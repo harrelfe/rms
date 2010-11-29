@@ -1,0 +1,25 @@
+Package: rms
+Version: 3.1-1
+Date: 2010-11-20
+Title: Regression Modeling Strategies
+Author: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
+Maintainer: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
+Depends: Hmisc (>= 3.7), survival (>= 2.36-2)
+Imports: survival
+Suggests: lattice, quantreg, nlme, rpart, polspline
+Description: Regression modeling, testing, estimation, validation,
+	graphics, prediction, and typesetting by storing enhanced model design
+	attributes in the fit.  rms is a collection of 229 functions that
+	assist with and streamline modeling.  It also contains functions for
+	binary and ordinal logistic regression models and the Buckley-James
+	multiple regression model for right-censored responses, and implements
+	penalized maximum likelihood estimation for logistic and ordinary
+	linear models.  rms works with almost any regression model, but it
+	was especially written to work with binary or ordinal logistic
+    regression, Cox regression, accelerated failure time models,
+    ordinary linear models,	the Buckley-James model, generalized least
+    squares for	serially or spatially correlated observations, generalized
+    linear models, and quantile regression.
+License: GPL version 2 or newer
+URL: http://biostat.mc.vanderbilt.edu/rms
+LazyLoad: yes

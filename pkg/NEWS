@@ -1,0 +1,70 @@
+Changes in version 3.1-1 (2010-11-20)
+   * Changed to be compatible with survival 2.36-2 which is now required
+   * Added logLik.rms and AIC.rms functions to be compatible with standard R
+   * Fixed (probably) old bug in latexrms with strat predictors
+
+Changes in version 3.1-0 (2010-09-12)
+   * Fixed gIndex to not use scale for labeling unless character
+   * Changed default na.action in Gls to na.omit and added a note in the help file that na.delete does not work with Gls
+   * Added terms component to Gls fit object (latex was not working)
+   * Added examples in robcov help file testing sandwich covariance estimator
+   * Added reference related to the effects package under help file for plot.Predict
+   * Added more examples and simulations to gIndex
+   * Fixed ancient bug in lrm.fit Fortran code to handle case where initial estimates are nearly perfect (was trying to step halve); thanks: Dan Hogan
+   * Changed survdiffplot to use gray(.85) for bands instead of gray(.95)
+   * Fixed formatting problem in print.psm
+   * Added prStats and reVector functions to rmsMisc.s
+   * Changed formatting of all print.* functions for model fits to use new prStats function
+   * Added latex=TRUE option to all model fit print methods; requires LaTeX package needspace
+   * Re-wrote printing routines to make use of more general model
+   * Removed long and scale options from cph printing-related routines
+   * Prepare for version 2.36-1 of survival package by adding censor=FALSE argument to survfit.coxph
+   * Added type="ccterms" to various predict methods
+   * Made type="ccterms" the default for partial g-indexes in gIndex, i.e., combine all indirectly related (through interactions) terms
+   * Added Spiegelhalter calibration test to val.prob
+   * Added a check in cph to trigger an error if strata() is used in formula
+   * Fixed drawing of polygon for shaded confidence bands for survplot.survfit (thanks to Patrick Breheny <patrick.breheny@uky.edu>)
+   * Changed default adjust.subtitle in bplot to depend on ref.zero, thanks to David Winsemius <dwinsemius@comcast.net>
+   * Used a namespace and simplified referenced to a few survival package functions that survival actually exports
+
+Changes in version 3.0-0 (2010-05-16)
+   * Made Gls not store data label() in residuals object, instead storing a label of 'Residuals'
+   * Fixed handling of na.action and check for presence of offsets in Glm
+   * Added type="cterms" to predict methods; computes combined terms for main effects + any interaction terms involving that main effect; in preparation for new geffects function
+   * Added GiniMd and gIndex functions
+   * Change lrm (lrm.fit) to use the middle intercept in computing Brier score
+   * Added 3 g-indexes to lrm fits
+   * Added 1 g-index to ols, Rq, Glm, Gls fits
+   * Added 2 g-indexes to cph, psm fits
+   * Added g to validate.ols, .lrm, .cph, .psm, but not to validate.bj
+   * Added print.validate to set default digits to 4
+   * Changed validate.lrm to compute 3 indexes even on ordinal response data
+
+Changes in version 2.2-0 (2010-02-23)
+   * Added levels.only option to survplot.* to remove variablename= from curve labels
+   * Added digits argument to calibrate.default
+   * Added new ref in val.prob help page
+   * Corrected location of dataset in residuals.lrm help page (thanks frederic.holzwarth@bgc-jena.mpg.de)
+   * Fixed latex.rms to latex-escape percent signs inside value labels
+   * Added scat1d.opts to plot.Predict
+   * Changed method of specifying variables to vary by not requiring an equals sign and a dot after the variable name, for Predict, summary, nomogram, gendata, survplot.rms
+   * Added factors argument to Predict to handle the above for survplot
+   * Made gendata a non-generic function, changed the order of its arguments, removed editor options, relying on R de function always
+   * Thanks to Kevin Thorpe <kevin.thorpe@utoronto.ca> to make latex.summary.rms and latex.anova.rms respect the table.env argument
+   * Fixed bug in calibrate.default related to digits argument
+   * Re-wrote bplot to use lattice graphics (e.g., levelplot contourplot wireframe), allowing for multiple panels for 3-d plots
+   * Changed all Rd files to use {arg1,arg2,...} instead of having empty {}
+
+Changes in version 2.1-0 (2009-09-30)
+   * Made Predict not return invisibly if predictors not specified
+   * New option nlines for plot.Predict for getting line plots with 2 categorical predictors
+   * Added rename option to rbind.Predict to handle case where predictor name has changed between models
+   * Added ties=mean to approx( ) calls that did not have ties= specified
+   * Added nlevels argument to bplot to pass to contour
+   * Added par argument to iLegend - list to pass to par().
+   * Redirected ... argument to iLegend to image( ).
+   * Fixed groupkm - was printing warning messages wrongly
+   * Added new semiparametric survival prediction calibration curve method in val.surv for external validation; this is the first implementation of smooth calibration curves for survival probability validation with right-censored data
+   * Fixed calibrate confidence limits from groupkm
+   * Added smooth calibration curve using hare (polspline package) for calibrate.cph and calibrate.psm
+   * Added display of predicted risks for cph and psm models even for the stratified KM method (old default)
