@@ -1026,21 +1026,22 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE, latex=FALSE)
     f
   }
 
-logLik.rms <- function(fit, ...)
+logLik.rms <- function(object, ...)
   {
-    w <- fit$loglik
+    w <- object$loglik
     if(length(w)) return(w[length(w)])
-    w <- fit$deviance
+    w <- object$deviance
     -0.5*w[length(w)]
   }
 
-AIC.rms <- function(fit, ..., k=2, type=c('loglik','chisq'))
+AIC.rms <- function(object, ..., k=2, type=c('loglik','chisq'))
   {
     type <- match.arg(type)
-    dof <- fit$stats['d.f.'] + ifelse(type=='loglik', num.intercepts(fit), 0)
+    dof <- object$stats['d.f.'] +
+      ifelse(type=='loglik', num.intercepts(object), 0)
     unname(switch(type,
-                  loglik=-2*logLik(fit) + k * dof,
-                  chisq = fit$stats['Model L.R.'] - k * dof))
+                  loglik=-2*logLik(object) + k * dof,
+                  chisq = object$stats['Model L.R.'] - k * dof))
   }
 
     
