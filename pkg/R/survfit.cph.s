@@ -1,5 +1,5 @@
 survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95, 
-                        individual=FALSE, type, vartype,
+                        individual=FALSE, type=NULL, vartype=NULL,
                         conf.type=c('log', 'log-log', 'plain', 'none'),
                         id, ...)
 {
@@ -9,7 +9,8 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
   Call[[1]] <- as.name("survfit")  ## nicer output for the user
   censor <- FALSE
 
-  if (missing(type))
+  type <- object$type
+  if (!length(type))
     {
       ## Use the appropriate one from the model
       w <- c("exact", "breslow", "efron")
@@ -23,7 +24,7 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
       survtype <- match(match.arg(type, w), w)
       survtype <- c(1,2,3,1,2,3,1,2,3)[survtype]
     }
-  vartype <- if(missing(vartype)) survtype
+  vartype <- if(!length(vartype)) survtype
   else
     {
       w <- c("greenwood", "aalen", "efron", "tsiatis")
@@ -33,14 +34,19 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
   
   if (!se.fit) conf.type <- "none"
   else conf.type <- match.arg(conf.type)
-  
-  X <- object$x
-  if(!length(X)) stop('must use x=TRUE with fit')
-  n <- nrow(X)
-  xcenter <- object$means
-  X <- X - rep(xcenter, rep.int(n, ncol(X)))
+
+  xpres <- length(object$means) > 0
   y <- object$y
   if(!length(y)) stop('must use y=TRUE with fit')
+  if(xpres)
+    {
+      X <- object$x
+      if(!length(X)) stop('must use x=TRUE with fit')
+      n <- nrow(X)
+      xcenter <- object$means
+      X <- X - rep(xcenter, rep.int(n, ncol(X)))
+    }
+  else X <- matrix(0, nrow=nrow(y), ncol=1)
 
   strata <- object$Strata
   if(!length(strata)) strata <- rep(0,  n)
@@ -49,9 +55,9 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
   weights <- object$weights
   if(!length(weights)) weights <- rep(1., n)
 
-  type <- attr(y, 'type')
-  if (type %nin% c('right','counting'))
-    stop("Cannot handle \"", type, "\" type survival data")
+  ## type <- attr(y, 'type')
+  ## if (type %nin% c('right','counting'))
+  ##   stop("Cannot handle \"", type, "\" type survival data")
   missid <- missing(id)
   if (!missid) individual <- TRUE
   else if (missid && individual) id <- rep(0, n)
@@ -65,7 +71,7 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
 
   if(missing(newdata))
     {
-      X2 <- matrix(0., nrow=1, ncol=ncol(X))
+      X2 <- if(xpres) matrix(0., nrow=1, ncol=ncol(X)) else 0
       rq <- ro <- NULL
       newrisk <- 1
     }
@@ -98,7 +104,9 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
     }
 
   g <- survival:::survfit.coxph.fit(y, X, weights, X2, risk, newrisk, strata,
-                                    se.fit, survtype, vartype, object$var,
+                                    se.fit, survtype, vartype,
+                                    if(length(object$var)) object$var else
+                                     matrix(0, nrow=1, ncol=1),
                                     id=id, y2=y2, strata2=rq)
 
   if (!censor)

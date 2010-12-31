@@ -17,8 +17,8 @@ cph <- function(formula=formula(data),
                 tol=1e-9,
                 surv=FALSE,
                 time.inc,
-                type,
-                vartype,
+                type=NULL,
+                vartype=NULL,
                 ...)
 {
   require(survival)
@@ -317,7 +317,7 @@ cph <- function(formula=formula(data),
       g <- list(n=sum(f$n),
                 coefficients=f$coefficients,
                 linear.predictors=f$linear.predictors,
-                method=f$method, means=f$means, var=f$var,
+                method=f$method, type=type, means=f$means, var=f$var,
                 x=X, y=Y, Strata=Strata, offset=offset, weights=weights,
                 terms=Terms, call=call)
       g <- survfit.cph(g, se.fit=surv,
@@ -385,8 +385,8 @@ cph <- function(formula=formula(data),
       if(is.character(surv)) f$surv.summary <- s.sum
       else
         {
-          attr(srv, "type") <- if(missing(type)) method
-          else type
+##          attr(srv, "type") <- if(missing(type)) method
+##          else type
 
           if(nstr>1)
             {
