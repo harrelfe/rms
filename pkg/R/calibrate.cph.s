@@ -41,7 +41,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
   
   surv.by.strata <- ssum[2,,1] #2nd time= at u, all strata
   xb <- fit$linear.predictors
-  if(length(stra <- attr(xb,'strata'))) 
+  if(length(stra <- fit$Strata)) 
     surv.by.strata <- surv.by.strata[stra]
   survival <- as.vector(surv.by.strata^exp(xb))
 
@@ -59,18 +59,17 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
   else
     pred <- NULL
   
-  distance <- function(x, y, fit, iter, u, fit.orig, what="observed",
+  distance <- function(x, y, strata, fit, iter, u, fit.orig, what="observed",
                        pred, orig.cuts, maxdim, ...)
     {
-      ##Assumes y is matrix with 1st col=time, 2nd=event indicator, 3rd=strata
-      ## This is now invalid for Surv objects.  strata info stored in attribute.
+      ## Assumes y is matrix with 1st col=time, 2nd=event indicator
       
       if(sum(y[,2]) < 5) return(NA)
       surv.by.strata <- fit$surv.summary[2,,1]
       ##2 means to use estimate at first time past t=0 (i.e., at u)
       
-      if(length(stra <- attr(y, 'strata')))
-        surv.by.strata <- surv.by.strata[stra] #Get for each stratum in data
+      if(length(strata))
+        surv.by.strata <- surv.by.strata[strata] #Get for each stratum in data
       cox <- as.vector(surv.by.strata^exp(x - fit$center))
       ##Assumes x really= x * beta
 
@@ -97,21 +96,20 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
       dist
     }
 
-  coxfit <- function(x, y, u, iter=0, ...)
+  coxfit <- function(x, y, strata, u, iter=0, ...)
     {
       etime <- y[,1]
       e     <- y[,2]
-      stra  <- attr(y, 'strata')
       
       if(sum(e) < 5) return(list(fail=TRUE))
       x <- x	#Get around lazy evaluation creating complex expression
       f <- if(length(x))
         {
-          if(length(stra))
-            cph(Surv(etime,e) ~ x + strat(stra), surv=TRUE, time.inc=u)
+          if(length(strata))
+            cph(Surv(etime,e) ~ x + strat(strata), surv=TRUE, time.inc=u)
           else cph(Surv(etime,e) ~ x, surv=TRUE, time.inc=u)
         }
-      else cph(Surv(etime,e) ~ strat(stra), surv=TRUE, time.inc=u)
+      else cph(Surv(etime,e) ~ strat(strata), surv=TRUE, time.inc=u)
       
       ## Get predicted survival at times 0, u, 2u, 3u, ...
       attr(f$terms, "Design") <- NULL
@@ -134,7 +132,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
         predab.resample(fit, method=method,
                         fit=coxfit, measure=distance,
                         pr=pr, B=b, bw=bw, rule=rule, type=type,  
-                        u=u, m=m, what=what, sls=sls, aics=aics, strata=TRUE,
+                        u=u, m=m, what=what, sls=sls, aics=aics,
                         pred=pred, orig.cuts=cuts, tol=tol, maxdim=maxdim, ...)
       n <- reliability[,"n"]
       rel <- rel + n * reliability[,"index.corrected"]

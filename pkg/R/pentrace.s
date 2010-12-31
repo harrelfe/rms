@@ -25,7 +25,6 @@ pentrace <- function(fit, penalty, penalty.matrix,
   fixed <- NULL
   dist  <- fit$dist
   parms <- fit$parms
-  Strata <- NULL
 
   clas <- fit$fitFunction[1]
   if(!length(clas)) clas <- oldClass(fit)[1]
@@ -51,21 +50,15 @@ pentrace <- function(fit, penalty, penalty.matrix,
   
   if(!length(fitter))stop("fitter not valid")
 
-  str.pres <- FALSE
-  if(clas=="cph")
-    {
-      str <- attr(X, "strata")
-      str.pres <- length(str) > 0
-    }
+  Strata <- fit$Strata
 
   if(!missing(subset))
     {
-      Y <- Y[subset,,drop=FALSE]
-      X <- X[subset,,drop=FALSE]
-      if(str.pres) str <- str[subset,drop=FALSE]
+      Y <- Y[subset,, drop=FALSE]
+      X <- X[subset,, drop=FALSE]
+      Strata <- Strata[subset, drop=FALSE]  # NULL[] is NULL
     }
   n <- nrow(Y)
-  if(str.pres) Strata <- str
 
   atr <- fit$Design
 

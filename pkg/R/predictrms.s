@@ -100,8 +100,9 @@ predictrms <-
           if(type=="lp" && length(fit$linear.predictors))
             {
               LP <- naresid(naa, fit$linear.predictors)
-              if(kint > 1) LP <- LP - fit$coefficients[1]+fit$coefficients[kint]
-              if(length(stra <- attr(fit$linear.predictors,"strata")))
+              if(kint > 1)
+                LP <- LP - fit$coefficients[1] + fit$coefficients[kint]
+              if(length(stra <- fit$Strata))
                 attr(LP, "strata") <- naresid(naa, stra)
               if(!se.fit && !conf.int)return(LP)
               else
@@ -109,7 +110,8 @@ predictrms <-
                   {
                     if(kint>1)
                       warning("se.fit is retrieved from the fit but it corresponded to kint=1")
-                    retlist <- list(linear.predictors=LP, se.fit=naresid(naa,fit$se.fit))
+                    retlist <- list(linear.predictors=LP,
+                                    se.fit=naresid(naa,fit$se.fit))
                     if(conf.int)
                       {
                         plminus <- zcrit*sqrt(retlist$se.fit^2 + vconstant)
@@ -120,9 +122,9 @@ predictrms <-
                   }
             }
           else
-            if(type=="x") return(structure(naresid(naa,fit$x),
-                 strata=if(length(stra <- attr(fit$x,"strata")))
-                 naresid(naa,stra) else NULL))
+            if(type=="x") return(structure(naresid(naa, fit$x),
+                 strata=if(length(stra <- fit$Strata))
+                         naresid(naa, stra) else NULL))
           X <- fit$x
           rnam <- dimnames(X)[[1]]
           if(!any(names(fit)=="x")) X <- NULL  #fit$x can get fit$xref
@@ -263,12 +265,11 @@ predictrms <-
             }
         }
       else strata <- attr(X,"strata")
-      
       added.col <- if(incl.non.slopes & (nrp>1 | !int.pres)) nrp else 0
-      if(incl.non.slopes & nrp>0 & somex & added.col>0)
+      if(incl.non.slopes & nrp > 0 & somex & added.col > 0)
         {
           xx <- matrix(double(1),
-                       nrow=nrow(X),ncol=added.col)
+                       nrow=nrow(X), ncol=added.col)
           for(j in 1:nrp) xx[,j] <- non.slopes[j]
         }
       else xx <- NULL

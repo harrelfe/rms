@@ -1,5 +1,3 @@
-#Requires fastbw
-
 predab.resample <-
   function(fit.orig,
            fit,
@@ -12,7 +10,6 @@ predab.resample <-
            type="residual",
            sls=.05,
            aics=0,
-           strata=FALSE,
            tol=1e-12, 
            non.slopes.in.x=TRUE,
            kint=1,
@@ -37,10 +34,7 @@ predab.resample <-
   else
     function(i, ns)
       {
-        if(any(i > ns))
-          {
-            i[i > ns] - ns
-          }
+        if(any(i > ns)) i[i > ns] - ns
         else NULL
       }
 
@@ -48,14 +42,8 @@ predab.resample <-
     {
       if(length(x))
         {
-          if(non.slopes == 0 || non.slopes.in.x)
-            {
-              x %*% b
-            }
-          else
-            {
-              b[kint] + x %*% b[-(1:non.slopes)]
-            }
+          if(non.slopes == 0 || non.slopes.in.x) x %*% b
+          else b[kint] + x %*% b[-(1:non.slopes)]
         }
       else
         {
@@ -82,7 +70,6 @@ predab.resample <-
   ## some subjects have multiple records now
   multi <- !missing(cluster)
 
-
   if(length(group))
     {
       if(multi || method != 'boot')
@@ -93,7 +80,6 @@ predab.resample <-
           ## Missing observations were deleted during fit
           if(length(nac)) 
             j <- !is.na(naresid(nac, y) %*% rep(1, ncol(y)))
-          
           group <- group[j]
         }
   
@@ -155,15 +141,14 @@ predab.resample <-
       }
     }
 
-  if(strata) stra <- attr(fit.orig$x, "strata")
+  stra <- fit.orig$Strata
 
   if(bw)
     {
-      ##	fit.orig <- fit(x,y,iter=0,tol=tol,...)
     if(fit.orig$fail) return()
 
     cat("\n		Backwards Step-down - Original Model\n")
-    fbw <- fastbw(fit.orig,rule=rule,type=type,sls=sls,aics=aics,eps=tol)
+    fbw <- fastbw(fit.orig, rule=rule, type=type, sls=sls, aics=aics, eps=tol)
 
     print(fbw)
 
@@ -172,7 +157,7 @@ predab.resample <-
       stop("no variables kept in original model")
     
     xcol <- x.index(orig.col.kept, non.slopes)
-    fit.orig <- fit(x[,xcol,drop=FALSE], y, stra=stra,
+    fit.orig <- fit(x[,xcol,drop=FALSE], y, strata=stra,
                     iter=0, tol=tol, xcol=xcol, ...)
     
   }
@@ -185,11 +170,12 @@ predab.resample <-
            kint=kint)
 
   index.orig <- if(missing(subset))
-    measure(xb, y, stra=stra, fit=fit.orig, iter=0, evalfit=TRUE,
+    measure(xb, y, strata=stra, fit=fit.orig, iter=0, evalfit=TRUE,
             fit.orig=fit.orig,
             kint=kint, ...)
   else 
-    measure(xb[subset], y[subset,,drop=FALSE], stra=stra, fit=fit.orig,
+    measure(xb[subset], y[subset,,drop=FALSE], strata=stra[subset],
+            fit=fit.orig,
             iter=0, evalfit=FALSE, fit.orig=fit.orig, kint=kint, ...)
   
   test.stat <- double(length(index.orig))
@@ -293,7 +279,7 @@ predab.resample <-
         train
 
       f <- fit(x[xtrain,,drop=FALSE], y[train,,drop=FALSE],
-             stra=stra, iter=i, tol=tol,...)
+               strata=stra[train], iter=i, tol=tol, ...)
     f$assign <- NULL  #Some programs put a NULL assign (e.g. ols.val fit)
  
     fail <- f$fail
@@ -331,12 +317,12 @@ predab.resample <-
               col.kept <- f$parms.kept
               
               if(!length(col.kept))
-                f <- fit(NULL, y[train,, drop=FALSE], stra=stra,
+                f <- fit(NULL, y[train,, drop=FALSE], stra=stra[xtrain],
                          iter=i, tol=tol,...)
               else
                 {
                   xcol <- x.index(col.kept, non.slopes)
-                  f <- fit(x[xtrain,xcol,drop=FALSE], stra=stra,
+                  f <- fit(x[xtrain,xcol,drop=FALSE], strata=stra[xtrain],
                            y[train,,drop=FALSE],
                            iter=i, tol=tol, xcol=xcol, ...)
                 }
@@ -358,12 +344,12 @@ predab.resample <-
           if(missing(subset))
             {
               train.statj <-
-                measure(xb[xtrain], y[train,,drop=FALSE], stra=stra, 
+                measure(xb[xtrain], y[train,,drop=FALSE], strata=stra[xtrain], 
                         fit=f, iter=i, fit.orig=fit.orig, evalfit=TRUE,
                         kint=kint, ...)
 
               test.statj <- measure(xb[test], y[test,,drop=FALSE],
-                                    stra=stra,
+                                    strata=stra[test],
                                     fit=f, iter=i, fit.orig=fit.orig,
                                     evalfit=FALSE,
                                     kint=kint, ...)
@@ -375,7 +361,8 @@ predab.resample <-
               if(any(ii < 0)) ii <- (1:n)[ii]
 
               ii <- ii[subset[ii]]
-              train.statj <- measure(xb[ii], y[ii,,drop=FALSE], stra=stra,
+              train.statj <- measure(xb[ii], y[ii,,drop=FALSE],
+                                     strata=stra[ii],
                                      fit=f, iter=i, fit.orig=fit.orig,
                                      evalfit=FALSE,
                                      kint=kint, ...)
@@ -385,7 +372,7 @@ predab.resample <-
               
               ii <- ii[subset[ii]]
               test.statj <- measure(xb[ii], y[ii,,drop=FALSE], fit=f,
-                                    iter=i, stra=stra,
+                                    iter=i, strata=stra[ii],
                                     fit.orig=fit.orig, evalfit=FALSE,
                                     kint=kint, ...)
             }

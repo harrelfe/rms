@@ -11,7 +11,7 @@ residuals.cph <-
     if(type %nin% c('deviance','martingale') && !length(y))
       stop('you must specify y=TRUE in the fit')
 
-    strata <- attr(x, 'strata')
+    strata <- object$Strata
     if(length(strata))
       {
       object$strata <- strata

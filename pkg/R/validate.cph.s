@@ -12,7 +12,7 @@ validate.cph <- function(fit, method="boot",
   
   modtype <- fit$method
   
-  discrim <- function(x, y, stra, fit, iter, evalfit=FALSE, dxy=FALSE,
+  discrim <- function(x, y, strata, fit, iter, evalfit=FALSE, dxy=FALSE,
                       need.surv=FALSE, u, modtype, pr=FALSE, ...)
     {
       n <- nrow(y)
@@ -43,7 +43,7 @@ validate.cph <- function(fit, method="boot",
             {
               type <- attr(y, "type")
               storage.mode(x) <- "double"
-              f <- coxphFit(x=x, y=y, strata=stra, iter.max=10, eps=.0001,
+              f <- coxphFit(x=x, y=y, strata=strata, iter.max=10, eps=.0001,
                             method=modtype, type=type)
               if(f$fail)
                 stop('fit failure in discrim,coxphFit')
@@ -55,7 +55,8 @@ validate.cph <- function(fit, method="boot",
               D <- (lr - 1)/ll0
               R2.max <- 1 - exp(-ll0/n)
               R2 <- (1 - exp(-lr/n))/R2.max
-              f.frozen <- coxphFit(x=x, y=y, strata=stra, iter.max=0, eps=.0001,
+              f.frozen <- coxphFit(x=x, y=y, strata=strata,
+                                   iter.max=0, eps=.0001,
                                    method=modtype, init=1, type=type)
               if(f.frozen$fail) stop('fit failure in discrim for f.frozen')
               U <- -2 * (f.frozen$loglik[2] - f$loglik[2]) / ll0
@@ -70,8 +71,9 @@ validate.cph <- function(fit, method="boot",
         {
           if(need.surv)
             {
-              attr(x, "strata") <- stra
-              x <- survest(fit, linear.predictors=x, times=u, conf.int=FALSE)$surv
+              attr(x, "strata") <- strata
+              x <- survest(fit, linear.predictors=x, times=u,
+                           conf.int=FALSE)$surv
             }
           Dxy <- rcorr.cens(x, y)["Dxy"]
           z <- c(Dxy, z)
@@ -81,7 +83,7 @@ validate.cph <- function(fit, method="boot",
       z
     }
   
-  cox.fit <- function(x, y, stra, u, need.surv=FALSE, modtype, tol=1e-9,
+  cox.fit <- function(x, y, strata, u, need.surv=FALSE, modtype, tol=1e-9,
                       ...)
     {
       if(!length(x))
@@ -98,7 +100,7 @@ validate.cph <- function(fit, method="boot",
           x <- as.matrix(x)
           dimnames(x) <- list(as.character(1:nrow(x)),as.character(1:ncol(x)))
           
-          f <- coxphFit(x=x, y=y, strata=stra, iter.max=10, eps=.0001,
+          f <- coxphFit(x=x, y=y, strata=strata, iter.max=10, eps=.0001,
                         method=modtype, toler.chol=tol, type=type)
           
           if(f$fail) return(f)
@@ -112,7 +114,10 @@ validate.cph <- function(fit, method="boot",
         }
 
       x <- x      #Don't want lazy evaluation of complex expression
-      f <- cph(y ~ x + strat(stra), surv=TRUE, method=modtype)
+      f <- if(length(strata))
+        cph(y ~ x + strat(strata), surv=TRUE, method=modtype)
+      else
+        cph(y ~ x, surv=TRUE, method=modtype)
       f$non.slopes <- f$assume.code <- f$assign <- f$name <- f$assume <- NULL
       ##Don't fool fastbw called from predab.resample
       f
@@ -121,5 +126,5 @@ validate.cph <- function(fit, method="boot",
   predab.resample(fit, method=method, fit=cox.fit, measure=discrim,
                   pr=pr, B=B, bw=bw, rule=rule, type=type, sls=sls,
                   aics=aics, dxy=dxy, u=u, need.surv=need.surv,
-                  strata=TRUE, modtype=modtype,tol=tol, ...)
+                  modtype=modtype,tol=tol, ...)
 }

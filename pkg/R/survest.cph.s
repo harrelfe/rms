@@ -116,12 +116,12 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
               ne    <- c(0,             g$n.event[j])
               surv  <- c(1,             g$surv[j])
               se    <- c(NA,            g$std.err[j])
-              upper <- c(NA,            g$upper[j])
-              lower <- c(NA,            g$lower[j])
+              upper <- c(1,             g$upper[j])  # 1 was NA
+              lower <- c(1,             g$lower[j])  # 1 was NA
               
               yy <- fit$y
               ny <- ncol(yy)
-              str <- unclass(attr(yy, 'strata'))
+              str <- unclass(fit$Strata)
               if(length(str)) yy <- yy[str==sreq, ny-1] else yy <- yy[,ny-1]
               maxt <- max(yy)
               if(maxt > tim[length(tim)])
@@ -233,7 +233,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
         {
           linear.predictors <- fit$linear.predictors	#assume was centered
           rnam <- names(linear.predictors)
-          if(length(linear.predictors)==0)
+          if(!length(linear.predictors))
             {
               if(length(fit$x)==0)
                 stop("newdata, x, linear.predictors not given but x nor linear.predictors stored in fit")
@@ -330,8 +330,8 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
           upper <- ciupper(surv, zcrit*std.err)
           lower[1] <- 1
           upper[1] <- 1
-          attr(lower,"type") <- NULL
-          attr(upper,"type") <- NULL
+          attr(lower, "type") <- NULL
+          attr(upper, "type") <- NULL
         }
       surv <- fun(surv); surv[is.infinite(surv)] <- NA
       if(conf.int>0)
@@ -341,10 +341,11 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
         }
 
       if(nf==0) strata <- NULL
-      retlist <- list(time=times,surv=surv,linear.predictors=linear.predictors)
+      retlist <- list(time=times, surv=surv,
+                      linear.predictors=linear.predictors)
 
       if(conf.int>0) retlist <- 
-        c(retlist,list(lower=lower,upper=upper,std.err=std.err))
+        c(retlist,list(lower=lower, upper=upper, std.err=std.err))
       if(nf>0)
         {
           retlist$strata           <- strata

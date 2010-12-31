@@ -23,10 +23,10 @@ cph <- function(formula=formula(data),
 {
   require(survival)
   method <- match.arg(method)
-  call <- match.call()
-  m <- match.call(expand=FALSE)
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
-              names(m), 0)
+  call   <- match.call()
+  m      <- match.call(expand=FALSE)
+  mc     <- match(c("formula", "data", "subset", "weights", "na.action"), 
+                  names(m), 0)
   m <- m[c(1, mc)]
   m$na.action <- na.action
 
@@ -51,7 +51,7 @@ cph <- function(formula=formula(data),
 
   nstrata <- 0
   Strata <- NULL
-  smo <- NULL  ## survival package model object, for survfit.coxph
+
 
   if(!missing(data) ||
      (length(z <- attr(terms(formula, allowDotAsName=TRUE),"term.labels"))>0 &&
@@ -83,29 +83,18 @@ cph <- function(formula=formula(data),
         stop('cph supports strat(), not strata()')
       cluster <- specials$cluster
       stra    <- specials$strat
-      attr(Terms, 'specials')$strata <- attr(Terms, 'specials')$strat
-      ## Make survfit.coxph work
-
 
       if(length(cluster))
         {
           if(missing(robust)) robust <- TRUE
           Terms <- Terms[-(cluster - 1)]
-          cluster <- smo$cluster <- attr(X, 'cluster')
+          cluster <- attr(X, 'cluster')
           attr(X, 'cluster') <- NULL
         }
 
       Terms.ns     <- Terms
-#      Terms.strata <- Terms # for survfit.coxph
       if(length(stra))
         {
-#          formulas <- as.formula(gsub('strat\\(','strata\\(',deparse(formula)))
-#          Terms.strata <-
-#            if(missing(data))
-#              terms(formulas, specials=c("cluster","strata"))
-#            else
-#              terms(formulas, specials=c("cluster","strata"), data=data)
-          
           temp <- untangle.specials(Terms.ns, "strat", 1)
           Terms.ns <- Terms.ns[-temp$terms]	#uses [.terms function
           ##  Set all factors=2
@@ -122,44 +111,29 @@ cph <- function(formula=formula(data),
               xi <- X[[i+1]]
               levels(xi) <- paste(name[i],"=",levels(xi),sep="")
               Strata[[nstrata]] <- xi
-              if(surv) smo[[strataname[nstrata]]] <- xi
             }
-#          if(surv)
-#            {
-#              strataname <- 
-#                gsub('strat\\(','strata\\(',
-#                     attr(Terms, 'term.labels')[stra - 1])
-#              smo <- as.data.frame(Strata)
-#              names(smo) <- strataname
-#            }
-          Strata <- interaction(as.data.frame(Strata),drop=TRUE)
+          Strata <- interaction(as.data.frame(Strata), drop=TRUE)
         }
       
-      offs <- offset <- attr(Terms, "offset")
-      
-      xpres <- length(asm) && any(asm!=8)
+      xpres <- length(asm) && any(asm != 8)
       Y <- model.extract(X, 'response')
       if(!inherits(Y,"Surv"))
         stop("response variable should be a Surv object")
+      n <- nrow(Y)
     
       weights <- model.extract(X, 'weights')
-      if(surv && length(weights)) smo$"(weights)" <- weights
-      tt <- length(offset)
-      offset <- if(tt == 0) rep(0, nrow(Y))
-      else if(tt == 1) X[[offset]]
-      else
-        {
-          ff <- X[[offset[1]]]
-          for(i in 2:tt)   # for case with multiple offset terms
-            ff <- ff + X[[offset[i]]]
-          ff
-        }
-      if(surv && tt > 0) smo$offset <- ff
+      offset <- attr(Terms, "offset")
+      lo <- length(offset)
+      if(lo)
+         {
+           offset <- rep(0., n)
+           for(i in 1:lo) offset <- offset + X[[offset[i]]]
+         }
     
       ##No mf if only strata factors
       if(!xpres)
         {
-          X <- matrix(nrow=0,ncol=0)
+          X <- matrix(nrow=0, ncol=0)
           assign <- NULL
         }
       else
@@ -181,8 +155,8 @@ cph <- function(formula=formula(data),
         stop("response variable should be a Surv object")
     
       Y <- Y[!is.na(Y)]
-      assign <- NULL
-      xpres <- FALSE
+      assign  <- NULL
+      xpres   <- FALSE
       nullmod <- TRUE
       nact <- NULL
     }
@@ -206,32 +180,30 @@ cph <- function(formula=formula(data),
                          Year=1,
                          maxtime/10)
       
-      if(time.inc >= maxtime | maxtime/time.inc>25)
-        time.inc <- max(pretty(c(0,maxtime)))/10
+      if(time.inc >= maxtime | maxtime / time.inc>25)
+        time.inc <- max(pretty(c(0, maxtime)))/10
     }
 
   if(nullmod) f <- NULL
   else
     {
       ytype <- attr(Y, "type")
-      if( method=="breslow" || method =="efron")
-        {
-          if (ytype== 'right')
-            fitter <- coxph.fit
-          else if (ytype=='counting')
-            fitter <- survival:::agreg.fit
-          else
-            stop(paste("Cox model doesn't support \"", ytype,
-                       "\" survival data", sep=''))
-        }
-      else if (method=='exact')
-        fitter <- agexact.fit
-      else
-        stop(paste ("Unknown method", method))
-
+      fitter <-
+        if( method=="breslow" || method =="efron")
+          {
+            if (ytype== 'right') coxph.fit
+            else if (ytype=='counting') survival:::agreg.fit
+            else
+              stop(paste("Cox model doesn't support \"", ytype,
+                         "\" survival data", sep=''))
+          }
+        else if (method=='exact') agexact.fit
+        else
+          stop(paste ("Unknown method", method))
+      
       if (missing(init)) init <- NULL
-
-      f <- fitter(X, Y, strata=Strata, offset=offset,
+      f <- fitter(X, Y,
+                  strata=Strata, offset=offset,
                   weights=weights, init=init,
                   method=method, rownames=rnam,
                   control=coxph.control(eps=eps, toler.chol=tol,
@@ -269,37 +241,34 @@ cph <- function(formula=formula(data),
       fit2 <- c(f, list(x=X, y=Y, method=method))
       if(length(stra)) fit2$strata <- Strata
     
-      temp <- survival:::residuals.coxph(fit2, type='dfbeta', collapse=cluster)
-      f$var <- t(temp) %*% temp
+      r <- survival:::residuals.coxph(fit2, type='dfbeta', collapse=cluster)
+      f$var <- t(r) %*% r
     }
   
-  if(length(weights) && any(weights!=1)) f$weights <- weights
-
   nvar <- length(f$coefficients)
 
-  temp <- factor(Y[,ny], levels=0:1, labels=c("No Event","Event"))
+  ev <- factor(Y[,ny], levels=0:1, labels=c("No Event","Event"))
   n.table <- {
-    if(!length(Strata)) table(temp,dnn='Status')
-    else table(Strata, temp, dnn=c('Stratum','Status'))
+    if(!length(Strata)) table(ev, dnn='Status')
+    else table(Strata, ev, dnn=c('Stratum','Status'))
   }
   f$n <- n.table
-  nnn <- nrow(Y)
   nevent <- sum(Y[,ny])
   if(xpres)
     {
       logtest <- -2 * (f$loglik[1] - f$loglik[2])
-      R2.max <- 1 - exp(2*f$loglik[1]/nnn)
-      R2 <- (1 - exp(-logtest/nnn))/R2.max
+      R2.max  <-  1 - exp(2*f$loglik[1]/n)
+      R2 <- (1 - exp(-logtest/n))/R2.max
       P  <- 1 - pchisq(logtest,nvar)
       gindex <- GiniMd(f$linear.predictors)
-      stats <- c(nnn, nevent, logtest, nvar, P, f$score, 
+      stats <- c(n, nevent, logtest, nvar, P, f$score, 
                  1-pchisq(f$score,nvar), R2, gindex, exp(gindex))
       names(stats) <- c("Obs", "Events", "Model L.R.", "d.f.", "P", 
                         "Score", "Score P", "R2", "g", "gr")
     }
   else
     {
-      stats <- c(nnn, nevent)
+      stats <- c(n, nevent)
       names(stats) <- c("Obs","Events")
     }
 
@@ -316,14 +285,14 @@ cph <- function(formula=formula(data),
 
   if(xpres)
     {
-      f$center <- sum(f$means*f$coefficients)
-      f$scale.pred <- c("log Relative Hazard","Hazard Ratio")
+      f$center <- sum(f$means * f$coefficients)
+      f$scale.pred <- c("log Relative Hazard", "Hazard Ratio")
       attr(f$linear.predictors,"strata") <- Strata
       names(f$linear.predictors) <- rnam
       if(se.fit)
         {
-          XX <- X - rep(f$means, rep.int(nnn, nvar))   # see scale() function
-          ##  XX <- sweep(X, 2, f$means)	# center   (slower)
+          XX <- X - rep(f$means, rep.int(n, nvar))   # see scale() function
+          ##  XX <- sweep(X, 2, f$means)	# center   (slower;so is scale)
           se.fit <- drop(((XX %*% f$var) * XX) %*% rep(1,ncol(XX)))^.5
           names(se.fit) <- rnam
           f$se.fit <- se.fit  	
@@ -335,9 +304,8 @@ cph <- function(formula=formula(data),
 
   if(is.character(surv) || surv)
     {
-      Strata <- if(!length(Strata)) rep(1, nnn) else unclass(Strata)
-      
-      nstr <- max(Strata, na.rm=TRUE)
+      iStrata <- if(!length(Strata)) rep(1, n) else unclass(Strata)
+      nstr <- max(iStrata, na.rm=TRUE)
       srv  <- NULL
       tim  <- NULL
       s.e. <- NULL
@@ -346,38 +314,23 @@ cph <- function(formula=formula(data),
                      c(length(timepts),nstr,3),
                      list(format(timepts),paste("Stratum",1:nstr),
                           c("Survival","n.risk","std.err")))
+      g <- list(n=sum(f$n),
+                coefficients=f$coefficients,
+                linear.predictors=f$linear.predictors,
+                method=f$method, means=f$means, var=f$var,
+                x=X, y=Y, Strata=Strata, offset=offset, weights=weights,
+                terms=Terms, call=call)
+      g <- survfit.cph(g, se.fit=surv,
+                       type=type, vartype=vartype, conf.type='log')
       
-      g <- list(formula=list(
-                  n=sum(f$n),
-                  coefficients=f$coefficients,
-                  linear.predictors=f$linear.predictors,
-                  method=f$method, means=f$means, var=f$var,
-                  x=X, y=Y,
-                  model=smo,
-                  terms=Terms, call=call))
-      class(g$formula) <- 'coxph'
-
-      if(!missing(type))      g$type      <- type
-      if(!missing(vartype))   g$vartype   <- vartype
-      g$censor <- FALSE  # don't output censored values
-
-#      if(length(Strata))
-#        {
-#          n.all <- table(Strata) # patch bug in survfit.coxph.null
-#          storeTemp(n.all)       # survfit.coxph.null can't find here
-#                                 # (why? namespace?)
-#        }
-
-      g <- do.call('survfit', g)
-      
-      stemp <- if(nstr==1) rep(1, length(g$time)) else rep(1:nstr, g$strata)
+      strt <- if(nstr == 1) rep(1, length(g$time)) else rep(1:nstr, g$strata)
 
       i <- 0
       for(k in 1:nstr)
         {
-          j    <- stemp==k
-          i    <- i+1
-          yy   <- Y[Strata==i, ny - 1]
+          j    <- strt == k
+          i    <- i + 1
+          yy   <- Y[iStrata==i, ny - 1]
           maxt <- max(yy)
           ##n.risk from surv.fit does not have usual meaning if not Kaplan-Meier
       
@@ -397,7 +350,7 @@ cph <- function(formula=formula(data),
             {
               kk <- kk + 1
               t.choice <- max((1:length(tt))[tt <= tp+1e-6])
-              if(tp > max(tt)+1e-6 & su[length(su)] > 0)
+              if(tp > max(tt) + 1e-6 & su[length(su)] > 0)
                 {
                   Su <- NA
                   Se <- NA
@@ -445,13 +398,13 @@ cph <- function(formula=formula(data),
         }
     }
 
-  if((x || y) && nstrata > 0)
-    attr(X, "strata") <- attr(Y, "strata") <- Strata
-    if(x) f$x <- X
+  f$Strata <- Strata
+  if(x) f$x <- X
   if(y) f$y <- Y
-
+  f$weights <- weights
+  f$offset  <- offset
+    
   class(f) <- c("cph", "rms", "coxph")
-  
   f
 }
 
@@ -504,7 +457,7 @@ Survival.cph <- function(object, ...)
         }
       for(i in 1:length(times))
         {
-          tm <- max((1:length(time))[time <= times[i]+1e-6])
+          tm <- max((1:length(time))[time <= times[i] + 1e-6])
           su <- surv[tm]
           if(times[i] > max(time)+1e-6) su <- NA
           s[,i] <- su^exp(lp)
@@ -533,7 +486,7 @@ Quantile.cph <- function(object, ...)
           s <- surv^exp(lp[j])
           if(type=="polygon") Q[j,] <- approx(s, time, q, ties=mean)$y
           else for(i in 1:length(q))
-            if(any(s <= q[i])) Q[j,i] <- min(time[s<=q[i]])  #is NA if none
+            if(any(s <= q[i])) Q[j,i] <- min(time[s <= q[i]])  #is NA if none
         }
       drop(Q)
     }

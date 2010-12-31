@@ -289,7 +289,7 @@ survplot.rms <-
                 {
                   tt <- seq(max(0,xlim[1]),min(maxtime,xlim[2]),by=time.inc)
                   ny <- ncol(Y)
-                  if(is.null(str <- attr(Y,"strata"))) Y <- Y[,ny-1]
+                  if(!length(str <- fit$Strata)) Y <- Y[,ny-1]
                   else Y <- Y[oldUnclass(str)==oldUnclass(stratum),ny-1]
                   nrisk <-
                     rev(cumsum(table(
