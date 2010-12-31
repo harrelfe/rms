@@ -12,7 +12,7 @@ estimation for spline functions) is the same one used for basing predictions.
 }
 \usage{
 \method{survfit}{cph}(formula, newdata, se.fit=TRUE, conf.int=0.95, 
-        individual=FALSE, type, vartype,
+        individual=FALSE, type=NULL, vartype=NULL,
         conf.type=c('log', "log-log", "plain", "none"), id, \dots)
 }
 \arguments{

@@ -18,7 +18,7 @@ predab.resample(fit.orig, fit, measure,
                 method=c("boot","crossvalidation",".632","randomization"),
                 bw=FALSE, B=50, pr=FALSE,
                 rule="aic", type="residual", sls=.05, aics=0,
-                strata=FALSE, tol=1e-12, non.slopes.in.x=TRUE, kint=1,
+                tol=1e-12, non.slopes.in.x=TRUE, kint=1,
                 cluster, subset, group=NULL, \dots)
 }
 \arguments{

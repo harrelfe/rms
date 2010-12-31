@@ -23,7 +23,7 @@ cph(formula = formula(data), data=parent.frame(),
     singular.ok=FALSE, robust=FALSE,
     model=FALSE, x=FALSE, y=FALSE, se.fit=FALSE, 
     eps=1e-4, init, iter.max=10, tol=1e-9, surv=FALSE, time.inc,
-    type, vartype, \dots)
+    type=NULL, vartype=NULL, \dots)
 
 \method{Survival}{cph}(object, \dots)
 # Evaluate result as g(times, lp, stratum=1, type=c("step","polygon"))

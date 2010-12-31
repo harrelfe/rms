@@ -782,7 +782,13 @@ f <- cph(Srv ~ strat(age.dec)+strat(sex), surv=TRUE)
 # Plot log(-log 3-year survival probability) vs. mean age
 # within age deciles and vs. sex
 p <- Predict(f, age.dec, sex, time=3, loglog=TRUE)
-plot(p, ~ as.numeric(as.character(age.dec))|sex, ylim=c(-5,-1))
+plot(p)
+plot(p, ~ as.numeric(as.character(age.dec)) | sex, ylim=c(-5,-1))
+
+# Show confidence bars instead.  Note some limits are not present (infinite)
+agen <- as.numeric(as.character(p$age.dec))
+xYplot(Cbind(yhat, lower, upper) ~ agen | sex, data=p)
+
 
 
 # Fit a model assuming proportional hazards for age and
