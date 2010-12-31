@@ -1,5 +1,5 @@
-Changes in version 3.1-1 (2010-11-20)
-   * Changed to be compatible with survival 2.36-2 which is now required
+Changes in version 3.2-0 (2011-01-03)
+   * Changed to be compatible with survival 2.36-3 which is now required
    * Added logLik.rms and AIC.rms functions to be compatible with standard R
    * Fixed (probably) old bug in latexrms with strat predictors
 
