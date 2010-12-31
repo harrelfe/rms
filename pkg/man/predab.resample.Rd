@@ -98,10 +98,6 @@ Significance level for stopping in fastbw if \code{rule="p"}. Default is \code{.
 Stopping criteria for \code{rule="aic"}. Stops deleting factors when
 chi-square - 2 times d.f. falls below \code{aics}. Default is \code{0}.
 }
-\item{strata}{set to \code{TRUE} if \code{fit.orig} has an \code{x}
-  element that contains a \code{"strata"} attribute which is a vector
-  that should be sampled the same way as the observations in \code{x}
-  and \code{y}}
 \item{tol}{
 Tolerance for singularity checking.  Is passed to \code{fit} and \code{fastbw}.
 }

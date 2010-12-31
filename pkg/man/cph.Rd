@@ -240,7 +240,7 @@ cph(formula = formula(data), data=parent.frame(),
   }
   \item{linear.predictors}{
     values of predicted X beta for observations used in fit, normalized
-    to have overall mean zero
+    to have overall mean zero, then having any offsets added
   }
   \item{resid}{
     martingale residuals

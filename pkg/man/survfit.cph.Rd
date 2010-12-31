@@ -13,14 +13,21 @@ estimation for spline functions) is the same one used for basing predictions.
 \usage{
 \method{survfit}{cph}(formula, newdata, se.fit=TRUE, conf.int=0.95, 
         individual=FALSE, type, vartype,
-        conf.type=c('log', "log-log", "plain", "none"), \dots)
+        conf.type=c('log', "log-log", "plain", "none"), id, \dots)
 }
 \arguments{
 \item{formula}{
 a fit object from \code{cph} or \code{coxph}
 see \code{\link[survival]{survfit.coxph}}
 }
-\item{newdata,se.fit,conf.int,individual,type,vartype,conf.type}{see \code{\link[survival]{survfit}}}
+\item{newdata,se.fit,conf.int,individual,type,vartype,conf.type,id}{see
+  \code{\link[survival]{survfit}}.  If \code{individual} is \code{TRUE},
+  there must be exactly one \code{Surv} object in \code{newdata}.  This
+  object is used to specify time intervals for time-dependent covariate
+  paths.  To get predictions for multiple subjects with time-dependent
+  covariates, specify a vector \code{id} which specifies unique
+  hypothetical subjects.  The length of \code{id} should equal the
+  number of rows in \code{newdata}.}
 \item{\dots}{Not used}
 }
 \value{see \code{survfit.coxph}}
