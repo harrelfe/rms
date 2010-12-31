@@ -166,8 +166,8 @@ param.order(at, term.order)
 Penalty.matrix(at, X)
 Penalty.setup(at, penalty)
 
-\method{logLik}{rms}(fit, \dots)
-\method{AIC}{rms}(fit, \dots, k=2, type=c('loglik', 'chisq'))
+\method{logLik}{rms}(object, \dots)
+\method{AIC}{rms}(object, \dots, k=2, type=c('loglik', 'chisq'))
 
 lrtest(fit1, fit2)
 \method{print}{lrtest}(x, \dots)
@@ -235,8 +235,13 @@ set to \code{FALSE} to prevent \code{Getlim} or \code{Getlimi} from issuing an e
 if data for a variable are not found
 }
 \item{type}{
-set to \code{"direct"} to return lists of indexes of directly related
-factors only (those in interactions with the predictor)
+For \code{related.predictors}, set to \code{"direct"} to return lists of
+indexes of directly related factors only (those in interactions with the
+predictor).  For \code{AIC.rms}, \code{type} specifies the basis on
+which to return AIC.  The default is minus twice the maximized log
+likelihood plus \code{k} times the degrees of freedom counting
+intercept(s).  Specify \code{type='chisq'} to get a penalized model
+likelihood ratio chi-square instead.
 }
 \item{term.order}{
 1 for all parameters, 2 for all parameters associated with either nonlinear
@@ -251,10 +256,6 @@ a vector or list specifying penalty multipliers for types of model terms
 }
 \item{k}{the multiplier of the degrees of freedom to be used in
   computing AIC.  The default is 2.}
-\item{type}{the basis on which to return AIC.  The default is minus
-  twice the maximized log likelihood plus \code{k} times the degrees of
-  freedom counting intercept(s).  Specify \code{type='chisq'} to get a
-  penalized model likelihood ratio chi-square instead.}
 \item{x}{a result of \code{lrtest}, or the result of a high-level model
   fitting function (for \code{prModFit}}
 \item{labels}{
