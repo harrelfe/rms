@@ -314,6 +314,9 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, ...)
     }
   else
     {
+      ## summary.gls calls BIC which tries to use logLik.rms.
+      ## Make it use logLik.gls instead
+      class(x) <- 'gls'
       s <- summary.gls(x)$tTable
       k <- k + 1
       z[[k]] <- list(type='coefmatrix',
