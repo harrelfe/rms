@@ -110,11 +110,10 @@ oos.loglik.psm <- function(fit, lp, y, ...) {
   else stop('not implemented for psm models')
 }
 
-oos.loglik.Glm <-
-  function(fit, lp, y, ...) {
-    if(missing(lp)) return(deviance(fit))
-    glm.fit.null(x=NULL,y=as.vector(y),offset=lp,family=fit$family)$deviance
-  } 
+oos.loglik.Glm <- function(fit, lp, y, ...)
+  if(missing(lp)) deviance(fit) else
+  glm.fit(x=NULL, y=as.vector(y), offset=lp, family=fit$family)$deviance
+
   
 #Function to retrieve limits and values, from fit (if they are there)
 #or from a datadist object.  If need.all=F and input is coming from datadist,

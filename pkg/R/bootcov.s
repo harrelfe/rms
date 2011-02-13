@@ -31,7 +31,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
       parms <-  fit$parms
     }
 
-  if(nfit=='Glmd') fitFamily <- fit$family
+  if(nfit=='Glm') fitFamily <- fit$family
   
   penalty.matrix <- fit$penalty.matrix
 
@@ -326,7 +326,7 @@ bootplot <- function(obj, which, X,
       for(j in 1:nq)
         {
           histdensity(qoi[j,], xlab=labels.[j], ...)
-          quan[j,] <- quantile(qoi[j,],probs)
+          quan[j,] <- quantile(qoi[j,], probs, na.rm=TRUE)
           abline(v=quan[j,], lty=2)
           title(sub=paste('Fraction of effects>',fun(0),' = ',
                   format(mean(qoi[j,]>fun(0))),sep=''),adj=0)
@@ -392,7 +392,9 @@ confplot <- function(obj, X, against,
   if(method=='pointwise')
     {
       pred <- X %*% t(boot.Coef)   ## n x B
-      p <- fun(apply(pred, 1, quantile, probs=c((1-conf.int)/2,1-(1-conf.int)/2)))
+      p <- fun(apply(pred, 1, quantile,
+                     probs=c((1 - conf.int)/2, 1 - (1 - conf.int)/2),
+                     na.rm=TRUE))
       lower <- p[1,]
       upper <- p[2,]
     }
@@ -402,7 +404,7 @@ confplot <- function(obj, X, against,
       loglik    <- obj$boot.loglik
       if(length(loglik)==0) stop('did not specify "loglik=TRUE" to bootcov')
       
-      crit <- quantile(loglik, conf.int)
+      crit <- quantile(loglik, conf.int, na.rm=TRUE)
       qual <- loglik <= crit
       boot.Coef <- boot.Coef[qual,,drop=FALSE]
       pred   <- X %*% t(boot.Coef)  ## n x B
