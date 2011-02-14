@@ -1,6 +1,8 @@
-Changes in version 3.2-0 (2011-01-03)
+Changes in version 3.2-0 (2011-02-14)
    * Changed to be compatible with survival 2.36-3 which is now required
    * Added logLik.rms and AIC.rms functions to be compatible with standard R
+   * Fixed oos.loglik.Glm
+   * Fixed bootcov related to nfit='Glm'
    * Fixed (probably) old bug in latexrms with strat predictors
 
 Changes in version 3.1-0 (2010-09-12)

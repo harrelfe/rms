@@ -5,4 +5,3 @@ import(Hmisc)
 
 importFrom(survival, coxph.fit, coxph.control, survfit, survreg.fit)
 
-
