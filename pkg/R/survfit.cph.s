@@ -103,11 +103,11 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
       y2 <- newdata[[which(isS)]]
     }
 
-  g <- survfit.coxph.fit(y, X, weights, X2, risk, newrisk, strata,
-                         se.fit, survtype, vartype,
-                         if(length(object$var)) object$var else
-                         matrix(0, nrow=1, ncol=1),
-                         id=id, y2=y2, strata2=rq)
+  g <- survfitcoxph.fit(y, X, weights, X2, risk, newrisk, strata,
+                        se.fit, survtype, vartype,
+                        if(length(object$var)) object$var else
+                        matrix(0, nrow=1, ncol=1),
+                        id=id, y2=y2, strata2=rq)
 
   if (!censor)
     {
