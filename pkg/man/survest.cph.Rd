@@ -9,8 +9,8 @@ Compute survival probabilities and optional confidence limits for
 Cox survival models.  If \code{x=TRUE, y=TRUE} were specified to \code{cph},
 confidence limits use the correct formula for any combination of
 predictors. Otherwise, if \code{surv=TRUE} was specified to \code{cph},
-confidence limits are based only on standard errors of \code{log(-log
-  S(t))} at the mean value of \eqn{X\beta}{X beta}. If the model
+confidence limits are based only on standard errors of \code{log(S(t))}
+at the mean value of \eqn{X\beta}{X beta}. If the model 
 contained only stratification factors, or if predictions are being
 requested near the mean of each covariable, this approximation will be
 accurate. Unless \code{times} is given, at most one observation may be
@@ -49,8 +49,8 @@ a vector of times at which to get predictions. If omitted, predictions
 are made at all unique failure times in the original input data.
 }
 \item{loglog}{
-set to \code{TRUE} to make the \code{log-log} transformation of survival estimates
-and confidence limits.
+set to \code{TRUE} to make the \code{log-log} transformation of survival
+estimates and confidence limits.
 }
 \item{fun}{
 any function to transform the estimates and confidence limits (\code{loglog}
