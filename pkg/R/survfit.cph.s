@@ -71,7 +71,8 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
 
   if(missing(newdata))
     {
-      X2 <- if(xpres) matrix(0., nrow=1, ncol=ncol(X)) else 0
+      X2 <- if(xpres) matrix(0., nrow=1, ncol=ncol(X)) else
+      matrix(0., nrow=1, ncol=1)
       rq <- ro <- NULL
       newrisk <- 1
     }
@@ -102,7 +103,6 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
         stop("newdata must contain exactly one Surv object when individual=TRUE")
       y2 <- newdata[[which(isS)]]
     }
-
   g <- survfitcoxph.fit(y, X, weights, X2, risk, newrisk, strata,
                         se.fit, survtype, vartype,
                         if(length(object$var)) object$var else
