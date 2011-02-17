@@ -46,7 +46,11 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
       xcenter <- object$means
       X <- X - rep(xcenter, rep.int(n, ncol(X)))
     }
-  else X <- matrix(0, nrow=nrow(y), ncol=1)
+  else
+    {
+      n <- nrow(y)
+      X <- matrix(0, nrow=n, ncol=1)
+    }
 
   strata <- object$Strata
   if(!length(strata)) strata <- rep(0,  n)
