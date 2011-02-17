@@ -197,7 +197,7 @@ cph <- function(formula=formula(data),
               stop(paste("Cox model doesn't support \"", ytype,
                          "\" survival data", sep=''))
           }
-        else if (method=='exact') agexact.fit
+        else if (method=='exact') survival:::agexact.fit
         else
           stop(paste ("Unknown method", method))
       
