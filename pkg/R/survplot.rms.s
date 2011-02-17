@@ -149,7 +149,7 @@ survplot.rms <-
   abbrevy <- if(abbrev.label) abbreviate(y) else y
   abbrevy <- if(is.factor(abbrevy)) as.character(abbrevy) else format(abbrevy)
   
-  if(labelc) curves <- vector('list',nc)
+  if(labelc || conf=='bands') curves <- vector('list',nc)
 
   for(i in 1:nrow(xadj))
     {
@@ -233,7 +233,7 @@ survplot.rms <-
           if(conf != 'bands')
             lines(tim, srv, type=ltype, lty=lty[i], col=col[i], lwd=lwd[i])
           
-          if(labelc) curves[[i]] <- list(tim, srv)
+          if(labelc || conf=='bands') curves[[i]] <- list(tim, srv)
           
           if(pr)
             {
@@ -330,7 +330,7 @@ survplot.rms <-
                       lwd=lwd, opts=label.curves)
 
   if(length(adjust)) title(sub=paste("Adjusted to:",adjust),
-                           adj=0,cex=.6)
+                           adj=0, cex=.6)
   
   invisible(list(adjust=adjust, curve.labels=curve.labels))
 }
