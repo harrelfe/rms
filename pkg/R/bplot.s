@@ -74,7 +74,7 @@ bplot <-
           llines(perim[,'x'], perim[,'ymax'], col=gray(.85))
         }
     }
-  lfun(formula, panel=pan, scales=scales, ..., data=data,
+  lfun(formula, panel=pan, scales=scales, zlim=zlim, ..., data=data,
        xlab=xlab, ylab=ylab, zlab=zlab, sub=sub)
 }
 
