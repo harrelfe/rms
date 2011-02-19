@@ -1,7 +1,7 @@
 #main.effect=F to suppress printing main effects when the factor in
 #question is involved in any interaction.
 
-anova.rms <- function(object,...,main.effect=FALSE, tol=1e-9, 
+anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9, 
                       test=c('F','Chisq'), ss=TRUE)
 {
 
@@ -465,7 +465,7 @@ latex.anova.rms <-
                                  1,5),sep=""), 
            psmall=TRUE,
            dec.chisq=2, dec.F=2, dec.ss=NA,
-           dec.ms=NA, dec.P=4, table.env=TRUE, ...)
+           dec.ms=NA, dec.P=4, table.env=TRUE, caption=NULL, ...)
 {
   rowl <- latexTranslate(dimnames(object)[[1]])
 
@@ -504,11 +504,12 @@ latex.anova.rms <-
 
   resp <- latexTranslate(as.character(attr(object,"formula")[2]))
   ## Make LaTeX preserve spaces in heading
-  head <- paste(if(any(sn=='F'))"Analysis of Variance"
-  else "Wald Statistics", "for {\\tt", resp, "}")
+  if(!length(caption))
+    caption <- paste(if(any(sn=='F'))"Analysis of Variance"
+    else "Wald Statistics", "for {\\tt", resp, "}")
 
   latex(dstats, cdec=dig, title=title,
-        caption = if(table.env) head else NULL,
+        caption = if(table.env) caption else NULL,
         rowlabel="", col.just=rep('r',length(sn)), table.env=table.env, ...)
 }
 
