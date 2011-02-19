@@ -17,9 +17,10 @@ sufficient data to generate believable interaction fits.
 }
 \usage{
 bplot(x, formula, lfun=levelplot, xlab, ylab, zlab,
-      adj.subtitle=!info$ref.zero, cex.adj=.75, cex.lab=1, perim, showperim=FALSE,
+      adj.subtitle=!info$ref.zero, cex.adj=.75, cex.lab=1,
+      perim, showperim=FALSE,
       zlim=range(yhat, na.rm=TRUE), scales=list(arrows=FALSE),
-      ylabrot, zlabrot=90, \dots)
+      xlabrot, ylabrot, zlabrot=90, \dots)
 
 perimeter(x, y, xinc=diff(range(x))/10, n=10, lowess.=TRUE)
 }
@@ -97,6 +98,9 @@ Set to \code{FALSE} to suppress subtitling the graph with the list of
 }
 \item{scales}{see \code{\link[lattice]{wireframe}}
 }
+\item{xlabrot}{rotation angle for the x-axis.  Default is 30 for
+  \code{wireframe} and 0 otherwise.
+  }
 \item{ylabrot}{rotation angle for the y-axis.  Default is -40 for
   \code{wireframe}, 90 for \code{contourplot} or \code{levelplot},
   and 0 otherwise.
