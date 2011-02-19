@@ -3,12 +3,16 @@ bplot <-
            adj.subtitle=!info$ref.zero, cex.adj=.75, cex.lab=1,
            perim, showperim=FALSE,
            zlim=range(yhat, na.rm=TRUE),
-           scales=list(arrows=FALSE), ylabrot, zlabrot=90, ...)
+           scales=list(arrows=FALSE), xlabrot, ylabrot, zlabrot=90, ...)
 {
   require(lattice)
   lfunname <- deparse(substitute(lfun))
+  if(missing(xlabrot))
+    xlabrot <- switch(lfunname,
+                      wireframe=30, contourplot=0, levelplot=0, 0)
   if(missing(ylabrot))
-    ylabrot <- switch(lfunname, wireframe=-40, contourplot=90, levelplot=90, 0)
+    ylabrot <- switch(lfunname,
+                      wireframe=-40, contourplot=90, levelplot=90, 0)
   info    <- attr(x, 'info')
   varying <- info$varying
   if(length(varying) < 2) stop('should vary at least two variables')
@@ -41,10 +45,11 @@ bplot <-
   units   <- at$units
 
   if(missing(xlab))
-    xlab  <- list(label=labelPlotmath(label[nx], units[nx]), cex=cex.lab)
+    xlab  <- list(label=labelPlotmath(label[nx], units[nx]),
+                  rot=xlabrot, cex=cex.lab)
   if(missing(ylab))
-    ylab  <- list(label=labelPlotmath(label[ny], units[ny]), rot=ylabrot,
-                  cex=cex.lab)
+    ylab  <- list(label=labelPlotmath(label[ny], units[ny]),
+                  rot=ylabrot, cex=cex.lab)
   if(missing(zlab))
     zlab  <- list(label=info$ylabPlotmath, rot=zlabrot, cex=cex.lab)
   
