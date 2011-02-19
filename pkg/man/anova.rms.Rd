@@ -45,7 +45,8 @@ to \code{latex.default} for conversion to LaTeX.
      sort=c("descending","ascending","none"), pl=TRUE, \dots)
 
 \method{latex}{anova.rms}(object, title, psmall=TRUE, dec.chisq=2,
-      dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, table.env=TRUE, \dots)
+      dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, table.env=TRUE,
+      caption=NULL, \dots)
 }
 \arguments{
 \item{object}{
@@ -154,6 +155,8 @@ digits to the right for mean squares (default is \code{NA})
 }
 \item{dec.P}{digits to the right for \eqn{P}-values}
 \item{table.env}{see \code{\link[Hmisc]{latex}}}
+\item{caption}{caption for table if \code{table.env} is \code{TRUE}.
+  Default is constructed from the response variable.}
 }
 \value{
 \code{anova.rms} returns a matrix of class \code{anova.rms} containing factors 
