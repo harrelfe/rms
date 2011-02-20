@@ -17,7 +17,8 @@ validate(fit, method="boot", B=40,
 \method{print}{validate}(x, digits=4, B=Inf, \dots)
 \method{latex}{validate}(x, digits=4, B=Inf, file='', append=FALSE,
                          title=first.word(deparse(substitute(x))),
-                         caption=NULL, table.env=FALSE, \dots)
+                         caption=NULL, table.env=FALSE,
+                         size='normalsize', extracolsize=size, \dots)
 }
 \arguments{
   \item{fit}{
@@ -82,10 +83,14 @@ validate(fit, method="boot", B=40,
 \item{file}{file to write LaTeX output.  Default is standard output.}
 \item{append}{set to \code{TRUE} to append LaTeX output to an existing
   file}
-\item{title, caption, table.env}{see
+\item{title, caption, table.env, extracolsize}{see
   \code{\link[Hmisc]{latex.default}}.  If \code{table.env} is
   \code{FALSE} and \code{caption} is given, the character string
-  contained in \code{caption} will be placed before the table, centered.}
+  contained in \code{caption} will be placed before the table,
+  centered.}
+\item{size}{size of LaTeX output.  Default is \code{'normalsize'}.  Must
+  be a defined LaTeX size when prepended by double slash.
+  }
 }
 \details{
   It provides bias-corrected indexes that are specific to each type

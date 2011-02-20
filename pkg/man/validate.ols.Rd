@@ -20,6 +20,8 @@ operating characteristic curve area using the formula \eqn{0.5(D_{xy} +
 1)}. The Nagelkerke-Maddala \eqn{R^2} index for the dichotomized
 \code{y} is also given.  See \code{predab.resample} for the list of
 resampling methods.
+
+The LaTeX needspace package must be in effect to use the \code{latex} method.
 }
 \usage{
 # fit <- fitting.function(formula=response ~ terms, x=TRUE, y=TRUE)
