@@ -10,10 +10,12 @@
 \usage{
 # fit <- cph(formula=Surv(ftime,event) ~ terms, x=TRUE, y=TRUE, \dots)
 \method{validate}{cph}(fit, method="boot", B=40, bw=FALSE, rule="aic", type="residual",
-        sls=.05, aics=0, pr=FALSE, dxy=FALSE, u, tol=1e-9, \dots)
+        sls=.05, aics=0, force=NULL, pr=FALSE, dxy=FALSE, u, tol=1e-9, \dots)
 
 \method{validate}{psm}(fit, method="boot",B=40,
-        bw=FALSE, rule="aic", type="residual", sls=.05, aics=0, pr=FALSE,
+        bw=FALSE, rule="aic", type="residual", sls=.05, aics=0,
+        force=NULL,
+        pr=FALSE,
         dxy=FALSE, tol=1e-12, rel.tolerance=1e-5, maxiter=15, \dots)
 }
 \arguments{
@@ -50,6 +52,7 @@
   \item{aics}{
     cutoff on AIC when \code{rule="aic"}.
   }
+  \item{force}{see \code{\link{fastbw}}}
   \item{pr}{
     \code{TRUE} to print results of each repetition
   }

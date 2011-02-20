@@ -9,16 +9,16 @@ It computes estimates of optimism of, and bias-corrected estimates of a vector
 of indexes of predictive accuracy, for a model with a specified
 design matrix, with or without fast backward step-down of predictors. If \code{bw=TRUE}, the design
 matrix \code{x} must have been created by \code{ols}, \code{lrm}, or \code{cph}.
-If \code{bw=TRUE}, \code{predab.resample} prints a matrix of asterisks showing which
-factors were selected at each repetition, along with a frequency distribution
-of the number of factors retained across re-samples.
+If \code{bw=TRUE}, \code{predab.resample} stores as the \code{kept}
+attribute a logical matrix encoding which
+factors were selected at each repetition.
 }
 \usage{
 predab.resample(fit.orig, fit, measure, 
                 method=c("boot","crossvalidation",".632","randomization"),
                 bw=FALSE, B=50, pr=FALSE,
                 rule="aic", type="residual", sls=.05, aics=0,
-                tol=1e-12, non.slopes.in.x=TRUE, kint=1,
+                tol=1e-12, force=NULL, non.slopes.in.x=TRUE, kint=1,
                 cluster, subset, group=NULL, \dots)
 }
 \arguments{
@@ -101,6 +101,7 @@ chi-square - 2 times d.f. falls below \code{aics}. Default is \code{0}.
 \item{tol}{
 Tolerance for singularity checking.  Is passed to \code{fit} and \code{fastbw}.
 }
+\item{force}{see \code{\link{fastbw}}}
 \item{non.slopes.in.x}{set to \code{FALSE} if the design matrix \code{x}
 does not have columns for intercepts and these columns are needed}
 \item{kint}{

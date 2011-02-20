@@ -22,7 +22,8 @@ If the fit was from \code{ols}, \code{fastbw} will compute the usual \eqn{R^2}
 statistic for each model.
 }
 \usage{
-fastbw(fit, rule="aic", type="residual", sls=.05, aics=0, eps=1e-9, k.aic=2)
+fastbw(fit, rule="aic", type="residual", sls=.05, aics=0, eps=1e-9,
+       k.aic=2, force=NULL)
 
 \method{print}{fastbw}(x, digits=4, \dots)
 }
@@ -57,12 +58,15 @@ multiplier to compute AIC, default is 2.  To use BIC, set \code{k.aic} equal
 to \eqn{\log(n)}, where \eqn{n} is the effective sample size (number of events
 for survival models).
 }
+\item{force}{a vector of integers specifying parameters forced to be in
+  the model, not counting intercept(s)}
 \item{x}{result of \code{fastbw}}
 \item{digits}{number of significant digits to print}
 \item{\dots}{ignored}
 }
 \value{
-a list with the following components:
+a list with an attribute \code{kept} if \code{bw=TRUE}, and the
+following components:
 
 \item{result}{
 matrix of statistics with rows in order of deletion.
@@ -120,4 +124,3 @@ lm.fit(X[,z$parms.kept], Y)         # least squares fit of reduced model
 \keyword{htest}
 \concept{stepwise}
 \concept{variable selection}
-

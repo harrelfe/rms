@@ -13,8 +13,8 @@
 # fit <- fitting.function(formula=response ~ terms, x=TRUE, y=TRUE)
 validate(fit, method="boot", B=40,
          bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, 
-         pr=FALSE, \dots)
-\method{print}{validate}(x, digits=4, ...)
+         force=NULL, pr=FALSE, \dots)
+\method{print}{validate}(x, digits=4, B=Inf, ...)
 }
 \arguments{
   \item{fit}{
@@ -52,6 +52,7 @@ validate(fit, method="boot", B=40,
   \item{aics}{
     cutoff on AIC when \code{rule="aic"}.
   }
+  \item{force}{see \code{\link{fastbw}}}
   \item{pr}{
     \code{TRUE} to print results of each repetition
   }
@@ -70,6 +71,11 @@ validate(fit, method="boot", B=40,
   }
   \item{x}{an object produced by one of the \code{validate} functions}
   \item{digits}{number of decimal places to print}
+  \item{B}{an upper limit on the number of resamples for which information
+  is printed about which variables were selected in each model re-fit.
+  Specify zero to suppress printing.  Default is to print all
+  re-samples.
+  }
 }
 \details{
   It provides bias-corrected indexes that are specific to each type
