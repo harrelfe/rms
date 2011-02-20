@@ -1,7 +1,7 @@
 calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
                           method="boot", u, m=150, pred, cuts, B=40,
                           bw=FALSE, rule="aic",
-                          type="residual", sls=.05, aics=0,
+                          type="residual", sls=.05, aics=0, force=NULL,
                           pr=FALSE, what="observed-predicted",
                           tol=1e-12, maxiter=15, rel.tolerance=1e-5,
                           maxdim=5, ...)
@@ -97,9 +97,10 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
                         u=u, m=m, what=what,
                         dist=dist, inverse=inverse, parms=parms,
                         fixed=fixed, family=family,
-                        sls=sls, aics=aics, strata=FALSE,
+                        sls=sls, aics=aics, force=force, strata=FALSE,
                         tol=tol, pred=pred, orig.cuts=cuts, maxiter=maxiter,
                         rel.tolerance=rel.tolerance, maxdim=maxdim, ...)
+      kept <- attr(reliability, 'kept') # TODO: accumulate over reps
       n <- reliability[,"n"]
       rel <- rel + n * reliability[,"index.corrected"]
       opt <- opt + n * reliability[,"optimism"]
@@ -127,7 +128,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
                                   drop=FALSE],
                       rel,mean.predicted=pred, KM=KM,
                       KM.corrected=obs.corrected, std.err=se),
-                predicted=survival,
+                predicted=survival, kept=kept,
                 class="calibrate", u=u, units=unit, n=ny[1], d=nevents, 
                 p=length(fit$coefficients)-1, m=m, B=B, what=what, call=call)
     }
@@ -140,7 +141,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
                                   drop=FALSE],
                       rel, calibrated=calibrated,
                       calibrated.corrected=calibrated.corrected),
-                predicted=survival,
+                predicted=survival, kept=kept,
                 class="calibrate", u=u, units=unit, n=ny[1], d=nevents, 
                 p=length(fit$coefficients)-1, m=m, B=B, what=what, call=call)
     }

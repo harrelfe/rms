@@ -1,7 +1,7 @@
 validate <-
   function(fit,  method="boot", B=40,
            bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, 
-           pr=FALSE,...)
+           force=NULL, pr=FALSE,...)
   UseMethod("validate")
 
 
@@ -13,8 +13,9 @@ validate <-
 #Frank Harrell 11 June 91
 
 validate.ols <- function(fit, method="boot",
-	B=40,bw=FALSE,rule="aic",type="residual",
-	sls=.05,aics=0,pr=FALSE, u=NULL, rel=">", tolerance=1e-7, ...)
+	B=40, bw=FALSE, rule="aic", type="residual",
+	sls=.05, aics=0, force=NULL,
+    pr=FALSE, u=NULL, rel=">", tolerance=1e-7, ...)
 {
   fit.orig <- fit
   
@@ -104,10 +105,85 @@ validate.ols <- function(fit, method="boot",
   
   predab.resample(fit.orig,method=method,fit=ols.fit,measure=discrim,pr=pr,
                   B=B,bw=bw,rule=rule,type=type,sls=sls,aics=aics,
-                  tolerance=tolerance,
+                  force=force,tolerance=tolerance,
                   backward=bw,u=u, penalty.matrix=penalty.matrix,
                   rel=rel, ...)
 }
 
-print.validate <- function(x, digits=4, ...)
-  print(round(unclass(x), digits), ...)
+print.validate <- function(x, digits=4, B=Inf, ...)
+  {
+    kept <- attr(x, 'kept'); attr(x, 'kept') <- NULL
+    print(round(unclass(x), digits), ...)
+    if(length(kept) && B > 0)
+      {
+        cat("\nFactors Retained in Backwards Elimination\n\n")
+        varin <- ifelse(kept, '*', ' ')
+        print(varin[1:min(nrow(varin), B),], quote=FALSE)
+        cat("\nFrequencies of Numbers of Factors Retained\n\n")
+        nkept <- apply(kept, 1, sum)
+        tkept <- table(nkept)
+        names(dimnames(tkept)) <- NULL
+        print(tkept)
+    }
+  }
+
+latex.validate <- function(x, digits=4, B=Inf, file='', append=FALSE,
+                           title=first.word(deparse(substitute(x))),
+                           caption=NULL, table.env=FALSE, ...)
+  {
+    chg <- function(x, old, new)
+      {
+        names(new) <- old
+        tx <- new[x]
+        ifelse(is.na(tx), x, tx)
+      }
+    kept <- attr(x, 'kept'); attr(x, 'kept') <- NULL
+    cn <- colnames(x)
+    cn <- chg(cn, c('index.orig', 'training', 'test', 'optimism',
+                    'index.corrected', 'n'),
+              c('Original\nSample', 'Training\nSample',
+                'Test\nSample', 'Optimism', 'Corrected\nIndex',
+                '$n$'))
+    rn <- rownames(x)
+    rn <- chg(rn, c('Dxy','R2','Emax','D','U','Q','B','g','gp','gr'),
+              c('$D_{xy}$','$R^{2}$','$E_{\\max}$','$D$','$U$',
+                '$Q$','$B$','$g$','$g_{p}$','$g_{r}$'))
+    dimnames(x) <- list(rn, cn)
+    cat('\n\\begin{center}\n', file=file, append=append)
+    if(length(caption) && !table.env)
+      cat(caption, '\n\n', sep='', file=file, append=TRUE)
+    latex(unclass(x), digits=digits, rowlabel='Index',
+          title=title, caption=if(table.env) caption,
+          table.env=table.env, file=file, append=TRUE, center='none', ...)
+    cat('\\end{center}\n', file=file, append=TRUE)
+
+    if(length(kept) && B > 0)
+      {
+        varin <- ifelse(kept, '*', ' ')
+        k <- 'Factors Retained in Backwards Elimination'
+        nr <- nrow(varin)
+        varin <- varin[1:min(nrow(varin), B),, drop=FALSE]
+        cap <- if(length(caption)) caption else
+        'Factors Retained in Backwards Elimination'
+        if(nr > B) cap <- paste(cap, '(first', B, 'resamples)')
+        cat('\n\\begin{center}\n', file=file, append=TRUE)
+        if(!table.env) cat(cap, '\n\n', file=file, append=TRUE)
+        latex(varin, ..., caption=if(table.env) cap,
+              title=paste(title,'retained', sep='-'),
+              rowname=NULL, file=file, append=TRUE,
+              table.env=table.env, center='none')
+        cat('\\end{center}\n', file=file, append=TRUE)
+
+        cap <- if(length(caption)) caption else
+        'Frequencies of Numbers of Factors Retained'
+        nkept <- apply(kept, 1, sum)
+        tkept <- t(as.matrix(table(nkept)))
+        cat('\n\\begin{center}\n', file=file, append=TRUE)
+        if(!table.env) cat(cap, '\n\n', file=file, append=TRUE)
+        latex(tkept, ..., caption=if(table.env) cap,
+              title=paste(title, 'freq', sep='-'),
+              rowname=NULL, file=file, append=TRUE,
+              table.env=table.env, center='none')
+        cat('\\end{center}\n', file=file, append=TRUE)
+    }
+  }

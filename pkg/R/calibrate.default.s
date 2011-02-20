@@ -2,7 +2,7 @@ calibrate.default <- function(fit, predy,
 			      method=c("boot","crossvalidation",".632","randomization"),
 			      B=40, bw=FALSE, rule=c("aic","p"),
 			      type=c("residual","individual"),
-			      sls=.05, pr=FALSE, kint,
+			      sls=.05, aics=0, force=NULL, pr=FALSE, kint,
 			      smoother="lowess", digits=NULL, ...)
 {
   call   <- match.call()
@@ -77,6 +77,7 @@ calibrate.default <- function(fit, predy,
 
   z <- predab.resample(fit, method=method, fit=fitit, measure=cal.error,
                        pr=pr, B=B, bw=bw, rule=rule, type=type, sls=sls,
+                       aics=aics, force=force,
                        non.slopes.in.x=model=="ol",
                        smoother=smoother, predy=predy, model=model, kint=kint,
                        penalty.matrix=penalty.matrix, ...)
@@ -90,7 +91,7 @@ calibrate.default <- function(fit, predy,
             predicted=predicted, smoother=smoother)
 }
 
-print.calibrate.default <- function(x, ...)
+print.calibrate.default <- function(x, B=Inf, ...)
 {
   at <- attributes(x)
   cat("\nEstimates of Calibration Accuracy by ",at$method," (B=",at$B,")\n\n",
@@ -118,6 +119,19 @@ print.calibrate.default <- function(x, ...)
           round(quantile(abs(err),.9,na.rm=TRUE),3),	   '\n\n',sep='')
     }
   print.default(x)
+  kept <- at$kept
+  if(length(kept))
+    {
+      cat("\nFactors Retained in Backwards Elimination\n\n")
+      varin <- ifelse(kept, '*', ' ')
+      print(varin[1:min(nrow(varin), B),], quote=FALSE)
+      cat("\nFrequencies of Numbers of Factors Retained\n\n")
+      nkept <- apply(kept, 1, sum)
+      tkept <- table(nkept)
+      names(dimnames(tkept)) <- NULL
+      print(tkept)
+    }
+  
   invisible()
 }
 

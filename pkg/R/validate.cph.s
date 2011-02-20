@@ -1,6 +1,6 @@
 validate.cph <- function(fit, method="boot",
                          B=40, bw=FALSE, rule="aic", type="residual",
-                         sls=.05, aics=0, pr=FALSE,
+                         sls=.05, aics=0, force=NULL, pr=FALSE,
                          dxy=FALSE, u, tol=1e-9, ...)
 {
   atr <- fit$Design
@@ -125,6 +125,6 @@ validate.cph <- function(fit, method="boot",
   
   predab.resample(fit, method=method, fit=cox.fit, measure=discrim,
                   pr=pr, B=B, bw=bw, rule=rule, type=type, sls=sls,
-                  aics=aics, dxy=dxy, u=u, need.surv=need.surv,
+                  aics=aics, force=force, dxy=dxy, u=u, need.surv=need.surv,
                   modtype=modtype,tol=tol, ...)
 }

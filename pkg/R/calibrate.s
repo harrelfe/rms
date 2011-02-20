@@ -1,6 +1,6 @@
 calibrate <- function(fit, ...) UseMethod("calibrate")
 
-print.calibrate <- function(x, ...)
+print.calibrate <- function(x, B=Inf, ...)
 {
   at <- attributes(x)
   predicted <- at$predicted
@@ -25,6 +25,18 @@ print.calibrate <- function(x, ...)
             format(quantile(err, 0.9, na.rm=TRUE)),
             '\n', sep='')
       }
+  kept <- at$kept
+  if(length(kept))
+    {
+      cat("\nFactors Retained in Backwards Elimination\n\n")
+      varin <- ifelse(kept, '*', ' ')
+      print(varin[1:min(nrow(varin), B),], quote=FALSE)
+      cat("\nFrequencies of Numbers of Factors Retained\n\n")
+      nkept <- apply(kept, 1, sum)
+      tkept <- table(nkept)
+      names(dimnames(tkept)) <- NULL
+      print(tkept)
+    }
   invisible()
 }
 

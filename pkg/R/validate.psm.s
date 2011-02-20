@@ -1,7 +1,8 @@
 validate.psm <-
-  function(fit,method="boot",B=40,
-           bw=FALSE,rule="aic",type="residual",sls=.05,aics=0,pr=FALSE,
-           dxy=FALSE,tol=1e-12, rel.tolerance=1e-5, maxiter=15, ...)
+  function(fit, method="boot", B=40,
+           bw=FALSE, rule="aic", type="residual", sls=.05, aics=0,
+           force=NULL, pr=FALSE,
+           dxy=FALSE, tol=1e-12, rel.tolerance=1e-5, maxiter=15, ...)
 {
 
   xb <- fit$linear.predictors
@@ -74,7 +75,7 @@ validate.psm <-
                   fit=survreg.fit2, measure=distance,
                   pr=pr, B=B, bw=bw, rule=rule, type=type,  
                   dxy=dxy, dist=dist, parms=parms,
-                  sls=sls, aics=aics, strata=FALSE, tol=tol,
+                  sls=sls, aics=aics, force=force, strata=FALSE, tol=tol,
                   maxiter=maxiter, rel.tolerance=rel.tolerance, ...)
 }
 

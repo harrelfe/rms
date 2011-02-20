@@ -6,7 +6,7 @@
 
 validate.lrm <- function(fit,method="boot",
 	B=40, bw=FALSE, rule="aic", type="residual",
-	sls=.05, aics=0, pr=FALSE,
+	sls=.05, aics=0, force=NULL, pr=FALSE,
     kint,
 	Dxy.method=if(k==1)"somers2" else "lrm",
 	emax.lim=c(0,1), ...)
@@ -81,10 +81,10 @@ validate.lrm <- function(fit,method="boot",
 
   z <- predab.resample(fit, method=method, fit=lrmfit, measure=discrim, pr=pr,
                        B=B, bw=bw, rule=rule, type=type, sls=sls, aics=aics,
-                       Dxy.method=Dxy.method,
+                       force=force, Dxy.method=Dxy.method,
                        non.slopes.in.x=FALSE,
                        penalty.matrix=penalty.matrix, kint=kint, ...)
-  
+  kept <- attr(z, 'kept')
   calib <- z[3:4,5]
   p <- seq(emax.lim[1],emax.lim[2],.0005)
   L <- logb(p/(1-p))
@@ -96,5 +96,5 @@ validate.lrm <- function(fit,method="boot",
                       c("index.orig","training","test","optimism",
                         "index.corrected","n"))
   ## if(k > 1) z <- z[-(7:9),,drop=FALSE]
-  structure(z, class='validate')
+  structure(z, class='validate', kept=kept)
 }

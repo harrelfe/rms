@@ -7,45 +7,48 @@
 # Modified 22Sep93 - new storage format for design attributes
 # Modified 1Mar94 - add k.aic
 # Modified 4Mar96 - use S commands instead of avia if not under UNIX
+# Modified 19Feb11 - added force argument
 #
 # F. Harrell 18Jan91
 
 fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0, 
-			eps=1e-9, k.aic=2)
+			eps=1e-9, k.aic=2, force=NULL)
 {
   ns <- num.intercepts(fit)
+  if(length(force)) force <- force + ns
   L <- if(ns==0) NULL else 1:ns
   
   pt <- length(fit$coef)
-  p <- pt-ns
+  p <- pt - ns
   atr <- fit$Design
   
   assume <- atr$assume.code
-  if(!length(assume))stop("fit does not have design information")
+  if(!length(assume)) stop("fit does not have design information")
   assign <- fit$assign
   nama <- names(assign)[1]
   asso <- 1*(nama=="(Intercept)" | nama=="Intercept")
   
-  f <- sum(assume!=8)
+  f <- sum(assume != 8)
   strt <- integer(f)
   len <- strt
   j <- 0
   for(i in 1:length(assume))
     {
-      if(assume[i]!=8){
-      j <- j+1
-      aj <- assign[[j+asso]]
-      strt[j] <- min(aj)
-      len[j]  <- length(aj)
+      if(assume[i] != 8)
+        {
+          j <- j+1
+          aj <- assign[[j + asso]]
+          strt[j] <- min(aj)
+          len[j]  <- length(aj)
+        }
     }
-    }
-  name <- atr$name[assume!=8]
-  ed <- as.integer(strt+len-1)
+  name <- atr$name[assume != 8]
+  ed <- as.integer(strt + len - 1)
 
-  rule <- charmatch(rule,c("aic","p"),0)
+  rule <- charmatch(rule, c("aic","p"), 0)
   if(rule==0)
     stop("rule must be aic or p for Akaike's info criterion or p-value")
-  type <- charmatch(type,c("residual","individual","total"),0)
+  type <- charmatch(type,c("residual","individual","total"), 0)
   if(type==0)
     stop("type must be residual or individual")
   if(type==3) type <- 1
@@ -72,7 +75,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
   beta <- fit$coef
   Cov  <- vcov(fit, regcoef.only=TRUE)  #Ignore scale parameters
   cov <- Cov
-  Coef <- matrix(NA, nrow=f, ncol=pt, dimnames=list(NULL,names(beta)))
+  Coef <- matrix(NA, nrow=f, ncol=pt, dimnames=list(NULL, names(beta)))
   d <- 0
 
   fcl <- oldClass(fit)
@@ -97,8 +100,8 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
     {
       fi <- length(factors.in)
       ln <- len[factors.in]
-      st <- as.integer(ns+c(1,1+cumsum(ln[-fi]))[1:fi])
-      en <- as.integer(st+ln-1)
+      st <- as.integer(ns + c(1, 1+cumsum(ln[-fi]))[1:fi])
+      en <- as.integer(st + ln - 1)
       crit.min <- 1e10
       chisq.crit.min <- 1e10
       jmin <- 0
@@ -107,7 +110,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
       factors.in.loop <- factors.in  #indirect reference prob in S 3.1
       for(j in factors.in.loop)
         {
-          k <- k+1
+          k <- k + 1
           ## can't get this to work in R - CHECK:
           ##	z <- if(.R.)
           ##      .Fortran("avia",beta,cov,chisq=double(1),length(beta),
@@ -122,10 +125,11 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
           
           ##replace previous 5 statements with following 3 to use slow method
           q <- st[k]:en[k]
-          chisq <- beta[q] %*% solvet(cov[q,q], beta[q], tol=eps)
+          chisq <- if(any(q %in% force)) Inf else
+          beta[q] %*% solvet(cov[q,q], beta[q], tol=eps)
           df <- length(q)
           
-          switch(rule, crit <- chisq-k.aic*df, crit <- pchisq(chisq,df))
+          switch(rule, crit <- chisq-k.aic * df, crit <- pchisq(chisq, df))
           if(crit < crit.min)
             {
               jmin <- j
@@ -135,9 +139,10 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
             }	
         }
       
-      factors.in <- factors.in[factors.in!=jmin]
-      parms.in <- parms.in[parms.in<strt[jmin] | parms.in>ed[jmin]]
+      factors.in <- factors.in[factors.in != jmin]
+      parms.in <- parms.in[parms.in < strt[jmin] | parms.in > ed[jmin]]
       if(length(parms.in)==0) q <- 1:pt else q <- (1:pt)[-parms.in]
+
       ## if(under.unix && !.R.) {
       ## z <- if(.R.)
       ##  .Fortran("avia",fit$coef,Cov,chisq=double(1),
@@ -156,13 +161,13 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
       resid.df <- length(q)
       
       switch(type,
-             switch(rule, del <- resid-k.aic*resid.df <= aics,
-                    del <- 1-pchisq(resid,resid.df)>sls),
+             switch(rule, del <- resid - k.aic*resid.df <= aics,
+                    del <- 1 - pchisq(resid,resid.df) > sls),
              switch(rule, del <- crit.min <= aics,
-                    del <- 1-crit.min > sls)	)
+                    del <- 1 - crit.min > sls)	)
       if(del)
         {
-          d <- d+1
+          d <- d + 1
           factors.del[d] <- jmin
           chisq.del[d] <- chisq.crit.min
           df.del[d] <- df.min
@@ -170,8 +175,8 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
           df.resid[d] <- resid.df
           if(length(parms.in))
             {
-              cov.rm.inv <- solvet(Cov[-parms.in,-parms.in], tol=eps)
-              cov.cross <- Cov[parms.in,-parms.in,drop=FALSE]
+              cov.rm.inv <- solvet(Cov[-parms.in, -parms.in], tol=eps)
+              cov.cross <- Cov[parms.in, -parms.in, drop=FALSE]
               w <- cov.cross %*% cov.rm.inv
               beta <- fit$coef[parms.in] - w %*% fit$coef[-parms.in]
               cov <- Cov[parms.in,parms.in] - w %*% t(cov.cross)
@@ -185,7 +190,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
                   ## sse = Y'(I - H)Y, where H = X*inv(X'X)*X'
                   ##     = Y'Y - Y'X*inv(X'X)*X'Y
                   ##     = Y'Y - Y'Xb
-                  sse <- ypy - t(xpy[parms.in,,drop=FALSE])%*%beta
+                  sse <- ypy - t(xpy[parms.in, , drop=FALSE])%*%beta
                   r2[d] <- 1 - sse/sst
                 }
             }
@@ -205,15 +210,16 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
       if(dor2)
         {
           r2 <- r2[1:d]
-          Coef <- Coef[1:d,,drop=FALSE]
+          Coef <- Coef[1:d,, drop=FALSE]
         }
-      res <- cbind(chisq.del[1:d],df.del[1:d],
-                   1-pchisq(chisq.del[1:d],df.del[1:d]),
-                   resid.del[1:d],df.resid[1:d],
-                   1-pchisq(resid.del[1:d],df.resid[1:d]),resid.del[1:d]-k.aic*
+      res <- cbind(chisq.del[1:d], df.del[1:d],
+                   1-pchisq(chisq.del[1:d], df.del[1:d]),
+                   resid.del[1:d], df.resid[1:d],
+                   1-pchisq(resid.del[1:d], df.resid[1:d]),
+                   resid.del[1:d] - k.aic * 
                    df.resid[1:d])
-      labs <- c("Chi-Sq","d.f.","P","Residual","d.f.","P","AIC")
-      dimnames(res) <- list(name[fd],labs)
+      labs <- c("Chi-Sq", "d.f.", "P", "Residual", "d.f.", "P", "AIC")
+      dimnames(res) <- list(name[fd], labs)
       if(length(fd)==f) fk <- NULL else fk <- (1:f)[-fd]
     }
   else
@@ -226,9 +232,9 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
   nf <- name[fk]
   
   pd <- NULL
-  if(d>0) for(i in 1:d) pd <- c(pd, (strt[fd[i]]:ed[fd[i]]))
+  if(d>0) for(i in 1:d) pd <- c(pd, (strt[fd[i]] : ed[fd[i]]))
 
-  if(length(fd)==f) fk <- NULL
+  if(length(fd) == f) fk <- NULL
   else
     if(d==0) fk <- 1:f
     else fk <- (1:f)[-fd]
@@ -238,7 +244,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
     else
       pk <- (1:pt)[-pd]
 
-  if(length(pd)!=p)
+  if(length(pd) != p)
     {
       beta <- as.vector(beta)
       names(beta) <- names(fit$coef)[pk]
@@ -246,10 +252,11 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
     }
 
   if(dor2) res <- cbind(res, R2=r2)
-  r <- list(result=res,names.kept=nf,factors.kept=fk,
+  r <- list(result=res, names.kept=nf, factors.kept=fk,
             factors.deleted=fd,
-            parms.kept=pk,parms.deleted=pd, coefficients=beta, var=cov,
-            Coefficients=Coef)
+            parms.kept=pk, parms.deleted=pd, coefficients=beta, var=cov,
+            Coefficients=Coef,
+            force=if(length(force)) names(fit$coef)[force])
   oldClass(r) <- "fastbw"
   r
 }
@@ -262,14 +269,18 @@ print.fastbw <- function(x, digits=4, ...)
   fd <- x$factors.deleted
   if(length(fd))
     {
-      cres <- cbind(dimnames(res)[[1]],format(round(res[,1],2)),format(res[,2]),
-                    format(round(res[,3],4)),format(round(res[,4],2)),
-                    format(res[,5]),format(round(res[,6],4)),
-                    format(round(res[,7],2)),
-                    if(ncol(res)>7)format(round(res[,8],3)))
-      dimnames(cres) <- list(rep("",nrow(cres)),
+      cres <- cbind(dimnames(res)[[1]], format(round(res[,1], 2)),
+                    format(res[,2]),
+                    format(round(res[,3], 4)), format(round(res[,4], 2)),
+                    format(res[,5]), format(round(res[,6], 4)),
+                    format(round(res[,7], 2)),
+                    if(ncol(res) > 7)format(round(res[,8], 3)))
+      dimnames(cres) <- list(rep("", nrow(cres)),
                              c("Deleted", dimnames(res)[[2]]))
       cat("\n")
+      if(length(x$force))
+        cat('Parameters forced into all models:\n',
+            paste(x$force, collapse=', '), '\n\n')
       print(cres, quote=FALSE)
       if(length(x$coef))
         {
@@ -277,7 +288,7 @@ print.fastbw <- function(x, digits=4, ...)
           cof <- coef(x)
           vv <- if(length(cof)>1) diag(x$var) else x$var
           z <- cof/sqrt(vv)
-          stats <- cbind(cof, sqrt(vv), z, 1-pchisq(z^2,1))
+          stats <- cbind(cof, sqrt(vv), z, 1 - pchisq(z^2,1))
           dimnames(stats) <- list(names(cof), c("Coef","S.E.","Wald Z","P"))
           print(stats, digits=digits)
         }

@@ -10,7 +10,8 @@ predab.resample <-
            type="residual",
            sls=.05,
            aics=0,
-           tol=1e-12, 
+           tol=1e-12,
+           force=NULL,
            non.slopes.in.x=TRUE,
            kint=1,
            cluster,
@@ -148,7 +149,8 @@ predab.resample <-
     if(fit.orig$fail) return()
 
     cat("\n		Backwards Step-down - Original Model\n")
-    fbw <- fastbw(fit.orig, rule=rule, type=type, sls=sls, aics=aics, eps=tol)
+    fbw <- fastbw(fit.orig, rule=rule, type=type, sls=sls, aics=aics,
+                  eps=tol, force=force)
 
     print(fbw)
 
@@ -181,11 +183,7 @@ predab.resample <-
   test.stat <- double(length(index.orig))
   train.stat <- test.stat
   name <- fparms$Design$name
-  if(bw)
-    {
-      varin <- matrix("", nrow=B, ncol=length(name))
-      nvarin <- rep(NA, B)
-	}
+  if(bw) varin <- matrix(FALSE, nrow=B, ncol=length(name))
   
   j <- 0
   num <- 0
@@ -307,13 +305,12 @@ predab.resample <-
             }
           else
             {
-              f <- fastbw(f, rule=rule, type=type, sls=sls, aics=aics, eps=tol)
+              f <- fastbw(f, rule=rule, type=type, sls=sls, aics=aics,
+                          eps=tol, force=force)
               
               if(pr) print(f)
 
-              varin[j + 1, f$factors.kept] <- "*"
-              
-              nvarin[j + 1] <- length(f$factors.kept)
+              varin[j + 1, f$factors.kept] <- TRUE
               col.kept <- f$parms.kept
               
               if(!length(col.kept))
@@ -421,17 +418,8 @@ predab.resample <-
   if(bw)
     {
       varin <- varin[1:j, ,drop=FALSE]
-      nvarin <- nvarin[1:j]
-      
       dimnames(varin) <- list(rep("", j), name)
-      cat("\n		Factors Retained in Backwards Elimination\n\n")
-      print(varin, quote=FALSE)
-      cat("\n         Frequencies of Numbers of Factors Retained\n\n")
-      tvarin <- table(nvarin)
-      names(dimnames(tvarin)) <- NULL
-      print(tvarin)
     }
-  
-  structure(res, class='validate')
+  structure(res, class='validate', kept=if(bw) varin)
 }
   
