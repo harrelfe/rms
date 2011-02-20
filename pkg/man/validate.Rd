@@ -14,7 +14,10 @@
 validate(fit, method="boot", B=40,
          bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, 
          force=NULL, pr=FALSE, \dots)
-\method{print}{validate}(x, digits=4, B=Inf, ...)
+\method{print}{validate}(x, digits=4, B=Inf, \dots)
+\method{latex}{validate}(x, digits=4, B=Inf, file='', append=FALSE,
+                         title=first.word(deparse(substitute(x))),
+                         caption=NULL, table.env=FALSE, \dots)
 }
 \arguments{
   \item{fit}{
@@ -59,7 +62,8 @@ validate(fit, method="boot", B=40,
   \item{\dots}{
     parameters for each specific validate function, and parameters to
     pass to \code{predab.resample} (note especially the \code{group},
-    \code{cluster}, amd \code{subset} parameters).
+    \code{cluster}, amd \code{subset} parameters).  For \code{latex},
+	optional arguments to \code{\link[Hmisc]{latex.default}}.
     
     For \code{psm}, you can pass the \code{maxiter} parameter here (passed to 
     \code{survreg.control}, default is 15 iterations) as well as a \code{tol} parameter 
@@ -74,8 +78,14 @@ validate(fit, method="boot", B=40,
   \item{B}{an upper limit on the number of resamples for which information
   is printed about which variables were selected in each model re-fit.
   Specify zero to suppress printing.  Default is to print all
-  re-samples.
-  }
+  re-samples.}
+\item{file}{file to write LaTeX output.  Default is standard output.}
+\item{append}{set to \code{TRUE} to append LaTeX output to an existing
+  file}
+\item{title, caption, table.env}{see
+  \code{\link[Hmisc]{latex.default}}.  If \code{table.env} is
+  \code{FALSE} and \code{caption} is given, the character string
+  contained in \code{caption} will be placed before the table, centered.}
 }
 \details{
   It provides bias-corrected indexes that are specific to each type
