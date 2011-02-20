@@ -129,7 +129,9 @@ print.validate <- function(x, digits=4, B=Inf, ...)
 
 latex.validate <- function(x, digits=4, B=Inf, file='', append=FALSE,
                            title=first.word(deparse(substitute(x))),
-                           caption=NULL, table.env=FALSE, ...)
+                           caption=NULL, table.env=FALSE,
+                           size='normalsize',
+                           extracolsize=size, ...)
   {
     chg <- function(x, old, new)
       {
@@ -149,41 +151,64 @@ latex.validate <- function(x, digits=4, B=Inf, file='', append=FALSE,
               c('$D_{xy}$','$R^{2}$','$E_{\\max}$','$D$','$U$',
                 '$Q$','$B$','$g$','$g_{p}$','$g_{r}$'))
     dimnames(x) <- list(rn, cn)
-    cat('\n\\begin{center}\n', file=file, append=append)
+    cat('\\needspace{2in}\n', file=file, append=append)
+    cat('\\begin{center}\\', size, '\n', sep='', file=file, append=append)
     if(length(caption) && !table.env)
       cat(caption, '\n\n', sep='', file=file, append=TRUE)
     latex(unclass(x), digits=digits, rowlabel='Index',
           title=title, caption=if(table.env) caption,
-          table.env=table.env, file=file, append=TRUE, center='none', ...)
+          table.env=table.env, file=file, append=TRUE,
+          center='none', extracolsize=extracolsize, ...)
     cat('\\end{center}\n', file=file, append=TRUE)
 
     if(length(kept) && B > 0)
       {
-        varin <- ifelse(kept, '*', ' ')
-        k <- 'Factors Retained in Backwards Elimination'
+        varin <- ifelse(kept, '$\\bullet$', ' ')
         nr <- nrow(varin)
         varin <- varin[1:min(nrow(varin), B),, drop=FALSE]
-        cap <- if(length(caption)) caption else
-        'Factors Retained in Backwards Elimination'
-        if(nr > B) cap <- paste(cap, '(first', B, 'resamples)')
-        cat('\n\\begin{center}\n', file=file, append=TRUE)
-        if(!table.env) cat(cap, '\n\n', file=file, append=TRUE)
+        cat('\\needspace{2in}\n', sep='',
+            file=file, append=append)
+        cat('\\begin{center}\\', size, '\n', sep='',
+            file=file, append=TRUE)
+        if(table.env)
+          {
+            cap <- paste(caption,
+                         '. Factors retained in backwards elimination', sep='')
+            if(nr > B)
+              cap <- paste(cap, paste(' (first', B, 'resamples).', sep=''))
+          }
+        else
+          {
+            cap <- 'Factors Retained in Backwards Elimination'
+            if(nr > B) cap <- c(cap, paste('First', B, 'Resamples'))
+            cap <- paste(cap, collapse='\\\\')
+            cat(cap, '\n\n', file=file, append=TRUE)
+          }
         latex(varin, ..., caption=if(table.env) cap,
               title=paste(title,'retained', sep='-'),
               rowname=NULL, file=file, append=TRUE,
-              table.env=table.env, center='none')
-        cat('\\end{center}\n', file=file, append=TRUE)
+              table.env=table.env, center='none',
+              extracolsize=extracolsize)
+        if(!table.env) cat('\\end{center}\n', file=file, append=TRUE)
 
-        cap <- if(length(caption)) caption else
-        'Frequencies of Numbers of Factors Retained'
+        cap <- if(table.env)
+          paste(caption,
+                '. Frequencies of numbers of factors retained', sep='')
+        else
+          {
+            cap <- 'Frequencies of Numbers of Factors Retained'
+            cat('\\needspace{1in}\n', sep='',
+                file=file, append=append)
+            cat('\\begin{center}\\', size, '\n', sep='', file=file, append=TRUE)
+            cat(cap, '\n\n', file=file, append=TRUE)
+          }
+        
         nkept <- apply(kept, 1, sum)
         tkept <- t(as.matrix(table(nkept)))
-        cat('\n\\begin{center}\n', file=file, append=TRUE)
-        if(!table.env) cat(cap, '\n\n', file=file, append=TRUE)
         latex(tkept, ..., caption=if(table.env) cap,
               title=paste(title, 'freq', sep='-'),
               rowname=NULL, file=file, append=TRUE,
-              table.env=table.env, center='none')
-        cat('\\end{center}\n', file=file, append=TRUE)
+              table.env=table.env, center='none', extracolsize=extracolsize)
+        if(!table.env) cat('\\end{center}\n', file=file, append=TRUE)
     }
   }

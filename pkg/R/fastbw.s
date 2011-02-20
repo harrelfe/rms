@@ -52,6 +52,8 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
   if(type==0)
     stop("type must be residual or individual")
   if(type==3) type <- 1
+  if(length(force) && type != 'individual')
+    warning('force probably does not work unless type="individual"')
 
   factors.in <- 1:f
   parms.in <- 1:pt
