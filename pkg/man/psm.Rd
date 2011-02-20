@@ -124,8 +124,8 @@ lwd=3, \dots)
   \item{\dots}{
     other arguments to fitting routines, or to pass to \code{survplot} from
     \cr
-    \code{survplot.residuals.psm.censored.normalized}.  Ignored for
-    \code{lines}.}
+    \code{survplot.residuals.psm.censored.normalized}.  Passed to the
+	generic \code{lines} function for \code{lines}.}
   \item{times}{
     a scalar or vector of times for which to evaluate survival probability
     or hazard
