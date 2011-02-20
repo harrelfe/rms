@@ -380,7 +380,7 @@ lines.residuals.psm.censored.normalized <-
   dist <- attr(r, 'dist')
   if(dist %in% c('weibull','loglogistic','lognormal')) tx <- exp(x)
   ## $survival functions log x
-  lines(x, attr(r,'theoretical')(tx), lwd=lwd, lty=lty)
+  lines(x, attr(r,'theoretical')(tx), lwd=lwd, lty=lty, ...)
   invisible()
 }
 
