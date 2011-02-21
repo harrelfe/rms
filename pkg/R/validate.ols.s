@@ -155,7 +155,8 @@ latex.validate <- function(x, digits=4, B=Inf, file='', append=FALSE,
     cat('\\begin{center}\\', size, '\n', sep='', file=file, append=append)
     if(length(caption) && !table.env)
       cat(caption, '\n\n', sep='', file=file, append=TRUE)
-    latex(unclass(x), digits=digits, rowlabel='Index',
+    cdec <- ifelse(cn == '$n$', 0, digits)
+    latex(unclass(x), cdec=cdec, rowlabel='Index',
           title=title, caption=if(table.env) caption,
           table.env=table.env, file=file, append=TRUE,
           center='none', extracolsize=extracolsize, ...)
