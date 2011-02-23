@@ -112,7 +112,6 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
         stop("newdata must contain exactly one Surv object when individual=TRUE")
       y2 <- newdata[[which(isS)]]
     }
-  ww <<- list(y, X, weights, X2, risk, newrisk, strata, se.fit, survtype, vartype, object$var, id, y2, rq)
   g <- survfitcoxph.fit(y, X, weights, X2, risk, newrisk, strata,
                         se.fit, survtype, vartype,
                         if(length(object$var)) object$var else
