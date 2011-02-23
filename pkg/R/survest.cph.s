@@ -156,6 +156,10 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
       else
         {
           g <- summary(g, print.it=FALSE, times=times)
+          ## summary.survfit returns std. err of S(t) unlike other
+          ## survival package functions
+          g$std.err <- ifelse(g$surv == 0, NA, g$std.err / g$surv)
+          
           if(!individual && nf > 0)
             { ##delete extra cells added by survfit for strat
               if(length(g$time) != length(times)*num.strata)
@@ -166,13 +170,10 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
               gs <- factor(g$strata, strata.levels)
               strata.row <- matrix(rep(unclass(gs), d[2]), ncol=d[2])
               m <- strata.col==strata.row
-              ## summary.survfit returns std. err of S(t) unlike other
-              ## survival package functions
-              se <- ifelse(g$surv == 0, NA, g$std.err / g$surv)
               g$surv    <- matrix(g$surv[m],   ncol=d[2])[,,drop=TRUE]
               g$lower   <- matrix(g$lower[m],  ncol=d[2])[,,drop=TRUE]
               g$upper   <- matrix(g$upper[m],  ncol=d[2])[,,drop=TRUE]
-              g$std.err <- matrix(se,          ncol=d[2])[,,drop=TRUE]
+              g$std.err <- matrix(g$std.err[m],ncol=d[2])[,,drop=TRUE]
             }
         }
       tim  <- g$time
