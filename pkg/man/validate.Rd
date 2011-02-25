@@ -1,6 +1,7 @@
 \name{validate}
 \alias{validate}
 \alias{print.validate}
+\alias{latex.validate}
 \title{
   Resampling Validation of a Fitted Model's Indexes of Fit
 }

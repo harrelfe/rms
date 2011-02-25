@@ -72,7 +72,13 @@ calibrate(fit, \dots)
 a fit from \code{ols}, \code{lrm}, \code{cph} or \code{psm}
 }
 \item{x}{an object created by \code{calibrate}}
-\item{method,B,bw,rule,type,sls,aics,NULL}{see \code{\link{validate}}}
+\item{method,B,bw,rule,type,sls,aics,force}{see \code{\link{validate}}.
+  For \code{print.validate} and \code{latex.validate}, \code{B} is an
+  upper limit on the number of resamples for which 
+  information is printed about which variables were selected in each
+  model re-fit. Specify zero to suppress printing.  Default is to print
+  all re-samples.
+  }
 \item{cmethod}{method for validating survival predictions using
   right-censored data.  The default is \code{cmethod='hare'} to use the
   \code{hare} function in the \code{polspline} package.  Specify
@@ -175,11 +181,6 @@ and \code{y} containing the coordinates of the upper left corner of the
 legend.  By default, a legend will be drawn in the lower right 1/16th of
 the plot.
 }
-\item{B}{an upper limit on the number of resamples for which information
-  is printed about which variables were selected in each model re-fit.
-  Specify zero to suppress printing.  Default is to print all
-  re-samples.
-  }
 }
 \value{
 matrix specifying mean predicted survival in each interval, the
