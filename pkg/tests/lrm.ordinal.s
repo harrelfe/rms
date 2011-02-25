@@ -1,6 +1,4 @@
 require(rms)
-source('~/R/rms/pkg/R/lrm.fit.s')
-source('~/R/rms/pkg/R/lrm.s')
 set.seed(1)
 n <- 20
 y <- sample(1:4, n, replace=TRUE)
