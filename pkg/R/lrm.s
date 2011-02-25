@@ -1,5 +1,5 @@
-lrm <- function(formula,data,subset,na.action=na.delete,
-				method="lrm.fit",model=FALSE, x=FALSE, y=FALSE, 
+lrm <- function(formula, data,subset, na.action=na.delete,
+				method="lrm.fit", model=FALSE, x=FALSE, y=FALSE, 
 				linear.predictors=TRUE, se.fit=FALSE, 
 				penalty=0, penalty.matrix, tol=1e-7, strata.penalty=0,
                 var.penalty=c('simple','sandwich'),
@@ -124,11 +124,11 @@ lrm <- function(formula,data,subset,na.action=na.delete,
       if(existsFunction(method))
         {
           fitter <- getFunction(method)
-          if(ofpres) f <- fitter(X,Y,offset=offs,
-                                 penalty.matrix=penalty.matrix,tol=tol,
+          if(ofpres) f <- fitter(X, Y, offset=offs,
+                                 penalty.matrix=penalty.matrix, tol=tol,
                                  weights=weights, normwt=normwt, ...)
-          else f <- fitter(X,Y,
-                           penalty.matrix=penalty.matrix,tol=tol,
+          else f <- fitter(X, Y,
+                           penalty.matrix=penalty.matrix, tol=tol,
                            weights=weights, normwt=normwt, ...)
         }
 	  else stop(paste("unimplemented method:", method))
@@ -152,17 +152,18 @@ lrm <- function(formula,data,subset,na.action=na.delete,
         ## Get improved covariance matrix
         v <- f$var
         if(var.penalty=='sandwich') f$var.from.info.matrix <- v
-        f.nopenalty <- if(ofpres) fitter(X,Y,offset=offs,initial=f$coef, maxit=1, tol=tol) else
-        fitter(X,Y,initial=f$coef, maxit=1, tol=tol)
+        f.nopenalty <- if(ofpres)
+          fitter(X, Y, offset=offs, initial=f$coef, maxit=1, tol=tol) else
+        fitter(X, Y, initial=f$coef, maxit=1, tol=tol)
         ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
         info.matrix.unpenalized <- f.nopenalty$info.matrix
         dag <- diag(info.matrix.unpenalized %*% v)
         f$effective.df.diagonal <- dag
-        f$var <- if(var.penalty=='simple')v else
+        f$var <- if(var.penalty == 'simple') v else
         v %*% info.matrix.unpenalized %*% v
         df <- sum(dag[-(1:nrp)])
         lr <- f.nopenalty$stats["Model L.R."]
-        pval <- 1-pchisq(lr, df)
+        pval <- 1 - pchisq(lr, df)
         f$stats[c('d.f.','Model L.R.','P')] <- c(df, lr, pval)  
       }
     }
