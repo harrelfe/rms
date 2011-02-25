@@ -1,3 +1,46 @@
+## Compare standard errors of log survival probability from survest and survfit
+
+require(rms)
+set.seed(123)
+n <- 200
+age <- rnorm(n, 50, 10)
+x <- 50*runif(n)
+ct <- round(365*runif(n))
+h <- .003*exp(.005*age+0.008*x)
+ft <- round(-log(runif(n))/h)
+status <- ifelse(ft <= ct,1,0)
+ft <- pmin(ft, ct)
+
+S <- Surv(ft, status)
+fit <- cph(S ~ age + x, x=TRUE, y=TRUE)
+d <- data.frame(age=mean(age), x=mean(x))
+s <- survest(fit, d, times=56)
+prn(with(s, cbind(time, surv, std.err, lower, upper)), 'survest')
+s <- survfit(fit, d)
+
+k <- which(s$time == 56)
+prn(with(s, cbind(time, surv, std.err, lower, upper)[k,]), 'survfit')
+
+fit <- cph(S ~ age + x, x=TRUE, y=TRUE, surv=TRUE, time.inc=56)
+k <- which(fit$time == 56)
+prn(with(fit, cbind(time, surv, std.err, lower, upper)[k,]), 'cph surv=T')
+s <- survest(fit, d, times=56)
+prn(with(s, cbind(time, surv, std.err, lower, upper)),
+    'survest from cph surv=T')
+s <- survfit(fit, d)
+k <- which(s$time == 56)
+prn(with(s, cbind(time, surv, std.err, lower, upper)[k,]),
+    'survfit from cph surv=T')
+
+
+survest(fit, data.frame(age=40, x=25), times=56)
+ 
+pp <- survfit.cph(fit, data.frame(age=40, x=25),se.fit=TRUE)
+cbind(pp$std.err, pp$lower,pp$upper)[pp$time==56]
+ 
+
+##--------------------------------------------------------------
+
 require(survival)
 
 plots      <- TRUE
