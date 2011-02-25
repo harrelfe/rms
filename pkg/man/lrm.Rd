@@ -59,8 +59,8 @@ under the name \code{y}.
 }
 \item{linear.predictors}{
 causes the predicted X beta (with missings excluded) to be returned
-under the name \code{linear.predictors}. When the response variable has
-more than two levels, only the first intercept is used.
+under the name \code{linear.predictors}.  When the response variable has
+more than two levels, the first intercept is used.
 }
 \item{se.fit}{
 causes the standard errors of the fitted values to be returned under
