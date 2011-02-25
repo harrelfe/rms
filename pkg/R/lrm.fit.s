@@ -33,9 +33,9 @@
 #    1-17-03 :made all versions use weights, double precision for x,y
 #    5-13-10 :change B to use middle intercept; added g-index
 
-lrm.fit <- function(x,y,offset,initial,est,
-                    maxit=12,eps=.025,tol=1E-7,trace=FALSE,
-                    penalty.matrix=NULL,weights=NULL,normwt=FALSE)
+lrm.fit <- function(x, y, offset, initial, est,
+                    maxit=12, eps=.025, tol=1E-7, trace=FALSE,
+                    penalty.matrix=NULL, weights=NULL, normwt=FALSE)
 {	
   cal <- match.call()
   opts <- double(12)
@@ -145,24 +145,24 @@ lrm.fit <- function(x,y,offset,initial,est,
   if(nxin==0 & !ofpres)
     {
       loglik <- rep(loglik,2)
-      z <- list(coef=initial,u=rep(0,kint),opts=c(rep(0,7),.5,0,0,0))
+      z <- list(coef=initial, u=rep(0,kint), opts=c(rep(0,7), .5, 0, 0, 0))
     }
   
   if(ofpres)
     {
       ##Fit model with only intercept(s) and offset
       z <- 
-        .Fortran("lrmfit",coef=initial,as.integer(0),0,x,y,offset,
+        .Fortran("lrmfit", coef=initial, as.integer(0), 0, x, y, offset,
                  u=double(kint),
-                 double(kint*(kint+1)/2),loglik=double(1),n,as.integer(0),
-                 sumw,kint,
-                 v=double(kint*kint),double(kint),double(kint),
-                 double(kint),pivot=integer(kint),opts=opts,ftable,
+                 double(kint*(kint+1)/2),loglik=double(1), n, as.integer(0),
+                 sumw, kint,
+                 v=double(kint*kint), double(kint), double(kint),
+                 double(kint), pivot=integer(kint), opts=opts, ftable,
                  penmat, weights, PACKAGE="rms")
       
       loglik <- c(loglik,z$loglik)
       if(z$opts[6] | z$opts[7] < kint)
-        return(structure(list(fail=TRUE),class="lrm"))
+        return(structure(list(fail=TRUE), class="lrm"))
       initial <- z$coef
     }
 
@@ -170,11 +170,11 @@ lrm.fit <- function(x,y,offset,initial,est,
     {
       ##Fit model with intercept(s), offset, and any fitted covariables
 	z <- 
-      .Fortran("lrmfit",coef=initial,nxin,est,x,y,offset,
+      .Fortran("lrmfit", coef=initial, nxin, est, x, y, offset,
                u=double(nvi),
-               double(nvi*(nvi+1)/2),loglik=double(1),n,nx,sumw,nvi,
-               v=double(nvi*nvi),double(nvi),double(2*nvi),double(nvi),
-               pivot=integer(nvi),opts=opts,ftable,penmat,weights,
+               double(nvi*(nvi+1)/2), loglik=double(1), n, nx, sumw, nvi,
+               v=double(nvi*nvi), double(nvi), double(2*nvi), double(nvi),
+               pivot=integer(nvi), opts=opts, ftable, penmat, weights,
                PACKAGE="rms")
     
 	irank <- z$opts[7]
@@ -211,7 +211,7 @@ lrm.fit <- function(x,y,offset,initial,est,
   ##Invert v with respect to fitted variables
   if(nxin==0) elements <- 1:kint
   else
-    elements <- c(1:kint,kint+est)
+    elements <- c(1:kint, kint + est)
   if(nx==0 && !ofpres)
     {
       v <- NULL; info.matrix <- NULL
@@ -219,20 +219,21 @@ lrm.fit <- function(x,y,offset,initial,est,
     }
   else
     {
-      if(nxin==nx)
+      if(nxin == nx)
         { 
-          info.matrix <- matrix(z$v,nrow=nvi,ncol=nvi)
+          info.matrix <- matrix(z$v, nrow=nvi, ncol=nvi)
           v <- solvet(info.matrix, tol=tol)
           irank <- nvi
         }
       else
         {
           info.matrix <- matrix(z$v, nrow=nvi, ncol=nvi)
-          v <- matinv(info.matrix,elements,negate=TRUE,eps=tol)
-          info.matrix <- info.matrix[elements,elements]
+          v <- matinv(info.matrix, elements, negate=TRUE, eps=tol)
+          info.matrix <- info.matrix[elements, elements]
           usc <- z$u[-elements]
-          resid.chi2 <- usc %*% solve(v[-elements,-elements],tol=tol) %*% usc
-          resid.df <- nx-nxin
+          resid.chi2 <- usc %*% solve(v[-elements, -elements],
+                                      tol=tol) %*% usc
+          resid.df <- nx - nxin
           irank <- attr(v,"rank")
           attr(v,"rank") <- NULL
         }
@@ -240,56 +241,59 @@ lrm.fit <- function(x,y,offset,initial,est,
   
   if(kint==1) name <- "Intercept"
   else 
-    name <- paste("y>=",ylevels[2:(kint+1)],sep="")
+    name <- paste("y>=", ylevels[2:(kint+1)], sep="")
   name <- c(name, xname)
-  names(z$coef) <- name
+  kof <- z$coef
+  names(kof) <- name
   names(z$u) <- name
-  if(length(v)) dimnames(v) <- list(name,name)
+  if(length(v)) dimnames(v) <- list(name, name)
   
   llnull <- loglik[length(loglik)-1]
   model.lr <- llnull - loglik[length(loglik)]
   model.df <- irank - kint
   model.p <- if(initial.there) NA else
-    if(model.df > 0) 1 - pchisq(model.lr,model.df) else 1
+    if(model.df > 0) 1 - pchisq(model.lr, model.df) else 1
 
-  r2     <- 1 - exp(-model.lr/sumwt)
-  r2.max <- 1 - exp(-llnull/sumwt)
+  r2     <- 1 - exp(-model.lr / sumwt)
+  r2.max <- 1 - exp(-llnull / sumwt)
   r2     <- r2 / r2.max
+  lp <- matxv(x, kof, kint=1)
   kmid <- floor((kint + 1) / 2)
-  lp <- matxv(x, z$coef, kint=kmid)
-  prob <- plogis(lp)
+  lpmid <- lp - kof[1] + kof[kmid] 
+  prob <- plogis(lpmid)
   event <- y > (kmid - 1)
-##  B <- mean((prob - event)^2)
-  B <- sum(weights*(prob - event)^2)/sum(weights)
-  g  <- GiniMd(lp)
+  ##  B <- mean((prob - event)^2)
+  B <- sum(weights*(prob - event)^2) / sum(weights)
+  g  <- GiniMd(lpmid)
   gp <- GiniMd(prob)
   
-  stats <- c(n,max(abs(z$u[elements])),model.lr,model.df,
-             model.p,z$opts[8],z$opts[9],
+  stats <- c(n, max(abs(z$u[elements])), model.lr, model.df,
+             model.p, z$opts[8], z$opts[9],
              z$opts[10], z$opts[11], r2, B, g, exp(g), gp)
 
-  nam <- c("Obs","Max Deriv",
-           "Model L.R.","d.f.","P","C","Dxy",
-           "Gamma","Tau-a","R2","Brier","g","gr","gp")
+  nam <- c("Obs", "Max Deriv",
+           "Model L.R.", "d.f.", "P", "C", "Dxy",
+           "Gamma", "Tau-a", "R2", "Brier", "g", "gr", "gp")
   
-  if(nxin!=nx)
+  if(nxin != nx)
     {
-      stats <- c(stats,resid.chi2,resid.df,1-pchisq(resid.chi2,resid.df))
-      nam <- c(nam, "Residual Score","d.f.","P")
+      stats <- c(stats, resid.chi2, resid.df,
+                 1 - pchisq(resid.chi2, resid.df))
+      nam <- c(nam, "Residual Score", "d.f.", "P")
     }
   names(stats) <- nam
   
   if(wtpres) stats <- c(stats, 'Sum of Weights'=sumwt)
   
-  retlist <- list(call=cal,freq=numy,sumwty=if(wtpres)sumwty else NULL,
-                  stats=stats,fail=dvrg,coefficients=z$coef,
-                  var=v,u=z$u,
+  retlist <- list(call=cal, freq=numy, sumwty=if(wtpres)sumwty else NULL,
+                  stats=stats, fail=dvrg, coefficients=kof,
+                  var=v, u=z$u,
                   deviance=loglik,
-                  est=est,non.slopes=kint, linear.predictors=lp,
+                  est=est, non.slopes=kint, linear.predictors=lp,
                   penalty.matrix=if(nxin>0 && any(penalty.matrix!=0))
                   penalty.matrix else NULL,
                   info.matrix=info.matrix,
-                  weights=if(wtpres)weights else NULL)
+                  weights=if(wtpres) weights else NULL)
   
   oldClass(retlist) <- 'lrm'
   retlist
