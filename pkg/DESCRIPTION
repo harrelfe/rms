@@ -1,6 +1,6 @@
 Package: rms
-Version: 3.2-0
-Date: 2011-02-14
+Version: 3.3-0
+Date: 2011-02-25
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Maintainer: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
@@ -16,10 +16,10 @@ Description: Regression modeling, testing, estimation, validation,
 	penalized maximum likelihood estimation for logistic and ordinary
 	linear models.  rms works with almost any regression model, but it
 	was especially written to work with binary or ordinal logistic
-    regression, Cox regression, accelerated failure time models,
-    ordinary linear models,	the Buckley-James model, generalized least
-    squares for	serially or spatially correlated observations, generalized
-    linear models, and quantile regression.
+	regression, Cox regression, accelerated failure time models,
+	ordinary linear models,	the Buckley-James model, generalized least
+	squares for serially or spatially correlated observations, generalized
+	linear models, and quantile regression.
 License: GPL version 2 or newer
 URL: http://biostat.mc.vanderbilt.edu/rms
 LazyLoad: yes
