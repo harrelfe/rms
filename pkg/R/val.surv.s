@@ -34,9 +34,9 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
     est.surv <- if(usehare)
       {
         if(missing(newdata))
-          survest(fit, times=u)
+          survest(fit, times=u)$surv
         else
-          survest(fit, newdata, times=u)
+          survest(fit, newdata, times=u)$surv
       }
   else
     {
