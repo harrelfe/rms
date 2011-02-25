@@ -32,7 +32,8 @@ arguments passed to \code{predictrms}, such as \code{kint} and \code{newdata}
 See \code{predict.rms} for \code{"x", "data.frame", "terms", "cterms",
   "ccterms", "adjto", 
 "adjto.data.frame"} and \code{"model.frame"}. \code{type="lp"} is used to get
-linear predictors (always using the first intercept). \code{type="fitted"}
+linear predictors (using the first intercept by default; specify
+\code{kint} to use others). \code{type="fitted"}
 is used to get all the probabilities \eqn{Y\geq
   j}. \code{type="fitted.ind"} gets all the individual probabilities
 \eqn{Y=j}. For an ordinal response variable, \code{type="mean"} computes
