@@ -34,7 +34,11 @@ validate(fit, method="boot", B=40,
   }
   \item{B}{
     number of repetitions.  For \code{method="crossvalidation"}, is the
-    number of groups of omitted observations.
+    number of groups of omitted observations.  For \code{print.validate}
+	and \code{latex.validate}, \code{B} is an upper limit on the number
+	of resamples for which information is printed about which variables
+	were selected in each model re-fit.  Specify zero to suppress
+	printing.  Default is to print all re-samples.
   }
   \item{bw}{
     \code{TRUE} to do fast step-down using the \code{fastbw} function,
@@ -77,10 +81,6 @@ validate(fit, method="boot", B=40,
   }
   \item{x}{an object produced by one of the \code{validate} functions}
   \item{digits}{number of decimal places to print}
-  \item{B}{an upper limit on the number of resamples for which information
-  is printed about which variables were selected in each model re-fit.
-  Specify zero to suppress printing.  Default is to print all
-  re-samples.}
 \item{file}{file to write LaTeX output.  Default is standard output.}
 \item{append}{set to \code{TRUE} to append LaTeX output to an existing
   file}

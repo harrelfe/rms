@@ -72,8 +72,8 @@ calibrate(fit, \dots)
 a fit from \code{ols}, \code{lrm}, \code{cph} or \code{psm}
 }
 \item{x}{an object created by \code{calibrate}}
-\item{method,B,bw,rule,type,sls,aics,force}{see \code{\link{validate}}.
-  For \code{print.validate} and \code{latex.validate}, \code{B} is an
+\item{method, B, bw, rule, type, sls, aics, force}{see \code{\link{validate}}.
+  For \code{print.calibrate}, \code{B} is an
   upper limit on the number of resamples for which 
   information is printed about which variables were selected in each
   model re-fit. Specify zero to suppress printing.  Default is to print
