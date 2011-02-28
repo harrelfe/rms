@@ -16,7 +16,7 @@ validate(fit, method="boot", B=40,
          bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, 
          force=NULL, pr=FALSE, \dots)
 \method{print}{validate}(x, digits=4, B=Inf, \dots)
-\method{latex}{validate}(x, digits=4, B=Inf, file='', append=FALSE,
+\method{latex}{validate}(object, digits=4, B=Inf, file='', append=FALSE,
                          title=first.word(deparse(substitute(x))),
                          caption=NULL, table.env=FALSE,
                          size='normalsize', extracolsize=size, \dots)
@@ -79,7 +79,7 @@ validate(fit, method="boot", B=40,
 
 	For \code{print.validate} \ldots is ignored.
   }
-  \item{x}{an object produced by one of the \code{validate} functions}
+  \item{x,object}{an object produced by one of the \code{validate} functions}
   \item{digits}{number of decimal places to print}
 \item{file}{file to write LaTeX output.  Default is standard output.}
 \item{append}{set to \code{TRUE} to append LaTeX output to an existing
