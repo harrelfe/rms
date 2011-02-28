@@ -127,7 +127,7 @@ print.validate <- function(x, digits=4, B=Inf, ...)
     }
   }
 
-latex.validate <- function(x, digits=4, B=Inf, file='', append=FALSE,
+latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
                            title=first.word(deparse(substitute(x))),
                            caption=NULL, table.env=FALSE,
                            size='normalsize',
@@ -139,6 +139,7 @@ latex.validate <- function(x, digits=4, B=Inf, file='', append=FALSE,
         tx <- new[x]
         ifelse(is.na(tx), x, tx)
       }
+    x <- object
     kept <- attr(x, 'kept'); attr(x, 'kept') <- NULL
     cn <- colnames(x)
     cn <- chg(cn, c('index.orig', 'training', 'test', 'optimism',
