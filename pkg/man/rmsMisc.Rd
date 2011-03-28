@@ -22,6 +22,7 @@
 \alias{param.order}
 \alias{Penalty.matrix}
 \alias{Penalty.setup}
+\alias{logLik.ols}
 \alias{logLik.rms}
 \alias{AIC.rms}
 \alias{lrtest}
@@ -86,7 +87,9 @@ generates the proper vector of penalty multipliers for the current model.
 \code{logLik.rms} returns the maximized log likelihood for the model,
 whereas \code{AIC.rms} returns the AIC.  The latter function has an
 optional argument for computing AIC on a "chi-square" scale (model
-likelihood ratio chi-square minus twice the regression degrees of freedom.
+likelihood ratio chi-square minus twice the regression degrees of
+freedom.  \code{logLik.ols} handles the case for \code{ols}, just by
+invoking \code{logLik.lm} in the \code{stats} package.
 
 The \code{lrtest} function does likelihood ratio tests for
 two nested models, from fits that have \code{stats} components with
@@ -166,6 +169,7 @@ param.order(at, term.order)
 Penalty.matrix(at, X)
 Penalty.setup(at, penalty)
 
+\method{logLik}{ols}(object, \dots)
 \method{logLik}{rms}(object, \dots)
 \method{AIC}{rms}(object, \dots, k=2, type=c('loglik', 'chisq'))
 
