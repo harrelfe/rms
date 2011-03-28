@@ -1025,22 +1025,24 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE, latex=FALSE)
     f
   }
 
+logLik.ols <- function(object, ...)
+  stats:::logLik.lm(object)
+
 logLik.rms <- function(object, ...)
   {
+    dof <- unname(object$stats['d.f.'] + num.intercepts(object))
+    if(inherits(object, 'psm')) dof <- dof + 1  # for sigma
     w <- object$loglik
-    if(length(w)) return(w[length(w)])
+    if(length(w)) return(structure(w[length(w)], df=dof, class='logLik'))
     w <- object$deviance
-    -0.5*w[length(w)]
+    structure(-0.5*w[length(w)], df=dof, class='logLik')
   }
 
 AIC.rms <- function(object, ..., k=2, type=c('loglik','chisq'))
   {
     type <- match.arg(type)
-    dof <- object$stats['d.f.'] +
-      ifelse(type=='loglik', num.intercepts(object), 0)
-    unname(switch(type,
-                  loglik=-2*logLik(object) + k * dof,
-                  chisq = object$stats['Model L.R.'] - k * dof))
+    if(type == 'loglik') return(AIC(logLik(object), k=k))
+    stats <- object$stats
+    dof <- stats['d.f.']
+    unname(stats['Model L.R.'] - k * dof)
   }
-
-    
