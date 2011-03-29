@@ -274,18 +274,20 @@ group <- c(rep('a', n/2), rep('b', n/2))
 A <- NULL
 for(g in c('a','b'))
   {
-    f <- ols(y ~ pol(x1,2) + pol(x2,2), subset=group==g)
+    f <- ols(y ~ pol(x1,2) + pol(x2,2) + pol(x1,2) %ia% pol(x2,2),
+             subset=group==g)
     a <- plot(anova(f),
-              what='partial R2', pl=FALSE, rm.totals=FALSE)
-    a <- a[setdiff(names(a), 'TOTAL NONLINEAR')]
-    d <- data.frame(group=g, Variable=names(a), partialR2=unname(a))
+              what='partial R2', pl=FALSE, rm.totals=FALSE, sort='none')
+    a <- a[-grep('NONLINEAR', names(a))]
+    d <- data.frame(group=g, Variable=factor(names(a), names(a)),
+                    partialR2=unname(a))
     A <- rbind(A, d)
   }
 dotplot(Variable ~ partialR2 | group, data=A,
         xlab=ex <- expression(partial~R^2))
 dotplot(group ~ partialR2 | Variable, data=A, xlab=ex)
 dotplot(Variable ~ partialR2, groups=group, data=A, xlab=ex,
-        auto.key=list(corner=c(.5,.6)))
+        auto.key=list(corner=c(.5,.5)))
 
 # Suppose that a researcher wants to make a big deal about a variable 
 # because it has the highest adjusted chi-square.  We use the
