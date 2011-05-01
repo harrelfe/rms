@@ -69,7 +69,9 @@ Survival(object, \dots)
 # quantsurv(q, lp)    # quantiles of survival time
 # meant(lp)           # mean survival time
 
-\method{residuals}{psm}(object, type="censored.normalized", \dots)
+\method{residuals}{psm}(object, type=c("censored.normalized",
+"response", "deviance", "dfbeta",
+"dfbetas", "working", "ldcase", "ldresp", "ldshape", "matrix"), \dots)
 
 \method{survplot}{residuals.psm.censored.normalized}(fit, x, g=4, col, main, \dots)
 
