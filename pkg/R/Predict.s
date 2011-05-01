@@ -35,6 +35,7 @@ Predict <-
       names(res) <- nams
 
       i <- 0
+      info <- NULL # handles case where nams is empty, when no predictors
       for(nam in nams)
         {
           i <- i + 1

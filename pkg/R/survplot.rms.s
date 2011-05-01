@@ -122,7 +122,16 @@ survplot.rms <-
     stop('cannot vary more than one predictor')
 
   adjust <- if(adj.subtitle) info$adjust else NULL
-  nc <- nrow(xadj)
+  if(length(xadj))
+    {
+      nc <- nrow(xadj)
+      covpres <- TRUE
+    }
+  else
+    {
+      nc <- 1
+      covpres <- FALSE
+    }
   y <- if(length(varying)) xadj[[varying]] else ''
 
   curve.labels <- NULL
@@ -151,13 +160,19 @@ survplot.rms <-
   
   if(labelc || conf=='bands') curves <- vector('list',nc)
 
-  for(i in 1:nrow(xadj))
+  for(i in 1:nc)
     {
-      adj <- xadj[i,,drop=FALSE]
-      ay <- if(length(varying)) adj[[varying]] else ''
       ci <- conf.int
-      w <- survest(fit, newdata=adj, fun=fun, what=what,
-                   conf.int=ci, type=type, conf.type=conf.type)
+      ay <- if(length(varying)) adj[[varying]] else ''
+      if(covpres)
+        {
+          adj <- xadj[i,,drop=FALSE]
+          w <- survest(fit, newdata=adj, fun=fun, what=what,
+                       conf.int=ci, type=type, conf.type=conf.type)
+        }
+      else w <- survest(fit, fun=fun, what=what, conf.int=ci,
+                        type=type, conf.type=conf.type)
+
       time <- w$time
       if(logt) time <- logb(time)
       s <- !is.na(time) & (time>=xlim[1])
