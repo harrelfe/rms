@@ -336,12 +336,16 @@ predict.psm <-
   }
 
 
-residuals.psm <- function(object, type = "censored.normalized", ...)
+residuals.psm <-
+  function(object,
+           type=c("censored.normalized",
+             "response", "deviance","dfbeta","dfbetas", 
+             "working","ldcase","ldresp","ldshape", "matrix"), ...)
 {
   type <- match.arg(type)
-  if(type!='censored.normalized')
+  if(type != 'censored.normalized')
     {
-      if(type=='score')
+      if(type == 'score')
         stop('score residuals not implemented')
       ## TODO
       return(survival:::residuals.survreg(object, type=type))
