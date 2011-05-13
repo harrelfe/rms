@@ -195,6 +195,10 @@ Rosenbaum, Paul R (1995): Observational Studies.  New York: Springer-Verlag.
 Rosenbaum P, Rubin D (1983): Assessing sensitivity to an unobserved binary
 covariate in an observational study with binary outcome.  J Roy Statist Soc
 B 45:212--218.
+
+
+Lee WC (2011): Bounding the bias of unmeasured factors with confounding
+and effect-modifying potentials.  Stat in Med 30:1007-1017.
 }
 \seealso{
 \code{\link{lrm}}, \code{\link{cph}}, \code{\link{sample}}
