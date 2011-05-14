@@ -21,31 +21,31 @@
 #
 #Frank Harrell 1 Jun 91
 #
-val.prob <- function(p,y,logit,group,weights=rep(1,length(y)),normwt=FALSE,
-					 pl=TRUE,smooth=TRUE,logistic.cal=TRUE,
+val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
+                     normwt=FALSE, pl=TRUE, smooth=TRUE, logistic.cal=TRUE,
 					 xlab="Predicted Probability", ylab="Actual Probability",
-					 lim=c(0,1),m,g,cuts,emax.lim=c(0,1),
-					 legendloc=lim[1]+c(.55*diff(lim),.27*diff(lim)),
-					 statloc=c(0,.99),riskdist="calibrated",cex=.7, mkh=.02,
+					 lim=c(0,1), m, g, cuts, emax.lim=c(0,1),
+					 legendloc=lim[1] + c(.55*diff(lim),.27*diff(lim)),
+					 statloc=c(0,.99), riskdist="calibrated", cex=.7, mkh=.02,
 					 connect.group=FALSE, connect.smooth=TRUE, 
 					 g.group=4, evaluate=100, nmin=0)
 {
 
-  if(missing(p)) p <- 1/(1+exp(-logit))	else logit <- logb(p/(1-p))
-  if(length(p)!=length(y))stop("lengths of p or logit and y do not agree")
+  if(missing(p)) p <- plogis(logit)	else logit <- qlogis(p)
+  if(length(p) != length(y)) stop("lengths of p or logit and y do not agree")
   names(p) <- names(y) <- names(logit) <- NULL
 
   Spi <- function(p, y)
     {
-      z <- sum((y - p)*(1 - 2*p)) / sqrt(sum((1-2*p)*(1-2*p)*p*(1-p)))
-      P <- 2*(1 - pnorm(abs(z)))
+      z <- sum((y - p)*(1 - 2*p)) / sqrt(sum((1 - 2 * p) * (1 - 2 * p) * p * (1-p)))
+      P <- 2 * (1 - pnorm(abs(z)))
       c(Z=z, P=P)
     }
   
   if(!missing(group))
     {
       if(length(group)==1 && is.logical(group) && group)
-        group <- rep('',length(y))
+        group <- rep('', length(y))
       if(!is.factor(group)) group <- 
         if(is.logical(group) || is.character(group)) 
           as.factor(group) else cut2(group, g=g.group)
@@ -72,7 +72,7 @@ val.prob <- function(p,y,logit,group,weights=rep(1,length(y)),normwt=FALSE,
   if(length(unique(p))==1)
     {
       P <- mean(y)
-      Intc <- logb(P/(1-P))
+      Intc <- qlogis(P)
       n <- length(y)
       D <- -1/n
       L01 <- -2 * sum(y * logit - logb(1 + exp(logit)), na.rm=TRUE)
@@ -99,10 +99,14 @@ val.prob <- function(p,y,logit,group,weights=rep(1,length(y)),normwt=FALSE,
   f <- lrm.fit(logit[i], y[i])
   stats <- f$stats
   n <- stats["Obs"]
-  predprob <- seq(emax.lim[1],emax.lim[2],by=.0005)
-  lt <- f$coef[1]+f$coef[2]*logb(predprob/(1-predprob))
-  calp <- 1/(1+exp(-lt))
+  predprob <- seq(emax.lim[1], emax.lim[2], by=.0005)
+  lt <- f$coef[1] + f$coef[2] * qlogis(predprob)
+  calp <- plogis(lt)
   emax <- max(abs(predprob-calp))
+  
+  Sm <- lowess(p, y, iter=0)
+  cal.smooth <- approx(Sm, xout=p, ties=mean)$y
+  eavg <- mean(abs(p - cal.smooth))
   
   if(pl)
     {
@@ -116,10 +120,9 @@ val.prob <- function(p,y,logit,group,weights=rep(1,length(y)),normwt=FALSE,
         }
       if(smooth)
         {
-          Sm <- lowess(p,y,iter=0)
           if(connect.smooth)
             { 
-              lines(Sm,lty=3)
+              lines(Sm, lty=3)
               lt <- c(lt, 3)
               marks <- c(marks, -1)
             }
@@ -130,8 +133,6 @@ val.prob <- function(p,y,logit,group,weights=rep(1,length(y)),normwt=FALSE,
               marks <- c(marks, 1)
             }
           leg <- c(leg, "Nonparametric")
-          cal.smooth <- approx(Sm, xout=p, ties=mean)$y
-          eavg <- mean(abs(p-cal.smooth))
         }
       if(!missing(m) | !missing(g) | !missing(cuts))
         {
@@ -139,9 +140,8 @@ val.prob <- function(p,y,logit,group,weights=rep(1,length(y)),normwt=FALSE,
           else if(!missing(g)) q <- cut2(p, g=g, levels.mean=TRUE, digits=7)
           else if(!missing(cuts)) q <- cut2(p, cuts=cuts, levels.mean=TRUE,
                                             digits=7)
-          ##		means <- tapply(p, q, function(x)mean(x,na.rm=TRUE))
           means <- as.double(levels(q))
-          prop <- tapply(y, q, function(x)mean(x,na.rm=TRUE))
+          prop <- tapply(y, q, function(x) mean(x, na.rm=TRUE))
           points(means, prop, pch=2)
           if(connect.group) {lines(means, prop); lt <- c(lt, 1)}
           else lt <- c(lt, 0)
@@ -167,16 +167,14 @@ val.prob <- function(p,y,logit,group,weights=rep(1,length(y)),normwt=FALSE,
   names(stats) <- c("Dxy","C (ROC)", 
                     "R2","D","D:Chi-sq","D:p","U","U:Chi-sq","U:p","Q",
                     "Brier","Intercept","Slope","Emax","S:z","S:p")
-  if(smooth) stats <- c(stats, c(Eavg=eavg))
+  stats <- c(stats, c(Eavg=eavg))
   if(pl)
     {
       logit <- seq(-7, 7, length=200)
-      prob <- 1/(1+exp(-logit))
+      prob <- plogis(logit)
       pred.prob <- f$coef[1] + f$coef[2] * logit
-      pred.prob <- 1/(1+exp(-pred.prob))
-      if(logistic.cal)lines(prob, pred.prob, lty=1)
-      ##	pc <- rep(" ", length(lt))
-      ##	pc[lt==0] <- "."
+      pred.prob <- plogis(pred.prob)
+      if(logistic.cal) lines(prob, pred.prob, lty=1)
       lp <- legendloc
       if(!is.logical(lp))
         {
@@ -190,36 +188,37 @@ val.prob <- function(p,y,logit,group,weights=rep(1,length(y)),normwt=FALSE,
           leg <- paste(leg, ":", format(stats[dostats]),sep="")
           if(!is.list(statloc)) statloc <- list(x=statloc[1],y=statloc[2])
           text(statloc,paste(format(names(stats[dostats])),collapse="\n"),
-               adj=c(0,1),cex=cex)
-          text(statloc$x+.225*diff(lim),statloc$y,
-               paste(format(round(stats[dostats],3)),
-                     collapse="\n"),adj=c(1,1),cex=cex)
-          ##	legend(statloc, leg, lty=rep(0, length(dostats)))
+               adj=c(0,1), cex=cex)
+          text(statloc$x + .225 * diff(lim), statloc$y,
+               paste(format(round(stats[dostats], 3)),
+                     collapse="\n"), adj=c(1,1), cex=cex)
         }
       if(is.character(riskdist))
         {
           if(riskdist=="calibrated")
             {
-              x <- f$coef[1]+f$coef[2]*logb(p/(1-p))
-              x <- 1/(1+exp(-x))
-              x[p==0] <- 0; x[p==1] <- 1}
+              x <- f$coef[1] + f$coef[2] * qlogis(p)
+              x <- plogis(x)
+              x[p==0] <- 0; x[p==1] <- 1
+            }
           else
             x <- p
-          bins <- seq(lim[1],lim[2],length=101)
+          bins <- seq(lim[1], lim[2], length=101)
           x <- x[x>=lim[1] & x<=lim[2]]
-          f <- table(cut(x,bins))
-          j <- f>0
+          f <- table(cut(x, bins))
+          j <- f > 0
           bins <- (bins[-101])[j]
           f <- f[j]
-          f <- lim[1]+.15*diff(lim)*f/max(f)
-          segments(bins,0,bins,f)
+          f <- lim[1] + .15 * diff(lim) * f/max(f)
+          segments(bins, 0, bins, f)
         }
     }	
   stats
 }
 
 
-val.probg <- function(p, y, group, evaluate=100, weights, normwt, nmin) {
+val.probg <- function(p, y, group, evaluate=100, weights, normwt, nmin)
+{
   if(normwt) weights <- length(y)*weights/sum(weights)
   ng <- length(lg <- levels(group))
   if(ng==1) {ng <- 0; lg <- character(0)}
@@ -232,62 +231,66 @@ val.probg <- function(p, y, group, evaluate=100, weights, normwt, nmin) {
   q.limits <- c(.01,.025,.05,.1,.25,.5,.75,.9,.95,.975,.99)
   limits <- matrix(NA, nrow=ng+1, ncol=length(q.limits),
 				   dimnames=list(nn, as.character(q.limits)))
-  for(i in 1:(ng+1)) {
-	s <- if(i==(ng+1)) 1:length(p) else group==lg[i]
-	P <- p[s]
-	Y <- y[s]
-	wt <- weights[s]
-	lims <- wtd.quantile(P, wt, q.limits, na.rm=FALSE, normwt=FALSE)
-	limits[i,] <- lims
-	n <- sum(wt)
-	n1 <- sum(wt[Y == 1])
-	c.index <- (mean(wtd.rank(P,wt,na.rm=FALSE,normwt=FALSE)[Y == 1]) - 
-				(n1 + 1)/2)/(n - n1)
-	# c.index <- somers2(P,Y,wt,normwt=FALSE,na.rm=FALSE)['C']
-	sm <- wtd.loess.noiter(P, Y, wt, na.rm=FALSE, type='all')  
-	##all -> return all points
-	curve <- if(length(sm$x) > evaluate)
-	  approx(sm, xout=seq(min(P),max(P),length=evaluate), ties=mean) else {
-		o <- order(sm$x)
-		nd <- !duplicated(sm$x[o])
-		list(x=sm$x[o][nd], y=sm$y[o][nd])
-	  }
-	if(nmin > 0) {
-	  cuts <- wtd.quantile(P, wt, c(nmin, n-nmin)/n, normwt=FALSE, na.rm=FALSE)
-	  keep <- curve$x >= cuts[1] & curve$x <= cuts[2]
-	  curve <- list(x=curve$x[keep], y=curve$y[keep])
-	}
-	curves[[i]] <- curve
-	cal.smooth <- sm$y
-	eavg <- sum(wt*abs(P-cal.smooth))/n
-	b    <- sum(wt*((P-Y)^2))/n
-	E0b  <- sum(wt*P*(1-P))/n
-	Vb   <- sum(wt*((1-2*P)^2)*P*(1-P))/n/n
-	bchisq <- (b - E0b)^2 / Vb
-	b.cal  <- sum(wt*((cal.smooth-Y)^2))/n
-
-	pred  <- sum(wt*P)/n
-	obs   <- sum(wt*Y)/n
-	L <- ifelse(P==0 | P==1, NA, logb(P/(1-P)))
-	w <- !is.na(L)
-	del <- matrix(c(sum((wt*(Y-P))[w]),sum((wt*L*(Y-P))[w])),ncol=2)
-	v <- rbind(c(sum((wt*P*(1-P))[w]), sum((wt*L*P*(1-P))[w])),
-			   c(NA, sum((wt*L*L*P*(1-P))[w])))
-	v[2,1] <- v[1,2]
-	chisq  <- (sum(wt*(P-Y))^2) / sum(wt*P*(1-P))
-	chisq2 <- del %*% solve(v) %*% t(del)
-	p90    <- diff(lims[c(3,9)])
-	Lcal   <- ifelse(cal.smooth <= 0 | cal.smooth >= 1, NA,
-				   logb(cal.smooth/(1-cal.smooth)))
-	or <- exp(wtd.quantile(abs(L - Lcal), wt, .5, na.rm=TRUE, normwt=FALSE))
-	stats[i,] <- c(n,pred,obs,chisq,chisq2,eavg,eavg/p90,or,c.index,
-				   b,bchisq,b.cal)
-  }
+  for(i in 1:(ng+1))
+    {
+      s <- if(i==(ng+1)) 1:length(p) else group==lg[i]
+      P <- p[s]
+      Y <- y[s]
+      wt <- weights[s]
+      lims <- wtd.quantile(P, wt, q.limits, na.rm=FALSE, normwt=FALSE)
+      limits[i,] <- lims
+      n <- sum(wt)
+      n1 <- sum(wt[Y == 1])
+      c.index <- (mean(wtd.rank(P, wt, na.rm=FALSE, normwt=FALSE)[Y == 1]) - 
+                  (n1 + 1)/2)/(n - n1)
+      ## c.index <- somers2(P, Y, wt, normwt=FALSE, na.rm=FALSE)['C']
+      sm <- wtd.loess.noiter(P, Y, wt, na.rm=FALSE, type='all')  
+      ##all -> return all points
+      curve <- if(length(sm$x) > evaluate)
+        approx(sm, xout=seq(min(P), max(P), length=evaluate), ties=mean) else
+      {
+        o <- order(sm$x)
+        nd <- !duplicated(sm$x[o])
+        list(x=sm$x[o][nd], y=sm$y[o][nd])
+      }
+      if(nmin > 0)
+        {
+          cuts <- wtd.quantile(P, wt, c(nmin, n-nmin)/n, normwt=FALSE, na.rm=FALSE)
+          keep <- curve$x >= cuts[1] & curve$x <= cuts[2]
+          curve <- list(x=curve$x[keep], y=curve$y[keep])
+        }
+      curves[[i]] <- curve
+      cal.smooth <- sm$y
+      eavg <- sum(wt * abs(P - cal.smooth))/n
+      b    <- sum(wt * ((P - Y)^2))/n
+      E0b  <- sum(wt * P * (1 - P))/n
+      Vb   <- sum(wt * ((1 - 2 * P)^2) * P * (1 - P))/n/n
+      bchisq <- (b - E0b)^2 / Vb
+      b.cal  <- sum(wt * ((cal.smooth - Y)^2))/n
+      
+      pred  <- sum(wt * P)/n
+      obs   <- sum(wt * Y)/n
+      L <- ifelse(P==0 | P==1, NA, qlogis(P))
+      w <- !is.na(L)
+      del <- matrix(c(sum((wt*(Y-P))[w]),sum((wt*L*(Y-P))[w])),ncol=2)
+      v <- rbind(c(sum((wt*P*(1-P))[w]), sum((wt*L*P*(1-P))[w])),
+                 c(NA, sum((wt*L*L*P*(1-P))[w])))
+      v[2,1] <- v[1,2]
+      chisq  <- (sum(wt * (P - Y))^2) / sum(wt * P * (1 - P))
+      chisq2 <- del %*% solve(v) %*% t(del)
+      p90    <- diff(lims[c(3,9)])
+      Lcal   <- ifelse(cal.smooth <= 0 | cal.smooth >= 1, NA,
+                       qlogis(cal.smooth))
+      or <- exp(wtd.quantile(abs(L - Lcal), wt, .5, na.rm=TRUE, normwt=FALSE))
+      stats[i,] <- c(n, pred, obs, chisq, chisq2, eavg, eavg/p90, or, c.index,
+                     b, bchisq, b.cal)
+    }
   structure(list(stats=stats, cal.curves=curves, quantiles=limits), 
 			class='val.prob')
 }
 
-print.val.prob <- function(x, ...) {
+print.val.prob <- function(x, ...)
+{
   print(round(x$stats,3))
   cat('\nQuantiles of Predicted Probabilities\n\n')
   print(round(x$quantiles,3))
@@ -301,8 +304,8 @@ plot.val.prob <- function(x,
 						  lwd.overall=4, quantiles=c(0.05,0.95),
 						  flag=function(stats) ifelse(
 						   stats[,'ChiSq2'] > qchisq(.99,2) |
-						   stats[,'B ChiSq'] > qchisq(.99,1),'*',' '), ...) {
-
+						   stats[,'B ChiSq'] > qchisq(.99,1),'*',' '), ...)
+{
   stats <- x$stats[,stats,drop=FALSE]
   lwd <- rep(par('lwd'), nrow(stats))
   lwd[dimnames(stats)[[1]]=='Overall'] <- lwd.overall
@@ -313,25 +316,28 @@ plot.val.prob <- function(x,
   abline(a=0,b=1,lty=2)
   if(is.logical(statloc) && !statloc) return(invisible())
 
-  if(length(quantiles)) {
-	limits <- x$quantiles
-	quant <- round(as.numeric(dimnames(limits)[[2]]),3)
-	w <- quant %in% round(quantiles,3)
-	if(any(w)) for(j in 1:nrow(limits)) {
-	  qu <- limits[j,w]
-	  scat1d(qu, y=approx(curves[[j]], xout=qu, ties=mean)$y)
-	}
-  }
+  if(length(quantiles))
+    {
+      limits <- x$quantiles
+      quant <- round(as.numeric(dimnames(limits)[[2]]),3)
+      w <- quant %in% round(quantiles,3)
+      if(any(w)) for(j in 1:nrow(limits))
+        {
+          qu <- limits[j,w]
+          scat1d(qu, y=approx(curves[[j]], xout=qu, ties=mean)$y)
+        }
+    }
 
   xx <- statloc[1]; y <- statloc[2]
-  for(i in 0:ncol(stats)) {
-	column.text <- if(i==0) c('Group',
-						paste(flag(stats),dimnames(stats)[[1]],sep='')) else
+  for(i in 0:ncol(stats))
+    {
+      column.text <- if(i==0) c('Group',
+                          paste(flag(stats),dimnames(stats)[[1]],sep='')) else
 	  c(dimnames(stats)[[2]][i], 
-		format(round(stats[,i],if(i %in% c(4:5,11))1 else 3)))
-    cat(column.text,'\n')
-	text(xx, y, paste(column.text,collapse='\n'), adj=0, cex=cex)
-	xx <- xx + (1+.8*max(nchar(column.text)))*cex*par('cxy')[1]
-  }
-invisible()
+		format(round(stats[,i], if(i %in% c(4:5,11))1 else 3)))
+      cat(column.text, '\n')
+      text(xx, y, paste(column.text, collapse='\n'), adj=0, cex=cex)
+      xx <- xx + (1 + .8 * max(nchar(column.text))) * cex * par('cxy')[1]
+    }
+  invisible()
 }
