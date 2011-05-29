@@ -110,7 +110,7 @@ Predict(x, ..., fun,
 	specify \code{non.slopes=c(0,1,0)}. The default is
 	\code{non.slopes=rep(0,k)} if \code{adj.zero=TRUE}, where \code{k}
 	is the number of intercepts in the model.  If \code{adj.zero=FALSE},
-	the default is \code{(1,0,0,\dots,0)}. 
+	the default is \code{(1,0,0,\dots,0)}, i.e., the first intercept is used.
   }
   \item{time}{
 	Specify a single time \code{u} to cause function \code{survest} to
