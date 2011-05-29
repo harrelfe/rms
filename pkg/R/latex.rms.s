@@ -35,8 +35,8 @@ latexrms <- function(object,
       vn <- name
       vn[ac!=9] <- varnames
       varnames <- vn
-      tl <- sedit(tl, name, varnames)
-      if(anytr) TLi <- sedit(TLi, name, varnames)
+      tl <- sedit(tl, name, varnames, wild.literal=TRUE)
+      if(anytr) TLi <- sedit(TLi, name, varnames, wild.literal=TRUE)
     }
   else
     varnames <- name
@@ -72,13 +72,13 @@ latexrms <- function(object,
   from <- c('sqrt(*)',  'log(',  'I(*)', '1/(*)',   'pmin(', 'pmax(')
   to   <- c('\\sqrt{*}','\\log(','[*]',  '(*)^{-1}','\\min(','\\max(')
   tl  <- sedit(tl, from, to)
-  tl <- sedit(tl, varnames, vnames)
+  tl <- sedit(tl, varnames, vnames, wild.literal=TRUE)
   ltl <- nchar(tl)
   tl <- paste("{\\rm ", tl, "}", sep="")
   if(anytr)
     {
       TLi <- sedit(TLi, from, to)
-      TLi <- sedit(TLi, varnames, vnames)
+      TLi <- sedit(TLi, varnames, vnames, wild.literal=TRUE)
       TLi <- ifelse(TLi=="", "", paste("{\\rm ", TLi, "}", sep=""))
     }
   
