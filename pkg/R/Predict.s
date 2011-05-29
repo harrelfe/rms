@@ -184,7 +184,7 @@ Predict <-
 
       if(length(xx)==0)
         stop("model has no covariables and survival not plotted")
-      xb <- if(conf.int) xx$linear.predictors else xx
+      xb <- if(is.list(xx)) xx$linear.predictors else xx
     }
   else   ## time specified
     {
