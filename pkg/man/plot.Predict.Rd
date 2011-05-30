@@ -29,7 +29,8 @@
   in a base graphic.
 }
 \usage{
-\method{plot}{Predict}(x, formula, groups=NULL, subset,
+\method{plot}{Predict}(x, formula, groups=NULL,
+     cond=NULL, varypred=FALSE, subset,
      xlim, ylim, xlab, ylab, 
      data=NULL, col.fill=gray(seq(.95, .75, length=5)),
      adj.subtitle, cex.adj, perim=NULL, digits=4, nlevels=3,
@@ -53,6 +54,14 @@ pantext(object, x, y, cex=.5, adj=0, fontfamily="Courier", lattice=TRUE)
   \code{groups} does not contain the groups data as is customary in
   \code{lattice}; it is only a single character string specifying the
   name of the grouping variable.}
+\item{cond}{when plotting effects of different predictors, \code{code}
+  is a character string that specifies a single variable name in
+  \code{x} that can be used to form panels.}
+\item{varypred}{set to \code{TRUE} if \code{x} is the result of
+  passing multiple \code{Predict} results, that represent different
+  predictors, to \code{rbind.Predict}.  This will cause the \code{.set.}
+  variable created by \code{rbind} to be copied to the
+  \code{.predictor.} variable.}
 \item{subset}{a subsetting expression for restricting the rows of
   \code{x} that are used in plotting.  For example, predictions may have
   been requested for males and females but one wants to plot only females.}
@@ -255,6 +264,16 @@ fit <- update(fit)   # make new reference value take effect
 p <- Predict(fit, age, ref.zero=TRUE, fun=exp)
 plot(p, ylab='Age=x:Age=30 Odds Ratio',
      abline=list(list(h=1, lty=2, col=2), list(v=30, lty=2, col=2)))
+
+# Compute predictions for three predictors, with superpositioning or
+# conditioning on sex, combined into one graph
+
+p1 <- Predict(fit, age, sex)
+p2 <- Predict(fit, cholesterol, sex)
+p3 <- Predict(fit, blood.pressure, sex)
+p <- rbind(age=p1, cholesterol=p2, blood.pressure=p3)
+plot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE)
+plot(p, cond='sex', varypred=TRUE, adj.subtitle=FALSE)
 
 
 # Plots for a parametric survival model
