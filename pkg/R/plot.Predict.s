@@ -1,5 +1,5 @@
 plot.Predict <-
-  function(x, formula, groups=NULL, subset,
+  function(x, formula, groups=NULL, cond=NULL, varypred=FALSE, subset,
            xlim, ylim, xlab, ylab,
            data=NULL, col.fill=gray(seq(.95, .75, length=5)),
            adj.subtitle, cex.adj, perim=NULL,
@@ -7,6 +7,11 @@ plot.Predict <-
            scat1d.opts=list(frac=0.025, lwd=0.3), ...)
 {
   require(lattice)
+  if(varypred)
+    {
+      x$.predictor. <- x$.set.
+      x$.set. <- NULL
+    }
   predpres <- length(x$.predictor.)
   if(missing(addpanel)) addpanel <- function(...) {}
 
@@ -34,6 +39,12 @@ plot.Predict <-
       if(length(gname) > 1 || !is.character(gname) ||
          gname %nin% names(x))
         stop('groups must be a single predictor name')
+    }
+  if(length(cond))
+    {
+      if(length(cond) > 1 || !is.character(cond) ||
+         cond %nin% names(x))
+        stop('cond must be a single predictor name')
     }
   if(missing(ylab))    ylab     <- info$ylabPlotmath
   if(!length(x$lower)) conf.int <- FALSE
@@ -66,6 +77,9 @@ plot.Predict <-
       levs <- at <- labels <- limits <- list()
       lp <- levels(p)
       np <- length(lp)
+      groups <- gr <- if(length(gname)) as.factor(x[[gname]])
+      cond <- co <- if(length(cond)) as.factor(x[[cond]])
+
       perhapsAbbrev <- function(k)
         {
           len <- nchar(k)
@@ -82,12 +96,28 @@ plot.Predict <-
           ll <- length(l)
           levs[[w]]   <- if(ll) l else character(0)
           xp[i]       <- as.numeric(z[i])
+          if(length(groups)) gr[i] <- groups[i]
+          if(length(cond)) co[i] <- cond[i]
           at[[w]]     <- if(ll) 1:ll else pretty(z[i])
           labels[[w]] <- if(ll) perhapsAbbrev(l) else format(at[[w]])
           limits[[w]] <- if(ll) c(2/3, ll+1/3) else range(z[i])
         }
-      formula <- if(!conf.int) x$yhat ~ xp | p else
-      Cbind(x$yhat, x$lower, x$upper) ~ xp | p
+      if(length(cond))
+        {
+          nuc <- length(levels(cond))
+          at <- at[rep(seq(1, length(at)), each=nuc)]
+          labels <- labels[rep(seq(1, length(labels)), each=nuc)]
+          limits <- limits[rep(seq(1, length(limits)), each=nuc)]
+          levs <- levs[rep(seq(1, length(levs)), each=nuc)]
+          
+          formula <- if(!conf.int) x$yhat ~ xp | cond*p else
+          Cbind(x$yhat, x$lower, x$upper) ~ xp | cond*p
+        }
+      else
+        {
+          formula <- if(!conf.int) x$yhat ~ xp | p else
+          Cbind(x$yhat, x$lower, x$upper) ~ xp | p
+        }
       
       pan <- function(x, y, ...)
         {
@@ -123,8 +153,9 @@ plot.Predict <-
         }
       scales <- list(x=list(relation='free', limits=limits,
                        at=at, labels=labels))
-      r <- list(formula=formula, subset=subset, type='l',
-                method='filled bands', col.fill=col.fill,
+      r <- list(formula=formula, groups=gr, subset=subset, type='l',
+                method=if(conf.int) 'filled bands' else 'bars',
+                col.fill=col.fill,
                 xlab='', ylab=ylab, ylim=ylim,
                 panel=pan, scales=scales)
       if(length(dotlist)) r <- c(r, dotlist)
@@ -273,7 +304,8 @@ plot.Predict <-
 
       r <- list(formula=formula, data=x, subset=subset,
                 type=if(xdiscrete) 'b' else 'l',
-                method='filled bands', col.fill=col.fill,
+                method=if(conf.int) 'filled bands' else 'bars',
+                col.fill=col.fill,
                 xlab=xlab, ylab=ylab, ylim=ylim, panel=pan)
       if(length(xscale)) r$scales <- xscale
       if(!missing(xlim)) r$xlim   <- xlim
