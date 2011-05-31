@@ -33,7 +33,7 @@ to \code{latex.default} for conversion to LaTeX.
 }
 \usage{
 \method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9, 
-      test=c('F','Chisq'), ss=TRUE)
+      test=c('F','Chisq'), india=TRUE, indnl=TRUE, ss=TRUE)
 
 \method{print}{anova.rms}(x, which=c('none','subscripts','names','dots'), \dots)
 
@@ -78,6 +78,10 @@ singularity criterion for use in matrix inversion
 \item{test}{
 For an \code{ols} fit, set \code{test="Chisq"} to use Wald \eqn{\chi^2} tests rather than F-tests.
 }
+\item{india}{set to \code{FALSE} to exclude individual tests of
+  interaction from the table}
+\item{indnl}{set to \code{FALSE} to exclude individual tests of
+  nonlinearity from the table}
 \item{ss}{
 For an \code{ols} fit, set \code{ss=FALSE} to suppress printing partial sums of squares, mean
 squares, and the Error SS and MS.
