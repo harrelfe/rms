@@ -278,7 +278,7 @@ group <- c(rep('a', n/2), rep('b', n/2))
 A <- NULL
 for(g in c('a','b'))
   {
-    f <- ols(y ~ pol(x1,2) + pol(x2,2) + pol(x1,2) %ia% pol(x2,2),
+    f <- ols(y ~ pol(x1,2) + pol(x2,2) + pol(x1,2) \%ia\% pol(x2,2),
              subset=group==g)
     a <- plot(anova(f),
               what='partial R2', pl=FALSE, rm.totals=FALSE, sort='none')

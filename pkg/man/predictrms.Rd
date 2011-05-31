@@ -283,7 +283,7 @@ xYplot(pred ~ age, groups=interaction(cholesterol,blood.pressure),
 Key()
 
 
-#Add upper and lower 0.95 confidence limits for individuals
+# Add upper and lower 0.95 confidence limits for individuals
 combos <- cbind(combos, predict(fit, combos, conf.int=.95))
 xYplot(Cbind(linear.predictors, lower, upper) ~ age | cholesterol,
        groups=blood.pressure, data=combos, type='b')
