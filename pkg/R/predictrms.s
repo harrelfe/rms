@@ -109,9 +109,9 @@ predictrms <-
                   {
                     if(kint>1)
                       warning("se.fit is retrieved from the fit but it corresponded to kint=1")
-                    retlist <- list(linear.predictors=LP,
-                                    se.fit=if(se.fit)
-                                    naresid(naa,fit$se.fit) else numeric(0))
+                    retlist <- list(linear.predictors=LP)
+                    if(se.fit) retlist$se.fit <-
+                      naresid(naa, fit$se.fit)
                     if(conf.int)
                       {
                         plminus <- zcrit*sqrt(retlist$se.fit^2 + vconstant)
@@ -358,7 +358,7 @@ predictrms <-
           xb <- if(length(offset) && any(offset != 0)) offset else numeric(0)
           if(nstrata > 0) attr(xb, 'strata') <- naresid(naa, strata)
           return(structure(if(se.fit) list(linear.predictors=xb,
-                                           se.fit=numeric(0)) else
+                                           se.fit=rep(NA, length(xb))) else
                            xb,
                  na.action=if(expand.na) NULL else naa))
     }
@@ -373,12 +373,15 @@ predictrms <-
           names(se) <- rnam
 
           sef <- naresid(naa, se)
-          retlist <-
-            structure(if(conf.int || se.fit)
-                      list(linear.predictors=xb - ycenter,
-                           se.fit=if(se.fit) sef else numeric(0))
-                      else xb - ycenter,
-                      na.action=if(expand.na) NULL else naa)
+          ww <- if(conf.int || se.fit)
+            {
+              if(se.fit)
+                list(linear.predictors = xb - ycenter, se.fit = sef) else
+                list(linear.predictors = xb - ycenter)
+            }
+          else xb - ycenter
+          retlist <- structure(ww, 
+                               na.action=if(expand.na) NULL else naa)
           if(conf.int)
             {
               plminus <- zcrit*sqrt(sef^2 + vconstant)
