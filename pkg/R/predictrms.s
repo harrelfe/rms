@@ -359,7 +359,7 @@ predictrms <-
           if(nstrata > 0) attr(xb, 'strata') <- naresid(naa, strata)
           return(structure(if(se.fit) list(linear.predictors=xb,
                                            se.fit=numeric(0)) else
-                           linear.predictors,
+                           xb,
                  na.action=if(expand.na) NULL else naa))
     }
       xb <- naresid(naa, xb)

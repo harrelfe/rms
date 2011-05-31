@@ -163,7 +163,7 @@ survplot.rms <-
   for(i in 1:nc)
     {
       ci <- conf.int
-      ay <- if(length(varying)) adj[[varying]] else ''
+      ay <- if(length(varying)) xadj[[varying]] else ''
       if(covpres)
         {
           adj <- xadj[i,,drop=FALSE]
