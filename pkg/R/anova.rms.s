@@ -2,7 +2,8 @@
 #question is involved in any interaction.
 
 anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9, 
-                      test=c('F','Chisq'), ss=TRUE)
+                      test=c('F','Chisq'),
+                      india=TRUE, indnl=TRUE, ss=TRUE)
 {
 
   ava <- function(idx,coef,cov,tol)
@@ -172,11 +173,11 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
 
             ## If factor i in >1 interaction, print summary
             ## Otherwise, will be printed later
-            if(j!=9 & ni>1)
+            if(india && (j != 9 & ni > 1))
               {
                 w <- ava(ia.index,coef,cov,tol=tol)
                 s <- s+1; W[[s]] <- ia.index
-                stats<-rbind(stats,w)
+                stats <- rbind(stats,w)
                 lab <- c(lab, " All Interactions")
               }
           }
@@ -185,11 +186,14 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
           idx <- c(main.index[nl], nonlin.ia.index)
           num.nonlin <- num.nonlin+1
           all.nonlin[idx] <- TRUE
-          w <- ava(idx,coef,cov,tol=tol)
-          s <- s+1; W[[s]] <- idx
-          stats <- rbind(stats,w)
-          lab <- c(lab, if(!length(nonlin.ia.index))" Nonlinear"
-          else " Nonlinear (Factor+Higher Order Factors)")	
+          if(indnl)
+            {
+              w <- ava(idx,coef,cov,tol=tol)
+              s <- s+1; W[[s]] <- idx
+              stats <- rbind(stats,w)
+              lab <- c(lab, if(!length(nonlin.ia.index))" Nonlinear"
+              else " Nonlinear (Factor+Higher Order Factors)")
+            }
         } 
         ## If interaction factor involves a non-linear term from an
         ## expanded polynomial, lspline, rcspline, or scored factor,
@@ -211,30 +215,33 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
                 idx <- main.index[nonlin.xy]
                 li <- length(idx)
                 
-                if(li>0)
+                if(li > 0)
                   {
                     num.nonlin <- num.nonlin+1
                     all.nonlin[idx] <- TRUE
-                    w <- ava(idx,coef,cov,tol=tol)
-                    s <- s+1
-                    W[[s]] <- idx
-                    stats<-rbind(stats,w)
-                    lab<-c(lab," Nonlinear Interaction : f(A,B) vs. AB")
-                    idx <- main.index[nonlin.xandy]
-                    li <- length(idx)
-                    
-                    if(li>0)
+                    if(indnl)
                       {
                         w <- ava(idx,coef,cov,tol=tol)
                         s <- s+1
                         W[[s]] <- idx
                         stats<-rbind(stats,w)
-                        lab<-c(lab," f(A,B) vs. Af(B) + Bg(A)")
+                        lab<-c(lab," Nonlinear Interaction : f(A,B) vs. AB")
+                      }
+                    idx <- main.index[nonlin.xandy]
+                    li <- length(idx)
+                    
+                    if(indnl && li > 0)
+                      {
+                        w <- ava(idx,coef,cov,tol=tol)
+                        s <- s+1
+                        W[[s]] <- idx
+                        stats <- rbind(stats,w)
+                        lab <- c(lab," f(A,B) vs. Af(B) + Bg(A)")
                       }
 
                     idx <- main.index[nonlin.x]
                     li <- length(idx)
-                    if(li>0 & any(nonlin.x!=nonlin.xy))
+                    if(indnl && (li > 0 & any(nonlin.x != nonlin.xy)))
                       {
                         w <- ava(idx,coef,cov,tol=tol)
                         s <- s+1
@@ -247,7 +254,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
                     idx <- main.index[nonlin.y]
                     li <- length(idx)
                     
-                    if(li>0 & any(nonlin.y!=nonlin.xy))
+                    if(indnl && (li > 0 & any(nonlin.y != nonlin.xy)))
                       {
                         w <- ava(idx,coef,cov,tol=tol)
                         s <- s+1
@@ -264,7 +271,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     }
 
   ## If >1 test of adequacy, print pooled test of all nonlinear effects
-  if(num.nonlin>1)
+  if(num.nonlin > 1 || (num.nonlin==1 & !indnl))
     {
       idx <- (1:nc)[all.nonlin]
       li <- length(idx)
@@ -275,7 +282,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     }
 
   ## If >1 test of interaction, print pooled test of all interactions in list
-  if(num.ia>1)
+  if(num.ia > 1 || (num.ia==1 & !india))
     {
       idx <- (1:nc)[all.ia]
       li <- length(idx)
