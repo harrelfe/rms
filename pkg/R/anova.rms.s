@@ -269,6 +269,10 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
           }
       }
     }
+  ## If all lines so far had (Factor +Higher Order Factors) in them,
+  ## remove this redundancy
+  if(length(grep('\\(Factor\\+Higher Order Factors\\)', lab)) == length(lab))
+    lab <- gsub('\\(Factor\\+Higher Order Factors\\)', '', lab)
 
   ## If >1 test of adequacy, print pooled test of all nonlinear effects
   if(num.nonlin > 1 || (num.nonlin==1 & !indnl))
