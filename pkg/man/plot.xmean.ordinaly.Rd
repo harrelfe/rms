@@ -18,7 +18,7 @@ expected means assuming a forward continuation ratio model.
 }
 \usage{
 \method{plot}{xmean.ordinaly}(x, data, subset, na.action, subn=TRUE,
-                    cr=FALSE, topcats=1, \dots)
+                    cr=FALSE, topcats=1, cex.points=.75, \dots)
 }
 \arguments{
 \item{x}{
@@ -56,6 +56,8 @@ when this option is specified.
   \code{k} most frequent predictor categories, where \code{k} is
   \code{min(ncat-1, topcats)} and \code{ncat} is the number of unique
   values of the predictor.}
+\item{cex.points}{if \code{cr} is \code{TRUE}, specifies the size of the
+  \code{"C"} that is plotted.  Default is 0.75.}
 \item{...}{
 other arguments passed to \code{plot} and \code{lines}
 }}
