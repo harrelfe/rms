@@ -1,5 +1,6 @@
 plot.xmean.ordinaly <- function(x, data, subset, na.action,
-                                subn=TRUE, cr=FALSE, topcats=1, ...)
+                                subn=TRUE, cr=FALSE, topcats=1,
+                                cex.points=.75, ...)
 {
   X <- match.call(expand=FALSE)
   X$subn <- X$cr <- X$topcats <- X$... <- NULL
@@ -70,7 +71,7 @@ plot.xmean.ordinaly <- function(x, data, subset, na.action,
       mgp.axis(1, at=yy, labels=names(fy))
       mgp.axis(2)
       lines(yy, xmean.y.po, lty=2, ...)
-      if(cr) points(yy, xmean.y.cr, pch='C')
+      if(cr) points(yy, xmean.y.cr, pch='C', cex=cex.points)
       if(subn) title(sub=paste('n=',n,sep=''),adj=0)
     }
   
