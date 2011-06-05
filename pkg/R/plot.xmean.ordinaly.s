@@ -3,7 +3,7 @@ plot.xmean.ordinaly <- function(x, data, subset, na.action,
                                 cex.points=.75, ...)
 {
   X <- match.call(expand=FALSE)
-  X$subn <- X$cr <- X$topcats <- X$... <- NULL
+  X$subn <- X$cr <- X$topcats <- X$cex.points <- X$... <- NULL
   if(missing(na.action)) X$na.action <- na.keep
   Terms <- if(missing(data)) terms(x)
   else
