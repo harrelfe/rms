@@ -265,17 +265,17 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
   misc <- reVector(Obs   =stats['Obs'],
                    'Sum of weights'=stats['Sum of Weights'],
                    Strata=if(nstrata > 1) nstrata,
-                   'max |deriv|' = maxd,
-                   Penalty=penaltyFactor)
+                   'max |deriv|' = maxd)
   if(length(x$freq) < 4)
     {
       names(x$freq) <- paste(if(latex)'~~' else ' ',
                              names(x$freq), sep='')
       misc <- c(misc[1], x$freq, misc[-1])
     }
-  lr   <- reVector('LR chi2'     = stats['Model L.R.'],
-                   'd.f.'        = round(stats['d.f.'],3),
-                   'Pr(> chi2)' = stats['P'])
+  lr   <- reVector('LR chi2'    = stats['Model L.R.'],
+                   'd.f.'       = round(stats['d.f.'],3),
+                   'Pr(> chi2)' = stats['P'],
+                   Penalty      = penaltyFactor)
   disc <- reVector(R2=stats['R2'], g=stats['g'], gr=stats['gr'],
                    gp=stats['gp'], Brier=stats['Brier'])
   discr <-reVector(C=stats['C'], Dxy=stats['Dxy'], gamma=stats['Gamma'],
