@@ -231,6 +231,7 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
   if(!length(nstrata)) nstrata <- 1
 
   pm <- x$penalty.matrix
+  penaltyFactor <- NULL
   if(length(pm))
     {
       psc <- if(length(pm)==1) sqrt(pm)
@@ -241,10 +242,7 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
       k <- k + 1
       z[[k]] <- list(type='print', list(as.data.frame(x$penalty, row.names='')),
                      title='Penalty factors')
-      k <- k + 1
-      z[[k]] <- list(type='print',
-                     list(t(cof) %*% pm %*% cof, digits=2),
-                     title='Final penalty on -2 log L')
+      penaltyFactor <- signif(as.vector(t(cof) %*% pm %*% cof), 3)
     }
 
   ## ?ok to have uncommented next 3 lines?
@@ -267,7 +265,8 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
   misc <- reVector(Obs   =stats['Obs'],
                    'Sum of weights'=stats['Sum of Weights'],
                    Strata=if(nstrata > 1) nstrata,
-                   'max |deriv|' = maxd)
+                   'max |deriv|' = maxd,
+                   Penalty=penaltyFactor)
   if(length(x$freq) < 4)
     {
       names(x$freq) <- paste(if(latex)'~~' else ' ',
