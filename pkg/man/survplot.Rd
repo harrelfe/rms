@@ -77,7 +77,7 @@ adjusted to, when defaults given to fitting routine (through
 \code{limits}) are not used.  The value given to factors is the original
 coding of data given to fit, except that for categorical or strata
 factors the text string levels may be specified.  The form of values
-given to the first factor none (omit the equal sign to use default range
+given to the first factor are none (omit the equal sign to use default range
 or list of all values if variable is discrete), \code{"text"} if factor
 is categorical, \code{c(value1, value2, \dots)}, or a function which
 returns a vector, such as \code{seq(low,high,by=increment)}.  Only the
