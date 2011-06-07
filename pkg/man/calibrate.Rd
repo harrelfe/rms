@@ -188,7 +188,10 @@ corresponding estimated bias-corrected Kaplan-Meier estimates,
 number of subjects, and other statistics.  For linear and logistic models,
 the matrix instead has rows corresponding to the prediction points, and
 the vector of predicted values being validated is returned as an attribute.
-The returned object has class \code{"calibrate"} or \code{"calibrate.default"}.
+The returned object has class \code{"calibrate"} or
+\code{"calibrate.default"}.
+\code{plot.calibrate.default} invisibly returns the vector of estimated
+  prediction errors corresponding to the dataset used to fit the model.
 }
 \section{Side Effects}{
 prints, and stores an object \code{pred.obs} or \code{.orig.cal}
