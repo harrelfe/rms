@@ -242,7 +242,7 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
       k <- k + 1
       z[[k]] <- list(type='print', list(as.data.frame(x$penalty, row.names='')),
                      title='Penalty factors')
-      penaltyFactor <- signif(as.vector(t(cof) %*% pm %*% cof), 3)
+      penaltyFactor <- as.vector(t(cof) %*% pm %*% cof)
     }
 
   ## ?ok to have uncommented next 3 lines?
@@ -285,7 +285,7 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
                    c('Model Likelihood','Ratio Test'),
                    c('Discrimination',' Indexes'),
                    c('Rank Discrim.','Indexes'))
-  data <- list(misc, c(lr, c(2,NA,-4)), c(disc,3), c(discr,3))
+  data <- list(misc, c(lr, c(2,NA,-4,2)), c(disc,3), c(discr,3))
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
 
