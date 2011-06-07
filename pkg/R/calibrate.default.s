@@ -171,6 +171,7 @@ plot.calibrate.default <- function(x, xlab, ylab, xlim, ylim, legend=TRUE,
   
   plot(p, p.app, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, type="n", ...)
   predicted <- at$predicted
+  err <- NULL
   if(length(predicted))
     {  ## for downward compatibility
       s <- !is.na(p + p.cal)
@@ -196,5 +197,5 @@ plot.calibrate.default <- function(x, xlab, ylab, xlim, ylim, legend=TRUE,
       legend(legend, c("Apparent", "Bias-corrected", "Ideal"),
              lty=c(3,1,2), bty="n")
     }
-  invisible()
+  invisible(err)
 }
