@@ -2,7 +2,7 @@ plot.Predict <-
   function(x, formula, groups=NULL, cond=NULL, varypred=FALSE, subset,
            xlim, ylim, xlab, ylab,
            data=NULL, col.fill=gray(seq(.95, .75, length=5)),
-           adj.subtitle, cex.adj, perim=NULL,
+           adj.subtitle, cex.adj, cex.axis, perim=NULL,
            digits=4, nlevels=3, nlines=FALSE, addpanel,
            scat1d.opts=list(frac=0.025, lwd=0.3), ...)
 {
@@ -153,6 +153,7 @@ plot.Predict <-
         }
       scales <- list(x=list(relation='free', limits=limits,
                        at=at, labels=labels))
+      if(!missing(cex.axis)) scales$x$cex <- cex.axis
       r <- list(formula=formula, groups=gr, subset=subset, type='l',
                 method=if(conf.int) 'filled bands' else 'bars',
                 col.fill=col.fill,
@@ -260,6 +261,7 @@ plot.Predict <-
           xv <- as.factor(xv)
           xlev <- levels(xv)
           xscale <- list(x=list(at=1:length(xlev), labels=xlev))
+          if(!missing(cex.axis)) xscale$x$cex <- cex.axis
           x[[xvar]] <- as.integer(xv)
         }
       
