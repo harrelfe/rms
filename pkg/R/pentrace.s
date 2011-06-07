@@ -365,9 +365,9 @@ print.pentrace <- function(x, ...)
   pen$aic <- x$aic
   print(pen)
   cat('\n')
-  if(is.data.frame(x$results.all)) print(x$results.all) else
-  print(as.data.frame(x$results.all, 
-                      row.names=rep('',length(x$results.all[[1]]))))
+  if(is.data.frame(x$results.all)) print(x$results.all, row.names=FALSE) else
+  print(as.data.frame(x$results.all,), row.names=FALSE) 
+#                      row.names=rep('',length(x$results.all[[1]]))))
   invisible()
 }
 
