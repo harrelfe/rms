@@ -33,7 +33,7 @@
      cond=NULL, varypred=FALSE, subset,
      xlim, ylim, xlab, ylab, 
      data=NULL, col.fill=gray(seq(.95, .75, length=5)),
-     adj.subtitle, cex.adj, perim=NULL, digits=4, nlevels=3,
+     adj.subtitle, cex.adj, cex.axis, perim=NULL, digits=4, nlevels=3,
      nlines=FALSE, addpanel, scat1d.opts=list(frac=0.025, lwd=0.3), ...)
 
 pantext(object, x, y, cex=.5, adj=0, fontfamily="Courier", lattice=TRUE)
@@ -105,6 +105,9 @@ settings of non-graphed adjustment values.
 \code{cex} parameter for size of adjustment settings in subtitles.  Default is
 0.75 times \code{par("cex")}.
 }
+\item{cex.axis}{
+  \code{cex} parameter for x-axis tick labels
+  }
 \item{perim}{
 \code{perim} specifies a function having two
 arguments.  The first is the vector of values of the first variable that
