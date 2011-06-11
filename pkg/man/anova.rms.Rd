@@ -229,7 +229,7 @@ p <- Predict(g, age, treat="b")
 s <- anova(g)
 # Usually omit fontfamily to default to 'Courier'
 # It's specified here to make R pass its package-building checks
-plot(p, addpanel=pantext(s, 28, 1.9, fontfamily='Helvetica'))
+plot(p, addpanel=pantext(s, 28, 1.9,  fontfamily='Helvetica'))
 
 plot(s)                          # new plot - dot chart of chisq-d.f.
 # latex(s)                       # nice printout - creates anova.g.tex
