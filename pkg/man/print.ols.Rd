@@ -11,7 +11,8 @@ estimation, prints the maximum penalized likelihood estimate of the residual
 standard deviation (\code{Sigma}) instead of the usual root mean squared error.
 }
 \usage{
-\method{print}{ols}(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE, \dots)
+\method{print}{ols}(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
+title="Linear Regression Model", \dots)
 }
 \arguments{
 \item{x}{fit object}
@@ -24,6 +25,7 @@ standard deviation (\code{Sigma}) instead of the usual root mean squared error.
   model.}
 \item{latex}{a logical value indicating whether information should be
   formatted as plain text or as LaTeX markup}
+\item{title}{a character string title to be passed to \code{prModFit}}
 \item{\dots}{other parameters to pass to \code{print} or \code{format}}
 }
 \seealso{

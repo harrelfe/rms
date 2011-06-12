@@ -7,7 +7,7 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
     control, verbose, B=0, dupCluster=FALSE, pr=FALSE,
     opmeth=c('optimize','optim'), x=FALSE)
 
-\method{print}{Gls}(x, digits=4, coefs=TRUE, latex=FALSE, \dots)
+\method{print}{Gls}(x, digits=4, coefs=TRUE, latex=FALSE, title, \dots)
 }
 \arguments{
  \item{model}{a two-sided linear formula object describing the
@@ -65,6 +65,7 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
   model.}
 \item{latex}{a logical value indicating whether information should be
   formatted as plain text or as LaTeX markup}
+\item{title}{a character string title to be passed to \code{prModFit}}
  \item{\dots}{ignored}
 }
 \description{

@@ -17,7 +17,7 @@ Rq(formula, tau = 0.5, data, subset, weights, na.action=na.delete,
    method = "br", model = FALSE, contrasts = NULL,
    se = "nid", hs = TRUE, x = FALSE, y = FALSE, ...)
 
-\method{print}{Rq}(x, digits=4, coefs=TRUE, latex=FALSE, \dots)
+\method{print}{Rq}(x, digits=4, coefs=TRUE, latex=FALSE, title, \dots)
 
 \method{latex}{Rq}(object,
            file = paste(first.word(deparse(substitute(object))),
@@ -53,6 +53,7 @@ RqFit(fit, wallow=TRUE, passdots=FALSE)
 	model.}
   \item{latex}{a logical value indicating whether information should be
 	formatted as plain text or as LaTeX markup}
+  \item{title}{a character string title to be passed to \code{prModFit}}
   \item{object}{an object created by \code{Rq}}
   \item{file,append,which,varnames,columns,inline,caption}{see
 	\code{\link{latexrms}}}

@@ -17,7 +17,7 @@ lrm(formula, data, subset, na.action=na.delete, method="lrm.fit",
     weights, normwt, \dots)
 
 \method{print}{lrm}(x, digits=4, strata.coefs=FALSE,
-    coefs=TRUE, latex=FALSE, \dots)
+    coefs=TRUE, latex=FALSE, title='Logistic Regression Model', \dots)
 }
 \arguments{
 \item{formula}{
@@ -140,6 +140,7 @@ variances estimates that are too low.
   model.}
 \item{latex}{a logical value indicating whether information should be
   formatted as plain text or as LaTeX markup}
+\item{title}{a character string title to be passed to \code{prModFit}}
 }
 \value{
 The returned fit object of \code{lrm} contains the following components

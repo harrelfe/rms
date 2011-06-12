@@ -14,7 +14,8 @@ NULL, na.action = na.delete, start = NULL, offset = NULL, control =
 glm.control(...), model = TRUE, method = "glm.fit", x = FALSE, y = TRUE,
 contrasts = NULL, \dots)
 
-\method{print}{Glm}(x, digits=4, coefs=TRUE, latex=FALSE, \dots)
+\method{print}{Glm}(x, digits=4, coefs=TRUE, latex=FALSE,
+title='General Linear Model', \dots)
 }
 \arguments{
   \item{formula,family,data,weights,subset,na.action,start,offset,control,model,method,x,y,contrasts}{see \code{\link{glm}}; for \code{print}, \code{x} is
@@ -27,6 +28,7 @@ contrasts = NULL, \dots)
 	model.}
   \item{latex}{a logical value indicating whether information should be
 	formatted as plain text or as LaTeX markup}
+  \item{title}{a character string title to be passed to \code{prModFit}}
 }
 \value{a fit object like that produced by \code{\link{glm}} but with
   \code{rms} attributes and a \code{class} of \code{"rms"},

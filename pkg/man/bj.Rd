@@ -49,7 +49,8 @@ bj(formula=formula(data), data, subset, na.action=na.delete,
    link="log", control, method='fit', x=FALSE, y=FALSE, 
    time.inc)
 
-\method{print}{bj}(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE, \dots)
+\method{print}{bj}(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
+title="Buckley-James Censored Data Regression", \dots)
 
 \method{residuals}{bj}(object, type=c("censored","censored.normalized"),\dots)
 
@@ -126,6 +127,7 @@ bj.fit(x, y, control)
 	model.}
   \item{latex}{a logical value indicating whether information should be
 	formatted as plain text or as LaTeX markup}
+  \item{title}{a character string title to be passed to \code{prModFit}}
   \item{object}{the result of \code{bj}}
   \item{type}{
     type of residual desired.  Default is censored unnormalized residuals,

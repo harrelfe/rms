@@ -48,7 +48,7 @@ psm(formula=formula(data),
     model=FALSE, x=FALSE, y=TRUE, time.inc, \dots)
 
 \method{print}{psm}(x, correlation=FALSE, digits=4, coefs=TRUE,
-latex=FALSE, \dots) 
+latex=FALSE, title, \dots) 
 
 Hazard(object, \dots)
 \method{Hazard}{psm}(object, \dots)   # for psm fit
@@ -123,6 +123,7 @@ lwd=3, \dots)
 	model.}
   \item{latex}{a logical value indicating whether information should be
 	formatted as plain text or as LaTeX markup}
+  \item{title}{a character string title to be passed to \code{prModFit}}
   \item{\dots}{
     other arguments to fitting routines, or to pass to \code{survplot} from
     \cr
