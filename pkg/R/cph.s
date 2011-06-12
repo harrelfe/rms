@@ -616,7 +616,8 @@ predict.cph <- function(object, newdata=NULL,
   }
 
 print.cph <- function(x, digits=4, table=TRUE, conf.int=FALSE,
-                      coefs=TRUE, latex=FALSE, ...)
+                      coefs=TRUE, latex=FALSE,
+                      title='Cox Proportional Hazards Model', ...)
 { 
   k <- 0
   z <- list()
@@ -677,7 +678,7 @@ print.cph <- function(x, digits=4, table=TRUE, conf.int=FALSE,
         }
     }
   
-  prModFit(x, title='Cox Proportional Hazards Model',
+  prModFit(x, title=title,
            z, digits=digits, coefs=coefs, latex=latex, ...)
   invisible()
 }

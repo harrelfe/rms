@@ -213,12 +213,12 @@ predict.ols <-
                na.action, expand.na, center.terms, ...)
   }
 
-print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE, ...)
+print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
+                      title="Linear Regression Model", ...)
 {
   k <- 0
   z <- list()
   
-  Title <- "Linear Regression Model"
 
   if(length(zz <- x$na.action))
     {
@@ -315,7 +315,7 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE, ...)
                               quote=FALSE, digits = digits))
         }
     }
-  prModFit(x, title=Title, z, digits=digits,
+  prModFit(x, title=title, z, digits=digits,
            coefs=coefs, latex=latex, ...)
   
   invisible()

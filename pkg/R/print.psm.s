@@ -1,12 +1,13 @@
 print.psm <- function(x, correlation = FALSE, digits=4,
-                      coefs=TRUE, latex=FALSE, ...)
+                      coefs=TRUE, latex=FALSE, title, ...)
 {
   k <- 0
   z <- list()
   
   dist <- x$dist
   name <- survreg.distributions[[dist]]$name
-  Title <- paste("Parametric Survival Model:",name,"Distribution")
+  if(missing(title))
+    title <- paste("Parametric Survival Model:", name, "Distribution")
 
   stats <- x$stats
 
@@ -52,7 +53,7 @@ print.psm <- function(x, correlation = FALSE, digits=4,
           }
       }
 
-  prModFit(x, title=Title, z, digits=digits, coefs=coefs, latex=latex, ...)
+  prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex, ...)
   invisible()
 }
 

@@ -265,7 +265,7 @@ Gls <-
   }
 
 
-print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, ...)
+print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
 {
   ## Following taken from print.gls with changes marked FEH
 
@@ -277,9 +277,10 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, ...)
   dd <- x$dims
   errordf <- dd$N - dd$p
   mCall <- x$call
-  Title <- if (inherits(x, "gnls")) "Generalized Nonlinear Least Squares Fit"
-  else paste("Generalized Least Squares Fit by",
-             ifelse(x$method == "REML", "REML", "Maximum Mikelihood"))
+  if(missing(title))
+    title <- if (inherits(x, "gnls")) "Generalized Nonlinear Least Squares Fit"
+    else paste("Generalized Least Squares Fit by",
+               ifelse(x$method == "REML", "REML", "Maximum Mikelihood"))
 
   ltype <- if (inherits(x, "gnls")) 'Log-likelihood' else
    paste('Log-', ifelse(x$method == "REML", "restricted-", ""),
@@ -361,7 +362,7 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, ...)
                      title = 'Bootstrap Nonparametric 0.95 Confidence Limits for Correlation Parameter')
     }
   
-  prModFit(x, title=Title, z, digits=digits, coefs=coefs, latex=latex, ...)
+  prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex, ...)
   invisible()
 }
 

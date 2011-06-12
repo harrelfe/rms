@@ -318,12 +318,12 @@ bjplot <- function(fit, which=1:dim(X)[[2]])
   invisible(retlist)
 }
 
-print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE, ...)
+print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
+                     title="Buckley-James Censored Data Regression", ...)
 {
   k <- 0
   z <- list()
   
-  Title <- "Buckley-James Censored Data Regression"
 
   if(length(zz <- x$na.action))
     {
@@ -364,7 +364,7 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE, ...)
                      title='Correlation Matrix for Parameter Estimates')
 	}
 
-  prModFit(x, title=Title, z, digits=digits, coefs=coefs, latex=latex, ...)
+  prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex, ...)
   invisible()
 }
 
