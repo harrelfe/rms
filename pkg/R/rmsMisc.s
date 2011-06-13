@@ -952,6 +952,7 @@ prStats <- function(labels, w, latex=FALSE)
             k <- latexTranslate(names(w[[i]]), greek=TRUE)
             k[k=='Dxy']   <- '$D_{xy}$'
             k[k=='LR chi2']  <- 'LR $\\chi^{2}$'
+            k[k=='Score chi2'] <- 'Score $\\chi^{2}$'
             k[k=='Pr($>$ chi2)'] <- 'Pr$(>\\chi^{2})$'
             k[k=='$\\tau$-a'] <- '$\\tau_{a}$'
             k[k=='R2']    <- '$R^{2}$'
