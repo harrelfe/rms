@@ -4,6 +4,7 @@
 \alias{RqFit}
 \alias{print.Rq}
 \alias{latex.Rq}
+\alias{predict.Rq}
 \title{rms Package Interface to quantreg Package}
 \description{
 The \code{Rq} function is the \code{rms} front-end to the
@@ -25,6 +26,8 @@ Rq(formula, tau = 0.5, data, subset, weights, na.action=na.delete,
            which, varnames, columns=65, inline=FALSE, caption=NULL,
            ...)
 
+\method{predict}{Rq}(object, \dots, se.fit=FALSE)
+
 RqFit(fit, wallow=TRUE, passdots=FALSE)
 }
 \arguments{
@@ -41,7 +44,8 @@ RqFit(fit, wallow=TRUE, passdots=FALSE)
   \item{\dots}{
 	other arguments passed to one of the \code{rq} fitting routines.
 	For \code{latex.Rq} these are optional arguments passed to
-	\code{latexrms}.  Ignored for \code{print.Rq}.
+	\code{latexrms}.  Ignored for \code{print.Rq}.  For
+	\code{predict.Rq} this is usually just a \code{newdata} argument.
   }
   \item{digits}{
 	number of significant digits used in formatting results in
@@ -57,6 +61,8 @@ RqFit(fit, wallow=TRUE, passdots=FALSE)
   \item{object}{an object created by \code{Rq}}
   \item{file,append,which,varnames,columns,inline,caption}{see
 	\code{\link{latexrms}}}
+  \item{se.fit}{set to \code{TRUE} to obtain standard errors of
+	predicted quantiles}
   \item{fit}{an object created by \code{Rq}}
   \item{wallow}{
 	set to \code{TRUE} if \code{weights} are allowed in the
