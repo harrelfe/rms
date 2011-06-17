@@ -176,3 +176,6 @@ latex.Rq <-
     latexrms(f, file=file, append=TRUE, which=which, inline=inline,
              varnames=varnames, columns=columns, caption, ...)
   }
+
+predict.Rq <- function(object, ..., se.fit=FALSE)
+  predictrms(object, ..., se.fit=se.fit)
