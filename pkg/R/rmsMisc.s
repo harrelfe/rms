@@ -732,7 +732,8 @@ rmsArgs <- function(.object, envir=parent.frame(2))
 ## General function to print model fit objects using latex or regular
 ## print (the default)
 
-prModFit <- function(x, title, w, digits=4, coefs=TRUE, latex=FALSE, ...)
+prModFit <- function(x, title, w, digits=4, coefs=TRUE,
+                     latex=FALSE, lines.page=40, long=TRUE, needspace, ...)
   {
     bverb <- function() if(latex) cat('\\begin{verbatim}\n')
     everb <- function() if(latex) cat('\\end{verbatim}\n')
@@ -776,13 +777,17 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, latex=FALSE, ...)
         return()
       }
 
-    if(latex) cat('\\needspace{13\\baselineskip}\n')
-    catl(title, pre=1, bold=TRUE)
-    
-    bverb()
-    dput(x$call)
-    cat('\n')
-    everb()
+    if(!missing(needspace) && latex)
+      cat('\\needspace{', needspace, '}\n', sep='')
+    if(title != '') catl(title, pre=1, bold=TRUE)
+
+    if(long)
+      {
+        bverb()
+        dput(x$call)
+        cat('\n')
+        everb()
+      }
 
     for(z in w)
       {
@@ -810,10 +815,11 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, latex=FALSE, ...)
                 Z    <- beta/se
                 P    <- if(length(errordf)) 2*(1 - pt(abs(Z), errordf)) else
                         1 - pchisq(Z^2, 1)
-                U    <- cbind('\\textrm{Coef}' =
-                              formatNP(beta, digits, latex=latex),
-                              '\\textrm{S.E.}' =
-                              formatNP(se,   digits, latex=latex),
+                pad <- function(x) paste('~', x, '~', sep='')
+                U    <- cbind('\\textrm{~Coef~}' =
+                              pad(formatNP(beta, digits, latex=latex)),
+                              '\\textrm{~S.E.~}' =
+                              pad(formatNP(se,   digits, latex=latex)),
                               '\\textrm{Wald~} Z'  =
                               formatNP(Z,    2, latex=latex),
                               '\\textrm{Pr}(>|Z|)' =
@@ -839,7 +845,11 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, latex=FALSE, ...)
                         U <- rbind(U, rep('', ncol(U)))
                         rownames(U)[nrow(U)] <- '\\dots'
                       }
-                    latex(U, file='', first.hline.double=FALSE, table=FALSE,
+                    if(!missing(needspace) && latex)
+                      cat('\\needspace{', needspace, '}\n', sep='')
+                    latex(U, file='', first.hline.double=FALSE,
+                          table=FALSE, longtable=TRUE,
+                          lines.page=lines.page,
                           col.just=rep('r',4), rowlabel='',
                           math.col.names=TRUE)
                   }
