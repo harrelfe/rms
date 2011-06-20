@@ -20,7 +20,7 @@
   This assumes that the second variable was a factor variable.  The rug plots
   are drawn by \code{scat1d}.  When the same predictor is used on all
   \eqn{x}-axes, and multiple panels are drawn, you can use
-  \code{datasub} to specify an expression to subset according to other
+  \code{subdata} to specify an expression to subset according to other
   criteria in addition.
 
   To plot effects instead of estimates (e.g., treatment differences as a
@@ -105,7 +105,8 @@ variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm}, or \cod
   \code{subdata=b==levels(b)[which.packet()[2]]}, where the \code{2}
   comes from the fact that \code{b} was listed second after the
   vertical bar (this assumes \code{b} is a \code{factor} in
-  \code{data}.  Another example: \code{subdata=sex==c('male','female')[current.row()]}.}
+  \code{data}.  Another example:
+  \code{subdata=sex==c('male','female')[current.row()]}.}
 \item{col.fill}{
   a vector of colors used to fill confidence bands for successive
   superposed groups.  Default is inceasingly dark gray scale.
