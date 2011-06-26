@@ -815,7 +815,8 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                 Z    <- beta/se
                 P    <- if(length(errordf)) 2*(1 - pt(abs(Z), errordf)) else
                         1 - pchisq(Z^2, 1)
-                pad <- function(x) paste('~', x, '~', sep='')
+                pad <- function(x)
+                  if(latex) paste('~', x, '~', sep='') else x
                 U    <- cbind('\\textrm{~Coef~}' =
                               pad(formatNP(beta, digits, latex=latex)),
                               '\\textrm{~S.E.~}' =
@@ -1043,10 +1044,11 @@ logLik.rms <- function(object, ...)
   {
     dof <- unname(object$stats['d.f.'] + num.intercepts(object))
     if(inherits(object, 'psm')) dof <- dof + 1  # for sigma
+    nobs <- nobs(object)
     w <- object$loglik
-    if(length(w)) return(structure(w[length(w)], df=dof, class='logLik'))
+    if(length(w)) return(structure(w[length(w)], nobs=nobs, df=dof, class='logLik'))
     w <- object$deviance
-    structure(-0.5*w[length(w)], df=dof, class='logLik')
+    structure(-0.5*w[length(w)], nobs=nobs, df=dof, class='logLik')
   }
 
 AIC.rms <- function(object, ..., k=2, type=c('loglik','chisq'))
@@ -1056,4 +1058,12 @@ AIC.rms <- function(object, ..., k=2, type=c('loglik','chisq'))
     stats <- object$stats
     dof <- stats['d.f.']
     unname(stats['Model L.R.'] - k * dof)
+  }
+
+nobs.rms <- function(object, ...)
+  {
+    st <- object$stats
+    if(inherits(object,'Gls')) length(object$residuals)
+    else if(any(names(st) == 'Obs')) unname(st['Obs'])
+    else unname(st['n'])
   }
