@@ -25,6 +25,7 @@
 \alias{logLik.ols}
 \alias{logLik.rms}
 \alias{AIC.rms}
+\alias{nobs.rms}
 \alias{lrtest}
 \alias{univarLR}
 \alias{Newlabels}
@@ -90,6 +91,8 @@ optional argument for computing AIC on a "chi-square" scale (model
 likelihood ratio chi-square minus twice the regression degrees of
 freedom.  \code{logLik.ols} handles the case for \code{ols}, just by
 invoking \code{logLik.lm} in the \code{stats} package.
+
+\code{nobs.rms} returns the number of observations used in the fit.
 
 The \code{lrtest} function does likelihood ratio tests for
 two nested models, from fits that have \code{stats} components with
@@ -173,6 +176,7 @@ Penalty.setup(at, penalty)
 \method{logLik}{ols}(object, \dots)
 \method{logLik}{rms}(object, \dots)
 \method{AIC}{rms}(object, \dots, k=2, type=c('loglik', 'chisq'))
+\method{nobs}{rms}(object, \dots)
 
 lrtest(fit1, fit2)
 \method{print}{lrtest}(x, \dots)
