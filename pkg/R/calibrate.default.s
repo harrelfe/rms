@@ -70,7 +70,12 @@ calibrate.default <- function(fit, predy,
     switch(model,
            lr=lrm.fit(x, y, penalty.matrix=penalty.matrix, tol=1e-13),
            ol=c(if(length(penalty.matrix)==0)
-                  lm.fit.qr.bare(x, y, intercept=FALSE)
+             {
+                  w <- lm.fit.qr.bare(x, y, intercept=FALSE, xpxi=TRUE)
+                  w$var <- w$xpxi * sum(w$residuals^2) /
+                    (length(y) - length(w$coefficients))
+                  w
+                }
                 else 
                   lm.pfit(x, y, penalty.matrix=penalty.matrix), fail=FALSE))
   }
