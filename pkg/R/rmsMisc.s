@@ -469,8 +469,12 @@ lrtest <- function(fit1, fit2)
 
 print.lrtest <- function(x, ...)
 {
-  cat('\nModel 1: '); print(x$formula1)
-  cat('Model 2: '); print(x$formula2); cat('\n')
+  f1 <- x$formula1
+  f2 <- x$formula2
+  attributes(f1) <- NULL
+  attributes(f2) <- NULL
+  cat('\nModel 1: '); print(f1)
+  cat('Model 2: '); print(f2); cat('\n')
   print(x$stats)
   cat('\n')
   invisible()
