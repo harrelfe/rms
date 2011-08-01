@@ -279,7 +279,8 @@ latexrms <-
   Coef <- f$coef
   if((length(which)==p)&& (nrp==1 | !missing(intercept)))
     {
-      cof <- if(missing(intercept)) format(Coef[1]) else format(intercept)
+      cof <- if(missing(intercept))
+        format(Coef[1], digits=digits) else format(intercept, digits=digit)
       cur <- cof
       cols <- nchar(cof)
     }
@@ -312,7 +313,7 @@ latexrms <-
           k <- f$assign[[TL[i]]]
           coef <- Coef[k]
           nam.coef[[i]] <- names(coef)
-          cof <- format(coef)
+          cof <- format.sep(coef, digits=digits)
           lcof <- nchar(cof)
           cof <- latexSN(cof)
           cof <- ifelse(coef<=0, cof, paste("+", cof, sep=""))
