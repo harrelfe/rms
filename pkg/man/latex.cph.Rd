@@ -14,20 +14,24 @@
 \method{latex}{cph}(object, title,
       file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
       append=FALSE, surv=TRUE, maxt=FALSE, which=NULL, varnames, columns=65, 
-      inline=FALSE, before=if(inline)"" else "& &", dec=3,
-      pretrans=TRUE, caption, \dots) # for cph fit
+      inline=FALSE, before=if(inline)"" else "& &", after="", dec=3,
+      pretrans=TRUE, caption, digits=.Options$digits, size="", \dots) # for cph fit
 
 \method{latex}{lrm}(object, title, file, append, which, varnames,
-columns, inline, before, pretrans, caption, \dots) # for lrm fit
+columns, inline, before, after, pretrans, caption,
+digits=.Options$digits, size="", \dots) # for lrm fit
 
 \method{latex}{ols}(object, title, file, append, which, varnames,
-columns, inline, before, pretrans, caption, \dots) # ols fit
+columns, inline, before, after, pretrans, caption,
+digits=.Options$digits, size="", \dots) # ols fit
 
 \method{latex}{pphsm}(object, title, file, append, which=NULL, varnames,
-columns, inline, before, pretrans, caption, \dots) # pphsm fit
+columns, inline, before, after, pretrans, caption,
+digits=.Options$digits, size="", \dots) # pphsm fit
 
 \method{latex}{psm}(object, title, file, append, which=NULL, varnames,
-columns, inline, before, pretrans, caption, \dots) # psm fit
+columns, inline, before, after, pretrans, caption,
+digits=.Options$digits, size="", \dots) # psm fit
 }
 \arguments{
 \item{object}{
@@ -45,10 +49,16 @@ if the maximum follow-up time in the data (\code{object$maxtime}) exceeds the
 last entry in \code{object$surv.summary}, underlying survival estimates at
 \code{object$maxtime} will be added to the table if \code{maxt=TRUE}.
 }
-\item{which,varnames,columns,inline,before,dec,pretrans}{see \code{\link[Hmisc]{latex.default}}}
+\item{which,varnames,columns,inline,before,dec,pretrans}{see
+  \code{\link[Hmisc]{latex.default}}}
+\item{after}{if not an empty string, added to end of markup if
+  \code{inline=TRUE}}
 \item{caption}{a character string specifying a title for the equation to
   be centered and typeset in bold face.   Default is no title.
-  }
+}
+\item{digits}{see \link{latexrms}}
+\item{size}{a LaTeX size to use, without the slash.  Default is the
+  prevailing size}
 \item{\dots}{ignored}
 }
 \value{

@@ -19,8 +19,8 @@ called internally by \code{latexrms} (which is called by
 latexrms(object,
  file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
  append=FALSE, which=1:p, varnames, columns=65, prefix=NULL, inline=FALSE,
- before=if(inline)"" else "& &", intercept, pretrans=TRUE,
- digits=.Options$digits)
+ before=if(inline)"" else "& &", after="", intercept, pretrans=TRUE,
+ digits=.Options$digits, size="")
 
 \method{latex}{rms}(object, title,
  file=paste(first.word(deparse(substitute(object))),'tex',sep='.'), \dots)
@@ -73,8 +73,13 @@ a fit object created by a fitting function in the \code{rms} series
 }
 \item{before}{
   a character string to place before each line of output. Use the default
-  for a LaTeX \code{eqnarray} environment.
+  for a LaTeX \code{eqnarray} environment.  For \code{inline=TRUE}, the
+ \code{before} string, if not an empty string, will be placed once
+ before the entire markup.
 }
+\item{after}{
+  a character string to place after the output if \code{inline=TRUE}
+  }
 \item{intercept}{
   a special intercept value to include that is not part of the standard
   model parameters (e.g., centering constant in Cox model). Only allowed
@@ -87,6 +92,8 @@ a fit object created by a fitting function in the \code{rms} series
 }
 \item{digits}{number of digits of precision to use in formatting
   coefficients and other numbers}
+\item{size}{a LaTeX font size to use for the output, without the slash.
+ Default is current size.}
 \item{title}{ignored}
 \item{\dots}{other arguments in \dots will be passed to \code{latexrms}
  and \code{latex.default}}
