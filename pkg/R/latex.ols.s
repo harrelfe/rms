@@ -2,10 +2,11 @@ latex.ols <-
   function(object, title,
            file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
            append=FALSE, which, varnames, columns=65, inline=FALSE, 
-           before=if(inline)"" else "& &", pretrans=TRUE, caption=NULL, ...)
+           before=if(inline)"" else "& &", after="",
+           pretrans=TRUE, caption=NULL, digits=.Options$digits, size='', ...)
 {
   f <- object
-    
+  
   w <- if(length(caption)) paste('\\begin{center} \\bf',
                                  caption,'\\end{center}')
   
@@ -24,8 +25,8 @@ latex.ols <-
   cat(w, file=file, sep=if(length(w)) "\n" else "", append=append)
   latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
-           before=before, prefix="X\\hat{\\beta}", inline=inline, 
-           pretrans=pretrans)
+           before=before, after=after, prefix="X\\hat{\\beta}", inline=inline, 
+           pretrans=pretrans, digits=digits, size=size)
 }
 
 

@@ -1,7 +1,9 @@
-latex.lrm <- function(object, title, 
-   file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
-   append=FALSE, which, varnames, columns=65, inline=FALSE, 
-   before=if(inline)"" else "& &",pretrans=TRUE,caption=NULL,...)
+latex.lrm <-
+  function(object, title, 
+           file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
+           append=FALSE, which, varnames, columns=65, inline=FALSE, 
+           before=if(inline)"" else "& &", after="",
+           pretrans=TRUE, caption=NULL, digits=.Options$digits, size='', ...)
 {
   f <- object
   
@@ -45,8 +47,8 @@ latex.lrm <- function(object, title,
   cat(w, file=file, append=append, sep=if(length(w))"\n" else "")
   latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
-           before=before, prefix="X\\hat{\\beta}", inline=inline,
-           pretrans=pretrans)
+           before=before, after=after, prefix="X\\hat{\\beta}",
+           inline=inline, pretrans=pretrans, digits=digits, size=size)
 }
 
 

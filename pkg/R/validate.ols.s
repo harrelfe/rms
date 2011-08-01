@@ -152,7 +152,7 @@ latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
               c('$D_{xy}$','$R^{2}$','$E_{\\max}$','$D$','$U$',
                 '$Q$','$B$','$g$','$g_{p}$','$g_{r}$'))
     dimnames(x) <- list(rn, cn)
-    cat('\\needspace{2in}\n', file=file, append=append)
+    cat('\\Needspace{2in}\n', file=file, append=append)
     cat('\\begin{center}\\', size, '\n', sep='', file=file, append=append)
     if(length(caption) && !table.env)
       cat(caption, '\n\n', sep='', file=file, append=TRUE)
@@ -168,7 +168,7 @@ latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
         varin <- ifelse(kept, '$\\bullet$', ' ')
         nr <- nrow(varin)
         varin <- varin[1:min(nrow(varin), B),, drop=FALSE]
-        cat('\\needspace{2in}\n', sep='',
+        cat('\\Needspace{2in}\n', sep='',
             file=file, append=append)
         cat('\\begin{center}\\', size, '\n', sep='',
             file=file, append=TRUE)
@@ -199,7 +199,7 @@ latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
         else
           {
             cap <- 'Frequencies of Numbers of Factors Retained'
-            cat('\\needspace{1in}\n', sep='',
+            cat('\\Needspace{1in}\n', sep='',
                 file=file, append=append)
             cat('\\begin{center}\\', size, '\n', sep='', file=file, append=TRUE)
             cat(cap, '\n\n', file=file, append=TRUE)

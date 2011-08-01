@@ -782,7 +782,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
       }
 
     if(!missing(needspace) && latex)
-      cat('\\needspace{', needspace, '}\n', sep='')
+      cat('\\Needspace{', needspace, '}\n', sep='')
     if(title != '') catl(title, pre=1, bold=TRUE)
 
     if(long)
@@ -851,7 +851,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                         rownames(U)[nrow(U)] <- '\\dots'
                       }
                     if(!missing(needspace) && latex)
-                      cat('\\needspace{', needspace, '}\n', sep='')
+                      cat('\\Needspace{', needspace, '}\n', sep='')
                     latex(U, file='', first.hline.double=FALSE,
                           table=FALSE, longtable=TRUE,
                           lines.page=lines.page,

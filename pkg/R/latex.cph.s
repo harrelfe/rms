@@ -3,8 +3,9 @@ latex.cph <-
            file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
            append=FALSE, surv=TRUE, maxt=FALSE, which=NULL, varnames, 
            columns=65, inline=FALSE, 
-           before=if(inline)"" else "& &", dec=3, pretrans=TRUE,
-           caption=NULL, ...)
+           before=if(inline)"" else "& &", after="",
+           dec=3, pretrans=TRUE,
+           caption=NULL, digits=.Options$digits, size='', ...)
 {
   f <- object
   whichThere <- length(which)
@@ -39,9 +40,10 @@ latex.cph <-
 
   z <- latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
                 columns=columns, 
-                before=before,
+                before=before, after=after,
                 prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
-                intercept=Intercept, inline=inline, pretrans=pretrans)
+                intercept=Intercept, inline=inline,
+                pretrans=pretrans, digits=digits, size=size) 
 
   if(inline) return(z)
   
