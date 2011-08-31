@@ -57,9 +57,10 @@ pantext(object, x, y, cex=.5, adj=0, fontfamily="Courier", lattice=TRUE)
   \code{groups} does not contain the groups data as is customary in
   \code{lattice}; it is only a single character string specifying the
   name of the grouping variable.}
-\item{cond}{when plotting effects of different predictors, \code{code}
+\item{cond}{when plotting effects of different predictors, \code{cond}
   is a character string that specifies a single variable name in
-  \code{x} that can be used to form panels.}
+  \code{x} that can be used to form panels.  Only applies if using
+  \code{rbind} to combine several \code{Predict} results.}
 \item{varypred}{set to \code{TRUE} if \code{x} is the result of
   passing multiple \code{Predict} results, that represent different
   predictors, to \code{rbind.Predict}.  This will cause the \code{.set.}
