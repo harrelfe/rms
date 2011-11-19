@@ -123,7 +123,8 @@ print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE,
 
 summary.Glm <- function(...) summary.rms(...)
 
-vcov.Glm <- function(object, ...) stats:::vcov.glm(object, ...)
+vcov.Glm <- function(object, ...)
+  if(length(v <- object$var)) v else stats:::vcov.glm(object, ...)
 
 ## Varcov.Glm <- function(object, ...) vcov.
 #  Varcov.glm(object, regcoef.only, ...)
@@ -135,6 +136,8 @@ vcov.Glm <- function(object, ...) stats:::vcov.glm(object, ...)
 #  s <- summary.glm(object)
 #  s$cov.unscaled * s$dispersion
 #}
+
+residuals.Glm <- function(object, ...) residuals.glm(object, ...)
 
 predict.Glm <- 
   function(object, newdata,

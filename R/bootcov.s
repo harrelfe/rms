@@ -155,8 +155,9 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
           
           if(length(f$fail) && f$fail) next
           
-          b <- b+1
           cof <- as.vector(f$coef)
+          if(any(is.na(cof))) next   # glm
+          b <- b + 1
           
           if(sc.pres) cof <- c(cof, log(f$scale))
           
@@ -223,15 +224,16 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
               j <- sample(clusters, nc, replace=TRUE)
               obs <- unlist(Obsno[j])
             }
-
+          
           f <- fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE], 
                       maxit=maxit, penalty.matrix=penalty.matrix,
                       strata=Strata[obs])
           
           if(length(f$fail) && f$fail) next
           
-          b <- b+1
           cof <- as.vector(f$coef)
+          if(any(is.na(cof))) next  # glm
+          b <- b + 1
           
           if(sc.pres) cof <- c(cof, log(f$scale))
           
@@ -257,6 +259,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
     }
   
   bar <- bar/b
+  fit$B <- b
   names(bar) <- vname
   fit$boot.coef <- bar
   if(coef.reps) fit$boot.Coef <- coefs

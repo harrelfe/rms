@@ -1,6 +1,7 @@
 \name{Glm}
 \alias{Glm}
 \alias{print.Glm}
+\alias{residuals.Glm}
 \title{rms Version of glm}
 \description{
 This function saves \code{rms} attributes with the fit object so that
@@ -16,11 +17,14 @@ contrasts = NULL, \dots)
 
 \method{print}{Glm}(x, digits=4, coefs=TRUE, latex=FALSE,
 title='General Linear Model', \dots)
+
+\method{residuals}{Glm}(object, ...)
 }
 \arguments{
   \item{formula,family,data,weights,subset,na.action,start,offset,control,model,method,x,y,contrasts}{see \code{\link{glm}}; for \code{print}, \code{x} is
 	the result of \code{Glm}}
-  \item{\dots}{ignored for \code{print}}
+  \item{\dots}{ignored for \code{print} or passed to
+	\code{residuals.glm} from \code{residuals.Glm}}
   \item{digits}{number of significant digits to print}
   \item{coefs}{specify \code{coefs=FALSE} to suppress printing the table
 	of model coefficients, standard errors, etc.  Specify \code{coefs=n}
@@ -29,6 +33,7 @@ title='General Linear Model', \dots)
   \item{latex}{a logical value indicating whether information should be
 	formatted as plain text or as LaTeX markup}
   \item{title}{a character string title to be passed to \code{prModFit}}
+  \item{object}{a fit object created by \code{Glm}}
 }
 \value{a fit object like that produced by \code{\link{glm}} but with
   \code{rms} attributes and a \code{class} of \code{"rms"},
@@ -36,7 +41,7 @@ title='General Linear Model', \dots)
   element of the fit object is the \eqn{g}-index.
 }
 \seealso{\code{\link{glm}},\code{\link{rms}},\code{\link{GiniMd}},
-   \code{\link{prModFit}}}
+   \code{\link{prModFit}},\code{\link[stats]{residuals.glm}}}
 \examples{
 ## Dobson (1990) Page 93: Randomized Controlled Trial :
 counts <- c(18,17,15,20,10,20,25,13,12)

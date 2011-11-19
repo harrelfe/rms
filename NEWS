@@ -1,3 +1,44 @@
+Changes in version 3.3-3 (2011-12-??)
+   * robcov: used vcov to get var-cov matrix
+   * vcov.Glm: gave precedence to $var object in fit
+   * Added residuals.Glm to force call to residuals.glm, and make robcov fail as type="score" is not implemented for glm
+   * Fixed bootcov for Glm to sense NA in coefficients and skip that iteration
+
+Changes in version 3.3-2 (2011-11-09)
+   * calibrate.default: add var-cov matrix to ols objects
+   * print.lrtest: discarded two formula attributes before printing
+   * Added digits, size, and after arguments for latex methods for model fits, made before argument work with inline=TRUE, changed \needspace to \Needspace in latex.validate and prModFit
+   * latex: fixed to consider digits for main effects
+   * plot.xmean.ordinaly: added new argument cex.points
+   * print.lrm: improved printing of -2 LL overall penalty
+   * plot.calibrate.default: invisibly return prediction errors
+   * plot.Predict: added cex.axis argument to pass to x scales; added subdata
+   * print.pentrace: neatened up output
+   * added title as an argument to all high-level function print methods
+   * prModFit: fixed bug where Score chi2 was not translated to LaTeX
+   * prModFit: changed to use LaTeX longtable style for coefficients etc.
+   * prModFit: added arguments long and needspace
+   * prModFit: suppressed title if title=""
+   * rmsMisc: added nobs.rms and added nobs to object returned by logLik.rms
+   * Added new argument cex.points to plot.xmean.ordinaly
+   * Changed example in anova.rms to use reorder instead of reorder.factor
+
+Changes in version 3.3-1 (2011-06-01)
+   * Added new example for anova.rms for making dot plots of partial R^2 of predictors
+   * Defined logLik.ols (calls logLik.lm)
+   * Fixed and cleaned up logLik.rms, AIC.rms
+   * Fixed residuals.psm to allow other type= values used by residuals.survreg
+   * Fixed Predict and survplot.rms to allow for case where no covariates present
+   * Fixed bug in val.prob where Eavg wasn't being defined if pl=FALSE (thanks: Ben Haller)
+   * Fixed bug in Predict so that it could get a list or vector from predictrms
+   * Fixed latex.rms to not treat * as a wild card in various contexts (may be interaction)
+   * Fixed predictrms to temporarily get std.err if conf.int requested even it std.err not; omitted std.err in returned object if not wanted
+   * Enhanced plot.Predict to allow plots for different predictors to be combined, after running rbind.Predict (varypred argument)
+   * Also enhanced to allow groups= and cond= when varying the predictors
+   * Corrected bug where sometimes would try to plot confidence limits when conf.int=FALSE was given to Predict
+   * Added india, indnl arguments to anova.rms to suppress printing individual tests of interaction/nonlinearity
+   * Changed anova.rms so that if all non-summary terms have (Factor+Higher Order Factor) in their labels, this part of the labels is suppressed (useful with india and indnl)
+
 Changes in version 3.3-0 (2011-02-28)
    * In survplot.rms, fixed bug (curves were undefined if conf='bands' and labelc was FALSE)
    * In survfit.cph, fixed bug by which n wasn't always defined

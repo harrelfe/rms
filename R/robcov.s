@@ -2,7 +2,7 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
 {
   method <- match.arg(method)
   
-  var <- fit$var
+  var   <- vcov(fit)
   vname <- dimnames(var)[[1]]
   
   if(inherits(fit, "ols") ||
@@ -72,7 +72,7 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
 ##   cat("\nN^2/[sum of Ni^2]    :",format(round(nn,1)),"\n\n")
 ##			}
 
-  fit$orig.var <- fit$var
+  fit$orig.var <- var
   fit$var <- adjvar
   ##fit$design.effects <- deff
   ##fit$effective.n <- eff.n
