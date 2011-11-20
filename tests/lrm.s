@@ -1,0 +1,26 @@
+require(rms)
+n <- 50000
+x1 <- runif(n)
+x2 <- runif(n)
+x3 <- runif(n)
+L <- x1 + x2 + x3 - 1.5
+y <- ifelse(runif(n) <= plogis(L), 1, 0)
+system.time(f <- glm(y ~ x1 + x2 + x3, family=binomial))
+print(summary(f), digits=7)
+system.time(g <- lrm(y ~ x1 + x2 + x3))
+print(g, digits=7)
+coef(f) - coef(g)
+sqrt(diag(vcov(f)))/sqrt(diag(vcov(g)))
+
+require(MASS)
+n <- 300
+y <- factor(sample(0:4, n, TRUE))
+x1 <- runif(n)
+x2 <- runif(n)
+x3 <- runif(n)
+system.time(f <- polr(y ~ x1 + x2 + x3))
+print(summary(f, digits=7))
+system.time(g <- lrm(y ~ x1 + x2 + x3))
+print(g, digits=7)
+c(-f$zeta, f$coefficients) - coef(g)
+print( (diag(vcov(f))[c(4:7, 1:3)])/diag(vcov(g)), digits=10)
