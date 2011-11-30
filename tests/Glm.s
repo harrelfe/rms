@@ -5,6 +5,8 @@ treatment <- gl(3,3)
 
 f <- Glm(counts ~ outcome + treatment, family=poisson(), x=TRUE, y=TRUE)
 g <- bootcov(f,B=100)
+f
+g
 diag(vcov(g))/diag(vcov(f))
 
 x <- runif(1000)

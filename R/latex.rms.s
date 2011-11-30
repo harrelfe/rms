@@ -280,7 +280,7 @@ latexrms <-
   if((length(which)==p)&& (nrp==1 | !missing(intercept)))
     {
       cof <- if(missing(intercept))
-        format(Coef[1], digits=digits) else format(intercept, digits=digit)
+        format(Coef[1], digits=digits) else format(intercept, digits=digits)
       cur <- cof
       cols <- nchar(cof)
     }
