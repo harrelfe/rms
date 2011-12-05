@@ -281,9 +281,12 @@ Presented at the Joint Statistical Meetings,
 Chicago, August 1996.
 }
 \seealso{
-\code{\link{robcov}}, \code{\link{sample}}, \code{\link{rms}}, \code{\link{lm.fit}}, \code{\link{lrm.fit}}, \code{\link[survival]{survival-internal}}, \code{\link[survival]{survival-internal}},
-\code{\link{predab.resample}}, \code{\link{rmsMisc}}, \code{\link{Predict}}, \code{\link{gendata}},
-\code{\link{contrast.rms}}
+\code{\link{robcov}}, \code{\link{sample}}, \code{\link{rms}},
+\code{\link{lm.fit}}, \code{\link{lrm.fit}},
+\code{\link[survival]{survival-internal}}, 
+\code{\link{predab.resample}}, \code{\link{rmsMisc}},
+\code{\link{Predict}}, \code{\link{gendata}}, 
+\code{\link{contrast.rms}}, \code{\link{Predict}}
 }
 \examples{
 set.seed(191)

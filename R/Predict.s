@@ -172,8 +172,10 @@ Predict <-
     stop("wrong # values in non.slopes")
 
   beta <- fit$coefficients
-  if(length(beta) & conf.int > 0) cov <- vcov(fit, regcoef.only=TRUE)
-
+  bootdone <- length(boot.Coef <- fit$boot.Coef)
+  if(bootdone && (conf.type == 'individual'))
+    stop('conf.type="individual" not compatible with bootcov with coef.reps=TRUE')
+  
   if(!length(time))
     {
       xx <- predictrms(fit, settings, non.slopes=non.slopes,
@@ -185,9 +187,21 @@ Predict <-
       if(length(xx)==0)
         stop("model has no covariables and survival not plotted")
       xb <- if(is.list(xx)) xx$linear.predictors else xx
+      if(bootdone)
+        {
+          X <- predictrms(fit, settings, non.slopes=non.slopes,
+                          ref.zero=ref.zero, type='x')
+          pred <- X %*% t(boot.Coef)
+          lim  <- apply(pred, 1, quantile,
+                        probs=c((1-conf.int)/2,
+                              1-(1-conf.int)/2), na.rm=TRUE)
+          xx$lower <- lim[1,]
+          xx$upper <- lim[2,]
+        }
     }
   else   ## time specified
     {
+      if(bootdone) stop('time may not be specified if bootcov was used with coef.reps=TRUE')
       xx <- survest(fit, settings, times=time, loglog=loglog, 
                     conf.int=conf.int)
       xb <- as.vector(xx$surv)

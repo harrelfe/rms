@@ -17,6 +17,12 @@ scale, or estimated probability of surviving past a fixed single time
 point given the linear predictor.  \code{Predict} is usually used for
 plotting predicted values but there is also a \code{print} method.
 
+When the first argument to \code{Predict} is a fit object created by
+\code{bootcov} with \code{coef.reps=TRUE}, confidence limits come from
+the stored matrix of bootstrap repititions of coefficients, using 
+bootstrap percentile nonparametric confidence limits.  Such confidence
+intervals do not make distributional assumptions.
+
 There is a \code{plot} method for \code{Predict} objects that makes it
 easy to show predicted values and confidence bands.
 
@@ -180,7 +186,7 @@ f.harrell@vanderbilt.edu
 \code{\link{contrast.rms}}, \code{\link{summary.rms}},  
 \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{survest}},
 \code{\link{survplot}}, \code{\link{rmsMisc}},
-\code{\link[Hmisc]{transace}}, \code{rbind}
+\code{\link[Hmisc]{transace}}, \code{rbind}, \code{\link{bootcov}}
 }
 \examples{
 n <- 1000    # define sample size
@@ -258,13 +264,21 @@ Predict(f, age, fun=function(x)med(lp=x))
 # Fit an ols model to log(y) and plot the relationship between x1
 # and the predicted mean(y) on the original scale without assuming
 # normality of residuals; use the smearing estimator.  Before doing
-# that, show confidence intervals for mean and individual log(y)
+# that, show confidence intervals for mean and individual log(y),
+# and for the latter, also show bootstrap percentile nonparametric
+# pointwise confidence limits
 set.seed(1)
 x1 <- runif(300)
 x2 <- runif(300)
 ddist <- datadist(x1,x2); options(datadist='ddist')
 y  <- exp(x1+ x2 - 1 + rnorm(300))
-f  <- ols(log(y) ~ pol(x1,2) + x2)
+f  <- ols(log(y) ~ pol(x1,2) + x2, x=TRUE, y=TRUE)  # x y for bootcov
+fb <- bootcov(f, B=100, coef.reps=TRUE)
+pb <- Predict(fb, x1, x2=c(.25,.75))
+p1 <- Predict(f,  x1, x2=c(.25,.75))
+p <- rbind(normal=p1, boot=pb)
+plot(p)
+
 p1 <- Predict(f, x1, conf.type='mean')
 p2 <- Predict(f, x1, conf.type='individual')
 p  <- rbind(mean=p1, individual=p2)
