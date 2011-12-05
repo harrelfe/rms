@@ -199,7 +199,7 @@ pentrace <- function(fit, penalty, penalty.matrix,
         }
       unpenalized <- all(penfact==0)
 
-      if(i==1) Coef <- if(keep.coef) matrix(NA,ncol=length(f$coef),nrow=np)
+      if(i==1) Coef <- if(keep.coef) matrix(NA,ncol=length(fit$coef),nrow=np)
       else NULL
 
       if(unpenalized) f <- fit
