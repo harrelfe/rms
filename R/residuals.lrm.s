@@ -333,7 +333,7 @@ residuals.lrm <-
 }
 
 
-plot.lrm.partial <- function(..., labels, center=FALSE)
+plot.lrm.partial <- function(..., labels, center=FALSE, ylim)
 {
   dotlist <- list(...)
   nfit <- length(dotlist)
@@ -362,7 +362,7 @@ plot.lrm.partial <- function(..., labels, center=FALSE)
       for(j in 1:nfit)
         {
           if(j==1) plot(curves[[1]], xlab=vname[i], ylab='Partial Residual',
-               ylim=c(ymin, ymax), type='l')
+               ylim=if(missing(ylim)) c(ymin, ymax) else ylim, type='l')
           else lines(curves[[j]], lty=j)
         }
       if(nfit>1) labcurve(curves, labels)

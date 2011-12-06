@@ -56,7 +56,7 @@ same plot for that predictor.
                   "dfbeta","dfbetas","dffit","dffits","hat","gof","lp1"),
            pl=FALSE, xlim, ylim, kint, label.curves=TRUE, which, \dots)
 
-\method{plot}{lrm.partial}(\dots, labels, center=FALSE)
+\method{plot}{lrm.partial}(\dots, labels, center=FALSE, ylim)
 }
 \arguments{
 \item{object}{
