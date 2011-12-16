@@ -136,7 +136,10 @@ psm <- function(formula=formula(data),
         tranfun <- dlist$trans
         exactsurv <- Y[,ncol(Y)] ==1
         if (any(exactsurv))
-          logcorrect <- sum(logb(dlist$dtrans(Y[exactsurv,1])))
+          logcorrect <-
+            ifelse(length(weights),
+                   sum(weights[exactsurv]*logb(dlist$dtrans(Y[exactsurv, 1]))),
+                   sum(logb(dlist$dtrans(Y[exactsurv, 1]))))
 
         if (type=='interval')
           {
