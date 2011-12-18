@@ -2,7 +2,7 @@ Predict <-
   function(x, ...,
            fun, type=c("predictions","model.frame","x"),
            np=200,
-           conf.int=.95, conf.type=c('mean','individual'),
+           conf.int=.95, conf.type=c('mean','individual','simultaneous'),
            adj.zero=FALSE, ref.zero=FALSE,
            non.slopes, time=NULL, loglog=FALSE, digits=4, name, factors=NULL)
 {
@@ -328,6 +328,7 @@ rbind.Predict <- function(..., rename)
     if(!length(sets)) sets <- paste('Set', 1:ns)
     obs.each.set <- sapply(d, function(x) length(x[[1]]))
     .set. <- rep(sets, obs.each.set)
+    .set. <- factor(.set., levels=unique(.set.))
 
     if(!missing(rename)) for(i in 1:ns)
       names(d[[i]]) <- trans(names(d[[i]]), rename)

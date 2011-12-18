@@ -19,7 +19,7 @@ plotting predicted values but there is also a \code{print} method.
 
 When the first argument to \code{Predict} is a fit object created by
 \code{bootcov} with \code{coef.reps=TRUE}, confidence limits come from
-the stored matrix of bootstrap repititions of coefficients, using 
+the stored matrix of bootstrap repetitions of coefficients, using 
 bootstrap percentile nonparametric confidence limits.  Such confidence
 intervals do not make distributional assumptions.
 
@@ -34,12 +34,16 @@ using \code{ols}, and have the two types of confidence bands be
 superposed onto one plot or placed into two panels.  Another use for
 \code{rbind} is to combine predictions from quantile regression models
 that predicted three different quantiles.
+
+If \code{conf.type="simultaneous"}, simultaneous (over all requested
+predictions) confidence limits are computed.  See the
+\code{\link{predictrms}} function for details.
 }
 \usage{
 Predict(x, ..., fun,
         type = c("predictions", "model.frame", "x"),
         np = 200, conf.int = 0.95,
-        conf.type = c("mean", "individual"),
+        conf.type = c("mean", "individual","simultaneous"),
         adj.zero = FALSE, ref.zero = FALSE,
         non.slopes, time = NULL, loglog = FALSE, digits=4, name, factors=NULL)
 
@@ -99,6 +103,9 @@ Predict(x, ..., fun,
 	to all models.  For models containing a residual variance (e.g,
 	\code{ols}), you can specify \code{conf.type="individual"} instead,
 	to obtain limits on the predicted value for an individual subject.
+	Specify \code{conf.type="simultaneous"} to obtain simultaneous
+	confidence bands for mean predictions with family-wise coverage of
+	\code{conf.int}.
   }
   \item{adj.zero}{
 	Set to \code{TRUE} to adjust all non-plotted variables to 0 (or
@@ -215,6 +222,9 @@ fit <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)))
 Predict(fit, age, cholesterol, np=4)
 Predict(fit, age=seq(20,80,by=10), sex, conf.int=FALSE)
 Predict(fit, age=seq(20,80,by=10), sex='male')  # works if datadist not used
+# Get simultaneous confidence limits accounting for making 7 estimates
+# Predict(fit, age=seq(20,80,by=10), sex='male', conf.type='simult')
+# (this needs the multcomp package)
 
 ddist$limits$age[2] <- 30    # make 30 the reference value for age
 # Could also do: ddist$limits["Adjust to","age"] <- 30

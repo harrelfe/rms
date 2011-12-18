@@ -24,7 +24,8 @@ linear predictors.
 \method{predict}{bj}(object, newdata,
         type=c("lp", "x", "data.frame",
                  "terms", "cterms", "ccterms", "adjto", "adjto.data.frame", "model.frame"),
-        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual'),
+        se.fit=FALSE, conf.int=FALSE,
+        conf.type=c('mean','individual','simultaneous'),
         incl.non.slopes, non.slopes, kint=1,
         na.action=na.keep, expand.na=TRUE,
         center.terms=type=="terms", \dots) # for bj
@@ -33,7 +34,7 @@ linear predictors.
         type=c("lp", "x",
                  "data.frame", "terms", "cterms", "ccterms", "adjto", "adjto.data.frame",
                  "model.frame"),
-        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual'),
+        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual','simultaneous'),
         incl.non.slopes=NULL,
         non.slopes=NULL, kint=1, na.action=na.keep, expand.na=TRUE,
         center.terms=type=="terms", \dots) # cph
@@ -41,7 +42,7 @@ linear predictors.
 \method{predict}{Glm}(object, newdata,
         type= c("lp", "x", "data.frame",
                  "terms", "cterms", "ccterms", "adjto", "adjto.data.frame", "model.frame"),
-        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual'),
+        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual','simultaneous'),
         incl.non.slopes,
         non.slopes, kint=1, na.action=na.keep, expand.na=TRUE,
         center.terms=type=="terms", \dots) # Glm
@@ -49,7 +50,7 @@ linear predictors.
 \method{predict}{Gls}(object, newdata,
         type=c("lp", "x", "data.frame",
                  "terms", "cterms", "ccterms", "adjto", "adjto.data.frame", "model.frame"),
-        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual'),
+        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual','simultaneous'),
         incl.non.slopes,
         non.slopes, kint=1, na.action=na.keep, expand.na=TRUE,
         center.terms=type=="terms", \dots) # Gls
@@ -57,7 +58,7 @@ linear predictors.
 \method{predict}{ols}(object, newdata,
         type=c("lp", "x", "data.frame",
                  "terms", "cterms", "ccterms", "adjto", "adjto.data.frame", "model.frame"),
-        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual'),
+        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual','simultaneous'),
         incl.non.slopes,
         non.slopes, kint=1, na.action=na.keep, expand.na=TRUE,
         center.terms=type=="terms", \dots) # ols
@@ -65,7 +66,7 @@ linear predictors.
 \method{predict}{psm}(object, newdata,
         type=c("lp", "x", "data.frame",
                  "terms", "cterms", "ccterms", "adjto", "adjto.data.frame", "model.frame"),
-        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual'),
+        se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual','simultaneous'),
         incl.non.slopes,
         non.slopes, kint=1, na.action=na.keep, expand.na=TRUE,
         center.terms=type=="terms", \dots) # psm

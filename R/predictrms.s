@@ -7,13 +7,19 @@ predictrms <-
   function(fit, newdata=NULL,
            type=c("lp","x","data.frame","terms","cterms","ccterms","adjto",
              "adjto.data.frame","model.frame"),
-           se.fit=FALSE, conf.int=FALSE, conf.type=c('mean','individual'),
+           se.fit=FALSE, conf.int=FALSE,
+           conf.type=c('mean','individual','simultaneous'),
            incl.non.slopes=NULL, non.slopes=NULL, kint=1,
            na.action=na.keep, expand.na=TRUE,
            center.terms=type=="terms", ref.zero=FALSE, ...)
 {
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
+  if(conf.type == 'simultaneous') {
+    require(multcomp)
+    if(missing(newdata) || !length(newdata))
+      stop('newdata must be given if conf.type="simultaneous"')
+  }
   ## R does not preserve missing(x)
   mnon.slopes <- missing(non.slopes) || !length(non.slopes)  # was missing( )
 
@@ -384,9 +390,17 @@ predictrms <-
                                na.action=if(expand.na) NULL else naa)
           if(conf.int)
             {
-              plminus <- zcrit*sqrt(sef^2 + vconstant)
-              retlist$lower <- xb - plminus - ycenter
-              retlist$upper <- xb + plminus - ycenter
+              if(conf.type == 'simultaneous') {
+                u <- confint(glht(fit, X,
+                                  df=if(length(idf)) idf else 0),
+                                  level=conf.int)$confint
+                retlist$lower <- u[,'lwr']
+                retlist$upper <- u[,'upr']
+              } else {
+                plminus <- zcrit*sqrt(sef^2 + vconstant)
+                retlist$lower <- xb - plminus - ycenter
+                retlist$upper <- xb + plminus - ycenter
+              }
             }
           return(retlist)
         }

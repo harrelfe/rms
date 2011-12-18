@@ -3,9 +3,11 @@ contrast <- function(fit, ...) UseMethod("contrast")
 contrast.rms <-
   function(fit, a, b, cnames=NULL,
            type=c('individual','average','joint'),
+           conf.type=c('individual','simultaneous'),
            weights='equal', conf.int=0.95, tol=1e-7, ...)
 {
   type <- match.arg(type)
+  conf.type <- match.arg(conf.type)
   
   zcrit <- if(length(idf <- fit$df.residual)) qt((1+conf.int)/2, idf) else
   qnorm((1+conf.int)/2)
@@ -87,13 +89,24 @@ contrast.rms <-
   se <- if(ndf==1) sqrt(v) else sqrt(diag(v))
   Z <- est/se
   P <- if(length(idf)) 2*(1-pt(abs(Z), idf)) else 2*(1-pnorm(abs(Z)))
+  if(conf.type=='individual') {
+    lower <- est - zcrit*se
+    upper <- est + zcrit*se
+  } else {
+    u <- confint(glht(fit, X,
+                      df=if(length(idf)) idf else 0),
+                      level=conf.int)$confint
+    lower <- u[,'lwr']
+    upper <- u[,'upr']
+  }
+  
   res <- list(Contrast=est, SE=se,
-              Lower=est - zcrit*se, Upper=est + zcrit*se,
+              Lower=lower, Upper=upper,
               Z=Z, Pvalue=P, 
               var=v, df.residual=idf,
               X=X, 
               cnames=if(type=='average')NULL else cnames, nvary=length(vary))
-  if(type!='average') res <- c(vary, res)
+  if(type != 'average') res <- c(vary, res)
   
   r <- qr(v, tol=tol)
   nonred <- r$pivot[1:r$rank]   # non-redundant contrasts

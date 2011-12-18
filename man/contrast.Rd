@@ -48,7 +48,8 @@ with \code{xYplot} or \code{Dotplot} (see the last example before the
 \usage{
 contrast(fit, \dots)
 \method{contrast}{rms}(fit, a, b, cnames=NULL, 
-         type=c("individual", "average", "joint"), 
+         type=c("individual", "average", "joint"),
+         conf.type=c("individual","simultaneous"),
          weights="equal", conf.int=0.95, tol=1e-7, \dots)
 
 \method{print}{contrast.rms}(x, X=FALSE, fun=function(u)u, jointonly=FALSE, ...)
@@ -89,6 +90,15 @@ obtain a Type II or III contrast).  Set \code{type="joint"} to jointly
 test all non-redundant contrasts with a multiple degree of freedom test
 and no averaging.
 }
+\item{conf.type}{
+  The default type of confidence interval computed for a given
+  individual (1 d.f.) contrast is a pointwise confidence interval.  Set
+  \code{conf.type="simultaneous"} to use the \code{multcomp} package's
+  \code{glht} and \code{confint} functions to compute confidence
+  intervals with simultaneous (family-wise) coverage, thus adjusting for
+  multiple comparisons.  Note that individual P-values are not adjusted
+  for multiplicity.
+  }
 \item{weights}{
 a numeric vector, used when \code{type="average"}, to obtain weighted contrasts
 }
@@ -254,6 +264,7 @@ plot(Predict(f, age, treat, sex='male'))
 ages  <- seq(35,65,by=5); sexes <- c('female','male')
 w     <- contrast(f, list(treat='drug',    age=ages, sex=sexes),
                      list(treat='placebo', age=ages, sex=sexes))
+# add conf.type="simultaneous" to adjust for having done 14 contrasts
 xYplot(Cbind(Contrast, Lower, Upper) ~ age | sex, data=w,
        ylab='Drug - Placebo')
 xYplot(Cbind(Contrast, Lower, Upper) ~ age, groups=sex, data=w,

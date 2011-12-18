@@ -604,7 +604,7 @@ predict.cph <- function(object, newdata=NULL,
                         type=c("lp", "x", "data.frame", "terms", "cterms",
                           "ccterms", "adjto", "adjto.data.frame", "model.frame"),
                         se.fit=FALSE, conf.int=FALSE,
-                        conf.type=c('mean','individual'),
+                        conf.type=c('mean','individual','simultaneous'),
                         incl.non.slopes=NULL, non.slopes=NULL, kint=1,
                         na.action=na.keep, expand.na=TRUE,
                         center.terms=type=="terms", ...)
