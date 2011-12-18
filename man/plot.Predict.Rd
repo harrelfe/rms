@@ -247,7 +247,8 @@ plot(p)
 p <- Predict(fit, age=seq(20,80,length=100), sex, conf.int=FALSE)
                          # Plot relationship between age and log
                          # odds, separate curve for each sex,
-plot(p)                  # no C.I.
+plot(p, subset=sex=='female' | age > 30)
+# No confidence interval, suppress estimates for males <= 30
 
 p <- Predict(fit, age, sex)
 plot(p, label.curves=FALSE, data=llist(age,sex))
