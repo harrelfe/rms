@@ -1,11 +1,11 @@
 require(rms)
-require(multcomp)
-set.seed(1)
-n <- 100
+set.seed(13)
+n <- 200
 x1 <- runif(n)
 y <- ifelse(runif(n) <= plogis(2*(x1-.5)), 1, 0)
 lrm(y ~ x1)
-f <- lrm(y ~ rcs(x1,4))
+f <- lrm(y ~ rcs(x1,4), x=TRUE, y=TRUE)
+g <- bootcov(f, B=1000, coef.reps=TRUE)
 anova(f)
 specs(f)
 # Get simultaneous confidence intervals for estimates at 3 x's
@@ -24,13 +24,15 @@ X <- pd(c(.05, seq(.5, .6, length=100), .7, 1))
 confint(glht(f, X))
 
 dd <- datadist(x1); options(datadist='dd')
-xs <- seq(0, 1, by=0.05)
+xs <- seq(0, 1, by=0.02)
 i <- Predict(f, x1=xs)
 s <- Predict(f, x1=xs, conf.type='simultaneous')
-b <- rbind(simultaneous=s, individual=i)
-plot(b)
+boot <- Predict(g, x1=xs)
+b <- rbind(simultaneous=s, individual=i, bootstrap=boot)
 plot(b, ~ x1 | .set.)
+xYplot(Cbind(yhat,lower,upper) ~ x1, groups=.set., data=b,
+       method='bands', type='l', label.curves=list(keys='lines'),
+       keyloc=list(x=.1,y=1.5))
 
 contrast(f, list(x1=.2), list(x1=.6))
 contrast(f, list(x1=.2), list(x1=c(.6,.8)), conf.type='simult')
-
