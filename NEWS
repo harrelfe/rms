@@ -1,10 +1,11 @@
-Changes in version 3.3-4 (2012-01-??)
+Changes in version 3.4-0 (2012-01-17)
    * psm: fixed logcorrect logic (thanks: Rob Kushler)
    * Added suggested package multcomp (required for simultaneous CLs)
    * Implemented simultaneous confidence intervals in Predict, predictrms, contrast.rms, all specific model predict methods
    * Add multiplicity adjustment for individual confidence limits computed by contrast.rms, to preserve family-wise coverage using multcomp package
    * Improved rbind.Predict to preserve order of groups as presented, as levels of .set.
    * Added example for plot.Predict showing how to suppress predictions for certain intervals/groups from being plotted
+   * Added example in plot.Predict help file for graphing multiple types of confidence bands simultaneously
 
 Changes in version 3.3-3 (2011-12-06)
    * robcov: used vcov to get var-cov matrix

@@ -294,6 +294,24 @@ p <- rbind(age=p1, cholesterol=p2, blood.pressure=p3)
 plot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE)
 plot(p, cond='sex', varypred=TRUE, adj.subtitle=FALSE)
 
+\dontrun{
+# For males at the median blood pressure and cholesterol, plot 3 types
+# of confidence intervals for the probability on one plot, for varying age
+ages <- seq(20, 80, length=100)
+p1 <- Predict(fit, age=ages, sex='male', fun=plogis)  # standard pointwise
+p2 <- Predict(fit, age=ages, sex='male', fun=plogis,
+              conf.type='simultaneous')               # simultaneous
+p3 <- Predict(fit, age=c(60,65,70), sex='male', fun=plogis,
+              conf.type='simultaneous')               # simultaneous 3 pts
+# The previous only adjusts for a multiplicity of 3 points instead of 100
+f <- update(fit, x=TRUE, y=TRUE)
+g <- bootcov(f, B=500, coef.reps=TRUE)
+p4 <- Predict(g, age=ages, sex='male', fun=plogis)    # bootstrap percentile
+p <- rbind(Pointwise=p1, 'Simultaneous 100 ages'=p2,
+           'Simultaneous     3 ages'=p3, 'Bootstrap nonparametric'=p4)
+xYplot(Cbind(yhat, lower, upper) ~ age, groups=.set.,
+       data=p, type='l', method='bands', label.curve=list(keys='lines'))
+}
 
 # Plots for a parametric survival model
 n <- 1000
