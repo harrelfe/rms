@@ -5,7 +5,7 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
   X <- list(...)
 
   argnames <- as.character(sys.call())[-1]
-  
+
   if(inherits(x <- X[[1]],"datadist"))
     {
       Limits <- x$limits
@@ -24,7 +24,7 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
       if(length(X) > 1) stop('when the first argument is a data frame, no other variables may be specified')
       X <- X[[1]]
     }
-  
+
   else
     if(is.recursive(X[[1]]) &&
        length(Terms <- X[[1]]$terms) && length(D <- attr(Terms,"Design")))
@@ -43,7 +43,7 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
                        paste(names(data),collapse=" ")))
               for(nm in n) X[[nm]] <- data[[nm]]
             }
-          else for(nm in n) X[[nm]] <- get(nm, data)  
+          else for(nm in n) X[[nm]] <- get(nm, data)
       }
     else
       {
@@ -70,7 +70,7 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
   nam <- names(X)
   p <- length(nam)
   if(p==0) stop("you must specify individual variables or a data frame")
-  
+
   maxl <- 0
   for(i in 1:p)
     {
@@ -94,7 +94,7 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
                           levx[1],levx[ll])
               values <- levx
             }
-          
+
           else
             if(ll)
               {
@@ -103,7 +103,7 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
                 (names(tab)[tab==max(tab)])[1]
               }
               limits <- factor(c(NA,adjto,NA,lev[1],lev[ll],lev[1],lev[ll]),
-                               levels=lev) 
+                               levels=lev)
               ## non-ordered categorical
             }
             else
@@ -136,12 +136,12 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
                     limits[4] <- q[1]; limits[5] <- q[2]
                     ## check for very poorly distributed categorical numeric variable
                     if(limits[4]==limits[5]) limits[4:5] <- r
-                    
+
                     ## Use low category if binary var, middle if 3-level, median otherwise
                     if(nunique < 3) limits[2] <- values[1] else
                     if(nunique==3) limits[2] <- values[2] else
                     limits[2] <- median(oldUnclass(y))
-                    
+
                     if(nunique < 4) q <- r else
                     q <- quantile(oldUnclass(y), q.effect)
                     limits[1] <- q[1]; limits[3] <- q[2]
@@ -155,13 +155,13 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
           maxl <- max(maxl, lx)
         }
     }
-  
-  Limits <- structure(Limits, class="data.frame", 
+
+  Limits <- structure(Limits, class="data.frame",
                       row.names=c("Low:effect","Adjust to",
                         "High:effect","Low:prediction",
                         "High:prediction","Low","High"))
   ##data.frame(Limits) gives error with chron objects
-  
+
   d <- list(limits=Limits, values=Values)
   oldClass(d) <- "datadist"
   d
@@ -186,7 +186,7 @@ print.datadist <- function(x, ...)
         {
           v <- V[[n]]
           if(length(v)==0) next  # for gendata
-          if(is.character(v) && length(v)>80) 
+          if(is.character(v) && length(v)>80)
             v <- c(v[1:20],paste("+",length(v),"others"))
           w <- if(is.character(v)) v else format(v)
           nc <- nchar(paste(w,collapse=" "))

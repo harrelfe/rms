@@ -1,4 +1,4 @@
-survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95, 
+survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
                         individual=FALSE, type=NULL, vartype=NULL,
                         conf.type=c('log', 'log-log', 'plain', 'none'),
                         id, ...)
@@ -31,7 +31,7 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
       vt <- match(match.arg(vartype, w), w)
       if(vt == 4) 2 else vt
     }
-  
+
   if (!se.fit) conf.type <- "none"
   else conf.type <- match.arg(conf.type)
 
@@ -66,14 +66,14 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
   if (!missid) individual <- TRUE
   else if (missid && individual) id <- rep(0, n)
   else id <- NULL
-  if (individual && type != "counting") 
+  if (individual && type != "counting")
     stop("The individual option is  only valid for start-stop data")
-  
+
   ## Compute confidence limits for survival based on -log survival,
   ## constraining to be in [0,1]; d = std.error of cum hazard * z value
   ciupper <- function(surv, d) ifelse(surv==0, 0, pmin(1, surv*exp(d)))
   cilower <- function(surv, d) ifelse(surv==0, 0, surv*exp(-d))
-  
+
   risk <- rep(exp(object$linear.predictors), length=n)
   ## need to center offset??
   ## coxph.fit centered offset inside linear predictors
@@ -87,7 +87,7 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
     }
   else
     {
-      if (length(object$frail)) 
+      if (length(object$frail))
         stop("The newdata argument is not supported for sparse frailty terms")
       X2 <- predictrms(object, newdata, type='x', expand.na=FALSE)
       ## result with type='x' has attributes strata and offset which may be NULL
@@ -122,7 +122,7 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
     {
       kfun <- function(x, keep)
         {
-          if (is.matrix(x)) x[keep,, drop=FALSE] 
+          if (is.matrix(x)) x[keep,, drop=FALSE]
           else if (length(x) == length(keep)) x[keep] else x
         }
       keep <- g$n.event > 0
@@ -133,7 +133,7 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
         }
       g <- lapply(g, kfun, keep)
     }
-  
+
   if (se.fit)
     {
       zval <- qnorm(1 - (1 - conf.int)/2, 0, 1)

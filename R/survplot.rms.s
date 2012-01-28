@@ -1,8 +1,8 @@
 survplot <- function(fit, ...) UseMethod("survplot")
 
 survplot.rms <-
-  function(fit, ..., xlim, 
-           ylim=if(loglog) c(-5,1.5) else 
+  function(fit, ..., xlim,
+           ylim=if(loglog) c(-5,1.5) else
             if(what=="survival" & missing(fun)) c(0,1),
            xlab, ylab, time.inc,
            what=c("survival","hazard"),
@@ -25,7 +25,7 @@ survplot.rms <-
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
   conf <- match.arg(conf)
-  
+
   psmfit <- inherits(fit,'psm') || (length(fit$fitFunction) &&
                                     any(fit$fitFunction == 'psm'))
   if(what=="hazard" && !psmfit)
@@ -35,7 +35,7 @@ survplot.rms <-
       warning('conf.int may only be used with what="survival"')
       conf.int <- FALSE
     }
-  
+
   if(loglog)
     {
       fun <- function(x) logb(-logb(ifelse(x==0|x==1,NA,x)))
@@ -51,12 +51,12 @@ survplot.rms <-
       fun <- function(x) x
       use.fun <- FALSE
     }
-  
+
   if(what=="hazard" & loglog)
     stop('may not specify loglog=T with what="hazard"')
 
   if(use.fun | logt | what=="hazard") { dots <- FALSE; grid <- FALSE }
-  
+
   cox <- inherits(fit,"cph") || (length(fit$fitFunction) &&
                                  any(fit$fitFunction == 'cph'))
   if(cox)
@@ -65,25 +65,25 @@ survplot.rms <-
       exactci <- !(is.null(fit$x)|is.null(fit$y))
       ltype <- "s"	#step functions for cph
     }
-  
+
   else
     {
       if(n.risk) stop("the n.risk option applies only to fits from cph")
       exactci <- TRUE
       ltype <- "l"
     }
-  
+
   oxpd <- par('xpd')
   par(xpd=NA)
   on.exit(par(xpd=oxpd))
-  
+
   ## Compute confidence limits for survival based on -log survival,
   ## constraining to be in [0,1]; d = std.error of cum hazard * z value
   ciupper <- function(surv, d) ifelse(surv==0, 0, pmin(1, surv*exp(d)))
   cilower <- function(surv, d) ifelse(surv==0, 0, surv*exp(-d))
-  
+
   labelc <- is.list(label.curves) || label.curves
-  
+
   units <- fit$units
   if(missing(ylab))
     {
@@ -97,12 +97,12 @@ survplot.rms <-
       if(logt) xlab <- paste("log Survival Time in ",units,"s",sep="")
       else xlab <- paste(units,"s",sep="")
     }
-  
+
   maxtime <- fit$maxtime
   maxtime <- max(pretty(c(0,maxtime)))
   if(missing(time.inc)) time.inc <- fit$time.inc
 
-  if(missing(xlim)) 
+  if(missing(xlim))
     xlim <- if(logt)logb(c(maxtime/100,maxtime)) else c(0,maxtime)
 
 
@@ -152,12 +152,12 @@ survplot.rms <-
     rep(lty, length=nc)
   col <- rep(col, length=nc)
   lwd <- rep(lwd, length=nc)
-  
+
   i <- 0
   if(levels.only) y <- gsub('.*=', '', y)
   abbrevy <- if(abbrev.label) abbreviate(y) else y
   abbrevy <- if(is.factor(abbrevy)) as.character(abbrevy) else format(abbrevy)
-  
+
   if(labelc || conf=='bands') curves <- vector('list',nc)
 
   for(i in 1:nc)
@@ -187,9 +187,9 @@ survplot.rms <-
           else format(ay)
           curve.labels <- c(curve.labels, abbrevy[i])
           if(i==1 & !add)
-            {				
+            {
               plot(time, surv, xlab=xlab, xlim=xlim,
-                   ylab=ylab, ylim=ylim, type="n", axes=FALSE)	
+                   ylab=ylab, ylim=ylim, type="n", axes=FALSE)
               mgp.axis(1, at=if(logt)pretty(xlim) else
                        seq(xlim[1], max(pretty(xlim)), time.inc), labels=TRUE)
 
@@ -205,7 +205,7 @@ survplot.rms <-
                   else if(yd<=.4) yi <- .05
                   else yi <- .1
                   yp <- seq(ylim[2],ylim[1] +
-                            if(n.risk && missing(y.n.risk))yi else 0, 
+                            if(n.risk && missing(y.n.risk))yi else 0,
                             by=-yi)
                   if(dots) for(tt in xp)symbols(rep(tt,length(yp)),yp,
                                                 circle=rep(dotsize,length(yp)),
@@ -241,15 +241,15 @@ survplot.rms <-
                 }
               else tim[tim > xlim[2]] <- NA
             }
-		   
+
           ##don't let step function go beyond x-axis -
           ##this cuts it off but allows step to proceed axis end
 
           if(conf != 'bands')
             lines(tim, srv, type=ltype, lty=lty[i], col=col[i], lwd=lwd[i])
-          
+
           if(labelc || conf=='bands') curves[[i]] <- list(tim, srv)
-          
+
           if(pr)
             {
               zest <- rbind(tim,srv)
@@ -310,7 +310,7 @@ survplot.rms <-
                     rev(cumsum(table(
                                      cut(-Y,sort(unique(-c(tt,range(Y)+
                                                            c(-1,1)))))
-                                     )[-length(tt)-1]))	
+                                     )[-length(tt)-1]))
                 }
               else
                 {
@@ -346,6 +346,6 @@ survplot.rms <-
 
   if(length(adjust)) title(sub=paste("Adjusted to:",adjust),
                            adj=0, cex=.6)
-  
+
   invisible(list(adjust=adjust, curve.labels=curve.labels))
 }

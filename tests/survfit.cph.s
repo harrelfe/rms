@@ -34,10 +34,10 @@ prn(with(s, cbind(time, surv, std.err, lower, upper)[k,]),
 
 
 survest(fit, data.frame(age=40, x=25), times=56)
- 
+
 pp <- survfit.cph(fit, data.frame(age=40, x=25),se.fit=TRUE)
 cbind(pp$std.err, pp$lower,pp$upper)[pp$time==56]
- 
+
 
 ##--------------------------------------------------------------
 
@@ -143,7 +143,7 @@ if(testrms)
     Srv <- Surv(dt, e)
     g <- cph(if(additive) Srv ~ age + strat(sex) else Srv ~ age*strat(sex),
              surv=TRUE)
-    
+
     for(sx in levels(sex))
       {
         k <- survest(g, data.frame(age=50, sex=sx))
@@ -151,7 +151,7 @@ if(testrms)
         print(with(k, data.frame(time=time, surv=surv,
                                  std.err=std.err, lower=lower, upper=upper)))
       }
-    
+
     if(plots)
       {
         survplot(g, sex, age=50, conf.int=TRUE)
@@ -162,7 +162,7 @@ if(testrms)
         title('rms survplot + survest surv=T')
         gr()
       }
-    
+
     h <- cph(if(additive) Srv ~ age + strat(sex) else Srv ~ age*strat(sex),
              x=TRUE, y=TRUE)
     s <- survfit(h, new)
@@ -208,7 +208,7 @@ if(testDesign)
     Srv <- Surv(dt, e)
     new <- expand.grid(age=50, sex=levels(sex))
     dd <- datadist(age,sex); options(datadist='dd')
-  
+
     g <- cph(if(additive) Srv ~ age + strat(sex) else Srv ~ age*strat(sex),
              surv=TRUE)
     if(plots)

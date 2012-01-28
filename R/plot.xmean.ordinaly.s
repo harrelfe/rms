@@ -13,7 +13,7 @@ plot.xmean.ordinaly <- function(x, data, subset, na.action,
   X <- eval.parent(X)
   resp <- attr(Terms, 'response')
   if(resp==0) stop('must have a response variable')
-  
+
   nx <- ncol(X) - 1
   Y <- X[[resp]]
   nam <- as.character(attr(Terms, 'variables'))
@@ -27,7 +27,7 @@ plot.xmean.ordinaly <- function(x, data, subset, na.action,
       n <- length(x)
       f <- lrm.fit(x, y)
       fy <- f$freq/n
-      
+
       ##Following is pulled out of predict.lrm
       ns <- length(fy) - 1  # number of intercepts
       k <- ns + 1
@@ -35,7 +35,7 @@ plot.xmean.ordinaly <- function(x, data, subset, na.action,
       xb <- f$linear.predictors - intcept[1]
       xb <- sapply(intcept, '+', xb)
       P <- 1/(1+exp(-xb))
-      
+
       P <- matrix(P, ncol=ns)
       P <- cbind(1, P) - cbind(P, 0)  #one column per prob(Y=j)
 
@@ -74,7 +74,7 @@ plot.xmean.ordinaly <- function(x, data, subset, na.action,
       if(cr) points(yy, xmean.y.cr, pch='C', cex=cex.points)
       if(subn) title(sub=paste('n=',n,sep=''),adj=0)
     }
-  
+
 
   for(i in 1:nx)
     {

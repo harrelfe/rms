@@ -92,13 +92,13 @@ C-----------------------------------------------------------------------------
      &                  wv4,pivot)
 C----------------------------------------------------------------------------
 C       V is an n x n symmetric matrix and a is an n x 1 vector.
-C       Returns P=a' v**-1 a and nrank=rank(v), where 
+C       Returns P=a' v**-1 a and nrank=rank(v), where
 C       a=a(idx(i),i=1,...,nidx), v=(v(idx(i),idx(i),i=1,...,nidx).
 C       vsub is nidx x nidx scratch matrix and wv1-wv4 are scratch
-C       vectors of length nidx (except for wv3 which is 2*nidx).  
+C       vectors of length nidx (except for wv3 which is 2*nidx).
 C   pivot is scratch integer vector
 C       of length nidx.  eps is singularity criterion, e.g. 1d-7.
-C       Uses Fortran routines dqr (see S function qr) and dqrsl1 
+C       Uses Fortran routines dqr (see S function qr) and dqrsl1
 C   (see S function solve).  In R these are dqrdc2 and dqrsl (args
 C      differ too).
 C
@@ -147,11 +147,11 @@ C       CALL dblepr('p',1,p,1)
         END
       SUBROUTINE AVIA2(A,V,P,N,idx,nidx,nrank,eps,vsub,s,swept)
 C----------------------------------------------------------------------------
-C     V IS AN N X N SYMMETRIC square MATRIX AND A IS AN 
+C     V IS AN N X N SYMMETRIC square MATRIX AND A IS AN
 C     N X 1 VECTOR.
 C     THIS ROUTINE RETURNS P=a' vinverse a and nrank=rank(v) where
 C     a=A(idx(i),i=1,...,nidx), v=V(idx(i),idx(i),i=1,...,nidx).
-C     S(nidx) is DOUBLE PRECISION scratch vector, SWEPT(nidx) is LOGICAL scratch 
+C     S(nidx) is DOUBLE PRECISION scratch vector, SWEPT(nidx) is LOGICAL scratch
 C     vector, VSUB(nidx*(nidx+1)/2) is DOUBLE PRECISION scratch vector
 C     eps is singularity criterion, e.g. 1D-6
 C
@@ -181,7 +181,7 @@ C       Initialize s vector to diagonal elements
       K=0
       DO 10 I=1,Nidx
 C       Singularities are like parameter never appeared
-        IF(swept(i)) THEN 
+        IF(swept(i)) THEN
                 AI=A(idx(i))
             ELSE
                 AI=0D0
@@ -199,13 +199,13 @@ C       gsweep returns negative of inverse
         P=-P
       RETURN
       END
-        SUBROUTINE ainvb(a, b, aib, k, tol, irank, pivot, 
+        SUBROUTINE ainvb(a, b, aib, k, tol, irank, pivot,
      &                   wv1, wv2, wv3)
 C-----------------------------------------------------------------------
 C       Uses same Fortran subroutines as S function solve to accurately
 C       compute aib=a inverse * b, for k x k symmetric matrix a stored in
 C       lower triangular form and k x 1 vector b.  wv1(k,k), wv2(k), wv3(2*k)
-C       are DOUBLE PRECISION scratch arrays and pivot(k) is INTEGER scratch vector. 
+C       are DOUBLE PRECISION scratch arrays and pivot(k) is INTEGER scratch vector.
 C       tol is tolerance, e.g. 1d-7.
 C       IF irank (output) < k, result is not computed.  Index of singular
 C       column will be stored in pivot(k) if irank<k.
@@ -246,7 +246,7 @@ C       CALL intpr('i',1,i,1)
 C       CALL intpr('j',1,j,1)
         RETURN
         END
-        SUBROUTINE matinv(x, n, ne, idx, swept, lswept, t, s, nrank, 
+        SUBROUTINE matinv(x, n, ne, idx, swept, lswept, t, s, nrank,
      &          eps,negate)
 C-----------------------------------------------------------------------
 C       Uses subroutine GINV to invert n*n symmetric matrix x stored in
@@ -377,7 +377,7 @@ C       IF (IFAULT.NE.0) RETURN
       END
       SUBROUTINE GSWEEP(S, T, K, L, N, E, SWEPT, IFAULT)
 C
-C     Clark: ALGORITHM AS 178  APPLIED STATISTICS (1982) VOL. 31, NO. 2 
+C     Clark: ALGORITHM AS 178  APPLIED STATISTICS (1982) VOL. 31, NO. 2
 C     Improvements by Ridout and Cobby, Applied Statistics 1989 AS R78
 C
 C     PERFORMS GAUSS-JORDAN PIVOT FOR ROW/COL K IN NXN WORKING ARRAY

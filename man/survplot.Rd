@@ -40,11 +40,11 @@ survplot(fit, \dots)
          col=1, col.fill=gray(seq(.95, .75, length=5)),
          adj.subtitle=TRUE, loglog=FALSE, fun,
          n.risk=FALSE, logt=FALSE, dots=FALSE, dotsize=.003,
-         grid=FALSE, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1, 
+         grid=FALSE, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1,
          y.n.risk, cex.n.risk=.6, pr=FALSE)
-\method{survplot}{survfit}(fit, xlim, 
+\method{survplot}{survfit}(fit, xlim,
          ylim, xlab, ylab, time.inc,
-         conf=c("bands","bars","none"), add=FALSE, 
+         conf=c("bands","bars","none"), add=FALSE,
          label.curves=TRUE, abbrev.label=FALSE,
          levels.only=FALSE, lty,lwd=par('lwd'),
          col=1, col.fill=gray(seq(.95, .75, length=5)),
@@ -99,7 +99,7 @@ default is \code{(1, log(maxtime))}.
 }
 \item{ylim}{
 y-axis limits.  Default is \code{c(0,1)} for survival, and \code{c(-5,1.5)} if \code{loglog=TRUE}.
-If \code{fun} or \code{loglog=TRUE} are given and \code{ylim} is not, 
+If \code{fun} or \code{loglog=TRUE} are given and \code{ylim} is not,
 the limits will be computed from the data.  For \code{what="hazard"}, default
 limits are computed from the first hazard function plotted.
 }
@@ -108,12 +108,12 @@ x-axis label.  Default is \code{units} attribute of failure time variable given 
 \code{Surv}.
 }
 \item{ylab}{
-y-axis label.  Default is \code{"Survival Probability"} or 
+y-axis label.  Default is \code{"Survival Probability"} or
 \code{"log(-log Survival Probability)"}. If \code{fun} is given, the default
 is \code{""}.  For \code{what="hazard"}, the default is \code{"Hazard Function"}.
 }
 \item{time.inc}{
-time increment for labeling the x-axis and printing numbers at risk. 
+time increment for labeling the x-axis and printing numbers at risk.
 If not specified, the value
 of \code{time.inc} stored with the model fit will be used.
 }
@@ -213,7 +213,7 @@ set to \code{TRUE} to add number of subjects at risk for each curve, using the
 fitting the model if \code{y=TRUE} was specified to the fit or if the fit
 was from \code{survfit}.
 The numbers are placed at the bottom
-of the graph unless \code{y.n.risk} is given. 
+of the graph unless \code{y.n.risk} is given.
 If the fit is from \code{survest.psm}, \code{n.risk} does not apply.
 }
 \item{srt.n.risk}{
@@ -221,7 +221,7 @@ angle of rotation for leftmost number of subjects at risk (since this number
 may run into the second or into the y-axis).  Default is \code{0}.
 }
 \item{adj.n.risk}{
-justification for leftmost number at risk. Default is \code{1} for right 
+justification for leftmost number at risk. Default is \code{1} for right
 justification.
 Use \code{0} for left justification, \code{.5} for centered.
 }
@@ -288,8 +288,8 @@ component of \code{mgp} using \code{mgp.axis.labels(c(xvalue,yvalue))}.
 \seealso{
 \code{\link{datadist}}, \code{\link{rms}}, \code{\link{cph}},
 \code{\link{psm}}, \code{\link{survest}}, \code{\link{predictrms}},
-\code{\link{plot.Predict}}, 
-\code{\link[Hmisc]{units}}, \code{\link[Hmisc]{errbar}},  
+\code{\link{plot.Predict}},
+\code{\link[Hmisc]{units}}, \code{\link[Hmisc]{errbar}},
 \code{\link{survfit}}, \code{\link[survival]{survreg.distributions}},
 \code{\link[Hmisc]{labcurve}},
 \code{\link[Hmisc]{mgp.axis}}, \code{\link{par}},

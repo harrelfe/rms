@@ -7,7 +7,7 @@ print.calibrate <- function(x, B=Inf, ...)
   dput(at$call)
   cat('\n\nn=', length(predicted), '  B=', at$B,
       '  u=', at$u, ' ', at$units, '\n\n', sep='')
-  
+
   stratified <- 'KM' %in% colnames(x)
   if(stratified){
     attributes(x) <- at[c('dim','dimnames')]
@@ -18,7 +18,7 @@ print.calibrate <- function(x, B=Inf, ...)
       {
         s <- !is.na(x[,'pred'] + x[,'calibrated.corrected'])
         err <- predicted -
-          approxExtrap(x[s,'pred'],x[s,'calibrated.corrected'], 
+          approxExtrap(x[s,'pred'],x[s,'calibrated.corrected'],
                        xout=predicted, ties=mean)$y
         cat('\nMean |error|:', format(mean(abs(err))),
             '  0.9 Quantile of |error|:',
@@ -100,7 +100,7 @@ plot.calibrate <- function(x, xlab, ylab, subtitles=TRUE,
             approxExtrap(pred[s], cal.corrected[s], xout=predicted, ties=mean)$y
         }
     }
-  
+
   if(subtitles && !add)
     {
       if(type=='smooth')
@@ -127,12 +127,12 @@ plot.calibrate <- function(x, xlab, ylab, subtitles=TRUE,
                 adj=1, cex.sub=cex.subtitles)
         }
     }
-  
+
   abline(0, 1, col=gray(.9))	#ideal line
   if(type=='stratified')
     points(pred, cal.corrected, pch=4, col='blue')
   else
     lines (pred, cal.corrected, col='blue')
-  
+
   invisible()
 }

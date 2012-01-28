@@ -11,7 +11,7 @@ range will be all levels of a categorical predictor or equally-spaced
 points between the \code{\link{datadist}} \code{"Low:prediction"} and
 \code{"High:prediction"} values for the variable (\code{datadist} by
 default uses the 10th smallest and 10th largest predictor values in the
-dataset).  Predicted values are 
+dataset).  Predicted values are
 the linear predictor (X beta), a user-specified transformation of that
 scale, or estimated probability of surviving past a fixed single time
 point given the linear predictor.  \code{Predict} is usually used for
@@ -19,7 +19,7 @@ plotting predicted values but there is also a \code{print} method.
 
 When the first argument to \code{Predict} is a fit object created by
 \code{bootcov} with \code{coef.reps=TRUE}, confidence limits come from
-the stored matrix of bootstrap repetitions of coefficients, using 
+the stored matrix of bootstrap repetitions of coefficients, using
 bootstrap percentile nonparametric confidence limits.  Such confidence
 intervals do not make distributional assumptions.
 
@@ -55,13 +55,13 @@ Predict(x, ..., fun,
   \item{x}{
 	an \code{rms} fit object, or for \code{print} the result of \code{Predict}.
 	\code{options(datadist="d")} must have been specified (where
-	\code{d} was created by \code{datadist}), or 
+	\code{d} was created by \code{datadist}), or
 	it must have been in effect when the the model was fitted.}
   \item{\dots}{
 	One or more variables to vary, or single-valued adjustment values.
 	Specify a variable name without an equal sign to use the default
-	display range, or any range 
-	you choose (e.g. \code{seq(0,100,by=2),c(2,3,7,14)}). 
+	display range, or any range
+	you choose (e.g. \code{seq(0,100,by=2),c(2,3,7,14)}).
 	The default list of values for which predictions are made
 	is taken as the list of unique values of the variable if they number fewer
 	than 11. For variables with \eqn{>10} unique values, \code{np}
@@ -168,7 +168,7 @@ Predict(x, ..., fun,
 \details{
 When there are no intercepts in the fitted model, plot subtracts
 adjustment values from each factor while computing variances for
-confidence limits. 
+confidence limits.
 
 Specifying \code{time} will not work for Cox models with time-dependent
 covariables.  Use \code{survest} or \code{survfit} for that purpose.
@@ -190,7 +190,7 @@ f.harrell@vanderbilt.edu
 }
 \seealso{
 \code{\link{datadist}}, \code{\link{predictrms}},
-\code{\link{contrast.rms}}, \code{\link{summary.rms}},  
+\code{\link{contrast.rms}}, \code{\link{summary.rms}},
 \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{survest}},
 \code{\link{survplot}}, \code{\link{rmsMisc}},
 \code{\link[Hmisc]{transace}}, \code{rbind}, \code{\link{bootcov}}
@@ -237,7 +237,7 @@ require(lattice)
 xyplot(yhat ~ age | sex, data=w, type='l')
 # To add confidence bands we need to use the Hmisc xYplot function in
 # place of xyplot
-xYplot(Cbind(yhat,lower,upper) ~ age | sex, data=w, 
+xYplot(Cbind(yhat,lower,upper) ~ age | sex, data=w,
        method='filled bands', type='l', col.fill=gray(.95))
 # If non-displayed variables were in the model, add a subtitle to show
 # their settings using title(sub=paste('Adjusted to',attr(w,'info')$adjust),adj=0)
@@ -248,7 +248,7 @@ n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)
 label(age) <- "Age"
-sex <- factor(sample(c('Male','Female'), n, 
+sex <- factor(sample(c('Male','Female'), n,
               rep=TRUE, prob=c(.6, .4)))
 cens <- 15*runif(n)
 h <- .02*exp(.04*(age-50)+.8*(sex=='Female'))
@@ -266,7 +266,7 @@ med <- Quantile(f)       # Creates function to compute quantiles
                          # (median by default)
 Predict(f, age, fun=function(x)med(lp=x))
 # Note: This works because med() expects the linear predictor (X*beta)
-#       as an argument.  Would not work if use 
+#       as an argument.  Would not work if use
 #       ref.zero=TRUE or adj.zero=TRUE.
 # Also, confidence intervals from this method are approximate since
 # they don't take into account estimation of scale parameter

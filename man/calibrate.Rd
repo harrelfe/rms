@@ -19,7 +19,7 @@ functions for Cox (\code{cph}), parametric survival models (\code{psm}),
 binary and ordinal logistic models (\code{lrm}) and ordinary least
 squares (\code{ols}).  For survival models,
 "predicted" means predicted survival probability at a single
-time point, and "observed" refers to the corresponding Kaplan-Meier 
+time point, and "observed" refers to the corresponding Kaplan-Meier
 survival estimate, stratifying on intervals of predicted survival, or,
 if the \code{polspline} package is installed, the predicted survival
 probability as a function of transformed predicted survival probability
@@ -40,21 +40,21 @@ respectively for \code{lrm} and \code{ols} fits or all other fits.
 }
 \usage{
 calibrate(fit, \dots)
-\method{calibrate}{default}(fit, predy, 
+\method{calibrate}{default}(fit, predy,
   method=c("boot","crossvalidation",".632","randomization"),
   B=40, bw=FALSE, rule=c("aic","p"),
   type=c("residual","individual"),
   sls=.05, aics=0, force=NULL, pr=FALSE, kint, smoother="lowess",
-  digits=NULL, \dots) 
+  digits=NULL, \dots)
 \method{calibrate}{cph}(fit, cmethod=c('hare', 'KM'),
-  method="boot", u, m=150, pred, cuts, B=40, 
+  method="boot", u, m=150, pred, cuts, B=40,
   bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, force=NULL,
   pr=FALSE, what="observed-predicted", tol=1e-12, maxdim=5, \dots)
 \method{calibrate}{psm}(fit, cmethod=c('hare', 'KM'),
   method="boot", u, m=150, pred, cuts, B=40,
   bw=FALSE,rule="aic",
   type="residual", sls=.05, aics=0, force=NULL,
-  pr=FALSE, what="observed-predicted", tol=1e-12, maxiter=15, 
+  pr=FALSE, what="observed-predicted", tol=1e-12, maxiter=15,
   rel.tolerance=1e-5, maxdim=5, \dots)
 
 \method{print}{calibrate}(x, B=Inf, \dots)
@@ -74,7 +74,7 @@ a fit from \code{ols}, \code{lrm}, \code{cph} or \code{psm}
 \item{x}{an object created by \code{calibrate}}
 \item{method, B, bw, rule, type, sls, aics, force}{see \code{\link{validate}}.
   For \code{print.calibrate}, \code{B} is an
-  upper limit on the number of resamples for which 
+  upper limit on the number of resamples for which
   information is printed about which variables were selected in each
   model re-fit. Specify zero to suppress printing.  Default is to print
   all re-samples.
@@ -137,7 +137,7 @@ intercept to use, e.g., \code{kint=2} means to calibrate \eqn{Prob(Y\geq
 \item{smoother}{
 a function in two variables which produces \eqn{x}- and
 \eqn{y}-coordinates by smoothing the input \code{y}.  The default is to
-use \code{lowess(x, y, iter=0)}. 
+use \code{lowess(x, y, iter=0)}.
 }
 \item{digits}{If specified, predicted values are rounded to
   \code{digits} digits before passing to the smoother.  Occasionally,
@@ -158,7 +158,7 @@ defaults to "Fraction Surviving x-units" or to a suitable label for
 other models
 }
 \item{xlim,ylim}{2-vectors specifying x- and y-axis limits, if not using
-  defaults} 
+  defaults}
 \item{subtitles}{
 set to \code{FALSE} to suppress subtitles in plot describing method and for \code{lrm}
 and \code{ols} the mean absolute error and original sample size
@@ -235,9 +235,9 @@ x2 <- runif(200)
 x3 <- runif(200)
 x4 <- runif(200)
 f <- lrm(y ~ x1+x2+x3*x4, x=TRUE, y=TRUE)
-cal <- calibrate(f, kint=2, predy=seq(.2,.8,length=60), 
+cal <- calibrate(f, kint=2, predy=seq(.2,.8,length=60),
                  group=y)
-# group= does k-sample validation: make resamples have same 
+# group= does k-sample validation: make resamples have same
 # numbers of subjects in each level of y as original sample
 
 

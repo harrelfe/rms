@@ -1,7 +1,7 @@
 predab.resample <-
   function(fit.orig,
            fit,
-           measure, 
+           measure,
            method=c("boot","crossvalidation",".632","randomization"),
            bw=FALSE,
            B=50,
@@ -22,13 +22,13 @@ predab.resample <-
   method <- match.arg(method)
   oldopt <- options(digits=4)
   on.exit(options(oldopt))
-  
+
   ## Following logic prevents having to load a copy of a large x object
   if(any(match(c("x", "y"), names(fit.orig), 0) == 0))
     stop("must have specified x=T and y=T on original fit")
 
   fparms <- fit.orig[c("non.slopes", "assign", "terms", "Design")]
-  
+
   non.slopes <- num.intercepts(fit.orig)
 
   x.index <- if(non.slopes==0 || non.slopes.in.x) function(i,...) i
@@ -55,15 +55,15 @@ predab.resample <-
     }
 
   nac <- fit.orig$na.action
-  
+
   x <- as.matrix(fit.orig$x)
   n <- nrow(x)
-  
+
   ## Remove model.matrix class for subset operations later
-  attr(x,'class') <- NULL	
+  attr(x,'class') <- NULL
 
   y <- fit.orig$y
-  
+
   if(is.category(y)) y <- oldUnclass(y)
 
   y <- as.matrix(y)
@@ -75,15 +75,15 @@ predab.resample <-
     {
       if(multi || method != 'boot')
         stop('group is currently allowed only when method="boot" and cluster is not given')
-    
+
       if(length(group) > n)
         {
           ## Missing observations were deleted during fit
-          if(length(nac)) 
+          if(length(nac))
             j <- !is.na(naresid(nac, y) %*% rep(1, ncol(y)))
           group <- group[j]
         }
-  
+
       if(length(group) != n)
         stop('length of group does not match # rows used in fit')
 
@@ -92,7 +92,7 @@ predab.resample <-
     }
   else
     ngroup <- 0
-  
+
   if(multi)
     {
       if(method != 'boot')
@@ -110,10 +110,10 @@ predab.resample <-
 
       if(length(cluster) != n)
         stop('length of cluster does not match # rows used in fit')
-    
+
     if(any(is.na(cluster)))
       stop('cluster has NAs')
-    
+
     n.orig <- length(unique(cluster))
     cl.samp <- split(1:n, cluster)
     }
@@ -127,12 +127,12 @@ predab.resample <-
           j <- !is.na(naresid(nac, y) %*% rep(1, ncol(y)))
           subset <- subset[j]
         }
-    
+
       if(length(subset) != n  && all(subset >= 0))
         stop('length of subset does not match # rows used in fit')
-    
+
     if(any(is.na(subset))) stop('subset has NAs')
-    
+
     if(!is.logical(subset))
       {
         subset2 <- rep(FALSE, n)
@@ -157,11 +157,11 @@ predab.resample <-
     orig.col.kept <- fbw$parms.kept
     if(!length(orig.col.kept))
       stop("no variables kept in original model")
-    
+
     xcol <- x.index(orig.col.kept, non.slopes)
     fit.orig <- fit(x[,xcol,drop=FALSE], y, strata=stra,
                     iter=0, tol=tol, xcol=xcol, ...)
-    
+
   }
   else
     orig.col.kept <- seq(along=fit.orig$coef)
@@ -175,16 +175,16 @@ predab.resample <-
     measure(xb, y, strata=stra, fit=fit.orig, iter=0, evalfit=TRUE,
             fit.orig=fit.orig,
             kint=kint, ...)
-  else 
+  else
     measure(xb[subset], y[subset,,drop=FALSE], strata=stra[subset],
             fit=fit.orig,
             iter=0, evalfit=FALSE, fit.orig=fit.orig, kint=kint, ...)
-  
+
   test.stat <- double(length(index.orig))
   train.stat <- test.stat
   name <- fparms$Design$name
   if(bw) varin <- matrix(FALSE, nrow=B, ncol=length(name))
-  
+
   j <- 0
   num <- 0
 
@@ -198,7 +198,7 @@ predab.resample <-
       sb <- sample(n, replace=FALSE)
     }
   ##Cross-val keeps using same random set of indexes, without replacement
-  
+
   ntest <- 0 #Used in getting weighted average for .632 estimator
 
   if(method==".632")
@@ -212,16 +212,16 @@ predab.resample <-
           S[, i] <- s <- sample(n, replace=TRUE)
           W[s, i] <- FALSE  #now these obs are NOT omitted
         }
-    
+
       nomit <- drop(W %*% rep(1,ncol(W)))  #no. boot samples omitting each obs
       if(min(nomit) == 0)
         stop("not every observation omitted at least once ",
            "in bootstrap samples.\nRe--run with larger B")
-      
+
       W <- apply(W / nomit, 2, sum) / n
       cat("\n\nWeights for .632 method (ordinary bootstrap weights ",
           format(1 / B), ")\n", sep="")
-      
+
       print(summary(W))
     }
 
@@ -279,7 +279,7 @@ predab.resample <-
       f <- fit(x[xtrain,,drop=FALSE], y[train,,drop=FALSE],
                strata=stra[train], iter=i, tol=tol, ...)
     f$assign <- NULL  #Some programs put a NULL assign (e.g. ols.val fit)
- 
+
     fail <- f$fail
       if(!fail)
         {
@@ -295,7 +295,7 @@ predab.resample <-
             }
 
           clf <- attr(f, "class")  # class is removed by c() below
-          
+
           f[names(fparms)] <- fparms
           attr(f, "class") <- clf
           if(!bw)
@@ -307,12 +307,12 @@ predab.resample <-
             {
               f <- fastbw(f, rule=rule, type=type, sls=sls, aics=aics,
                           eps=tol, force=force)
-              
+
               if(pr) print(f)
 
               varin[j + 1, f$factors.kept] <- TRUE
               col.kept <- f$parms.kept
-              
+
               if(!length(col.kept))
                 f <- fit(NULL, y[train,, drop=FALSE], stra=stra[xtrain],
                          iter=i, tol=tol,...)
@@ -337,11 +337,11 @@ predab.resample <-
           xb <- Xb(x[,xcol,drop=FALSE], coef, non.slopes,
                    non.slopes.in.x, n,
                    kint=kint)
-          
+
           if(missing(subset))
             {
               train.statj <-
-                measure(xb[xtrain], y[train,,drop=FALSE], strata=stra[xtrain], 
+                measure(xb[xtrain], y[train,,drop=FALSE], strata=stra[xtrain],
                         fit=f, iter=i, fit.orig=fit.orig, evalfit=TRUE,
                         kint=kint, ...)
 
@@ -354,7 +354,7 @@ predab.resample <-
           else
             {
               ii <- xtrain
-              
+
               if(any(ii < 0)) ii <- (1:n)[ii]
 
               ii <- ii[subset[ii]]
@@ -363,22 +363,22 @@ predab.resample <-
                                      fit=f, iter=i, fit.orig=fit.orig,
                                      evalfit=FALSE,
                                      kint=kint, ...)
-                  
+
               ii <- test
               if(any(ii < 0)) ii <- (1:n)[ii]
-              
+
               ii <- ii[subset[ii]]
               test.statj <- measure(xb[ii], y[ii,,drop=FALSE], fit=f,
                                     iter=i, strata=stra[ii],
                                     fit.orig=fit.orig, evalfit=FALSE,
                                     kint=kint, ...)
             }
-          
+
           na <- is.na(train.statj + test.statj)
           num <- num + !na
-          if(pr) 
+          if(pr)
             print(cbind(training=train.statj, test=test.statj))
-              
+
           train.statj[na] <- 0
           test.statj[na] <- 0
           if(method == ".632")
@@ -389,20 +389,20 @@ predab.resample <-
             }
           else
             wt <- 1
-          
+
           train.stat <- train.stat + train.statj
           test.stat <- test.stat + test.statj * wt
           ntest <- ntest + 1
-        } 
+        }
     }
-  
+
   if(pr) cat("\n\n")
-      
+
   if(j != B)
     cat("\nDivergence or singularity in", B - j, "samples\n")
-  
+
   train.stat <- train.stat / num
-  
+
   if(method != ".632")
     {
       test.stat <- test.stat / num
@@ -410,11 +410,11 @@ predab.resample <-
     }
   else
     optimism <- .632 * (index.orig - test.stat)
-  
+
   res <- cbind(index.orig=index.orig, training=train.stat, test=test.stat,
                optimism=optimism, index.corrected=index.orig-optimism, n=num)
-  
-  
+
+
   if(bw)
     {
       varin <- varin[1:j, ,drop=FALSE]
@@ -422,4 +422,4 @@ predab.resample <-
     }
   structure(res, class='validate', kept=if(bw) varin)
 }
-  
+

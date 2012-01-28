@@ -1,10 +1,10 @@
-Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete, 
+Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
                 method = "br", model = FALSE, contrasts = NULL,
-                se='nid', hs=TRUE, x=FALSE, y=FALSE, ...) 
+                se='nid', hs=TRUE, x=FALSE, y=FALSE, ...)
 {
   call <- match.call()
   mf <- match.call(expand.dots = FALSE)
-  m <- match(c("formula", "data", "subset", "weights", "na.action"), 
+  m <- match(c("formula", "data", "subset", "weights", "na.action"),
              names(mf), 0)
   mf <- mf[c(1, m)]
   mf$drop.unused.levels <- TRUE
@@ -27,16 +27,16 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
   if (length(tau) > 1)
     stop('does not allow more than one quantile to be estimated simultaneously')
   require(quantreg)
-  fit <- if (length(weights)) 
+  fit <- if (length(weights))
     rq.wfit(X, Y, tau = tau, weights, method, ...)
   else rq.fit(X, Y, tau = tau, method, ...)
   rownames(fit$residuals) <- rownames(dimnames(X)[[1]])
   rho <- sum(Rho(fit$residuals, tau))
-  
+
   stats <- c(n=length(fit$residuals),
              p=length(fit$coefficients),
              g=GiniMd(fit$fitted.values))
-  
+
   fit <- c(fit,
            list(
                 na.action = at$na.action,
@@ -56,7 +56,7 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
                 fitFunction=c("Rq", "rq"),
                 stats     = stats))
   attr(fit, "na.message") <- attr(m, "na.message")
-  
+
   s <- summary.rq(fit, cov=TRUE, se=se, hs=hs)
   k <- s$coefficients
   nam <- names(fit$coefficients)
@@ -65,7 +65,7 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
   cov <- s$cov
   dimnames(cov) <- list(nam, nam)
   fit$var <- cov
-  
+
   ## Remove the following since summary.rq has done its job
   if(!model) fit$model <- NULL
   if(!x) fit$x <- NULL
@@ -122,7 +122,7 @@ print.Rq <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
         k <- k + 1
         z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
       }
-    
+
     s <- x$stats
     n <- s['n']; p <- s['p']; errordf <- n - p; g <- s['g']
 
@@ -135,11 +135,11 @@ print.Rq <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
 
     s <- x$summary
     k <- k + 1
-    z[[k]] <- list(type='coefmatrix', 
+    z[[k]] <- list(type='coefmatrix',
                    list(coef = s[,'Value'],
                         se   = s[,'Std. Error'],
                         errordf = errordf))
-    
+
     if (length(mes <- attr(x, "na.message")))
       {
         k <- k + 1
@@ -159,19 +159,19 @@ latex.Rq <-
     f   <- object
     tau <- f$tau
     at  <- f$Design
-    
-    w <- if (length(caption)) 
+
+    w <- if (length(caption))
         paste("\\begin{center} \\bf", caption, "\\end{center}")
     if (missing(which) & !inline)
       {
-        Y <- paste("{\\rm ", as.character(formula(f))[2], 
+        Y <- paste("{\\rm ", as.character(formula(f))[2],
                    "}", sep = "")
-        w <- c(w, paste("\\[", Y, "_{", tau, "} = X\\beta, {\\rm \\ \\ where} \\\\ \\]", 
+        w <- c(w, paste("\\[", Y, "_{", tau, "} = X\\beta, {\\rm \\ \\ where} \\\\ \\]",
                         sep = ""))
       }
     if(missing(which)) which <- 1:length(at$name)
     if(missing(varnames)) varnames <- at$name
-    
+
     cat(w, file = file, sep = if (length(w)) "\n"  else "", append = append)
     latexrms(f, file=file, append=TRUE, which=which, inline=inline,
              varnames=varnames, columns=columns, caption, ...)

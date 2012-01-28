@@ -1,15 +1,15 @@
 nomogram <-
-  function(fit, ..., adj.to, 
+  function(fit, ..., adj.to,
            lp=TRUE, lp.at=NULL,
            fun=NULL, fun.at=NULL, fun.lp.at=NULL, funlabel="Predicted Value",
            interact=NULL, intercept=1,
-           conf.int=FALSE, 
+           conf.int=FALSE,
            conf.lp=c("representative", "all", "none"),
-           est.all=TRUE, abbrev=FALSE, minlength=4, maxscale=100, nint=10, 
+           est.all=TRUE, abbrev=FALSE, minlength=4, maxscale=100, nint=10,
            vnames=c("labels","names"),
            varname.label=TRUE, varname.label.sep="=",
            omit=NULL, verbose=FALSE)
-{	
+{
 
   conf.lp <- match.arg(conf.lp)
   vnames  <- match.arg(vnames)
@@ -30,7 +30,7 @@ nomogram <-
   if(nfun>1 && length(funlabel)==1) funlabel <- rep(funlabel, nfun)
   if(nfun>0 && is.list(fun) && length(names(fun))) funlabel <- names(fun)
 
-  if(length(fun.at) && !is.list(fun.at)) 
+  if(length(fun.at) && !is.list(fun.at))
     fun.at <- rep(list(fun.at),nfun)
   if(length(fun.lp.at) && !is.list(fun.lp.at))
     fun.lp.at <- rep(list(fun.lp.at),nfun)
@@ -56,11 +56,11 @@ nomogram <-
     }
 
   ia    <- at$interactions
-  
+
   factors <- rmsArgs(substitute(list(...)))
   nf <- length(factors)
 
-  which <- if(est.all) (1:length(assume))[assume!=8] else 
+  which <- if(est.all) (1:length(assume))[assume!=8] else
   (1:length(assume))[assume!=8 & assume!=9]
   if(nf>0)
     {
@@ -94,7 +94,7 @@ nomogram <-
 
   ## Number of non-slopes:
   nrp <- num.intercepts(fit)
-  Intercept <- if(nrp>0) fit$coefficients[intercept] else 
+  Intercept <- if(nrp>0) fit$coefficients[intercept] else
   if(!is.null(fit$center)) -fit$center else 0
 
   intercept.offset <- if(nrp<2) 0 else
@@ -107,7 +107,7 @@ nomogram <-
       ni <- name[i]
       z <- factors[[ni]]
       lz <- length(z)
-      if(lz < 2) settings[[ni]] <- value.chk(at, i, NA, -nint, Limval, 
+      if(lz < 2) settings[[ni]] <- value.chk(at, i, NA, -nint, Limval,
                                              type.range="full") else
       if(lz > 0 && any(is.na(z)))
         stop("may not specify NA as a variable value")
@@ -117,7 +117,7 @@ nomogram <-
           if(is.null(lims[[ni]]) || is.na(lims[2,ni])) {
             lims[[ni]] <- c(NA,z[1],NA)
             warning(paste("adjustment values for ",ni,
-                          " not defined in datadist; taken to be first value specified (", 
+                          " not defined in datadist; taken to be first value specified (",
                           z[1],")" ,sep=""))
           }
         }
@@ -129,7 +129,7 @@ nomogram <-
   if(any(isna)) stop(
                      paste("adjustment values not defined here or with datadist for",
                            paste(name[assume!=9][isna],collapse=" ")))
-  
+
   num.lines <- 0
 
   entities <- 0
@@ -143,14 +143,14 @@ nomogram <-
   end <- 0
 
   ## Sort to do continuous factors first if any interactions present
-  
+
   main.effects <- which[assume[which]<8]
   ## this logic not handle strata w/intera.
   if(any(assume==9))
     main.effects <-
       main.effects[order(10*discrete[main.effects]+
                          (name[main.effects] %in% names(interact)))]
-  
+
   ## For each predictor, get vector of predictor numbers directly or
   ## indirectly associated with it
   rel <- related.predictors(at)   # Function in rmsMisc.s
@@ -173,7 +173,7 @@ nomogram <-
                                  type='main')
           set[[iset]] <- x
           nset <- c(nset, label[i])
-    
+
           start <- c(start, end+1)
           n <- length(settings[[nam]])
           len <- c(len, n)
@@ -203,10 +203,10 @@ nomogram <-
             for(n in if(is.character(abbrev))abbrev else names(acombo))
               {
                 if(discrete[n])
-                  { 
+                  {
                     acombo[[n]] <-
                       abbreviate(parms[[n]],
-                                 minlength=if(minlength==1)4 else minlength)[combo[[n]]]  
+                                 minlength=if(minlength==1)4 else minlength)[combo[[n]]]
                     ## lucky that abbreviate function names its result
                   }
               }
@@ -231,7 +231,7 @@ nomogram <-
               for(j in 1:length(acombo))
                 {
                   set.name <-
-                    paste(set.name, 
+                    paste(set.name,
                           if(varname.label) paste(namo[j],varname.label.sep,
                                                   sep="") else "",
                           format(acombo[[j]][k]),sep="")
@@ -246,7 +246,7 @@ nomogram <-
               ia.names <- unique(ia.names)
               attr(x,'info') <-
                 list(predictor=nam,
-                     effect.name=c(nam,namo[assume[namo]!=8],ia.names), 
+                     effect.name=c(nam,namo[assume[namo]!=8],ia.names),
                      type=if(k==1) "first" else "continuation")
               set[[iset]] <- x
               nset <- c(nset, set.name)
@@ -256,11 +256,11 @@ nomogram <-
               len <- c(len, n)
               end <- end+n
             }
-        }    
+        }
     }
   xadj <- unclass(rms.levels(adj, at))
   for(k in 1:length(xadj)) xadj[[k]] <- rep(xadj[[k]], sum(len))
-  
+
   j <- 0
   for(S in set)
     {
@@ -279,7 +279,7 @@ nomogram <-
   if(any(is.infinite(xx)))
     stop("variable limits and transformations are such that an infinite axis value has resulted.\nRe-run specifying your own limits to variables.")
 
-  if(se) xse <- predictrms(fit, newdata=xadj, se.fit=TRUE, 
+  if(se) xse <- predictrms(fit, newdata=xadj, se.fit=TRUE,
                            kint=intercept)
 
   R <- matrix(NA, nrow=2, ncol=length(main.effects),
@@ -312,8 +312,8 @@ nomogram <-
   R <- R[,R[1,] < 1e30,drop=FALSE]
   sc <- maxscale/max(R[2,]-R[1,])
   Intercept <- Intercept + sum(R[1,])
-  
-###if(missing(naxes)) naxes <- 
+
+###if(missing(naxes)) naxes <-
 ###  if(total.sep.page) max(space.used + 1, nfun + lp + 1) else
 ###                     space.used + 1 + nfun + lp + 1
 
@@ -329,12 +329,12 @@ nomogram <-
       type <- setinfo$type
       x <- S[[1]]
       nam <- names(S)[1]  #stored with fastest first
-      fx <- if(is.character(x)) x else 
+      fx <- if(is.character(x)) x else
       sedit(Format(x)," ","") #axis not like bl   - was translate()
       if(abb && discrete[nam] && (is.logical(abbrev) || nam %in% abbrev))
         {
           old.text <- fx
-          fx <- if(abb && minlength==1)letters[1:length(fx)] else 
+          fx <- if(abb && minlength==1)letters[1:length(fx)] else
           abbreviate(fx, minlength=minlength)
           Abbrev[[nam]] <- list(abbrev=fx, full=old.text)
         }
@@ -358,7 +358,7 @@ nomogram <-
                   fx[ie] <- if(discrete[nam] || ie < length(xt))
                     paste(fx[is], "-", fx[ie],sep="") else
                   paste(fx[is], '+', sep='')
-                  
+
                   fx[is:(ie-1)] <- ""
                   xt[is:(ie-1)] <- NA
                 }
@@ -378,17 +378,17 @@ nomogram <-
       if(nrp>1) xb <- xb + intercept.offset
       lp.at <- pretty(range(xb), n=nint)
     }
-  
+
   sum.max <- if(entities==1) maxscale
   else max(maxscale,sc*max(lp.at-Intercept))
   x <- pretty(c(0, sum.max), n=nint)
-  
+
   new.max <- max(x)
-  
+
   iset <- iset + 1
   nset <- c(nset, 'total.points')
   set[[iset]] <- list(x=x)
-  
+
   if(lp)
     {
       x2 <- seq(lp.at[1], max(lp.at), by=(lp.at[2]-lp.at[1])/2)
@@ -405,7 +405,7 @@ nomogram <-
               xse <- c(xse, S$se.fit)
             }
           i <- order(xxb)
-          if(length(xxb)<16 | conf.lp=="representative") 
+          if(length(xxb)<16 | conf.lp=="representative")
             {nlev <- 4; w <- 1} else {nlev <- 8; w <- 2}
           if(conf.lp=="representative")
             {
@@ -425,7 +425,7 @@ nomogram <-
         }
       else set[[iset]] <- list(x=scaled.x, x.real=lp.at)
     }
-  
+
   if(nfun>0)
     {
       if(!is.list(fun)) fun <- list(fun)
@@ -490,7 +490,7 @@ print.nomogram <- function(x, dec=0, ...)
   w <- diff(range(obj$lp$x))/diff(range(obj$lp$x.real))
   cat('Points per unit of linear predictor:',format(w),
 	  '\nLinear predictor units per point   :',format(1/w),'\n\n')
-  
+
   fun <- FALSE
   for(x in names(obj))
     {

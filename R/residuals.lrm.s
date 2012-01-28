@@ -1,9 +1,9 @@
 residuals.lrm <-
-  function(object, 
+  function(object,
            type=c("ordinary","score","score.binary","pearson",
              "deviance","pseudo.dep","partial",
              "dfbeta","dfbetas","dffit","dffits","hat","gof","lp1"),
-           pl=FALSE, xlim, ylim, kint=1, label.curves=TRUE, 
+           pl=FALSE, xlim, ylim, kint=1, label.curves=TRUE,
            which, ...)
 {
   gotsupsmu <- FALSE
@@ -19,7 +19,7 @@ residuals.lrm <-
   cof <- object$coefficients
   ordone <- type %in% c('partial','gof','score','score.binary')
   ## residuals explicitly handled for ordinal model
-  if(ordone && !missing(kint)) 
+  if(ordone && !missing(kint))
     stop('may not specify kint for partial, score, score.binary, or gof')
 
   if(k > 1 && kint !=1 && !ordone) L <- L - cof[1] + cof[kint]
@@ -37,7 +37,7 @@ residuals.lrm <-
                   lev2[kint],
                   ' to compute residuals or test GOF',
                   sep=''))
-  
+
   if(type=="gof")
     {
       if(length(X <- object$x)==0)
@@ -65,9 +65,9 @@ residuals.lrm <-
         }
       return(drop(stats))
     }
-  
+
   naa <- object$na.action
-  
+
   if(type=="ordinary") return(naresid(naa,Y - 1/(1+exp(-L))))
 
   if(type %in% c('score','score.binary','partial'))
@@ -106,7 +106,7 @@ residuals.lrm <-
             errbar(ii, ww[1], ww[3], ww[2], add=TRUE)
           }
       }
-  
+
   if(type=='score.binary')
     {
       if(k==1) stop('score.binary only applies to ordinal models')
@@ -120,7 +120,7 @@ residuals.lrm <-
           xi <- X[,i]
           r <- vector('list',k)
           names(r) <- lev[-1]
-          for(j in 1:k) 
+          for(j in 1:k)
             r[[j]] <- xi*((Y>=j)-1/(1+exp(-(L-cof[1]+cof[j]))))
           if(pl!='boxplot') plotit(r, ylim=if(missing(ylim))NULL else ylim,
                xlab=yname, ylab=xname[i])
@@ -132,7 +132,7 @@ residuals.lrm <-
         }
       invisible()
     }
-  
+
   if(type=="score")
     {
       if(!length(X <- oldUnclass(object$x)))
@@ -165,7 +165,7 @@ residuals.lrm <-
               if(pl=='boxplot')
                 {
                   boxplot(split(ui, Y), varwidth=TRUE, notch=TRUE,
-                          names=lev, err=-1, 
+                          names=lev, err=-1,
                           ylim=if(missing(ylim))quantile(ui,c(.1,.9))
                           else ylim, ...)
                   title(xlab=yname, ylab=paste('Score Residual for',xname[i-k]))
@@ -178,7 +178,7 @@ residuals.lrm <-
         }
       return(if(dopl)invisible(naresid(naa, u)) else naresid(naa, u))
     }
-  
+
   if(type=="pearson") return(naresid(naa,(Y-P)/sqrt(P*(1-P))))
 
   if(type=="deviance")
@@ -253,7 +253,7 @@ residuals.lrm <-
                   ri <- R[,i,,drop=TRUE]
                   smoothed <- vector('list',k)
                   ymin <- 1e30; ymax <- -1e30
-                  
+
                   for(j in 1:k)
                     {
                       w <- if(pl!='supsmu')
@@ -280,12 +280,12 @@ residuals.lrm <-
                                lev2[j])
                         }
                     }
-                  if(is.list(label.curves) || 
+                  if(is.list(label.curves) ||
                      (is.logical(label.curves) && label.curves))
                     labcurve(smoothed, lev2, opts=label.curves)
                 }
             }
-          return(invisible(if(k==1)naresid(naa,r) else R))   
+          return(invisible(if(k==1)naresid(naa,r) else R))
         }
       return(if(k==1) naresid(naa,r) else R)
     }
@@ -314,7 +314,7 @@ residuals.lrm <-
       g <- lm(L+(Y-P)/v ~ X, weights=v)
       infl <- lm.influence(g)
       dfb <- coef(infl)    ## R already computed differences
-  
+
       dimnames(dfb) <- list(rnam, c(cnam[kint],cnam[-(1:k)]))
       if(type=="dfbeta") return(naresid(naa,dfb))
       if(type=="dfbetas")

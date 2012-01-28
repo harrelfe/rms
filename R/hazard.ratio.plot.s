@@ -131,7 +131,7 @@ hazard.ratio.plot <-
                 if(legendloc[1]=="ll")
                   z <- list(x=par("usr")[1],y=par("usr")[3])
                 else
-                  z <- list(x=legendloc[1],y=legendloc[2]) 		  }	
+                  z <- list(x=legendloc[1],y=legendloc[2]) 		  }
           if(legendloc[1]!="none")legend(z,leg,lty=ltype,cex=cex,bty="n")
         }
     }

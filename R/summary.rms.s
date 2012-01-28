@@ -8,7 +8,7 @@
 #	c(lo,w,hi): use range (lo,hi), adjust to w.  Any of 3 can be NA.
 # For categories and strata values can be character
 # values that are original values before translating to is.category -
-# only enough letters are needed to uniquely identify the category 
+# only enough letters are needed to uniquely identify the category
 # This applies to category and strata vars.  Default adjusted to is
 # from second element of limits vector.
 # For category factors, all comparisons to reference category are made.
@@ -18,13 +18,13 @@
 
 summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                            abbrev=FALSE, vnames=c("names","labels"))
-{	
+{
   obj.name <- as.character(sys.call())[2]
   at <- object$Design
   labels <- at$label
 
   vnames <- match.arg(vnames)
-  
+
   assume <- at$assume.code
   if(is.null(assume)) stop("fit does not have design information")
   if(any(assume==10))
@@ -59,13 +59,13 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   on.exit(options(oldopt))
 
   lims <- Limval$limits[1:3,,drop=FALSE]
-  
+
   ##Find underlying categorical variables
   ucat <- rep(FALSE, length(assume))
   for(i in (1:length(assume))[assume!=5 & assume<8])
     ucat[i] <- name[i] %in% names(values) &&
   length(V <- values[[name[i]]]) && is.character(V)
-  
+
   stats <- NULL
   lab <- NULL
   lc <- length(object$coef)
@@ -102,7 +102,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   if(any(isna))
     stop(paste("adjustment values not defined here or with datadist for",
                paste(name[assume!=9][isna],collapse=" ")))
-  k <- which[assume[which]!=8 & assume[which]!=5 & assume[which]!=10 & 
+  k <- which[assume[which]!=8 & assume[which]!=5 & assume[which]!=10 &
              !ucat[which]]
   m <- length(k)
   if(m)
@@ -112,7 +112,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
       if(any(isna)) stop(paste("ranges not defined here or with datadist for",
                                paste(name[k[isna]], collapse=" ")))
     }
-  
+
   xadj <- oldUnclass(rms.levels(adj, at))
   m <- length(k)
   if(m)
@@ -123,7 +123,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
       even<- seq(2,M,by=2)
       ##Extend data frame
       for(i in 1:length(adj)) adj[[i]] <- rep(adj[[i]], M)
-   
+
       i <- 0
       for(l in k)
         {
@@ -152,13 +152,13 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
           lab <- lab[w]
         }
     }
-  
+
   for(j in 1:length(xadj)) xadj[[j]] <- rep(xadj[[j]], 2)
 
   for(i in which[assume[which]==5 | ucat[which]])
     {
       ## All comparisons with reference category
-  
+
       parmi <- if(ucat[i]) values[[name[i]]] else parms[[name[i]]]
       parmi.a <- if(abbrev) abbreviate(parmi) else parmi
       iref <- as.character(xadj[[name[i]]][1])
@@ -197,7 +197,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
     list(lab, c("Low","High",
                 "Diff.","Effect","S.E.",
                 paste("Lower",cll),paste("Upper",cll),"Type"))
-  
+
   attr(stats,"heading") <-
     paste("             Effects              Response : ",
           as.character(formula(object))[2], sep='')
@@ -210,14 +210,14 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
     {
       interact <- sort(unique(interact[interact>0]))
       nam <- name[which[match(which, interact, 0)>0]]
-      if(length(nam)) for(nm in nam) 
+      if(length(nam)) for(nm in nam)
         adjust <- paste(adjust, nm,"=",
                         if(is.factor(xadj[[nm]]))
                         as.character(xadj[[nm]])[1] else
                         format(xadj[[nm]][1])," ",sep="")
     }
   attr(stats,"adjust") <- adjust
-  
+
   stats
 }
 
@@ -228,24 +228,24 @@ print.summary.rms <- function(x, ...)
   cstats <- dimnames(x)[[1]]
   for(i in 1:3) cstats <- cbind(cstats, format(signif(x[,i],5)))
   for(i in 4:7) cstats <- cbind(cstats, format(round(x[,i],2)))
-  dimnames(cstats) <- list(rep("",nrow(cstats)), 
+  dimnames(cstats) <- list(rep("",nrow(cstats)),
                            c("Factor", dimnames(x)[[2]][1:7]))
   cat(attr(x,"heading"),"\n\n")
   print(cstats,quote=FALSE)
   if((A <- attr(x,"adjust"))!="") cat("\nAdjusted to:", A,"\n\n")
-  
+
   invisible()
 }
 
 
 latex.summary.rms <-
-  function(object, 
+  function(object,
            title=if(under.unix)
            paste('summary',attr(object,'obj.name'),sep='.') else
            paste("sum",substring(first.word(attr(object,"obj.name")),
                                  1,5),sep=""),
            table.env=TRUE, ...)
-{ 
+{
 
   title <- title   # because of lazy evaluation
   caption <- latexTranslate(attr(object, "heading"))
@@ -257,7 +257,7 @@ latex.summary.rms <-
                        substring(rowl,2),"}",sep=""),
                  rowl) # preserve leading blank
   rowl <- sedit(rowl, "-", "---")
-  cstats <- matrix("", nrow=nrow(object), ncol=ncol(object), 
+  cstats <- matrix("", nrow=nrow(object), ncol=ncol(object),
                    dimnames=dimnames(object))
   for(i in 1:3) cstats[,i] <- format(signif(object[,i],5))
   for(i in 4:7) cstats[,i] <- format(round(object[,i],2))
@@ -273,7 +273,7 @@ latex.summary.rms <-
 
 
 plot.summary.rms <-
-  function(x, at, log=FALSE, 
+  function(x, at, log=FALSE,
            q=c(0.7, 0.8, 0.9, 0.95, 0.99), xlim, nbar, cex=1, nint=10, cex.c=.5,
            cex.t=1, clip=c(-1e30,1e30), main, ...)
 {
@@ -314,7 +314,7 @@ plot.summary.rms <-
     }
   else
     augment <- c(augment, if(log)exp(xlim) else xlim)
-  
+
   fmt <- function(k)
     {
       m <- length(k)
@@ -330,7 +330,7 @@ plot.summary.rms <-
   tmai <- par('mai')
   on.exit(par(mai=tmai))
   par(mai=c(tmai[1],mxlb,1.5*tmai[3],tmai[4]))
-  
+
   outer.widths <- fun(effect+out*se)-fun(effect-out*se)
   if(missing(nbar)) nbar <- n
   npage <- ceiling(n/nbar)
@@ -339,7 +339,7 @@ plot.summary.rms <-
     {
       ie <- min(is+nbar-1, n)
       plot(1:nbar, rep(0,nbar), xlim=xlim, ylim=c(1,nbar),
-           type="n", axes=FALSE, 
+           type="n", axes=FALSE,
            xlab="", ylab="")
       if(cex.t>0) title(tlab, cex=cex.t)
       lines(fun(c(0,0)),c(nbar-(ie-is), nbar),lty=2)
@@ -353,7 +353,7 @@ plot.summary.rms <-
           if(!missing(at)) pxlim <- at
           axis(3, logb(pxlim), lab=format(pxlim))
         }
-      else 
+      else
         {
           pxlim <- pretty(xlim, n=nint)
           pxlim <- sort(unique(c(pxlim, augment)))
@@ -364,12 +364,12 @@ plot.summary.rms <-
       imax <- (is:ie)[outer.widths[is:ie]==max(outer.widths[is:ie])][1]
       for(i in is:ie)
         {
-          confbar(nbar-(i-is+1)+1, effect[i], se[i], q=q, type="h", 
+          confbar(nbar-(i-is+1)+1, effect[i], se[i], q=q, type="h",
                   fun=fun, cex=cex.c, labels=i==imax, clip=clip, ...)
           mtext(lb[i], 2, 0, at=nbar-(i-is+1)+1, cex=cex,
                 adj=1, las=1)
         }
-      if(adjust!="") 
+      if(adjust!="")
         {
           adjto <- paste("Adjusted to:",adjust,sep="")
           xx <- par('usr')[2]

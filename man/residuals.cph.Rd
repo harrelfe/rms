@@ -3,7 +3,7 @@
 \title{Residuals for a cph Fit}
 
 \description{
-Calculates martingale, deviance, score or Schoenfeld residuals 
+Calculates martingale, deviance, score or Schoenfeld residuals
 (scaled or unscaled) or influence statistics for a
 Cox proportional hazards model. This is a slightly modified version
 of Therneau's \code{residuals.coxph} function. It assumes that \code{x=TRUE} and
@@ -12,7 +12,7 @@ residuals, which are stored with the fit by default.
 }
 \usage{
 \method{residuals}{cph}(object,
-      type=c("martingale", "deviance", "score", "schoenfeld", 
+      type=c("martingale", "deviance", "score", "schoenfeld",
              "dfbeta", "dfbetas", "scaledsch", "partial"), \dots)
 }
 \arguments{
@@ -26,15 +26,15 @@ to obtain approximate leave-out-one \eqn{\Delta \beta}s.  Use
 \code{type="dfbetas"} to normalize the \eqn{\Delta \beta}s for
 the standard errors of the regression coefficient estimates.
 Scaled Schoenfeld residuals (\code{type="scaledsch"}, Grambsch and
-Therneau, 1993) better 
+Therneau, 1993) better
 reflect the log hazard ratio function than ordinary Schoenfeld
-residuals, and they are on the regression coefficient scale.  
+residuals, and they are on the regression coefficient scale.
 The weights use Grambsch and Therneau's "average variance" method.
 }
 \item{\dots}{see \code{\link[survival]{residuals.coxph}}}
 }
 \value{
-The object returned will be a vector for martingale and deviance 
+The object returned will be a vector for martingale and deviance
 residuals and matrices for score and schoenfeld residuals, dfbeta, or dfbetas.
 There will
 be one row of residuals for each row in the input data (without \code{collapse}).
@@ -61,7 +61,7 @@ based on weighted residuals", unpublished manuscript, Feb 1993.
 \code{\link{cph}}, \code{\link[survival]{coxph}}, \code{\link[survival]{residuals.coxph}}, \code{\link{cox.zph}}, \code{\link{naresid}}
 }
 \examples{
-# fit <- cph(Surv(start, stop, event) ~ (age + surgery)* transplant, 
+# fit <- cph(Surv(start, stop, event) ~ (age + surgery)* transplant,
 #            data=jasa1)
 # mresid <- resid(fit, collapse=jasa1$id)
 

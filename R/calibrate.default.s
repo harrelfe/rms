@@ -1,4 +1,4 @@
-calibrate.default <- function(fit, predy, 
+calibrate.default <- function(fit, predy,
 			      method=c("boot","crossvalidation",".632","randomization"),
 			      B=40, bw=FALSE, rule=c("aic","p"),
 			      type=c("residual","individual"),
@@ -28,12 +28,12 @@ calibrate.default <- function(fit, predy,
       fit$y <- as.integer(y)-1
     }
 
-  predicted <- if(model=="lr") 
+  predicted <- if(model=="lr")
                  1/(1+exp(-(fit$linear.predictors-fit$coefficients[1] +
                             fit$coefficients[kint])))
                else
                  fit$linear.predictors
- 
+
   if(missing(predy))
     {
       if(n < 11) stop("must have n > 10 if do not specify predy")
@@ -76,7 +76,7 @@ calibrate.default <- function(fit, predy,
                     (length(y) - length(w$coefficients))
                   w
                 }
-                else 
+                else
                   lm.pfit(x, y, penalty.matrix=penalty.matrix), fail=FALSE))
   }
 
@@ -92,7 +92,7 @@ calibrate.default <- function(fit, predy,
              z)
   structure(z, class="calibrate.default", call=call, kint=kint, model=model,
             lev.name=lev.name, yvar.name=yvar.name, n=n, freq=fit$freq,
-            non.slopes=ns, B=B, method=method, 
+            non.slopes=ns, B=B, method=method,
             predicted=predicted, smoother=smoother)
 }
 
@@ -109,13 +109,13 @@ print.calibrate.default <- function(x, B=Inf, ...)
       else lab <- paste(lab,">=",at$lev.name,"}",sep="")
     }
   else lab <- at$yvar.name
-  
+
   cat("\nPrediction of",lab,"\n\n")
   predicted <- at$predicted
   if(length(predicted))
     {  ## for downward compatibility
       s <- !is.na(x[,'predy'] + x[,'calibrated.corrected'])
-      err <- predicted - approx(x[s,'predy'],x[s,'calibrated.corrected'], 
+      err <- predicted - approx(x[s,'predy'],x[s,'calibrated.corrected'],
                                 xout=predicted, ties=mean)$y
       cat('\nn=',length(err),    '   Mean absolute error=',
           round(mean(abs(err),na.rm=TRUE),3),'   Mean squared error=',
@@ -136,18 +136,18 @@ print.calibrate.default <- function(x, B=Inf, ...)
       names(dimnames(tkept)) <- NULL
       print(tkept)
     }
-  
+
   invisible()
 }
 
-plot.calibrate.default <- function(x, xlab, ylab, xlim, ylim, legend=TRUE, 
+plot.calibrate.default <- function(x, xlab, ylab, xlim, ylim, legend=TRUE,
                                    subtitles=TRUE, scat1d.opts=NULL, ...)
 {
   at <- attributes(x)
   if(missing(ylab))
     ylab <- if(at$model=="lr") "Actual Probability"
     else paste("Observed", at$yvar.name)
-  
+
   if(missing(xlab))
     {
       if(at$model=="lr")
@@ -162,7 +162,7 @@ plot.calibrate.default <- function(x, xlab, ylab, xlim, ylim, legend=TRUE,
         }
       else xlab <- paste("Predicted", at$yvar.name)
     }
-  
+
   p     <- x[,"predy"]
   p.app <- x[,"calibrated.orig"]
   p.cal <- x[,"calibrated.corrected"]
@@ -173,7 +173,7 @@ plot.calibrate.default <- function(x, xlab, ylab, xlim, ylim, legend=TRUE,
       if(missing(xlim)) xlim <- range(p)
       if(missing(ylim)) ylim <- range(c(p.app, p.cal, na.rm=TRUE))
     }
-  
+
   plot(p, p.app, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, type="n", ...)
   predicted <- at$predicted
   err <- NULL
@@ -190,7 +190,7 @@ plot.calibrate.default <- function(x, xlab, ylab, xlim, ylim, legend=TRUE,
                             ' n=', n, sep=''), cex=.65, adj=1)
       do.call('scat1d', c(list(x=predicted), scat1d.opts))
     }
-  
+
   lines(p, p.app, lty=3)
   lines(p, p.cal, lty=1)
   abline(a=0, b=1, lty=2)

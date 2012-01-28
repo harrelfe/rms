@@ -1,23 +1,23 @@
 residuals.ols <-
-  function(object, 
+  function(object,
            type=c("ordinary","score","dfbeta","dfbetas","dffit","dffits","hat",
              "hscore"), ...)
 {
 
   type <- match.arg(type)
   naa <- object$na.action
-  
+
   if(type=="ordinary") return(naresid(naa, object$residuals))
-  
+
   if(!length(object$x))stop("did not specify x=T in fit")
-  
+
   if(type=="score") return(naresid(naa, object$x*object$residuals))
-  
+
   infl <- ols.influence(object)
-  
+
   if(type=="hscore") return(naresid(naa, object$x *
        (object$residuals/(1-infl$hat))))
-  
+
   if(type=="dfbeta"|type=="dfbetas")
     {
       r <- t(coef(object) - t(coef(infl)))

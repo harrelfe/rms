@@ -21,7 +21,7 @@ The best method is probably to run \code{datadist} once before any models are
 fitted, storing the distribution summaries for all potential variables.
 Adjustment values are \code{0} for binary variables, the most frequent
 category (or optionally the first category level)
-for categorical (\code{factor}) variables, the middle level for 
+for categorical (\code{factor}) variables, the middle level for
 \code{ordered factor} variables, and medians for continuous variables.
 See descriptions of \code{q.display} and \code{q.effect} for how display and
 effect ranges are chosen for continuous variables.
@@ -57,7 +57,7 @@ first argument is a fit object, \code{data} must be an integer.
 set of two quantiles for computing the range of continuous variables
 to use in displaying regression relationships.  Defaults are
 \eqn{q} and \eqn{1-q}, where \eqn{q=10/max(n,200)}, and \eqn{n} is the
-number of 
+number of
 non-missing observations.  Thus for \eqn{n<200}, the .05 and .95 quantiles
 are used.  For \eqn{n\geq 200}, the \eqn{10^{th}} smallest and
 \eqn{10^{th}} largest values are used.  If you specify \code{q.display},

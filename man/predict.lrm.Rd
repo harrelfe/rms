@@ -14,7 +14,7 @@ predictor, which is assumed to use the first intercept in its computation.
 \usage{
 \method{predict}{lrm}(object, \dots, type=c("lp", "fitted",
             "fitted.ind", "mean", "x", "data.frame",
-            "terms", "cterms", "ccterms", "adjto","adjto.data.frame", 
+            "terms", "cterms", "ccterms", "adjto","adjto.data.frame",
             "model.frame"), se.fit=FALSE, codes=FALSE)
 
 \method{Mean}{lrm}(object, codes=FALSE, \dots)
@@ -30,14 +30,14 @@ arguments passed to \code{predictrms}, such as \code{kint} and \code{newdata}
 }
 \item{type}{
 See \code{predict.rms} for \code{"x", "data.frame", "terms", "cterms",
-  "ccterms", "adjto", 
+  "ccterms", "adjto",
 "adjto.data.frame"} and \code{"model.frame"}. \code{type="lp"} is used to get
 linear predictors (using the first intercept by default; specify
 \code{kint} to use others). \code{type="fitted"}
 is used to get all the probabilities \eqn{Y\geq
   j}. \code{type="fitted.ind"} gets all the individual probabilities
 \eqn{Y=j}. For an ordinal response variable, \code{type="mean"} computes
-the estimated mean \eqn{Y} by summing values of \eqn{Y} 
+the estimated mean \eqn{Y} by summing values of \eqn{Y}
 multiplied by the estimated \eqn{Prob(Y=j)}. If \eqn{Y} was a character or
 \code{factor} object, the levels are the character values or factor levels,
 so these must be translatable to numeric, unless \code{codes=TRUE}.

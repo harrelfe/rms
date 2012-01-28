@@ -13,7 +13,7 @@ vif(fit)
 \arguments{
 \item{fit}{
 an object created by \code{lrm}, \code{ols}, \code{psm}, \code{cph},
-\code{Rq}, \code{Glm}, \code{glm} 
+\code{Rq}, \code{Glm}, \code{glm}
 }}
 \value{vector of vifs}
 \author{
@@ -26,7 +26,7 @@ Vanderbilt University
 f.harrell@vanderbilt.edu
 }
 \references{
-Davis CE, Hyde JE, Bangdiwala SI, Nelson JJ: An example of dependencies 
+Davis CE, Hyde JE, Bangdiwala SI, Nelson JJ: An example of dependencies
 among variables in a conditional logistic regression. In Modern
 Statistical Methods in Chronic Disease Epidemiology, Eds SH Moolgavkar and
 RL Prentice, pp. 140--147.  New York: Wiley; 1986.

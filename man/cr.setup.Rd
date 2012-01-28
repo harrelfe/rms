@@ -28,7 +28,7 @@ the response variable.  For \code{category} or \code{factor} variables, the
 }}
 \value{
 a list with components \code{y, cohort, subs, reps}.  \code{y} is a new binary
-variable that is to be used in the binary logistic fit.  \code{cohort} is 
+variable that is to be used in the binary logistic fit.  \code{cohort} is
 a \code{factor} vector specifying which cohort condition currently applies.
 \code{subs} is a vector of subscripts that can be used to replicate other
 variables the same way \code{y} was replicated.  \code{reps} specifies how many
@@ -76,7 +76,7 @@ cohort <- u$cohort
 sex <- sex[u$subs]
 
 lrm(Y ~ cohort + sex)
- 
+
 f <- lrm(Y ~ cohort*sex)   # saturated model - has to fit all data cells
 f
 
@@ -116,7 +116,7 @@ dd     <- datadist(dd, cohort)       # add to dd
 f <- lrm(y ~ cohort + age*sex)       # ordinary cont. ratio model
 g <- lrm(y ~ cohort*sex + age, x=TRUE,y=TRUE) # allow unequal slopes for
                                      # sex across cutoffs
-cal <- calibrate(g, cluster=u$subs, subset=cohort=='all')  
+cal <- calibrate(g, cluster=u$subs, subset=cohort=='all')
 # subs makes bootstrap sample the correct units, subset causes
 # Predicted Prob(pain.severity=0) to be checked for calibration
 }

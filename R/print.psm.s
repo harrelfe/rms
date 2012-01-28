@@ -3,7 +3,7 @@ print.psm <- function(x, correlation = FALSE, digits=4,
 {
   k <- 0
   z <- list()
-  
+
   dist <- x$dist
   name <- survreg.distributions[[dist]]$name
   if(missing(title))
@@ -85,7 +85,7 @@ print.psm <- function(x, correlation = FALSE, digits=4,
 #      excl <- wt == 0
 #      if(any(excl))
 #        {
-#          warning(paste(sum(excl), 
+#          warning(paste(sum(excl),
 #                        "rows with zero weights not counted"))
 #          resid <- resid[!excl]
 #          if(!length(x$df.residual))
@@ -135,18 +135,18 @@ print.psm <- function(x, correlation = FALSE, digits=4,
 
 print.summary.survreg2 <-
   function (x, digits = max(options()$digits - 4, 3),
-            correlation=FALSE, ...) 
+            correlation=FALSE, ...)
   {
     correl <- x$correl
     n <- x$n
-    if (is.null(digits)) 
+    if (is.null(digits))
       digits <- options()$digits
     print(x$table, digits = digits)
-    if (nrow(x$var) == length(x$coefficients)) 
-      cat("\nScale fixed at", format(x$scale, digits = digits), 
+    if (nrow(x$var) == length(x$coefficients))
+      cat("\nScale fixed at", format(x$scale, digits = digits),
           "\n")
     else
-      if (length(x$scale) == 1) 
+      if (length(x$scale) == 1)
         cat("\nScale=", format(x$scale, digits = digits), "\n")
       else
         {

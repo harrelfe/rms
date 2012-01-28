@@ -28,7 +28,7 @@ gendata(fit, \dots, nobs, viewvals=FALSE, factors)
 a fit object created with \code{rms} in effect
 }
 \item{...}{
-predictor settings, if \code{nobs} is not given. 
+predictor settings, if \code{nobs} is not given.
 }
 \item{nobs}{
 number of observations to create if doing it interactively using X-windows
@@ -41,7 +41,7 @@ displaying the possible value of categorical predictors
 a list containing predictor settings with their names.  This is an
 alternative to specifying the variables separately in \dots.  Unlike the
 usage of \dots, variables getting default ranges in \code{factors}
-should have \code{NA} as their value. 
+should have \code{NA} as their value.
 }}
 \value{
 a data frame with all predictors, and an attribute \code{names.subset} if
@@ -68,7 +68,7 @@ f.harrell@vanderbilt.edu
 \seealso{
 \code{\link{predict.rms}}, \code{\link{survest.cph}},
 \code{\link{survest.psm}}, \code{\link{rmsMisc}},
-\code{\link{expand.grid}}, \code{\link{de}}, \code{\link{page}}, 
+\code{\link{expand.grid}}, \code{\link{de}}, \code{\link{page}},
 \code{\link{print.datadist}}, \code{\link{Predict}}
 }
 \examples{

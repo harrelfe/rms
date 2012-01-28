@@ -8,14 +8,14 @@
 #in the quantile group on the average; then g will be computed.  The default
 #m is 50, so the default g is n/50.
 #If cuts is given (e.g. cuts=c(0,.1,.2,...,.9,.1)), it overrides m and g.
-#Set pl=T to plot results.  If pl=T, units attribute of y applies.  
+#Set pl=T to plot results.  If pl=T, units attribute of y applies.
 #Default is "Day".
 #xlab and ... are passed to plot() if pl=T.  Default xlab is label(x)
 #if it is defined, otherwise the name of the calling argument for x.
 #
 #Author: Frank Harrell   8 May 91
 
-groupkm <- function(x, Srv, m=50, g, 
+groupkm <- function(x, Srv, m=50, g,
                     cuts, u, pl=FALSE, loglog=FALSE, conf.int=.95, xlab, ylab,
                     lty=1, add=FALSE,
                     cex.subtitle=.7, ...)
@@ -67,7 +67,7 @@ groupkm <- function(x, Srv, m=50, g,
         {
           pred[i] <- mean(x[s], na.rm=TRUE)
           dummystrat <- as.factor(rep(1, nobs))
-          f <- survival:::survfitKM(dummystrat,Srv[s,]) 
+          f <- survival:::survfitKM(dummystrat,Srv[s,])
           ##doesn't need conf.int since only need s.e.
           tt <- c(0, f$time)
           ss <- c(1, f$surv)
@@ -85,7 +85,7 @@ groupkm <- function(x, Srv, m=50, g,
             }
         }
     }
-  z <- cbind(x=pred, n=numobs, events=events, KM=km, 
+  z <- cbind(x=pred, n=numobs, events=events, KM=km,
              std.err=std.err)
 
   ciupper <- function(surv, d) ifelse(surv==0, 0, pmin(1, surv*exp(d)))

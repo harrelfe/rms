@@ -5,9 +5,9 @@
 Function to divide \code{x} (e.g. age, or predicted survival at time \code{u} created by
 \code{survest}) into \code{g} quantile groups, get Kaplan-Meier estimates at time \code{u}
 (a scaler), and to return a matrix with columns \code{x}=mean \code{x} in
-quantile, \code{n}=number of subjects, \code{events}=no. events, and 
+quantile, \code{n}=number of subjects, \code{events}=no. events, and
 \code{KM}=K-M survival at time \code{u},
-\code{std.err} = s.e. of -log K-M.  Confidence intervals are based on 
+\code{std.err} = s.e. of -log K-M.  Confidence intervals are based on
 -log S(t).
 Instead of supplying \code{g}, the user can supply the minimum number of subjects
 to have
@@ -17,7 +17,7 @@ Calls Therneau's \code{survfitKM} in the \code{survival} package to get
 Kaplan-Meiers estimates and standard errors.
 }
 \usage{
-groupkm(x, Srv, m=50, g, cuts, u, 
+groupkm(x, Srv, m=50, g, cuts, u,
         pl=FALSE, loglog=FALSE, conf.int=.95, xlab, ylab,
         lty=1, add=FALSE, cex.subtitle=.7, \dots)
 }
@@ -55,7 +55,7 @@ set to \code{TRUE} if adding to an existing plot
 }
 \item{cex.subtitle}{
 character size for subtitle. Default is \code{.7}.  Use \code{FALSE} to
-suppress subtitle. 
+suppress subtitle.
 }
 \item{...}{plotting parameters to pass to the plot and errbar functions}
 }
@@ -79,7 +79,7 @@ e <- ifelse(d.time <= cens,1,0)
 d.time <- pmin(d.time, cens)
 units(d.time) <- "Year"
 groupkm(age, Surv(d.time, e), g=10, u=5, pl=TRUE)
-#Plot 5-year K-M survival estimates and 0.95 confidence bars by 
+#Plot 5-year K-M survival estimates and 0.95 confidence bars by
 #decile of age.  If omit g=10, will have >= 50 obs./group.
 }
 \keyword{survival}

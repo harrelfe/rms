@@ -27,11 +27,11 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
 
   inputData <- !(missing(newdata) && missing(linear.predictors) &&
                  missing(x))
-  
+
   if(!se.fit) conf.int <- 0
-  
-  if(individual && (length(fit$x)==0 || length(fit$y)==0 || 
-                    attr(fit$y,'type') != 'counting')) 
+
+  if(individual && (length(fit$x)==0 || length(fit$y)==0 ||
+                    attr(fit$y,'type') != 'counting'))
     stop('must specify x=TRUE, y=TRUE, and start and stop time to cph when individual=TRUE')
 
   if(missing(fun)) fun <-
@@ -72,7 +72,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
           g <- sf(fit, se.fit=se.fit, conf.int=conf.int, conf.type=conf.type,
                   type=type, vartype=vartype, cphnull=TRUE)
           sreq <- if(missing(newdata)) 1
-          else 
+          else
             attr(predict(fit, newdata, type="lp", expand.na=FALSE),"strata")
         }
       else
@@ -96,7 +96,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
           naa <- g$na.action
         }
       sreq <- unclass(sreq)
-      
+
       if(missing(times))
         {
           ##delete extra S(t) curves added by survfit for all strata
@@ -110,7 +110,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
                   stemp <- rep(1:num.strata, g$strata)
                   j <- stemp==sreq
                 }
-              
+
               tim   <- c(0,             g$time[j])
               nr    <- c(g$n.risk[j][1],g$n.risk[j])
               ne    <- c(0,             g$n.event[j])
@@ -118,7 +118,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
               se    <- c(NA,            g$std.err[j])
               upper <- c(1,             g$upper[j])  # 1 was NA
               lower <- c(1,             g$lower[j])  # 1 was NA
-              
+
               yy <- fit$y
               ny <- ncol(yy)
               str <- unclass(fit$Strata)
@@ -134,19 +134,19 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
                   upper <- c(upper, NA)
                   lower <- c(lower, NA)
                 }
-              
+
               surv  <- fun(surv)
               surv[is.infinite(surv)]   <- NA
               lower <- fun(lower)
               lower[is.infinite(lower)] <- NA
               upper <- fun(upper)
               upper[is.infinite(upper)] <- NA
-              
+
               retlist <- list(time=tim,n.risk=nr,
                               n.event=ne,
-                              surv=surv, 
+                              surv=surv,
                               std.err=se,
-                              upper=upper, lower=lower, 
+                              upper=upper, lower=lower,
                               conf.type=g$conf.type,
                               conf.int=g$conf.int, call=g$call)
               if(nf > 0) retlist$strata <- sreq
@@ -159,7 +159,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
           ## summary.survfit returns std. err of S(t) unlike other
           ## survival package functions
           g$std.err <- ifelse(g$surv == 0, NA, g$std.err / g$surv)
-          
+
           if(!individual && nf > 0)
             { ##delete extra cells added by survfit for strat
               if(length(g$time) != length(times)*num.strata)
@@ -196,7 +196,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
           dimnames(low)  <- dn
           dimnames(up)   <- dn
         }
-      
+
       surv <- fun(surv)
       low  <- fun(low)
       up   <- fun(up)
@@ -209,15 +209,15 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
       if(nf > 0) retlist$strata <- naresid(naa,sreq)
       return(retlist)
     }
-  
+
   asnum.strata <- function(str, strata.levels)
     {
       if(!length(str)) return(NULL)
       if(is.numeric(str) && any(str < 1 | str>length(strata.levels)))
         stop('illegal stratum number')
-      
+
       if(is.category(str) || is.numeric(str)) return(as.integer(str))
-      
+
       i <- match(str, strata.levels, nomatch=0)
       if(any(i == 0)) stop(paste('illegal strata:',
                paste(str[i==0],collapse=' ')))
@@ -225,7 +225,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
     }
 
   ##Instead use the baseline survival computed at fit time with cph(...,surv=TRUE)
-  
+
   nt <- if(missing(times)) 0 else length(times)
   if(conf.int > 0 && f > 0)
     warning(paste("S.E. and confidence intervals are approximate except",
@@ -244,18 +244,18 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
               linear.predictors <- matxv(fit$x, fit$coef) - fit$center
               strata <- fit$strata
               rnam   <- dimnames(fit$x)[[1]]
-            } 
+            }
           else  strata <- attr(linear.predictors,"strata")
-        } 
-      else 
-        { 
-          if(missing(x)) 
+        }
+      else
+        {
+          if(missing(x))
             {
               x   <- predict(fit, newdata, type="x", expand.na=FALSE)
               naa <- attr(x,"na.action")
             }
           strata <- attr(x,"strata")
-          if(f > 0) linear.predictors <- matxv(x,fit$coef) - fit$center 
+          if(f > 0) linear.predictors <- matxv(x,fit$coef) - fit$center
           else linear.predictors <- 0
           rnam <- dimnames(x)[[1]]
         }
@@ -265,7 +265,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
       strata <- asnum.strata(attr(linear.predictors, "strata"), strata.levels)
       rnam   <- names(linear.predictors)
     }
-  if(length(strata)==0 && nf > 0) 
+  if(length(strata)==0 && nf > 0)
     stop("strata not stored in x or linear.predictors")
   attr(strata, "class") <- NULL
 
@@ -284,7 +284,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
       ns <- max(strata, na.rm=TRUE)
       n  <- length(strata)
     }
-  
+
   if(what=='parallel')
     {
       if(length(times) >1 && length(times) != n)
@@ -310,10 +310,10 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
         }
       return(est.surv)
     }
-  
+
   if(n>1 && nt==0)
     stop("must specify times if getting predictions for >1 obs.")
-  
+
   if(nt==0)
     {  #Get est for 1 obs
       if(!is.list(fit$time))
@@ -348,7 +348,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
       retlist <- list(time=times, surv=surv,
                       linear.predictors=linear.predictors)
 
-      if(conf.int>0) retlist <- 
+      if(conf.int>0) retlist <-
         c(retlist,list(lower=lower, upper=upper, std.err=std.err))
       if(nf>0)
         {
@@ -357,7 +357,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
         }
       return(retlist)
     }
-  
+
   ##Selected times for >=1 obs
   ##First get survival at times "times" for each stratum
 
@@ -424,10 +424,10 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
     function(...) naresid(...)
   if(conf.int==0)
     return(list(time=times, surv=nar(naa,srv)))
-  
+
   retlist <- list(time=times, surv=nar(naa,srv), lower=nar(naa,lower),
                   upper=nar(naa,upper), std.err=nar(naa,serr))
-  
+
   if(nf>0) retlist$requested.strata <- nar(naa, unclass(strata))
   retlist
 }

@@ -14,18 +14,18 @@ rms Special Transformation Functions
 }
 \description{
 This is a series of functions (\code{asis}, \code{pol}, \code{lsp}, \code{rcs}, \code{catg},
-\code{scored}, \code{strat}, \code{matrx}, and \code{\%ia\%}) that set up special attributes 
+\code{scored}, \code{strat}, \code{matrx}, and \code{\%ia\%}) that set up special attributes
 (such as
 knots and nonlinear term indicators) that are carried through to fits
 (using for example \code{lrm},\code{cph}, \code{ols}, \code{psm}). \code{anova.rms}, \code{summary.rms},
-\code{Predict}, \code{survplot}, \code{fastbw}, \code{validate}, \code{specs}, 
+\code{Predict}, \code{survplot}, \code{fastbw}, \code{validate}, \code{specs},
 \code{which.influence}, \code{nomogram} and \code{latex.rms} use these
 attributes to automate certain analyses (e.g., automatic tests of linearity
 for each predictor are done by \code{anova.rms}). Many of the functions
 are called implicitly.  Some S functions such as \code{ns} derive data-dependent
 transformations that are not "remembered" when predicted values are
 later computed, so the predictions will be incorrect. The functions listed
-here solve that problem. 
+here solve that problem.
 
 
 \code{asis} is the identity transformation, \code{pol} is an ordinary (non-orthogonal) polynomial, \code{rcs} is
@@ -127,7 +127,7 @@ f.harrell@vanderbilt.edu
 options(knots=4, poly.degree=2)
 country <- factor(country.codes)
 blood.pressure <- cbind(sbp=systolic.bp, dbp=diastolic.bp)
-fit <- lrm(Y ~ sqrt(x1)*rcs(x2) + rcs(x3,c(5,10,15)) + 
+fit <- lrm(Y ~ sqrt(x1)*rcs(x2) + rcs(x3,c(5,10,15)) +
        lsp(x4,c(10,20)) + country + blood.pressure + poly(age,2))
 # sqrt(x1) is an implicit asis variable, but limits of x1, not sqrt(x1)
 #       are used for later plotting and effect estimation

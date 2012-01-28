@@ -24,7 +24,7 @@
 #		Check a given list of values for a factor for validity,
 #		or if list is NA, return list of possible values
 #	var.inner - stripped down terms.inner, returns character strings
-#	
+#
 # Default label is attr(x,"label") or argument name if label= omitted.
 # First argument can be as follows, using asis as an example:
 #	asis(x, ...)		name="x", label=attr(x,"label") or "x"
@@ -51,7 +51,7 @@
 # (e.g. dummy variable for category -> F).  For matrx, all are linear.
 #
 # System options used: nknots for default number of knots in restr. cubic spline
-# and poly.degree, default degree of polynomials 
+# and poly.degree, default degree of polynomials
 # Second argument to routines is the parameters (parms) of the
 # transformation (except for asis), defined as follows:
 #
@@ -71,8 +71,8 @@
 # may be named or positional, in the following order: label, name.
 # For matrx, parms are not allowed.
 #
-# Function to return list with elements name, parms, label. 
-# corresponding to arguments in call to asis, etc.  parms=NULL if 
+# Function to return list with elements name, parms, label.
+# corresponding to arguments in call to asis, etc.  parms=NULL if
 # parms.allowed=F.  Reason for going to this trouble is that first arg to
 # asis, etc. is allowed to be a named argument to set a new name for it.
 # With ordinary argument fetching, remaining arguments would have to be
@@ -98,7 +98,7 @@ des.args <- function(x,parms.allowed,call.args) {
 	k <- charmatch(arg.name,nm,0)	#k>0 : named arg found
     ## Added karg <= length(x) 9Apr02 for R; R doesn't return NULL
     ## like S+
-	if(k>0) x[[k]] else 
+	if(k>0) x[[k]] else
 	if(length(nm) < karg || nm[karg]!="") NULL else
      if(karg <= length(x)) x[[karg]] else NULL
   }
@@ -107,7 +107,7 @@ des.args <- function(x,parms.allowed,call.args) {
 	if(charmatch("parms",nam,0)>0)
       stop(paste("parms not allowed for",as.character(call.args[1])))
   }
- 
+
   nm <- argu(x,5,"name",pa,nam)
   if(!is.null(nm)) name <- nm
   if(!is.null(.Options$Design.attr)) {
@@ -125,7 +125,7 @@ des.args <- function(x,parms.allowed,call.args) {
   if(is.null(label)) label <- name
 
   list(name=name,parms=parms,label=label,units=atx$units)  #9Jun99
-  
+
 }
 
 ## Function to list all attributes of new sub-design matrix
@@ -135,15 +135,15 @@ set.atr <- function(xd,x,z,colnames,assume,code,parms,nonlinear) {
   if(is.matrix(xd))
     list(dim=dim(xd),dimnames=list(NULL,colnames),class="rms",
          name=z$name, label=z$label, assume=assume, assume.code=code,
-         parms=parms, 
+         parms=parms,
          nonlinear=nonlinear,colnames=colnames,units=z$units)
   else list(dim=dim(xd),class="rms",
             name=z$name, label=z$label, assume=assume, assume.code=code,
-            parms=parms, 
+            parms=parms,
             nonlinear=nonlinear,colnames=colnames,units=z$units)
 }
 
-## asis transformation - no transformation	
+## asis transformation - no transformation
 asis<-function(...) {
   cal <- sys.call()
   xx <- list(...)
@@ -265,7 +265,7 @@ lsp <- function(...) {
 ## Restricted cubic spline expansion
 rcs <- function(...)
 {
-  
+
   cal <- sys.call()
   xx <- list(...)
   z <- des.args(xx,TRUE,cal)
@@ -295,7 +295,7 @@ rcs <- function(...)
     }
 
   pc <- length(.Options$rcspc) && .Options$rcspc
-  
+
   if(!length(knots))
     {
       xd <- rcspline.eval(x, nk=nknots, inclx=TRUE, pc=pc)
@@ -341,7 +341,7 @@ catg <- function(...) {
       parms <- as.character(sort(unique(y[!is.na(y)])))
     }
   }
-  
+
   if(!is.factor(y)) {
     x <- factor(y, levels=parms)
   } else {
@@ -550,7 +550,7 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
               stop(paste("illegal values for categorical variable:",
                          paste(x[j==0],collapse=" "),"\nPossible levels:",
                          paste(values,collapse=" ")))
-          }	
+          }
       }
     } else if(as==5|as==8) {
       if(isna) x <- parms
@@ -691,7 +691,7 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
           nonlinear[k] <- nl1[i] | nl2[j]
         }
     }
-  
+
   dimnames(x) <- list(NULL, name)
   attr(x,"ia") <- c(a1$name, a2$name)
   attr(x,"parms") <- parms

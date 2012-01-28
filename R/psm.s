@@ -1,18 +1,18 @@
 psm <- function(formula=formula(data),
                 data=parent.frame(),
-                weights, subset, na.action=na.delete, dist='weibull', 
+                weights, subset, na.action=na.delete, dist='weibull',
                 init=NULL,  scale=0,
                 control=survreg.control(),
                 parms=NULL, model=FALSE, x=FALSE, y=TRUE, time.inc, ...)
   {
     require(survival)
-    
+
     call <- match.call()
     m <- match.call(expand=FALSE)
     if(dist=='extreme')
       warning('Unlike earlier versions of survreg, dist="extreme" does not fit\na Weibull distribution as it uses an identity link.  To fit the Weibull\ndistribution use the default for dist or specify dist="weibull".')
     m <- match.call(expand=FALSE)
-    mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
+    mc <- match(c("formula", "data", "subset", "weights", "na.action"),
                 names(m), 0)
     m <- m[c(1, mc)]
     m$na.action <- na.action  ## FEH
@@ -39,7 +39,7 @@ psm <- function(formula=formula(data),
     Terms <- atrx$terms
     atr   <- atrx$Design
     ## End FEH
-    
+
     weights <- model.extract(m, 'weights')
     Y <- model.extract(m, "response")
 
@@ -96,10 +96,10 @@ psm <- function(formula=formula(data),
     rnam <- dimnames(Y)[[1]]
     dimnames(X) <- list(rnam, c("(Intercept)",atr$colnames))
     ## End FEH except for 23nov02 and later changes
-    
+
     n <- nrow(X)
     nvar <- ncol(X)
-    
+
     if (length(offset)) offset <- as.numeric(m[[offset]])
     else
       offset <- rep(0, n)
@@ -125,11 +125,11 @@ psm <- function(formula=formula(data),
         if (!is.character(dlist$name) || !is.character(dlist$dist) ||
             !is.function(dlist$trans) || !is.function(dlist$dtrans))
           stop("Invalid distribution object")
-      }	
+      }
 
     type <- attr(Y, "type")
     if (type== 'counting') stop ("Invalid survival type")
-    
+
     logcorrect <- 0   #correction to the loglik due to transformations
     if (length(dlist$trans))
       {
@@ -153,7 +153,7 @@ psm <- function(formula=formula(data),
           else
             Y <- cbind(tranfun(Y[,1]), Y[,2])
         }
-        if (!all(is.finite(Y))) 
+        if (!all(is.finite(Y)))
           stop("Invalid survival times for this distribution")
       }
     else
@@ -162,7 +162,7 @@ psm <- function(formula=formula(data),
         else
           if (type=='interval' && all(Y[,3]<3)) Y <- Y[,c(1,3)]
       }
-    
+
     if (!length(dlist$itrans)) itrans <- function(x) x
     else
       itrans <- dlist$itrans
@@ -170,7 +170,7 @@ psm <- function(formula=formula(data),
     if (length(dlist$scale))
       {
         if (!missing(scale))
-          warning(paste(dlist$name, 
+          warning(paste(dlist$name,
                         "has a fixed scale, user specified value ignored"))
         scale <- dlist$scale
       }
@@ -179,7 +179,7 @@ psm <- function(formula=formula(data),
     if (missing(control)) control <-survreg.control(...)
 
     if (scale < 0) stop("Invalid scale value")
-    if (scale >0 && nstrata >1) 
+    if (scale >0 && nstrata >1)
       stop("Cannot have multiple strata with a fixed scale")
 
     ## Check for penalized terms
@@ -187,7 +187,7 @@ psm <- function(formula=formula(data),
     if (any(pterms))
       {
         pattr <- lapply(m[pterms], attributes)
-        ## 
+        ##
         ## the 'order' attribute has the same components as 'term.labels'
         ##   pterms always has 1 more (response), sometimes 2 (offset)
         ## drop the extra parts from pterms
@@ -200,7 +200,7 @@ psm <- function(formula=formula(data),
         ##pcols <- (attr(X, 'assign')[-1])[pterms]
         assign<-attrassign(X,newTerms)
         pcols<-assign[-1][pterms]
-        
+
         fit <- survival:::survpenal.fit(X, Y, weights, offset, init=init,
                              controlvals = control,
                              dist= dlist, scale=scale,
@@ -208,9 +208,9 @@ psm <- function(formula=formula(data),
                              pcols, pattr,assign, parms=parms)
       }
     else fit <-
-      survreg.fit(X, Y, weights, offset, 
+      survreg.fit(X, Y, weights, offset,
                   init=init, controlvals=control,
-                  dist= dlist, scale=scale, nstrat=nstrata, 
+                  dist= dlist, scale=scale, nstrat=nstrata,
                   strata, parms=parms)
 
     ## Next line: FEH added fitFunction='psm'
@@ -283,9 +283,9 @@ psm <- function(formula=formula(data),
       else
       c('psm','rms','survreg')
     ## End FEH
-                       
+
     fit
-    
+
   }
 
 Hazard   <- function(object, ...) UseMethod("Hazard")
@@ -324,7 +324,7 @@ Mean.psm <- function(object, ...)
     g
   }
 
-predict.psm <- 
+predict.psm <-
   function(object, newdata,
            type=c("lp","x","data.frame","terms","cterms","ccterms","adjto",
              "adjto.data.frame",  "model.frame"),
@@ -343,7 +343,7 @@ predict.psm <-
 residuals.psm <-
   function(object,
            type=c("censored.normalized",
-             "response", "deviance","dfbeta","dfbetas", 
+             "response", "deviance","dfbeta","dfbetas",
              "working","ldcase","ldresp","ldshape", "matrix"), ...)
 {
   type <- match.arg(type)
@@ -361,7 +361,7 @@ residuals.psm <-
   ncy <- ncol(y)
   scale <- object$scale
   dist  <- object$dist
-  
+
   r <- (y[,-ncy,drop=FALSE]-object$linear.predictors)/scale
   r <- cbind(r, y[,ncy])
   ## Moved the following line here from bottom
@@ -378,7 +378,7 @@ residuals.psm <-
   r
 }
 
-lines.residuals.psm.censored.normalized <- 
+lines.residuals.psm.censored.normalized <-
   function(x, n=100, lty=1, xlim=range(r[,-ncol(r)],na.rm=TRUE),
            lwd=3, ...)
 {
@@ -392,14 +392,14 @@ lines.residuals.psm.censored.normalized <-
   invisible()
 }
 
-survplot.residuals.psm.censored.normalized <- 
+survplot.residuals.psm.censored.normalized <-
   function(fit, x, g=4, col, main, ...)
 {
   r <- fit
-  
+
   if(missing(x))
     {
-      survplot(survfit(r ~ 1), conf='none', xlab='Residual', 
+      survplot(survfit(r ~ 1), conf='none', xlab='Residual',
                col=if(missing(col))par('col') else col, ...)
       if(!missing(main)) title(main)
     }
@@ -415,7 +415,7 @@ survplot.residuals.psm.censored.normalized <-
       if(missing(main))
         {
           main <-
-            if(length(lab <- attr(x,'label'))) lab 
+            if(length(lab <- attr(x,'label'))) lab
             else ''
         }
       if(main != '') title(main)

@@ -8,9 +8,9 @@ a fit from maximum likelihood or least squares, to correct for
 heteroscedasticity and for correlated responses from cluster samples.
 The method uses the ordinary estimates of regression coefficients and
 other parameters of the model, but involves correcting the covariance
-matrix for model misspecification and sampling design. 
-Models currently implemented are models that have a 
-\code{residuals(fit,type="score")} function implemented, such as \code{lrm}, 
+matrix for model misspecification and sampling design.
+Models currently implemented are models that have a
+\code{residuals(fit,type="score")} function implemented, such as \code{lrm},
 \code{cph}, \code{coxph}, and ordinary linear models (\code{ols}).
 The fit must have specified the \code{x=TRUE} and \code{y=TRUE} options for certain models.
 Observations in different clusters are assumed to be independent.

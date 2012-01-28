@@ -20,12 +20,12 @@ exponential = list(
 		drop(outer(lp, q, FUN=f, parms=parms))
 		},
     mean = function(lp, parms) exp(lp),
-    
+
     latex = function(...) '\\exp(-t/\\exp(X\\beta))'
   ),
-  
+
 extreme = list(
-    survival = function(times, lp, parms) { 
+    survival = function(times, lp, parms) {
 		exp(-exp((times-lp)/exp(parms)))
 		},
     hazard = function(times, lp, parms) {
@@ -52,7 +52,7 @@ extreme = list(
     ),
 
 weibull = list(
-    survival = function(times, lp, parms) { 
+    survival = function(times, lp, parms) {
 		t.trans <- logb(times)
 		names(t.trans) <- format(times)
 		exp(-exp((t.trans-lp)/exp(parms)))
@@ -84,9 +84,9 @@ weibull = list(
 		z
 		}
     ),
-                    
+
 logistic = list(
-    survival = function(times, lp, parms) { 
+    survival = function(times, lp, parms) {
 		1/(1+exp((times-lp)/exp(parms)))
 		},
     hazard = function(times, lp, parms) {
@@ -110,7 +110,7 @@ logistic = list(
     ),
 
 loglogistic = list(
-    survival = function(times, lp, parms) { 
+    survival = function(times, lp, parms) {
 		1/(1+exp((logb(times)-lp)/exp(parms)))
 		},
     hazard = function(times, lp, parms) {
@@ -139,7 +139,7 @@ loglogistic = list(
 		z <- paste("[1+\\exp(",z,")]^{-1}")
 		z
 		}),
-    
+
 gaussian = list(
     survival = function(times, lp, parms) 1-pnorm((times-lp)/exp(parms)),
     hazard = function(times, lp, parms) {
@@ -164,7 +164,7 @@ gaussian = list(
     ),
 
 lognormal = list(
-    survival = function(times, lp, parms) { 
+    survival = function(times, lp, parms) {
 		t.trans <- logb(times)
 		names(t.trans) <- format(times)
 		1-pnorm((t.trans-lp)/exp(parms))
@@ -196,7 +196,7 @@ lognormal = list(
 		z
 		}
     ),
-  
+
 t = list(
     survival = function(times, lp, parms) {
 		scale <- exp(parms[1])

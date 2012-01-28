@@ -1,6 +1,6 @@
 validate <-
   function(fit,  method="boot", B=40,
-           bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, 
+           bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0,
            force=NULL, pr=FALSE,...)
   UseMethod("validate")
 
@@ -18,9 +18,9 @@ validate.ols <- function(fit, method="boot",
     pr=FALSE, u=NULL, rel=">", tolerance=1e-7, ...)
 {
   fit.orig <- fit
-  
+
   penalty.matrix <- fit.orig$penalty.matrix
-  
+
   discrim <- function(x, y, fit, iter, evalfit=FALSE, u=NULL, rel=NULL,
                       pr=FALSE, ...)
 	{
@@ -70,8 +70,8 @@ validate.ols <- function(fit, method="boot",
       names(z) <- nam
       z
     }
-  
-  ols.fit <- function(x,y,tolerance=1e-7,backward, 
+
+  ols.fit <- function(x,y,tolerance=1e-7,backward,
                       penalty.matrix=NULL, xcol=NULL, ...)
     {
       if(!length(x))
@@ -96,13 +96,13 @@ validate.ols <- function(fit, method="boot",
         {
           fit <- lm.fit.qr.bare(x,as.vector(y),tolerance=tolerance,
                                 intercept=FALSE, xpxi=TRUE)
-          if(backward) 
+          if(backward)
             fit$var <- sum(fit$residuals^2)*fit$xpxi/
               (length(y) - length(fit$coefficients))
         }
       c(fit,fail=FALSE)
     }
-  
+
   predab.resample(fit.orig,method=method,fit=ols.fit,measure=discrim,pr=pr,
                   B=B,bw=bw,rule=rule,type=type,sls=sls,aics=aics,
                   force=force,tolerance=tolerance,
@@ -204,7 +204,7 @@ latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
             cat('\\begin{center}\\', size, '\n', sep='', file=file, append=TRUE)
             cat(cap, '\n\n', file=file, append=TRUE)
           }
-        
+
         nkept <- apply(kept, 1, sum)
         tkept <- t(as.matrix(table(nkept)))
         latex(tkept, ..., caption=if(table.env) cap,

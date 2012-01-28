@@ -1,21 +1,21 @@
 latexrms <-
   function(object,
            file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
-           append=FALSE, which=1:p, varnames, columns=65, prefix=NULL, 
+           append=FALSE, which=1:p, varnames, columns=65, prefix=NULL,
            inline=FALSE, before=if(inline)"" else "& &", after="",
            intercept, pretrans=TRUE, digits=.Options$digits, size='')
 {
-  f    <- object	
+  f    <- object
   at   <- f$Design
   name <- at$name
   ac   <- at$assume.code
   p    <- length(name)
   nrp  <- num.intercepts(f)
-  
+
   ## f$term.labels does not include strat
   TL   <- attr(terms(f),"term.labels")
   tl   <- TL
-  
+
   ##Get inner transformations
 
   from <- c('asis(*)','pol(*)','lsp(*)','rcs(*)','catg(*)','scored(*)',
@@ -23,7 +23,7 @@ latexrms <-
   to   <- rep('*',9)
 
   TLi <- paste("h(",sedit(TL, from, to),")",sep="")
-  
+
   ## change wrapping function to h()
 
   h <- function(x,...) deparse(substitute(x))
@@ -56,7 +56,7 @@ latexrms <-
 
   interaction <- at$interactions
   if(length(interaction)==0) interaction <- 0
-  
+
   parms <- at$parms
 
   ##If any interactions to be printed, make sure all main effects are included
@@ -67,9 +67,9 @@ latexrms <-
       for(i in which[ia]) which <- c(which,parms[[name[i]]][,1])
       which <- which[which>0]
       which <- sort(unique(which))
-    } 
+    }
 
-  
+
   from <- c('sqrt(*)',  'log(',  'I(*)', '1/(*)',   'pmin(', 'pmax(')
   to   <- c('\\sqrt{*}','\\log(','[*]',  '(*)^{-1}','\\min(','\\max(')
   tl  <- sedit(tl, from, to)
@@ -82,9 +82,9 @@ latexrms <-
       TLi <- sedit(TLi, varnames, vnames, wild.literal=TRUE)
       TLi <- ifelse(TLi=="", "", paste("{\\rm ", TLi, "}", sep=""))
     }
-  
+
   varnames <- paste("{\\rm ", vnames, "}", sep="")
-  
+
   Two.Way <- function(prm,Nam,nam.coef,lNam,cof,coef,f,columns,lcof,varnames,
                       lnam, at, digits=digits)
     {
@@ -115,9 +115,9 @@ latexrms <-
           act <- mnam[mnam>0]
           lN2.act <- length(act)
           ##Check if restricted interaction between a rcs and another nonlinear
-          ##var, i.e. >1 2nd term possible, only 1 (linear) there, and at first 
+          ##var, i.e. >1 2nd term possible, only 1 (linear) there, and at first
           ##nonlinear term of rcs
-          
+
           if(lN2.act==1 & lN2>1 & at$assume.code[i1]==4 & j1==2)
             {
               if(cur!="")
@@ -138,7 +138,7 @@ latexrms <-
               m <- m+n
               cnam <- paste(nam.coef[[if(rev)i2 else i1]][1], "*",
                             nam.coef[[if(rev)i1 else i2]][-1])
-              v <- rcspline.restate(at$parms[[at$name[i1]]], c(0, coef[cnam]), 
+              v <- rcspline.restate(at$parms[[at$name[i1]]], c(0, coef[cnam]),
                                     x=varnames[i1],
                                     lx=lnam[i1], columns=columns, before="",
                                     after="",
@@ -182,7 +182,7 @@ latexrms <-
                 }
               cur <- paste(cur, v, sep="")
               m <- m + n
-              
+
               if(at$assume.code[i2]==4 & !any(mnam==0))
                 {
                   ##rcspline, interaction not restricted
@@ -190,7 +190,7 @@ latexrms <-
                                         coef[act], x=varnames[i2],
                                         lx=lnam[i2],
                                         columns=columns, before="",
-                                        after="", 
+                                        after="",
                                         begin=cur, nbegin=m,
                                         digits=digits)
                   m <- attr(v, "columns.used") + 1   #1 for "]"
@@ -199,7 +199,7 @@ latexrms <-
                   if(j>1) q <- c(q, v[-j])
                   cur <- paste(v[j],"]")
                 }
-              
+
               else
                 {
                   for(j2 in 1:lN2)
@@ -229,7 +229,7 @@ latexrms <-
       attr(q, "columns.used") <- m
       q
     }
-  
+
   Three.Way <- function(prm,Nam,nam.coef,lNam,cof,coef,f,columns,lcof,at)
     {
       i1 <- prm[1,1]; i2 <- prm[2,1]; i3 <- prm[3,1]
@@ -264,7 +264,7 @@ latexrms <-
       attr(q, "columns.used") <- m
       q
     }
-  
+
   if(!inline)
     {
       tex <- "\\begin{eqnarray*}"
@@ -273,7 +273,7 @@ latexrms <-
         tex <- c(tex,
                  paste("\\lefteqn{",prefix,"=}\\\\",sep=""))
     } else tex <- NULL
-  
+
   cur <- ""
   cols <- 0
   Coef <- f$coef
@@ -284,10 +284,10 @@ latexrms <-
       cur <- cof
       cols <- nchar(cof)
     }
-  
+
   anybrace <- anyplus <- FALSE
   Nam <- lNam <- nam.coef <- list()
-  
+
   for(i in (1:p)[which])
     {
       ass <- ac[i]
@@ -322,7 +322,7 @@ latexrms <-
             {
               r <- grep("times",cof)
               r <- if(length(r)==0) 1:length(cof) else -r
-              cof.sp[r] <- paste(cof.sp[r],"\\:",sep="")    
+              cof.sp[r] <- paste(cof.sp[r],"\\:",sep="")
             }
           else
             if(length(grep("time",cof[1]))==0)
@@ -339,7 +339,7 @@ latexrms <-
                q <- paste(cof.sp, nam, sep="")
                m <- ltl[i]+lcof
              },
-             
+
              { # 2 - pol
                q <- ""
                m <- 0
@@ -349,7 +349,7 @@ latexrms <-
                for(j in pow) q <- paste(q,cof.sp[j], nams[j], sep="")
                m <- prm*lnam[i]+sum(lcof)
              },
-             
+
              { # 3 - lsp
                if(cols>0)
                  {
@@ -365,7 +365,7 @@ latexrms <-
                lkn <- nchar(kn)
                for(j in 1:length(prm))
                  {
-                   z <- paste("(", nam, if(prm[j]<0) "+" else NULL, 
+                   z <- paste("(", nam, if(prm[j]<0) "+" else NULL,
                               if(prm[j]!=0) kn[j] else NULL, ")_{+}",
                               sep="")
                  nams <- c(nams, z)
@@ -387,8 +387,8 @@ latexrms <-
                  }
                Nam[[i]] <- nams; lNam[[i]] <- lnams
              },
-             
-             
+
+
              { # 4 - rcs
                q <- rcspline.restate(prm, coef, x=nam, lx=lnam[i],
                                      columns=columns,
@@ -450,7 +450,7 @@ latexrms <-
                  }
              },
              q <- "",
-             
+
              { # 7 - scored
                if(cols>0)
                  {
@@ -496,9 +496,9 @@ latexrms <-
                  }
                q <- ""
              },
-             
+
              {
-               if(prm[3,1]==0) 
+               if(prm[3,1]==0)
                  q <- Two.Way(prm,Nam,nam.coef,lNam,cof,coef,f,columns,lcof,
                               varnames,lnam,at,digits=digits)
                else q <- Three.Way(prm,Nam,nam.coef,lNam,cof,coef,f,
@@ -516,7 +516,7 @@ latexrms <-
                    tex <- c(tex,q[-j])
                    q <- q[j]
                  }
-             }, 
+             },
              { # 10 - matrx
                nam <- names(coef)
                if(cols>0)
@@ -547,9 +547,9 @@ latexrms <-
                    m <- m + n
                  }
              }
-             ) 
-    
-     
+             )
+
+
       if(length(q) && q!="")
         {
           if(cols+m > columns)
@@ -558,14 +558,14 @@ latexrms <-
               cur <- ""
               cols <- 0
             }
-          
+
           cur <- paste(cur, q)
           cols <- cols + m
         }
     }
-  
+
   if(cur!="") tex <- c(tex, cur)
-  
+
   if(inline)
     {
       if(before != '') tex <- c(before, tex)
@@ -575,10 +575,10 @@ latexrms <-
       cat(tex, sep="\n", file=file, append=append)
       return(structure(list(file=file,style=NULL), class='latex'))
     }
-  
+
   tex <- c(tex,"\\end{eqnarray*}")
   tex <- ifelse(substring(tex,1,1)=="\\",tex,paste(before,tex,"\\\\"))
-  
+
   if(anybrace | anyplus)
     {
       s <- if(length(which)==p) "and $" else "where $"
@@ -590,7 +590,7 @@ latexrms <-
       s <- paste(s, "$.")
       tex <- c(tex, s)
     }
-  
+
   if(anytr & pretrans)
     {
       i <- TLi!=""
@@ -606,7 +606,7 @@ latexrms <-
         }
       tex <- c(tex, tr)
     }
-  
+
   cat(tex, sep="\n", file=file, append=append)
   structure(list(file=file, style=NULL),class='latex')
 }

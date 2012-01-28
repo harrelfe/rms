@@ -1,11 +1,11 @@
 plot.nomogram <-
   function(x, lplabel="Linear Predictor",
            fun.side, col.conf=c(1,if(under.unix).3 else 12),
-           conf.space=c(.08,.2), 
-           label.every=1, force.label=FALSE, 
+           conf.space=c(.08,.2),
+           label.every=1, force.label=FALSE,
            xfrac=.35, cex.axis=.85, cex.var=1,
            col.grid=NULL,
-           varname.label=TRUE, varname.label.sep="=", ia.space=.7, 
+           varname.label=TRUE, varname.label.sep="=", ia.space=.7,
            tck=NA, tcl=-0.25, lmgp=.4, naxes,
            points.label='Points', total.points.label='Total Points',
            total.sep.page=FALSE, total.fun, cap.labels=FALSE, ...)
@@ -84,10 +84,10 @@ plot.nomogram <-
     ## Determine how wide the labels can be
     xl <- -xfrac*maxscale
 
-    if(missing(naxes)) naxes <- 
+    if(missing(naxes)) naxes <-
       if(total.sep.page) max(space.used + 1, nfun + lp + 1) else
     space.used + 1 + nfun + lp + 1
-    
+
     Format <- function(x) { # like format but does individually
       f <- character(l <- length(x))
       for(i in 1:l) f[i] <- format(x[i])
@@ -104,7 +104,7 @@ plot.nomogram <-
              type="n",axes=FALSE,xlab="",ylab="")
         if(!missing(usr)) par(usr=usr)
         if(!points) return(y + 1)
-        
+
         ax <- c(0,maxscale)
         text(xl, y, points.label, adj=0, cex=cex.var)
         x <- pretty(ax, n=nint)
@@ -118,17 +118,17 @@ plot.nomogram <-
                      col=col.grid[-1], lwd=1)
           }
         axisf(3, at=x, pos=y, cex=cex.axis, tck=tck, tcl=tcl,
-              label.every=label.every, 
+              label.every=label.every,
               force.label=force.label, padj=0)
         axisf(3, at=x2, labels=FALSE, pos=y,
               tck=tck2,tcl=tcl2, cex=cex.axis)
         y
       }
-    
+
     y <- newpage(naxes, xl, maxscale, cex.var, nint, space.used, col.grid,
                  cex.axis, tck, tck2, tcl, tcl2, label.every=label.every,
                  force.label=force.label, points.label=points.label)
-    
+
     i <- 0
     ns <- names(set)
 
@@ -153,9 +153,9 @@ plot.nomogram <-
                                   cex=cex.var), collapse='\n'), adj=0, cex=cex.var)
           x <- S[[1]]
           nam <- names(S)[1]  #stored with fastest first
-          fx <- if(is.character(x)) x else 
+          fx <- if(is.character(x)) x else
           sedit(Format(x)," ","") #axis not like bl   - was translate()
-          
+
 ###          is <- start[i]
 ###          ie <- is+len[i]-1
           xt <- S$points
@@ -172,7 +172,7 @@ plot.nomogram <-
                       fx[ie] <- if(discrete[nam] || ie < length(xt))
                         paste(fx[is], "-", fx[ie],sep="") else
                       paste(fx[is], '+', sep='')
-                      
+
                       fx[is:(ie-1)] <- ""
                       xt[is:(ie-1)] <- NA
                     }
@@ -190,7 +190,7 @@ plot.nomogram <-
           new.mgp <- vector(mode='list', 2)
           new.mgp[[2]] <- c(0, lmgp, 0)
           new.mgp[[1]] <- new.mgp[[2]] - c(0,0.6,0)
-          
+
           ## Find direction changes
           ch <- if(length(xt) > 2) c(FALSE, FALSE, diff(diff(xt) > 0) != 0)
           else rep(FALSE, length(xt))
@@ -208,7 +208,7 @@ plot.nomogram <-
                         (minlength==1 && nam %in% names(Abbrev)),
                         disc=TRUE, mgp=new.mgp[[k]], padj=padj[k])
                   if(se) bar(xt[is],
-                             if(k==1) y-conf.space-.32 else y+conf.space+.32, 
+                             if(k==1) y-conf.space-.32 else y+conf.space+.32,
                              zcrit, sc*S$se.fit[is], col.conf)
                 }
             }
@@ -227,7 +227,7 @@ plot.nomogram <-
               if(max(j)<length(ch)) j <- c(j, length(ch)+1)
               flag <- 1
               is <- 1
-              
+
               for(k in j)
                 {
                   ie <- k-1
@@ -237,15 +237,15 @@ plot.nomogram <-
                         mgp=new.mgp[[flag]],
                         disc=discrete[nam], padj=padj[flag])
                   if(se) bar(xt[is:ie],
-                             if(side[flag]==1) y-conf.space-.32 else y+conf.space+.32, 
+                             if(side[flag]==1) y-conf.space-.32 else y+conf.space+.32,
                              zcrit, sc*S$se.fit[is:ie], col.conf)
                   flag <- if(flag==2) 1 else 2
                   is <- ie+1
                 }
             }
         }
-    
-        
+
+
     S  <- set$total.points
     x  <- S$x
     new.max <- max(x)
@@ -278,13 +278,13 @@ plot.nomogram <-
         x2 <- seq(lp.at[1], max(lp.at), by=(lp.at[2]-lp.at[1])/2)
         scaled.x2 <- (x2 - Intercept)*sc
         y <- y-1
-        if(y < -.05) 
+        if(y < -.05)
           y <- newpage(naxes, xl, maxscale, cex.var, nint,
                        space.used, col.grid,
                        cex.axis, tck, tck2, tcl, tcl2,
                        label.every=label.every, force.label=force.label,
                        points=FALSE,usr=usr) - 1
-        
+
         text(xl, y, lplabel, adj=0, cex=cex.var)
         axisf(1, at=x,  labels=Format(lp.at), pos=y,
               cex=cex.axis, tck=tck,tcl=tcl,
@@ -315,9 +315,9 @@ plot.nomogram <-
         text(xl, y, funlabel[i], adj=0, cex=cex.var)
         sides <- if(missing(fun.side)) rep(1, length(fat))
          else (fun.side[[i]])[s]
-        if(length(sides)!=length(fat)) 
+        if(length(sides)!=length(fat))
           stop('fun.side vector not same length as fun.at or fun.lp.at')
-        for(jj in 1:length(fat)) 
+        for(jj in 1:length(fat))
           axis(sides[jj], at=scaled[jj], label=fat[jj],
                pos=y, cex.axis=cex.axis, tck=tck, tcl=tcl,
                mgp=if(sides[jj] == 1) c(0,lmgp - 0.6, 0) else c(0, lmgp, 0),
@@ -338,9 +338,9 @@ legend.nomabbrev <- function(object, which, x, y=NULL, ncol=3, ...)
                 pch=paste(abb$abbrev,collapse=''),
                 ...)
   else if(length(y))
-    legend(x, y, paste(format(abb$abbrev),':',abb$full,sep=''), 
+    legend(x, y, paste(format(abb$abbrev),':',abb$full,sep=''),
            ncol=ncol, ...) else
-  legend(x, paste(format(abb$abbrev),':',abb$full,sep=''), ncol=ncol, 
+  legend(x, paste(format(abb$abbrev),':',abb$full,sep=''), ncol=ncol,
          ...)
   invisible()
 }
@@ -369,8 +369,8 @@ axisf <- function(side, at, labels=TRUE, pos, cex, tck, tcl,
         if(!is.na(at[i]))
           ax(side, at[i], labels[i], pos=pos, cex=cex, tcl=0, ...)
     }
-  else ax(side, at[!is.na(at)], labels[!is.na(at)], 
+  else ax(side, at[!is.na(at)], labels[!is.na(at)],
           pos=pos, cex=cex, tcl=0, ...)
-  
+
   invisible()
 }

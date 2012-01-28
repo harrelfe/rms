@@ -8,7 +8,7 @@ regression coefficients and confidence limits within time intervals.
 The log hazard ratios are plotted against the mean failure/censoring
 time within the interval. Unless \code{times} is specified, the number of
 time intervals will be \eqn{\max(round(d/e),2)}, where \eqn{d} is the
-total number 
+total number
 of events in the sample. Efron's likelihood is used for estimating
 Cox regression coefficients (using \code{coxph.fit}).  In the case of
 tied failure times, some intervals may have a point in common.

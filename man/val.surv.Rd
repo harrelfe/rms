@@ -35,7 +35,7 @@ of class \code{"val.survh"}, otherwise it returns an object of class
 \code{"val.surv"}.
 
 If \code{u} is not specified, \code{val.surv} uses Cox-Snell (1968)
-residuals on the cumulative 
+residuals on the cumulative
 probability scale to check on the calibration of a survival model
 against right-censored failure time data.  If the predicted survival
 probability at time \eqn{t} for a subject having predictors \eqn{X} is
@@ -130,10 +130,10 @@ observations are used.
      histogram is used if the sample size exceeds 200.}
 \item{\dots}{When \code{u} is given to \code{val.surv}, \dots represents
      optional arguments to \code{hare}.  It can represent arguments to
-     pass to \code{plot} or \code{lines} for 
+     pass to \code{plot} or \code{lines} for
      \code{plot.val.survh}.  Otherwise, \dots contains optional
      arguments for \code{plsmo} or \code{plot}.   For
-     \code{print.val.survh}, \dots is ignored.} 
+     \code{print.val.survh}, \dots is ignored.}
 \item{group}{
 a grouping variable.  If numeric this variable is grouped into
 \code{g.group} quantile groups (default is quartiles).  \code{group},
@@ -152,7 +152,7 @@ ratio instead.
 \item{type}{
 Set to the default (\code{"l"}) to plot the trend line only, \code{"b"}
 to plot both individual subjects ratios and trend lines, or
-\code{"p"} to plot only points. 
+\code{"p"} to plot only points.
 }
 \item{xlim}{
 }

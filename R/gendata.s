@@ -13,7 +13,7 @@ gendata <- function(fit, ..., nobs, viewvals=FALSE, factors)
         if(!all(nam.sub %in% nam)) stop("misspelled a variable name")
         df.sub <- as.data.frame(df[,nam.sub])
         cat("Edit the predictor settings to use.\n")
-        if(viewvals && 
+        if(viewvals &&
            length(val <- Getlim(at, allow.null=TRUE,
                                 need.all=FALSE)$values[nam.sub]))
           {

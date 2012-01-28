@@ -32,15 +32,15 @@ substitutes Greek/math symbols in column headings, uses boldface for
 to \code{latex.default} for conversion to LaTeX.
 }
 \usage{
-\method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9, 
+\method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9,
       test=c('F','Chisq'), india=TRUE, indnl=TRUE, ss=TRUE)
 
 \method{print}{anova.rms}(x, which=c('none','subscripts','names','dots'), \dots)
 
-\method{plot}{anova.rms}(x, 
+\method{plot}{anova.rms}(x,
      what=c("chisqminusdf","chisq","aic","P","partial R2","remaining R2",
-            "proportion R2"), 
-     xlab=NULL, pch=16, 
+            "proportion R2"),
+     xlab=NULL, pch=16,
      rm.totals=TRUE, rm.ia=FALSE, rm.other=NULL, newnames,
      sort=c("descending","ascending","none"), pl=TRUE, \dots)
 
@@ -62,7 +62,7 @@ of all factors listed. Names may be abbreviated.  For example, specify
 \code{anova(fit,age,cholesterol)} to get a Wald statistic for testing the joint
 importance of age, cholesterol, and any factor interacting with them.
 
-Can be optional graphical parameters to send to 
+Can be optional graphical parameters to send to
 \code{dotchart2}, or other parameters to send to \code{latex.default}.
 Ignored for \code{print}.
 }
@@ -100,7 +100,7 @@ tested and blanks for those just being adjusted for.
 }
 \item{what}{
 what type of statistic to plot.  The default is the Wald
-\eqn{\chi^2}{chi-square} 
+\eqn{\chi^2}{chi-square}
 statistic for each factor (adding in the effect of higher-ordered
 factors containing that factor) minus its degrees of freedom.  The
 last three choice for \code{what} only apply to \code{ols} models.
@@ -136,7 +136,7 @@ analyze the vector of statistics returned.
 title to pass to \code{latex}, default is name of fit object passed to
 \code{anova} prefixed with \code{"anova."}.  For Windows, the default is
 \code{"ano"} followed by the first 5 letters of the name of the fit
-object. 
+object.
 }
 \item{psmall}{
 The default is \code{psmall=TRUE}, which causes \code{P<0.00005} to print as \code{<0.0001}.
@@ -163,7 +163,7 @@ digits to the right for mean squares (default is \code{NA})
   Default is constructed from the response variable.}
 }
 \value{
-\code{anova.rms} returns a matrix of class \code{anova.rms} containing factors 
+\code{anova.rms} returns a matrix of class \code{anova.rms} containing factors
 as rows and \eqn{\chi^2}{chi-square}, d.f., and \eqn{P}-values as
 columns (or d.f., partial \eqn{SS, MS, F, P}).
 \code{plot.anova.rms} invisibly returns the vector of quantities
@@ -188,7 +188,7 @@ file with a name of the form \code{"title.tex"} (see the \code{title} argument a
 \code{\link{rms}}, \code{\link{rmsMisc}}, \code{\link{lrtest}},
 \code{\link{rms.trans}}, \code{\link{summary.rms}},
 \code{\link[Hmisc]{solvet}}, \code{\link{locator}},
-\code{\link[Hmisc]{dotchart2}}, \code{\link[Hmisc]{latex}},  
+\code{\link[Hmisc]{dotchart2}}, \code{\link[Hmisc]{latex}},
 \code{\link[Hmisc]{xYplot}}, \code{\link{anova.lm}},
 \code{\link{contrast.rms}}, \code{\link{pantext}}
 }
@@ -293,7 +293,7 @@ dotplot(group ~ partialR2 | Variable, data=A, xlab=ex)
 dotplot(Variable ~ partialR2, groups=group, data=A, xlab=ex,
         auto.key=list(corner=c(.5,.5)))
 
-# Suppose that a researcher wants to make a big deal about a variable 
+# Suppose that a researcher wants to make a big deal about a variable
 # because it has the highest adjusted chi-square.  We use the
 # bootstrap to derive 0.95 confidence intervals for the ranks of all
 # the effects in the model.  We use the plot method for anova, with
@@ -307,14 +307,14 @@ dotplot(Variable ~ partialR2, groups=group, data=A, xlab=ex,
 mydata <- data.frame(x1=runif(200), x2=runif(200),
                      sex=factor(sample(c('female','male'),200,TRUE)))
 set.seed(9)  # so can reproduce example
-mydata$y <- ifelse(runif(200)<=plogis(mydata$x1-.5 + .5*(mydata$x2-.5) + 
+mydata$y <- ifelse(runif(200)<=plogis(mydata$x1-.5 + .5*(mydata$x2-.5) +
                    .5*(mydata$sex=='male')),1,0)
 
 
 if(require(boot))
    {
       b <- boot(mydata, function(data, i, ...) rank(-plot(anova(
-                lrm(y ~ rcs(x1,4)+pol(x2,2)+sex,data,subset=i)), 
+                lrm(y ~ rcs(x1,4)+pol(x2,2)+sex,data,subset=i)),
                 sort='none', pl=FALSE)),
                 R=25)  # should really do R=500 but will take a while
       Rank <- b$t0
@@ -329,7 +329,7 @@ if(require(boot))
       predictor <- as.factor(names(original.chisq))
       predictor <- reorder(predictor, -original.chisq)
 
-      Dotplot(predictor ~ Cbind(Rank, lim), pch=3, xlab='Rank', 
+      Dotplot(predictor ~ Cbind(Rank, lim), pch=3, xlab='Rank',
               main=if(.R.) expression(paste(
       'Ranks and 0.95 Confidence Limits for ',chi^2,' - d.f.')) else
       'Ranks and 0.95 Confidence Limits for Chi-square - d.f.')

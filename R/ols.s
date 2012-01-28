@@ -1,4 +1,4 @@
-ols <- function(formula, data, weights, subset, na.action=na.delete, 
+ols <- function(formula, data, weights, subset, na.action=na.delete,
                 method = "qr", model = FALSE, x = FALSE, y = FALSE,
                 se.fit=FALSE, linear.predictors=TRUE,
                 penalty=0, penalty.matrix, tol=1e-7, sigma=NULL,
@@ -7,13 +7,13 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
   m <- match.call(expand = FALSE)
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
+  mc <- match(c("formula", "data", "subset", "weights", "na.action"),
               names(m), 0)
   m <- m[c(1, mc)]
   m$na.action <- na.action
   m$drop.unused.levels <- TRUE
   m[[1]] <- as.name("model.frame")
-  ##X's present) 
+  ##X's present)
   if(length(attr(terms(formula),"term.labels")))
     {
       ## R's model.frame.default gives wrong model frame if [.factor
@@ -32,14 +32,14 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       nact <- atrx$na.action
       Terms <- atrx$terms
       assig <- DesignAssign(atr, 1, Terms)
-      
+
       penpres <- FALSE
       if(!missing(penalty) && any(unlist(penalty) != 0)) penpres <- TRUE
       if(!missing(penalty.matrix) && any(penalty.matrix != 0)) penpres <- TRUE
-      
+
       if(penpres && missing(var.penalty))
         warning('default for var.penalty has changed to "simple"')
-      
+
       if(method == "model.frame") return(X)
       scale <- as.character(formula[2])
       attr(Terms, "formula") <- formula
@@ -51,13 +51,13 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       n <- length(Y)
       if(model) m <- X
       X <- model.matrix(Terms, X)
-      if(length(atr$colnames)) 
+      if(length(atr$colnames))
         dimnames(X)[[2]] <- c("Intercept",atr$colnames)
       else dimnames(X)[[2]] <- c("Intercept",dimnames(X)[[2]][-1])
       if(method=="model.matrix") return(X)				   }
-  
+
   ##Model with no covariables:
-  
+
   else
     {
       if(length(weights))
@@ -79,23 +79,23 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
                   df.residual=n-1, intercept=TRUE)
       if(linear.predictors)
         {
-          fit$linear.predictors <- rep(yest,n); 
+          fit$linear.predictors <- rep(yest,n);
           names(fit$linear.predictors) <- names(Y)
         }
       if(model) fit$model <- m
-      if(x) fit$x <- matrix(1, ncol=1, nrow=n, 
+      if(x) fit$x <- matrix(1, ncol=1, nrow=n,
                             dimnames=list(NULL,"Intercept"))
       if(y) fit$y <- Y
       fit$fitFunction <- c('ols','lm')
       oldClass(fit) <- c("ols","rms","lm")
       return(fit)
     }
-  
+
   if(!penpres)
     {
       fit <- if(length(weights))
         lm.wfit(X, Y, weights, method=method,  ...)
-      else 
+      else
         lm.fit(X, Y, method=method, ...)
       cov.unscaled <- chol2inv(fit$qr$qr)
       r <- fit$residuals
@@ -125,7 +125,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     {
       p <- length(atr$colnames)
       if(missing(penalty.matrix)) penalty.matrix <- Penalty.matrix(atr,X)
-      if(nrow(penalty.matrix)!=p || ncol(penalty.matrix)!=p) 
+      if(nrow(penalty.matrix)!=p || ncol(penalty.matrix)!=p)
         stop('penalty matrix does not have',p,'rows and columns')
       psetup <- Penalty.setup(atr, penalty)
       penalty <- psetup$penalty
@@ -141,7 +141,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
                      var.penalty=var.penalty)
       fit$penalty <- penalty
     }
-  
+
   if(model) fit$model <- m
   if(linear.predictors)
     {
@@ -192,14 +192,14 @@ lm.pfit <- function(X, Y, penalty.matrix, tol=1e-7, regcoef.only=FALSE,
   df <- sum(dag) - 1
   stats <- c(n=n, 'Model L.R.'=lr, 'd.f.'=df, R2=1-sse/sst,
              g=GiniMd(yhat), Sigma=sqrt(s2))
-  
+
   list(coefficients=drop(coef), var=var, residuals=res, df.residual=n-1,
-       penalty.matrix=penalty.matrix, 
+       penalty.matrix=penalty.matrix,
        stats=stats, effective.df.diagonal=dag)
 }
 
 
-predict.ols <- 
+predict.ols <-
   function(object, newdata,
            type=c("lp","x","data.frame","terms","cterms","ccterms","adjto",
              "adjto.data.frame", "model.frame"),
@@ -219,7 +219,7 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
 {
   k <- 0
   z <- list()
-  
+
 
   if(length(zz <- x$na.action))
     {
@@ -285,21 +285,21 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
                        list(resid, digits=digits),
                        tex=latex, title='Residuals')
       }
-  
+
   if(nsingular <- df[3] - df[1])
     {
       k <- k + 1
       z[[k]] <- list(type='cat',
                      paste(nsingular, 'coefficients not defined because of singularities'))
     }
-      
+
   k <- k + 1
   se <- sqrt(diag(x$var))
   z[[k]] <- list(type='coefmatrix',
                  list(coef    = x$coefficients,
                       se      = se,
                       errordf = rdf))
-  
+
   if(!pen)
     {
       if(long && p > 0)
@@ -311,13 +311,13 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
           correl[ll] <- format(round(correl[ll], digits), ...)
           correl[!ll] <- ""
           k <- k + 1
-          z[[k]] <- list(type='print', 
+          z[[k]] <- list(type='print',
                          list(correl[-1,  - (p+1), drop = FALSE],
                               quote=FALSE, digits = digits))
         }
     }
   prModFit(x, title=title, z, digits=digits,
            coefs=coefs, latex=latex, ...)
-  
+
   invisible()
 }

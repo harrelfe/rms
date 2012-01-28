@@ -9,7 +9,7 @@
 #  groups are constructed to have m observations each on the average.
 #  Otherwise, if g is given, g quantile groups will be constructed.
 #  If instead cuts is given, proportions will be computed based on the
-#  cut points in the vector cuts, e.g. cuts<-seq(0,1,by=.2). 
+#  cut points in the vector cuts, e.g. cuts<-seq(0,1,by=.2).
 #  If legendloc is given, a legend will be plotted there
 #  Otherwise, it is placed at (.6, .38)
 #  Use legendloc=locator(1) to use the mouse for legend positioning.
@@ -27,7 +27,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
 					 lim=c(0,1), m, g, cuts, emax.lim=c(0,1),
 					 legendloc=lim[1] + c(.55*diff(lim),.27*diff(lim)),
 					 statloc=c(0,.99), riskdist="calibrated", cex=.7, mkh=.02,
-					 connect.group=FALSE, connect.smooth=TRUE, 
+					 connect.group=FALSE, connect.smooth=TRUE,
 					 g.group=4, evaluate=100, nmin=0)
 {
 
@@ -41,13 +41,13 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
       P <- 2 * (1 - pnorm(abs(z)))
       c(Z=z, P=P)
     }
-  
+
   if(!missing(group))
     {
       if(length(group)==1 && is.logical(group) && group)
         group <- rep('', length(y))
-      if(!is.factor(group)) group <- 
-        if(is.logical(group) || is.character(group)) 
+      if(!is.factor(group)) group <-
+        if(is.logical(group) || is.character(group))
           as.factor(group) else cut2(group, g=g.group)
       names(group) <- NULL
       nma <- !(is.na(p + y + weights) | is.na(group))
@@ -68,7 +68,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
       weights <- weights[nma]
       return(val.probg(p, y, group, evaluate, weights, normwt, nmin) )
     }
-  
+
   if(length(unique(p))==1)
     {
       P <- mean(y)
@@ -85,13 +85,13 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
       stats <- c(0, .5, 0, D, 0, 1, U, U.chisq, U.p, Q,
                  mean((y-p[1])^2), Intc, 0,
                  rep(abs(p[1]-P),2), spi)
-      names(stats) <- c("Dxy","C (ROC)", 
+      names(stats) <- c("Dxy","C (ROC)",
                         "R2","D","D:Chi-sq","D:p","U","U:Chi-sq","U:p","Q",
                         "Brier","Intercept","Slope","Emax","Eavg",
                         "S:z", "S:p")
       return(stats)
     }
-  
+
   i <- !is.infinite(logit)
   nm <- sum(!i)
   if(nm>0) warning(paste(nm,
@@ -103,11 +103,11 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   lt <- f$coef[1] + f$coef[2] * qlogis(predprob)
   calp <- plogis(lt)
   emax <- max(abs(predprob-calp))
-  
+
   Sm <- lowess(p, y, iter=0)
   cal.smooth <- approx(Sm, xout=p, ties=mean)$y
   eavg <- mean(abs(p - cal.smooth))
-  
+
   if(pl)
     {
       plot(.5,.5,xlim=lim, ylim=lim, type="n", xlab=xlab, ylab=ylab)
@@ -121,7 +121,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
       if(smooth)
         {
           if(connect.smooth)
-            { 
+            {
               lines(Sm, lty=3)
               lt <- c(lt, 3)
               marks <- c(marks, -1)
@@ -164,7 +164,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   spi <- unname(Spi(p, y))
   stats <- c(Dxy, C, R2, D, lr, p.lr, U, U.chisq, p.U, Q, B, f$coef, emax,
              spi)
-  names(stats) <- c("Dxy","C (ROC)", 
+  names(stats) <- c("Dxy","C (ROC)",
                     "R2","D","D:Chi-sq","D:p","U","U:Chi-sq","U:p","Q",
                     "Brier","Intercept","Slope","Emax","S:z","S:p")
   stats <- c(stats, c(Eavg=eavg))
@@ -212,7 +212,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
           f <- lim[1] + .15 * diff(lim) * f/max(f)
           segments(bins, 0, bins, f)
         }
-    }	
+    }
   stats
 }
 
@@ -223,7 +223,7 @@ val.probg <- function(p, y, group, evaluate=100, weights, normwt, nmin)
   ng <- length(lg <- levels(group))
   if(ng==1) {ng <- 0; lg <- character(0)}
   stats <- matrix(NA, nrow=ng+1, ncol=12,
-				  dimnames=list(nn <- c(lg,'Overall'), 
+				  dimnames=list(nn <- c(lg,'Overall'),
 					c('n','Pavg','Obs','ChiSq','ChiSq2','Eavg',
 					  'Eavg/P90','Med OR','C','B','B ChiSq','B cal')))
   curves <- vector('list',ng+1)
@@ -241,10 +241,10 @@ val.probg <- function(p, y, group, evaluate=100, weights, normwt, nmin)
       limits[i,] <- lims
       n <- sum(wt)
       n1 <- sum(wt[Y == 1])
-      c.index <- (mean(wtd.rank(P, wt, na.rm=FALSE, normwt=FALSE)[Y == 1]) - 
+      c.index <- (mean(wtd.rank(P, wt, na.rm=FALSE, normwt=FALSE)[Y == 1]) -
                   (n1 + 1)/2)/(n - n1)
       ## c.index <- somers2(P, Y, wt, normwt=FALSE, na.rm=FALSE)['C']
-      sm <- wtd.loess.noiter(P, Y, wt, na.rm=FALSE, type='all')  
+      sm <- wtd.loess.noiter(P, Y, wt, na.rm=FALSE, type='all')
       ##all -> return all points
       curve <- if(length(sm$x) > evaluate)
         approx(sm, xout=seq(min(P), max(P), length=evaluate), ties=mean) else
@@ -267,7 +267,7 @@ val.probg <- function(p, y, group, evaluate=100, weights, normwt, nmin)
       Vb   <- sum(wt * ((1 - 2 * P)^2) * P * (1 - P))/n/n
       bchisq <- (b - E0b)^2 / Vb
       b.cal  <- sum(wt * ((cal.smooth - Y)^2))/n
-      
+
       pred  <- sum(wt * P)/n
       obs   <- sum(wt * Y)/n
       L <- ifelse(P==0 | P==1, NA, qlogis(P))
@@ -285,7 +285,7 @@ val.probg <- function(p, y, group, evaluate=100, weights, normwt, nmin)
       stats[i,] <- c(n, pred, obs, chisq, chisq2, eavg, eavg/p90, or, c.index,
                      b, bchisq, b.cal)
     }
-  structure(list(stats=stats, cal.curves=curves, quantiles=limits), 
+  structure(list(stats=stats, cal.curves=curves, quantiles=limits),
 			class='val.prob')
 }
 
@@ -297,10 +297,10 @@ print.val.prob <- function(x, ...)
   invisible()
 }
 
-plot.val.prob <- function(x, 
-						  xlab="Predicted Probability", 
+plot.val.prob <- function(x,
+						  xlab="Predicted Probability",
 						  ylab="Actual Probability",
-						  lim=c(0,1), statloc=lim, stats=1:12, cex=.5, 
+						  lim=c(0,1), statloc=lim, stats=1:12, cex=.5,
 						  lwd.overall=4, quantiles=c(0.05,0.95),
 						  flag=function(stats) ifelse(
 						   stats[,'ChiSq2'] > qchisq(.99,2) |
@@ -311,7 +311,7 @@ plot.val.prob <- function(x,
   lwd[dimnames(stats)[[1]]=='Overall'] <- lwd.overall
   curves <- x$cal.curves
 
-  labcurve(curves, pl=TRUE, xlim=lim, ylim=lim, 
+  labcurve(curves, pl=TRUE, xlim=lim, ylim=lim,
 		   xlab=xlab, ylab=ylab, cex=cex, lwd=lwd, ...)
   abline(a=0,b=1,lty=2)
   if(is.logical(statloc) && !statloc) return(invisible())
@@ -333,7 +333,7 @@ plot.val.prob <- function(x,
     {
       column.text <- if(i==0) c('Group',
                           paste(flag(stats),dimnames(stats)[[1]],sep='')) else
-	  c(dimnames(stats)[[2]][i], 
+	  c(dimnames(stats)[[2]][i],
 		format(round(stats[,i], if(i %in% c(4:5,11))1 else 3)))
       cat(column.text, '\n')
       text(xx, y, paste(column.text, collapse='\n'), adj=0, cex=cex)

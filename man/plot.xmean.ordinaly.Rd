@@ -7,10 +7,10 @@ Plot Mean X vs. Ordinal Y
 Separately for each predictor variable \eqn{X} in a formula, plots the mean of
 \eqn{X} vs. levels of \eqn{Y}.  Then under the proportional odds assumption,
 the expected value of the predictor for each \eqn{Y} value is also plotted (as
-a dotted line).  This plot is useful for assessing the ordinality assumption 
+a dotted line).  This plot is useful for assessing the ordinality assumption
 for \eqn{Y} separately for each \eqn{X}, and for assessing the proportional odds
 assumption in a simple univariable way.  If several predictors do not
-distinguish adjacent categories of \eqn{Y}, those levels may need to be 
+distinguish adjacent categories of \eqn{Y}, those levels may need to be
 pooled.  This display assumes
 that each predictor is linearly related to the log odds of each event in
 the proportional odds model.  There is also an option to plot the

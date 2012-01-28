@@ -20,7 +20,7 @@ print.pphsm <- function(x, digits = max(options()$digits - 4, 3),
 {
   if (length(f <- x$fail) && f)
       stop(" Survreg failed.  No summary provided")
-  
+
   cat("Parametric Survival Model Converted to PH Form\n\n")
 
   stats <- x$stats
@@ -46,7 +46,7 @@ print.pphsm <- function(x, digits = max(options()$digits - 4, 3),
         }
     }
   cat("\n")
-  
+
   invisible()
 }
 

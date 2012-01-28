@@ -2,21 +2,21 @@ which.influence <- function(fit, cutoff=.2)
 {
   cox <- inherits(fit,"cph") || (length(fit$fitFunction) &&
                                  any(fit$fitFunction=='cph'))
-  
+
   stats <- resid(fit, "dfbetas")
   rnam  <- which(!is.na(stats[,1]))
   stats <- stats[rnam,,drop=FALSE]   ##delete rows added back due to NAs
   d <- dimnames(stats)[[1]]
   if(length(d)) rnam <- d
-  
+
   at <- fit$Design
-  
+
   w <- list()
   namw <- NULL
   k <- 0
   oldopt <- options(warn=-1)
   on.exit(options(oldopt))
-  
+
   if(!cox)
     {
       ww <- rnam[abs(stats[,1])>=cutoff]
@@ -27,7 +27,7 @@ which.influence <- function(fit, cutoff=.2)
           namw <- "Intercept"
         }
     }
-  
+
   Assign <- fit$assign
   nm <- names(Assign)[1]
   if(nm=="Intercept" | nm=="(Intercept)") Assign[[1]] <- NULL
@@ -54,7 +54,7 @@ which.influence <- function(fit, cutoff=.2)
         }
      }
   if(length(w))names(w) <- namw
-  
+
   w
 }
 

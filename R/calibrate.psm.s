@@ -16,7 +16,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
         cmethod <- 'KM'
       }
     }
-  
+
   if(!length(fit$y)) stop("fit did not store y")
   oldopt <- options(digits=3)
   on.exit(options(oldopt))
@@ -47,7 +47,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
   inverse <- survreg.distributions[[dist]]$itrans
   if(!length(inverse)) inverse <- function(x) x
   parms <- fit$parms
-  
+
   distance <- function(x, y, fit, iter, u, fit.orig, what="observed", inverse,
                        pred, orig.cuts, maxdim, ...)
     {
@@ -60,7 +60,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
       ##Assumes x really= x * beta
       if(length(orig.cuts))
         {
-          pred.obs <- 
+          pred.obs <-
             groupkm(psurv, Surv(inverse(y[,1]), y[,2]), u=u, cuts=orig.cuts)
           dist <- if(what=="observed") pred.obs[,"KM"]
           else                         pred.obs[,"KM"] - pred.obs[,"x"]
@@ -73,7 +73,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
           dist <- if(what=='observed') pred.obs$actualseq
           else                         pred.obs$actualseq - pred
         }
-      
+
       if(iter==0) storeTemp(pred.obs)
       dist
     }
@@ -87,13 +87,13 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
   opt  <- 0
   nrel <- 0
   B    <- 0
-  
+
   for(i in 1:overall.reps)
     {
       reliability <-
         predab.resample(fit, method=method,
                         fit=survreg.fit2, measure=distance,
-                        pr=pr, B=b, bw=bw, rule=rule, type=type,  
+                        pr=pr, B=b, bw=bw, rule=rule, type=type,
                         u=u, m=m, what=what,
                         dist=dist, inverse=inverse, parms=parms,
                         fixed=fixed, family=family,
@@ -105,7 +105,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
       rel <- rel + n * reliability[,"index.corrected"]
       opt <- opt + n * reliability[,"optimism"]
       nrel <- nrel + n
-      B <- B + max(n)	
+      B <- B + max(n)
       if(pr) print(reliability)
     }
 
@@ -129,7 +129,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
                       rel,mean.predicted=pred, KM=KM,
                       KM.corrected=obs.corrected, std.err=se),
                 predicted=survival, kept=kept,
-                class="calibrate", u=u, units=unit, n=ny[1], d=nevents, 
+                class="calibrate", u=u, units=unit, n=ny[1], d=nevents,
                 p=length(fit$coefficients)-1, m=m, B=B, what=what, call=call)
     }
   else
@@ -142,7 +142,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
                       rel, calibrated=calibrated,
                       calibrated.corrected=calibrated.corrected),
                 predicted=survival, kept=kept,
-                class="calibrate", u=u, units=unit, n=ny[1], d=nevents, 
+                class="calibrate", u=u, units=unit, n=ny[1], d=nevents,
                 p=length(fit$coefficients)-1, m=m, B=B, what=what, call=call)
     }
 }

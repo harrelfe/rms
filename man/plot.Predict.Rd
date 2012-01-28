@@ -34,7 +34,7 @@
 \usage{
 \method{plot}{Predict}(x, formula, groups=NULL,
      cond=NULL, varypred=FALSE, subset,
-     xlim, ylim, xlab, ylab, 
+     xlim, ylim, xlab, ylab,
      data=NULL, subdata, col.fill=gray(seq(.95, .75, length=5)),
      adj.subtitle, cex.adj, cex.axis, perim=NULL, digits=4, nlevels=3,
      nlines=FALSE, addpanel, scat1d.opts=list(frac=0.025, lwd=0.3), ...)
@@ -73,7 +73,7 @@ pantext(object, x, y, cex=.5, adj=0, fontfamily="Courier", lattice=TRUE)
 This parameter is seldom used, as limits are usually controlled with
 \code{Predict}.  One reason to use \code{xlim} is to plot a
 \code{factor} variable on the x-axis that was created with the \code{cut2} function
-with the \code{levels.mean} option, with \code{val.lev=TRUE} specified to \code{plot.Predict}. 
+with the \code{levels.mean} option, with \code{val.lev=TRUE} specified to \code{plot.Predict}.
 In this case you may want the axis to
 have the range of the original variable values given to \code{cut2} rather
 than the range of the means within quantile groups.
@@ -154,7 +154,7 @@ default is 4 significant digits.
 \item{scat1d.opts}{a list containing named elements that specifies
   parameters to \code{\link{scat1d}} when \code{data} is given.  The
   \code{col} parameter is usually derived from other plotting
-  information and not specified by the user.} 
+  information and not specified by the user.}
 \item{\dots}{
   extra arguments to pass to \code{xYplot} or \code{Dotplot}.  Some
   useful ones are \code{label.curves} and \code{abline}.
@@ -164,7 +164,7 @@ default is 4 significant digits.
   curves are most separated, labeling each curve with the full curve label.
   Set \code{label.curves} to a \code{list} to specify options to
   \code{labcurve}, e.g., \code{label.curves=} \code{list(method="arrow",
-	cex=.8)}. 
+	cex=.8)}.
   These option names may be abbreviated in the usual way arguments
   are abbreviated.  Use for example \code{label.curves=list(keys=letters[1:5])}
   to draw single lower case letters on 5 curves where they are most
@@ -208,7 +208,7 @@ f.harrell@vanderbilt.edu
   \code{\link{Predict}}, \code{\link{rbind.Predict}},
   \code{\link{datadist}}, \code{\link{predictrms}}, \code{\link{anova.rms}},
   \code{\link{contrast.rms}}, \code{\link{summary.rms}},
-  \code{\link{rms}}, \code{\link{rmsMisc}}, 
+  \code{\link{rms}}, \code{\link{rmsMisc}},
   \code{\link[Hmisc]{labcurve}}, \code{\link[Hmisc]{scat1d}},
   \code{\link[Hmisc]{xYplot}}, \code{\link[Hmisc]{Overview}}
 }
@@ -300,7 +300,7 @@ n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)
 label(age) <- "Age"
-sex <- factor(sample(c('Male','Female'), n, 
+sex <- factor(sample(c('Male','Female'), n,
               rep=TRUE, prob=c(.6, .4)))
 cens <- 15*runif(n)
 h <- .02*exp(.04*(age-50)+.8*(sex=='Female'))
@@ -365,7 +365,7 @@ options(datadist=NULL)
 # the democratic party is plotted against the percent of voters
 # who graduated from college.  Data are county-level percents.
 
-incomes <- seq(22900, 32800, length=4)  
+incomes <- seq(22900, 32800, length=4)
 # equally spaced to outer quintiles
 p <- Predict(f, college, income=incomes, conf.int=FALSE)
 plot(p, xlim=c(0,35), ylim=c(30,55))

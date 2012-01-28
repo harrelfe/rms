@@ -10,7 +10,7 @@
   a1 <- attributes(x1)
   a2 <- attributes(x2)
   nam <- as.character(sys.call())[-1]
-  
+
   redo <- function(x,nam)
     {
       if(is.null(attr(x,"assume.code")))
@@ -23,7 +23,7 @@
         }
       ass <- attr(x,"assume.code")
       nam <- attr(x,"name")
-      
+
       if(ass==5)
         {
           colnames <- attr(x,"colnames")
@@ -53,7 +53,7 @@
                 len <- ncol(x)
               }
           }
-      
+
       attr(x,"colnames") <- colnames
       attr(x,"len") <- len
       if(ass==8) attr(x,"nonlinear") <- rep(FALSE, len)
@@ -73,15 +73,15 @@
 
   l1 <- a1$len
   l2 <- a2$len
-  if(any(nl1) & any(nl2))	nc <- l1+l2-1   
+  if(any(nl1) & any(nl2))	nc <- l1+l2-1
   else nc <- l1*l2
-  if(is.matrix(x1)) nr <- nrow(x1) 
+  if(is.matrix(x1)) nr <- nrow(x1)
   else nr <- length(x1)
   x <- matrix(single(1),nrow=nr,ncol=nc)
   name <- character(nc)
   parms <- matrix(integer(1),nrow=2,ncol=nc+1)
   nonlinear <- logical(nc)
-  
+
   k <- 0
   if(!is.factor(x1)) x1 <- as.matrix(x1)
   if(!is.factor(x2)) x2 <- as.matrix(x2)

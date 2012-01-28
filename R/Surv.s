@@ -5,8 +5,8 @@ Surv <- function(time, time2, event,
   nam  <- as.character(sys.call())[-1]
   mtype <- missing(type)
   type <- match.arg(type)
- 
-  
+
+
   ng  <- (!missing(time)) + (!missing(time2)) + (!missing(event))
   if (missing(type))
     {
@@ -39,7 +39,7 @@ Surv <- function(time, time2, event,
   if(!missing(event)) g$event <- event
   if(!mtype)          g$type  <- type
   if(!missing(origin)) g$origin <- origin
-  
+
   surv <- survival:::Surv
   ss <- do.call('surv', g)
 

@@ -21,7 +21,7 @@ the results, and \code{plot.summary.rms}
 plots shaded confidence bars to display the results graphically.
 The longest confidence bar on each page is labeled with confidence levels
 (unless this bar has been ignored due to \code{clip}).  By default, the
-following confidence levels are all shown: .7, .8, .9, .95, and .99, using 
+following confidence levels are all shown: .7, .8, .9, .95, and .99, using
 levels of gray scale (colors for Windows).
 }
 \usage{
@@ -45,7 +45,7 @@ the result of \code{summary}.
 }
 \item{\dots}{
 For \code{summary}, omit list of variables to estimate effects for all
-predictors. Use a list 
+predictors. Use a list
 of variables of the form \code{age, sex} to estimate using default
 ranges. Specify \code{age=50} for example to adjust age to 50 when testing
 other factors (this will only matter for factors that interact with age).
@@ -57,7 +57,7 @@ example, if \code{treat} has levels \code{"a", "b"} and \code{"c"} and \code{tre
 is given to \code{summary}, treatment \code{a} will be compared to \code{b}
 and \code{c} will be compared to \code{b}. Treatment \code{b} will be used when estimating
 the effect of other factors. Category variables can have category labels
-listed (in quotes), or an unquoted number that is a legal level, if all levels 
+listed (in quotes), or an unquoted number that is a legal level, if all levels
 are numeric.  You need only use the first few
 letters of each variable name - enough for unique identification.
 For variables not defined with \code{datadist}, you must specify 3 values, none
@@ -105,7 +105,7 @@ vector of coordinates at which to put tick mark labels on the main axis.  If
 }
 \item{log}{
 Set to \code{TRUE} to plot on \eqn{X\beta}{X beta} scale but labeled with
-anti-logs. 
+anti-logs.
 }
 \item{q}{scalar or vector of confidence coefficients to depict}
 \item{xlim}{
@@ -137,7 +137,7 @@ confidence limits outside the interval \code{c(clip[1], clip[2])} will be
 ignored, and \code{clip} also be respected when computing \code{xlim}
 when \code{xlim} is not specified.  \code{clip} should be in the units of
 \code{fun(x)}.  If \code{log=TRUE}, \code{clip} should be in \eqn{X\beta}{X
-  beta} units. 
+  beta} units.
 }
 \item{main}{
 main title.  Default is inferred from the model and value of \code{log},
@@ -145,7 +145,7 @@ e.g., \code{"log Odds Ratio"}.
 }
 }
 \value{
-For \code{summary.rms}, a matrix of class \code{summary.rms} 
+For \code{summary.rms}, a matrix of class \code{summary.rms}
 with rows corresponding to factors in
 the model and columns containing the low and high values for the effects,
 the range for the effects, the effect point estimates (difference in
@@ -208,7 +208,7 @@ latex(s, file="")                # Just write LaTeX code to screen
 summary(fit, sex='male', age=60) # Specify ref. cell and adjustment val
 summary(fit, age=c(50,70))       # Estimate effect of increasing age from
                                  # 50 to 70
-s <- summary(fit, age=c(50,60,70)) 
+s <- summary(fit, age=c(50,60,70))
                                  # Increase age from 50 to 70, adjust to
                                  # 60 when estimating effects of other factors
 #Could have omitted datadist if specified 3 values for all non-categorical

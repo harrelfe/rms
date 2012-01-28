@@ -24,7 +24,7 @@ squared difference in \code{p} and \code{y}), \code{Intercept}, and
 \code{Slope}, \eqn{E_{max}}=maximum absolute difference in predicted
 and calibrated probabilities, the Spiegelhalter \eqn{Z}-test for
 calibration accuracy, and its two-tailed \eqn{P}-value.  If
-\code{pl=TRUE}, plots fitted logistic 
+\code{pl=TRUE}, plots fitted logistic
 calibration curve and optionally a smooth nonparametric fit using
 \code{lowess(p,y,iter=0)} and grouped proportions vs.  mean predicted
 probability in group.  If the predicted probabilities or logits are
@@ -77,20 +77,20 @@ parameters apply to the \code{plot} method but not to \code{val.prob}:
 \code{xlab}, \code{ylab}, \code{lim}, \code{statloc}, \code{cex}.
 }
 \usage{
-val.prob(p, y, logit, group, weights=rep(1,length(y)), normwt=FALSE, 
+val.prob(p, y, logit, group, weights=rep(1,length(y)), normwt=FALSE,
          pl=TRUE, smooth=TRUE, logistic.cal=TRUE,
          xlab="Predicted Probability", ylab="Actual Probability",
          lim=c(0, 1), m, g, cuts, emax.lim=c(0,1),
-         legendloc=lim[1] + c(0.55 * diff(lim), 0.27 * diff(lim)), 
+         legendloc=lim[1] + c(0.55 * diff(lim), 0.27 * diff(lim)),
          statloc=c(0,0.99), riskdist="calibrated", cex=.7, mkh=.02,
-         connect.group=FALSE, connect.smooth=TRUE, g.group=4, 
+         connect.group=FALSE, connect.smooth=TRUE, g.group=4,
          evaluate=100, nmin=0)
 
 \method{print}{val.prob}(x, \dots)
 
-\method{plot}{val.prob}(x, xlab="Predicted Probability", 
+\method{plot}{val.prob}(x, xlab="Predicted Probability",
      ylab="Actual Probability",
-     lim=c(0,1), statloc=lim, stats=1:12, cex=.5, 
+     lim=c(0,1), statloc=lim, stats=1:12, cex=.5,
      lwd.overall=4, quantiles=c(.05,.95), flag, \dots)
 }
 \arguments{
@@ -132,7 +132,7 @@ y-axis label, default is \code{"Actual Probability"} for
 \code{val.prob}.
 }
 \item{lim}{
-limits for both x and y axes  
+limits for both x and y axes
 }
 \item{m}{
 If grouped proportions are desired, average no. observations per group
@@ -158,7 +158,7 @@ of legend for curves and points.  Default is \code{c(.55, .27)} scaled to
 will be added to plot, using
 \code{statloc} as the upper left corner of a box (default is \code{c(0,.9)}).
 You can specify a list or a vector.  Use \code{locator(1)}
-for the mouse, \code{FALSE} to suppress statistics.  
+for the mouse, \code{FALSE} to suppress statistics.
 This is plotted after the curve legends.
 }
 \item{riskdist}{
@@ -225,7 +225,7 @@ By default the 0.05 and 0.95 quantiles are indicated.
 a function of the matrix of statistics (rows representing groups)
 returning a vector of character strings (one value for each group, including
 "Overall").  \code{plot.val.prob} will print this vector of character
-values to the left of the statistics.  The \code{flag} function 
+values to the left of the statistics.  The \code{flag} function
 can refer to columns of the matrix used as input to the function by
 their names given in the description above.  The default function
 returns \code{"*"} if either \code{ChiSq2} or \code{B ChiSq} is
@@ -239,7 +239,7 @@ elements: \code{Dxy}, \code{R2}, \code{D}, \code{D:Chi-sq}, \code{D:p},
      \code{Intercept}, \code{Slope}, \code{S:z}, \code{S:p}, \code{Emax}.
 When \code{group} is present \code{val.prob} returns an object of class
 \code{val.prob} containing a list with summary statistics and calibration
-curves for all the strata plus \code{"Overall"}.  
+curves for all the strata plus \code{"Overall"}.
 }
 \details{
 The 2 d.f. \eqn{\chi^2}{chi-square} test and \code{Med OR} exclude predicted or
@@ -296,9 +296,9 @@ models-A new proposal:The coefficient of discrimination.  Am Statist
 \code{\link[Hmisc]{wtd.stats}}, \code{\link[Hmisc]{scat1d}}
 }
 \examples{
-# Fit logistic model on 100 observations simulated from the actual 
+# Fit logistic model on 100 observations simulated from the actual
 # model given by Prob(Y=1 given X1, X2, X3) = 1/(1+exp[-(-1 + 2X1)]),
-# where X1 is a random uniform [0,1] variable.  Hence X2 and X3 are 
+# where X1 is a random uniform [0,1] variable.  Hence X2 and X3 are
 # irrelevant.  After fitting a linear additive model in X1, X2,
 # and X3, the coefficients are used to predict Prob(Y=1) on a
 # separate sample of 100 observations.  Note that data splitting is
@@ -334,7 +334,7 @@ plot(v, flag=function(stats) ifelse(
 # mis-calibration at the 0.05 level instead of the default, 0.01
 
 
-plot(val.prob(phat, y[101:200], group=x1[101:200], g.group=2), 
+plot(val.prob(phat, y[101:200], group=x1[101:200], g.group=2),
               col=1:3) # 3 colors (1 for overall)
 
 

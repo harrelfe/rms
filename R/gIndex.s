@@ -12,7 +12,7 @@ gIndex <-
                      'Anti-log',
                      deparse(substitute(postfun))) else character(0),
            ...)
-{	
+{
   obj.name <- as.character(sys.call())[2]
   type <- match.arg(type)
   labels <- attr(object, 'Design')$label
@@ -31,7 +31,7 @@ gIndex <-
       for(i in 1:p)
         {
           gmd   <- GiniMd(terms[,i], na.rm=TRUE)
-          g[i,] <- c(gmd, if(length(postfun)) postfun(gmd)) 
+          g[i,] <- c(gmd, if(length(postfun)) postfun(gmd))
         }
     }
 
@@ -57,7 +57,7 @@ print.gIndex <-
 {
   vnames <- match.arg(vnames)
   at <- attributes(x)
-  
+
   if(vnames == 'labels')
     {
       lab <- at$labels[rownames(x)]
@@ -96,7 +96,7 @@ plot.gIndex <- function(x, what=c('pre', 'post'),
       dotchart2(x, xlab=xlab, pch=pch, ...)
       invisible(x)
   }
-                          
+
 
 ## David HA (1968): Gini's mean difference rediscovered.  Biometrika 55 No. 3
 ## p. 573-575

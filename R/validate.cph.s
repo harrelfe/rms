@@ -6,12 +6,12 @@ validate.cph <- function(fit, method="boot",
   atr <- fit$Design
 
   need.surv <- dxy & any(atr$assume.code==8)
-  
+
   if(need.surv & missing(u))
     stop("Presence of strata -> survival estimates needed for dxy; u omitted")
-  
+
   modtype <- fit$method
-  
+
   discrim <- function(x, y, strata, fit, iter, evalfit=FALSE, dxy=FALSE,
                       need.surv=FALSE, u, modtype, pr=FALSE, ...)
     {
@@ -63,7 +63,7 @@ validate.cph <- function(fit, method="boot",
               g <- GiniMd(slope*x)
             }
         }
-      
+
       Q <- D - U
       z   <- c(R2,  slope,    D,  U,   Q,   g)
       nam <- c("R2","Slope", "D", "U", "Q", "g")
@@ -82,16 +82,16 @@ validate.cph <- function(fit, method="boot",
       names(z) <- nam
       z
     }
-  
+
   cox.fit <- function(x, y, strata, u, need.surv=FALSE, modtype, tol=1e-9,
                       ...)
     {
       if(!length(x))
         return(list(fail=FALSE,coefficients=numeric(0)))
-      
+
       if(!need.surv)
         u <- 0
-      
+
       ##	coxph(x,y,e,pr=F,surv=need.surv)
       if(!need.surv)
         {
@@ -99,12 +99,12 @@ validate.cph <- function(fit, method="boot",
           storage.mode(x) <- "double"
           x <- as.matrix(x)
           dimnames(x) <- list(as.character(1:nrow(x)),as.character(1:ncol(x)))
-          
+
           f <- coxphFit(x=x, y=y, strata=strata, iter.max=10, eps=.0001,
                         method=modtype, toler.chol=tol, type=type)
-          
+
           if(f$fail) return(f)
-          
+
           if(any(is.na(f$coef)))
             {
               cat('Singularity in coxph.fit. Coefficients:\n'); print(f$coef)
@@ -122,7 +122,7 @@ validate.cph <- function(fit, method="boot",
       ##Don't fool fastbw called from predab.resample
       f
     }
-  
+
   predab.resample(fit, method=method, fit=cox.fit, measure=discrim,
                   pr=pr, B=B, bw=bw, rule=rule, type=type, sls=sls,
                   aics=aics, force=force, dxy=dxy, u=u, need.surv=need.surv,
