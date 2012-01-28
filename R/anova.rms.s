@@ -1,7 +1,7 @@
 #main.effect=F to suppress printing main effects when the factor in
 #question is involved in any interaction.
 
-anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9, 
+anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
                       test=c('F','Chisq'),
                       india=TRUE, indnl=TRUE, ss=TRUE)
 {
@@ -21,7 +21,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
 
   if(misstest) test <- if(is.ols) 'F' else 'Chisq'
   if(!is.ols && test=='F') stop('F-test not allowed for this type of model')
-  
+
   if(!is.ols) ss <- FALSE
 
   at <- object$Design
@@ -33,7 +33,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
 
   ia <- at$interactions
   nia <- if(!length(ia)) 0 else ncol(ia)
-  
+
   assume <- at$assume.code
   parms <- at$parms
   f <- length(assume)
@@ -73,9 +73,9 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   nrp <- num.intercepts(object)
   if(itype==2 & nrp!=0)
     stop("fit score statistics and x are incompatible")
-  
+
   nc <- length(coef)
-  
+
   cov <- vcov(object, regcoef.only=TRUE)  #Omit row/col for scale parameters
 
   stats <- NULL
@@ -88,19 +88,19 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   num.ia <- 0
   num.nonlin <- 0
   issue.warn <- FALSE
-  
+
   for(i in which)
     {
       j <- assume[i]
       parmi <- parms[[name[i]]]
       low.fact <- if(j!=9) i else (parmi[,1])[parmi[,1]>0]
-    
+
     nl <- if(!length(names(at$nonlinear))) at$nonlinear[[i]]
     else at$nonlinear[[name[i]]]
-    
+
     if(!length(nl))
       nl <- rep(FALSE,length(assign[[name[i]]]))
-    
+
     ## Factor no. according to model matrix is 1 + number of non-strata factors
     ## before this factor
     if(j!=8)
@@ -155,20 +155,20 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
                           nonlin.ia.index <- c(nonlin.ia.index,
                                                idx[parmk[m[jj],-1]==1])
                         }
-                    
+
                     nonlin.ia.index <- if(length(nonlin.ia.index))
                       unique(nonlin.ia.index)
                     else NULL
                     ##Highest order can be counted twice
                   }
               }
-            
+
             idx <- c(main.index,ia.index)
             all.slopes[idx] <- TRUE
             w <- ava(idx,coef,cov,tol=tol)
             s <- s+1; W[[s]] <- idx
             stats <- rbind(stats,w)
-            lab <- c(lab, paste(name[i], 
+            lab <- c(lab, paste(name[i],
                                 " (Factor+Higher Order Factors)"))
 
             ## If factor i in >1 interaction, print summary
@@ -194,7 +194,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
               lab <- c(lab, if(!length(nonlin.ia.index))" Nonlinear"
               else " Nonlinear (Factor+Higher Order Factors)")
             }
-        } 
+        }
         ## If interaction factor involves a non-linear term from an
         ## expanded polynomial, lspline, rcspline, or scored factor,
         ## do tests to see if a simplification (linear interaction) is
@@ -205,7 +205,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
             all.ia[main.index] <- TRUE
             if(parmi[3,1]>0)
               issue.warn <- TRUE
-        
+
             if(parmi[3,1]==0 && ncol(parmi)>1)
               {
                 nonlin.x <- as.logical(parmi[1,2:ncol(parmi)])
@@ -214,7 +214,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
                 nonlin.xandy <- nonlin.x & nonlin.y
                 idx <- main.index[nonlin.xy]
                 li <- length(idx)
-                
+
                 if(li > 0)
                   {
                     num.nonlin <- num.nonlin+1
@@ -229,7 +229,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
                       }
                     idx <- main.index[nonlin.xandy]
                     li <- length(idx)
-                    
+
                     if(indnl && li > 0)
                       {
                         w <- ava(idx,coef,cov,tol=tol)
@@ -253,7 +253,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
 
                     idx <- main.index[nonlin.y]
                     li <- length(idx)
-                    
+
                     if(indnl && (li > 0 & any(nonlin.y != nonlin.xy)))
                       {
                         w <- ava(idx,coef,cov,tol=tol)
@@ -263,7 +263,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
                         lab<-c(lab,paste(" Nonlinear Interaction in",
                                          name[parmi[2,1]],"vs. Bg(A)"))
                       }
-                    
+
                   }
               }
           }
@@ -316,9 +316,9 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   s <- s+1; W[[s]] <- idx
   stats <- rbind(stats,w)
   lab <- c(lab,"TOTAL")
-  
+
   statnam <- c('Chi-Square','d.f.')
-  
+
   if(is.ols)
     {
       sigma2 <- object$stats['Sigma']^2
@@ -327,7 +327,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
 
   if(ss)
     {
-      stats <- cbind(stats[,2], stats[,1]*sigma2, stats[,1]*sigma2/stats[,2], 
+      stats <- cbind(stats[,2], stats[,1]*sigma2, stats[,1]*sigma2/stats[,2],
                      stats[,1])
       statnam <- c('d.f.','Partial SS','MS','Chi-Square')
       stats <- rbind(stats, Error=c(dfe, sigma2*dfe, sigma2, NA))
@@ -359,9 +359,9 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   attr(stats,"coef.names") <- names(coef)
   attr(stats,"non.slopes") <- nrp
 
-  if(issue.warn) 
+  if(issue.warn)
     warning("tests of nonlinear interaction with respect to single component \nvariables ignore 3-way interactions")
-  
+
   stats
 }
 
@@ -371,11 +371,11 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 {
   stats <- x
   digits <- c('Chi-Square'=2, F=2, 'd.f.'=0, 'Partial SS'=15, MS=15, P=4)
-  cstats <- matrix('', nrow=nrow(stats), ncol=ncol(stats), 
+  cstats <- matrix('', nrow=nrow(stats), ncol=ncol(stats),
                    dimnames=dimnames(stats))
-  
+
   which <- match.arg(which)
-  
+
   do.which <- which!='none' && length(W <- attr(stats,'which'))
 
   if(do.which)
@@ -388,20 +388,20 @@ print.anova.rms <- function(x, which=c('none','subscripts',
             ranges <- character(n)
             m <- 0
             s <- x
-            
+
             while(length(s) > 0)
               {
                 j <- s == s[1] + (1:length(s))-1
                 m <- m+1
                 ranges[m] <- if(sum(j)>1) paste(range(s[j]),collapse='-')
                 else s[1]
-                
+
                 s <- s[!j]
               }
 
             ranges[1:m]
           }
-  
+
       k <- length(W)
       w <- character(k)
       coef.names <- attr(stats,'coef.names')
@@ -427,10 +427,10 @@ print.anova.rms <- function(x, which=c('none','subscripts',
     }
 
   sn <- dimnames(cstats)[[2]]
-  
+
   for(j in 1:ncol(cstats))
     cstats[,j] <- format(round(stats[,j], digits[sn[j]]))
-  
+
   cstats[is.na(stats)] <- ''
   j <- sn=='P'
   cstats[stats[,j] < 0.00005,j] <- '<.0001'
@@ -442,17 +442,17 @@ print.anova.rms <- function(x, which=c('none','subscripts',
   heading <- paste("                ",
                    if(any(dimnames(stats)[[2]]=='F'))"Analysis of Variance"
                    else "Wald Statistics",
-                   "          Response: ", 
+                   "          Response: ",
                    as.character(attr(stats, "formula")[2]), sep = "")
-  
+
   cat(heading,"\n\n")
   if(any(sn=='MS'))
     cstats[cstats[,1]=='TOTAL',1] <- 'REGRESSION'
-  
+
   if(do.which) cstats <- cbind(cstats, Tested=w)
-  
+
   print(cstats,quote=FALSE)
-  
+
   if(do.which && which!='names')
     {
       cat('\nSubscripts correspond to:\n')
@@ -460,8 +460,8 @@ print.anova.rms <- function(x, which=c('none','subscripts',
       else coef.names,
             quote=FALSE)
     }
-  
-  if(!any(sn=='MS') && length(dfe <- attr(stats,'df.residual'))) 
+
+  if(!any(sn=='MS') && length(dfe <- attr(stats,'df.residual')))
     cat('\nError d.f.:', dfe, '\n')
 
   invisible()
@@ -473,7 +473,7 @@ latex.anova.rms <-
            paste('anova',attr(object,'obj.name'),sep='.')
            else
            paste("ano",substring(first.word(attr(object,"obj.name")),
-                                 1,5),sep=""), 
+                                 1,5),sep=""),
            psmall=TRUE,
            dec.chisq=2, dec.F=2, dec.ss=NA,
            dec.ms=NA, dec.P=4, table.env=TRUE, caption=NULL, ...)
@@ -482,7 +482,7 @@ latex.anova.rms <-
 
   ## Translate interaction symbol (*) to times symbol
   rowl <- sedit(rowl, "*", "$\\times$", wild.literal=TRUE)
-  
+
   ## Put TOTAL rows in boldface
   rowl <- ifelse(substring(rowl,1,5) %in% c("TOTAL","ERROR"),
                  paste("{\\bf",rowl,"}"),rowl)
@@ -492,10 +492,10 @@ latex.anova.rms <-
                  rowl) # preserve leading blank
 
   P <- object[,3]
-  
+
   dstats <- as.data.frame(object)
   attr(dstats, 'row.names') <- rowl
-  
+
   if(psmall)
     {
       psml <- !is.na(dstats$P) & dstats$P < 0.00005
@@ -548,20 +548,20 @@ plot.anova.rms <-
                "~After Removing Variable")),
            "proportion R2"=expression(paste("Proportion of Overall",
              ~R^2)))
-    
+
   rm <- c(if(rm.totals) c("TOTAL NONLINEAR","TOTAL NONLINEAR + INTERACTION",
-                          "TOTAL INTERACTION","TOTAL"), 
+                          "TOTAL INTERACTION","TOTAL"),
           " Nonlinear"," All Interactions", "ERROR",
           " f(A,B) vs. Af(B) + Bg(A)", rm.other)
-    
+
   rn <- dimnames(x)[[1]]
   rm <- c(rm, rn[substring(rn,2,10)=="Nonlinear"])
   k <- !(rn %in% rm)
   if(rm.ia)
     k[grep("\\*", rn)] <- FALSE
-  
+
   an <- x[k,,drop=FALSE]
-    
+
   dof <- an[,'d.f.']
   P <- an[,'P']
   chisq <- if(any(dimnames(an)[[2]]=='F')) an[,'F']*dof
@@ -571,12 +571,12 @@ plot.anova.rms <-
   if(what %in% c("partial R2","remaining R2","proportion R2")) {
     if("Partial SS" %nin% dimnames(x)[[2]])
       stop('to plot R2 you must have an ols model and must not have specified ss=F to anova')
-    
+
     sse <- x['ERROR','Partial SS']
     ssr <- x['TOTAL','Partial SS']
     sst <- sse + ssr
   }
-    
+
   an <- switch(what,
                chisq=chisq,
                chisqminusdf=chisq-dof,
@@ -585,18 +585,18 @@ plot.anova.rms <-
                "partial R2" = an[,"Partial SS"]/sst,
                "remaining R2" = (ssr - an[,"Partial SS"]) / sst,
                "proportion R2" = an[,"Partial SS"] / ssr)
-  
+
   if(missing(newnames))
     newnames <- sedit(names(an),"  (Factor+Higher Order Factors)", "")
-  
+
   names(an) <- newnames
   an <- switch(sort,
                descending=-sort(-an),
                ascending=sort(an),
                none=an)
-  
+
   if(pl)
     dotchart2(an, xlab=xlab, pch=pch, ...)
-  
+
   invisible(an)
 }

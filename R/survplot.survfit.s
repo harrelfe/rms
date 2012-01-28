@@ -1,7 +1,7 @@
 survplot.survfit <-
-  function(fit, xlim, 
+  function(fit, xlim,
            ylim, xlab, ylab, time.inc,
-           conf=c("bands","bars","none"), add=FALSE, 
+           conf=c("bands","bars","none"), add=FALSE,
            label.curves=TRUE,
            abbrev.label=FALSE, levels.only=FALSE,
            lty,lwd=par('lwd'),
@@ -51,9 +51,9 @@ survplot.survfit <-
 	  else xlab <- if(units==' ') '' else paste(units,"s",sep="")
     }
 
-  if(missing(xlim)) 
+  if(missing(xlim))
 	xlim <- if(logt)logb(c(maxtime/100,maxtime)) else c(mintime,maxtime)
-  
+
   if(trans)
     {
       fit$surv <- fun(fit$surv)
@@ -101,7 +101,7 @@ survplot.survfit <-
     }
   xd <- xlim[2]-xlim[1]
   yd <- ylim[2]-ylim[1]
-  
+
   if(n.risk && !add)
     {
       mar <- par()$mar
@@ -114,7 +114,7 @@ survplot.survfit <-
 
   if(labelc || conf=='bands') curves <- vector('list',ns)
   Tim <- Srv <- list()
-  
+
   oxpd <- par('xpd')
   par(xpd=NA)
   on.exit(par(xpd=oxpd))
@@ -231,7 +231,7 @@ survplot.survfit <-
                      col=col[i])
             }
         }
-      
+
           if(n.risk)
             {
               j <- vs==i
@@ -249,13 +249,13 @@ survplot.survfit <-
                             yy, adj=0, sleva[i], cex=cex.n.risk)
             }
     }
-  
+
   if(conf=='bands') for(i in 1:ns)
     lines(curves[[i]][[1]], curves[[i]][[2]],
           lty=lty[i], lwd=lwd[i], col=col[i], type='s')
   if(labelc) labcurve(curves, sleva, type='s', lty=lty, lwd=lwd,
                       opts=label.curves, col=col)
-  
+
   invisible(slev)
 }
 
@@ -293,17 +293,17 @@ survdiffplot <-
     }
 
   if(missing(xlab)) xlab <- if(units==' ') 'Time' else paste(units,"s",sep="")
-  
+
   if(missing(xlim)) xlim <- c(mintime,maxtime)
-  
+
   if(grid) {dots <- FALSE; if(is.logical(grid)) grid <- .05}
   polyg <- ordGridFun(grid=grid)$polygon
 
   times <- sort(unique(c(fit$time, seq(mintime, maxtime, by=time.inc))))
 
-  
+
   f <- summary(fit, times=times)
-  
+
   slev <- levels(f$strata)
   ns <- length(slev)
   if(ns !=2 ) stop('must have exactly two strata')
@@ -341,7 +341,7 @@ survdiffplot <-
                labels=TRUE)
     }
   k <- !is.na(times+lo+hi)
-  
+
   switch(conf,
          shaded=polyg(c(times[k],rev(times[k])), c(lo[k],rev(hi[k])),
            col=gray(.85), type='s'),
@@ -363,7 +363,7 @@ survdiffplot <-
       nrisk      <- pmin(anr$nrisk, bnr$nrisk)
       xd         <- xlim[2] - xlim[1]
       yd         <- ylim[2] - ylim[1]
-  
+
       if(!add)
         {
           mar <- par()$mar

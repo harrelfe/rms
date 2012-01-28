@@ -22,15 +22,15 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
    \code{corClasses} for a description of the available \code{corStruct}
    classes. If a grouping variable is to be used, it must be specified in
    the \code{form} argument to the \code{corStruct}
-   constructor. Defaults to \code{NULL}, corresponding to uncorrelated 
-   errors.}  
+   constructor. Defaults to \code{NULL}, corresponding to uncorrelated
+   errors.}
  \item{weights}{an optional \code{varFunc} object or one-sided formula
    describing the within-group heteroscedasticity structure. If given as
    a formula, it is used as the argument to \code{varFixed},
    corresponding to fixed variance weights. See the documentation on
    \code{varClasses} for a description of the available \code{varFunc}
    classes. Defaults to \code{NULL}, corresponding to homoscesdatic
-   errors.} 
+   errors.}
  \item{subset}{an optional expression indicating which subset of the rows of
    \code{data} should  be  used in the fit. This can be a logical
    vector, or a numeric vector indicating which observation numbers are
@@ -81,7 +81,7 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
 \value{
   an object of classes \code{Gls}, \code{rms}, and \code{gls}
   representing the linear model
-  fit. Generic functions such as \code{print}, \code{plot}, and 
+  fit. Generic functions such as \code{print}, \code{plot}, and
   \code{summary} have methods to show the results of the fit. See
   \code{glsObject} for the components of the fit. The functions
   \code{resid}, \code{coef}, and \code{fitted} can be used to extract
@@ -111,7 +111,7 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
   Douglas Bates \email{bates@stat.wisc.edu},
   Frank Harrell \email{f.harrell@vanderbilt.edu},
   Patrick Aboyoun
-} 
+}
 \seealso{
   \code{\link{gls}}
   \code{\link{glsControl}}, \code{\link{glsObject}},

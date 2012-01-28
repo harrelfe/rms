@@ -57,7 +57,7 @@ derivative, and vector of first derivatives at each iteration.
 \item{normwt}{
  set to \code{TRUE} to scale \code{weights} so they sum to the length of
  \code{y}; useful for sample surveys as opposed to the default of
- frequency weighting 
+ frequency weighting
  }
 }
 
@@ -77,7 +77,7 @@ derivative of log likelihood, model likelihood ratio chi-square, d.f.,
 P-value,
 \eqn{c} index (area under ROC curve), Somers' \eqn{D_{xy}},
 Goodman-Kruskal \eqn{\gamma}{gamma}, and Kendall's \eqn{\tau_a}{tau-a}
-rank correlations 
+rank correlations
 between predicted probabilities and observed response, the
 Nagelkerke \eqn{R^2} index, the Brier probability score with
 respect to computing the probability that \eqn{y >} the mid level less
@@ -104,7 +104,7 @@ improved sandwich-type estimator (which \code{lrm} does compute).
 vector of first derivatives of log-likelihood
 }
 \item{deviance}{
--2 log likelihoods. 
+-2 log likelihoods.
 When an offset variable is present, three
 deviances are computed: for intercept(s) only, for
 intercepts+offset, and for intercepts+offset+predictors.
@@ -130,8 +130,8 @@ f.harrell@vanderbilt.edu
 \code{\link[Hmisc]{solvet}}, \code{\link{cr.setup}}, \code{\link{gIndex}}
 }
 \examples{
-#Fit an additive logistic model containing numeric predictors age, 
-#blood.pressure, and sex, assumed to be already properly coded and 
+#Fit an additive logistic model containing numeric predictors age,
+#blood.pressure, and sex, assumed to be already properly coded and
 #transformed
 #
 # fit <- lrm.fit(cbind(age,blood.pressure,sex), death)

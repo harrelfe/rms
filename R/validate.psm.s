@@ -16,7 +16,7 @@ validate.psm <-
   parms   <- fit$parms
   ## inverse <- survreg.distributions[[dist]]$itrans
 
-  
+
   distance <- function(x, y, fit, iter, evalfit=FALSE,
                        fit.orig, dxy=FALSE, dist,parms,
                        tol=1e-12, maxiter=15, rel.tolerance=1e-5, ...)
@@ -73,14 +73,14 @@ validate.psm <-
 
   predab.resample(fit, method=method,
                   fit=survreg.fit2, measure=distance,
-                  pr=pr, B=B, bw=bw, rule=rule, type=type,  
+                  pr=pr, B=B, bw=bw, rule=rule, type=type,
                   dxy=dxy, dist=dist, parms=parms,
                   sls=sls, aics=aics, force=force, strata=FALSE, tol=tol,
                   maxiter=maxiter, rel.tolerance=rel.tolerance, ...)
 }
 
 
-survreg.fit2 <- function(x,y,iter=0,dist,parms=NULL,tol,maxiter=15, 
+survreg.fit2 <- function(x,y,iter=0,dist,parms=NULL,tol,maxiter=15,
                          init=NULL, rel.tolerance=1e-5, fixed=NULL, ...)
 {
   e <- y[,2]
@@ -99,15 +99,15 @@ survreg.fit2 <- function(x,y,iter=0,dist,parms=NULL,tol,maxiter=15,
         }
     }
   if (length(dlist$dist)) dlist <- survreg.distributions[[dlist$dist]]
-  
-  f <- 
+
+  f <-
     survreg.fit(as.matrix(x),y,dist=dlist,parms=parms,
                 controlvals=survreg.control(maxiter=maxiter,
                   rel.tolerance=rel.tolerance),
                 offset=rep(0,length(e)),init=init)
   if(is.character(f)) { warning(f); return(list(fail=TRUE)) }
   f$fail <- FALSE
-    
+
   ## TODO: fetch scale properly if fixed
   nstrata <- length(f$icoef) - 1
   if (nstrata > 0)
@@ -119,7 +119,7 @@ survreg.fit2 <- function(x,y,iter=0,dist,parms=NULL,tol,maxiter=15,
     }
   else f$scale <- scale
   f$loglik <- f$loglik + logcorrect
-  
+
 #	f$var <- solvet(f$imat, tol=tol)
 #	sd <- survreg.distributions[[dist]]
 #	f$deviance <- sum(sd$deviance(y,f$parms, f$deriv[,1]))

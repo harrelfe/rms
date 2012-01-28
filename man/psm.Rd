@@ -42,13 +42,13 @@
 psm(formula=formula(data),
     data=parent.frame(), weights,
     subset, na.action=na.delete, dist="weibull",
-    init=NULL, scale=0, 
+    init=NULL, scale=0,
     control=survreg.control(),
-    parms=NULL, 
+    parms=NULL,
     model=FALSE, x=FALSE, y=TRUE, time.inc, \dots)
 
 \method{print}{psm}(x, correlation=FALSE, digits=4, coefs=TRUE,
-latex=FALSE, title, \dots) 
+latex=FALSE, title, \dots)
 
 Hazard(object, \dots)
 \method{Hazard}{psm}(object, \dots)   # for psm fit
@@ -152,7 +152,7 @@ lwd=3, \dots)
   }
   \item{n}{
     number of points to evaluate theoretical standardized survival
-    function for 
+    function for
     \cr
     \code{lines.residuals.psm.censored.normalized}
   }
@@ -180,7 +180,7 @@ lwd=3, \dots)
     specify \code{x}.
 }}
 \value{
-  \code{psm} returns a fit object with all the information \code{survreg} would store as 
+  \code{psm} returns a fit object with all the information \code{survreg} would store as
   well as what \code{rms} stores and \code{units} and \code{time.inc}.
   \code{Hazard}, \code{Survival}, and \code{Quantile} return S-functions.
   \code{residuals.psm} with \code{type="censored.normalized"} returns a \code{Surv} object
@@ -190,7 +190,7 @@ lwd=3, \dots)
 }
 \details{
   The object \code{survreg.distributions} contains definitions of properties
-  of the various survival distributions. 
+  of the various survival distributions.
   \cr
   \code{psm} does not trap singularity errors due to the way \code{survreg.fit}
   does matrix inversion.  It will trap non-convergence (thus returning
@@ -209,10 +209,10 @@ lwd=3, \dots)
 }
 \seealso{
   \code{\link{rms}}, \code{\link{survreg}},
-  \code{\link{residuals.survreg}}, \code{\link{survreg.object}},  
+  \code{\link{residuals.survreg}}, \code{\link{survreg.object}},
   \code{\link{survreg.distributions}},
   \code{\link{pphsm}}, \code{\link{survplot}}, \code{\link{survest}},
-  \code{\link[survival]{Surv}}, 
+  \code{\link[survival]{Surv}},
   \code{\link[Hmisc]{na.delete}},
   \code{\link[Hmisc]{na.detail.response}}, \code{\link{datadist}},
   \code{\link{latex.psm}}, \code{\link{GiniMd}}, \code{\link{prModFit}}
@@ -232,7 +232,7 @@ death <- ifelse(d.time <= cens,1,0)
 d.time <- pmin(d.time, cens)
 
 
-f <- psm(Surv(d.time,death) ~ sex*pol(age,2), 
+f <- psm(Surv(d.time,death) ~ sex*pol(age,2),
          dist='lognormal')
 # Log-normal model is a bad fit for proportional hazards data
 
@@ -275,13 +275,13 @@ plot(g$time, g$surv, xlab='Time', type='l',
      ylab=expression(S(t)))
 
 
-f <- psm(Surv(d.time,death) ~ age, 
+f <- psm(Surv(d.time,death) ~ age,
          dist="loglogistic", y=TRUE)
 r <- resid(f, 'cens') # note abbreviation
-survplot(survfit(r ~ 1), conf='none') 
-                      # plot Kaplan-Meier estimate of 
+survplot(survfit(r ~ 1), conf='none')
+                      # plot Kaplan-Meier estimate of
                       # survival function of standardized residuals
-survplot(survfit(r ~ cut2(age, g=2)), conf='none')  
+survplot(survfit(r ~ cut2(age, g=2)), conf='none')
                       # both strata should be n(0,1)
 lines(r)              # add theoretical survival function
 #More simply:

@@ -8,7 +8,7 @@ contrast.rms <-
 {
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
-  
+
   zcrit <- if(length(idf <- fit$df.residual)) qt((1+conf.int)/2, idf) else
   qnorm((1+conf.int)/2)
 
@@ -27,7 +27,7 @@ contrast.rms <-
       xb <- predict(fit, db, type='x')
     }
   mb <- nrow(xb)
-  
+
   vary <- NULL
   if(type!='average' && !length(cnames))
     {
@@ -54,7 +54,7 @@ contrast.rms <-
           vary <- if(sum(l==max(ma,mb))==1)d[l==max(ma,mb)]
         }
     }
-  
+
   if(max(ma,mb)>1 && min(ma,mb)==1)
     {
       if(ma==1) xa <- matrix(xa, nrow=mb, ncol=ncol(xb), byrow=TRUE)
@@ -67,7 +67,7 @@ contrast.rms <-
   X <- xa - xb
   p <- ncol(X)
   m <- nrow(X)
-  
+
   if(is.character(weights))
     {
       if(weights!='equal') stop('weights must be "equal" or a numeric vector')
@@ -82,7 +82,7 @@ contrast.rms <-
   if(m > 1 && type=='average')
     X <- matrix(apply(weights*X, 2, sum) / sum(weights), nrow=1,
                 dimnames=list(NULL,dimnames(X)[[2]]))
-  
+
   est <- drop(X %*% coef(fit))
   v <- X %*% vcov(fit, regcoef.only=FALSE) %*% t(X)
   ndf <- if(is.matrix(v))nrow(v) else 1
@@ -99,27 +99,27 @@ contrast.rms <-
     lower <- u[,'lwr']
     upper <- u[,'upr']
   }
-  
+
   res <- list(Contrast=est, SE=se,
               Lower=lower, Upper=upper,
-              Z=Z, Pvalue=P, 
+              Z=Z, Pvalue=P,
               var=v, df.residual=idf,
-              X=X, 
+              X=X,
               cnames=if(type=='average')NULL else cnames, nvary=length(vary))
   if(type != 'average') res <- c(vary, res)
-  
+
   r <- qr(v, tol=tol)
   nonred <- r$pivot[1:r$rank]   # non-redundant contrasts
   redundant <- (1:length(est)) %nin% nonred
   res$redundant <- redundant
-  
+
   if(type=='joint')
     {
       est <- est[!redundant]
       v <- v[!redundant, !redundant, drop=FALSE]
       res$jointstat <- as.vector(est %*% solve(v, tol=tol) %*% est)
     }
-  
+
   structure(res, class='contrast.rms')
 }
 
@@ -136,7 +136,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u)u,
   no[no=='SE'] <- 'S.E.'
   no[no=='Z'] <- sn
   no[no=='Pvalue'] <- pn
-  
+
   cnames <- x$cnames
   if(!length(cnames)) cnames <- if(x$nvary)rep('',length(x[[1]])) else
     as.character(1:length(x[[1]]))
@@ -157,7 +157,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u)u,
       print(as.matrix(w),quote=FALSE)
       if(any(x$redundant)) cat('\nRedundant contrasts are denoted by *\n')
     }
-  
+
   jstat <- x$jointstat
   if(length(jstat))
     {

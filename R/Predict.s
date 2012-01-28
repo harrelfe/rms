@@ -84,14 +84,14 @@ Predict <-
     stop("ref.zero=TRUE does not make sense with time given")
 
   if(fname=='') factors <- dotlist ## name not an argument
-  else 
+  else
     {
       factors <- list()
       for(g in fname) factors[[g]] <- NA
     }
   nf <- length(factors)
   fnam <- names(factors)
-  
+
   if(nf < 1) stop("must specify predictors to vary")
 
   which <- charmatch(fnam, name, 0)
@@ -141,7 +141,7 @@ Predict <-
   settings <- expand.grid(settings)
   adjust <- NULL
   for(n in name[assume != 9 & name %nin% fnam])
-    adjust <- paste(adjust, n, "=", 
+    adjust <- paste(adjust, n, "=",
                     if(is.factor(xadj[[n]])) as.character(xadj[[n]])
                     else format(xadj[[n]])," ",sep="")
 
@@ -151,7 +151,7 @@ Predict <-
   assume <- assume[j]
   names(label) <- names(units) <- names(assume) <- name[j]
   at <- list(label=label, units=units, assume.code=assume)
-  
+
   info <- list(varying=varying, adjust=adjust, Design=at,
                ylabPlotmath=ylabPlotmath, ylab=ylab, yunits=yunits,
                ref.zero=ref.zero, adj.zero=adj.zero, time=time,
@@ -175,7 +175,7 @@ Predict <-
   bootdone <- length(boot.Coef <- fit$boot.Coef)
   if(bootdone && (conf.type == 'individual'))
     stop('conf.type="individual" not compatible with bootcov with coef.reps=TRUE')
-  
+
   if(!length(time))
     {
       xx <- predictrms(fit, settings, non.slopes=non.slopes,
@@ -202,7 +202,7 @@ Predict <-
   else   ## time specified
     {
       if(bootdone) stop('time may not be specified if bootcov was used with coef.reps=TRUE')
-      xx <- survest(fit, settings, times=time, loglog=loglog, 
+      xx <- survest(fit, settings, times=time, loglog=loglog,
                     conf.int=conf.int)
       xb <- as.vector(xx$surv)
     }
@@ -211,7 +211,7 @@ Predict <-
       lower <- as.vector(xx$lower)
       upper <- as.vector(xx$upper)
     }
-      
+
   if(!missing(fun))
     {
       xb <- fun(xb)
@@ -219,10 +219,10 @@ Predict <-
         {
           lower <- fun(lower)
           upper <- fun(upper)
-        }	
+        }
     }
 
-  
+
   settings$yhat   <- xb
   if(conf.int > 0)
     {
@@ -302,7 +302,7 @@ rbind.Predict <- function(..., rename)
     d <- list(...)
     ns <- length(d)
     if(ns==1) return(d[[1]])
-    
+
     info <- attr(d[[1]], 'info')
 
     if(!missing(rename))
@@ -319,7 +319,7 @@ rbind.Predict <- function(..., rename)
         names(info$Design$assume.code) <-
           trans(names(info$Design$assume.code), rename)
       }
-    
+
     info$Design$label <- c(info$Design$label, .set.='Set')
     info$Design$units <- c(info$Design$units, .set.='')
     info$varying <- c(info$varying, '.set.')

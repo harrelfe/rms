@@ -5,8 +5,8 @@
 \description{Computes various residuals and measures of influence for a
   fit from \code{ols}.}
 \usage{
-\method{residuals}{ols}(object, 
-      type=c("ordinary", "score", "dfbeta", "dfbetas", 
+\method{residuals}{ols}(object,
+      type=c("ordinary", "score", "dfbeta", "dfbetas",
              "dffit", "dffits", "hat", "hscore"), \dots)
 }
 \arguments{
@@ -18,12 +18,12 @@ specify \code{x=TRUE} to \code{ols}.
 type of residual desired.  \code{"ordinary"} refers to the usual residual.
 \code{"score"} is the matrix of score residuals (contributions to first
 derivative of log likelihood).
-\code{dfbeta} and \code{dfbetas} mean respectively the raw and normalized matrix 
+\code{dfbeta} and \code{dfbetas} mean respectively the raw and normalized matrix
 of changes in regression coefficients after
 deleting in turn each observation.  The coefficients are normalized by their
 standard errors.  \code{hat} contains the leverages --- diagonals of the ``hat'' matrix.
 \code{dffit} and \code{dffits} contain respectively the difference and normalized
-difference in predicted values when each observation is omitted. 
+difference in predicted values when each observation is omitted.
 The S \code{lm.influence} function is used.  When \code{type="hscore"}, the
 ordinary residuals are divided by one minus the corresponding hat
 matrix diagonal element to make residuals have equal variance.
@@ -32,7 +32,7 @@ matrix diagonal element to make residuals have equal variance.
 }
 \value{
 a matrix or vector, with places for observations that were originally
-deleted by \code{ols} held by \code{NA}s 
+deleted by \code{ols} held by \code{NA}s
 }
 \author{
 Frank Harrell\cr
@@ -42,7 +42,7 @@ f.harrell@vanderbilt.edu
 }
 \seealso{
 \code{\link{lm.influence}}, \code{\link{ols}},
-\code{\link{which.influence}} 
+\code{\link{which.influence}}
 }
 \examples{
 set.seed(1)

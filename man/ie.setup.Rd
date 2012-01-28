@@ -40,7 +40,7 @@ the minimum difference between any two untied \code{failure.time}s.
 }}
 \value{
 a list with components \code{S, ie.status, subs, reps}.  \code{S} is a \code{Surv}
-object containing start and stop times for intervals of observation, 
+object containing start and stop times for intervals of observation,
 along with event indicators.  \code{ie.status} is one if the intervening
 event has occurred at the start of the interval, zero otherwise.
 \code{subs} is a vector of subscripts that can be used to replicate other
@@ -62,7 +62,7 @@ f.harrell@vanderbilt.edu
 \seealso{
 \code{\link{cph}}, \code{\link[survival]{coxph}},
 \code{\link[survival]{Surv}}, \code{\link{cr.setup}},
-\code{\link{predab.resample}} 
+\code{\link{predab.resample}}
 }
 \examples{
 failure.time <- c(1 ,   2,   3)

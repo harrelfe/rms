@@ -15,7 +15,7 @@ Calculate Total and Partial g-indexes for an rms Fit
   example, a regression model having age and sex and age*sex on the
   right hand side, with corresponding regression coefficients \eqn{b_{1},
 	b_{2}, b_{3}}{b1, b2, b3} will have the \eqn{g}-index for age
-  computed from Gini's mean 
+  computed from Gini's mean
   difference on the product of age \eqn{\times (b_{1} + b_{3}w)}{times
 	(b1 + b3*w)} where
   \eqn{w} is an indicator set to one for observations with sex not equal
@@ -31,7 +31,7 @@ Calculate Total and Partial g-indexes for an rms Fit
   between any two distinct elements of a vector.  For a Bernoulli
   (binary) variable with proportion of ones equal to \eqn{p} and sample
   size \eqn{n}, Gini's mean difference is
-  \eqn{2\frac{n}{n-1}p(1-p)}{2np(1-p)/(n-1)}.  For a 
+  \eqn{2\frac{n}{n-1}p(1-p)}{2np(1-p)/(n-1)}.  For a
   trinomial variable (e.g., predicted values for a 3-level categorical
   predictor using two dummy variables) having (predicted)
   values \eqn{A, B, C} with corresponding proportions \eqn{a, b, c},
@@ -70,7 +70,7 @@ GiniMd(x, na.rm=FALSE)
 	indexes to be computed after maximally combining all related main
 	effects and interactions.  The is usually the only way that makes
 	sense when considering partial linear predictors.  Specify
-	\code{type='cterms'} to only combine a main effect 
+	\code{type='cterms'} to only combine a main effect
 	with interactions containing it, not also with other main effects
 	connected through interactions.  Use \code{type='terms'} to separate
   interactions into their own effects.}
@@ -194,7 +194,7 @@ set.seed(1)
 X <- expand.grid(treat=c('A','B'), sex=c('F', 'M'))
 a <- 3; b <- 7; c <- 13; d <- 5
 X <- rbind(X[rep(1, a),], X[rep(2, b),], X[rep(3, c),], X[rep(4, d),])
-y <- with(X, -.1 + .3*(treat=='B') + .5*(sex=='M') + .4*(treat=='B' & sex=='M')) 
+y <- with(X, -.1 + .3*(treat=='B') + .5*(sex=='M') + .4*(treat=='B' & sex=='M'))
 f <- ols(y ~ treat*sex, data=X, x=TRUE)
 gIndex(f, type='cterms')
 k <- coef(f)

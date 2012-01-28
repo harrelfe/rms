@@ -10,7 +10,7 @@ Cox survival models.  If \code{x=TRUE, y=TRUE} were specified to \code{cph},
 confidence limits use the correct formula for any combination of
 predictors. Otherwise, if \code{surv=TRUE} was specified to \code{cph},
 confidence limits are based only on standard errors of \code{log(S(t))}
-at the mean value of \eqn{X\beta}{X beta}. If the model 
+at the mean value of \eqn{X\beta}{X beta}. If the model
 contained only stratification factors, or if predictions are being
 requested near the mean of each covariable, this approximation will be
 accurate. Unless \code{times} is given, at most one observation may be
@@ -18,7 +18,7 @@ predicted.
 }
 \usage{
 survest(fit, \dots)
-\method{survest}{cph}(fit, newdata, linear.predictors, x, times, 
+\method{survest}{cph}(fit, newdata, linear.predictors, x, times,
         fun, loglog=FALSE, conf.int=0.95, type, vartype,
         conf.type=c("log", "log-log", "plain", "none"), se.fit=TRUE,
         what=c('survival','parallel'),
@@ -57,7 +57,7 @@ any function to transform the estimates and confidence limits (\code{loglog}
 is a special case)
 }
 \item{conf.int}{
-set to \code{FALSE} or \code{0} to suppress confidence limits, or e.g. \code{.95} to 
+set to \code{FALSE} or \code{0} to suppress confidence limits, or e.g. \code{.95} to
 cause 0.95 confidence limits to be computed
 }
 \item{type}{

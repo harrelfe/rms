@@ -12,12 +12,12 @@ pentrace <- function(fit, penalty, penalty.matrix,
   which  <- match.arg(which)
   tdf    <- length(target.df)
   if(tdf) method <- 'optimize'
-  
+
   if(!length(X <- fit$x) | !length(Y <- as.matrix(fit$y)))
     stop("you did not specify x=T and y=T in the fit")
   fit$x <- fit$y <- NULL
-  
-  if(length(pn <- fit$penalty)>0 && max(unlist(pn))!=0) 
+
+  if(length(pn <- fit$penalty)>0 && max(unlist(pn))!=0)
     warning('you should not have specified penalty= in fit so that unpenalized model can be a candidate for the best model')
 
   sc.pres <- match("parms",names(fit),0) > 0
@@ -31,23 +31,23 @@ pentrace <- function(fit, penalty, penalty.matrix,
 
   isols <- clas=='ols'
 
-  if(!(isols | clas=='lrm')) 
+  if(!(isols | clas=='lrm'))
     stop("at present pentrace only works for lrm or ols")
 
   if(missing(fitter))
     fitter <- switch(clas,
-                     ols=function(x,y,maxit,...)lm.pfit(x,y,...), 
+                     ols=function(x,y,maxit,...)lm.pfit(x,y,...),
                      lrm=function(x,y,maxit=12,...)
-                     lrm.fit(x,y,maxit=maxit,...), 
+                     lrm.fit(x,y,maxit=maxit,...),
                      cph=function(x,y,maxit=12,...)coxphFit(x,y,
-                                        strata=Strata, iter.max=maxit, 
+                                        strata=Strata, iter.max=maxit,
                                         eps=.0001, method="efron",
                                         toler.chol=tol),
                      psm=function(x,y,maxit=12,...) survreg.fit2(x, y,
                                         dist=dist, parms=parms, fixed=fixed,
                                         offset=NULL,
                                         init=NULL, maxiter=maxit))
-  
+
   if(!length(fitter))stop("fitter not valid")
 
   Strata <- fit$Strata
@@ -62,16 +62,16 @@ pentrace <- function(fit, penalty, penalty.matrix,
 
   atr <- fit$Design
 
-  if(missing(penalty.matrix)) 
+  if(missing(penalty.matrix))
     penalty.matrix <- Penalty.matrix(atr, X)
 
   obj.best <- -1e10
-  
+
   ns <- num.intercepts(fit)
-  
-  
+
+
   islist <- is.list(penalty)
-  
+
   if(islist)
     {
       penalty <- expand.grid(penalty)
@@ -99,12 +99,12 @@ pentrace <- function(fit, penalty, penalty.matrix,
   if(method=='optimize')
     {
       stop('method="optimize" not yet implemented in R')
-  
-      if((islist && nrow(penalty)>1) || (!islist && length(penalty)>1)) 
+
+      if((islist && nrow(penalty)>1) || (!islist && length(penalty)>1))
         stop('may not specify multiple potential penalties when method="optimize"')
 
       objective <- function(pen, X, Y, z)
-        { 
+        {
 
           ##Problem with sending so many auxiliary parameters to nlminb -
           ##nlminb's internal parameters got shifted somehow
@@ -118,7 +118,7 @@ pentrace <- function(fit, penalty, penalty.matrix,
               pen <- structure(as.list(pen), names=pennames)
               penfact <- Penalty.setup(atr, pen)$multiplier
             } else penfact <- pen
-	
+
           if(length(penfact)==1 || !islist) pm <- penfact*penalty.matrix
           else
             {
@@ -126,9 +126,9 @@ pentrace <- function(fit, penalty, penalty.matrix,
               pm <- a %*% penalty.matrix %*% a
             }
           f <- fitter(X, Y, penalty.matrix=pm, tol=tol, maxit=maxit)
-          if(length(f$fail) && f$fail) 
+          if(length(f$fail) && f$fail)
             stop('fitter failed.  Try changing maxit or tol')
-          
+
           if(isols)
             {
               ## ols (from lm.pfit) already stored correct LR chisq and effective df
@@ -143,7 +143,7 @@ pentrace <- function(fit, penalty, penalty.matrix,
               f.nopenalty <- fitter(X, Y, initial=f$coef, maxit=1, tol=tol)
               if(length(f.nopenalty$fail) && f.nopenalty$fail)
                 stop('fitter failed.  Try changing tol')
-              info.matrix.unpenalized <- 
+              info.matrix.unpenalized <-
                 if(length(f.nopenalty$info.matrix))
                   f.nopenalty$info.matrix else
               solvet(f.nopenalty$var, tol=tol) # -> vcov
@@ -170,21 +170,21 @@ pentrace <- function(fit, penalty, penalty.matrix,
         }
       res <- nlminb(unlist(penalty), objective, lower=0, X=X, Y=Y,
                     z=list(n=n,
-                      penalty.matrix=penalty.matrix, pennames=names(penalty), 
-                      isols=isols, islist=islist, tol=tol, maxit=maxit, ns=ns, 
+                      penalty.matrix=penalty.matrix, pennames=names(penalty),
+                      isols=isols, islist=islist, tol=tol, maxit=maxit, ns=ns,
                       fitter=fitter, atr=atr, pr=pr, which=which,
-                      target.df=target.df), 
+                      target.df=target.df),
                     control=list(abs.tol=.00001,
                       rel.tol=if(tdf)1e-6 else .00001))
-      return(list(penalty=if(islist)	
-                  structure(as.list(res$parameters),names=names(penalty)) 
-      else res$parameters, 
+      return(list(penalty=if(islist)
+                  structure(as.list(res$parameters),names=names(penalty))
+      else res$parameters,
                   objective=if(tdf)res$aux$df else -res$objective))
     }
 
   df <- aic <- bic <- aic.c <-
     if(islist) double(length(penalty[[1]])) else double(length(penalty))
-  
+
   for(i in 1:np)
     {
       if(islist)
@@ -204,7 +204,7 @@ pentrace <- function(fit, penalty, penalty.matrix,
 
       if(unpenalized) f <- fit
       else
-        { 
+        {
           if(length(penfact)==1 || !islist) pm <- penfact*penalty.matrix
           else
             {
@@ -212,10 +212,10 @@ pentrace <- function(fit, penalty, penalty.matrix,
               pm <- a %*% penalty.matrix %*% a
             }
           f <- fitter(X, Y, penalty.matrix=pm, tol=tol, maxit=maxit)
-          if(length(f$fail) && f$fail) 
+          if(length(f$fail) && f$fail)
             stop('fitter failed.  Try changing maxit or tol')
         }
-      
+
       if(keep.coef) Coef[i,] <- f$coef
 
       if(unpenalized || isols)
@@ -234,7 +234,7 @@ pentrace <- function(fit, penalty, penalty.matrix,
           f.nopenalty <- fitter(X, Y, initial=f$coef, maxit=1, tol=tol)
           if(length(f.nopenalty$fail) && f.nopenalty$fail)
             stop('fitter failed.  Try changing tol')
-          info.matrix.unpenalized <- 
+          info.matrix.unpenalized <-
             if(length(f.nopenalty$info.matrix)) f.nopenalty$info.matrix
             else
               solvet(f.nopenalty$var, tol=tol) # -> vcov
@@ -251,7 +251,7 @@ pentrace <- function(fit, penalty, penalty.matrix,
       bic[i]   <- lr - df[i]*logb(n)
       aic.c[i] <- lr - 2*df[i]*(1 + (df[i]+1)/(n-df[i]-1))
       obj <- switch(which, aic.c=aic.c[i], aic=aic[i], bic=bic[i])
-      
+
       if(obj > obj.best)
         {
           pen.best <- pen
@@ -279,27 +279,27 @@ pentrace <- function(fit, penalty, penalty.matrix,
   mat$aic <- aic
   mat$bic <- bic
   mat$aic.c <- aic.c
-  
-  structure(list(penalty=pen.best, df=df.best, objective=obj.best, 
+
+  structure(list(penalty=pen.best, df=df.best, objective=obj.best,
                  fit=f.best, var.adj=var.adj.best, diag=diag.best,
                  results.all=mat, Coefficients=Coef), class="pentrace")
 }
 
 
 plot.pentrace <- function(x, method=c('points','image'),
-						  which=c('effective.df','aic','aic.c','bic'), 
+						  which=c('effective.df','aic','aic.c','bic'),
 						  pch=2, add=FALSE, ylim, ...)
 {
   method <- match.arg(method)
 
   x     <- x$results.all
-  
+
   penalty      <- x[[1]]
   effective.df <- x$df
   aic          <- x$aic
   bic          <- x$bic
   aic.c        <- x$aic.c
-  
+
   if(length(x) == 5)
     {  ## only one variable given to penalty=
 
@@ -307,9 +307,9 @@ plot.pentrace <- function(x, method=c('points','image'),
         if(!add)
           plot(penalty, effective.df, xlab="Penalty", ylab="Effective d.f.",
                type="l", ...)
-      if(!add) plot(penalty, aic, 
+      if(!add) plot(penalty, aic,
                     ylim=if(missing(ylim))range(c(aic,bic)) else ylim,
-                    xlab="Penalty", ylab="Information Criterion", 
+                    xlab="Penalty", ylab="Information Criterion",
                     type=if('aic' %in% which)"l" else "n", lty=1, ...)
       else
         if('aic' %in% which) lines(penalty, aic, lty=2, ...)
@@ -319,7 +319,7 @@ plot.pentrace <- function(x, method=c('points','image'),
                       if('aic' %in% which) "Dotted: AIC",
                       if('bic' %in% which) "Dashed: BIC",sep='  '),
                     adj=0,cex=.75)
-      
+
       return(invisible())
     }
 
@@ -333,12 +333,12 @@ plot.pentrace <- function(x, method=c('points','image'),
   x2 <- sort(unique(X2))
   n1 <- length(x1)
   n2 <- length(x2)
-  
+
   aic.r <- rank(aic); aic.r <- aic.r/max(aic.r)
-  
+
   if(method=='points')
     {
-      plot(0, 0, xlim=c(1,n1), ylim=c(1,n2), xlab=nam[1], ylab=nam[2], 
+      plot(0, 0, xlim=c(1,n1), ylim=c(1,n2), xlab=nam[1], ylab=nam[2],
            type='n', axes=FALSE, ...)
       mgp.axis(1, at=1:n1, labels=format(x1))
       mgp.axis(2, at=1:n2, labels=format(x2))
@@ -349,7 +349,7 @@ plot.pentrace <- function(x, method=c('points','image'),
     }
 
   z <- matrix(NA,nrow=n1,ncol=n2)
-  for(i in 1:n1) 
+  for(i in 1:n1)
     for(j in 1:n2) z[i,j] <- aic.r[X1==x1[i] & X2==x2[j]]
   image(x1, x2, z, xlab=nam[1], ylab=nam[2], zlim=range(aic.r), ...)
   invisible(aic.r)
@@ -366,7 +366,7 @@ print.pentrace <- function(x, ...)
   print(pen)
   cat('\n')
   if(is.data.frame(x$results.all)) print(x$results.all, row.names=FALSE) else
-  print(as.data.frame(x$results.all,), row.names=FALSE) 
+  print(as.data.frame(x$results.all,), row.names=FALSE)
 #                      row.names=rep('',length(x$results.all[[1]]))))
   invisible()
 }
@@ -394,7 +394,7 @@ effective.df <- function(fit, object)
              c(sum(nonlin),        sum(dag[nonlin])),
              c(sum(ia),            sum(dag[ia])),
              c(sum(ia.nonlin),     sum(dag[ia.nonlin])))
-  
+
   dimnames(z) <- list(c('All','Simple Terms','Interaction or Nonlinear',
                         'Nonlinear', 'Interaction','Nonlinear Interaction'),
                       c('Original','Penalized'))

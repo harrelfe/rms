@@ -1,4 +1,4 @@
-#Resampling optimism of discrimination and reliability of a logistic 
+#Resampling optimism of discrimination and reliability of a logistic
 #regression model
 #B: # reps
 #bw=T to incorporate backward stepdown (using fastbw) with params rule,type,sls
@@ -16,11 +16,11 @@ validate.lrm <- function(fit,method="boot",
   if(length(y)==0) stop("fit did not use x=TRUE,y=TRUE")
   if(!is.factor(y)) y <- factor(y)   ## was category 11Apr02
   fit$y <- oldUnclass(y)-1  #mainly for Brier score (B)
-  
+
   if(missing(kint)) kint <- floor((k+1)/2)
-  
+
   penalty.matrix <- fit$penalty.matrix
-  
+
   discrim <- function(x, y, fit, iter, evalfit=FALSE, pr=FALSE,
                       Dxy.method="somers2",
                       penalty.matrix, kint, ...)
@@ -42,7 +42,7 @@ validate.lrm <- function(fit,method="boot",
           gp <- stats['gp']
         }
       else
-        {	
+        {
           k <- fit$non.slopes
           null.model <- length(fit$coefficients)==k
           refit <- if(null.model) lrm.fit(y=y) else lrm.fit(x,y,tol=1e-13)
@@ -70,8 +70,8 @@ validate.lrm <- function(fit,method="boot",
                     "g",   "gp")
       z
     }
-  
-  lrmfit <- function(x, y, maxit=12, tol=1e-7, penalty.matrix=NULL, 
+
+  lrmfit <- function(x, y, maxit=12, tol=1e-7, penalty.matrix=NULL,
                      xcol=NULL, ...)
     {
       if(length(xcol) && length(penalty.matrix) > 0)

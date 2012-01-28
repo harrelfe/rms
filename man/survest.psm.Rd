@@ -5,7 +5,7 @@
 \description{
 Computes predicted survival probabilities or hazards and optionally confidence
 limits (for survival only) for parametric survival models fitted with
-\code{psm}. 
+\code{psm}.
 If getting predictions for more than one observation, \code{times} must
 be specified. For a model without predictors, no input data are
 specified.
@@ -35,7 +35,7 @@ some abbreviation of \code{"hazard"} to compute hazard rates.
 \code{what="parallel"} assumes that the length of \code{times} is the number of
 subjects (or one), and causes \code{survest} to estimate the
 \eqn{i^{th}} subject's survival probability at the \eqn{i^{th}} value of
-\code{times} (or at the scalar value of \code{times}). 
+\code{times} (or at the scalar value of \code{times}).
 \code{what="parallel"} is used by \code{val.surv} for example.
 }
 \item{loglog}{

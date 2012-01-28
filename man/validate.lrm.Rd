@@ -42,7 +42,7 @@ Default is the middle intercept.
 }
 \item{Dxy.method}{
 \code{"lrm"} to use \code{lrm}s computation of \eqn{D_{xy}} correlation,
-which rounds 
+which rounds
 predicted probabilities to nearest .002.  Use \code{Dxy.method="somers2"} (the
 default) to instead use the more accurate but slower \code{somers2} function.  This
 will matter most when the model is extremely predictive.
@@ -92,7 +92,7 @@ Sen. New York: North-Holland, p. 333--343.
 }
 \seealso{
 \code{\link{predab.resample}}, \code{\link{fastbw}}, \code{\link{lrm}},
-\code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{calibrate}}, 
+\code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{calibrate}},
 \code{\link[Hmisc]{somers2}}, \code{\link{cr.setup}}, \code{\link{gIndex}}
 }
 \examples{
@@ -113,7 +113,7 @@ y <- ifelse(runif(n) < plogis(L), 1, 0)
 f <- lrm(y ~ sex*rcs(cholesterol)+pol(age,2)+blood.pressure, x=TRUE, y=TRUE)
 #Validate full model fit
 validate(f, B=10)              # normally B=150
-validate(f, B=10, group=y)  
+validate(f, B=10, group=y)
 # two-sample validation: make resamples have same numbers of
 # successes and failures as original sample
 
@@ -130,7 +130,7 @@ Y <- u$y
 cohort <- u$cohort
 attach(mydataframe[u$subs,])
 f <- lrm(Y ~ cohort+rcs(age,4)*sex, penalty=list(interaction=2))
-validate(f, cluster=u$subs, subset=cohort=='all') 
+validate(f, cluster=u$subs, subset=cohort=='all')
 #see predab.resample for cluster and subset
 }
 }

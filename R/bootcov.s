@@ -1,4 +1,4 @@
-bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE, 
+bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
                     loglik=coef.reps, pr=FALSE, maxit=15, group=NULL,
                     stat=NULL)
 {
@@ -32,7 +32,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
     }
 
   if(nfit=='Glm') fitFamily <- fit$family
-  
+
   penalty.matrix <- fit$penalty.matrix
 
   if(missing(fitter))
@@ -47,13 +47,13 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
                }
                else function(x,y,...) {
                  lm.fit.qr.bare(x,y,tolerance=1e-11,intercept=FALSE)
-               }, 
+               },
                lrm=function(x,y,maxit=15,penalty.matrix,...) {
                  lrm.fit(x,y,maxit=maxit,tol=1E-11,
                          penalty.matrix=penalty.matrix)
-               }, 
+               },
                cph=function(x,y,strata=NULL,maxit=15,...) {
-                 coxphFit(x,y, strata=strata, iter.max=maxit, 
+                 coxphFit(x,y, strata=strata, iter.max=maxit,
                           eps=.0001, method="efron", toler.chol=1e-11, type='right')
                },
                psm=function(x,y,maxit=15,...) {
@@ -69,9 +69,9 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
                Rq=RqFit(fit, wallow=FALSE)
                )
     }
-  
+
   if(!length(fitter)) stop("fitter not valid")
-  
+
   if(loglik)
     {
       oosl <- switch(nfit,
@@ -80,16 +80,16 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
                      cph=oos.loglik.cph,
                      psm=oos.loglik.psm,
                      Glm=oos.loglik.Glm)
-      
+
       if(!length(oosl))
         stop('loglik=TRUE but no oos.loglik method for model in rmsMisc')
-      
+
       Loglik <- double(B+1)
-      
+
       Loglik[B+1] <- oosl(fit)
     }
   else Loglik <- NULL
-  
+
   n <- nrow(X)
   p <- length(fit$coef)
   vname <- names(fit$coef)
@@ -98,19 +98,19 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
       p <- p + 1
       vname <- c(vname, "log scale")
     }
-    
+
   bar <- rep(0, p)
   cov <- matrix(0, nrow=p, ncol=p, dimnames=list(vname,vname))
   if(coef.reps) coefs <- matrix(NA, nrow=B, ncol=p, dimnames=list(NULL,vname))
   if(length(stat)) stats <- numeric(B)
-  
+
   Y <- as.matrix(if(is.category(Y)) oldUnclass(Y) else Y)
   ny <- ncol(Y)
 
   Strata <- fit$Strata
-  
+
   nac <- fit$na.action
-  
+
   if(length(group))
     {
       if(length(group) > n)
@@ -122,7 +122,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
               group <- group[j]
             }
         }
-      
+
       if(length(group) != n)
         stop('length of group does not match # rows used in fit')
 
@@ -130,14 +130,14 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
       ngroup <- length(group.inds)
     }
   else ngroup <- 0
-  
+
   if(missing(cluster))
     {
       b <- 0
       for(i in 1:B)
         {
           if(pr) cat(i,"\r")
-          
+
           if(ngroup)
             {
               j <- integer(n)
@@ -150,25 +150,25 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
           else j <- sample(1:n, n, replace=TRUE)
 
           ## Note: If Strata is NULL, NULL[j] is still NULL
-          f <- fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE], maxit=maxit, 
+          f <- fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE], maxit=maxit,
                       penalty.matrix=penalty.matrix, strata=Strata[j])
-          
+
           if(length(f$fail) && f$fail) next
-          
+
           cof <- as.vector(f$coef)
           if(any(is.na(cof))) next   # glm
           b <- b + 1
-          
+
           if(sc.pres) cof <- c(cof, log(f$scale))
-          
+
           if(coef.reps) coefs[b,] <- cof
-          
+
           if(length(stat)) stats[b] <- f$stats[stat]
-          
+
           bar <- bar + cof
           cof <- as.matrix(cof)
           cov <- cov + cof %*% t(cof)
-          
+
           if(loglik) Loglik[b] <- oosl(f, matxv(X,cof), Y)
         }
       if(pr) cat('\n')
@@ -184,23 +184,23 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
               cluster <- cluster[j]
             }
         }
-      
+
       if(length(cluster)!=n)
         stop("length of cluster does not match # rows used in fit")
-      
+
       if(any(is.na(cluster))) stop("cluster contains NAs")
-      
+
       cluster <- as.character(cluster)
-      
+
       clusters <- unique(cluster)
       nc <- length(clusters)
       Obsno <- split(1:n, cluster)
-      
+
       b <- 0
       for(i in 1:B)
         {
           if(pr) cat(i,"\r")
-          
+
           ## Begin addition Bill Pikounis
           if(ngroup)
             {
@@ -224,23 +224,23 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
               j <- sample(clusters, nc, replace=TRUE)
               obs <- unlist(Obsno[j])
             }
-          
-          f <- fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE], 
+
+          f <- fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE],
                       maxit=maxit, penalty.matrix=penalty.matrix,
                       strata=Strata[obs])
-          
+
           if(length(f$fail) && f$fail) next
-          
+
           cof <- as.vector(f$coef)
           if(any(is.na(cof))) next  # glm
           b <- b + 1
-          
+
           if(sc.pres) cof <- c(cof, log(f$scale))
-          
+
           if(coef.reps) coefs[b,] <- cof
-          
+
           if(length(stat)) stats[b] <- f$stats[stat]
-          
+
           bar <- bar + cof
           cof <- as.matrix(cof)
           cov <- cov + cof %*% t(cof)
@@ -248,22 +248,22 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
         }
       if(pr) cat('\n')
     }
-  
+
   if(b < B)
     {
       warning(paste('fit failure in',B-b,
                     'resamples.  Might try increasing maxit'))
       if(coef.reps) coefs <- coefs[1:b,,drop=FALSE]
-      
+
       Loglik <- Loglik[1:b]
     }
-  
+
   bar <- bar/b
   fit$B <- b
   names(bar) <- vname
   fit$boot.coef <- bar
   if(coef.reps) fit$boot.Coef <- coefs
-  
+
   bar <- as.matrix(bar)
   cov <- (cov - b * bar %*% t(bar))/(b-1)
   fit$orig.var <- fit$var
@@ -280,7 +280,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
   fit
 }
 
-  
+
 bootplot <- function(obj, which, X,
                      conf.int=c(.9,.95,.99),
                      what=c('density','qqnorm'),
@@ -291,11 +291,11 @@ bootplot <- function(obj, which, X,
   what <- match.arg(what)
   Coef <- obj$boot.Coef
   if(length(Coef)==0) stop('did not specify "coef.reps=TRUE" to bootcov')
-  
+
   if(missing(which))
     {
       if(!is.matrix(X)) X <- matrix(X, nrow=1)
-    
+
       qoi <- X %*% t(Coef)   ##nxp pxB = nxB
       if(missing(labels.))
         {
@@ -310,11 +310,11 @@ bootplot <- function(obj, which, X,
       qoi <- t(Coef[,which,drop=FALSE])
       nns <- num.intercepts(obj)
       if(missing(labels.)) {
-        labels. <- paste(ifelse(which > nns, 'Coefficient of ', ''), 
+        labels. <- paste(ifelse(which > nns, 'Coefficient of ', ''),
                          dimnames(Coef)[[2]][which], sep='')
       }
     }
-  
+
   nq <- nrow(qoi)
   qoi <- fun(qoi)
   quan <- NULL
@@ -343,7 +343,7 @@ bootplot <- function(obj, which, X,
           qqline(qoi[j,])
         }
     }
-  
+
   invisible(list(qoi=drop(qoi), quantiles=drop(quan)))
 }
 
@@ -362,7 +362,7 @@ histdensity <- function(y, xlab, nclass, width, mult.width=1, ...)
     }
 
   if(missing(nclass)) nclass <- (logb(length(y),base=2)+1)*2
-  
+
   hist(y, nclass=nclass, xlab=xlab, probability=TRUE, ...)
   if(missing(width))
     {
@@ -375,10 +375,10 @@ histdensity <- function(y, xlab, nclass, width, mult.width=1, ...)
 }
 
 
-confplot <- function(obj, X, against, 
+confplot <- function(obj, X, against,
                      method=c('simultaneous','pointwise'),
                      conf.int=0.95,
-                     fun=function(x)x, 
+                     fun=function(x)x,
                      add=FALSE, lty.conf=2, ...)
 {
 
@@ -389,7 +389,7 @@ confplot <- function(obj, X, against,
   if(length(boot.Coef)==0) stop('did not specify "coef.reps=TRUE" to bootcov')
 
   if(!is.matrix(X)) X <- matrix(X, nrow=1)
-  
+
   fitted <- fun(X %*% obj$coefficients)
 
   if(method=='pointwise')
@@ -406,7 +406,7 @@ confplot <- function(obj, X, against,
       boot.Coef <- rbind(boot.Coef, obj$coefficients)
       loglik    <- obj$boot.loglik
       if(length(loglik)==0) stop('did not specify "loglik=TRUE" to bootcov')
-      
+
       crit <- quantile(loglik, conf.int, na.rm=TRUE)
       qual <- loglik <= crit
       boot.Coef <- boot.Coef[qual,,drop=FALSE]
@@ -415,15 +415,15 @@ confplot <- function(obj, X, against,
       lower  <- fun(apply(pred, 1, min))
       pred   <- fun(pred)
     }
-  
+
   if(!missing(against))
     {
       lab <- label(against)
       if(lab=='') lab <- (as.character(sys.call())[-1])[3]
-      
+
       if(add) lines(against, fitted, ...)
       else plot(against, fitted, xlab=lab, type='l', ...)
-      
+
       lines(against, lower, lty=lty.conf)
       lines(against, upper, lty=lty.conf)
     }

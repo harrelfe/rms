@@ -7,13 +7,13 @@
 \title{LaTeX Representation of a Fitted Cox Model}
 
 \description{
-  Creates a file containing a LaTeX representation of the fitted model. 
+  Creates a file containing a LaTeX representation of the fitted model.
 }
 
 \usage{
 \method{latex}{cph}(object, title,
       file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
-      append=FALSE, surv=TRUE, maxt=FALSE, which=NULL, varnames, columns=65, 
+      append=FALSE, surv=TRUE, maxt=FALSE, which=NULL, varnames, columns=65,
       inline=FALSE, before=if(inline)"" else "& &", after="", dec=3,
       pretrans=TRUE, caption, digits=.Options$digits, size="", \dots) # for cph fit
 

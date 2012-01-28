@@ -27,7 +27,7 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
         }
     }
   else units <- attr(S, 'units')
-  
+
   if(!any(attr(S,'class')=='Surv')) stop('S must be a Surv object')
   if(ncol(S) != 2) stop('S must be a right-censored Surv object')
   if(missing(est.surv))
@@ -59,7 +59,7 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
           pseq <- seq(lim[1], lim[2], length=evaluate)
         }
       else pseq <- pred
-      
+
       actual    <- 1 - phare(u, fun(est.surv), f)
       actualseq <- 1 - phare(u, fun(pseq), f)
       w <- structure(list(harefit=f, p=est.surv, actual=actual,
@@ -68,7 +68,7 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
                           units=units), class='val.survh')
       return(w)
     }
-  
+
   n <- nrow(S)
   nac <- if(!missing(fit)) fit$na.action
   if(!missing(censor) && length(censor) > 1 && !missing(fit))
@@ -98,7 +98,7 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
       else
         predict(fit, newdata, type='lp')
     }
-  
+
   if(length(est.surv) != n)
     stop('length of est.surv must equal number of rows in S')
   structure(list(S=S, est.surv=est.surv,
@@ -145,7 +145,7 @@ plot.val.survh <- function(x, lim, xlab, ylab,
     if(riskdist) do.call('scat1d', c(list(x=x$p), scat1d.opts))
     invisible()
   }
-    
+
 
 
 plot.val.surv <- function(x, group, g.group=4,
@@ -159,10 +159,10 @@ plot.val.surv <- function(x, group, g.group=4,
   censor.est.surv <- x$censor.est.surv
   what <- match.arg(what)
   type <- match.arg(type)
-  
+
   n <- length(est.surv)
   nac <- x$na.action
-  
+
   if(!missing(group))
     {
       if(length(group) > n && length(nac))
@@ -173,11 +173,11 @@ plot.val.surv <- function(x, group, g.group=4,
         }
       if(length(group) != n)
         stop("length of group does not match # rows used in fit")
-      if(!is.factor(group)) group <- 
-        if(is.logical(group) || is.character(group)) 
+      if(!is.factor(group)) group <-
+        if(is.logical(group) || is.character(group))
           as.factor(group) else cut2(group, g=g.group)
     }
-  
+
   if(length(censor.est.surv))
     {
       if(missing(group)) group <- rep(1, length(censor.est.surv))
@@ -213,12 +213,12 @@ plot.val.surv <- function(x, group, g.group=4,
       abline(h=if(what=='difference')0 else 1, lty=2)
       return(res)
     }
-  
+
   if(missing(xlab)) xlab <- 'Predicted Pr[T <= observed T]'
   if(missing(ylab)) ylab <- 'Fraction <= x'
   if(missing(xlim)) xlim <- 0:1
   if(missing(ylim)) ylim <- 0:1
-  
+
   if(missing(group))
     {
       nma <- !is.na(est.surv + S[,2])
@@ -235,11 +235,11 @@ plot.val.surv <- function(x, group, g.group=4,
       return(invisible())
     }
 
- 
+
   nma <- !(is.na(est.surv + S[,1] + S[,2]) | is.na(group))
   S <- S[nma,,drop=FALSE]
   est.surv <- est.surv[nma]
-  
+
   ng <- length(lg <- levels(group))
   curves <- vector('list',ng+1)
   names(curves) <- c(lg, 'Overall')
@@ -250,7 +250,7 @@ plot.val.surv <- function(x, group, g.group=4,
                      Surv(1-est.surv[s],S[s,2]),
                      se.fit = FALSE, conf.type = "none")
       curves[[i]] <- list(x=c(0,f$time), y=1-c(1,f$surv))
-    }  
+    }
   labcurve(curves, pl=TRUE, xlab=xlab, ylab=ylab, xlim=xlim, ylim=ylim, ...)
   abline(a=0,b=1,lty=2)
   invisible()

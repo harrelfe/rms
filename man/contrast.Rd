@@ -47,7 +47,7 @@ with \code{xYplot} or \code{Dotplot} (see the last example before the
 }
 \usage{
 contrast(fit, \dots)
-\method{contrast}{rms}(fit, a, b, cnames=NULL, 
+\method{contrast}{rms}(fit, a, b, cnames=NULL,
          type=c("individual", "average", "joint"),
          conf.type=c("individual","simultaneous"),
          weights="equal", conf.int=0.95, tol=1e-7, \dots)
@@ -184,7 +184,7 @@ k <- contrast(f, list(treat='b', center=lc),
                  list(treat='a', center=lc),
               type='average', weights=table(center))
 print(k, X=TRUE)
-# Note: If other variables had interacted with either treat 
+# Note: If other variables had interacted with either treat
 # or center, we may want to list settings for these variables
 # inside the list()'s, so as to not use default settings
 

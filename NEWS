@@ -68,7 +68,7 @@ Changes in version 3.3-0 (2011-02-28)
    * Fixed val.surv by pulling surv object from survest result
    * Clarified in predict.lrm help file that doesn't always use the first intercept
    * lrm.fit, lrm: linear predictor stored in fit object now uses first intercept and not middle one (NOT DOWNWARD COMPATIBLE but makes predict work when using stored linear.predictors)
-   * Fixed argument consistency with validate methods   
+   * Fixed argument consistency with validate methods
 
 Changes in version 3.2-0 (2011-02-14)
    * Changed to be compatible with survival 2.36-3 which is now required

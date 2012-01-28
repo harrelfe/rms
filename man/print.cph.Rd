@@ -8,7 +8,7 @@ frequencies, parameter estimates, standard errors, z-statistics, numbers
 of missing values, etc.
 }
 \usage{
-\method{print}{cph}(x, digits=4, table=TRUE, conf.int=FALSE, 
+\method{print}{cph}(x, digits=4, table=TRUE, conf.int=FALSE,
 coefs=TRUE, latex=FALSE, title='Cox Proportional Hazards Model', \dots)
 }
 \arguments{

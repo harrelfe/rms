@@ -9,22 +9,22 @@ For a binary logistic model fit, computes the following residuals, letting
 \eqn{L} denote the logit or linear predictors: ordinary (\eqn{Y-P}), score
 (\eqn{X (Y-P)}), pearson (\eqn{(Y-P)/\sqrt{P(1-P)}}), deviance (for \eqn{Y=0} is
 \eqn{-\sqrt{2|\log(1-P)|}}, for \eqn{Y=1} is \eqn{\sqrt{2|\log(P)|}},
-pseudo dependent variable used in influence statistics 
+pseudo dependent variable used in influence statistics
 (\eqn{L + (Y-P)/(P(1-P))}), and partial (\eqn{X_{i}\beta_{i} +
-  (Y-P)/(P(1-P))}). 
+  (Y-P)/(P(1-P))}).
 
 
 Will compute all these residuals for an ordinal logistic model, using
 as temporary binary responses dichotomizations of \eqn{Y}, along with the corresponding
 \eqn{P}, the probability that \eqn{Y \geq} cutoff.  For
-\code{type="partial"}, all 
+\code{type="partial"}, all
 possible dichotomizations are used, and for \code{type="score"}, the actual
 components of the first derivative of the log likelihood are used for
 an ordinal model.  Alternatively, specify \code{type="score.binary"}
 to use binary model score residuals but for all cutpoints of \eqn{Y}
-(plotted only, not returned). The \code{score.binary}, 
+(plotted only, not returned). The \code{score.binary},
 \code{partial}, and perhaps \code{score} residuals are useful for checking the proportional odds assumption.
-If the option \code{pl=TRUE} is used to plot the \code{score} or \code{score.binary} residuals, 
+If the option \code{pl=TRUE} is used to plot the \code{score} or \code{score.binary} residuals,
 a score residual plot is
 made for each column of the design (predictor) matrix, with \code{Y} cutoffs on the
 x-axis and the mean +- 1.96 standard errors of the score residuals on
@@ -37,7 +37,7 @@ to check the proportional odds assumption, as
 well as to see if the predictor behaves linearly.
 
 
-Also computes a variety of influence statistics and the 
+Also computes a variety of influence statistics and the
 le Cessie - van Houwelingen - Copas - Hosmer unweighted sum of squares test
 for global goodness of fit, done separately for each cutoff of \eqn{Y} in the
 case of an ordinal model.
@@ -66,7 +66,7 @@ object created by \code{lrm}
 for \code{residuals}, applies to \code{type="partial"}  when \code{pl}
 is not \code{FALSE}.  These are extra arguments passed to the smoothing
 function.  Can also be used to pass extra arguments to \code{boxplot}
-for \code{type="score"} or \code{"score.binary"}. 
+for \code{type="score"} or \code{"score.binary"}.
 For \code{plot.lrm.partial} this specifies a series of binary model fit
 objects.
 }
@@ -76,8 +76,8 @@ linear predictors, derived by subtracting the \code{dffit} from the original
 linear predictor values.
 }
 \item{pl}{
-applies only to \code{type="partial"}, \code{"score"}, and \code{"score.binary"}.  
-For score residuals in an ordinal model, set \code{pl=TRUE} to get means and 
+applies only to \code{type="partial"}, \code{"score"}, and \code{"score.binary"}.
+For score residuals in an ordinal model, set \code{pl=TRUE} to get means and
 approximate 0.95 confidence bars
 vs. \eqn{Y}, separately for each \eqn{X}.  Alternatively, specify
 \code{pl="boxplot"} to use \code{boxplot} to
@@ -120,7 +120,7 @@ default for \code{tilt} here is \code{TRUE}.
 a vector of integers specifying column numbers of the design matrix for which to compute or plot residuals, for \code{type="partial","score","score.binary"}.
 }
 \item{labels}{
-for \code{plot.lrm.partial} this specifies a vector of character strings 
+for \code{plot.lrm.partial} this specifies a vector of character strings
 providing labels for the list of binary fits.  By default, the names of
 the fit objects are used as labels.  The \code{labcurve} function is used
 to label the curve with the \code{labels}.
@@ -129,8 +129,8 @@ to label the curve with the \code{labels}.
 for \code{plot.lrm.partial} this causes partial residuals for every model to have a mean of zero before smoothing and plotting
 }}
 \value{
-a matrix (\code{type="partial","dfbeta","dfbetas","score"}), 
-test statistic (\code{type="gof"}), or a vector otherwise.  
+a matrix (\code{type="partial","dfbeta","dfbetas","score"}),
+test statistic (\code{type="gof"}), or a vector otherwise.
 For partial residuals from an ordinal
 model, the returned object is a 3-way array (rows of \eqn{X} by columns
 of \eqn{X} by cutoffs of \eqn{Y}), and NAs deleted during the fit
@@ -140,9 +140,9 @@ is returned.
 \details{
 For the goodness-of-fit test, the le Cessie-van Houwelingen normal test
 statistic for the unweighted sum of squared errors (Brier score times \eqn{n})
-is used.  For an ordinal response variable, the test 
+is used.  For an ordinal response variable, the test
 for predicting the probability that \eqn{Y\geq j} is done separately for
-all \eqn{j} (except the first).  Note that the test statistic can have strange behavior 
+all \eqn{j} (except the first).  Note that the test statistic can have strange behavior
 (i.e., it is far too large) if the model has no predictive value.
 
 
@@ -244,7 +244,7 @@ x <- rnorm(n)
 
 par(mfrow=c(2,3))
 for(j in 1:2) {     # 1: prop.odds   2: non-prop. odds
-  if(j==1) 
+  if(j==1)
     L <- matrix(c(1.4,.4,-.1,-.5,-.9),nrow=n,ncol=5,byrow=TRUE) + x/2 else {
 	  # Slopes and intercepts for cutoffs of 1:5 :
 	  slopes <- c(.7,.5,.3,.3,0)

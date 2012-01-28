@@ -7,12 +7,12 @@
 Trace AIC and BIC vs. Penalty
 }
 \description{
-For an ordinary unpenalized fit from \code{lrm} or \code{ols} and for a vector or list of penalties, 
+For an ordinary unpenalized fit from \code{lrm} or \code{ols} and for a vector or list of penalties,
 fits a series of logistic or linear models using penalized maximum likelihood
 estimation, and saves the effective degrees of freedom, Akaike Information
 Criterion (\eqn{AIC}), Schwarz Bayesian Information Criterion (\eqn{BIC}), and
 Hurvich and Tsai's corrected \eqn{AIC} (\eqn{AIC_c}).  Optionally
-\code{pentrace} can 
+\code{pentrace} can
 use the \code{nlminb} function to solve for the optimum penalty factor or
 combination of factors penalizing different kinds of terms in the model.
 The \code{effective.df} function prints the original and effective
@@ -23,12 +23,12 @@ The effective d.f. is computed separately for each class of terms in
 the model (e.g., interaction, nonlinear).
 A \code{plot} method exists to plot the results, and a \code{print} method exists
 to print the most pertinent components.  Both \eqn{AIC} and \eqn{BIC}
-may be plotted if 
+may be plotted if
 there is only one penalty factor type specified in \code{penalty}.  Otherwise,
 the first two types of penalty factors are plotted, showing only the \eqn{AIC}.
 }
 \usage{
-pentrace(fit, penalty, penalty.matrix, 
+pentrace(fit, penalty, penalty.matrix,
          method=c('grid','optimize'),
          which=c('aic.c','aic','bic'), target.df,
          fitter, pr=FALSE, tol=1e-7,
@@ -38,8 +38,8 @@ effective.df(fit, object)
 
 \method{print}{pentrace}(x, \dots)
 
-\method{plot}{pentrace}(x, method=c('points','image'), 
-     which=c('effective.df','aic','aic.c','bic'), pch=2, add=FALSE, 
+\method{plot}{pentrace}(x, method=c('points','image'),
+     which=c('effective.df','aic','aic.c','bic'), pch=2, add=FALSE,
      ylim, \dots)
 }
 \arguments{
@@ -55,7 +55,7 @@ the model will be penalized by the same amount, specified by elements in
 also be a list in the format documented in the \code{lrm} function, except that
 elements of the list can be vectors.  The \code{expand.grid} function is
 invoked by \code{pentrace} to generate all possible combinations of
-penalties.  For example, specifying 
+penalties.  For example, specifying
 \code{penalty=list(simple=1:2, nonlinear=1:3)} will generate 6 combinations
 to try, so that the analyst can attempt to determine whether penalizing
 more complex terms in the model more than the linear or categorical
@@ -87,7 +87,7 @@ For \code{plot.pentrace} this parameter applies only if more than one
 penalty term-type was used.  The default is to use open triangles
 whose sizes are proportional to the ranks of the AICs, plotting the
 first two penalty factors respectively on the x and y  axes.  Use
-\code{method="image"} to plot an image plot. 
+\code{method="image"} to plot an image plot.
 }
 \item{which}{
 the objective to maximize for either \code{method}.  Default is \code{"aic.c"} (corrected
@@ -201,17 +201,17 @@ f <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
          x=TRUE, y=TRUE)
 p <- pentrace(f, seq(.2,1,by=.05))
 plot(p)
-p$diag      # may learn something about fractional effective d.f. 
+p$diag      # may learn something about fractional effective d.f.
             # for each original parameter
 pentrace(f, list(simple=c(0,.2,.4), nonlinear=c(0,.2,.4,.8,1)))
 
 
 # Bootstrap pentrace 5 times, making a plot of corrected AIC plot with 5 reps
 n <- nrow(f$x)
-plot(pentrace(f, seq(.2,1,by=.05)), which='aic.c', 
+plot(pentrace(f, seq(.2,1,by=.05)), which='aic.c',
      col=1, ylim=c(30,120)) #original in black
 for(j in 1:5)
-  plot(pentrace(f, seq(.2,1,by=.05), subset=sample(n,n,TRUE)), 
+  plot(pentrace(f, seq(.2,1,by=.05), subset=sample(n,n,TRUE)),
        which='aic.c', col=j+1, add=TRUE)
 
 

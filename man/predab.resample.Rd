@@ -14,7 +14,7 @@ attribute a logical matrix encoding which
 factors were selected at each repetition.
 }
 \usage{
-predab.resample(fit.orig, fit, measure, 
+predab.resample(fit.orig, fit, measure,
                 method=c("boot","crossvalidation",".632","randomization"),
                 bw=FALSE, B=50, pr=FALSE,
                 rule="aic", type="residual", sls=.05, aics=0,
@@ -31,7 +31,7 @@ because of poor associations with the response.
 \item{fit}{
 a function to fit the model, either the original model fit, or a fit in a
 sample.  fit has as arguments \code{x},\code{y}, \code{iter}, \code{penalty}, \code{penalty.matrix},
-\code{xcol}, and other arguments passed to \code{predab.resample}. 
+\code{xcol}, and other arguments passed to \code{predab.resample}.
 If you don't want \code{iter}
 as an argument inside the definition of \code{fit}, add \dots to the end of its
 argument list. \code{iter} is passed to \code{fit} to inform the function of the
@@ -40,7 +40,7 @@ allow for the possibility of selecting no predictors, i.e., it should fit an
 intercept-only model if the model has intercept(s). \code{fit} must return
 objects \code{coef} and \code{fail} (\code{fail=TRUE} if \code{fit} failed due to singularity or
 non-convergence - these cases are excluded from summary statistics). \code{fit}
-must add design attributes to the returned object if \code{bw=TRUE}.  
+must add design attributes to the returned object if \code{bw=TRUE}.
 The \code{penalty.matrix} parameter is not used if \code{penalty=0}.  The \code{xcol}
 vector is a vector of columns of \code{X} to be used in the current model fit.
 For \code{ols} and \code{psm} it includes a \code{1} for the intercept position.
@@ -52,7 +52,7 @@ of \code{penalty.matrix} for the current variables selected, for example.
 a function to compute a vector of indexes of predictive accuracy for a given fit.
 For \code{method=".632"} or \code{method="crossval"}, it will make the most sense for
 measure to compute only indexes that are independent of sample size. The
-measure function should take the following arguments or use \dots: \code{xbeta} 
+measure function should take the following arguments or use \dots: \code{xbeta}
 (X beta for
 current fit), \code{y}, \code{evalfit}, \code{fit}, \code{iter}, and \code{fit.orig}. \code{iter} is as in \code{fit}.
 \code{evalfit} is set to \code{TRUE}
@@ -60,14 +60,14 @@ by \code{predab.resample} if the fit is being evaluated on the sample used to ma
 fit, \code{FALSE} otherwise; \code{fit.orig} is the fit object returned by the original fit on the whole
 sample. Using \code{evalfit} will sometimes save computations. For example, in
 bootstrapping the area under an ROC curve for a logistic regression model,
-\code{lrm} already computes the area if the fit is on the training sample. 
+\code{lrm} already computes the area if the fit is on the training sample.
 \code{fit.orig}
 is used to pass computed configuration parameters from the original fit such as
 quantiles of predicted probabilities that are used as cut points in other samples.
 The vector created by measure should have \code{names()} associated with it.
 }
 \item{method}{
-The default is \code{"boot"} for ordinary bootstrapping (Efron, 1983, Eq. 2.10).  
+The default is \code{"boot"} for ordinary bootstrapping (Efron, 1983, Eq. 2.10).
 Use \code{".632"} for Efron's \code{.632} method (Efron, 1983, Section 6 and Eq. 6.10),
 \code{"crossvalidation"}
 for grouped cross--validation, \code{"randomization"} for the randomization method. May
@@ -114,8 +114,8 @@ Vector containing cluster identifiers.  This can be specified only if
 \code{method="boot"}.  If it is present, the bootstrap is done using sampling
 with replacement from the clusters rather than from the original records.
 If this vector is not the same length as the number of rows in the data
-matrix used in the fit, an attempt will be made to use \code{naresid} on 
-\code{fit.orig} to conform \code{cluster} to the data.  
+matrix used in the fit, an attempt will be made to use \code{naresid} on
+\code{fit.orig} to conform \code{cluster} to the data.
 See \code{bootcov} for more about this.
 }
 \item{subset}{

@@ -45,9 +45,9 @@
 \usage{
 nomogram(fit, ..., adj.to, lp=TRUE, lp.at=NULL,
          fun=NULL, fun.at=NULL, fun.lp.at=NULL, funlabel="Predicted Value",
-         interact=NULL, intercept=1,  conf.int=FALSE, 
+         interact=NULL, intercept=1,  conf.int=FALSE,
          conf.lp=c("representative", "all", "none"),
-         est.all=TRUE, abbrev=FALSE, minlength=4, maxscale=100, nint=10, 
+         est.all=TRUE, abbrev=FALSE, minlength=4, maxscale=100, nint=10,
          vnames=c("labels","names"),
          varname.label=TRUE, varname.label.sep="=",
          omit=NULL, verbose=FALSE)
@@ -56,9 +56,9 @@ nomogram(fit, ..., adj.to, lp=TRUE, lp.at=NULL,
 
 \method{plot}{nomogram}(x, lplabel="Linear Predictor", fun.side,
  col.conf=c(1,if(under.unix).3 else 12),
- conf.space=c(.08,.2), label.every=1, force.label=FALSE, 
+ conf.space=c(.08,.2), label.every=1, force.label=FALSE,
  xfrac=.35, cex.axis=.85, cex.var=1, col.grid=NULL,
- varname.label=TRUE, varname.label.sep="=", ia.space=.7, 
+ varname.label=TRUE, varname.label.sep="=", ia.space=.7,
  tck=NA, tcl=-0.25, lmgp=.4, naxes,
  points.label='Points', total.points.label='Total Points',
  total.sep.page=FALSE, total.fun, cap.labels=FALSE, ...)
@@ -68,14 +68,14 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
 \arguments{
   \item{fit}{
     a regression model fit that was created with \code{rms}, and
-	(usually) with \code{options(datadist = "object.name")} in effect. 
+	(usually) with \code{options(datadist = "object.name")} in effect.
   }
   \item{\dots}{
     settings of variables to use in constructing axes.  If \code{datadist}
     was in effect, the default is to use \code{pretty(total range, nint)}
-    for continuous variables, and the class levels for discrete ones. 
+    for continuous variables, and the class levels for discrete ones.
     For \code{legend.nomabbrev}, \code{\dots} specifies optional
-	parameters to pass 
+	parameters to pass
     to \code{legend}.  Common ones are \code{bty = "n"} to suppress drawing the
     box.  You may want to specify a non-proportionally spaced font
     (e.g., courier) number if abbreviations are more than one letter long.
@@ -101,7 +101,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
     an optional function to transform the linear predictors, and to plot
     on another axis.  If more than one transformation is plotted, put
     them in a list, e.g. \code{list(function(x) x/2, function(x) 2*x)}.
-    Any function values equal to \code{NA} will be ignored.  
+    Any function values equal to \code{NA} will be ignored.
   }
   \item{fun.at}{
     function values to label on axis.  Default \code{fun} evaluated
@@ -115,10 +115,10 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
     If you want to
     evaluate one of the functions at a different set of linear predictor
     values than may have been used in constructing the linear predictor axis,
-    specify a vector or list of vectors 
+    specify a vector or list of vectors
     of linear predictor values at which to evaluate the function.  This is
     especially useful for discrete functions.  The presence of this attribute
-    also does away with the need for \code{nomogram} to compute numerical approximations of 
+    also does away with the need for \code{nomogram} to compute numerical approximations of
     the inverse of the function.  It also allows the user-supplied function
     to return \code{factor} objects, which is useful when e.g. a single tick
     mark position actually represents a range.
@@ -136,7 +136,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
     constructed so that the continuous variable moves within the axis, and
     separate axes represent levels of interacting factors.  For interactions
     between two continuous variables, all but the axis variable must have
-    discrete levels defined in \code{interact}.  
+    discrete levels defined in \code{interact}.
     For discrete interacting factors, you may specify levels to use in
     constructing the multiple axes.  For continuous interacting factors,
     you must do this.  Examples: \code{interact = list(age = seq(10,70,by=10),
@@ -151,7 +151,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
     no confidence limits.  Setting \code{conf.int} to \code{TRUE} is the same as
     setting it to \code{c(0.7, 0.9)},
     with the line segment between the 0.7 and 0.9 levels shaded using
-    gray scale.  
+    gray scale.
   }
   \item{conf.lp}{
     default is \code{"representative"} to group all linear predictors evaluated
@@ -200,7 +200,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
     set to \code{TRUE} to get printed output detailing how tick marks are chosen
     and labeled for function axes.  This is useful in seeing how certain
     linear predictor values cannot be solved for using inverse linear
-    interpolation on the (requested linear predictor values, function values at 
+    interpolation on the (requested linear predictor values, function values at
     these lp values).  When this happens you will see \code{NA}s in the verbose
     output, and the corresponding tick marks will not appear in the nomogram.
   }
@@ -270,7 +270,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
   \item{ia.space}{
     When multiple axes are draw for levels of interacting factors, the
     default is to group combinations related to a main effect.  This is
-    done by spacing the axes for the second to last of these 
+    done by spacing the axes for the second to last of these
     within a group only
     0.7 (by default) of the way down as compared with normal space of 1 unit.
   }
@@ -307,7 +307,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
   \item{cap.labels}{logical: should the factor labels have their first
     letter capitalized?}
 
-  
+
   \item{object}{
     the result returned from \code{nomogram}
   }
@@ -329,7 +329,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
 \value{
   a list of class \code{"nomogram"} that contains information used in plotting
   the axes.  If you specified \code{abbrev = TRUE}, a list called \code{abbrev} is also
-  returned that gives the abbreviations used for tick mark labels, if any.  
+  returned that gives the abbreviations used for tick mark labels, if any.
   This list is useful for
   making legends and is used by \code{legend.nomabbrev} (see the last example).
   The returned list also has components called \code{total.points}, \code{lp},
@@ -373,7 +373,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
   to make the \dQuote{points} scales reverse direction.  For parametric survival
   models, which are stated in terms of increasing regression effects meaning
   longer survival (the opposite of a Cox model), just do something like
-  \code{fit$coefficients <- -fit$coefficients} before invoking \code{nomogram}, 
+  \code{fit$coefficients <- -fit$coefficients} before invoking \code{nomogram},
   and if you add function axes, negate the function
   arguments.  For the Cox model, you also need to negate \code{fit$center}.
   If you omit \code{lp.at}, also negate \code{fit$linear.predictors}.
@@ -430,7 +430,7 @@ print(nom)
 nom <- nomogram(f, age=seq(10,90,by=10))
 plot(nom, xfrac=.45)
 g <- lrm(y ~ sex + rcs(age,3)*rcs(cholesterol,3))
-nom <- nomogram(g, interact=list(age=c(20,40,60)), 
+nom <- nomogram(g, interact=list(age=c(20,40,60)),
                 conf.int=c(.7,.9,.95))
 plot(nom, col.conf=c(1,.5,.2), naxes=7)
 
@@ -448,7 +448,7 @@ surv <- Survival(f)  # This would also work if f was from cph
 plot(nomogram(f, fun=function(x) med(lp=x), funlabel="Median Survival Time"))
 nom <- nomogram(f, fun=list(function(x) surv(3, x),
                             function(x) surv(6, x)),
-            funlabel=c("3-Month Survival Probability", 
+            funlabel=c("3-Month Survival Probability",
                        "6-month Survival Probability"))
 plot(nom, xfrac=.7)
 
@@ -457,7 +457,7 @@ nom <- nomogram(fit.with.categorical.predictors, abbrev=TRUE, minlength=1)
 nom$x1$points   # print points assigned to each level of x1 for its axis
 #Add legend for abbreviations for category levels
 abb <- attr(nom, 'info')$abbrev$treatment
-legend(locator(1), abb$full, pch=paste(abb$abbrev,collapse=''), 
+legend(locator(1), abb$full, pch=paste(abb$abbrev,collapse=''),
        ncol=2, bty='n')  # this only works for 1-letter abbreviations
 #Or use the legend.nomabbrev function:
 legend.nomabbrev(nom, 'treatment', locator(1), ncol=2, bty='n')
@@ -470,11 +470,11 @@ Y <- ifelse(y==0, 0, sample(1:3, length(y), TRUE))
 g <- lrm(Y ~ age+rcs(cholesterol,4)*sex)
 fun2 <- function(x) plogis(x-g$coef[1]+g$coef[2])
 fun3 <- function(x) plogis(x-g$coef[1]+g$coef[3])
-f <- Newlabels(g, c(age='Age in Years'))  
-#see Design.Misc, which also has Newlevels to change 
+f <- Newlabels(g, c(age='Age in Years'))
+#see Design.Misc, which also has Newlevels to change
 #labels for levels of categorical variables
-g <- nomogram(f, fun=list('Prob Y>=1'=plogis, 'Prob Y>=2'=fun2, 
-                     'Prob Y=3'=fun3), 
+g <- nomogram(f, fun=list('Prob Y>=1'=plogis, 'Prob Y>=2'=fun2,
+                     'Prob Y=3'=fun3),
          fun.at=c(.01,.05,seq(.1,.9,by=.1),.95,.99))
 plot(g, lmgp=.2, cex.axis=.6)
 options(datadist=NULL)

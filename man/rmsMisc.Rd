@@ -48,7 +48,7 @@ These functions are used internally to \code{anova.rms},
 \code{fastbw}, etc., to retrieve various attributes of a design.  These
 functions allow some fitting functions not in the \code{rms} series
 (e.g,, \code{lm}, \code{glm}) to be used with \code{rms.Design},
-\code{fastbw}, and similar functions. 
+\code{fastbw}, and similar functions.
 
 
 For \code{vcov}, there are these functions: \code{vcov.default},
@@ -64,7 +64,7 @@ The \code{Getlim} function retrieves distribution summaries
 from the fit or from a \code{datadist} object.  It handles getting summaries
 from both sources to fill in characteristics for variables that were not
 defined during the model fit.  \code{Getlimi} returns the summary
-for an individual model variable.  
+for an individual model variable.
 
 
 The \code{related.predictors} function
@@ -142,7 +142,7 @@ optional named element is fetched that doesn't exist.
 formatted representation has \code{digits} positions to the right of the
 decimal place.  If \code{latex=TRUE} it will translate any scientific
 notation to LaTeX math form.  If \code{pvalue=TRUE}, it will replace
-formatted values with "< 0.0001" (if \code{digits=4}). 
+formatted values with "< 0.0001" (if \code{digits=4}).
 }
 \usage{
 \method{vcov}{cph}(object, regcoef.only=TRUE, \dots)
@@ -205,7 +205,7 @@ formatNP(x, digits=NULL, pvalue=FALSE, latex=FALSE)
 \item{regcoef.only}{For fits such as parametric survival models
   which have a final row and column of the covariance matrix for a
   non-regression parameter such as a log(scale) parameter, setting
-  \code{regcoef.only=TRUE} causes only the first 
+  \code{regcoef.only=TRUE} causes only the first
   \code{p} rows and columns of the covariance matrix to be returned,
   where \code{p} is the length of \code{object$coef}.
 }
@@ -274,7 +274,7 @@ To give new labels for all variables, you can specify \code{labels} of the
 form \code{labels=c("Age in Years","Cholesterol")}, where the list of new labels is
 assumed to be the length of all main effect-type variables in the fit and
 in their original order in the model formula.  You may specify a named
-vector to give new labels in random order or for a subset of the 
+vector to give new labels in random order or for a subset of the
 variables, e.g., \code{labels=c(age="Age in Years",chol="Cholesterol")}.
 For \code{prStats}, is a list with major column headings, which can
 themselves be vectors that are then stacked vertically.
@@ -282,7 +282,7 @@ themselves be vectors that are then stacked vertically.
 \item{levels}{
 a list of named vectors specifying new level labels for categorical
 predictors.  This will override \code{parms} as well as \code{datadist} information
-(if available) that were stored with the fit.  
+(if available) that were stored with the fit.
 }
 \item{title}{a single character string used to specify an overall title
   for the regression fit, which is printed first by \code{prModFit}.
@@ -296,7 +296,7 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   means use \code{format} without rounding, as with integers and
   floating point values).  Negative values of \code{digits} indicate
   that the value is a P-value to be formatted with \code{formatNP}.
-  Digits are recycled as needed. 
+  Digits are recycled as needed.
 }
 \item{digits}{number of digits to the right of the decimal point, for
   formatting numeric values in printed output}
@@ -331,7 +331,7 @@ returns an integer with the number of intercepts in the model.
 stored in \code{fit} or retrieved from the object created by \code{datadist} and
 pointed to in \code{options(datadist=)}.
 \code{related.predictors} and \code{combineRelatedPredictors} return a
-list of vectors, and \code{interactions.containing} 
+list of vectors, and \code{interactions.containing}
 returns a vector.  \code{param.order} returns a logical vector corresponding
 to non-strata terms in the model.
 \code{Penalty.matrix} returns a symmetric matrix with dimension equal to the
@@ -339,7 +339,7 @@ number of slopes in the model.  For all but categorical predictor main
 effect elements, the matrix is diagonal with values equal to the variances
 of the columns of \code{X}.  For segments corresponding to \code{c-1} dummy variables
 for \code{c}-category predictors,  puts a \code{c-1} x \code{c-1} sub-matrix in
-\code{Penalty.matrix} that is constructed so that a quadratic form with 
+\code{Penalty.matrix} that is constructed so that a quadratic form with
 \code{Penalty.matrix} in the middle computes the sum of squared differences
 in parameter values about the mean, including a portion for the reference
 cell in which the parameter is by definition zero.
@@ -361,7 +361,7 @@ original vector of classes.
 \examples{
 \dontrun{
 f <- psm(S ~ x1 + x2 + sex + race, dist='gau')
-g <- psm(S ~ x1 + sex + race, dist='gau', 
+g <- psm(S ~ x1 + sex + race, dist='gau',
          fixed=list(scale=exp(f$parms)))
 lrtest(f, g)
 

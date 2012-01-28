@@ -42,7 +42,7 @@ DesignAssign <- function(atr, non.slopes, Terms) {
   }
   assign
 }
-  
+
 #Function to return variance-covariance matrix, optionally deleting
 #rows and columns corresponding to parameters such as scale parameters
 #in parametric survival models
@@ -99,7 +99,7 @@ oos.loglik.lrm <- function(fit, lp, y, ...) {
   p <- plogis(lp)
   -2*sum(ifelse(y==1, logb(p), logb(1-p)))
 }
-  
+
 oos.loglik.cph <- function(fit, lp, y, ...) {
   if(missing(lp)) return(-2*fit$loglik[2])
   else stop('not implemented for cph models')
@@ -114,7 +114,7 @@ oos.loglik.Glm <- function(fit, lp, y, ...)
   if(missing(lp)) deviance(fit) else
   glm.fit(x=NULL, y=as.vector(y), offset=lp, family=fit$family)$deviance
 
-  
+
 #Function to retrieve limits and values, from fit (if they are there)
 #or from a datadist object.  If need.all=F and input is coming from datadist,
 #insert columns with NAs for variables not defined
@@ -141,7 +141,7 @@ if((length(X)+length(limits))==0) {
   if(allow.null) {
     lims <- list()
     for(nn in nam) lims[[nn]] <- rep(NA,7)
-    lims <- structure(lims, class="data.frame", 
+    lims <- structure(lims, class="data.frame",
       row.names=c("Low:effect","Adjust to", "High:effect", "Low:prediction",
 		  "High:prediction","Low","High"))
     return(list(limits=lims, values=values))
@@ -163,11 +163,11 @@ if(length(lims) && any(na)) for(n in nam[na]) { #if() assumes NA stored in fit
   }
   else limits[[n]] <- u
 }
-limits <- structure(limits, class="data.frame", 
+limits <- structure(limits, class="data.frame",
    row.names=c("Low:effect","Adjust to", "High:effect", "Low:prediction",
 		"High:prediction","Low","High"))
 
-if(length(vals)) values <- c(values, 
+if(length(vals)) values <- c(values,
 	vals[match(names(vals),nam,0)>0 & match(names(vals),names(values),0)==0]
 	)   # add in values from datadist corresponding to vars in model
             # not already defined for model
@@ -180,7 +180,7 @@ list(limits=limits, values=values)
 
 Getlimi <- function(name, Limval, need.all=TRUE)
 {
-   lim <- if(match(name, names(Limval$limits), 0) > 0) 
+   lim <- if(match(name, names(Limval$limits), 0) > 0)
      Limval$limits[[name]] else NULL
    if(is.null(Limval) || is.null(lim) || all(is.na(lim))) {
       if(need.all) stop(paste("no limits defined by datadist for variable",
@@ -222,7 +222,7 @@ related.predictors <- function(at, type=c("all","direct"))
       x[[i]] <- r
     }
   if(type=="direct") return(x)
-  
+
   while(TRUE)
     {
       bigger <- FALSE
@@ -289,7 +289,7 @@ combineRelatedPredictors <- function(at)
       }
     list(names=newnames, namesia=newnamesia, components=components)
   }
-    
+
 
 #Function to list all interaction term numbers that include predictor
 #pred as one of the interaction components
@@ -333,7 +333,7 @@ if(term.order==3) nonlin else nonlin | ia
 #		factor variable in the model be a factor variable with
 #		the levels that were used in the model.  This is primarily
 #		so that row insertion will work right with <-[.data.frame
-#	
+#
 #at=Design attributes
 
 rms.levels <- function(df, at)
@@ -359,14 +359,14 @@ Penalty.matrix <- function(at, X)
 {
   d1 <- dimnames(X)[[2]][1]
   if(d1=='Intercept' || d1=='(Intercept)') X <- X[,-1,drop=FALSE]
-  
+
   d <- dim(X)
   n <- d[1]; p <- d[2]
   center <- as.vector(rep(1/n,n) %*% X)   # see scale() function
   v <- as.vector(rep(1/(n-1),n) %*%
                  (X - rep(center,rep(n,p)))^2)
-  
-  pen <- if(p==1) as.matrix(v) else as.matrix(diag(v))    
+
+  pen <- if(p==1) as.matrix(v) else as.matrix(diag(v))
   ## works even if X one column
 
   is <- 1
@@ -402,7 +402,7 @@ Penalty.setup <- function(at, penalty)
   if(!length(tinteraction)) tinteraction <- tnonlinear
   tnonlinear.interaction <- penalty$nonlinear.interaction
   if(!length(tnonlinear.interaction)) tnonlinear.interaction <- tinteraction
-  
+
   nonlin <- unlist(at$nonlinear[at$name[at$assume!='strata']])
   ia <- NULL
   for(i in (1:length(at$name))[at$assume!='strata'])
@@ -431,27 +431,27 @@ lrtest <- function(fit1, fit2)
     stop('fit1 had failed')
   if(length(fit2$fail) && fit2$fail)
     stop('fit2 had failed')
-  
+
   s1 <- fit1$stats
   s2 <- fit2$stats
-  
+
   if(!length(s1))
     s1 <- c('Model L.R.'=fit1$null.deviance - fit1$deviance,
             'd.f.'=fit1$rank - (any(names(coef(fit1))=='(Intercept)')))
   if(!length(s2))
     s2 <- c('Model L.R.'=fit2$null.deviance - fit2$deviance,
             'd.f.'=fit2$rank - (any(names(coef(fit2))=='(Intercept)')))
-  
+
   chisq1 <- s1['Model L.R.']
   chisq2 <- s2['Model L.R.']
-  if(length(chisq1)==0 || length(chisq2)==2) 
+  if(length(chisq1)==0 || length(chisq2)==2)
     stop('fits do not have stats component with "Model L.R." or deviance component')
   df1 <- s1['d.f.']
   df2 <- s2['d.f.']
   if(df1==df2) stop('models are not nested')
 
   lp1 <- length(fit1$parms);  lp2 <- length(fit2$parms)
-  if(lp1 != lp2) warning('fits do not have same number of scale parameters') else 
+  if(lp1 != lp2) warning('fits do not have same number of scale parameters') else
   if(lp1 == 1 && abs(fit1$parms-fit2$parms)>1e-6)
     warning('fits do not have same values of scale parameters.\nConsider fixing the scale parameter for the reduced model to that from the larger model.')
 
@@ -492,9 +492,9 @@ Newlabels.rms <- function(fit, labels, ...)
       if(length(labels)!=length(at$name))
         stop('labels is not a named vector and its length is not equal to the number of variables in the fit')
       nam <- at$name
-    } 
+    }
   i <- match(nam, at$name, nomatch=0)
-  
+
   if(any(i==0))
     {
       warning(paste('the following variables were not in the fit and are ignored:\n',
@@ -502,9 +502,9 @@ Newlabels.rms <- function(fit, labels, ...)
       labels <- labels[i>0]
       i <- i[i>0]
     }
-  
+
   at$label[i] <- labels
-  
+
   fit$Design <- at
   fit
 }
@@ -518,14 +518,14 @@ Newlevels.rms <- function(fit, levels, ...)
   if(length(nam)==0) stop('levels must have names')
 
   i <- match(nam, at$name, nomatch=0)
-  
+
   if(any(i==0))
     {
       warning(paste('the following variables were not in the fit and are ignored:\n',
                     paste(nam[i==0],collapse=' ')))
       nam <- nam[i>0]
     }
-  
+
   for(n in nam)
     {
       prm <- at$parms[[n]]
@@ -545,7 +545,7 @@ Newlevels.rms <- function(fit, levels, ...)
         }
       at$parms[[n]] <- levs
     }
-  
+
   fit$Design <- at
   fit
 }
@@ -770,11 +770,11 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
         }
       else
         cat(skipt(pre), x, '\n', skipt(skip), sep='')
-    
-    
+
+
     latexVector <- function(x, ...)
       cat(latexTabular(t(x), helvetica=FALSE, ...),'\n', sep='')
-    
+
     if(length(x$fail) && x$fail)
       {
         catl('Model Did Not Converge.  No summary provided.', bold=TRUE, pre=1)
@@ -894,7 +894,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
       }
     cat('\n')
   }
-    
+
 ## Function to print model fit statistics
 ## Example:
 #prStats(list('Observations', c('Log','Likelihood'),
@@ -916,7 +916,7 @@ prStats <- function(labels, w, latex=FALSE)
       if(n <= 0.5) '' else
     substring('                                                         ',
               1, floor(n))
-    
+
     ## Find maximum width used for each column
     p <- length(labels)
     width <- numeric(p)

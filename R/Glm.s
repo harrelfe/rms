@@ -1,4 +1,4 @@
-Glm <- 
+Glm <-
   function(formula, family = gaussian, data = list(), weights = NULL,
            subset = NULL, na.action = na.delete, start = NULL, offset = NULL,
            control = glm.control(...), model = TRUE, method = "glm.fit",
@@ -33,7 +33,7 @@ Glm <-
   desatr <- attr(mf,'Design')
   attr(mf,'Design') <- NULL
   nact <- attr(mf,'na.action')
-    
+
   switch(method, model.frame = return(mf), glm.fit = 1, glm.fit.null = 1,
          stop(paste("invalid `method':", method)))
   xvars <- as.character(attr(mt, "variables"))[-1]
@@ -112,7 +112,7 @@ print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE,
                 c(lr,   c(2, NA,-4)))
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
-  
+
   se <- sqrt(diag(vcov(x)))
   k <- k + 1
   z[[k]] <- list(type='coefmatrix',
@@ -132,14 +132,14 @@ vcov.Glm <- function(object, ...)
 #{
 #  if(length(object$var))
 #    return(object$var)  ## for Glm
-#  
+#
 #  s <- summary.glm(object)
 #  s$cov.unscaled * s$dispersion
 #}
 
 residuals.Glm <- function(object, ...) residuals.glm(object, ...)
 
-predict.Glm <- 
+predict.Glm <-
   function(object, newdata,
            type=c("lp","x","data.frame","terms","cterms","ccterms","adjto",
              "adjto.data.frame", "model.frame"),

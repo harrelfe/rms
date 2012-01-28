@@ -1,4 +1,4 @@
-predict.lrm <- function(object, ..., 
+predict.lrm <- function(object, ...,
 		type=c("lp","fitted","fitted.ind","mean","x","data.frame",
 		"terms", "cterms", "ccterms", "adjto", "adjto.data.frame",
           "model.frame"),
@@ -49,7 +49,7 @@ predict.lrm <- function(object, ...,
   m <- drop(Peq %*% vals)
   names(m) <- rnam
   m
-  
+
 }
 
 Mean.lrm <- function(object, codes=FALSE, ...)

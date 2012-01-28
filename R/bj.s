@@ -1,12 +1,12 @@
 bj <- function(formula=formula(data), data,
-               subset, na.action=na.delete, 
+               subset, na.action=na.delete,
                link="log",	control=NULL,
                method='fit', x=FALSE, y=FALSE, time.inc)
 {
   call <- match.call()
   m <- match.call(expand=FALSE)
   require(survival) || stop('survival package not available')
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
+  mc <- match(c("formula", "data", "subset", "weights", "na.action"),
               names(m), 0)
   m <- m[c(1, mc)]
   m$na.action <- na.action
@@ -18,14 +18,14 @@ bj <- function(formula=formula(data), data,
       on.exit(options(drop.unused.levels=dul))
       options(drop.unused.levels=FALSE)
     }
-  
+
   X <- Design(eval.parent(m))
   if(method=='model.frame') return(X)
   atrx  <- attributes(X)
   nact  <- atrx$na.action
   Terms <- atrx$terms
   atr   <- atrx$Design
-  
+
   lnames <- c("logit","probit","cloglog","identity","log","sqrt",
               "1/mu^2","inverse")
 
@@ -38,43 +38,43 @@ bj <- function(formula=formula(data), data,
   maxtime <- max(Y[,-ncy])
   nnn <- c(nrow(Y),sum(Y[,ncy]))
   if (!inherits(Y, "Surv")) stop("Response must be a survival object")
-  
+
   type <- attr(Y, "type")
-  
-  linkfun <- make.link(link)$linkfun 
-  
+
+  linkfun <- make.link(link)$linkfun
+
   if (type != 'right') stop ("Surv type must by 'right' censored")
   Y <- cbind(linkfun(Y[,1]), Y[,2])
-  
+
   X <- model.matrix(Terms, X)
   assgn <- DesignAssign(atr, 1, Terms)
-  
+
   if(method=='model.matrix') return(X)
-  
+
   time.units <- attr(Y, "units")
   if(is.null(time.units)) time.units <- "Day"
   if(missing(time.inc))
     {
       time.inc <- switch(time.units,Day=30,Month=1,Year=1,maxtime/10)
-      if(time.inc >= maxtime | maxtime/time.inc > 25) 
+      if(time.inc >= maxtime | maxtime/time.inc > 25)
          time.inc <- max(pretty(c(0, maxtime)))/10
     }
   rnam <- dimnames(Y)[[1]]
   dimnames(X) <- list(rnam, c("(Intercept)",atr$colnames))
-  
+
   n <- nrow(X)
   nvar <- ncol(X)
-  
+
   fit <- bj.fit(X, Y, control=control)
   if(link == 'log') fit$stats <- c(fit$stats, gr=unname(exp(fit$stats['g'])))
-  
+
   if(fit$fail) {
     cat("Failure in bj.fit\n")
     return(fit)
   }
-  
+
   if (length(nact)) fit$na.action <- nact
-  
+
   fit <- c(fit, list(maxtime=maxtime, units=time.units,
                      time.inc=time.inc, non.slopes=1, assign=assgn,
                      fitFunction='bj'))
@@ -97,7 +97,7 @@ bj <- function(formula=formula(data), data,
 }
 
 bj.fit <- function(x, y, control = NULL) {
-  
+
   if(ncol(y) != 2)
 	stop("y is not a right-censored Surv object")
   status <- y[, 2]
@@ -258,7 +258,7 @@ bjplot <- function(fit, which=1:dim(X)[[2]])
   m <- order(fit$y[, 1],  - fit$y[, 2])
   resd <- S[m, 1]
   cens <- S[m, 2]
-  KM.ehat <- survival:::survfitKM(dummystrat, S, 
+  KM.ehat <- survival:::survfitKM(dummystrat, S,
 						conf.type = "none", se.fit = FALSE)
   repeats <- c(diff( - KM.ehat$n.risk), KM.ehat$n.risk[length(KM.ehat$n.risk)])
   if(length(KM.ehat$time) != N)
@@ -277,19 +277,19 @@ bjplot <- function(fit, which=1:dim(X)[[2]])
   surv.i <- c(w$x, min(surv))
   residnew <- resd
   residnew[cens == 0] <- t.i[cens == 0]
-  retlist <- list(predictor = fit$linear.predictor[m], 
-				  x = fit$x[m,  ], res.cens = resd, hillis = residnew, 
+  retlist <- list(predictor = fit$linear.predictor[m],
+				  x = fit$x[m,  ], res.cens = resd, hillis = residnew,
 				  cens = cens)
   predictor <- fit$linear.predictor[m]
-  plot(predictor, resd, type = "n", 
+  plot(predictor, resd, type = "n",
 	   xlab = "Linear Predictor", ylab = "Residuals")
   points(predictor[cens == 0], resd[cens == 0], pch = 1)
   points(predictor[cens == 1], resd[cens == 1], pch = 16)
-  plot(predictor, residnew, type = 	"n", xlab = "Linear Predictor", 
+  plot(predictor, residnew, type = 	"n", xlab = "Linear Predictor",
 	   ylab = "Residuals")
   points(predictor[cens == 0], residnew[cens == 0], pch = 1)
   points(predictor[cens == 1], residnew[cens == 1], pch = 16)
-  
+
   for(i in which)
     {
       xi <- X[,i]
@@ -302,7 +302,7 @@ bjplot <- function(fit, which=1:dim(X)[[2]])
         {
           points(xi[imp],  Y[imp,1],  pch=1)
 
-          plot(xi, yy, xlab = xnam[i], ylab=paste('Imputed',trans,'Time'), 
+          plot(xi, yy, xlab = xnam[i], ylab=paste('Imputed',trans,'Time'),
                type = "n", ylim=ry)
           points(xi[imp],   yy[imp],  pch = 1)
           segments(xi[imp], Y[imp,1], xi[imp], yy[imp])
@@ -323,16 +323,16 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
 {
   k <- 0
   z <- list()
-  
+
 
   if(length(zz <- x$na.action))
     {
       k <- k + 1
       z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
     }
-  
+
   stats <- x$stats
- 
+
   misc   <- reVector(Obs=stats['Obs'], Events=stats['Events'])
   dfstat <- reVector('Regression d.f.' = stats['d.f.'],
                      sigma=stats['sigma'],
@@ -342,7 +342,7 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
   z[[k]] <- list(type='stats',
                  list(headings=list('', '', c('Discrimination','Indexes')),
                       data=list(misc, c(dfstat,c(NA,digits,NA)), c(disc, 3))))
-  
+
   cof <- x$coefficients
   se <- sqrt(diag(x$var))
   k <- k + 1
@@ -368,7 +368,7 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
   invisible()
 }
 
-predict.bj <- 
+predict.bj <-
   function(object, newdata,
            type=c("lp","x","data.frame","terms","cterms","ccterms","adjto",
              "adjto.data.frame", "model.frame"),
@@ -383,11 +383,11 @@ predict.bj <-
                na.action, expand.na, center.terms, ...)
   }
 
-residuals.bj <- function(object, 
+residuals.bj <- function(object,
 						 type = c("censored","censored.normalized"), ...)
 {
   type <- match.arg(type)
-    
+
   y <- object$y
   aty <- attributes(y)
   if('y' %nin% names(object)) stop('did not use y=TRUE with fit')
@@ -397,7 +397,7 @@ residuals.bj <- function(object,
   r <- cbind(r, y[,ncy])
   attr(r,'type') <- aty$type
   attr(r,'units') <- ' '
-  attr(r,'time.label') <- if(type=='censored') 
+  attr(r,'time.label') <- if(type=='censored')
     'Residual' else 'Normalized Residual'
   attr(r,'event.label') <- aty$event.label
   oldClass(r) <- c('residuals.bj','Surv')
@@ -438,7 +438,7 @@ validate.bj <-
 }
 
 
-bj.fit2 <- function(x,y,iter=0,maxiter=15, 
+bj.fit2 <- function(x,y,iter=0,maxiter=15,
                     init=NULL, rel.tolerance=1e-3, tol=1e-7, ...)
 {
   e <- y[,2]
@@ -449,6 +449,6 @@ bj.fit2 <- function(x,y,iter=0,maxiter=15,
   if(f$fail) warning('bj.fit failed')
   f
 }
-  
+
 
 latex.bj <- function(...) latexrms(...)

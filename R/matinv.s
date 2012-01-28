@@ -9,7 +9,7 @@
 #Caller must negate matrix when finished with all partial inversions if
 # negate is false.  The default is to automatically negate the which
 # portion of the inverse, i.e., to assume that no further operations are
-# to be done on the matrix 
+# to be done on the matrix
 #
 #Eps is singularity criterion, like 1-Rsquare
 #
@@ -31,10 +31,10 @@ matinv <- function(a, which, negate=TRUE, eps=1E-12)
   if(!length(swept))swept <- rep(FALSE, m)
   if(m!=ncol(a))stop("matrix must be square")
 
-	y <- 
-      .Fortran("matinv",x = a, as.integer(m), 
+	y <-
+      .Fortran("matinv",x = a, as.integer(m),
                as.integer(length(which)),which,
-               swept=swept, logical(m), double(m*(m+1)/2), 
+               swept=swept, logical(m), double(m*(m+1)/2),
                double(m), rank = integer(1), as.double(eps),
                as.logical(negate), PACKAGE="rms")
 
@@ -43,5 +43,5 @@ matinv <- function(a, which, negate=TRUE, eps=1E-12)
   attr(x,"swept") <- y$swept
   dimnames(x) <- dimnames(a)
   x
-  
+
 }

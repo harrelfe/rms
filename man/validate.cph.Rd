@@ -5,7 +5,7 @@
   of Fit}
 \description{
   This is the version of the \code{validate} function specific to models
-  fitted with \code{cph} or \code{psm}. 
+  fitted with \code{cph} or \code{psm}.
 }
 \usage{
 # fit <- cph(formula=Surv(ftime,event) ~ terms, x=TRUE, y=TRUE, \dots)
@@ -70,11 +70,11 @@
   }
 }
 \details{
-  Statistics validated include the Nagelkerke \eqn{R^2}, 
+  Statistics validated include the Nagelkerke \eqn{R^2},
   \eqn{D_{xy}}{Dxy}, slope shrinkage,  the discrimination index \eqn{D}
   [(model L.R. \eqn{\chi^2}{chi-square} - 1)/L], the unreliability index
   \eqn{U} = (difference in -2 log likelihood between uncalibrated
-  \eqn{X\beta}{X beta} and  
+  \eqn{X\beta}{X beta} and
   \eqn{X\beta}{X beta} with overall slope calibrated to test sample) / L,
   and the overall quality index \eqn{Q = D - U}.  \eqn{g} is the
         \eqn{g}-index on the log relative hazard (linear predictor) scale.
@@ -84,7 +84,7 @@
 }
 \value{
   matrix with rows corresponding to \eqn{D_{xy}}{Dxy}, Slope, \eqn{D},
-  \eqn{U}, and \eqn{Q}, and columns for the original index, resample estimates, 
+  \eqn{U}, and \eqn{Q}, and columns for the original index, resample estimates,
   indexes applied to whole or omitted sample using model derived from
   resample, average optimism, corrected index, and number of successful
   resamples.\cr
@@ -95,7 +95,7 @@
   with survival time and she wishes to get the more usual correlation
   using predicted survival time or predicted survival probability,
   \eqn{D_{xy}}{Dxy} should be negated.
-  
+
 }
 \section{Side Effects}{
   prints a summary, and optionally statistics for each re-fit (if \code{pr=TRUE})
@@ -133,7 +133,7 @@ validate(f, B=10)               # normally B=150
 # Validate a model with stratification.  Dxy is the only
 # discrimination measure for such models, by Dxy requires
 # one to choose a single time at which to predict S(t|X)
-f <- cph(S ~ rcs(age)*strat(sex), 
+f <- cph(S ~ rcs(age)*strat(sex),
          x=TRUE, y=TRUE, surv=TRUE, time.inc=2)
 validate(f, dxy=TRUE, u=2, B=10)   # normally B=150
 # Note u=time.inc

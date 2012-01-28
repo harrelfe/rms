@@ -6,14 +6,14 @@
 \description{
 \code{Function} is a class of functions for creating other S functions.
 \code{Function.rms} is the method for creating S functions to compute
-X beta, based on a model fitted with \code{rms} in effect.  
+X beta, based on a model fitted with \code{rms} in effect.
 Like \code{latex.rms}, \code{Function.rms} simplifies restricted cubic
 spline functions and factors out terms in second-order interactions.
 \code{Function.rms} will not work for models that have third-order
 interactions involving restricted cubic splines.
 \code{Function.cph} is a particular method for handling fits from
 \code{cph}, for which an intercept (the negative of the centering
-constant) is added to  
+constant) is added to
 the model.  \code{sascode} is a function that takes an S function such
 as one created by \code{Function} and does most of the editing
 to turn the function definition into

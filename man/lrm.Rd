@@ -11,8 +11,8 @@ fit forward continuation ratio models with \code{lrm}.
 }
 \usage{
 lrm(formula, data, subset, na.action=na.delete, method="lrm.fit",
-    model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE, 
-    penalty=0, penalty.matrix, tol=1e-7, 
+    model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE,
+    penalty=0, penalty.matrix, tol=1e-7,
     strata.penalty=0, var.penalty=c('simple','sandwich'),
     weights, normwt, \dots)
 
@@ -26,7 +26,7 @@ fitting of a model such as \eqn{logit(Y=1) = X\beta + W}, where \eqn{W} is the
 offset variable having no estimated coefficient.
 The response variable can be any data type; \code{lrm} converts it
 in alphabetic or numeric order to an S factor variable and
-recodes it 0,1,2,\dots internally. 
+recodes it 0,1,2,\dots internally.
 }
 \item{data}{
 data frame to use. Default is the current frame.
@@ -39,7 +39,7 @@ observations to analyze
 function to handle \code{NA}s in the data. Default is \code{na.delete}, which
 deletes any observation having response or predictor missing, while
 preserving the attributes of the predictors and maintaining frequencies
-of deletions due to each variable in the model.  
+of deletions due to each variable in the model.
 This is usually specified using \code{options(na.action="na.delete")}.
 }
 \item{method}{
@@ -71,17 +71,17 @@ The penalty factor subtracted from the log likelihood is
 \eqn{0.5 \beta' P \beta}, where \eqn{\beta} is the vector of regression
 coefficients other than intercept(s), and \eqn{P} is
 \code{penalty factors * penalty.matrix} and \code{penalty.matrix} is
-defined below.  The default is \code{penalty=0} implying that ordinary 
+defined below.  The default is \code{penalty=0} implying that ordinary
 unpenalized maximum likelihood estimation is used.
 If \code{penalty} is a scalar, it is assumed to be a penalty factor that
-applies 
+applies
 to all non-intercept parameters in the model.  Alternatively, specify a
 list to penalize different types of model terms by differing amounts.
 The elements in this list are named \code{simple, nonlinear, interaction} and
 \code{nonlinear.interaction}.  If you omit elements on the right of this
 series, values are inherited from elements on the left.  Examples:
 \code{penalty=list(simple=5, nonlinear=10)} uses a penalty factor of 10
-for nonlinear or interaction terms.  
+for nonlinear or interaction terms.
 \code{penalty=list(simple=0, nonlinear=2, nonlinear.interaction=4)} does not
 penalize linear main effects, uses a penalty factor of 2 for nonlinear or
 interaction effects (that are not both), and 4 for nonlinear interaction
@@ -94,7 +94,7 @@ the variance of the columns of the design matrix in its diagonal elements
 so that the penalty to the log likelhood is unitless.  For main effects
 for categorical predictors with \eqn{c} categories, the rows and columns of
 the matrix contain a \eqn{c-1 \times c-1} sub-matrix that is used to
-compute the 
+compute the
 sum of squares about the mean of the \eqn{c} parameter values (setting the
 parameter to zero for the reference cell) as the penalty component
 for that predictor.  This makes the penalty independent of the choice of
@@ -103,9 +103,9 @@ the rows and columns for certain parameters to zero so as to not
 penalize those parameters.
 Depending on \code{penalty}, some elements of \code{penalty.matrix} may
 be overridden automatically by setting them to zero.
-The penalty matrix that is used in the actual fit is 
+The penalty matrix that is used in the actual fit is
 \eqn{penalty \times diag(pf) \times penalty.matrix \times diag(pf)},
-where \eqn{pf} is the vector 
+where \eqn{pf} is the vector
 of square roots of penalty factors computed from \code{penalty} by
 \code{Penalty.setup} in \code{rmsMisc}.  If you specify \code{penalty.matrix}
 you must specify a nonzero value of \code{penalty} or no penalization will be
@@ -128,7 +128,7 @@ variances estimates that are too low.
 \item{normwt}{
  set to \code{TRUE} to scale \code{weights} so they sum to the length of
  \code{y}; useful for sample surveys as opposed to the default of
- frequency weighting 
+ frequency weighting
  }
 \item{\dots}{arguments that are passed to \code{lrm.fit}}
 \item{digits}{number of significant digits to use}
@@ -156,22 +156,22 @@ table of frequencies for \code{Y} in order of increasing \code{Y}
 vector with the following elements: number of observations used in the
 fit, maximum absolute value of first
 derivative of log likelihood, model likelihood ratio
-\eqn{\chi^2}{chi-square}, d.f., 
+\eqn{\chi^2}{chi-square}, d.f.,
 \eqn{P}-value, \eqn{c} index (area under ROC curve), Somers' \eqn{D_{xy}},
 Goodman-Kruskal \eqn{\gamma}{gamma}, Kendall's \eqn{\tau_a}{tau-a} rank
-correlations 
+correlations
 between predicted probabilities and observed response, the
 Nagelkerke \eqn{R^2} index, the Brier score computed with respect to
 \eqn{Y >} its lowest level, the \eqn{g}-index, \eqn{gr} (the
 \eqn{g}-index on the odds ratio scale), and \eqn{gp} (the \eqn{g}-index
 on the probability scale using the same cutoff used for the Brier
-score).  Probabilities are rounded to the nearest 0.002 
+score).  Probabilities are rounded to the nearest 0.002
 in the computations or rank correlation indexes.
 In the case of penalized estimation, the \code{"Model L.R."} is computed
 without the penalty factor, and \code{"d.f."} is the effective d.f. from
 Gray's (1992) Equation 2.9.
 The \eqn{P}-value uses this corrected model
-L.R. \eqn{\chi^2}{chi-square} and corrected d.f. 
+L.R. \eqn{\chi^2}{chi-square} and corrected d.f.
 The score chi-square statistic uses first derivatives which contain
 penalty components.
 }
@@ -247,7 +247,7 @@ Presentation on UVa Web page, 1998.
 \seealso{
 \code{\link{lrm.fit}}, \code{\link{predict.lrm}},
 \code{\link{rms.trans}}, \code{\link{rms}}, \code{\link{glm}},
-\code{\link{latex.lrm}}, 
+\code{\link{latex.lrm}},
 \code{\link{residuals.lrm}}, \code{\link[Hmisc]{na.delete}},
 \code{\link[Hmisc]{na.detail.response}},
 \code{\link{pentrace}}, \code{\link{rmsMisc}}, \code{\link{vif}},
@@ -257,8 +257,8 @@ Presentation on UVa Web page, 1998.
 }
 \examples{
 #Fit a logistic model containing predictors age, blood.pressure, sex
-#and cholesterol, with age fitted with a smooth 5-knot restricted cubic 
-#spline function and a different shape of the age relationship for males 
+#and cholesterol, with age fitted with a smooth 5-knot restricted cubic
+#spline function and a different shape of the age relationship for males
 #and females.  As an intermediate step, predict mean cholesterol from
 #age using a proportional odds ordinal logistic model
 #
@@ -321,8 +321,8 @@ effective.df(fitp)
 # or lrm(y ~ \dots, penalty=\dots)
 
 
-#Get fits for a variety of penalties and assess predictive accuracy 
-#in a new data set.  Program efficiently so that complex design 
+#Get fits for a variety of penalties and assess predictive accuracy
+#in a new data set.  Program efficiently so that complex design
 #matrices are only created once.
 
 
@@ -341,7 +341,7 @@ for(penlty in seq(0,.15,by=.005)) {
     X <- f$x    # saves time for future runs - don't have to use rcs etc.
     Y <- f$y    # this also deletes rows with NAs (if there were any)
     penalty.matrix <- diag(diag(var(X)))
-    Xnew <- predict(f, new.data, type="x", incl.non.slopes=FALSE)  
+    Xnew <- predict(f, new.data, type="x", incl.non.slopes=FALSE)
     # expand design matrix for new data
     Ynew <- new.data$y
   } else f <- lrm.fit(X,Y, penalty.matrix=penlty*penalty.matrix)
@@ -363,11 +363,11 @@ for(penlty in seq(0,.15,by=.005)) {
 #validate(f, \dots) to validate(f, method="cross", B=10) for example.
 #You will see tremendous variation in accuracy with minute changes in
 #the penalty.  This comes from the error inherent in using 10-fold
-#cross validation but also because we are not fixing the splits.  
+#cross validation but also because we are not fixing the splits.
 #20-fold cross validation was even worse for some
 #indexes because of the small test sample size.  Stability would be
-#obtained by using the same sample splits for all penalty values 
-#(see above), but then we wouldn't be sure that the choice of the 
+#obtained by using the same sample splits for all penalty values
+#(see above), but then we wouldn't be sure that the choice of the
 #best penalty is not specific to how the sample was split.  This
 #problem is addressed in the last example.
 #
@@ -396,7 +396,7 @@ for(penlty in penalties)
 par(mfrow=c(3,3))
 for(i in 1:9)
 {
-  plot(penalties, index[,i], 
+  plot(penalties, index[,i],
        xlab="Penalty", ylab=dimnames(index)[[2]][i])
   lines(lowess(penalties, index[,i]))
 }
@@ -424,7 +424,7 @@ lrm(y ~ x)   # same as above
 #NOTE: the effective.df( ) function is used in practice
 #
 \dontrun{
-for(seed in c(339,777,22,111,3)){ 
+for(seed in c(339,777,22,111,3)){
 # study performance for several datasets
   set.seed(seed)
   n <- 175; p <- 8
@@ -441,7 +441,7 @@ for(seed in c(339,777,22,111,3)){
   #
   Penalty <- seq(0,30,by=1)
   reps <- length(Penalty)
-  effective.df <- effective.df2 <- aic <- aic2 <- deviance.val <- 
+  effective.df <- effective.df2 <- aic <- aic2 <- deviance.val <-
     Lpenalty <- single(reps)
   n.t <- round(n^.75)
   ncv <- c(10,20,30,40)     # try various no. of reps in cross-val.
@@ -473,7 +473,7 @@ for(seed in c(339,777,22,111,3)){
     dev <- 0
     for(j in 1:max(ncv)) {
       s    <- sample(1:n, n.t)
-      cof  <- lrm.fit(X[s,],Y[s], 
+      cof  <- lrm.fit(X[s,],Y[s],
                       penalty.matrix=pen*pm)$coef
       pred <- cof[1] + (X[-s,] \%*\% cof[-1])
       dev <- dev -2*sum(Y[-s]*pred + log(1-plogis(pred)))

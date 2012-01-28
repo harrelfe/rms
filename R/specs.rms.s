@@ -26,7 +26,7 @@ specs.rms <- function(fit, long=FALSE, ...)
   ia.order <- fit$ia.order
   label <- fit$label
   units <- fit$units
-  
+
   if(length(ass))
     {
       if(names(ass)[1] %in% c("(Intercept)","Intercept")) ass[[1]] <- NULL
@@ -92,7 +92,7 @@ specs.rms <- function(fit, long=FALSE, ...)
                                     if(any(i3))"nonlinear" else "linear")
                   if(ncol(parmi)==1)  d[i,2] <- " "
                 }
-	
+
               else
                 {
                   lab <- ""
@@ -112,7 +112,7 @@ specs.rms <- function(fit, long=FALSE, ...)
       collab <- c("Transformation",collab)
       d <- cbind(trans,d)
     }
-  
+
   if(any(name!=label))
     {
       collab <- c("Label",collab)
@@ -126,7 +126,7 @@ specs.rms <- function(fit, long=FALSE, ...)
       d <- cbind(unitsb,d)
     }
   dimnames(d) <- list(name, collab)
-  
+
   structure(list(call=Call, how.modeled=d, limits=if(long)lim, strata=strata),
             class='specs.rms')
 }

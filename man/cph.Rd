@@ -18,10 +18,10 @@
 }
 \usage{
 cph(formula = formula(data), data=parent.frame(),
-    weights, subset, na.action=na.delete, 
-    method=c("efron","breslow","exact","model.frame","model.matrix"), 
+    weights, subset, na.action=na.delete,
+    method=c("efron","breslow","exact","model.frame","model.matrix"),
     singular.ok=FALSE, robust=FALSE,
-    model=FALSE, x=FALSE, y=FALSE, se.fit=FALSE, 
+    model=FALSE, x=FALSE, y=FALSE, se.fit=FALSE,
     eps=1e-4, init, iter.max=10, tol=1e-9, surv=FALSE, time.inc,
     type=NULL, vartype=NULL, \dots)
 
@@ -66,7 +66,7 @@ cph(formula = formula(data), data=parent.frame(),
   \item{na.action}{
     specifies an S function to handle missing data.  The default is the function \code{na.delete},
     which causes observations with any variable missing to be deleted.  The main difference
-    between \code{na.delete} and the S-supplied function \code{na.omit} is that 
+    between \code{na.delete} and the S-supplied function \code{na.omit} is that
     \code{na.delete} makes a list
     of the number of observations that are missing on each variable in the model.
     The \code{na.action} is usally specified by e.g. \code{options(na.action="na.delete")}.
@@ -79,7 +79,7 @@ cph(formula = formula(data), data=parent.frame(),
     model.
 
     For \code{Mean.cph}, \code{method} is \code{"exact"} to use numerical
-    integration of the 
+    integration of the
     survival function at any linear predictor value to obtain a mean survival
     time.  Specify \code{method="approximate"} to use an approximate method that is
     slower when \code{Mean.cph} is executing but then is essentially instant
@@ -104,7 +104,7 @@ cph(formula = formula(data), data=parent.frame(),
     model includes a \code{cluster()} operative, \code{FALSE} otherwise.
   }
   \item{model}{
-    default is \code{FALSE}(false).  Set to \code{TRUE} to return the model frame as element 
+    default is \code{FALSE}(false).  Set to \code{TRUE} to return the model frame as element
     \code{model} of the fit object.
   }
   \item{x}{
@@ -155,7 +155,7 @@ cph(formula = formula(data), data=parent.frame(),
   }
   \item{time.inc}{
     time increment used in deriving \code{surv.summary}.  Survival,
-    number at risk, and standard error will be stored for 
+    number at risk, and standard error will be stored for
     \code{t=0, time.inc, 2 time.inc, \dots, maxtime},
     where \code{maxtime} is the maximum survival time over all strata.
     \code{time.inc} is also used in constructing the time axis in the
@@ -168,12 +168,12 @@ cph(formula = formula(data), data=parent.frame(),
     \code{maxtime/ default time.inc} > 25, \code{time.inc} is increased.
   }
   \item{type}{
-    (for \code{cph}) applies if \code{surv} is \code{TRUE} or \code{"summary"}. 
+    (for \code{cph}) applies if \code{surv} is \code{TRUE} or \code{"summary"}.
     If \code{type} is omitted, the method consistent with \code{method} is used.
     See \code{survfit.coxph} (under \code{survfit}) or \code{survfit.cph} for details and for the
     definitions of values of \code{type}
 
-    For \code{Survival, Quantile, Mean} set to \code{"polygon"} to use linear 
+    For \code{Survival, Quantile, Mean} set to \code{"polygon"} to use linear
     interpolation instead of the usual step function.  For \code{Mean}, the default
     of \code{step} will yield the sample mean in the case of no censoring and no
     covariables, if \code{type="kaplan-meier"} was specified to \code{cph}.
@@ -217,8 +217,8 @@ cph(formula = formula(data), data=parent.frame(),
 \value{
   For \code{Survival}, \code{Quantile}, or \code{Mean}, an S function is returned.  Otherwise,
   in addition to what is listed below, formula/design information and
-  the components 
-  \code{maxtime, time.inc, units, model, x, y, se.fit} are stored, the last 5 
+  the components
+  \code{maxtime, time.inc, units, model, x, y, se.fit} are stored, the last 5
   depending on the settings of options by the same names.
   The vectors or matrix stored if \code{y=TRUE} or \code{x=TRUE} have rows deleted according to \code{subset} and
   to missing data, and have names or row names that come from the
@@ -261,13 +261,13 @@ cph(formula = formula(data), data=parent.frame(),
     lists of standard errors of estimate log-log survival
   }
   \item{surv.summary}{
-    a 3 dimensional array if \code{surv=TRUE}.  
+    a 3 dimensional array if \code{surv=TRUE}.
     The first dimension is time ranging from 0 to
     \code{maxtime} by \code{time.inc}.  The second dimension refers to strata.
     The third dimension contains the time-oriented matrix with
-    \code{Survival, n.risk} (number of subjects at risk), 
+    \code{Survival, n.risk} (number of subjects at risk),
     and \code{std.err} (standard error of log-log
-    survival). 
+    survival).
   }
   \item{center}{
     centering constant, equal to overall mean of X beta.
@@ -291,10 +291,10 @@ cph(formula = formula(data), data=parent.frame(),
   \code{\link[survival]{coxph}}, \code{\link[survival]{survival-internal}},
   \code{\link[survival]{Surv}}, \code{\link{residuals.cph}},
   \code{\link[survival]{cox.zph}}, \code{\link{survfit.cph}},
-  \code{\link{survest.cph}}, \code{\link[survival]{survfit.coxph}}, 
+  \code{\link{survest.cph}}, \code{\link[survival]{survfit.coxph}},
   \code{\link{survplot}}, \code{\link{datadist}},
   \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{anova.rms}},
-  \code{\link{summary.rms}}, \code{\link{Predict}}, 
+  \code{\link{summary.rms}}, \code{\link{Predict}},
   \code{\link{fastbw}}, \code{\link{validate}}, \code{\link{calibrate}},
   \code{\link{plot.Predict}}, \code{\link{specs.rms}},
   \code{\link{lrm}}, \code{\link{which.influence}},
@@ -311,7 +311,7 @@ n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)
 label(age) <- "Age"
-sex <- factor(sample(c('Male','Female'), n, 
+sex <- factor(sample(c('Male','Female'), n,
               rep=TRUE, prob=c(.6, .4)))
 cens <- 15*runif(n)
 h <- .02*exp(.04*(age-50)+.8*(sex=='Female'))
@@ -392,14 +392,14 @@ comb
 rm(age)
 set.seed(121)
 dframe <- data.frame(failure.time=1:10, event=rep(0:1,5),
-                     ie.time=c(NA,1.5,2.5,NA,3,4,NA,5,5,5), 
+                     ie.time=c(NA,1.5,2.5,NA,3,4,NA,5,5,5),
                      age=sample(40:80,10,rep=TRUE))
 z <- ie.setup(dframe$failure.time, dframe$event, dframe$ie.time)
 S <- z$S
 ie.status <- z$ie.status
 attach(dframe[z$subs,])    # replicates all variables
 
-f <- cph(S ~ age + ie.status, x=TRUE, y=TRUE)  
+f <- cph(S ~ age + ie.status, x=TRUE, y=TRUE)
 #Must use x=TRUE,y=TRUE to get survival curves with time-dep. covariables
 
 
@@ -408,7 +408,7 @@ f <- cph(S ~ age + ie.status, x=TRUE, y=TRUE)
 new <- data.frame(S=Surv(c(0,5), c(5,999), c(FALSE,FALSE)), age=rep(50,2),
                   ie.status=c(0,1))
 g <- survfit(f, new)
-plot(c(0,g$time), c(1,g$surv[,2]), type='s', 
+plot(c(0,g$time), c(1,g$surv[,2]), type='s',
      xlab='Days', ylab='Survival Prob.')
 # Not certain about what columns represent in g$surv for survival5
 # but appears to be for different ie.status

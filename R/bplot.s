@@ -52,9 +52,9 @@ bplot <-
                   rot=ylabrot, cex=cex.lab)
   if(missing(zlab))
     zlab  <- list(label=info$ylabPlotmath, rot=zlabrot, cex=cex.lab)
-  
+
   adjust  <- info$adjust
-  
+
   if(!missing(perim))
     {
       Ylo <- approx(perim[,1], perim[,2], x, ties=mean)$y
@@ -66,7 +66,7 @@ bplot <-
       data$yhat     <- yhat
     }
   else if(showperim) stop('cannot request showperim without specifying perim')
-  
+
   sub <- if(adj.subtitle && length(info$adjust))
     list(label=paste('Adjusted to:', info$adjust), cex=cex.adj) else NULL
 

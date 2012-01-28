@@ -1,13 +1,13 @@
 Gls <-
-  function (model, data = sys.frame(sys.parent()), correlation = NULL, 
-    weights = NULL, subset, method = c("REML", "ML"), na.action = na.omit, 
+  function (model, data = sys.frame(sys.parent()), correlation = NULL,
+    weights = NULL, subset, method = c("REML", "ML"), na.action = na.omit,
     control = list(), verbose = FALSE, B=0, dupCluster=FALSE,
             pr=FALSE, opmeth=c('optimize','optim'), x=FALSE)
-            
+
 {
     require(nlme)
     glsEstimate <- nlme:::glsEstimate
-    
+
     Call <- match.call()
     opmeth <- match.arg(opmeth)
     controlvals <- glsControl()
@@ -28,9 +28,9 @@ Gls <-
       groups <- getGroupsFormula(correlation)
     else groups <- NULL
     glsSt <- glsStruct(corStruct = correlation, varStruct = varFunc(weights))
-    mfArgs <- list(formula = asOneFormula(formula(glsSt), model, 
+    mfArgs <- list(formula = asOneFormula(formula(glsSt), model,
                      groups), data = data, na.action = na.action)
-    if (!missing(subset)) 
+    if (!missing(subset))
       mfArgs[["subset"]] <- asOneSidedFormula(Call[["subset"]])[[2]]
 
     mfArgs$drop.unused.levels <- TRUE
@@ -38,10 +38,10 @@ Gls <-
     rn <- origOrder <- row.names(dataMod)  ## rn FEH 6apr03
     if (length(groups))
       {
-        groups <- eval(parse(text = paste("~1", deparse(groups[[2]]), 
+        groups <- eval(parse(text = paste("~1", deparse(groups[[2]]),
                                sep = "|")))
         grps <- getGroups(dataMod, groups,
-                          level = length(getGroupsFormula(groups, 
+                          level = length(getGroupsFormula(groups,
                             asList = TRUE)))
         ord <- order(grps)
         grps <- grps[ord]
@@ -62,8 +62,8 @@ Gls <-
     desatr <- atrx$Design
     mt <- atrx$terms
     attr(X,'Design') <- NULL
-    
-    contr <- lapply(X, function(el) if (inherits(el, "factor")) 
+
+    contr <- lapply(X, function(el) if (inherits(el, "factor"))
                     contrasts(el))
     contr <- contr[!unlist(lapply(contr, is.null))]
     X <- model.matrix(model, X)
@@ -122,12 +122,12 @@ Gls <-
         attr(glsSt, "conLin") <-
           if(j==0)
             list(Xy = array(c(X, y), c(N, p + 1),
-                   list(rn, c(cn, deparse(model[[2]])))), 
+                   list(rn, c(cn, deparse(model[[2]])))),
                  dims = list(N = N, p = p, REML = as.integer(REML)),
                  logLik = 0)
           else
             list(Xy = array(c(X[s,,drop=FALSE], y[s]), c(Nb, p + 1),
-                   list(rn[s], c(cn, deparse(model[[2]])))), 
+                   list(rn[s], c(cn, deparse(model[[2]])))),
                  dims = list(N = Nb, p = p, REML = as.integer(REML)),
                  logLik = 0)
         ## FEH colnames(X) -> cn, ncol(X) -> p, j>0 case above
@@ -149,16 +149,16 @@ Gls <-
                 optim(fn = function(glsPars)
                       -logLik(glsSt, glsPars),
                       par = co,  ## FEH
-                      method = "BFGS", 
-                      control = list(trace = controlvals$msVerbose, 
+                      method = "BFGS",
+                      control = list(trace = controlvals$msVerbose,
                         reltol = if (numIter == 0)
-                        controlvals$msTol else 100 * 
+                        controlvals$msTol else 100 *
                         .Machine$double.eps,
                         maxit = controlvals$msMaxIter))$par
                 coef(glsSt) <- best   ## FEH
               }
             attr(glsSt, "glsFit") <- glsEstimate(glsSt, control = glsEstControl)
-            if (!needUpdate(glsSt)) 
+            if (!needUpdate(glsSt))
               break
             numIter <- numIter + 1
             glsSt <- update(glsSt, if(j==0) dataMod else dataMods)  ## FEH
@@ -196,10 +196,10 @@ Gls <-
       }  ## end bootstrap reps
     if(pr && B > 0) cat('\n')
     glsSt <- glsSt0   ## FEH
-        
+
     glsFit <- attr(glsSt, "glsFit")
     namBeta <- names(glsFit$beta)
-    attr(parAssign, "varBetaFact") <- varBeta <- glsFit$sigma * 
+    attr(parAssign, "varBetaFact") <- varBeta <- glsFit$sigma *
       glsFit$varBeta * sqrt((N - REML * p)/(N - p))
     varBeta <- crossprod(varBeta)
     dimnames(varBeta) <- list(namBeta, namBeta)
@@ -223,11 +223,11 @@ Gls <-
         if(length(cr) == 1) Resid <- unclass(Resid) else
         class(Resid) <- setdiff(cr, 'labelled')
       }
-    
+
     if (controlvals$apVar && FALSE)
       apVar <-
         nlme:::glsApVar(glsSt, glsFit$sigma,
-                        .relStep  = controlvals[[".relStep"]],  
+                        .relStep  = controlvals[[".relStep"]],
                         minAbsPar = controlvals[["minAbsParApVar"]],
                         natural   = controlvals[["natural"]])
     else
@@ -236,13 +236,13 @@ Gls <-
     dims[["p"]] <- p
     attr(glsSt, "conLin") <- NULL
     attr(glsSt, "glsFit") <- NULL
-    estOut <- list(modelStruct = glsSt, dims = dims, contrasts = contr, 
+    estOut <- list(modelStruct = glsSt, dims = dims, contrasts = contr,
                    coefficients = glsFit[["beta"]], varBeta = varBeta,
-                   sigma = glsFit$sigma, g=GiniMd(Fitted), 
+                   sigma = glsFit$sigma, g=GiniMd(Fitted),
                    apVar = apVar, logLik = glsFit$logLik,
-                   numIter = if(needUpdate(glsSt)) numIter else numIter0,  
+                   numIter = if(needUpdate(glsSt)) numIter else numIter0,
                    groups = grps, call = Call, method = method,
-                   fitted = Fitted,  
+                   fitted = Fitted,
                    residuals = Resid, parAssign = parAssign,
                    Design=desatr, assign=DesignAssign(desatr, 1, mt),
                    formula=model, terms=fTerms, opmeth=opmeth,
@@ -251,7 +251,7 @@ Gls <-
                    Nboot=if(B > 0) Nboot,
                    var=if(B > 0) var(bootcoef),
                    x=if(x) X)
-    
+
     ## Last 2 lines FEH 29mar03
     if (inherits(data, "groupedData"))
       {
@@ -273,7 +273,7 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
 
   k <- 0
   z <- list()
-  
+
   dd <- x$dims
   errordf <- dd$N - dd$p
   mCall <- x$call
@@ -286,12 +286,12 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
    paste('Log-', ifelse(x$method == "REML", "restricted-", ""),
          'likelihood',  sep='')
   if(latex) ltype <- paste(ltype, ' ', sep='')
-  
+
   misc <- reVector(Obs=dd$N,
                    Clusters=if(length(x$groups)) length(unique(x$groups)) else
                     dd$N,
                    g=x$g)
-  
+
   llike <- reVector(ll=x$logLik,
                     'Model d.f.' = dd$p - 1,
                     sigma  = x$sigma,
@@ -324,7 +324,7 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
                      list(coef = s[,'Value'], se = s[,'Std.Error'],
                           errordf = errordf))
     }
-  
+
 
   if (length(x$modelStruct) > 0)
     {
@@ -341,7 +341,7 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
       if(length(tn) > 1)
         {
           k < k + 1
-          z[[k]] <- list(type='print', list(tn), 
+          z[[k]] <- list(type='print', list(tn),
                          title = 'Table of Sample Sizes used in Bootstraps')
         }
       else
@@ -350,7 +350,7 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
           z[[k]] <- list(type='cat',
                          list('Bootstraps were all balanced with respect to clusters'))
         }
-      
+
       dr <- diag(x$varBeta)/diag(x$var)
       k <- k + 1
       z[[k]] <- list(type='print', list(round(dr, 2)),
@@ -361,7 +361,7 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
       z[[k]] <- list(type='print', list(r),
                      title = 'Bootstrap Nonparametric 0.95 Confidence Limits for Correlation Parameter')
     }
-  
+
   prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex, ...)
   invisible()
 }
@@ -370,7 +370,7 @@ vcov.Gls <- function(object, ...)
   if(any(names(object)=='var') && length(object$var))
   object$var else object$varBeta
 
-predict.Gls <- 
+predict.Gls <-
   function(object, newdata,
            type=c("lp","x","data.frame","terms","cterms", "ccterms", "adjto",
              "adjto.data.frame", "model.frame"),
@@ -384,6 +384,6 @@ predict.Gls <-
                incl.non.slopes, non.slopes, kint,
                na.action, expand.na, center.terms, ...)
   }
-    
+
 
 latex.Gls <- function(...) latexrms(...)

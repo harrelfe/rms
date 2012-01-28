@@ -1,10 +1,10 @@
 robcov <- function(fit, cluster, method=c('huber','efron'))
 {
   method <- match.arg(method)
-  
+
   var   <- vcov(fit)
   vname <- dimnames(var)[[1]]
-  
+
   if(inherits(fit, "ols") ||
      (length(fit$fitFunction) && any(fit$fitFunction=='ols')))
     var <- fit$df.residual * var/sum(fit$residuals^2)  #back to X'X
@@ -36,8 +36,8 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
   nc <- length(levels(cluster))
   clus.start <- clus.start[-(nc+1)]
   storage.mode(clus.start) <- "integer"
-  
-  W <- matrix(.Fortran("robcovf", n, p, nc, clus.start, clus.size, X, 
+
+  W <- matrix(.Fortran("robcovf", n, p, nc, clus.start, clus.size, X,
                        double(p), double(p*p), w=double(p*p),
                        PACKAGE="rms")$w, nrow=p)
 
@@ -55,7 +55,7 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
 ##					}
 
   adjvar <- var %*% W %*% var
-              
+
   ##var.new <- diag(adjvar)
   ##deff <- var.new/var.orig; names(deff) <- vname
   ##eff.n <- n/exp(mean(log(deff)))
@@ -76,7 +76,7 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
   fit$var <- adjvar
   ##fit$design.effects <- deff
   ##fit$effective.n <- eff.n
-  
+
   fit
-  
+
 }

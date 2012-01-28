@@ -1,5 +1,5 @@
 validate.rpart <- function(fit, method, B, bw, rule, type, sls, aics,
-                           force, pr=TRUE, k, rand, xval = 10, 
+                           force, pr=TRUE, k, rand, xval = 10,
                            FUN, ...)
 {
   if(missing(FUN))
@@ -14,7 +14,7 @@ validate.rpart <- function(fit, method, B, bw, rule, type, sls, aics,
   if(!is.data.frame(m)) stop('you must specify model=T in the fit')
   y <- model.extract(m, 'response')
   binary <- is.logical(y) ||
-   ((length(un <- sort(unique(y[!is.na(y)]))) == 
+   ((length(un <- sort(unique(y[!is.na(y)]))) ==
     2) && un[1] == 0 && un[2] == 1)
   if(binary && is.factor(y)) y <- as.numeric(y) - 1
   call <- match.call()
@@ -75,12 +75,12 @@ validate.rpart <- function(fit, method, B, bw, rule, type, sls, aics,
           cat("\n\nk=", format(kk), ":\n\n")
           dyx <- cbind(dyx.app, dyx.val, b.app, b.val)
           dimnames(dyx) <- list(c(as.character(1:j), "Mean"),
-                                c("Dxy Training", "Dxy Test", "MSE Training", 
+                                c("Dxy Training", "Dxy Test", "MSE Training",
                                   "MSE Test"))
           print(dyx)
         }
     }
-  structure(list(k = k, size = size, dxy.app = pdyx.app, dxy.val = 
+  structure(list(k = k, size = size, dxy.app = pdyx.app, dxy.val =
                  pdyx.val, mse.app = pb.app, mse.val = pb.val,
                  binary = binary, xval = xval),
             class = "validate.rpart")
@@ -89,12 +89,12 @@ validate.rpart <- function(fit, method, B, bw, rule, type, sls, aics,
 print.validate.rpart <- function(x, ...)
 {
   cat(x$xval, "-fold cross-validation\n\n", sep = "")
-  w <- cbind(k = x$k, size = x$size, Dxy.apparent = x$dxy.app, 
+  w <- cbind(k = x$k, size = x$size, Dxy.apparent = x$dxy.app,
              Dxy.val = x$dxy.val, MSE.apparent = x$mse.app,
              MSE.val = x$mse.val)
   if(x$binary)
-    dimnames(w) <- list(NULL, c("k", if(length(x$size)) "size", 
-                                "Dxy.apparent", "Dxy.val", "Brier.apparent", 
+    dimnames(w) <- list(NULL, c("k", if(length(x$size)) "size",
+                                "Dxy.apparent", "Dxy.val", "Brier.apparent",
                                 "Brier.val"))
   invisible(print(w))
 }
@@ -117,7 +117,7 @@ plot.validate.rpart <- function(x, what = c("mse", "dxy"),
     {
       blab <- if(obj$binary) "Brier Score" else "Mean Squared Error"
       ylim <- range(c(obj$mse.app, obj$mse.val))
-      plot(x, obj$mse.app, xlab = xlab, ylab = blab, ylim = ylim, 
+      plot(x, obj$mse.app, xlab = xlab, ylab = blab, ylim = ylim,
            type = "n")
       lines(x, obj$mse.app, lty = 3)
       lines(x, obj$mse.val, lty = 1)

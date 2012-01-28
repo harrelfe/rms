@@ -24,12 +24,12 @@ objects created by \code{validate.rpart}.
 \arguments{
 \item{fit}{
   an object created by \code{rpart}.  You must have specified the
-  \code{model=TRUE} argument to \code{rpart}. 
+  \code{model=TRUE} argument to \code{rpart}.
 }
 \item{method,B,bw,rule,type,sls,aics,force}{
   are there only for consistency with the generic \code{validate}
   function; these are ignored
-} 
+}
 \item{x}{the result of \code{validate.rpart}}
 \item{k}{
   a sequence of cost/complexity values.  By default these are obtained
@@ -48,7 +48,7 @@ objects created by \code{validate.rpart}.
 }
 \item{pr}{
   set to \code{FALSE} to prevent intermediate results for each \code{k}
-  to be printed 
+  to be printed
 }
 \item{what}{
   a vector of things to plot.  By default, 2 plots will be done, one for
@@ -86,7 +86,7 @@ f.harrell@vanderbilt.edu
 \seealso{
 \code{\link[rpart]{rpart}}, \code{\link[Hmisc]{somers2}},
 \code{\link[Hmisc]{rcorr.cens}}, \code{\link{locator}},
-\code{\link{legend}} 
+\code{\link{legend}}
 }
 \examples{
 \dontrun{

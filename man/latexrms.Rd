@@ -38,7 +38,7 @@ a fit object created by a fitting function in the \code{rms} series
 \item{which}{
   a vector of subcripts (corresponding to \code{object$Design$name})
   specifying a submodel to print. Default is to describe the whole
-  model. 
+  model.
   \code{which} can also be a vector of character strings specifying the
   factor names to print. Enough of each string is needed to ensure
   a unique match. Names for interaction effects are of the form
@@ -52,7 +52,7 @@ a fit object created by a fitting function in the \code{rms} series
   to \code{object$Design$name} and interactions must be omitted.
   Default is
   \code{object$Design$name[object$Design$assume.code!=9]}. \code{varnames}
- can contain any LaTeX commands such as subscripts and "\\\\\\\\frac"    
+ can contain any LaTeX commands such as subscripts and "\\\\\\\\frac"
  (all "\\" must be quadrupled.)
  Any "/" must be preceeded by "\\\\" (2, not 4 backslashes).
  Elements of \code{varnames} for interactions are ignored; they can be

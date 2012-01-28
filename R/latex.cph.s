@@ -1,17 +1,17 @@
 latex.cph <-
-  function(object, title, 
+  function(object, title,
            file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
-           append=FALSE, surv=TRUE, maxt=FALSE, which=NULL, varnames, 
-           columns=65, inline=FALSE, 
+           append=FALSE, surv=TRUE, maxt=FALSE, which=NULL, varnames,
+           columns=65, inline=FALSE,
            before=if(inline)"" else "& &", after="",
            dec=3, pretrans=TRUE,
            caption=NULL, digits=.Options$digits, size='', ...)
 {
   f <- object
   whichThere <- length(which)
-  
+
   atr <- f$Design
-  
+
   lev <- names(f$freq)
   Intercept <- -f$center
   strata <- f$strata
@@ -38,15 +38,15 @@ latex.cph <-
   if(missing(varnames)) varnames <- atr$name[atr$assume.code!=9]
   cat(w, sep=if(length(w))"\n" else "", file=file, append=append)
 
-  z <- latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
-                columns=columns, 
+  z <- latexrms(f, file=file, append=TRUE, which=which, varnames=varnames,
+                columns=columns,
                 before=before, after=after,
-                prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
+                prefix=if(!whichThere)"X\\hat{\\beta}" else NULL,
                 intercept=Intercept, inline=inline,
-                pretrans=pretrans, digits=digits, size=size) 
+                pretrans=pretrans, digits=digits, size=size)
 
   if(inline) return(z)
-  
+
   ss <- f$surv.summary
   if(surv && length(ss))
     {
@@ -58,27 +58,27 @@ latex.cph <-
       if(nstrat==0)
         {
           s <- matrix(ss[,,1],ncol=1)
-        
+
           if(maxt)
             {
               s <- cbind(s, f$surv[L <- length(f$surv)])
-              times <- c(times, f$time[L]) 
+              times <- c(times, f$time[L])
             }
           dimnames(s) <- list(format(times), "$S_{0}(t)$")
           latex.default(s, file=file, append=TRUE, rowlabel="$t$",
                         rowlabel.just="r",
                         dec=dec, table.env=FALSE)
         }
-      
+
       else
         {
 #    com <- paste(paste("-e 's/",sname,"=\\(.*\\),/",
 #	"\\1, /' ",sep=""),collapse="")
 #   # Adding \\: spacer in subscript caused LaTeX to barf  (19May95)
 #    n <- sys(paste('sed -e "s/[.]/, /g"',com, # "-e 's/ /\\\\\\\\:/g'"
-#		), 
+#		),
 #		paste(fs,",",sep=""))
-          
+
           ## Change . to ,blank
           n <- sedit(paste(fs,',',sep=''), '.', ', ')
           ## Change sname=*, to *,
@@ -92,8 +92,8 @@ latex.cph <-
                 smax[i] <- f$surv[[i]][abs(f$time[[i]]-maxtime)<.001]
               s <- rbind(s, smax)
               times <- c(times, maxtime)
-            }    
-    
+            }
+
           dimnames(s) <- list(format(times),
                               paste("$S_{", n, "}(t)$", sep=""))
           latex.default(s, file=file, append=TRUE,

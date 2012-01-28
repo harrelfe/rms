@@ -11,23 +11,23 @@
 #
 # F. Harrell 18Jan91
 
-fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0, 
+fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
 			eps=1e-9, k.aic=2, force=NULL)
 {
   ns <- num.intercepts(fit)
   if(length(force)) force <- force + ns
   L <- if(ns==0) NULL else 1:ns
-  
+
   pt <- length(fit$coef)
   p <- pt - ns
   atr <- fit$Design
-  
+
   assume <- atr$assume.code
   if(!length(assume)) stop("fit does not have design information")
   assign <- fit$assign
   nama <- names(assign)[1]
   asso <- 1*(nama=="(Intercept)" | nama=="Intercept")
-  
+
   f <- sum(assume != 8)
   strt <- integer(f)
   len <- strt
@@ -59,7 +59,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
   parms.in <- 1:pt
 
   ##library.dynam(section="local",file="mlmats.o")
-  
+
   ## Not needed if using solve() instead of avia
   ## Allocate work areas for avia
   ## s1 <- double(pt)
@@ -83,7 +83,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
   fcl <- oldClass(fit)
   dor2 <- length(fcl) &&
    (any(fcl=='ols') || (length(fit$fitFunction) &&
-          any(fit$fitFunction=='ols'))) && 
+          any(fit$fitFunction=='ols'))) &&
    (length(fit$y) || (length(fit$fitted.values) &&
                       length(fit$residuals)))
   if(dor2)
@@ -124,13 +124,13 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
           ##               ln[k],df=integer(1),eps,vsub,s1,s2,s3,s4,pivot,NAOK=TRUE)
           ##	chisq <- z$chisq
           ##	df <- z$df
-          
+
           ##replace previous 5 statements with following 3 to use slow method
           q <- st[k]:en[k]
           chisq <- if(any(q %in% force)) Inf else
           beta[q] %*% solvet(cov[q,q], beta[q], tol=eps)
           df <- length(q)
-          
+
           switch(rule, crit <- chisq-k.aic * df, crit <- pchisq(chisq, df))
           if(crit < crit.min)
             {
@@ -138,9 +138,9 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
               crit.min <- crit
               chisq.crit.min <- chisq
               df.min <- df
-            }	
+            }
         }
-      
+
       factors.in <- factors.in[factors.in != jmin]
       parms.in <- parms.in[parms.in < strt[jmin] | parms.in > ed[jmin]]
       if(length(parms.in)==0) q <- 1:pt else q <- (1:pt)[-parms.in]
@@ -157,11 +157,11 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
       ## resid <- z$chisq
       ## resid.df <- z$df
       ##}
-      
+
       ##replace previous 5 statements with following 2 to use slow method
       resid <- fit$coef[q] %*% solvet(Cov[q,q], fit$coef[q], tol=eps)
       resid.df <- length(q)
-      
+
       switch(type,
              switch(rule, del <- resid - k.aic*resid.df <= aics,
                     del <- 1 - pchisq(resid,resid.df) > sls),
@@ -205,7 +205,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
       else
         break
     }
-  
+
   if(d>0)
     {
       fd <- factors.del[1:d]
@@ -218,7 +218,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
                    1-pchisq(chisq.del[1:d], df.del[1:d]),
                    resid.del[1:d], df.resid[1:d],
                    1-pchisq(resid.del[1:d], df.resid[1:d]),
-                   resid.del[1:d] - k.aic * 
+                   resid.del[1:d] - k.aic *
                    df.resid[1:d])
       labs <- c("Chi-Sq", "d.f.", "P", "Residual", "d.f.", "P", "AIC")
       dimnames(res) <- list(name[fd], labs)
@@ -232,7 +232,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
     }
 
   nf <- name[fk]
-  
+
   pd <- NULL
   if(d>0) for(i in 1:d) pd <- c(pd, (strt[fd[i]] : ed[fd[i]]))
 
@@ -263,7 +263,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
   r
 }
 
-		
+
 print.fastbw <- function(x, digits=4, ...)
 {
 

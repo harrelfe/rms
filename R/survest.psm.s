@@ -5,9 +5,9 @@ survest <- function(fit, ...) UseMethod("survest")
 #Strata is attached to linear.predictors or x as "strata" attribute.
 #data matrix assumes that categorical variables are coded with integer codes
 
-survest.psm <- function(fit, newdata, linear.predictors, x, times, fun, 
+survest.psm <- function(fit, newdata, linear.predictors, x, times, fun,
                         loglog=FALSE, conf.int=.95,
-                        what=c("survival","hazard","parallel"), 
+                        what=c("survival","hazard","parallel"),
                         ...) {   # ... so survplot will work
 
   what <- match.arg(what)
@@ -37,7 +37,7 @@ survest.psm <- function(fit, newdata, linear.predictors, x, times, fun,
     stop("fit should not have been passed thru pphsm")
 
   nvar <- length(fit$coef)-num.intercepts(fit)
-  
+
   if(missing(linear.predictors))
     {
       if(nvar>0 & missing(x) & missing(newdata))
@@ -59,7 +59,7 @@ survest.psm <- function(fit, newdata, linear.predictors, x, times, fun,
               if(missing(x)) x <- predict(fit,newdata,type="x")
               linear.predictors <- matxv(x, fit$coef)
             }
-          if(conf.int>0) 
+          if(conf.int>0)
             {
               g1 <- drop(((x %*% cov) * x) %*% rep(1, ncol(x)))
               last <- {
@@ -72,26 +72,26 @@ survest.psm <- function(fit, newdata, linear.predictors, x, times, fun,
         }
     }
   else  rnam <- names(linear.predictors)
-  
+
   if(what=='parallel')
     {
       if(length(times)>1 && (length(times) != length(linear.predictors)))
         stop('length of times must = 1 or number of subjects when what="parallel"')
       return(trans(times,linear.predictors))
     }
-  
+
   if(missing(times)) times <- seq(0,fit$maxtime,length=200)
   nt <- length(times)
   n <- length(linear.predictors)
-  
+
   if(n>1 & missing(times))
     warning("should specify times if getting predictions for >1 obs.")
-  
+
   if(conf.int>0) zcrit <- qnorm((conf.int+1)/2)
-  
+
   comp <- function(a, b, Trans) Trans(b, a)
   surv <- drop(outer(linear.predictors, times, FUN=comp, Trans=trans))
-  
+
   if(conf.int>0 && (nt==1 | n==1))
     {
       dist <- fit$dist
@@ -134,14 +134,14 @@ survest.psm <- function(fit, newdata, linear.predictors, x, times, fun,
                            class='survest.psm')
       return(retlist)
     }
-  
+
   if(n==1) names(surv) <- format(times) else
   {
     if(is.matrix(surv))
       dimnames(surv) <- list(rnam, format(times))
     else names(surv) <- rnam
   }
-  
+
   surv
 }
 

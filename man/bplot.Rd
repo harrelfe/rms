@@ -74,14 +74,14 @@ Set to \code{FALSE} to suppress subtitling the graph with the list of
   names a matrix created by \code{perimeter} when used for 3-d plots of
   two continuous predictors.  When the combination of variables is outside
   the range in \code{perim}, that section of the plot is suppressed.  If
-  \code{perim} 
+  \code{perim}
   is omitted, 3-d plotting will use the marginal distributions of the
   two predictors to determine the plotting region, when the grid is
   not specified explicitly in \code{variables}.  When instead a series of
   curves is being plotted, \code{perim} specifies a function having two
   arguments.  The first is the vector of values of the first variable that
   is about to be plotted on the \eqn{x}-axis.  The second argument
-  is the single 
+  is the single
   value of the variable representing different curves, for the current
   curve being plotted.  The function's returned value must be a logical
   vector whose length is the same as that of the first argument, with
@@ -116,12 +116,12 @@ Set to \code{FALSE} to suppress subtitling the graph with the list of
 }
 \item{xinc}{
   increment in \code{x} over which to examine the density of \code{y} in
-  \code{perimeter} 
+  \code{perimeter}
 }
 \item{n}{
   within intervals of \code{x} for \code{perimeter}, takes the
   informative range of \code{y} to be the \eqn{n}th smallest to the
-  \eqn{n}th largest values of \code{y}.  If there aren't 
+  \eqn{n}th largest values of \code{y}.  If there aren't
   at least 2\eqn{n} \code{y} values in the \code{x} interval, no
   \code{y} ranges are used for that interval.
 }

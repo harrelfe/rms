@@ -28,20 +28,20 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
         cmethod <- 'KM'
       }
     }
-  
+
   oldopt <- options(digits=3)
   on.exit(options(oldopt))
   unit <- fit$units
   if(unit=="") unit <- "Day"
-  
+
   ssum <- fit$surv.summary
   if(!length(ssum)) stop('did not use surv=TRUE for cph( )')
   cat("Using Cox survival estimates at ", dimnames(ssum)[[1]][2],
       " ", unit, "s\n", sep="")
-  
+
   surv.by.strata <- ssum[2,,1] #2nd time= at u, all strata
   xb <- fit$linear.predictors
-  if(length(stra <- fit$Strata)) 
+  if(length(stra <- fit$Strata))
     surv.by.strata <- surv.by.strata[stra]
   survival <- as.vector(surv.by.strata^exp(xb))
 
@@ -58,16 +58,16 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
   if(cmethod=='hare') cuts <- NULL
   else
     pred <- NULL
-  
+
   distance <- function(x, y, strata, fit, iter, u, fit.orig, what="observed",
                        pred, orig.cuts, maxdim, ...)
     {
       ## Assumes y is matrix with 1st col=time, 2nd=event indicator
-      
+
       if(sum(y[,2]) < 5) return(NA)
       surv.by.strata <- fit$surv.summary[2,,1]
       ##2 means to use estimate at first time past t=0 (i.e., at u)
-      
+
       if(length(strata))
         surv.by.strata <- surv.by.strata[strata] #Get for each stratum in data
       cox <- as.vector(surv.by.strata^exp(x - fit$center))
@@ -100,7 +100,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
     {
       etime <- y[,1]
       e     <- y[,2]
-      
+
       if(sum(e) < 5) return(list(fail=TRUE))
       x <- x	#Get around lazy evaluation creating complex expression
       f <- if(length(x))
@@ -110,7 +110,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
           else cph(Surv(etime,e) ~ x, surv=TRUE, time.inc=u)
         }
       else cph(Surv(etime,e) ~ strat(strata), surv=TRUE, time.inc=u)
-      
+
       ## Get predicted survival at times 0, u, 2u, 3u, ...
       attr(f$terms, "Design") <- NULL
       ## Don't fool fastbw called from predab.resample
@@ -131,7 +131,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
       reliability <-
         predab.resample(fit, method=method,
                         fit=coxfit, measure=distance,
-                        pr=pr, B=b, bw=bw, rule=rule, type=type,  
+                        pr=pr, B=b, bw=bw, rule=rule, type=type,
                         u=u, m=m, what=what, sls=sls, aics=aics, force=force,
                         pred=pred, orig.cuts=cuts, tol=tol, maxdim=maxdim, ...)
       kept <- attr(reliability, 'kept') # TODO: accumulate over reps
@@ -139,7 +139,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
       rel <- rel + n * reliability[,"index.corrected"]
       opt <- opt + n * reliability[,"optimism"]
       nrel <- nrel + n
-      B <- B + max(n)	
+      B <- B + max(n)
     }
 
   mean.corrected <- rel/nrel

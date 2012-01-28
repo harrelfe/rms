@@ -45,7 +45,7 @@
     \item Bootstrap model validation to obtain unbiased
       estimates of model performance without requiring a
       separate validation sample
-    
+
     \item Automatic Wald tests of all effects in the model that
       are not parameterization-dependent (e.g., tests of
       nonlinearity of main effects when the variable does
@@ -53,13 +53,13 @@
       nonlinearity of interaction effects, tests for
       whether a predictor is important, either as a main
       effect or as an effect modifier)
-	  
+
     \item Graphical depictions of model estimates (effect
       plots, odds/hazard ratio plots, nomograms that
       allow model predictions to be obtained manually even
       when there are nonlinear effects and interactions
       in the model)
-    
+
     \item Various smoothed residual plots, including some new
       residual plots for verifying ordinal logistic model
       assumptions
@@ -67,12 +67,12 @@
       predictor (\eqn{X\hat{beta}}{X*beta hat}), hazard function, survival
       function, quantile functions analytically from the
       fitted model
-    
+
       \item Typesetting of fitted model using LaTeX
-	  
+
     \item Robust covariance matrix estimation (Huber or
       bootstrap)
-    
+
     \item Cubic regression splines with linear tail restrictions (natural splines)
     \item Tensor splines
     \item Interactions restricted to not be doubly nonlinear
@@ -82,10 +82,10 @@
       different amounts, e.g., you may want to penalize
       interaction or nonlinear effects more than main
       effects or linear effects
-    
+
     \item Estimation of hazard or odds ratios in presence of
       nolinearity and interaction
-    
+
     \item Sensitivity analysis for an unmeasured binary confounder in a
       binary logistic model
     }
@@ -173,7 +173,7 @@
 
     \item need to recognize that an intercept is not always a simple
     concept
-    \itemize{  
+    \itemize{
       \item some models (e.g., Cox) have no intercept
       \item some models (e.g., ordinal logistic) have multiple intercepts
     }
@@ -283,7 +283,7 @@
     \tab selection \tab \cr
     \bold{\code{residuals}}   \tab Residuals, influence statistics from fit \tab \cr
     (or \bold{\code{resid}})  \tab                         \tab \cr
-    \bold{\code{which.influence}} 
+    \bold{\code{which.influence}}
     \tab Which observations are overly               \tab \code{residuals} \cr
     \tab influential \tab \cr
     \bold{\code{sensuc}}      \tab Sensitivity of one binary predictor in \tab \cr
@@ -353,7 +353,7 @@
   \code{predict(f, newdata)}
 
   In the \bold{Examples} section there are three detailed examples using a
-  fitting function 
+  fitting function
   designed to be used with rms, \code{lrm} (logistic
   regression model).  In \bold{Detailed Example 1} we
   create 3 predictor variables and a two binary response
@@ -400,7 +400,7 @@
   subjects with 2 predictors, \code{age} and \code{sex}.  In the true
   population model, the log hazard function is linear in
   \code{age} and there is no \code{age} \eqn{\times}{x} \code{sex}
-  interaction.  In the  
+  interaction.  In the
   analysis below we do not make use of the linearity in
   age.  rms makes use of many of Terry Therneau's
   survival functions that are builtin to S.
@@ -464,7 +464,7 @@ dz.bp <- ifelse(runif(n) <= plogis(L.bp), 1, 0)
 # Use summary.formula in the Hmisc package to summarize the
 # data one predictor at a time
 
-s <- summary(dz.bp ~ age + sex + sys.bp) 
+s <- summary(dz.bp ~ age + sex + sys.bp)
 options(digits=3)
 print(s)
 plot(s)
@@ -555,7 +555,7 @@ options(datadist=NULL)
 #####################
 #Detailed Example 2 #
 #####################
-# Simulate the data.  
+# Simulate the data.
 n <- 1000    # define sample size
 set.seed(17) # so can reproduce the results
 treat <- factor(sample(c('a','b','c'), n, TRUE))
@@ -606,14 +606,14 @@ plot(anova(fit)) # Depict Wald statistics graphically
 anova(fit, treat, cholesterol) # Test these 2 by themselves
 summary(fit) # Estimate effects using default ranges
 plot(summary(fit)) # Graphical display of effects with C.L.
-summary(fit, treat="b", age=60) 
+summary(fit, treat="b", age=60)
 # Specify reference cell and adjustment val
 
 
 summary(fit, age=c(50,70)) # Estimate effect of increasing age from
                            # 50 to 70
-summary(fit, age=c(50,60,70)) # Increase age from 50 to 70, 
-                              # adjust to 60 when estimating 
+summary(fit, age=c(50,60,70)) # Increase age from 50 to 70,
+                              # adjust to 60 when estimating
                               # effects of other factors
 # If had not defined datadist, would have to define
 # ranges for all var.
@@ -716,7 +716,7 @@ print(drep, long=TRUE)
 # predicted values vary with a continuous predictor
 # on the x-axis, with two other predictors varying
 
-fit <- lrm(y ~ log(cholesterol - 10) + 
+fit <- lrm(y ~ log(cholesterol - 10) +
            num.diseases + rcs(age) + rcs(weight) + sex)
 
 
@@ -757,7 +757,7 @@ n <- 2000
 set.seed(731)
 age <- 50 + 12*rnorm(n)
 label(age) <- "Age"
-sex <- factor(sample(c('Male','Female'), n, 
+sex <- factor(sample(c('Male','Female'), n,
               rep=TRUE, prob=c(.6, .4)))
 cens <- 15*runif(n)
 h <- .02*exp(.04*(age-50)+.8*(sex=='Female'))
@@ -815,7 +815,7 @@ print(z); plot(z)
 # Re-fit this model without storing underlying survival
 # curves for reference groups, but storing raw data with
 # the fit (could also use f <- update(f, surv=FALSE, x=TRUE, y=TRUE))
-f <- cph(Srv ~ rcs(age,4)+strat(sex), x=TRUE, y=TRUE) 
+f <- cph(Srv ~ rcs(age,4)+strat(sex), x=TRUE, y=TRUE)
 # Get accurate C.L. for any age
 # Note: for evaluating shape of regression, we would not ordinarily
 # bother to get 3-year survival probabilities - would just use X * beta
@@ -831,7 +831,7 @@ plot(Predict(f, age=ages, sex, time=3, loglog=TRUE), ylim=c(-5,-1))
 # allowing for general interaction between age and sex
 f <- cph(Srv ~ rcs(age,4)*strat(sex), x=TRUE, y=TRUE)
 anova(f)
-ages <- seq(20, 80, by=6)   
+ages <- seq(20, 80, by=6)
 # Still fewer points - more parameters in model
 
 
@@ -942,7 +942,7 @@ f
 # and old psm (77.65); suspect were also testing sigma=1
 
 for(w in c('survival','hazard'))
- print(survest(f, data.frame(x1=7,x2=3,x3='1'), 
+ print(survest(f, data.frame(x1=7,x2=3,x3='1'),
        times=c(5,7), conf.int=.95, what=w))
 # S-Plus 2000 using old survival package:
 #  S(t):.925 .684 SE:0.729 0.556 Hazard:0.0734 0.255
@@ -1123,25 +1123,25 @@ options(datadist=NULL)
       recurrence following radical prostatectomy for
       prostate cancer.  \emph{J Natl Ca Inst} 1998;
       90(10):766-771.
-      
+
       \item Kattan, MW, Wheeler TM, Scardino PT.  A
       postoperative nomogram for disease recurrence
       following radical prostatectomy for prostate
       cancer. \emph{J Clin Oncol} 1999; 17(5):1499-1507
 
-      \item Kattan MW, Zelefsky MJ, Kupelian PA, Scardino PT, 
+      \item Kattan MW, Zelefsky MJ, Kupelian PA, Scardino PT,
       Fuks Z, Leibel SA.  A pretreatment nomogram for
       predicting the outcome of three-dimensional
-      conformal radiotherapy in prostate cancer.  
+      conformal radiotherapy in prostate cancer.
       \emph{J Clin Oncol} 2000; 18(19):3252-3259.
-      
+
       \item Eastham JA, May R, Robertson JL, Sartor O, Kattan
       MW.  Development of a nomogram which predicts the
       probability of a positive prostate biopsy in men
       with an abnormal digital rectal examination and a
       prostate specific antigen between 0 and 4
       ng/ml. \emph{Urology}. (In press).
-      
+
       \item Kattan MW, Heller G, Brennan MF.  A competing-risk
       nomogram fir sarcoma-specific death following local recurrence.
       \emph{Stat in Med} 2003; 22; 3515-3525.
@@ -1191,9 +1191,9 @@ options(datadist=NULL)
     \item Propensity modeling in evaluating medical diagnosis, anova
     dot chart
     \enumerate{
-      \item Weiss JP, Gruver C, et al.  Ordering an echocardiogram 
+      \item Weiss JP, Gruver C, et al.  Ordering an echocardiogram
       for evaluation of left ventricular function: Level
-      of expertise necessary for efficient use. \emph{J Am Soc 
+      of expertise necessary for efficient use. \emph{J Am Soc
         Echocardiography} 2000; 13:124-130.
     }
 
@@ -1245,7 +1245,7 @@ options(datadist=NULL)
     used \code{datadist} but not until after the fit was
     created, also send the object created by
     \code{datadist}.  Example: \code{save(myfit,"/tmp/myfit.rda")} will create
-    an R binary save file that can be attached to the E-mail.  
+    an R binary save file that can be attached to the E-mail.
     \item If the bug occurs during a model fit (e.g., with
     \code{lrm, ols, psm, cph}), send the statement causing
     the error with a \code{save}'d version of the data
@@ -1279,10 +1279,10 @@ options(datadist=NULL)
   biostatistical/epidemiologic modeling, testing,
   estimation, validation, graphics, and prediction.
   Programs available from \url{biostat.mc.vanderbilt.edu/rms}.
-  Be sure to reference other packages used as well as 
+  Be sure to reference other packages used as well as
   \R itself.
 }
- 
+
 \author{
   Frank E Harrell Jr\cr
   Professor of Biostatistics\cr

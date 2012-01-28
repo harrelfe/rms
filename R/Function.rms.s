@@ -14,7 +14,7 @@ Function.rms <- function(object, intercept=NULL,
   adj.to    <- Getlim(at, allow.null=TRUE, need.all=TRUE)$limits['Adjust to',]
 
 
-  chr <- function(y, digits) if(is.category(y)||is.character(y)) 
+  chr <- function(y, digits) if(is.category(y)||is.character(y))
     paste('"',as.character(y),'"',sep='') else format.sep(y, digits)
 
   adj.to <- unlist(lapply(adj.to,chr,digits=digits))
@@ -30,7 +30,7 @@ Function.rms <- function(object, intercept=NULL,
             'strat(*)','matrx(*)','I(*)')
   to   <- rep('*',9)
 
-  ##trans <- paste("h(",translate(TL[ac!=9], from, "\\1"),")",sep="")  
+  ##trans <- paste("h(",translate(TL[ac!=9], from, "\\1"),")",sep="")
   trans <- paste("h(",sedit(TL[ac!=9], from, to),")",sep="")
   ##change wrapping function to h()
   h <- function(x,...) deparse(substitute(x))
@@ -41,9 +41,9 @@ Function.rms <- function(object, intercept=NULL,
 
   interaction <- at$interactions
   if(length(interaction)==0) interaction <- 0
-  
+
   parms <- at$parms
-  
+
   Two.Way <- function(prm,Nam,nam.coef,cof,coef,f,varnames,at,digits)
     {
       i1 <- prm[1,1]; i2 <- prm[2,1]
@@ -67,7 +67,7 @@ Function.rms <- function(object, intercept=NULL,
           act <- mnam[mnam>0]
           lN2.act <- length(act)
           ##Check if restricted interaction between a rcs and another nonlinear
-          ##var, i.e. >1 2nd term possible, only 1 (linear) there, and at first 
+          ##var, i.e. >1 2nd term possible, only 1 (linear) there, and at first
           ##nonlinear term of rcs
           if(lN2.act==1 & lN2>1 & at$assume.code[i1]==4 & j1==2)
             {
@@ -75,7 +75,7 @@ Function.rms <- function(object, intercept=NULL,
               cnam <- paste(nam.coef[[if(rev)i2 else i1]][1], "*",
                             nam.coef[[if(rev)i1 else i2]][-1])
               vv <- attr(rcspline.restate(at$parms[[at$name[i1]]],
-                                          c(0, coef[cnam]), 
+                                          c(0, coef[cnam]),
                                           x=varnames[i1], digits=digits),
                          'function.text')
               v <- paste(v, vv, ')', sep='')
@@ -92,12 +92,12 @@ Function.rms <- function(object, intercept=NULL,
                 {
                   vv <- paste("+",N1[j1],"*(",sep="")
                   v <- paste(v, vv, sep='')
-                  
+
                   if(at$assume.code[i2]==4 & !any(mnam==0))
                     {
                       ##rcspline, interaction not restricted
                       vv <- attr(rcspline.restate(at$parms[[at$name[i2]]],
-                                                  coef[act], 
+                                                  coef[act],
                                                   x=varnames[i2],
                                                   digits=digits),
                                  'function.text')
@@ -122,7 +122,7 @@ Function.rms <- function(object, intercept=NULL,
         }
       v
     }
-  
+
 Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
   {
     i1 <- prm[1,1]; i2 <- prm[2,1]; i3 <- prm[3,1]
@@ -142,16 +142,16 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
       }
     v
   }
-  
+
 
   Coef <- object$coef
   if(nrp==1 | length(intercept))
     {
-      cof <- if(!length(intercept))format.sep(Coef[1],digits) else 
+      cof <- if(!length(intercept))format.sep(Coef[1],digits) else
       format.sep(intercept,digits)
       z <- paste(z, cof, sep='')
     }
-  
+
   Nam <- list();  nam.coef <- list()
   assig <- object$assign
 
@@ -167,7 +167,7 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
       nam.coef[[i]] <- names(coef)
       cof <- format.sep(coef,digits)
       cof <- ifelse(coef<=0, cof, paste("+", cof, sep=""))
-      
+
       switch(ass,
              {
                nam <- name[i]; Nam[[i]] <- nam
@@ -181,21 +181,21 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
                for(j in pow) q <- paste(q, cof[j], "*", nams[j], sep="")
              },
 
-             {  
+             {
                q <- paste(cof[1], "*", nam, sep="")
                nams <- nam
                kn <- format.sep(-prm,digits)
                for(j in 1:length(prm))
                  {
-                   zz <- paste("pmax(", nam, if(prm[j]<0) "+" else NULL, 
-                               if(prm[j]!=0) kn[j] else NULL, 
+                   zz <- paste("pmax(", nam, if(prm[j]<0) "+" else NULL,
+                               if(prm[j]!=0) kn[j] else NULL,
                                ",0)", sep="")
                    nams <- c(nams, zz)
                    q <- paste(q, cof[j+1], "*", zz, sep="")
                  }
                Nam[[i]] <- nams
              },
-             
+
              {
                q <- attr(rcspline.restate(prm, coef, x=nam, digits=digits),
                          'function.text')
@@ -219,9 +219,9 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
                    q <- paste(q, vv, sep="")
                  }
              },
-             
+
              q <- '',
-             
+
              {
                q <- paste(cof[1], "*", nam, sep="")
                nams <- nam
@@ -232,7 +232,7 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
                    nams <- c(nams, zz)
                    q <- paste(q, vv, sep="")
                  }
-               Nam[[i]] <- nams 
+               Nam[[i]] <- nams
              },
              ##Strat factor doesn't exist as main effect, but keep variable
              ##names and their lengths if they will appear in interactions later
@@ -243,15 +243,15 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
                    Nam[[i]] <- prm[-1]
                  }
                q <- "" },
-             
-             {  
-               if(prm[3,1]==0) 
+
+             {
+               if(prm[3,1]==0)
                  q <- Two.Way(prm,Nam,nam.coef,cof,coef,object,
                               name, at, digits)
               else q <- Three.Way(prm,Nam,nam.coef,cof,coef,
                                   object,at, digits)
-            
-             }, 
+
+             },
              {
                nam <- names(coef)
                q <- ""
@@ -262,7 +262,7 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
                    vv <- paste(cof[j], '*', nam[j], sep="")
                    q <- paste(q, vv, sep="")
                  }
-             }) 
+             })
       z <- paste(z, q, sep='')
     }
   z <- paste(z, '}')
@@ -277,7 +277,7 @@ sascode <- function(object, file="", append=FALSE)
 {
   chr <- function(y) if(is.category(y)||is.character(y))
     paste('"',as.character(y),'"',sep='') else as.character(y)
-  
+
   n <- names(object)[names(object)!='']
   for(i in n) if(file=='') cat(i,'=',chr(object[[i]]),';\n')
   else
@@ -289,7 +289,7 @@ sascode <- function(object, file="", append=FALSE)
   object <- paste(paste(object[3:(length(object)-1)],collapse='\n'),';',sep='')
 
 
-  ##com <- 'sed -e "s/pmax/max/g" -e "s/pmin/min/g" -e "s/==/=/g" 
+  ##com <- 'sed -e "s/pmax/max/g" -e "s/pmin/min/g" -e "s/==/=/g"
   ##-e "s/<-/=/g" -e "s/\\^/\*\*/g"'
   ##w <- sys(com, w)
   object <- sedit(object, c('pmax','pmin','==','<-','^'),

@@ -14,7 +14,7 @@ The \code{predict} function is used to obtain a variety of values or
 predicted values from either the data used to fit the model (if
 \code{type="adjto"} or \code{"adjto.data.frame"} or if \code{x=TRUE} or
 \code{linear.predictors=TRUE} were specified to the modeling function), or from
-a new dataset. Parameters such as knots and factor levels used in creating 
+a new dataset. Parameters such as knots and factor levels used in creating
 the design
 matrix in the original fit are "remembered".
 See the \code{Function} function for another method for computing the
@@ -89,7 +89,7 @@ the variables to factors.  These numeric values are checked to make sure
 they match a level, then the variable is converted internally to a \code{factor}.
 It is most typical to use a data frame
 for newdata, and the S function \code{expand.grid} is very handy here.
-For example, one may specify 
+For example, one may specify
 \cr
 \code{newdata=expand.grid(age=c(10,20,30),}
 \cr
@@ -106,12 +106,12 @@ S data frame of the combinations, \code{"model.frame"} to get a data frame
 of the transformed predictors, \code{"terms"} to get a matrix with
 each column being the linear combination of variables making up
 a factor (with separate terms for interactions), \code{"cterms"}
-("combined terms") to not create separate terms for interactions 
+("combined terms") to not create separate terms for interactions
 but to add all interaction terms involving each predictor to the
 main terms for each predictor, \code{"ccterms"} to combine all related
 terms (related through interactions) and their interactions into a
-single column, \code{"adjto"} to return a vector of 
-\code{limits[2]} (see \code{datadist}) in coded 
+single column, \code{"adjto"} to return a vector of
+\code{limits[2]} (see \code{datadist}) in coded
 form, and \code{"adjto.data.frame"} to return a data frame version of these
 central adjustment values.  Use of \code{type="cterms"} does not make
  sense for a \code{strat} variable that does not interact with
@@ -192,7 +192,7 @@ f.harrell@vanderbilt.edu
 \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{predict.lrm}},
 \code{\link{residuals.cph}}, \code{\link{datadist}},
 \code{\link{gendata}}, \code{\link{gIndex}},
-\code{\link{Function.rms}}, \code{\link[Hmisc]{reShape}}, 
+\code{\link{Function.rms}}, \code{\link[Hmisc]{reShape}},
 \code{\link[Hmisc]{xYplot}}, \code{\link{contrast.rms}}
 }
 \examples{
@@ -217,7 +217,7 @@ ddist <- datadist(age, blood.pressure, cholesterol, sex, treat)
 options(datadist='ddist')
 
 
-fit <- lrm(y ~ rcs(blood.pressure,4) + 
+fit <- lrm(y ~ rcs(blood.pressure,4) +
            sex * (age + rcs(cholesterol,4)) + sex*treat*age)
 
 
@@ -313,11 +313,11 @@ doit <- function(xd, lab) {
   lower <- xb - q * se; upper <- xb + q * se
   #Get odds ratios instead of linear effects
   xb <- exp(xb); lower <- exp(lower); upper <- exp(upper)
-  #First elements of these agree with 
+  #First elements of these agree with
   #summary(fit, age=30, sex='female',conf.int=.99))
   for(sx in levels(Sex)) {
     j <- Sex==sx
-    errbar(Age[j], xb[j], upper[j], lower[j], xlab="Age", 
+    errbar(Age[j], xb[j], upper[j], lower[j], xlab="Age",
            ylab=paste(lab,"Odds Ratio"), ylim=c(.1,20), log='y')
     title(paste("Sex:",sx))
     abline(h=1, lty=2)
@@ -392,7 +392,7 @@ df <- gendata(fit, age=c(10,20,30))  # leave other variables at ref. vals.
 predict(fit, df, type="fitted")
 
 
-# See reShape (in Hmisc) for an example where predictions corresponding to 
+# See reShape (in Hmisc) for an example where predictions corresponding to
 # values of one of the varying predictors are reformatted into multiple
 # columns of a matrix
 }

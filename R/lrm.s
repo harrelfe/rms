@@ -1,6 +1,6 @@
 lrm <- function(formula, data,subset, na.action=na.delete,
-				method="lrm.fit", model=FALSE, x=FALSE, y=FALSE, 
-				linear.predictors=TRUE, se.fit=FALSE, 
+				method="lrm.fit", model=FALSE, x=FALSE, y=FALSE,
+				linear.predictors=TRUE, se.fit=FALSE,
 				penalty=0, penalty.matrix, tol=1e-7, strata.penalty=0,
                 var.penalty=c('simple','sandwich'),
                 weights, normwt=FALSE, ...)
@@ -8,12 +8,12 @@ lrm <- function(formula, data,subset, na.action=na.delete,
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
   m <- match.call(expand=FALSE)
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
+  mc <- match(c("formula", "data", "subset", "weights", "na.action"),
              names(m), 0)
   m <- m[c(1, mc)]
   m$na.action <- na.action
   if(.R.) m$drop.unused.levels <- TRUE
-  
+
   m[[1]] <- as.name("model.frame")
   nact <- NULL
   if(missing(data)) data <- NULL
@@ -22,7 +22,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
   offs <- attr(tform, "offset")
   nstrata <- 1
   if(!missing(data) || (
-						length(atl <- attr(tform,"term.labels")) && 
+						length(atl <- attr(tform,"term.labels")) &&
 						any(atl!=".")))	{ ##X's present
 
     dul <- .Options$drop.unused.levels
@@ -71,7 +71,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
     if(penpres && missing(var.penalty))
       warning('default for var.penalty has changed to "simple"')
 
-    if(!penpres) penalty.matrix <- matrix(0,ncol=p,nrow=p) else { 
+    if(!penpres) penalty.matrix <- matrix(0,ncol=p,nrow=p) else {
       if(missing(penalty.matrix)) penalty.matrix <- Penalty.matrix(atr, X) else
       if(nrow(penalty.matrix)!=p || ncol(penalty.matrix)!=p) stop(
              paste("penalty.matrix does not have",p,"rows and columns"))
@@ -103,7 +103,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
       penpres <- FALSE
       penalty.matrix <- NULL
     }  ##Model: y~. without data= -> no predictors
-  
+
   if(method=="model.matrix") return(X)
 
   if(nstrata > 1)
@@ -133,9 +133,9 @@ lrm <- function(formula, data,subset, na.action=na.delete,
         }
 	  else stop(paste("unimplemented method:", method))
     }
-  
+
   if(f$fail) stop("Unable to fit model using ", dQuote(method))
-  
+
   f$call <- NULL
   if(model) f$model <- m
   if(x)
@@ -164,11 +164,11 @@ lrm <- function(formula, data,subset, na.action=na.delete,
         df <- sum(dag[-(1:nrp)])
         lr <- f.nopenalty$stats["Model L.R."]
         pval <- 1 - pchisq(lr, df)
-        f$stats[c('d.f.','Model L.R.','P')] <- c(df, lr, pval)  
+        f$stats[c('d.f.','Model L.R.','P')] <- c(df, lr, pval)
       }
     }
   ass <- if(xpres) DesignAssign(atr, nrp, Terms) else list()
-  
+
   if(xpres)
     {
       if(linear.predictors) names(f$linear.predictors) <- names(Y)
@@ -190,7 +190,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
                  scale.pred=c("log odds","Odds Ratio"),
 				 terms=Terms, assign=ass, na.action=nact, fail=FALSE,
                  nstrata=nstrata, fitFunction=c('lrm','glm')))
-  
+
   oldClass(f) <- c("lrm","rms","glm")
   f
 }
@@ -200,7 +200,7 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
 {
   z <- list()
   k <- 0
-  
+
   if(length(x$freq) > 3)
     {
       k <- k + 1
@@ -225,7 +225,7 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
       z[[k]] <- list(type=paste('naprint',class(x$na.action),sep='.'),
                      list(x$na.action))
     }
-  
+
   ns <- x$non.slopes
   nstrata <- x$nstrata
   if(!length(nstrata)) nstrata <- 1
@@ -280,7 +280,7 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
                    gp=stats['gp'], Brier=stats['Brier'])
   discr <-reVector(C=stats['C'], Dxy=stats['Dxy'], gamma=stats['Gamma'],
                    'tau-a'=stats['Tau-a'])
-  
+
   headings <- list('',
                    c('Model Likelihood','Ratio Test'),
                    c('Discrimination',' Indexes'),
@@ -297,7 +297,7 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
                           aux=if(length(pm)) penalty.scale,
                           auxname='Penalty Scale'))
     }
-  
+
   if(score.there)
     {
       q <- (1:length(cof))[-est.exp]

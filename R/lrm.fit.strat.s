@@ -10,7 +10,7 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
   nstrat <- length(lev)
   strata <- oldUnclass(strata)
   n <- length(y)
-  
+
   if(!length(weights))
     {
       normwt <- FALSE
@@ -38,13 +38,13 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
       xname <- dimnames(x)[[2]]
       if(length(xname)==0) xname <- paste("x[",1:nx,"]",sep="")
     }
-  
+
   nxin <- nx
-  
+
   if(!is.category(y)) y <- as.category(y)
   y <- oldUnclass(y)   # in case is.factor
   ylevels <- levels(y)
-  
+
   ofpres <- !missing(offset)
   if(ofpres)
     {
@@ -72,11 +72,11 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
   if(length(initial)<nvi) initial <- c(initial,rep(0,nvi-length(initial)))
   storage.mode(initial) <- "double"
   loglik <- -2 * sum(numy * logb(numy/n))
-  
+
   if(nxin > 0)
     {
       if(len.penmat==0) penalty.matrix <- matrix(0,nrow=nx,ncol=nx)
-      if(nrow(penalty.matrix)!=nx || ncol(penalty.matrix)!=nx) 
+      if(nrow(penalty.matrix)!=nx || ncol(penalty.matrix)!=nx)
         stop(paste("penalty.matrix does not have",nx,"rows and columns"))
       penmat <- rbind(
                       matrix(0,ncol=kint+nx,nrow=kint),
@@ -95,7 +95,7 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
   if(ofpres)
     {
       ##Fit model with only intercept(s) and offset
-      z <- 
+      z <-
         .Fortran("lrmfit",coef=initial,as.integer(0),0,x,y,offset,
                  u=double(kint),
                  double(kint*(kint+1)/2),loglik=double(1),n,as.integer(0),
@@ -103,20 +103,20 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
                  v=double(kint*kint),double(kint),double(kint),
                  double(kint),pivot=integer(kint),opts=opts,ftable,
                  penmat,weights, PACKAGE="rms")
-      
+
       loglik <- c(loglik,z$loglik)
       if(z$opts[6] | z$opts[7]<kint) return(list(fail=TRUE,class="lrm"))
       initial <- z$coef
     }
 
-		
+
   ## Newton-Raphson iterations with patterned matrix inversion for speed
   theta  <- initial
   iter   <- 0
   oldobj <- 1e10
   x      <- cbind(1,x)
   nns    <- nx+1  ## no. of non-strata parameters
-  
+
   while(iter <= maxit)
     {
       iter <- iter + 1
@@ -124,12 +124,12 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
       tau  <- c(0,theta[-(1:nns)])
       logit <- drop(x %*% beta + tau[strata] + offset)
       pred <- 1/(1+exp(-logit))
-      obj  <- -2*sum(y*logb(pred) + (1-y)*logb(1-pred)) + 
-        t(beta) %*% penmat %*% beta + 
+      obj  <- -2*sum(y*logb(pred) + (1-y)*logb(1-pred)) +
+        t(beta) %*% penmat %*% beta +
           strata.penalty*sum((tau-mean(tau))^2)
       if(trace)cat('-2logL=',format(obj),'')
       d <- y - pred
-      u <-  c(drop(matrix(d,nrow=1) %*% x)-drop(penmat %*% beta), 
+      u <-  c(drop(matrix(d,nrow=1) %*% x)-drop(penmat %*% beta),
               tapply(d,strata,sum)[-1] - strata.penalty*(tau[-1]-mean(tau)))
       u <- as.matrix(u)
       if(trace)cat(format(u),'\n')
@@ -137,7 +137,7 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
       ## Inverse is AA BB / BB' CC
       pq <- pred*(1-pred)
       A <- crossprod(pq * x, x) + penmat
-      B <- t(rowsum(pq * x, strata))[,-1,drop=FALSE]  
+      B <- t(rowsum(pq * x, strata))[,-1,drop=FALSE]
       ## above won't work if a stratum not represented
       dd <- tapply(pq, strata, sum)[-1]
       v <- 1/(dd + strata.penalty)
@@ -164,23 +164,23 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
     }
   if(iter > maxit) return(list(fail=TRUE, class='lrm'))
 
-  
+
   xname <- c(xname, lev[-1])
 
   if(kint==1) name <- "Intercept"
-  else 
+  else
     name <- paste("y>=",ylevels[2:(kint+1)],sep="")
   name <- c(name, xname)
   theta <- drop(theta)
   names(theta) <- name
-  
+
   loglik <- c(loglik, obj)
-  
+
   dimnames(AA) <- list(name[1:nns],name[1:nns])
   dimnames(BB) <- dimnames(BCi) <- list(name[1:nns],name[(nns+1):nvi])
   names(BCi)   <- NULL
-  
-  
+
+
   llnull <- loglik[length(loglik)-1]
   model.lr <- llnull-loglik[length(loglik)]
   model.df <- nvi - kint
@@ -195,9 +195,9 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
   r2.max <- 1-exp(-llnull/n)
   r2 <- r2/r2.max
   Brier <- mean((pred - (y>0))^2)
-  
+
   stats <- c(n,max(abs(u)),model.lr,model.df,model.p,
-             ## z$opts[8],z$opts[9],z$opts[10], z$opts[11], 
+             ## z$opts[8],z$opts[9],z$opts[10], z$opts[11],
              r2, Brier)
   nam <- c("Obs","Max Deriv",	"Model L.R.","d.f.","P",
            ##"C","Dxy","Gamma","Tau-a",
@@ -227,11 +227,11 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
                   var=AA,u=u,
                   deviance=loglik,
                   linear.predictors=logit,
-                  penalty.matrix=if(nxin>0 && any(penalty.matrix!=0)) 
+                  penalty.matrix=if(nxin>0 && any(penalty.matrix!=0))
 				  penalty.matrix else NULL,
                   nstrat=nstrat, strata.levels=lev,
                   strata.coefficients=theta[(nns+1):nvi],
-                  strata.penalty=strata.penalty, 
+                  strata.penalty=strata.penalty,
                   strata.unpen.diag.info=dd,
                   cov.nonstrata.strata=BB,
                   BCi=BCi,

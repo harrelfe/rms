@@ -44,7 +44,7 @@ bootstrap repetitions) are computed to derive the final simultaneous
 confidence band.
 
 
-The \code{bootplot} function takes the output of \code{bootcov} and 
+The \code{bootplot} function takes the output of \code{bootcov} and
 either plots a histogram and kernel density
 estimate of specified regression coefficients (or linear combinations
 of them through the use of a specified design matrix \code{X}), or a
@@ -79,7 +79,7 @@ twice the number of classes than the default for \code{hist}, and 1.5 times the
 A comprehensive example demonstrates the use of all of the functions.
 }
 \usage{
-bootcov(fit, cluster, B=200, fitter, 
+bootcov(fit, cluster, B=200, fitter,
         coef.reps=FALSE, loglik=coef.reps,
         pr=FALSE, maxit=15, group, stat=NULL)
 
@@ -90,7 +90,7 @@ bootplot(obj, which, X,
          fun=function(x)x, labels., \dots)
 
 
-confplot(obj, X, against, 
+confplot(obj, X, against,
          method=c('simultaneous','pointwise'),
          conf.int=0.95, fun=function(x)x,
          add=FALSE, lty.conf=2, \dots)
@@ -172,7 +172,7 @@ one or more integers specifying which regression coefficients to
 plot for \code{bootplot}
 }
 \item{conf.int}{
-a vector (for \code{bootplot}, default is \code{c(.9,.95,.99)}) or scalar 
+a vector (for \code{bootplot}, default is \code{c(.9,.95,.99)}) or scalar
 (for \code{confplot}, default is \code{.95}) confidence level.
 }
 \item{what}{
@@ -272,7 +272,7 @@ Merck Research Laboratories\cr
 Feng Z, McLerran D, Grizzle J (1996): A comparison of statistical methods for
 clustered data analysis with Gaussian error.  Stat in Med 15:1793--1806.
 
-Tibshirani R, Knight K (1996): Model search and inference by bootstrap 
+Tibshirani R, Knight K (1996): Model search and inference by bootstrap
 "bumping". Department of Statistics, University of Toronto.  Technical
 report available from
 \cr
@@ -283,9 +283,9 @@ Chicago, August 1996.
 \seealso{
 \code{\link{robcov}}, \code{\link{sample}}, \code{\link{rms}},
 \code{\link{lm.fit}}, \code{\link{lrm.fit}},
-\code{\link[survival]{survival-internal}}, 
+\code{\link[survival]{survival-internal}},
 \code{\link{predab.resample}}, \code{\link{rmsMisc}},
-\code{\link{Predict}}, \code{\link{gendata}}, 
+\code{\link{Predict}}, \code{\link{gendata}},
 \code{\link{contrast.rms}}, \code{\link{Predict}}
 }
 \examples{
@@ -344,8 +344,8 @@ diag(g$var)/diag(g2$var)
 anova(g2)[,1] / anova(g)[,1]
 
 
-# Simulate binary data where there is a strong 
-# age x sex interaction with linear age effects 
+# Simulate binary data where there is a strong
+# age x sex interaction with linear age effects
 # for both sexes, but where not knowing that
 # we fit a quadratic model.  Use the bootstrap
 # to get bootstrap distributions of various
@@ -371,7 +371,7 @@ bootplot(b, which=1:6, what='qq')
 # They appear somewhat non-normal
 
 
-# Plot histograms and estimated densities 
+# Plot histograms and estimated densities
 # for 6 coefficients
 w <- bootplot(b, which=1:6)
 # Print bootstrap quantiles
@@ -396,7 +396,7 @@ curves[[1]] <- with(p, list(x=age, y=lower))
 curves[[2]] <- with(p, list(x=age, y=upper))
 
 
-# Add pointwise normal-distribution confidence 
+# Add pointwise normal-distribution confidence
 # bands using unconditional variance-covariance
 # matrix from the 500 bootstrap reps
 p <- Predict(b, age=ages, sex='female')
@@ -408,7 +408,7 @@ dframe <- expand.grid(sex='female', age=ages)
 X <- predict(f, dframe, type='x')  # Full design matrix
 
 
-# Add pointwise bootstrap nonparametric 
+# Add pointwise bootstrap nonparametric
 # confidence limits
 p <- confplot(b, X=X, against=ages, method='pointwise',
               add=TRUE, lty.conf=4)

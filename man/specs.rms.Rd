@@ -6,7 +6,7 @@
 \description{
 Prints the design specifications, e.g., number of parameters for each
 factor, levels of categorical factors, knot locations in splines,
-pre-transformations, etc. 
+pre-transformations, etc.
 }
 \usage{
 specs(fit, \dots)

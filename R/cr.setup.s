@@ -6,7 +6,7 @@ cr.setup <- function(y)
   ylevels <- levels(y)
   kint    <- length(ylevels) - 1
   y       <- as.integer(y-1)
-  
+
   reps   <- ifelse(is.na(y), 1, ifelse(y < kint-1, y+1, kint))
   subs   <- rep(1:length(y), reps)
 
@@ -19,7 +19,7 @@ cr.setup <- function(y)
   Y      <- 1*(y==cuts)
   labels <- c('all', paste(yname,'>=',ylevels[2:kint],sep=''))
   cohort <- factor(cuts, levels=0:(kint-1), labels=labels)
-  
+
   list(y=Y, cohort=cohort, subs=subs, reps=reps)
 }
 

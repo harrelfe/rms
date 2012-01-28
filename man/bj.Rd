@@ -10,7 +10,7 @@
 }
 \description{
   \code{bj} fits the Buckley-James distribution-free least squares multiple
-  regression model to a possibly right-censored response variable.  
+  regression model to a possibly right-censored response variable.
   This model reduces to ordinary least squares if
   there is no censoring.  By default, model fitting is done after
   taking logs of the response variable.
@@ -21,7 +21,7 @@
   Buckley-James covariance matrix estimator are not fully known for
   strange censoring patterns.
 
-  The \code{residuals.bj} function exists mainly to compute 
+  The \code{residuals.bj} function exists mainly to compute
   residuals and to censor them (i.e., return them as
   \code{Surv} objects) just as the original
   failure time variable was censored.  These residuals are useful for
@@ -46,7 +46,7 @@
 }
 \usage{
 bj(formula=formula(data), data, subset, na.action=na.delete,
-   link="log", control, method='fit', x=FALSE, y=FALSE, 
+   link="log", control, method='fit', x=FALSE, y=FALSE,
    time.inc)
 
 \method{print}{bj}(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
@@ -76,13 +76,13 @@ bj.fit(x, y, control)
     a design matrix with or without a first column of ones, to pass
     to \code{bj.fit}.  All models will have an intercept.  For
     \code{print.bj} is a result of \code{bj}.  For \code{bj}, set
-    \code{x=TRUE} to include the design matrix in the fit object. 
+    \code{x=TRUE} to include the design matrix in the fit object.
   }
   \item{y}{
     a \code{Surv} object to pass to \code{bj.fit} as the two-column response
     variable.  Only right censoring is allowed, and there need not be any
     censoring.  For \code{bj}, set \code{y} to \code{TRUE} to include the
-    two-column response matrix, with the 
+    two-column response matrix, with the
     event/censoring indicator in the second column.  The first column will
     be transformed according to \code{link}, and depending on
     \code{na.action}, rows with missing data in the predictors or the
@@ -97,10 +97,10 @@ bj.fit(x, y, control)
     (maximum number of iterations allowed, default is 20),
     \code{eps} (convergence criterion: concergence is assumed when the ratio of
     sum of squared errors from one iteration to the next is between
-    1-\code{eps} and 1+\code{eps}), \code{trace} (set to \code{TRUE} to monitor iterations), 
-    \code{tol} (matrix singularity criterion, default is 1e-7), and 'max.cycle' 
-    (in case of nonconvergence the program looks for a cycle that repeats itself, 
-    default is 30).  
+    1-\code{eps} and 1+\code{eps}), \code{trace} (set to \code{TRUE} to monitor iterations),
+    \code{tol} (matrix singularity criterion, default is 1e-7), and 'max.cycle'
+    (in case of nonconvergence the program looks for a cycle that repeats itself,
+    default is 30).
   }
   \item{method}{
     set to \code{"model.frame"} or \code{"model.matrix"} to return one of those
@@ -142,7 +142,7 @@ bj.fit(x, y, control)
     linearly) for which to have \code{bjplot} make plots of only the variables listed in \code{which} (names or numbers).
   }
   \item{B,bw,rule,sls,aics,force,pr,tol,rel.tolerance,maxiter}{see
-	\code{\link{predab.resample}}} 
+	\code{\link{predab.resample}}}
   \item{\dots}{
     ignored for \code{print}; passed through to
     \code{predab.resample} for \code{validate}
@@ -150,11 +150,11 @@ bj.fit(x, y, control)
 }
 \value{
   \code{bj} returns a fit object with similar information to what \code{survreg},
-  \code{psm}, \code{cph} would store as 
+  \code{psm}, \code{cph} would store as
   well as what \code{rms} stores and \code{units} and \code{time.inc}.
   \code{residuals.bj} returns a \code{Surv} object.  One of the components of the
   \code{fit} object produced by \code{bj} (and \code{bj.fit}) is a vector called
-  \code{stats} which contains the following names elements: 
+  \code{stats} which contains the following names elements:
   \code{"Obs", "Events", "d.f.","error d.f.","sigma","g"}.  Here
   \code{sigma} is the estimate of the residual standard deviation.
   \code{g} is the \eqn{g}-index.  If the link function is \code{"log"},
@@ -171,9 +171,9 @@ bj.fit(x, y, control)
   iterations.  Our experience shows that often, in particular with high
   censoring, 100 iterations is not too many. Sometimes the method will
   not converge, but will instead enter a loop of repeating values (this
-  is due to the discrete nature  
+  is due to the discrete nature
   of Kaplan and Meier estimator and usually happens with small sample sizes).
-  The program will look for such a loop and return the average betas. It will also 
+  The program will look for such a loop and return the average betas. It will also
   issue a warning message and give the size of the cycle (usually less than 6).
 }
 \author{
@@ -197,20 +197,20 @@ bj.fit(x, y, control)
   \email{f.harrell@vanderbilt.edu}
 }
 \references{
-  Buckley JJ, James IR. Linear regression with censored data. Biometrika 1979; 
+  Buckley JJ, James IR. Linear regression with censored data. Biometrika 1979;
   66:429--36.
 
 
-  Miller RG, Halpern J. Regression with censored data. Biometrika 1982; 69: 
+  Miller RG, Halpern J. Regression with censored data. Biometrika 1982; 69:
   521--31.
 
 
-  James IR, Smith PJ. Consistency results for linear regression with censored 
+  James IR, Smith PJ. Consistency results for linear regression with censored
   data. Ann Statist 1984; 12: 590--600.
 
 
-  Lai TL, Ying Z. Large sample theory of a modified Buckley-James estimator for 
-  regression analysis 
+  Lai TL, Ying Z. Large sample theory of a modified Buckley-James estimator for
+  regression analysis
   with censored data. Ann Statist 1991; 19: 1370--402.
 
 
@@ -249,14 +249,14 @@ coef(f)               # look at regression coefficients
 coef(psm(Surv(ftime, stroke) ~ rcs(age,5) + hospital, dist='lognormal'))
                       # compare with coefficients from likelihood-based
                       # log-normal regression model
-                      # use dist='gau' not under R 
+                      # use dist='gau' not under R
 
 
 r <- resid(f, 'censored.normalized')
-survplot(survfit(r ~ 1), conf='none') 
-                      # plot Kaplan-Meier estimate of 
+survplot(survfit(r ~ 1), conf='none')
+                      # plot Kaplan-Meier estimate of
                       # survival function of standardized residuals
-survplot(survfit(r ~ cut2(age, g=2)), conf='none')  
+survplot(survfit(r ~ cut2(age, g=2)), conf='none')
                       # may desire both strata to be n(0,1)
 options(datadist=NULL)
 }

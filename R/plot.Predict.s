@@ -17,7 +17,7 @@ plot.Predict <-
 
   subdatapres <- !missing(subdata)
   if(subdatapres) subdata <- substitute(subdata)
-  
+
   doscat1d <- function(x, y, col)
     {
       so <- scat1d.opts
@@ -51,7 +51,7 @@ plot.Predict <-
     }
   if(missing(ylab))    ylab     <- info$ylabPlotmath
   if(!length(x$lower)) conf.int <- FALSE
-  
+
   if(missing(ylim))
     ylim <- range(pretty(
              if(conf.int) c(x$yhat, x$lower, x$upper)
@@ -63,7 +63,7 @@ plot.Predict <-
   cex <- par('cex')
   if(missing(cex.adj)) cex.adj <- .75*cex
   if(length(sub)) sub <- list(sub, cex=cex.adj, just=c('center','bottom'))
-  
+
   subset <- if(missing(subset)) TRUE
   else
     eval(substitute(subset),x)
@@ -112,7 +112,7 @@ plot.Predict <-
           labels <- labels[rep(seq(1, length(labels)), each=nuc)]
           limits <- limits[rep(seq(1, length(limits)), each=nuc)]
           levs <- levs[rep(seq(1, length(levs)), each=nuc)]
-          
+
           formula <- if(!conf.int) x$yhat ~ xp | cond*p else
           Cbind(x$yhat, x$lower, x$upper) ~ xp | cond*p
         }
@@ -121,7 +121,7 @@ plot.Predict <-
           formula <- if(!conf.int) x$yhat ~ xp | p else
           Cbind(x$yhat, x$lower, x$upper) ~ xp | p
         }
-      
+
       pan <- function(x, y, ...)
         {
           pn <- panel.number()
@@ -208,7 +208,7 @@ plot.Predict <-
                         }
                     }
                 }
-            } 
+            }
           xv <- x[[xvar]]
           xdiscrete <- is.factor(xv) || is.character(xv) ||
                        length(unique(xv[!is.na(xv)])) <= nlevels
@@ -267,7 +267,7 @@ plot.Predict <-
           if(!missing(cex.axis)) xscale$x$cex <- cex.axis
           x[[xvar]] <- as.integer(xv)
         }
-      
+
       pan <- function(x, y, groups=NULL, subscripts, ...)
         {
           yy <- y
@@ -339,7 +339,7 @@ pantext <- function(object, x, y, cex=.5, adj=0,
   fam <- fontfamily
   if(lattice)
     {
-      z <- 
+      z <-
         function(x, y, ..., xx, yy, text, cex, adj, family)
           ltext(xx, yy, text, cex=cex, adj=adj, fontfamily=family)
       formals(z) <-

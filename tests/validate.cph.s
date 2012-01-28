@@ -2,28 +2,28 @@
 
 require(rms)
 
-n <- 1000 
-set.seed(110222) 
-data <- matrix(rep(0, 5000), ncol=5) 
-data[, 1] <- sample(1:3, n, rep=TRUE, prob=c(.32,  .30,  .38)) 
-for (i in 1:1000) { 
-if (data[i, 1] == 1) data[i, 2] <- sample(1:3, 1, prob=c(.76,  .18,  .06)) 
-if (data[i, 1] == 2) data[i, 2] <- sample(1:3, 1, prob=c(.67,  .24,  .09)) 
-if (data[i, 1] == 3) data[i, 2] <- sample(1:3, 1, prob=c(.47,  .37,  .16))} 
-for (i in 1:1000) { 
-if (data[i, 1] == 1) data[i, 3] <- sample(1:4, 1, prob=c(.70,  .19,  .03,  .08)) 
-if (data[i, 1] == 2) data[i, 3] <- sample(1:4, 1, prob=c(.42,  .28,  .12,  .18)) 
-if (data[i, 1] == 3) data[i, 3] <- sample(1:4, 1, prob=c(.11,  .29,  .30,  .30))} 
-for (i in 1:1000) { 
-if (data[i, 3] == 1) data[i, 4] <- 12*rgamma(1000, rate=0.4, shape=1.7)[c(sample(26:975, 1, prob=c(rep(1/950, 950))))] 
-if (data[i, 3] == 2) data[i, 4] <- 12*rgamma(1000, rate=0.9, shape=1.7)[c(sample(26:975, 1, prob=c(rep(1/950, 950))))] 
-if (data[i, 3] == 3) data[i, 4] <- 12*rgamma(1000, rate=1.2, shape=0.6)[c(sample(26:975, 1, prob=c(rep(1/950, 950))))] 
-if (data[i, 3] == 4) data[i, 4] <- 12*rgamma(1000, rate=1.5, shape=0.7)[c(sample(26:975, 1, prob=c(rep(1/950, 950))))]} 
-for (i in 1:1000) { 
-if (data[i, 3] == 1) data[i, 5] <- sample(c(0, 1), 1, prob=c(.53,  .47)) 
-if (data[i, 3] == 2) data[i, 5] <- sample(c(0, 1), 1, prob=c(.17,  .83)) 
-if (data[i, 3] == 3) data[i, 5] <- sample(c(0, 1), 1, prob=c(.05,  .95)) 
-if (data[i, 3] == 4) data[i, 5] <- sample(c(0, 1), 1, prob=c(.06,  .94))} 
+n <- 1000
+set.seed(110222)
+data <- matrix(rep(0, 5000), ncol=5)
+data[, 1] <- sample(1:3, n, rep=TRUE, prob=c(.32,  .30,  .38))
+for (i in 1:1000) {
+if (data[i, 1] == 1) data[i, 2] <- sample(1:3, 1, prob=c(.76,  .18,  .06))
+if (data[i, 1] == 2) data[i, 2] <- sample(1:3, 1, prob=c(.67,  .24,  .09))
+if (data[i, 1] == 3) data[i, 2] <- sample(1:3, 1, prob=c(.47,  .37,  .16))}
+for (i in 1:1000) {
+if (data[i, 1] == 1) data[i, 3] <- sample(1:4, 1, prob=c(.70,  .19,  .03,  .08))
+if (data[i, 1] == 2) data[i, 3] <- sample(1:4, 1, prob=c(.42,  .28,  .12,  .18))
+if (data[i, 1] == 3) data[i, 3] <- sample(1:4, 1, prob=c(.11,  .29,  .30,  .30))}
+for (i in 1:1000) {
+if (data[i, 3] == 1) data[i, 4] <- 12*rgamma(1000, rate=0.4, shape=1.7)[c(sample(26:975, 1, prob=c(rep(1/950, 950))))]
+if (data[i, 3] == 2) data[i, 4] <- 12*rgamma(1000, rate=0.9, shape=1.7)[c(sample(26:975, 1, prob=c(rep(1/950, 950))))]
+if (data[i, 3] == 3) data[i, 4] <- 12*rgamma(1000, rate=1.2, shape=0.6)[c(sample(26:975, 1, prob=c(rep(1/950, 950))))]
+if (data[i, 3] == 4) data[i, 4] <- 12*rgamma(1000, rate=1.5, shape=0.7)[c(sample(26:975, 1, prob=c(rep(1/950, 950))))]}
+for (i in 1:1000) {
+if (data[i, 3] == 1) data[i, 5] <- sample(c(0, 1), 1, prob=c(.53,  .47))
+if (data[i, 3] == 2) data[i, 5] <- sample(c(0, 1), 1, prob=c(.17,  .83))
+if (data[i, 3] == 3) data[i, 5] <- sample(c(0, 1), 1, prob=c(.05,  .95))
+if (data[i, 3] == 4) data[i, 5] <- sample(c(0, 1), 1, prob=c(.06,  .94))}
 
 d <- data.frame(tumor=factor(data[,1]), ecog=factor(data[,2]), rx=factor(data[,3]), os=data[,4], censor=data[,5])
 S <- with(d, Surv(os, censor))

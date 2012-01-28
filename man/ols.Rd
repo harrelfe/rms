@@ -6,13 +6,13 @@
 Fits the usual weighted or unweighted linear regression model using the
 same fitting routines used by \code{lm}, but also storing the variance-covariance
 matrix \code{var} and using traditional dummy-variable coding for categorical
-factors.  
+factors.
 Also fits unweighted models using penalized least squares, with the same
 penalization options as in the \code{lrm} function.  For penalized estimation,
 there is a fitter function call \code{lm.pfit}.
 }
 \usage{
-ols(formula, data, weights, subset, na.action=na.delete, 
+ols(formula, data, weights, subset, na.action=na.delete,
     method="qr", model=FALSE,
     x=FALSE, y=FALSE, se.fit=FALSE, linear.predictors=TRUE,
     penalty=0, penalty.matrix, tol=1e-7, sigma,
@@ -20,7 +20,7 @@ ols(formula, data, weights, subset, na.action=na.delete,
 }
 \arguments{
 \item{formula}{
-an S formula object, e.g. 
+an S formula object, e.g.
 \cr
     Y ~ rcs(x1,5)*lsp(x2,c(10,20))
 }
@@ -42,7 +42,7 @@ row numbers in the given vector.
 \item{na.action}{
 specifies an S function to handle missing data.  The default is the function \code{na.delete},
 which causes observations with any variable missing to be deleted.  The main difference
-between \code{na.delete} and the S-supplied function \code{na.omit} is that 
+between \code{na.delete} and the S-supplied function \code{na.omit} is that
 \code{na.delete} makes a list
 of the number of observations that are missing on each variable in the model.
 The \code{na.action} is usally specified by e.g. \code{options(na.action="na.delete")}.
@@ -63,13 +63,13 @@ returned fit object.  Set both \code{x=TRUE} if you are going to use
 the \code{residuals} function later to return anything other than ordinary residuals.
 }
 \item{y}{
-default is \code{FALSE}.  Set to \code{TRUE} to return the vector of response values 
+default is \code{FALSE}.  Set to \code{TRUE} to return the vector of response values
 as element \code{y} of the fit.
 }
 \item{se.fit}{
 default is \code{FALSE}.  Set to \code{TRUE} to compute the estimated standard errors of
 the estimate of \eqn{X\beta}{X beta} and store them in element \code{se.fit}
-of the fit. 
+of the fit.
 }
 \item{linear.predictors}{
 set to \code{FALSE} to cause predicted values not to be stored
@@ -106,14 +106,14 @@ plus the design attributes
 Predicted values are always returned, in the element \code{linear.predictors}.
 The vectors or matrix stored if \code{y=TRUE} or \code{x=TRUE} have rows deleted according to \code{subset} and
 to missing data, and have names or row names that come from the
-data frame used as input data.  If \code{penalty} or \code{penalty.matrix} is given, 
+data frame used as input data.  If \code{penalty} or \code{penalty.matrix} is given,
 the \code{var} matrix
 returned is an improved variance-covariance matrix
 for the penalized regression coefficient estimates.  If
 \code{var.penalty="sandwich"} (not the default, as limited simulation
 studies have found it provides variance estimates that are too low) it
-is defined as 
-\eqn{\sigma^{2} (X'X + P)^{-1} X'X (X'X + P)^{-1}}, where \eqn{P} is 
+is defined as
+\eqn{\sigma^{2} (X'X + P)^{-1} X'X (X'X + P)^{-1}}, where \eqn{P} is
 \code{penalty factors * penalty.matrix}, with a column and row of zeros
 added for the
 intercept.  When \code{var.penalty="simple"} (the default), \code{var} is
@@ -121,7 +121,7 @@ intercept.  When \code{var.penalty="simple"} (the default), \code{var} is
 The returned list has a vector \code{stats} with named elements
 \code{n, Model L.R., d.f., R2, g, Sigma}.  \code{Model L.R.} is the model
 likelihood ratio \eqn{\chi^2}{chi-square} statistic, and \code{R2} is
-\eqn{R^2}.  For penalized estimation, \code{d.f.} is the 
+\eqn{R^2}.  For penalized estimation, \code{d.f.} is the
 effective degrees of freedom, which is the sum of the elements of another
 vector returned, \code{effective.df.diagonal}, minus one for the
 intercept.

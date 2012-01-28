@@ -54,9 +54,9 @@ significance of the \eqn{Z} statistic.
 # fit <- cph(formula=Surv(event.time,event.indicator) ~ x + other.predictors,
 #            x=TRUE, y=TRUE)
 
-sensuc(fit,  
-       or.xu=seq(1, 6, by = 0.5), or.u=or.xu, 
-       prev.u=0.5, constrain.binary.sample=TRUE, 
+sensuc(fit,
+       or.xu=seq(1, 6, by = 0.5), or.u=or.xu,
+       prev.u=0.5, constrain.binary.sample=TRUE,
        or.method=c("x:u y:u","u|x,y"),
        event=function(y) if(is.matrix(y))y[,ncol(y)] else 1*y)
 
@@ -67,7 +67,7 @@ sensuc(fit,
      ylab=if(x$type=='lrm')'Odds Ratio for Y:U' else
           'Hazard Ratio for Y:U',
      digits=2, cex.effect=.75, cex.z=.6*cex.effect,
-     delta=diff(par('usr')[3:4])/40, 
+     delta=diff(par('usr')[3:4])/40,
      type=c('symbols','numbers','colors'),
      pch=c(15,18,5,0), col=c(2,3,1,4), alpha=.05,
      impressive.effect=function(x)x > 1,\dots)
@@ -109,15 +109,15 @@ a function classifying the response variable into a binary event for the
 purposes of constraining the association between \eqn{U} and \eqn{Y}.
 For binary logistic models, \code{event} is left at its default value, which
 is the identify function, i.e, the original \eqn{Y} values are taken as the
-events (no other choice makes any sense here).  For Cox models, the 
+events (no other choice makes any sense here).  For Cox models, the
 default \code{event} function takes the last column of the \code{Surv} object
 stored with the fit.  For rare events (high proportion of censored
-observations), odds ratios approximate hazard ratios, so the default is OK.  
+observations), odds ratios approximate hazard ratios, so the default is OK.
 For other cases, the survival times should be considered (probably in
 conjunction with the event indicators), although it may not be possible
 to get a high enough hazard ratio between \eqn{U} and \eqn{Y} by sampling \eqn{U} by
 temporarily making \eqn{Y} binary.  See the last example which is
-for a 2-column \code{Surv} object (first column of response variable=event time, 
+for a 2-column \code{Surv} object (first column of response variable=event time,
 second=event indicator).  When
 dichotomizing survival time at a given point, it is advantageous to choose
 the cutpoint so that not many censored survival times preceed the cutpoint.

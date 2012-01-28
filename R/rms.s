@@ -1,7 +1,7 @@
 # Design  FEH 1Aug90, re-written 21Oct91
 #
 # Augments S formula language to include:
-# 
+#
 #	name	- name[i] = name of ith original variable in x
 #	label	- label[i] = label of ith original variable (=name if none)
 #	assume	- assume(original x)
@@ -20,7 +20,7 @@
 #		  vector of values.  NULL otherwise.
 #	interactions - 3 x k matrix of factor numbers
 #
-# Cannot have interactions between two stratification factors. 
+# Cannot have interactions between two stratification factors.
 #
 #
 
@@ -81,7 +81,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1)
   if(length(factors) && response.pres) factors <- factors[-1,,drop=FALSE]
 
   attr(Terms, "intercept") <- intercept
-  fname <- flabel <- name <- strt <- asm <- len <- 
+  fname <- flabel <- name <- strt <- asm <- len <-
     fname.incl.dup <- ia <- funits <- NULL
   parm <- nonlinear <- limits <- values <- list()
 
@@ -98,7 +98,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1)
       Limits <- datadist$limits
       Limnames <- dimnames(Limits)[[2]]
     }
-  
+
   nc <- 0
 
   options(Design.attr=NULL, TEMPORARY=FALSE)
@@ -202,7 +202,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1)
   which.ia <- (1:length(asm))[asm==9]
 
   ##Add automatically created interaction terms
-  
+
   if(anyfactors)
     {
       nrf <- if(!length(factors)) 0 else if(.R.) nrow(factors) else
@@ -295,7 +295,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1)
               ia <- cbind(ia, jf)
               if(length(parms)) parm[[ialab]] <- parms
               if(length(nonlin)) nonlinear[[ialab]] <- nonlin
-              
+
             }
         }
     }

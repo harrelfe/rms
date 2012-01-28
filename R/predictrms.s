@@ -55,7 +55,7 @@ predictrms <-
   int.pres <- nrp > 0
   if(somex) cov <- vcov(fit, regcoef.only=TRUE)    #remove scale params
   if(missing(incl.non.slopes) || !length(incl.non.slopes))
-    incl.non.slopes <- !mnon.slopes | (!missing(kint)) | 
+    incl.non.slopes <- !mnon.slopes | (!missing(kint)) |
                         int.pres | type!="x"
   int.pres <- int.pres & incl.non.slopes
 
@@ -206,7 +206,7 @@ predictrms <-
                       asj <- assume[j]
                       w <- newdata[,i]
                       V <- NULL
-                      if(asj==5 | asj==7 | asj==8 | 
+                      if(asj==5 | asj==7 | asj==8 |
                          (name[j] %in% names(Values) &&
                           length(V <- Values[[name[j]]]) && is.character(V)))
                         {
@@ -224,17 +224,17 @@ predictrms <-
                     }
                 }
             }
-          
+
           newdata <- addOffset4ModelFrame(Terms, newdata)
           X <- model.frame(Terms, newdata, na.action=na.action, ...)
           if(type=="model.frame") return(X)
           naa <- attr(X, "na.action")
           rnam <- row.names(X)
-          
+
           offs <- attr(Terms, "offset")
           if(!length(offs)) offset <- rep(0, length(rnam))
           else offset <- X[[offs]]
-          
+
           strata <- list()
           nst <- 0
           ii <- 0
@@ -246,11 +246,11 @@ predictrms <-
               as <- assume[ii]
               if(!length(asi) && as==7)
                 {
-                  attr(X[,i],"contrasts") <- 
+                  attr(X[,i],"contrasts") <-
                     attr(scored(xi,name=name[ii]),"contrasts")
                   if(length(xi)==1) warning("a bug in model.matrix can produce incorrect results\nwhen only one observation is being predicted for an ordered variable")
                 }
-              
+
               if(as==8)
                 {
                   nst <- nst+1
@@ -263,7 +263,7 @@ predictrms <-
             if(int.pres && nrp==1) model.matrix(Terms.ns, X)
           else
             model.matrix(Terms.ns, X)[,-1,drop=FALSE]
-          
+
           if(nstrata > 0)
             {
               names(strata) <- paste("S",1:nstrata,sep="")
@@ -280,18 +280,18 @@ predictrms <-
         }
       else xx <- NULL
     }
-  
+
   ## For models with multiple intercepts, delete elements of covariance matrix
   ## containing unused intercepts
   elements.to.delete <- 9999
   if(somex && nrp>1)
     {
-      i <- (1:nrp)[non.slopes==0]; cov <- cov[-i,-i,drop=FALSE] 
+      i <- (1:nrp)[non.slopes==0]; cov <- cov[-i,-i,drop=FALSE]
       elements.to.delete <- i
     }
-  
+
   if(type=="adjto" | type=="adjto.data.frame" | ref.zero |
-     (center.terms && type %in% c("terms","cterms","ccterms")) | 
+     (center.terms && type %in% c("terms","cterms","ccterms")) |
      (cox & (se.fit | conf.int)))
     {
       ## Form design matrix for adjust-to values
@@ -318,7 +318,7 @@ predictrms <-
       adjto <- model.frame(Terms, adjto)
       adjto <- if(int.pres) model.matrix(Terms.ns, adjto) else
       model.matrix(Terms.ns,adjto)[, -1, drop=FALSE]
-      
+
       if(type=="adjto")
         {
           k <- if(int.pres) 1:length(coeff) else (nrp+1):length(coeff)
@@ -328,15 +328,15 @@ predictrms <-
           return(adjto)
         }
     }
-  
+
   if(length(xx) && type %nin% c("terms","cterms","ccterms") && incl.non.slopes)
     {
       X <- cbind(xx, X)
       dimnames(X) <- list(rnam, names(coeff))
       if(cox & (se.fit | conf.int)) adjto <- c(xx[1,], adjto)
     }
-  
-  else if(somex) dimnames(X) <- 
+
+  else if(somex) dimnames(X) <-
     list(rnam,names(coeff)[(1 + length(coeff) - ncol(X)):length(coeff)])
 
   if(type=="x") return(
@@ -345,7 +345,7 @@ predictrms <-
                  offset=if(length(offs)) naresid(naa,offset) else NULL,
                  na.action=if(expand.na)NULL else naa)
        )
-  
+
   if(type=="lp")
     {
       if(somex)
@@ -371,7 +371,7 @@ predictrms <-
       xb <- naresid(naa, xb)
       if(nstrata > 0) attr(xb,"strata") <- naresid(naa,strata)
       ycenter <- if(ref.zero && somex) matxv(adjto, cof) - Center else 0
-      
+
       if(ref.zero || ((se.fit || conf.int) && somex))
         {
           if(cox || ref.zero) X <- sweep(X, 2, adjto) #Center columns
@@ -386,7 +386,7 @@ predictrms <-
                 list(linear.predictors = xb - ycenter)
             }
           else xb - ycenter
-          retlist <- structure(ww, 
+          retlist <- structure(ww,
                                na.action=if(expand.na) NULL else naa)
           if(conf.int)
             {
@@ -438,7 +438,7 @@ predictrms <-
               ko <- k - num.intercepts.not.in.X
               fitted[,j] <- matxv(X[,ko,drop=FALSE], coeff[k])
               if(se.fit) se[,j] <-
-                (((X[, ko, drop=FALSE]  %*% cov[ko, ko, drop=FALSE]) * 
+                (((X[, ko, drop=FALSE]  %*% cov[ko, ko, drop=FALSE]) *
                    X[, ko, drop=FALSE]) %*% rep(1, length(ko)))^.5
             }
         }
@@ -464,17 +464,17 @@ predictrms <-
             w[,i] <- rowSums(fitted[,z$namesia[[i]], drop=FALSE])
           fitted <- w
         }
-      
+
       fitted <- structure(naresid(naa, fitted),
                           strata=if(nstrata==0) NULL else naresid(naa, strata))
-      
+
   if(se.fit)
     {
       return(structure(list(fitted=fitted, se.fit=naresid(naa,se)),
                        na.action=if(expand.na)NULL else naa)) 	}
   else return(structure(fitted, na.action=if(expand.na)NULL else naa))
     }
-}   
+}
 
 addOffset4ModelFrame <- function(Terms, newdata, offset=0)
 {

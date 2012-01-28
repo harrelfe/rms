@@ -43,9 +43,9 @@ C     Dimensions of X, penalt, wt not needed until inside LLOGIT
       nxm=nx
 C     Don't mess up dimension statements in next routine
       IF(nxm .EQ. 0) nxm=1
-C     
+C
 C     NEWTON-RAPHSON ITERATIONS TO SOLVE FOR MLEs
-C     
+C
       OLDL=1D30
       maxit1=maxit - 1
       if(maxit .LT. 2)GO TO 730
@@ -71,7 +71,7 @@ C
 C     Added 2Jul10: was trying to step halve if initial estimates were MLEs
 C     Allow for a tiny worsening of LL without step-halving if
 C     Max absolute first derivative is small
-         IF(dmax .LT. 1D-9 .AND. DABS(loglik - oldl) .LT. 
+         IF(dmax .LT. 1D-9 .AND. DABS(loglik - oldl) .LT.
      &      0.1D0*dlike) GO TO 730
 C         IF(ITER .EQ. 1 .AND. dmax .LT. 1D-12) GO TO 730
          IF(loglik .GT. oldl.or.dvrg) THEN
@@ -246,7 +246,7 @@ C     Add to first and second derivatives
             ENDDO
          ENDDO
          GO TO 210
-      ENDIF     
+      ENDIF
       DO 200 N=1,NOBS
          iy=r(n)
          w=wt(n)

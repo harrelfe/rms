@@ -7,13 +7,13 @@
 }
 \description{
   The \code{validate} function when used on an object created by one of the
-  \code{rms} series does resampling validation of a 
+  \code{rms} series does resampling validation of a
   regression model, with or without backward step-down variable deletion.
 }
 \usage{
 # fit <- fitting.function(formula=response ~ terms, x=TRUE, y=TRUE)
 validate(fit, method="boot", B=40,
-         bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, 
+         bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0,
          force=NULL, pr=FALSE, \dots)
 \method{print}{validate}(x, digits=4, B=Inf, \dots)
 \method{latex}{validate}(object, digits=4, B=Inf, file='', append=FALSE,
@@ -70,9 +70,9 @@ validate(fit, method="boot", B=40,
     pass to \code{predab.resample} (note especially the \code{group},
     \code{cluster}, amd \code{subset} parameters).  For \code{latex},
 	optional arguments to \code{\link[Hmisc]{latex.default}}.
-    
-    For \code{psm}, you can pass the \code{maxiter} parameter here (passed to 
-    \code{survreg.control}, default is 15 iterations) as well as a \code{tol} parameter 
+
+    For \code{psm}, you can pass the \code{maxiter} parameter here (passed to
+    \code{survreg.control}, default is 15 iterations) as well as a \code{tol} parameter
     for judging matrix singularity in \code{solvet} (default is 1e-12)
     and a \code{rel.tolerance} parameter that is passed to
     \code{survreg.control} (default is 1e-5).
@@ -104,18 +104,18 @@ validate(fit, method="boot", B=40,
   the likelihood based statistics). The values corresponting to the row
   \eqn{D_{xy}}{Dxy} are equal to \eqn{2 * (C - 0.5)} where C is the
   C-index or concordance probability. \cr
-  
+
   For \code{validate.cph} with \code{dxy=TRUE},
   you must specify an argument \code{u} if the model is stratified, since
   survival curves can then cross and \eqn{X\beta}{X beta} is not 1-1 with
   predicted survival. \cr
   There is also \code{validate} method for
   \code{tree}, which only does cross-validation and which has a different
-  list of arguments.   
+  list of arguments.
 }
 \value{
 a matrix with rows corresponding to the statistical indexes and
-columns for columns for the original index, resample estimates, 
+columns for columns for the original index, resample estimates,
 indexes applied to
 the whole or omitted sample using the model derived from the resample,
 average optimism, corrected index, and number of successful re-samples.
@@ -130,9 +130,9 @@ f.harrell@vanderbilt.edu
 }
 \seealso{
 \code{\link{validate.ols}}, \code{\link{validate.cph}},
-\code{\link{validate.lrm}}, \code{\link{validate.rpart}}, 
+\code{\link{validate.lrm}}, \code{\link{validate.rpart}},
 \code{\link{predab.resample}}, \code{\link{fastbw}}, \code{\link{rms}},
-\code{\link{rms.trans}}, \code{\link{calibrate}} 
+\code{\link{rms.trans}}, \code{\link{calibrate}}
 }
 \examples{
 # See examples for validate.cph, validate.lrm, validate.ols
