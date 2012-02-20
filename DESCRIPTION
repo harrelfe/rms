@@ -1,6 +1,6 @@
 Package: rms
-Version: 3.4-0
-Date: 2011-01-17
+Version: 3.4-1
+Date: 2011-02-??
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Maintainer: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
@@ -20,6 +20,6 @@ Description: Regression modeling, testing, estimation, validation,
 	ordinary linear models,	the Buckley-James model, generalized least
 	squares for serially or spatially correlated observations, generalized
 	linear models, and quantile regression.
-License: GPL version 2 or newer
+License: GPL (>= 2)
 URL: http://biostat.mc.vanderbilt.edu/rms
 LazyLoad: yes

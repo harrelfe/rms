@@ -8,6 +8,7 @@ contrast.rms <-
 {
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
+  if(conf.type == 'simultaneous') require(multcomp)
   
   zcrit <- if(length(idf <- fit$df.residual)) qt((1+conf.int)/2, idf) else
   qnorm((1+conf.int)/2)
@@ -105,7 +106,9 @@ contrast.rms <-
               Z=Z, Pvalue=P, 
               var=v, df.residual=idf,
               X=X, 
-              cnames=if(type=='average')NULL else cnames, nvary=length(vary))
+              cnames=if(type=='average')NULL else cnames,
+              nvary=length(vary),
+              conf.type=conf.type, conf.int=conf.int)
   if(type != 'average') res <- c(vary, res)
   
   r <- qr(v, tol=tol)
@@ -178,6 +181,8 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u)u,
         }
     }
   if(!jointonly && length(edf))cat('\nError d.f.=',edf,'\n')
+  cat('\nConfidence intervals are', x$conf.int, x$conf.type,
+      'intervals\n')
   if(X)
     {
       cat('\nDesign Matrix for Contrasts\n\n')
