@@ -19,7 +19,7 @@ predab.resample(fit.orig, fit, measure,
                 bw=FALSE, B=50, pr=FALSE,
                 rule="aic", type="residual", sls=.05, aics=0,
                 tol=1e-12, force=NULL, non.slopes.in.x=TRUE, kint=1,
-                cluster, subset, group=NULL, \dots)
+                cluster, subset, group=NULL, debug=FALSE, \dots)
 }
 \arguments{
 \item{fit.orig}{
@@ -136,6 +136,8 @@ This allows one to handle k-sample problems, i.e., each bootstrap
 sample will be forced to selected the same number of observations from
 each level of group as the number appearing in the original dataset.
 }
+\item{debug}{set to \code{TRUE} to print subscripts of all training and
+  test samples}
 \item{\dots}{
 The user may add other arguments here that are passed to \code{fit} and
 \code{measure}.

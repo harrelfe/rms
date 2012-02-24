@@ -17,6 +17,7 @@ predab.resample <-
            cluster,
            subset,
            group=NULL,
+           debug=FALSE,
            ...)
 {
   method <- match.arg(method)
@@ -276,6 +277,12 @@ predab.resample <-
       else
         train
 
+      if(debug) {
+        cat('\nSubscripts of training sample:\n')
+        print(train)
+        cat('\nSubscripts of test sample:\n')
+        print(test)
+      }
       f <- fit(x[xtrain,,drop=FALSE], y[train,,drop=FALSE],
                strata=stra[train], iter=i, tol=tol, ...)
     f$assign <- NULL  #Some programs put a NULL assign (e.g. ols.val fit)
