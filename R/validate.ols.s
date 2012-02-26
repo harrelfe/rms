@@ -148,9 +148,9 @@ latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
                 'Test\nSample', 'Optimism', 'Corrected\nIndex',
                 '$n$'))
     rn <- rownames(x)
-    rn <- chg(rn, c('Dxy','R2','Emax','D','U','Q','B','g','gp','gr'),
+    rn <- chg(rn, c('Dxy','R2','Emax','D','U','Q','B','g','gp','gr','rho'),
               c('$D_{xy}$','$R^{2}$','$E_{\\max}$','$D$','$U$',
-                '$Q$','$B$','$g$','$g_{p}$','$g_{r}$'))
+                '$Q$','$B$','$g$','$g_{p}$','$g_{r}$','$\\rho$'))
     dimnames(x) <- list(rn, cn)
     cat('\\Needspace{2in}\n', file=file, append=append)
     cat('\\begin{center}\\', size, '\n', sep='', file=file, append=append)
