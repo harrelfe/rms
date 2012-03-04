@@ -203,6 +203,11 @@ f.harrell@vanderbilt.edu
   Fox J, Hong J (2009): Effect displays in R for multinomial and
   proportional-odds logit models: Extensions to the effects package.  J
   Stat Software 32 No. 1.
+}
+\note{If plotting the effects of all predictors you can reorder the
+  panels using for example \code{p <- Predict(fit); p$.predictor. <-
+	factor(p$.predictor., v)} where \code{v} is a vector of predictor
+  names specified in the desired order.
   }
 \seealso{
   \code{\link{Predict}}, \code{\link{rbind.Predict}},
