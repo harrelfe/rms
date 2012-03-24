@@ -171,21 +171,20 @@ matrx <- function(...) {
   xd <- xx[[1]]
   nc <- ncol(xd)
   if(!is.matrix(xd)) {
-    stop(paste(z$name,"is not a matrix"))
+    stop(paste(z$name, "is not a matrix"))
   }
   colname <- dimnames(xd)[[2]]
-  if(length(colname)==0) {
-    colname <- paste(z$name,'[',1:nc,']',sep="")
-  } else if(z$label==z$name) {
-    z$label <- paste(colname,collapse=",")
-  }
+  if(length(colname)==0 && nc > 0)
+    colname <- paste(z$name, '[', 1:nc, ']', sep="")
+  else if(z$label==z$name)
+    z$label <- paste(colname, collapse=",")
 
-  parms <- double(nc)
-  for(i in 1:nc){
+  parms <- rep(NA, max(1, nc))
+  if(length(xd)) for(i in 1:nc)
     parms[i] <- median(xd[,i], na.rm=TRUE)
-  }
 
-  attributes(xd) <- set.atr(xd,NULL,z,colname,"matrix",10,parms,rep(FALSE,nc))
+  attributes(xd) <- set.atr(xd, NULL, z, colname, "matrix", 10, parms,
+                            rep(FALSE,nc))
   xd
 }
 

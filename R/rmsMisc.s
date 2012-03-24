@@ -25,17 +25,14 @@ DesignAssign <- function(atr, non.slopes, Terms) {
   ## 23feb03: No, term.labels not useful if "." in formula
   ## formula argument no longer used
 
-  ## ll <- if(missing(formula)) atr$name else attr(terms(formula),'term.labels')
-##  ll <- atr$name   ## 22feb03
-  ## Changed 24feb03 to pass terms instead of formula, us it
   ll <- if(missing(Terms)) atr$name else attr(Terms,'term.labels')
   if(!length(ll)) return(list())
   nv <- length(ll)
   params <- sapply(atr$nonlinear, length)  ## d.f. per predictor
   asc <- atr$assume.code
-  assign <- list() #vector('list', nv+(non.slopes > 0)-sum(asc==8))
+  assign <- list()
   j <- non.slopes + 1
-  for(i in 1:length(ll)) {
+  if(length(params)) for(i in 1:length(ll)) {
     if(asc[i]==8) next
     assign[[ll[i]]] <- j:(j+params[i]-1)
     j <- j + params[i]

@@ -151,37 +151,33 @@ Design <- function(mf, allow.offset=TRUE, intercept=1)
               flabel <- c(flabel,z$label)
               asm <- c(asm,za)
               colnam[[i1]] <- z$colnames
-              if(za!=8) name <- c(name, colnam[[i1]])
-              if(za!=9)
-                {
-                  funits <- c(funits, if(length(z$units))z$units else '')
-                  if(length(z$parms)) parm[[zname]] <- z$parms
-                  if(length(XDATADIST))
-                    {
-                      limits[[zname]] <- if(any(Limnames==zname))
-                        {
-                          j <- match(zname, Limnames, 0) #require EXACT match
-                          Limits[,j[j>0]]
-                        }
-                      else rep(NA,7)
-                      j <- match(zname, names(datadist$values), 0)
-                      if(j>0)
-                        {
-                          values[[zname]] <- datadist$values[[j]]
-                          l1 <- levels(xi); l2 <- datadist$values[[j]]
-                          if(length(l1) && ((length(l1) != length(l2)) ||
-                                            any(sort(l1) != sort(l2))))
-                            warning(paste('Variable',zname,'has levels',paste(l1,collapse=' '),
-                                          'which do not match levels given to datadist (',
-                                          paste(l2,collapse=' '),'). datadist values ignored.'))
-                          values[[zname]] <- l1
-                        }
-                    }
+              if(za != 8 && length(colnam)) name <- c(name, colnam[[i1]])
+              if(za != 9) {
+                funits <- c(funits, if(length(z$units))z$units else '')
+                if(length(z$parms)) parm[[zname]] <- z$parms
+                if(length(XDATADIST)) {
+                  limits[[zname]] <- if(any(Limnames==zname)) {
+                    j <- match(zname, Limnames, 0) #require EXACT match
+                    Limits[,j[j>0]]
+                  }
+                  else rep(NA,7)
+                  j <- match(zname, names(datadist$values), 0)
+                  if(j>0) {
+                    values[[zname]] <- datadist$values[[j]]
+                    l1 <- levels(xi); l2 <- datadist$values[[j]]
+                    if(length(l1) && ((length(l1) != length(l2)) ||
+                                      any(sort(l1) != sort(l2))))
+                      warning(paste('Variable',zname,'has levels',paste(l1,collapse=' '),
+                                    'which do not match levels given to datadist (',
+                                    paste(l2,collapse=' '),'). datadist values ignored.'))
+                    values[[zname]] <- l1
+                  }
                 }
-
+              }
+              
               if(length(nonl <- z$nonlinear)) nonlinear[[zname]] <- nonl
 
-              if(za==9)
+              if(za == 9)
                 {
                   iia <- match(z$ia, fname)
                   if(any(is.na(iia)))stop(paste(paste(z$ia,collapse=" "),
