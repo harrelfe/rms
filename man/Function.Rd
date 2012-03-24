@@ -2,7 +2,7 @@
 \alias{Function.rms}
 \alias{Function.cph}
 \alias{sascode}
-\alias{percode}
+\alias{perlcode}
 \title{Compose an S Function to Compute X beta from a Fit}
 \description{
 \code{Function} is a class of functions for creating other S functions.
