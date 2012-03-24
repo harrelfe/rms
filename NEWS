@@ -1,7 +1,11 @@
-Chagnes in version 3.5-0 (2012-02-xx)
+Chagnes in version 3.5-0 (2012-03-xx)
    * contrast.rms: saved conf.type and conf.int in returned object, added to print method
-   * added debug= to predab.resample so user can see all the training and test sample subscripts
-   * added validate.Rq function
+   * Added debug= to predab.resample so user can see all the training and test sample subscripts
+   * Added validate.Rq function
+   * Fixed bug in Rq that caused 2 copies of fitted.values to be in fit object, which caused fit.mult.impute to double fitted.values
+   * Added how to reorder predictors if using plot(Predict(fit))
+   * Added new function perlcode written by Jeremy Stephens and Thomas Dupont; converts result of Function to Perl code
+   * Fixed partial argument matches in many functions to pass new R checks
 
 Changes in version 3.4-0 (2012-01-17)
    * psm: fixed logcorrect logic (thanks: Rob Kushler)

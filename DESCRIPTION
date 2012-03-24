@@ -1,12 +1,12 @@
 Package: rms
 Version: 3.5-0
-Date: 2011-02-??
+Date: 2011-03-24
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Maintainer: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Depends: Hmisc (>= 3.7), survival (>= 2.36-3)
 Imports: survival
-Suggests: lattice, quantreg, nlme, rpart, polspline, multcomp
+Suggests: lattice, quantreg, nlme, rpart, polspline, multcomp, boot
 Description: Regression modeling, testing, estimation, validation,
 	graphics, prediction, and typesetting by storing enhanced model design
 	attributes in the fit.  rms is a collection of 229 functions that
