@@ -24,7 +24,7 @@ cph <- function(formula=formula(data),
   require(survival)
   method <- match.arg(method)
   call   <- match.call()
-  m      <- match.call(expand=FALSE)
+  m      <- match.call(expand.dots=FALSE)
   mc     <- match(c("formula", "data", "subset", "weights", "na.action"), 
                   names(m), 0)
   m <- m[c(1, mc)]

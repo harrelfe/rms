@@ -150,7 +150,7 @@ survplot.survfit <-
                         by=-yi)
               if(dots)
                 for(tt in xp)symbols(rep(tt,length(yp)),yp,
-                                     circle=rep(dotsize,length(yp)),
+                                     circles=rep(dotsize,length(yp)),
                                      inches=dotsize,add=TRUE)
               else abline(h=yp, v=xp, col=grid)
             }
@@ -254,7 +254,7 @@ survplot.survfit <-
     lines(curves[[i]][[1]], curves[[i]][[2]],
           lty=lty[i], lwd=lwd[i], col=col[i], type='s')
   if(labelc) labcurve(curves, sleva, type='s', lty=lty, lwd=lwd,
-                      opts=label.curves, col=col)
+                      opts=label.curves, col.=col)
   
   invisible(slev)
 }

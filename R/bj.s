@@ -4,7 +4,7 @@ bj <- function(formula=formula(data), data,
                method='fit', x=FALSE, y=FALSE, time.inc)
 {
   call <- match.call()
-  m <- match.call(expand=FALSE)
+  m <- match.call(expand.dots=FALSE)
   require(survival) || stop('survival package not available')
   mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
               names(m), 0)

@@ -208,7 +208,7 @@ survplot.rms <-
                             if(n.risk && missing(y.n.risk))yi else 0, 
                             by=-yi)
                   if(dots) for(tt in xp)symbols(rep(tt,length(yp)),yp,
-                                                circle=rep(dotsize,length(yp)),
+                                                circles=rep(dotsize,length(yp)),
                                                 inches=dotsize,add=TRUE)
                   else abline(h=yp, v=xp, col=grid)
                 }
@@ -341,7 +341,7 @@ survplot.rms <-
     lines(curves[[i]][[1]], curves[[i]][[2]], type=ltype, lty=lty[i],
           col=col[i], lwd=lwd[i])
 
-  if(labelc) labcurve(curves, curve.labels, type=ltype, lty=lty, col=col,
+  if(labelc) labcurve(curves, curve.labels, type=ltype, lty=lty, col.=col,
                       lwd=lwd, opts=label.curves)
 
   if(length(adjust)) title(sub=paste("Adjusted to:",adjust),

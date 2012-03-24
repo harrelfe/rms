@@ -8,10 +8,9 @@ psm <- function(formula=formula(data),
     require(survival)
     
     call <- match.call()
-    m <- match.call(expand=FALSE)
+    m <- match.call(expand.dots=FALSE)
     if(dist=='extreme')
       warning('Unlike earlier versions of survreg, dist="extreme" does not fit\na Weibull distribution as it uses an identity link.  To fit the Weibull\ndistribution use the default for dist or specify dist="weibull".')
-    m <- match.call(expand=FALSE)
     mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
                 names(m), 0)
     m <- m[c(1, mc)]

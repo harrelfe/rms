@@ -351,7 +351,7 @@ plot.summary.rms <-
           ## still remain
           pxlim <- pxlim[pxlim>=exp(xlim[1])]
           if(!missing(at)) pxlim <- at
-          axis(3, logb(pxlim), lab=format(pxlim))
+          axis(3, logb(pxlim), labels=format(pxlim))
         }
       else 
         {

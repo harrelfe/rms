@@ -318,7 +318,7 @@ plot.nomogram <-
         if(length(sides)!=length(fat)) 
           stop('fun.side vector not same length as fun.at or fun.lp.at')
         for(jj in 1:length(fat)) 
-          axis(sides[jj], at=scaled[jj], label=fat[jj],
+          axis(sides[jj], at=scaled[jj], labels=fat[jj],
                pos=y, cex.axis=cex.axis, tck=tck, tcl=tcl,
                mgp=if(sides[jj] == 1) c(0,lmgp - 0.6, 0) else c(0, lmgp, 0),
                padj=if(sides[jj] == 1) 1 else 0)

@@ -28,7 +28,7 @@ Predict <-
 
   if(length(fname)>1 || (length(dotlist)==0 && fname==''))
     {
-      m <- match.call(expand=FALSE)
+      m <- match.call(expand.dots=FALSE)
       m[[1]] <- as.name('Predict')
       nams <- if(length(fname)>1) fname else name[assume!=9]
       res <- vector('list', length(nams))
