@@ -2,6 +2,7 @@
 \alias{Function.rms}
 \alias{Function.cph}
 \alias{sascode}
+\alias{percode}
 \title{Compose an S Function to Compute X beta from a Fit}
 \description{
 \code{Function} is a class of functions for creating other S functions.
@@ -18,7 +19,10 @@ the model.  \code{sascode} is a function that takes an S function such
 as one created by \code{Function} and does most of the editing
 to turn the function definition into
 a fragment of SAS code for computing X beta from the fitted model, along
-with assignment statements that initialize predictors to reference values.
+with assignment statements that initialize predictors to reference
+values.
+\code{perlcode} similarly creates Perl code to evaluate a fitted
+regression model.
 }
 \usage{
 \method{Function}{rms}(object, intercept=NULL,
@@ -28,6 +32,8 @@ with assignment statements that initialize predictors to reference values.
 # Use result as fun(predictor1=value1, predictor2=value2, \dots)
 
 sascode(object, file='', append=FALSE)
+
+perlcode(object)
 }
 \arguments{
 \item{object}{
@@ -59,9 +65,10 @@ and the default values of the predictors are set to \code{adjust-to} values
 (see \code{datadist}).  Multiple predicted X beta values may be calculated
 by specifying vectors as arguments to the created function.
 All non-scalar argument values must have the same length.
+\code{perlcode} returns a character string with embedded newline characters.
 }
 \author{
-Frank Harrell\cr
+Frank Harrell, Jeremy Stephens, and Thomas Dupont\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
 f.harrell@vanderbilt.edu
@@ -81,6 +88,7 @@ f$coef
 g  <- Function(f, digits=5)
 g
 sascode(g)
+cat(perlcode(g), '\n')
 g()
 g(x1=c(2,3), x2='b')   #could omit x2 since b is default category
 predict(f, expand.grid(x1=c(2,3),x2='b'))

@@ -300,3 +300,116 @@ sascode <- function(object, file="", append=FALSE)
     cat(object, sep="\n", file=file, append=TRUE)
   invisible()
 }
+
+perlcode <- function(object) {
+  group_translate <- function(expr) {
+    result <- vector("list", length(expr) - 1)
+    for (i in 2:length(expr)) {
+      result[[i-1]] <- convert(expr[[i]])
+    }
+    paste(result, collapse=";\n  ")
+  }
+
+  simple_translate <- function(expr) {
+    paste(convert(expr[[2]]), as.character(expr[[1]]), convert(expr[[3]]))
+  }
+
+  exp_translate <- function(expr) {
+    expr[[1]] <- "**"
+    simple_translate(expr)
+  }
+
+  pmax_pmin_translate <- function(expr) {
+    result <- vector("list", length(expr) - 1)
+    for (i in 2:length(expr)) {
+      result[[i-1]] <- convert(expr[[i]])
+    }
+    name <- substr(as.character(expr[[1]]), 2, 4)
+    paste(name, "((", paste(result, collapse=", "), "))", sep="")
+  }
+
+  equal_translate <- function(expr) {
+    perlop <- if (is.character(expr[[2]]) || is.character(expr[[3]])) "eq" else "=="
+    lhs <- convert(expr[[2]])
+    rhs <- convert(expr[[3]])
+    sprintf("(%s %s %s) ? 1 : 0", lhs, perlop, rhs)
+  }
+
+  parenthesis_translate <- function(expr) {
+    sprintf("(%s)", convert(expr[[2]]))
+  }
+
+  assign_translate <- function(expr) {
+    expr[[1]] <- "="
+    simple_translate(expr)
+  }
+
+  log_translate <- function(expr) {
+    paste("log(", convert(expr[[2]]), ")", sep="")
+  }
+
+  R_to_perl <- list(
+    "{" = group_translate,
+    "-" = simple_translate,
+    "+" = simple_translate,
+    "*" = simple_translate,
+    "/" = simple_translate,
+    "^" = exp_translate,
+    "==" = equal_translate,
+    "(" = parenthesis_translate,
+    "<-" = assign_translate,
+    "pmax" = pmax_pmin_translate,
+    "pmin" = pmax_pmin_translate,
+    "log" = log_translate
+  )
+
+  variable_translate <- function(v) {
+    sprintf("$%s", gsub("\\.", "_", v))
+  }
+
+  convert <- function(expr) {
+    if (length(expr) == 1) {
+      x <- as.character(expr)
+      if (typeof(expr) == "symbol") {
+        variable_translate(x)
+      } else {
+        if (is.character(expr)) {
+          sprintf('"%s"', x)
+        }
+        else {
+          x
+        }
+      }
+    }
+    else {
+      op <- as.character(expr[[1]])
+      if (typeof(expr[[1]]) == "symbol" && op %in% names(R_to_perl)) {
+        f <- R_to_perl[[op]]
+        f(expr)
+      } else {
+        stop("don't know how to convert operator: ", op)
+      }
+    }
+  }
+
+  f <- object
+
+  if (typeof(f) != "closure") {
+    stop("argument must be a function")
+  }
+
+  fargs <- formals(f)
+  fbody <- body(f)
+  function_name <- as.character(match.call()[[2]])
+  if (length(function_name) > 1) {
+    function_name <- "f"
+  }
+
+  result <- list(sprintf("use List::Util 'max', 'min';\nsub %s {", function_name))
+  for (i in 1:length(names(fargs))) {
+    v <- names(fargs)[[i]]
+    result <- c(result, sprintf("my %s = $_[%d];", variable_translate(v), i-1))
+  }
+  result <- c(result, convert(fbody))
+  paste(paste(result, collapse="\n  "), "}", sep="\n")
+}
