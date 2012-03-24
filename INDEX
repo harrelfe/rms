@@ -71,6 +71,7 @@ validate.lrm            Resampling Validation of a Logistic Model
 validate.ols            Validation of an Ordinary Linear Model
 validate.rpart          Dxy and Mean Squared Error by Cross-validating
                         a Tree Sequence
+validate.Rq             Validation of a Quantile Regression Model
 val.prob                Validate Predicted Probabilities
 val.surv                Validate Predicted Probabilities Against
                         Observed Survival Times
