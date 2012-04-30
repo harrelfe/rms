@@ -101,7 +101,10 @@ Gls <-
       {
         if(j == 0) s <- 1:N else
         {
-          if(ng == N) s <- sample(1:N, N, replace=TRUE)
+          if(ng == N) {
+            s <- sample(1:N, N, replace=TRUE)
+            dataMods <- dataMod[s,]
+          }
           else
             {
               grps.sampled <- sample(levg, ng, replace=TRUE)
@@ -365,10 +368,10 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
       z[[k]] <- list(type='print', list(round(dr, 2)),
                      title = 'Ratio of Original Variances to Bootstrap Variances')
       k <- k + 1
-      r <- round(quantile(x$boot.Corr, c(.025,.975)),3)
-      names(r) <- c('Lower','Upper')
+      r <- round(t(apply(x$boot.Corr, 2, quantile, probs=c(.025,.975))), 3)
+      colnames(r) <- c('Lower','Upper')
       z[[k]] <- list(type='print', list(r),
-                     title = 'Bootstrap Nonparametric 0.95 Confidence Limits for Correlation Parameter')
+                     title = 'Bootstrap Nonparametric 0.95 Confidence Limits for Correlation Parameters')
     }
   
   prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex, ...)
