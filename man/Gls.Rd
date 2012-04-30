@@ -4,8 +4,7 @@
 \title{Fit Linear Model Using Generalized Least Squares}
 \usage{
 Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
-    control, verbose, B=0, dupCluster=FALSE, pr=FALSE,
-    opmeth=c('optimize','optim'), x=FALSE)
+    control, verbose, B=0, dupCluster=FALSE, pr=FALSE, x=FALSE)
 
 \method{print}{Gls}(x, digits=4, coefs=TRUE, latex=FALSE, title, \dots)
 }
@@ -54,8 +53,6 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
    bootstrapping to consider multiply-sampled clusters as if they were
    one large cluster when fitting using the \code{gls} algorithm}
  \item{pr}{set to \code{TRUE} to show progress of bootstrap resampling}
- \item{opmeth}{specifies whether the \code{optimize} or the \code{optim}
-   function is to be used for optimization}
  \item{x}{for \code{Gls} set to \code{TRUE} to store the design matrix
    in the fit object; otherwise the result of \code{Gls}}
  \item{digits}{number of significant digits to print}
@@ -87,7 +84,7 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
   \code{resid}, \code{coef}, and \code{fitted} can be used to extract
   some of its components.  \code{Gls} returns the following components
   not returned by \code{gls}: \code{Design}, \code{assign},
-  \code{formula}, \code{opmeth} (see arguments), \code{B} (see
+  \code{formula} (see arguments), \code{B} (see
   arguments), \code{bootCoef} (matrix of \code{B} bootstrapped
   coefficients), \code{boot.Corr} (vector of bootstrapped correlation
   parameters), \code{Nboot} (vector of total sample size used in each

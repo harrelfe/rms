@@ -2,14 +2,13 @@ Gls <-
   function (model, data = sys.frame(sys.parent()), correlation = NULL, 
     weights = NULL, subset, method = c("REML", "ML"), na.action = na.omit, 
     control = list(), verbose = FALSE, B=0, dupCluster=FALSE,
-            pr=FALSE, opmeth=c('optimize','optim'), x=FALSE)
+            pr=FALSE, x=FALSE)
             
 {
     require(nlme)
     glsEstimate <- nlme:::glsEstimate
     
     Call <- match.call()
-    opmeth <- match.arg(opmeth)
     controlvals <- glsControl()
     if (!missing(control))
       {
@@ -82,7 +81,7 @@ Gls <-
     if(B > 0)
       {
         bootcoef <- matrix(NA, nrow=B, ncol=p, dimnames=list(NULL,cn))
-        bootcorr <- numeric(B)
+#        bootcorr <- numeric(B)
         Nboot    <- integer(B)
         if(length(grps))
           {
@@ -138,28 +137,31 @@ Gls <-
         numIter <- numIter0 <- 0
         repeat
           {
-            oldPars <- c(attr(glsSt, "glsFit")[["beta"]], coef(glsSt))
-            if (length(coef(glsSt)))
+            co <- c(coef(glsSt))  ## FEH
+            oldPars <- c(attr(glsSt, "glsFit")[["beta"]], co)
+            if (length(co))
               {
-                co <- c(coef(glsSt))  ## FEH
-                if(opmeth == 'optimize' && co > 1) opmeth <- 'optim'
-                best <- if(opmeth=='optimize')
-                  optimize(function(z)
-                           -logLik(glsSt,z), lower=-12, upper=12)$minimum else
-                optim(fn = function(glsPars)
-                      -logLik(glsSt, glsPars),
-                      par = co,  ## FEH
-                      method = "BFGS", 
-                      control = list(trace = controlvals$msVerbose, 
-                        reltol = if (numIter == 0)
-                        controlvals$msTol else 100 * 
-                        .Machine$double.eps,
-                        maxit = controlvals$msMaxIter))$par
-                coef(glsSt) <- best   ## FEH
+                optRes <- if(controlvals$opt == 'nlminb') {
+                  nlminb(co, function(glsPars) -logLik(glsSt, glsPars),
+                         control = list(trace = controlvals$msVerbose, 
+                           iter.max = controlvals$msMaxIter))
+                }
+                else {
+                  optim(co, function(glsPars) -logLik(glsSt, glsPars),
+                        method = controlvals$optimMethod, 
+                        control = list(trace = controlvals$msVerbose, 
+                          maxit = controlvals$msMaxIter,
+                          reltol = if (numIter ==  0)
+                          controlvals$msTol else 100 * .Machine$double.eps))
+                }
+                coef(glsSt) <- optRes$par
               }
+            else optRes <- list(convergence = 0)
             attr(glsSt, "glsFit") <- glsEstimate(glsSt, control = glsEstControl)
-            if (!needUpdate(glsSt)) 
+            if (!needUpdate(glsSt)) {
+              if (optRes$convergence) stop(optRes$message)
               break
+            }
             numIter <- numIter + 1
             glsSt <- update(glsSt, if(j==0) dataMod else dataMods)  ## FEH
             aConv <- c(attr(glsSt, "glsFit")[["beta"]], coef(glsSt))
@@ -189,8 +191,15 @@ Gls <-
       }
       if(j > 0)
         {
-          bootcoef[j,] <- attr(glsSt, "glsFit")[["beta"]]
-          bootcorr[j]  <- coef(glsSt$corStruct, unconstrained=FALSE)
+          bootcoef[j,]  <- attr(glsSt, "glsFit")[["beta"]]
+          bootc <- coef(glsSt$corStruct, unconstrained=FALSE)
+          if(j == 1) {
+            ncb <- ncol(bootc)
+            if(!length(ncb)) ncb <- length(bootc)
+            bootcorr <- matrix(NA, nrow=B, ncol=ncb,
+                               dimnames=list(NULL, names(bootc)))
+          }
+          bootcorr[j,] <- bootc
         }
         if(j==0) glsSt0 <- glsSt  ## FEH 4apr03
       }  ## end bootstrap reps
@@ -245,7 +254,7 @@ Gls <-
                    fitted = Fitted,  
                    residuals = Resid, parAssign = parAssign,
                    Design=desatr, assign=DesignAssign(desatr, 1, mt),
-                   formula=model, terms=fTerms, opmeth=opmeth,
+                   formula=model, terms=fTerms,
                    B=B, boot.Coef=if(B > 0) bootcoef,
                    boot.Corr=if(B > 0) bootcorr,
                    Nboot=if(B > 0) Nboot,
