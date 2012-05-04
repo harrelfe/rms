@@ -1,7 +1,7 @@
 validate <-
   function(fit,  method="boot", B=40,
            bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, 
-           force=NULL, pr=FALSE,...)
+           force=NULL, estimates=TRUE, pr=FALSE,...)
   UseMethod("validate")
 
 
@@ -14,7 +14,7 @@ validate <-
 
 validate.ols <- function(fit, method="boot",
 	B=40, bw=FALSE, rule="aic", type="residual",
-	sls=.05, aics=0, force=NULL,
+	sls=.05, aics=0, force=NULL, estimates=TRUE,
     pr=FALSE, u=NULL, rel=">", tolerance=1e-7, ...)
 {
   fit.orig <- fit
@@ -105,7 +105,7 @@ validate.ols <- function(fit, method="boot",
   
   predab.resample(fit.orig,method=method,fit=ols.fit,measure=discrim,pr=pr,
                   B=B,bw=bw,rule=rule,type=type,sls=sls,aics=aics,
-                  force=force,tolerance=tolerance,
+                  force=force, estimates=estimates, tolerance=tolerance,
                   backward=bw,u=u, penalty.matrix=penalty.matrix,
                   rel=rel, ...)
 }

@@ -44,16 +44,17 @@ calibrate(fit, \dots)
   method=c("boot","crossvalidation",".632","randomization"),
   B=40, bw=FALSE, rule=c("aic","p"),
   type=c("residual","individual"),
-  sls=.05, aics=0, force=NULL, pr=FALSE, kint, smoother="lowess",
-  digits=NULL, \dots) 
+  sls=.05, aics=0, force=NULL, estimates=TRUE, pr=FALSE, kint,
+  smoother="lowess", digits=NULL, \dots) 
 \method{calibrate}{cph}(fit, cmethod=c('hare', 'KM'),
   method="boot", u, m=150, pred, cuts, B=40, 
   bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, force=NULL,
+  estimates=TRUE,
   pr=FALSE, what="observed-predicted", tol=1e-12, maxdim=5, \dots)
 \method{calibrate}{psm}(fit, cmethod=c('hare', 'KM'),
   method="boot", u, m=150, pred, cuts, B=40,
   bw=FALSE,rule="aic",
-  type="residual", sls=.05, aics=0, force=NULL,
+  type="residual", sls=.05, aics=0, force=NULL, estimates=TRUE,
   pr=FALSE, what="observed-predicted", tol=1e-12, maxiter=15, 
   rel.tolerance=1e-5, maxdim=5, \dots)
 
@@ -72,7 +73,7 @@ calibrate(fit, \dots)
 a fit from \code{ols}, \code{lrm}, \code{cph} or \code{psm}
 }
 \item{x}{an object created by \code{calibrate}}
-\item{method, B, bw, rule, type, sls, aics, force}{see \code{\link{validate}}.
+\item{method, B, bw, rule, type, sls, aics, force, estimates}{see \code{\link{validate}}.
   For \code{print.calibrate}, \code{B} is an
   upper limit on the number of resamples for which 
   information is printed about which variables were selected in each

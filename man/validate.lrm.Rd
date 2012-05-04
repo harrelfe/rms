@@ -26,7 +26,7 @@ factor that takes into account overfitting.
 # fit <- lrm(formula=response ~ terms, x=TRUE, y=TRUE)
 \method{validate}{lrm}(fit, method="boot", B=40,
          bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0,
-         force=NULL,
+         force=NULL, estimates=TRUE,
          pr=FALSE,  kint, Dxy.method=if(k==1) 'somers2' else 'lrm',
          emax.lim=c(0,1), \dots)
 }
@@ -35,7 +35,7 @@ factor that takes into account overfitting.
 a fit derived by \code{lrm}. The options \code{x=TRUE} and \code{y=TRUE}
 must have been specified.
 }
-\item{method,B,bw,rule,type,sls,aics,force,pr}{see \code{\link{validate}} and \code{\link{predab.resample}}}
+\item{method,B,bw,rule,type,sls,aics,force,estimates,pr}{see \code{\link{validate}} and \code{\link{predab.resample}}}
 \item{kint}{
 In the case of an ordinal model, specify which intercept to validate.
 Default is the middle intercept.

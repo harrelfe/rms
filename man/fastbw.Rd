@@ -25,7 +25,7 @@ statistic for each model.
 fastbw(fit, rule="aic", type="residual", sls=.05, aics=0, eps=1e-9,
        k.aic=2, force=NULL)
 
-\method{print}{fastbw}(x, digits=4, \dots)
+\method{print}{fastbw}(x, digits=4, estimates=TRUE, \dots)
 }
 \arguments{
 \item{fit}{
@@ -62,6 +62,8 @@ for survival models).
   the model, not counting intercept(s)}
 \item{x}{result of \code{fastbw}}
 \item{digits}{number of significant digits to print}
+\item{estimtaes}{set to \code{FALSE} to suppress printing table of
+  approximate coefficients, SEs, etc., after variable deletions}
 \item{\dots}{ignored}
 }
 \value{

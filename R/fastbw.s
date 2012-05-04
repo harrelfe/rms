@@ -264,7 +264,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
 }
 
 		
-print.fastbw <- function(x, digits=4, ...)
+print.fastbw <- function(x, digits=4, estimates=TRUE,...)
 {
 
   res <- x$result
@@ -284,7 +284,7 @@ print.fastbw <- function(x, digits=4, ...)
         cat('Parameters forced into all models:\n',
             paste(x$force, collapse=', '), '\n\n')
       print(cres, quote=FALSE)
-      if(length(x$coef))
+      if(estimates && length(x$coef))
         {
           cat("\nApproximate Estimates after Deleting Factors\n\n")
           cof <- coef(x)

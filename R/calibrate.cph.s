@@ -15,7 +15,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
                           method="boot", u, m=150, pred, cuts, B=40,
                           bw=FALSE, rule="aic",
                           type="residual", sls=.05, aics=0, force=NULL,
-                          pr=FALSE, what="observed-predicted",
+                          estimates=TRUE, pr=FALSE, what="observed-predicted",
                           tol=1e-12, maxdim=5, ...)
 {
   call    <- match.call()
@@ -132,7 +132,8 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
         predab.resample(fit, method=method,
                         fit=coxfit, measure=distance,
                         pr=pr, B=b, bw=bw, rule=rule, type=type,  
-                        u=u, m=m, what=what, sls=sls, aics=aics, force=force,
+                        u=u, m=m, what=what, sls=sls, aics=aics,
+                        force=force, estimates=estimates,
                         pred=pred, orig.cuts=cuts, tol=tol, maxdim=maxdim, ...)
       kept <- attr(reliability, 'kept') # TODO: accumulate over reps
       n <- reliability[,"n"]

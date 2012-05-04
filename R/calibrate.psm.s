@@ -1,7 +1,8 @@
 calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
                           method="boot", u, m=150, pred, cuts, B=40,
                           bw=FALSE, rule="aic",
-                          type="residual", sls=.05, aics=0, force=NULL,
+                          type="residual", sls=.05, aics=0,
+                          force=NULL, estimates=TRUE,
                           pr=FALSE, what="observed-predicted",
                           tol=1e-12, maxiter=15, rel.tolerance=1e-5,
                           maxdim=5, ...)
@@ -97,7 +98,8 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
                         u=u, m=m, what=what,
                         dist=dist, inverse=inverse, parms=parms,
                         fixed=fixed, family=family,
-                        sls=sls, aics=aics, force=force, strata=FALSE,
+                        sls=sls, aics=aics, force=force, estimates=estimates,
+                        strata=FALSE,
                         tol=tol, pred=pred, orig.cuts=cuts, maxiter=maxiter,
                         rel.tolerance=rel.tolerance, maxdim=maxdim, ...)
       kept <- attr(reliability, 'kept') # TODO: accumulate over reps

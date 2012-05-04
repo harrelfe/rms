@@ -6,7 +6,7 @@
 
 validate.lrm <- function(fit,method="boot",
 	B=40, bw=FALSE, rule="aic", type="residual",
-	sls=.05, aics=0, force=NULL, pr=FALSE,
+	sls=.05, aics=0, force=NULL, estimates=TRUE, pr=FALSE,
     kint,
 	Dxy.method=if(k==1)"somers2" else "lrm",
 	emax.lim=c(0,1), ...)
@@ -81,7 +81,7 @@ validate.lrm <- function(fit,method="boot",
 
   z <- predab.resample(fit, method=method, fit=lrmfit, measure=discrim, pr=pr,
                        B=B, bw=bw, rule=rule, type=type, sls=sls, aics=aics,
-                       force=force, Dxy.method=Dxy.method,
+                       force=force, estimates=estimates, Dxy.method=Dxy.method,
                        non.slopes.in.x=FALSE,
                        penalty.matrix=penalty.matrix, kint=kint, ...)
   kept <- attr(z, 'kept')

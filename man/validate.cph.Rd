@@ -9,13 +9,13 @@
 }
 \usage{
 # fit <- cph(formula=Surv(ftime,event) ~ terms, x=TRUE, y=TRUE, \dots)
-\method{validate}{cph}(fit, method="boot", B=40, bw=FALSE, rule="aic", type="residual",
-        sls=.05, aics=0, force=NULL, pr=FALSE, dxy=FALSE, u, tol=1e-9, \dots)
+\method{validate}{cph}(fit, method="boot", B=40, bw=FALSE, rule="aic",
+type="residual", sls=.05, aics=0, force=NULL, estimates=TRUE,
+pr=FALSE, dxy=FALSE, u, tol=1e-9, \dots)
 
 \method{validate}{psm}(fit, method="boot",B=40,
         bw=FALSE, rule="aic", type="residual", sls=.05, aics=0,
-        force=NULL,
-        pr=FALSE,
+        force=NULL, estimates=TRUE, pr=FALSE,
         dxy=FALSE, tol=1e-12, rel.tolerance=1e-5, maxiter=15, \dots)
 }
 \arguments{
@@ -53,9 +53,8 @@
     cutoff on AIC when \code{rule="aic"}.
   }
   \item{force}{see \code{\link{fastbw}}}
-  \item{pr}{
-    \code{TRUE} to print results of each repetition
-  }
+  \item{estimates}{see \code{\link{print.fastbw}}}
+  \item{pr}{\code{TRUE} to print results of each repetition}
   \item{tol,\dots}{see \code{\link{validate}} or \code{\link{predab.resample}}}
   \item{dxy}{
     set to \code{TRUE} to validate Somers' \eqn{D_{xy}}{Dxy}  using

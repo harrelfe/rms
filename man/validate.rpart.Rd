@@ -16,7 +16,7 @@ objects created by \code{validate.rpart}.
 \usage{
 # f <- rpart(formula=y ~ x1 + x2 + \dots) # or rpart
 \method{validate}{rpart}(fit, method, B, bw, rule, type, sls, aics,
-    force, pr=TRUE,
+    force, estimates, pr=TRUE,
     k, rand, xval=10, FUN, \dots)
 \method{print}{validate.rpart}(x, \dots)
 \method{plot}{validate.rpart}(x, what=c("mse","dxy"), legendloc=locator, \dots)
@@ -26,7 +26,7 @@ objects created by \code{validate.rpart}.
   an object created by \code{rpart}.  You must have specified the
   \code{model=TRUE} argument to \code{rpart}. 
 }
-\item{method,B,bw,rule,type,sls,aics,force}{
+\item{method,B,bw,rule,type,sls,aics,force,estimates}{
   are there only for consistency with the generic \code{validate}
   function; these are ignored
 } 

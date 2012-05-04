@@ -1,5 +1,5 @@
 validate.rpart <- function(fit, method, B, bw, rule, type, sls, aics,
-                           force, pr=TRUE, k, rand, xval = 10, 
+                           force, estimates, pr=TRUE, k, rand, xval = 10, 
                            FUN, ...)
 {
   if(missing(FUN))

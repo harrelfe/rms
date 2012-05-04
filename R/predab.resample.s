@@ -12,6 +12,7 @@ predab.resample <-
            aics=0,
            tol=1e-12,
            force=NULL,
+           estimates=TRUE,
            non.slopes.in.x=TRUE,
            kint=1,
            cluster,
@@ -153,7 +154,7 @@ predab.resample <-
     fbw <- fastbw(fit.orig, rule=rule, type=type, sls=sls, aics=aics,
                   eps=tol, force=force)
 
-    print(fbw)
+    print(fbw, estimates=estimates)
 
     orig.col.kept <- fbw$parms.kept
     if(!length(orig.col.kept))
@@ -315,7 +316,7 @@ predab.resample <-
               f <- fastbw(f, rule=rule, type=type, sls=sls, aics=aics,
                           eps=tol, force=force)
               
-              if(pr) print(f)
+              if(pr) print(f, estimates=estimates)
 
               varin[j + 1, f$factors.kept] <- TRUE
               col.kept <- f$parms.kept

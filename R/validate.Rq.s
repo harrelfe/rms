@@ -1,7 +1,7 @@
 validate.Rq <-
   function(fit, method="boot",
            B=40, bw=FALSE, rule="aic", type="residual",
-           sls=.05, aics=0, force=NULL,
+           sls=.05, aics=0, force=NULL, estimates=TRUE, 
            pr=FALSE, u=NULL, rel=">", tolerance=1e-7, ...)
 {
   Rqfit <- RqFit(fit, wallow=FALSE)
@@ -68,6 +68,6 @@ validate.Rq <-
   predab.resample(fit.orig, method=method, fit=rqfit,
                   measure=discrim, pr=pr,
                   B=B, bw=bw, rule=rule, type=type, sls=sls, aics=aics,
-                  force=force, tolerance=tolerance,
+                  force=force, estimates=estimates, tolerance=tolerance,
                   backward=bw, u=u, rel=rel, ...)
 }

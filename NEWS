@@ -1,4 +1,8 @@
-Chagnes in version 3.5-0 (2012-03-xx)
+Changes in version 3.5-1 (2012-05-04)
+   * Gls: Updated optimization calls - had become inconsistent with gls and failed if > 1 correlation parameter (thanks: Mark Seeto <markseeto@gmail.com>); removed opmeth argument
+   * print.fastbw: added argument: estimates
+
+Changes in version 3.5-0 (2012-03-24)
    * contrast.rms: saved conf.type and conf.int in returned object, added to print method
    * Added debug= to predab.resample so user can see all the training and test sample subscripts
    * Added validate.Rq function
@@ -6,6 +10,7 @@ Chagnes in version 3.5-0 (2012-03-xx)
    * Added how to reorder predictors if using plot(Predict(fit))
    * Added new function perlcode written by Jeremy Stephens and Thomas Dupont; converts result of Function to Perl code
    * Fixed partial argument matches in many functions to pass new R checks
+   * Changed matrx and DesignAssign to allow validate.Rq to consider null models; neatened code
 
 Changes in version 3.4-0 (2012-01-17)
    * psm: fixed logcorrect logic (thanks: Rob Kushler)

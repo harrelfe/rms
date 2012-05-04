@@ -2,7 +2,7 @@ calibrate.default <- function(fit, predy,
 			      method=c("boot","crossvalidation",".632","randomization"),
 			      B=40, bw=FALSE, rule=c("aic","p"),
 			      type=c("residual","individual"),
-			      sls=.05, aics=0, force=NULL, pr=FALSE, kint,
+			      sls=.05, aics=0, force=NULL, estimates=TRUE, pr=FALSE, kint,
 			      smoother="lowess", digits=NULL, ...)
 {
   call   <- match.call()
@@ -82,7 +82,7 @@ calibrate.default <- function(fit, predy,
 
   z <- predab.resample(fit, method=method, fit=fitit, measure=cal.error,
                        pr=pr, B=B, bw=bw, rule=rule, type=type, sls=sls,
-                       aics=aics, force=force,
+                       aics=aics, force=force, estimates=estimates,
                        non.slopes.in.x=model=="ol",
                        smoother=smoother, predy=predy, model=model, kint=kint,
                        penalty.matrix=penalty.matrix, ...)

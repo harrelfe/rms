@@ -14,7 +14,7 @@
 # fit <- fitting.function(formula=response ~ terms, x=TRUE, y=TRUE)
 validate(fit, method="boot", B=40,
          bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, 
-         force=NULL, pr=FALSE, \dots)
+         force=NULL, estimates=TRUE, pr=FALSE, \dots)
 \method{print}{validate}(x, digits=4, B=Inf, \dots)
 \method{latex}{validate}(object, digits=4, B=Inf, file='', append=FALSE,
                          title=first.word(deparse(substitute(x))),
@@ -62,6 +62,7 @@ validate(fit, method="boot", B=40,
     cutoff on AIC when \code{rule="aic"}.
   }
   \item{force}{see \code{\link{fastbw}}}
+  \item{estimates}{see \code{\link{print.fastbw}}}
   \item{pr}{
     \code{TRUE} to print results of each repetition
   }
