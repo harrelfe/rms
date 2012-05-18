@@ -58,7 +58,7 @@ bjplot(fit, which=1:dim(X)[[2]])
 
 \method{validate}{bj}(fit, method="boot", B=40,
          bw=FALSE,rule="aic",type="residual",sls=.05,aics=0,
-         force=NULL, pr=FALSE,
+         force=NULL, estimates=TRUE, pr=FALSE,
 		 dxy=TRUE, tol=1e-7, rel.tolerance=1e-3, maxiter=15, \dots)
 
 bj.fit(x, y, control)
@@ -141,7 +141,7 @@ bj.fit(x, y, control)
     matrix (the names of the original predictors if they entered the model
     linearly) for which to have \code{bjplot} make plots of only the variables listed in \code{which} (names or numbers).
   }
-  \item{B,bw,rule,sls,aics,force,pr,tol,rel.tolerance,maxiter}{see
+  \item{B,bw,rule,sls,aics,force,estimates,pr,tol,rel.tolerance,maxiter}{see
 	\code{\link{predab.resample}}} 
   \item{\dots}{
     ignored for \code{print}; passed through to

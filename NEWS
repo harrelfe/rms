@@ -1,6 +1,7 @@
-Changes in version 3.5-1 (2012-05-04)
+Changes in version 3.5-1 (2012-05-18)
    * Gls: Updated optimization calls - had become inconsistent with gls and failed if > 1 correlation parameter (thanks: Mark Seeto <markseeto@gmail.com>); removed opmeth argument
    * print.fastbw: added argument: estimates
+   * survplot.survfit: handled fact that survival:::summary.survfit may not preserve order of strata levels.  Also fixed survit.cph and cph; Thanks: William.Fulp@moffitt.org
 
 Changes in version 3.5-0 (2012-03-24)
    * contrast.rms: saved conf.type and conf.int in returned object, added to print method

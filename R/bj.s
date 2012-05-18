@@ -409,7 +409,7 @@ residuals.bj <- function(object,
 validate.bj <-
   function(fit,method="boot",B=40,
            bw=FALSE,rule="aic",type="residual",sls=.05,aics=0,
-           force=NULL, pr=FALSE,
+           force=NULL, estimates=TRUE, pr=FALSE,
            dxy=TRUE, tol=1e-7, rel.tolerance=1e-3, maxiter=15, ...)
 {
 
@@ -431,7 +431,7 @@ validate.bj <-
   predab.resample(fit, method=method,
                   fit=bj.fit2, measure=distance,
                   pr=pr, B=B, bw=bw, rule=rule, type=type,
-                  sls=sls, aics=aics, force=force,
+                  sls=sls, aics=aics, force=force, estimates=estimates,
                   dxy=dxy,
                   maxiter=maxiter, tol=tol,
                   rel.tolerance=rel.tolerance, ...)

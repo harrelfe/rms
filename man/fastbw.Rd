@@ -62,7 +62,7 @@ for survival models).
   the model, not counting intercept(s)}
 \item{x}{result of \code{fastbw}}
 \item{digits}{number of significant digits to print}
-\item{estimtaes}{set to \code{FALSE} to suppress printing table of
+\item{estimates}{set to \code{FALSE} to suppress printing table of
   approximate coefficients, SEs, etc., after variable deletions}
 \item{\dots}{ignored}
 }
