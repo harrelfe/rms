@@ -408,6 +408,17 @@ show.pts <- function(college.pts, income.pt) {
 }
 
 plot(p, xlim=c(0,35), ylim=c(30,55), perim=show.pts)
+
+# Rename variables for better plotting of a long list of predictors
+f <- ...
+p <- Predict(f)
+re <- c(trt='treatment', diabet='diabetes', sbp='systolic blood pressure')
+
+for(n in names(re)) {
+  names(p)[names(p)==n] <- re[n]
+  p$.predictor.[p$.predictor.==n] <- re[n]
+  }
+plot(p)
 }
 }
 \keyword{models}
