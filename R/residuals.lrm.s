@@ -184,12 +184,11 @@ residuals.lrm <-
       stop("you did not use x=T in the fit")
     N <- length(Y)
     
-    px <- 1/(1 + exp(outer(cof[1:k],
-                         as.vector(X%*%cof[-(1:k)]), "+")))
+    px <- plogis(-outer(cof[1:k], as.vector(X%*%cof[-(1:k)]), "+"))
 
-    low.x = rbind(0,px)[cbind(Y+1L,1:N)]
-    hi.x = 1 - rbind(px,1)[cbind(Y+1L,1:N)]
-    return(hi.x - low.x)
+    low.x = rbind(0,px)[cbind(Y+1L,seq_len(N))]
+    hi.x = 1 - rbind(px,1)[cbind(Y+1L,seq_len(N))]
+    return(naresid(naa, hi.x - low.x))
   }
 
   if(type=="pearson") return(naresid(naa,(Y-P)/sqrt(P*(1-P))))

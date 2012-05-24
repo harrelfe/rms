@@ -20,10 +20,9 @@ as temporary binary responses dichotomizations of \eqn{Y}, along with the corres
 \code{type="partial"}, all 
 possible dichotomizations are used, and for \code{type="score"}, the actual
 components of the first derivative of the log likelihood are used for
-an ordinal model.
-For \code{type="li.shepherd"} the residual is
-\eqn{Pr(W<Y) - Pr(W>Y)} where Y is the observed response and W is a
-random variable from the fitted distribution.
+an ordinal model.  For \code{type="li.shepherd"} the residual is
+\eqn{Pr(W<Y) - Pr(W>Y)} where \eqn{Y} is the observed
+response and \eqn{W} is a random variable from the fitted distribution.
 Alternatively, specify \code{type="score.binary"}
 to use binary model score residuals but for all cutpoints of \eqn{Y}
 (plotted only, not returned). The \code{score.binary}, 
@@ -169,6 +168,16 @@ Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
 f.harrell@vanderbilt.edu
+
+Bryan Shepherd\cr
+Department of Biostatistics\cr
+Vanderbilt University\cr
+\email{bryan.shepherd@vanderbilt.edu}
+
+Charles Dupont\cr
+Department of Biostatistics\cr
+Vanderbilt University\cr
+\email{charles.dupont@vanderbilt.edu}
 }
 \references{
 Landwehr, Pregibon, Shoemaker. JASA 79:61--83, 1984.
@@ -184,7 +193,7 @@ Stat in Med 16:965--980, 1997.
 
 Copas JB.  Applied Statistics 38:71--80, 1989.
 
-Li C, Shepherd BE. Biometrika, 2012.
+Li C, Shepherd BE. Biometrika 99:473--480, 2012.
 }
 \seealso{
 \code{\link{lrm}}, \code{\link{naresid}}, \code{\link{which.influence}},
@@ -239,13 +248,11 @@ resid(f, 'gof')           #test GOF for each level separately
 f.wrong <- lrm(y ~ blood.pressure, x=TRUE, y=TRUE)
 par(mfrow=c(2,1))
 # li.shepherd residuals from model without age
-plot(age, resid(f.wrong, type="li.shepherd"),
-     ylab="li.shepherd residual")
-lines(lowess(age, resid(f.wrong, type="li.shepherd")))
+plot(age,resid(f.wrong),ylab='li.shepherd residual')
+lines(lowess(age, resid(f.wrong)))
 # li.shepherd residuals from model including age
-plot(age, resid(f, type="li.shepherd"),
-     ylab="li.shepherd residual")
-lines(lowess(age, resid(f, type="li.shepherd")))
+plot(age, resid(f), ylab="li.shepherd residual")
+lines(lowess(age, resid(f)))
 
 
 # Make a series of binary fits and draw 2 partial residual plots
