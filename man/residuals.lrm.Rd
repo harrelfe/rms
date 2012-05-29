@@ -6,7 +6,7 @@
 For a binary logistic model fit, computes the following residuals, letting
 \eqn{P} denote the predicted probability of the higher category of \eqn{Y},
 \eqn{X} denote the design matrix (with a column of 1s for the intercept), and
-\eqn{L} denote the logit or linear predictors: ordinary (\eqn{Y-P}), score
+\eqn{L} denote the logit or linear predictors: ordinary or li.shepherd (\eqn{Y-P}), score
 (\eqn{X (Y-P)}), pearson (\eqn{(Y-P)/\sqrt{P(1-P)}}), deviance (for \eqn{Y=0} is
 \eqn{-\sqrt{2|\log(1-P)|}}, for \eqn{Y=1} is \eqn{\sqrt{2|\log(P)|}},
 pseudo dependent variable used in influence statistics 
@@ -20,7 +20,10 @@ as temporary binary responses dichotomizations of \eqn{Y}, along with the corres
 \code{type="partial"}, all 
 possible dichotomizations are used, and for \code{type="score"}, the actual
 components of the first derivative of the log likelihood are used for
-an ordinal model.  Alternatively, specify \code{type="score.binary"}
+an ordinal model.  For \code{type="li.shepherd"} the residual is
+\eqn{Pr(W<Y) - Pr(W>Y)} where \eqn{Y} is the observed
+response and \eqn{W} is a random variable from the fitted distribution.
+Alternatively, specify \code{type="score.binary"}
 to use binary model score residuals but for all cutpoints of \eqn{Y}
 (plotted only, not returned). The \code{score.binary}, 
 \code{partial}, and perhaps \code{score} residuals are useful for checking the proportional odds assumption.
@@ -51,7 +54,7 @@ for each predictor, with residual plots from all model fits shown on the
 same plot for that predictor.
 }
 \usage{
-\method{residuals}{lrm}(object, type=c("ordinary", "score", "score.binary",
+\method{residuals}{lrm}(object, type=c("li.shepherd", "ordinary", "score", "score.binary",
                   "pearson", "deviance", "pseudo.dep", "partial",
                   "dfbeta","dfbetas","dffit","dffits","hat","gof","lp1"),
            pl=FALSE, xlim, ylim, kint, label.curves=TRUE, which, \dots)
@@ -104,7 +107,7 @@ of all smoothed curves for \code{partial} if
 \code{pl=TRUE}, or 0.1 and 0.9 quantiles of the residuals for \code{pl="boxplot"}.)
 }
 \item{kint}{
-for an ordinal model for residuals other than \code{partial}, \code{score}, or
+for an ordinal model for residuals other than \code{li.shepherd}, \code{partial}, \code{score}, or
 \code{score.binary}, specifies
 the intercept (and the cutoff of \eqn{Y}) to use for the calculations.
 Specifying \code{kint=2}, for example, means to use \eqn{Y \geq} 3rd level.
@@ -155,12 +158,26 @@ ordinal model.  Simulations when proportional odds is satisfied have
 still shown a U-shaped residual plot.  The series of binary model score
 residuals for all cutoffs of \eqn{Y} seems to better check the assumptions.
 See the last example.
+
+The li.shepherd residual is a single value per observation on the
+probability scale and can be useful for examining linearity, assessing
+for outliers, and measuring residual correlation.
 }
 \author{
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
 f.harrell@vanderbilt.edu
+
+Bryan Shepherd\cr
+Department of Biostatistics\cr
+Vanderbilt University\cr
+\email{bryan.shepherd@vanderbilt.edu}
+
+Charles Dupont\cr
+Department of Biostatistics\cr
+Vanderbilt University\cr
+\email{charles.dupont@vanderbilt.edu}
 }
 \references{
 Landwehr, Pregibon, Shoemaker. JASA 79:61--83, 1984.
@@ -175,6 +192,8 @@ Stat in Med 16:965--980, 1997.
 
 
 Copas JB.  Applied Statistics 38:71--80, 1989.
+
+Li C, Shepherd BE. Biometrika 99:473--480, 2012.
 }
 \seealso{
 \code{\link{lrm}}, \code{\link{naresid}}, \code{\link{which.influence}},
@@ -225,6 +244,15 @@ par(mfrow=c(2,2))
 resid(f, 'score.binary',   pl=TRUE)              #plot score residuals
 resid(f, 'partial', pl=TRUE)                     #plot partial residuals
 resid(f, 'gof')           #test GOF for each level separately
+
+f.wrong <- lrm(y ~ blood.pressure, x=TRUE, y=TRUE)
+par(mfrow=c(2,1))
+# li.shepherd residuals from model without age
+plot(age,resid(f.wrong),ylab='li.shepherd residual')
+lines(lowess(age, resid(f.wrong)))
+# li.shepherd residuals from model including age
+plot(age, resid(f), ylab="li.shepherd residual")
+lines(lowess(age, resid(f)))
 
 
 # Make a series of binary fits and draw 2 partial residual plots
