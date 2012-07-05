@@ -797,6 +797,10 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
         titl <- z$title
         tex  <- z$tex
         if(!length(tex)) tex <- FALSE
+        if(type == 'naprint.delete' && latex) {
+          type <- 'latex.naprint.delete'
+          tex <- TRUE
+        }
 
         preskip <- z$preskip
         if(!length(preskip)) preskip <- 0
@@ -891,6 +895,32 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
       }
     cat('\n')
   }
+
+latex.naprint.delete <- function(x, ...) {
+  lg <- length(g <- x$nmiss)
+  if(lg) {
+    cat("Frequencies of Missing Values Due to Each Variable\n\n\\smallskip\n\n")
+    if(sum(g > 0) < 4) {
+      cat('\\begin{verbatim}\n')
+      print(g)
+      cat('\\end{verbatim}\n')
+    } else {
+      z <- latexDotchart(g, names(g), auxdata=g, auxtitle='N',
+                         w=3, h=min(max(2.5*lg/20, 1), 8))
+      cat(z, sep='\n')
+    }
+    cat("\n")
+  }
+  
+  if(length(g <- x$na.detail.response)) {
+    cat("\nStatistics on Response by Missing/Non-Missing Status of Predictors\n\n")
+    print(oldUnclass(g))
+    cat("\n")           
+  }
+  
+  invisible()
+}
+                         
     
 ## Function to print model fit statistics
 ## Example:
