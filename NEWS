@@ -1,9 +1,10 @@
-Changes in version 3.5-1 (2012-07-07)
+Changes in version 3.6-0 (2012-08-15)
    * Gls: Updated optimization calls - had become inconsistent with gls and failed if > 1 correlation parameter (thanks: Mark Seeto <markseeto@gmail.com>); removed opmeth argument
    * print.fastbw: added argument: estimates
    * survplot.survfit: handled fact that survival:::summary.survfit may not preserve order of strata levels.  Also fixed survit.cph and cph; Thanks: William.Fulp@moffitt.org
    * plot.Predict: added example showing how to rename variables in plot
    * print(fit object, latex=TRUE): added latex.naprint.delete, used new Hmisc latexDotchart function to make a dot chart of number of NAs due to each model variable if at least 4 variables have NAs
+   * added trans argument to plot.anova.rms to allow transformed scales
 
 Changes in version 3.5-0 (2012-03-24)
    * contrast.rms: saved conf.type and conf.int in returned object, added to print method

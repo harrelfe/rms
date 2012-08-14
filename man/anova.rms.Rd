@@ -42,7 +42,7 @@ to \code{latex.default} for conversion to LaTeX.
             "proportion R2"), 
      xlab=NULL, pch=16, 
      rm.totals=TRUE, rm.ia=FALSE, rm.other=NULL, newnames,
-     sort=c("descending","ascending","none"), pl=TRUE, \dots)
+     sort=c("descending","ascending","none"), pl=TRUE, trans=NULL, \dots)
 
 \method{latex}{anova.rms}(object, title, psmall=TRUE, dec.chisq=2,
       dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, table.env=TRUE,
@@ -132,6 +132,11 @@ default is to sort bars in descending order of the summary statistic
 set to \code{FALSE} to suppress plotting.  This is useful when you only wish to
 analyze the vector of statistics returned.
 }
+\item{trans}{
+  set to a function to apply that transformation to the statistics
+  being plotted, and to truncate negative values at zero.  A good choice
+  is \code{trans=sqrt}.
+  }
 \item{title}{
 title to pass to \code{latex}, default is name of fit object passed to
 \code{anova} prefixed with \code{"anova."}.  For Windows, the default is
@@ -262,6 +267,7 @@ tab <- pantext(an, 1.2, .6, lattice=FALSE, fontfamily='Helvetica')
 # create function to write table; usually omit fontfamily
 tab()                            # execute it; could do tab(cex=.65)
 plot(an)                         # new plot - dot chart of chisq-d.f.
+# Specify plot(an, trans=sqrt) to use a square root scale for this plot
 # latex(an)                      # nice printout - creates anova.f.tex
 
 

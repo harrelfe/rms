@@ -532,7 +532,7 @@ plot.anova.rms <-
            pch=16, rm.totals=TRUE, rm.ia=FALSE,
            rm.other=NULL, newnames,
            sort=c("descending","ascending","none"),
-           pl=TRUE, ...)
+           pl=TRUE, trans=NULL, ...)
 {
   what <- match.arg(what)
   sort <- match.arg(sort)
@@ -548,7 +548,7 @@ plot.anova.rms <-
                "~After Removing Variable")),
            "proportion R2"=expression(paste("Proportion of Overall",
              ~R^2)))
-    
+
   rm <- c(if(rm.totals) c("TOTAL NONLINEAR","TOTAL NONLINEAR + INTERACTION",
                           "TOTAL INTERACTION","TOTAL"), 
           " Nonlinear"," All Interactions", "ERROR",
@@ -585,7 +585,7 @@ plot.anova.rms <-
                "partial R2" = an[,"Partial SS"]/sst,
                "remaining R2" = (ssr - an[,"Partial SS"]) / sst,
                "proportion R2" = an[,"Partial SS"] / ssr)
-  
+
   if(missing(newnames))
     newnames <- sedit(names(an),"  (Factor+Higher Order Factors)", "")
   
@@ -595,8 +595,15 @@ plot.anova.rms <-
                ascending=sort(an),
                none=an)
   
-  if(pl)
-    dotchart2(an, xlab=xlab, pch=pch, ...)
-  
+  if(pl) {
+    if(length(trans)) {
+      nan <- names(an)
+      an <- pmax(0, an)
+      pan <- pretty(an)
+      tan <- trans(an); names(tan) <- nan
+      dotchart2(tan, xlab=xlab, pch=pch,
+                axisat=trans(pan), axislabels=pan, ...)
+    } else dotchart2(an, xlab=xlab, pch=pch, ...)
+  }
   invisible(an)
 }
