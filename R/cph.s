@@ -116,12 +116,7 @@ cph <- function(formula=formula(data),
     n <- nrow(Y)
     
     weights <- model.extract(X, 'weights')
-    offset <- attr(Terms, "offset")
-    lo <- length(offset)
-    if(lo) {
-      offset <- rep(0., n)
-      for(i in 1:lo) offset <- offset + X[[offset[i]]]
-    }
+    offset <- model.offset(X)
     
     ##No mf if only strata factors
     if(!xpres) {

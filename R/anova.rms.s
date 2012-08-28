@@ -263,7 +263,6 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
                         lab<-c(lab,paste(" Nonlinear Interaction in",
                                          name[parmi[2,1]],"vs. Bg(A)"))
                       }
-                    
                   }
               }
           }

@@ -12,25 +12,23 @@ lrm <- function(formula, data,subset, na.action=na.delete,
              names(m), 0)
   m <- m[c(1, mc)]
   m$na.action <- na.action
-  if(.R.) m$drop.unused.levels <- TRUE
+  m$drop.unused.levels <- TRUE
   
   m[[1]] <- as.name("model.frame")
   nact <- NULL
   if(missing(data)) data <- NULL
 
   tform <- terms(formula, specials='strat', data=data)
-  offs <- attr(tform, "offset")
   nstrata <- 1
   if(!missing(data) || (
 						length(atl <- attr(tform,"term.labels")) && 
 						any(atl!=".")))	{ ##X's present
 
     dul <- .Options$drop.unused.levels
-    if(!length(dul) || dul)
-      {
-        on.exit(options(drop.unused.levels=dul))
-        options(drop.unused.levels=FALSE)
-      }
+    if(!length(dul) || dul) {
+      on.exit(options(drop.unused.levels=dul))
+      options(drop.unused.levels=FALSE)
+    }
 
     X <- Design(eval.parent(m))
     atrx <- attributes(X)
@@ -41,11 +39,10 @@ lrm <- function(formula, data,subset, na.action=na.delete,
     atr <- atrx$Design
 
     Y <- model.extract(X, 'response')
+    offs <- model.offset(X)
     weights <- wt <- model.extract(X, 'weights')
     if(length(weights))
       warning('currently weights are ignored in model validation and bootstrapping lrm fits')
-    ofpres <- length(offs) > 0
-    if(ofpres) offs <- X[[offs]]  else offs <- 0
     if(model) m <- X
     stra <- attr(tform,'specials')$strat
     Strata <- NULL
@@ -90,12 +87,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
   else
     {
       X <- eval.parent(m)
-      ofpres <- FALSE
-      if(length(offs))
-        {
-          ofpres <- TRUE
-          offs <- X[[offs]]
-        }
+      offs <- model.offset(X)
       Y <- model.extract(X, 'response')
       Y <- Y[!is.na(Y)]
       Terms <- X <- NULL

@@ -25,8 +25,7 @@
 #
 
 
-Design <- function(mf, allow.offset=TRUE, intercept=1)
-{
+Design <- function(mf, allow.offset=TRUE, intercept=1) {
 
   Terms <- attr(mf, "terms")
   Term.labels <- attr(Terms,'term.labels')

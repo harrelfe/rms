@@ -1,8 +1,7 @@
 survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95, 
                         individual=FALSE, type=NULL, vartype=NULL,
                         conf.type=c('log', 'log-log', 'plain', 'none'),
-                        id, ...)
-{
+                        id, ...) {
   require(survival)
   object <- formula
   Call <- match.call()
