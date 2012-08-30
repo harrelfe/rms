@@ -1,8 +1,7 @@
-lrm.fit.strat <- function(x, y, strata, offset, initial,
+lrm.fit.strat <- function(x, y, strata, offset=0, initial,
 						  maxit=25, eps=.025, tol=1E-7, trace=FALSE,
 						  penalty.matrix=NULL, strata.penalty=0,
-                          weights=NULL, normwt)
-{
+                          weights=NULL, normwt) {
   cal <- match.call()
   opts <- double(12)
   len.penmat <- length(penalty.matrix)
@@ -11,33 +10,30 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
   strata <- oldUnclass(strata)
   n <- length(y)
   
-  if(!length(weights))
-    {
-      normwt <- FALSE
-      weights <- rep(1,n)
-    }
+  if(!length(weights)) {
+    normwt <- FALSE
+    weights <- rep(1,n)
+  }
   if(length(weights) != n) stop('weights and y must be same length')
   storage.mode(weights) <- 'double'
   opts[12] <- normwt
   ## weights not implemented for stratified models yet
 
   initial.there <- !missing(initial)
-  if(missing(x) || length(x)==0)
-    {
-      nx <- 0
-      xname <- NULL
-      x <- 0
-    }
-  else
-    {
-      if(!is.matrix(x)) x <- as.matrix(x)
-      storage.mode(x) <- "double"
-      dx <- dim(x)
-      nx <- dx[2]
-      if(dx[1]!=n)stop("x and y must have same length")
-      xname <- dimnames(x)[[2]]
-      if(length(xname)==0) xname <- paste("x[",1:nx,"]",sep="")
-    }
+  if(missing(x) || length(x)==0) {
+    nx <- 0
+    xname <- NULL
+    x <- 0
+  }
+  else {
+    if(!is.matrix(x)) x <- as.matrix(x)
+    storage.mode(x) <- "double"
+    dx <- dim(x)
+    nx <- dx[2]
+    if(dx[1]!=n)stop("x and y must have same length")
+    xname <- dimnames(x)[[2]]
+    if(length(xname)==0) xname <- paste("x[",1:nx,"]",sep="")
+  }
   
   nxin <- nx
   
@@ -45,47 +41,39 @@ lrm.fit.strat <- function(x, y, strata, offset, initial,
   y <- oldUnclass(y)   # in case is.factor
   ylevels <- levels(y)
   
-  ofpres <- !missing(offset)
-  if(ofpres)
-    {
-      if(length(offset)!=n)stop("offset and y must have same length")
-      storage.mode(offset) <- "double"
-    }
-  else
-    offset <- 0
-
   if(n < 3)stop("must have >=3 non-missing observations")
   kint <- as.integer(length(ylevels)-1)
-  if(kint!=1) stop('only works for binary y')
+  if(kint != 1) stop('only works for binary y')
   ftable <- integer(501*(kint+1))
   levels(y) <- ylevels
   numy <- table(y)
   y <- as.integer(y-1)
   nvi <- as.integer(nxin+kint+nstrat-1)
-  if(missing(initial))
-    {
-      ncum <- rev(cumsum(rev(numy)))[2:(kint+1)]
-      pp <- ncum/n
-      initial <-logb(pp/(1-pp))
-      if(ofpres) initial <- initial-mean(offset)
-    }
-  if(length(initial)<nvi) initial <- c(initial,rep(0,nvi-length(initial)))
+  if(missing(initial)) {
+    ncum <- rev(cumsum(rev(numy)))[2:(kint+1)]
+    pp <- ncum/n
+    initial <-logb(pp/(1-pp))
+    initial <- initial - mean(offset)
+  }
+  if(length(initial) < nvi) initial <- c(initial,rep(0,nvi-length(initial)))
   storage.mode(initial) <- "double"
   loglik <- -2 * sum(numy * logb(numy/n))
   
-  if(nxin > 0)
-    {
-      if(len.penmat==0) penalty.matrix <- matrix(0,nrow=nx,ncol=nx)
-      if(nrow(penalty.matrix)!=nx || ncol(penalty.matrix)!=nx) 
-        stop(paste("penalty.matrix does not have",nx,"rows and columns"))
-      penmat <- rbind(
-                      matrix(0,ncol=kint+nx,nrow=kint),
-                      cbind(matrix(0,ncol=kint,nrow=nx),penalty.matrix))
-    }
+  if(nxin > 0) {
+    if(len.penmat==0) penalty.matrix <- matrix(0,nrow=nx,ncol=nx)
+    if(nrow(penalty.matrix)!=nx || ncol(penalty.matrix)!=nx) 
+      stop(paste("penalty.matrix does not have",nx,"rows and columns"))
+    penmat <- rbind(
+                matrix(0,ncol=kint+nx,nrow=kint),
+                cbind(matrix(0,ncol=kint,nrow=nx),penalty.matrix))
+  }
   else
     penmat <- matrix(0, ncol=kint, nrow=kint)
   storage.mode(penmat) <- 'double'
-
+  
+  ofpres <- !all(offset == 0)
+  storage.mode(offset) <- 'double'
+  
   if(nxin==0 & !ofpres)
     {
       loglik <- rep(loglik,2)

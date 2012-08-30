@@ -42,6 +42,7 @@
 \alias{prStats}
 \alias{reVector}
 \alias{formatNP}
+\alias{latex.naprint.delete}
 \title{Miscellaneous Design Attributes and Utility Functions}
 \description{
 These functions are used internally to \code{anova.rms},
@@ -142,7 +143,10 @@ optional named element is fetched that doesn't exist.
 formatted representation has \code{digits} positions to the right of the
 decimal place.  If \code{latex=TRUE} it will translate any scientific
 notation to LaTeX math form.  If \code{pvalue=TRUE}, it will replace
-formatted values with "< 0.0001" (if \code{digits=4}). 
+formatted values with "< 0.0001" (if \code{digits=4}).
+
+\code{latex.naprint.delete} will, if appropriate, use LaTeX to draw a
+dot chart of frequency of variable \code{NA}s related to model fits.
 }
 \usage{
 \method{vcov}{cph}(object, regcoef.only=TRUE, \dots)
@@ -198,6 +202,8 @@ prStats(labels, w, latex=FALSE)
 reVector(\dots, na.rm=TRUE)
 
 formatNP(x, digits=NULL, pvalue=FALSE, latex=FALSE)
+
+\method{latex}{naprint.delete}(object, \dots)
 }
 \arguments{
 \item{fit}{result of a fitting function}

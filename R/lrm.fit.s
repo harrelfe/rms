@@ -33,7 +33,7 @@
 #    1-17-03 :made all versions use weights, double precision for x,y
 #    5-13-10 :change B to use middle intercept; added g-index
 
-lrm.fit <- function(x, y, offset, initial, est,
+lrm.fit <- function(x, y, offset=0, initial, est,
                     maxit=12, eps=.025, tol=1E-7, trace=FALSE,
                     penalty.matrix=NULL, weights=NULL, normwt=FALSE)
 {	
@@ -92,16 +92,15 @@ lrm.fit <- function(x, y, offset, initial, est,
   y <- oldUnclass(y)   # in case is.factor
   ylevels <- levels(y)
 
-  ofpres <- !missing(offset)
+  ofpres <- !all(offset == 0)
   opts[5] <- ofpres
   if(ofpres)
     {
-      if(length(offset)!=n)stop("offset and y must have same length")
+      if(length(offset) != n)stop("offset and y must have same length")
       storage.mode(offset) <- "double"
     }
-  else offset <- 0
   
-  if(n < 3)stop("must have >=3 non-missing observations")
+  if(n < 3) stop("must have >=3 non-missing observations")
   kint <- as.integer(length(ylevels)-1)
   ftable <- integer(501*(kint+1))
   levels(y) <- ylevels
@@ -147,7 +146,7 @@ lrm.fit <- function(x, y, offset, initial, est,
       loglik <- rep(loglik,2)
       z <- list(coef=initial, u=rep(0,kint), opts=c(rep(0,7), .5, 0, 0, 0))
     }
-  
+
   if(ofpres)
     {
       ##Fit model with only intercept(s) and offset
@@ -166,9 +165,8 @@ lrm.fit <- function(x, y, offset, initial, est,
       initial <- z$coef
     }
 
-  if(nxin>0)
-    {
-      ##Fit model with intercept(s), offset, and any fitted covariables
+  if(nxin>0) {
+    ##Fit model with intercept(s), offset, and any fitted covariables
 	z <- 
       .Fortran("lrmfit", coef=initial, nxin, est, x, y, offset,
                u=double(nvi),
@@ -178,66 +176,60 @@ lrm.fit <- function(x, y, offset, initial, est,
                PACKAGE="rms")
     
 	irank <- z$opts[7]
-	if(irank < nvi)
-      {
-        cat("singular information matrix in lrm.fit (rank=",irank,
-            ").  Offending variable(s):\n")
-        cat(paste(xname[est[z$pivot[nvi:(irank+1)]-kint]],
-                  collapse=" "),"\n")
-        return(structure(list(fail=TRUE),class="lrm"))
-      }
+	if(irank < nvi) {
+      cat("singular information matrix in lrm.fit (rank=",irank,
+          ").  Offending variable(s):\n")
+      cat(paste(xname[est[z$pivot[nvi:(irank+1)]-kint]],
+                collapse=" "),"\n")
+      return(structure(list(fail=TRUE),class="lrm"))
+    }
 	loglik <- c(loglik, z$loglik)
   }
   
   dvrg <- z$opts[6] > 0
   
-  if(nxin != nx)
-    {
-      ##Set up for score statistics - last model is not refitted but derivatives
-      ##with respect to all other columns of x are evaluated
-      initial <- rep(0,nx)
-      if(length(est))initial[est] <- z$coef[(kint+1):nvi]
-      initial <- c(z$coef[1:kint], initial)
-      nvi <- as.integer(kint+nx)
-      opts[3] <- 1	#Max no. iterations 
-      z <-
-        .Fortran("lrmfit",coef=initial,nx,1:nx,x,y,offset,
-                 u=double(nvi),double(nvi*(nvi+1)),double(1),n,nx,
-                 sumw,nvi,v=double(nvi*nvi),double(nvi),double(nvi),
-                 double(nvi),integer(nvi),opts=opts,ftable,penmat,weights,
-                 PACKAGE="rms")
-    }
+  if(nxin != nx) {
+    ##Set up for score statistics - last model is not refitted but derivatives
+    ##with respect to all other columns of x are evaluated
+    initial <- rep(0,nx)
+    if(length(est))initial[est] <- z$coef[(kint+1):nvi]
+    initial <- c(z$coef[1:kint], initial)
+    nvi <- as.integer(kint+nx)
+    opts[3] <- 1	#Max no. iterations 
+    z <-
+      .Fortran("lrmfit",coef=initial,nx,1:nx,x,y,offset,
+               u=double(nvi),double(nvi*(nvi+1)),double(1),n,nx,
+               sumw,nvi,v=double(nvi*nvi),double(nvi),double(nvi),
+               double(nvi),integer(nvi),opts=opts,ftable,penmat,weights,
+               PACKAGE="rms")
+  }
   
   ##Invert v with respect to fitted variables
   if(nxin==0) elements <- 1:kint
   else
     elements <- c(1:kint, kint + est)
-  if(nx==0 && !ofpres)
-    {
-      v <- NULL; info.matrix <- NULL
-      irank <- kint
+  if(nx==0 && !ofpres) {
+    v <- NULL; info.matrix <- NULL
+    irank <- kint
+  }
+  else {
+    if(nxin == nx) { 
+      info.matrix <- matrix(z$v, nrow=nvi, ncol=nvi)
+      v <- solvet(info.matrix, tol=tol)
+      irank <- nvi
     }
-  else
-    {
-      if(nxin == nx)
-        { 
-          info.matrix <- matrix(z$v, nrow=nvi, ncol=nvi)
-          v <- solvet(info.matrix, tol=tol)
-          irank <- nvi
-        }
-      else
-        {
-          info.matrix <- matrix(z$v, nrow=nvi, ncol=nvi)
-          v <- matinv(info.matrix, elements, negate=TRUE, eps=tol)
-          info.matrix <- info.matrix[elements, elements]
-          usc <- z$u[-elements]
-          resid.chi2 <- usc %*% solve(v[-elements, -elements],
-                                      tol=tol) %*% usc
-          resid.df <- nx - nxin
-          irank <- attr(v,"rank")
-          attr(v,"rank") <- NULL
-        }
+    else {
+      info.matrix <- matrix(z$v, nrow=nvi, ncol=nvi)
+      v <- matinv(info.matrix, elements, negate=TRUE, eps=tol)
+      info.matrix <- info.matrix[elements, elements]
+      usc <- z$u[-elements]
+      resid.chi2 <- usc %*% solve(v[-elements, -elements],
+                                  tol=tol) %*% usc
+      resid.df <- nx - nxin
+      irank <- attr(v,"rank")
+      attr(v,"rank") <- NULL
     }
+  }
   
   if(kint==1) name <- "Intercept"
   else 
@@ -252,8 +244,8 @@ lrm.fit <- function(x, y, offset, initial, est,
   model.lr <- llnull - loglik[length(loglik)]
   model.df <- irank - kint
   model.p <- if(initial.there) NA else
-    if(model.df > 0) 1 - pchisq(model.lr, model.df) else 1
-
+  if(model.df > 0) 1 - pchisq(model.lr, model.df) else 1
+  
   r2     <- 1 - exp(-model.lr / sumwt)
   r2.max <- 1 - exp(-llnull / sumwt)
   r2     <- r2 / r2.max
@@ -270,17 +262,16 @@ lrm.fit <- function(x, y, offset, initial, est,
   stats <- c(n, max(abs(z$u[elements])), model.lr, model.df,
              model.p, z$opts[8], z$opts[9],
              z$opts[10], z$opts[11], r2, B, g, exp(g), gp)
-
+  
   nam <- c("Obs", "Max Deriv",
            "Model L.R.", "d.f.", "P", "C", "Dxy",
            "Gamma", "Tau-a", "R2", "Brier", "g", "gr", "gp")
   
-  if(nxin != nx)
-    {
-      stats <- c(stats, resid.chi2, resid.df,
-                 1 - pchisq(resid.chi2, resid.df))
-      nam <- c(nam, "Residual Score", "d.f.", "P")
-    }
+  if(nxin != nx) {
+    stats <- c(stats, resid.chi2, resid.df,
+               1 - pchisq(resid.chi2, resid.df))
+    nam <- c(nam, "Residual Score", "d.f.", "P")
+  }
   names(stats) <- nam
   
   if(wtpres) stats <- c(stats, 'Sum of Weights'=sumwt)

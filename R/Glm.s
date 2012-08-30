@@ -48,9 +48,10 @@ Glm <-
   Y <- model.response(mf, "numeric")
   weights <- model.weights(mf)
   offset <- model.offset(mf)
+  if(!length(offset)) offset <- 0
   if (length(weights) && any(weights < 0))
     stop("Negative wts not allowed")
-  if (length(offset) && length(offset) != NROW(Y))
+  if (length(offset) > 1 && length(offset) != NROW(Y))
     stop(paste("Number of offsets is", length(offset), ", should equal",
                NROW(Y), "(number of observations)"))
   fit <- (if (is.empty.model(mt)) glm.fit.null

@@ -40,6 +40,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
 
     Y <- model.extract(X, 'response')
     offs <- model.offset(X)
+    if(!length(offs)) offs <- 0
     weights <- wt <- model.extract(X, 'weights')
     if(length(weights))
       warning('currently weights are ignored in model validation and bootstrapping lrm fits')
@@ -88,6 +89,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
     {
       X <- eval.parent(m)
       offs <- model.offset(X)
+      if(!length(offs)) offs <- 0
       Y <- model.extract(X, 'response')
       Y <- Y[!is.na(Y)]
       Terms <- X <- NULL
@@ -99,85 +101,68 @@ lrm <- function(formula, data,subset, na.action=na.delete,
   if(method=="model.matrix") return(X)
 
   if(nstrata > 1)
-    {
-      f <- if(ofpres)
-        lrm.fit.strat(X,Y,Strata,offset=offs,
-                      penalty.matrix=penalty.matrix,
-                      strata.penalty=strata.penalty,
-                      tol=tol,
-                      weights=weights,normwt=normwt, ...)
-      else
-        lrm.fit.strat(X,Y,Strata,penalty.matrix=penalty.matrix,
-                      strata.penalty=strata.penalty,tol=tol,
-                      weights=weights, normwt=normwt, ...)
+      f <- lrm.fit.strat(X,Y,Strata,offset=offs,
+                         penalty.matrix=penalty.matrix,
+                         strata.penalty=strata.penalty,
+                         tol=tol,
+                         weights=weights,normwt=normwt, ...)
+  else {
+    if(existsFunction(method)) {
+      fitter <- getFunction(method)
+      f <- fitter(X, Y, offset=offs,
+                  penalty.matrix=penalty.matrix, tol=tol,
+                  weights=weights, normwt=normwt, ...)
     }
-  else
-    {
-      if(existsFunction(method))
-        {
-          fitter <- getFunction(method)
-          if(ofpres) f <- fitter(X, Y, offset=offs,
-                                 penalty.matrix=penalty.matrix, tol=tol,
-                                 weights=weights, normwt=normwt, ...)
-          else f <- fitter(X, Y,
-                           penalty.matrix=penalty.matrix, tol=tol,
-                           weights=weights, normwt=normwt, ...)
-        }
-	  else stop(paste("unimplemented method:", method))
-    }
+    else stop(paste("unimplemented method:", method))
+  }
   
   if(f$fail) stop("Unable to fit model using ", dQuote(method))
   
   f$call <- NULL
   if(model) f$model <- m
-  if(x)
-    {
-      f$x <- X
-      f$strata <- Strata
-	}
+  if(x) {
+    f$x <- X
+    f$strata <- Strata
+  }
   if(y) f$y <- Y
   nrp <- f$non.slopes
-  if(penpres)
-    {
-      f$penalty <- penalty
-      if(nstrata==1) {
-        ## Get improved covariance matrix
-        v <- f$var
-        if(var.penalty=='sandwich') f$var.from.info.matrix <- v
-        f.nopenalty <- if(ofpres)
-          fitter(X, Y, offset=offs, initial=f$coef, maxit=1, tol=tol) else
-        fitter(X, Y, initial=f$coef, maxit=1, tol=tol)
-        ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
-        info.matrix.unpenalized <- f.nopenalty$info.matrix
-        dag <- diag(info.matrix.unpenalized %*% v)
-        f$effective.df.diagonal <- dag
-        f$var <- if(var.penalty == 'simple') v else
-        v %*% info.matrix.unpenalized %*% v
-        df <- sum(dag[-(1:nrp)])
-        lr <- f.nopenalty$stats["Model L.R."]
-        pval <- 1 - pchisq(lr, df)
-        f$stats[c('d.f.','Model L.R.','P')] <- c(df, lr, pval)  
-      }
+  if(penpres) {
+    f$penalty <- penalty
+    if(nstrata==1) {
+      ## Get improved covariance matrix
+      v <- f$var
+      if(var.penalty=='sandwich') f$var.from.info.matrix <- v
+      f.nopenalty <- 
+        fitter(X, Y, offset=offs, initial=f$coef, maxit=1, tol=tol)
+      ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
+      info.matrix.unpenalized <- f.nopenalty$info.matrix
+      dag <- diag(info.matrix.unpenalized %*% v)
+      f$effective.df.diagonal <- dag
+      f$var <- if(var.penalty == 'simple') v else
+      v %*% info.matrix.unpenalized %*% v
+      df <- sum(dag[-(1:nrp)])
+      lr <- f.nopenalty$stats["Model L.R."]
+      pval <- 1 - pchisq(lr, df)
+      f$stats[c('d.f.','Model L.R.','P')] <- c(df, lr, pval)  
     }
+  }
   ass <- if(xpres) DesignAssign(atr, nrp, Terms) else list()
   
-  if(xpres)
-    {
-      if(linear.predictors) names(f$linear.predictors) <- names(Y)
-      else
+  if(xpres) {
+    if(linear.predictors) names(f$linear.predictors) <- names(Y)
+    else
         f$linear.predictors <- NULL
 
-      if(se.fit)
-        {
-          if(nstrata > 1) stop('se.fit=T not implemented for strat')
-          xint <- matrix(0, nrow=length(Y), ncol=f$non.slopes)
-          xint[,1] <- 1
-          X <- cbind(xint, X)
-          se <- drop((((X %*% f$var) * X) %*% rep(1, ncol(X)))^.5)
-          names(se) <- names(Y)
-          f$se.fit <- se
-        }
-    }
+      if(se.fit) {
+        if(nstrata > 1) stop('se.fit=T not implemented for strat')
+        xint <- matrix(0, nrow=length(Y), ncol=f$non.slopes)
+        xint[,1] <- 1
+        X <- cbind(xint, X)
+        se <- drop((((X %*% f$var) * X) %*% rep(1, ncol(X)))^.5)
+        names(se) <- names(Y)
+        f$se.fit <- se
+      }
+  }
   f <- c(f, list(call=call, Design=if(xpres)atr,
                  scale.pred=c("log odds","Odds Ratio"),
 				 terms=Terms, assign=ass, na.action=nact, fail=FALSE,
@@ -188,35 +173,30 @@ lrm <- function(formula, data,subset, na.action=na.delete,
 }
 
 print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
-                      latex=FALSE, title='Logistic Regression Model', ...)
-{
+                      latex=FALSE, title='Logistic Regression Model', ...) {
   z <- list()
   k <- 0
   
-  if(length(x$freq) > 3)
-    {
-      k <- k + 1
-      z[[k]] <- list(type='print', list(x$freq),
-                     title='Frequencies of Responses')
-    }
-  if(length(x$sumwty))
-    {
-      k <- k + 1
-      z[[k]] <- list(type='print', list(x$sumwty),
-                     title='Sum of Weights by Response Category')
-    }
-  if(!is.null(x$nmiss))  ## for backward compatibility
-    {
-      k <- k + 1
-      z[[k]] <- list(type='print', list(x$nmiss),
-                     title='Frequencies of Missing Values Due to Each Variable')
-    }
-  else if(length(x$na.action))
-    {
-      k <- k + 1
-      z[[k]] <- list(type=paste('naprint',class(x$na.action),sep='.'),
-                     list(x$na.action))
-    }
+  if(length(x$freq) > 3) {
+    k <- k + 1
+    z[[k]] <- list(type='print', list(x$freq),
+                   title='Frequencies of Responses')
+  }
+  if(length(x$sumwty)) {
+    k <- k + 1
+    z[[k]] <- list(type='print', list(x$sumwty),
+                   title='Sum of Weights by Response Category')
+  }
+  if(!is.null(x$nmiss)) {  ## for backward compatibility
+    k <- k + 1
+    z[[k]] <- list(type='print', list(x$nmiss),
+                   title='Frequencies of Missing Values Due to Each Variable')
+  }
+  else if(length(x$na.action)) {
+    k <- k + 1
+    z[[k]] <- list(type=paste('naprint',class(x$na.action),sep='.'),
+                   list(x$na.action))
+  }
   
   ns <- x$non.slopes
   nstrata <- x$nstrata
@@ -224,18 +204,17 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
 
   pm <- x$penalty.matrix
   penaltyFactor <- NULL
-  if(length(pm))
-    {
-      psc <- if(length(pm)==1) sqrt(pm)
-      else
-        sqrt(diag(pm))
-      penalty.scale <- c(rep(0,ns),psc)
-      cof <- matrix(x$coef[-(1:ns)], ncol=1)
-      k <- k + 1
-      z[[k]] <- list(type='print', list(as.data.frame(x$penalty, row.names='')),
-                     title='Penalty factors')
-      penaltyFactor <- as.vector(t(cof) %*% pm %*% cof)
-    }
+  if(length(pm)) {
+    psc <- if(length(pm)==1) sqrt(pm)
+    else
+      sqrt(diag(pm))
+    penalty.scale <- c(rep(0,ns),psc)
+    cof <- matrix(x$coef[-(1:ns)], ncol=1)
+    k <- k + 1
+    z[[k]] <- list(type='print', list(as.data.frame(x$penalty, row.names='')),
+                   title='Penalty factors')
+    penaltyFactor <- as.vector(t(cof) %*% pm %*% cof)
+  }
 
   ## ?ok to have uncommented next 3 lines?
   est.exp <- 1:ns
@@ -243,12 +222,11 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
     c(est.exp, ns + x$est[x$est + ns <= length(x$coefficients)])
   vv <- diag(x$var)
   cof <- x$coef
-  if(strata.coefs)
-    {
-      cof <- c(cof, x$strata.coef)
-      vv  <- c(vv,  x$Varcov(x, which='strata.var.diag'))
-      if(length(pm)) penalty.scale <- c(penalty.scale, rep(NA, x$nstrata-1))
-    }
+  if(strata.coefs) {
+    cof <- c(cof, x$strata.coef)
+    vv  <- c(vv,  x$Varcov(x, which='strata.var.diag'))
+    if(length(pm)) penalty.scale <- c(penalty.scale, rep(NA, x$nstrata-1))
+  }
   score.there <- nstrata==1 && (length(x$est) < length(x$coef) - ns)
   stats <- x$stats
 
@@ -258,12 +236,11 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
                    'Sum of weights'=stats['Sum of Weights'],
                    Strata=if(nstrata > 1) nstrata,
                    'max |deriv|' = maxd)
-  if(length(x$freq) < 4)
-    {
-      names(x$freq) <- paste(if(latex)'~~' else ' ',
-                             names(x$freq), sep='')
-      misc <- c(misc[1], x$freq, misc[-1])
-    }
+  if(length(x$freq) < 4) {
+    names(x$freq) <- paste(if(latex)'~~' else ' ',
+                           names(x$freq), sep='')
+    misc <- c(misc[1], x$freq, misc[-1])
+  }
   lr   <- reVector('LR chi2'    = stats['Model L.R.'],
                    'd.f.'       = round(stats['d.f.'],3),
                    'Pr(> chi2)' = stats['P'],
@@ -281,25 +258,23 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
 
-  if(coefs)
-    {
-      k <- k + 1
-      z[[k]] <- list(type='coefmatrix',
-                     list(coef=cof, se=sqrt(vv),
-                          aux=if(length(pm)) penalty.scale,
-                          auxname='Penalty Scale'))
-    }
+  if(coefs) {
+    k <- k + 1
+    z[[k]] <- list(type='coefmatrix',
+                   list(coef=cof, se=sqrt(vv),
+                        aux=if(length(pm)) penalty.scale,
+                        auxname='Penalty Scale'))
+  }
   
-  if(score.there)
-    {
-      q <- (1:length(cof))[-est.exp]
-      if(length(q)==1) vv <- x$var[q,q] else vv <- diag(x$var[q,q])
-      Z <- x$u[q]/sqrt(vv)
-      stats <- cbind(format(Z,digits=2), format(1-pchisq(Z^2,1),digits=4))
-      dimnames(stats) <- list(names(cof[q]),c("Score Z","P"))
-      k <- k + 1
-      z[[k]] <- list(type='print', list(stats))
-    }
+  if(score.there) {
+    q <- (1:length(cof))[-est.exp]
+    if(length(q)==1) vv <- x$var[q,q] else vv <- diag(x$var[q,q])
+    Z <- x$u[q]/sqrt(vv)
+    stats <- cbind(format(Z,digits=2), format(1-pchisq(Z^2,1),digits=4))
+    dimnames(stats) <- list(names(cof[q]),c("Score Z","P"))
+    k <- k + 1
+    z[[k]] <- list(type='print', list(stats))
+  }
   prModFit(x, title=title, z, digits=digits,
            coefs=coefs, latex=latex, ...)
   invisible()

@@ -117,6 +117,7 @@ cph <- function(formula=formula(data),
     
     weights <- model.extract(X, 'weights')
     offset <- model.offset(X)
+##  Cox ph fitter routines expect null if no offset
     
     ##No mf if only strata factors
     if(!xpres) {
@@ -167,7 +168,7 @@ cph <- function(formula=formula(data),
     if(time.inc >= maxtime | maxtime / time.inc>25)
       time.inc <- max(pretty(c(0, maxtime)))/10
   }
-  
+
   if(nullmod) f <- NULL
   else {
     ytype <- attr(Y, "type")
@@ -184,6 +185,7 @@ cph <- function(formula=formula(data),
         stop(paste ("Unknown method", method))
     
     if (missing(init)) init <- NULL
+    
     f <- fitter(X, Y,
                 strata=Strata, offset=offset,
                 weights=weights, init=init,
@@ -377,7 +379,7 @@ coxphFit <- function(..., method, strata=NULL, rownames=NULL, offset=NULL,
   else if (method == 'exact')
     fitter <- survival:::agexact.fit
   else stop("Unkown method ", method)
-  
+
   res <- fitter(..., strata=strata, rownames=rownames,
                 offset=offset, init=init, method=method,
                 control=coxph.control(toler.chol=toler.chol, toler.inf=1,

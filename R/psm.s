@@ -93,6 +93,7 @@ psm <- function(formula=formula(data),
   nvar <- ncol(X)
   
   offset <- model.offset(m)
+  if(!length(offset)) offset <- 0
   
   if (is.character(dist)) {
     dlist <- survreg.distributions[[dist]]

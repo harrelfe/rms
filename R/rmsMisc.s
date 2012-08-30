@@ -896,8 +896,8 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
     cat('\n')
   }
 
-latex.naprint.delete <- function(x, ...) {
-  lg <- length(g <- x$nmiss)
+latex.naprint.delete <- function(object, ...) {
+  lg <- length(g <- object$nmiss)
   if(lg) {
     cat("Frequencies of Missing Values Due to Each Variable\n\n\\smallskip\n\n")
     if(sum(g > 0) < 4) {
@@ -912,7 +912,7 @@ latex.naprint.delete <- function(x, ...) {
     cat("\n")
   }
   
-  if(length(g <- x$na.detail.response)) {
+  if(length(g <- object$na.detail.response)) {
     cat("\nStatistics on Response by Missing/Non-Missing Status of Predictors\n\n")
     print(oldUnclass(g))
     cat("\n")           
