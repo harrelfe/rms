@@ -20,7 +20,8 @@ operating characteristic curve area using the formula \eqn{0.5(D_{xy} +
 1)}. See \code{predab.resample} for the list of
 resampling methods.
 
-The LaTeX needspace package must be in effect to use the \code{latex} method.
+The LaTeX \code{needspace} package must be in effect to use the
+\code{latex} method. 
 }
 \usage{
 # fit <- fitting.function(formula=response ~ terms, x=TRUE, y=TRUE)

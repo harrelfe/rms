@@ -46,20 +46,12 @@ validate.Rq <-
              GiniMd(slope*x), intercept, slope)
       nam <- c("MAD", "rho", "g", "Intercept", "Slope")
       if(length(u)) {
-        yy <- if(rel==">") ifelse(y>u,  1, 0)
-        else if(rel==">=") ifelse(y>=u, 1, 0)
-        else if(rel=="<")  ifelse(y<u,  1, 0)
+        yy <- if(rel==">") ifelse(y >  u, 1, 0)
+        else if(rel==">=") ifelse(y >= u, 1, 0)
+        else if(rel=="<")  ifelse(y <  u, 1, 0)
         else ifelse(y <= u, 1, 0)
         z <- c(z, somers2(x,yy)["Dxy"])
-        nam <- c(nam, paste("Dxy Y",rel,format(u),sep=""))
-        if(rel==">"|rel==">=") P <- 1-pnorm((u-x)/sqrt(mse))
-        else P <- pnorm((u-x)/sqrt(mse))
-        P0 <- sum(yy)/n
-        L <- -2*sum(yy*logb(P)+(1-yy)*logb(1-P))
-        L0<- -2*sum(yy*logb(P0)+(1-yy)*logb(1-P0))
-        R2 <- (1-exp(-(L0-L)/n))/(1-exp(-L0/n))
-        z <- c(z, R2)
-        nam <- c(nam, paste("R2 Y",rel,format(u),sep=""))
+        nam <- c(nam, paste("Dxy Y", rel, format(u), sep=''))
       }
       names(z) <- nam
       z
