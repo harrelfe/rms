@@ -477,13 +477,18 @@ latex.anova.rms <-
            dec.chisq=2, dec.F=2, dec.ss=NA,
            dec.ms=NA, dec.P=4, table.env=TRUE, caption=NULL, ...)
 {
-  rowl <- latexTranslate(dimnames(object)[[1]])
+  sn   <- dimnames(object)[[2]]
+  rowl <- dimnames(object)[[1]]
+  if(any(sn=='MS'))
+    rowl[rowl=='TOTAL'] <- 'REGRESSION'
+
+  rowl <- latexTranslate(rowl)
 
   ## Translate interaction symbol (*) to times symbol
   rowl <- sedit(rowl, "*", "$\\times$", wild.literal=TRUE)
   
   ## Put TOTAL rows in boldface
-  rowl <- ifelse(substring(rowl,1,5) %in% c("TOTAL","ERROR"),
+  rowl <- ifelse(substring(rowl,1,5) %in% c("REGRE","ERROR"),
                  paste("{\\bf",rowl,"}"),rowl)
 
   rowl <- ifelse(substring(rowl,1,1)==" ",
@@ -507,7 +512,6 @@ latex.anova.rms <-
   digits <- c('Chi-Square'=dec.chisq, F=dec.F, 'd.f.'=0,
               'Partial SS'=dec.ss, MS=dec.ms, P=dec.P)
 
-  sn <- dimnames(object)[[2]]
   dig <- digits[sn]
   sn[sn=='Chi-Square'] <- '\\chi^2'
   names(dstats) <- paste('$',sn,'$',sep='')
