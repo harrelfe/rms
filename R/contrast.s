@@ -4,7 +4,7 @@ contrast.rms <-
   function(fit, a, b, cnames=NULL,
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'),
-           weights='equal', conf.int=0.95, tol=1e-7, ...)
+           weights='equal', conf.int=0.95, tol=1e-7, expand=TRUE, ...)
 {
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
@@ -13,7 +13,7 @@ contrast.rms <-
   zcrit <- if(length(idf <- fit$df.residual)) qt((1+conf.int)/2, idf) else
   qnorm((1+conf.int)/2)
 
-  da <- do.call('gendata', list(fit, factors=a))
+  da <- do.call('gendata', list(fit, factors=a, expand=expand))
   xa <- predict(fit, da, type='x')
   ma <- nrow(xa)
 
@@ -24,7 +24,7 @@ contrast.rms <-
     }
   else
     {
-      db <- do.call('gendata', list(fit, factors=b))
+      db <- do.call('gendata', list(fit, factors=b, expand=expand))
       xb <- predict(fit, db, type='x')
     }
   mb <- nrow(xb)

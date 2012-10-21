@@ -50,7 +50,7 @@ contrast(fit, \dots)
 \method{contrast}{rms}(fit, a, b, cnames=NULL, 
          type=c("individual", "average", "joint"),
          conf.type=c("individual","simultaneous"),
-         weights="equal", conf.int=0.95, tol=1e-7, \dots)
+         weights="equal", conf.int=0.95, tol=1e-7, expand=TRUE, \dots)
 
 \method{print}{contrast.rms}(x, X=FALSE, fun=function(u)u, jointonly=FALSE, ...)
 }
@@ -64,7 +64,8 @@ set to default (adjust-to) values.  Usually you will specify two
 variables in this list, one set to a constant and one to a sequence of
 values, to obtain contrasts for the sequence of values of an
 interacting factor.  The \code{gendata} function will generate the
-necessary combinations and default values for unspecified predictors.
+necessary combinations and default values for unspecified predictors,
+depending on the \code{expand} argument.
 }
 \item{b}{
 another list that generates the same number of observations as \code{a},
@@ -108,6 +109,9 @@ confidence level for confidence intervals for the contrasts
 \item{tol}{tolerance for \code{qr} function for determining which
   contrasts are redundant, and for inverting the covariance matrix
   involved in a joint test}
+\item{expand}{set to \code{FALSE} to have \code{gendata} not generate
+  all possible combinations of predictor settings.  This is useful when
+  getting contrasts over irregular predictor settings.}
 \item{\dots}{unused}
 \item{x}{result of \code{contrast}}
 \item{X}{

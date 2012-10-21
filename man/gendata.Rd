@@ -7,7 +7,8 @@ by e.g. \code{age=50, sex="male"}, and any omitted predictors are set to
 reference values (default=median for continuous variables, first level
 for categorical ones - see \code{datadist}).  If any predictor has more than one
 value given, \code{expand.grid} is called to generate all possible combinations
-of values.  If \code{nobs} is given, a data frame is first generated which has
+of values, unless \code{expand=FALSE}.  If \code{nobs} is given, a data
+frame is first generated which has 
 \code{nobs} of adjust-to values duplicated.  Then an editor window is opened
 which allows the user to subset the variable names down to ones which she
 intends to vary (this streamlines the \code{data.ed} step).  Then, if any
@@ -21,7 +22,7 @@ displayed with \code{data.ed}, and a final full data frame is returned.
 to \code{predict}.
 }
 \usage{
-gendata(fit, \dots, nobs, viewvals=FALSE, factors)
+gendata(fit, \dots, nobs, viewvals=FALSE, expand=TRUE, factors)
 }
 \arguments{
 \item{fit}{
@@ -37,6 +38,9 @@ number of observations to create if doing it interactively using X-windows
 if \code{nobs} is given, set \code{viewvals=TRUE} to open a window
 displaying the possible value of categorical predictors
 }
+\item{expand}{
+  set to \code{FALSE} to prevent \code{expand.grid} from being called,
+  and to instead just convert to a data frame.}
 \item{factors}{
 a list containing predictor settings with their names.  This is an
 alternative to specifying the variables separately in \dots.  Unlike the

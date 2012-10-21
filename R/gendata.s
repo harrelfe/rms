@@ -1,4 +1,4 @@
-gendata <- function(fit, ..., nobs, viewvals=FALSE, factors)
+gendata <- function(fit, ..., nobs, viewvals=FALSE, expand=TRUE, factors)
   {
     at <- fit$Design
     nam <- at$name[at$assume!="interaction"]
@@ -42,5 +42,5 @@ gendata <- function(fit, ..., nobs, viewvals=FALSE, factors)
     settings <- oldUnclass(settings)
     if(nf>0) for(i in 1:nf) settings[[fnam[i]]] <- factors[[i]]
     if(nf==0) return(as.data.frame(settings))
-    expand.grid(settings)
+    if(expand) expand.grid(settings) else as.data.frame(settings)
   }
