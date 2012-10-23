@@ -259,6 +259,7 @@ plot.Predict <-
       xv <- x[[xvar]]
       xscale <- NULL
       xdiscrete <- (is.factor(xv) || is.character(xv)) && nlines
+      prn(attributes(xv)); prn(is.character(xv)); prn(nlines);prn(xdiscrete)
       if(xdiscrete)
         {
           xv <- as.factor(xv)
