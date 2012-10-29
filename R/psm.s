@@ -93,7 +93,7 @@ psm <- function(formula=formula(data),
   nvar <- ncol(X)
   
   offset <- model.offset(m)
-  if(!length(offset)) offset <- 0
+  if(!length(offset)) offset <- rep(0, n)
   
   if (is.character(dist)) {
     dlist <- survreg.distributions[[dist]]
@@ -181,8 +181,8 @@ psm <- function(formula=formula(data),
     ord <- attr(Terms, 'order')[temp]
     if (any(ord > 1)) stop ('Penalty terms cannot be in an interaction')
     ##pcols <- (attr(X, 'assign')[-1])[pterms]
-    assign<-attrassign(X,newTerms)
-    pcols<-assign[-1][pterms]
+    assign <- attrassign(X,newTerms)
+    pcols <- assign[-1][pterms]
     
     fit <- survival:::survpenal.fit(X, Y, weights, offset, init=init,
                                     controlvals = control,

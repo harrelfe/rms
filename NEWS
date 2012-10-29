@@ -1,4 +1,4 @@
-Changes in version 3.6-0 (2012-10-??)
+Changes in version 3.6-0 (2012-10-26)
    * Gls: Updated optimization calls - had become inconsistent with gls and failed if > 1 correlation parameter (thanks: Mark Seeto <markseeto@gmail.com>); removed opmeth argument
    * print.fastbw: added argument: estimates
    * survplot.survfit: handled fact that survival:::summary.survfit may not preserve order of strata levels.  Also fixed survit.cph and cph; Thanks: William.Fulp@moffitt.org
@@ -8,6 +8,9 @@ Changes in version 3.6-0 (2012-10-??)
    * Corrected cph to use model.offset(); thanks: Simon Thornley <s.thornley@auckland.ac.nz>
    * Changed latex.anova.rms to use REGRESSION instead of TOTAL label
    * Changed gendata, contrast.rms to allow expand=FALSE to prevent expand.grid from being called to generate all combinations of predictors
+   * Added type= to plot.Predict to allow user to specify a different default line/point type (especially useful when x is categorical)
+   * Corrected bug in offset in psm - made default offset the length of X
+   * Corrected bug in calibrate.psm (fixed -> parms)
 
 Changes in version 3.5-0 (2012-03-24)
    * contrast.rms: saved conf.type and conf.int in returned object, added to print method
