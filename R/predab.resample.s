@@ -181,6 +181,7 @@ predab.resample <-
     measure(xb[subset], y[subset,,drop=FALSE], strata=stra[subset],
             fit=fit.orig,
             iter=0, evalfit=FALSE, fit.orig=fit.orig, kint=kint, ...)
+  keepinfo <- attr(index.orig, 'keepinfo')
   
   test.stat <- double(length(index.orig))
   train.stat <- test.stat
@@ -428,6 +429,6 @@ predab.resample <-
       varin <- varin[1:j, ,drop=FALSE]
       dimnames(varin) <- list(rep("", j), name)
     }
-  structure(res, class='validate', kept=if(bw) varin)
+  structure(res, class='validate', kept=if(bw) varin, keepinfo=keepinfo)
 }
   

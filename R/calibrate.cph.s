@@ -88,11 +88,8 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
           else                         pred.obs$actualseq - pred
         }
 
-      if(iter==0)
-        {
-          if(pr) print(pred.obs)
-          storeTemp(pred.obs, "pred.obs")  #Store externally for plotting
-        }
+      if(iter == 0 && pr) print(pred.obs)
+      if(iter == 0) structure(dist, keepinfo=list(pred.obs=pred.obs)) else
       dist
     }
 
@@ -135,12 +132,13 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
                         u=u, m=m, what=what, sls=sls, aics=aics,
                         force=force, estimates=estimates,
                         pred=pred, orig.cuts=cuts, tol=tol, maxdim=maxdim, ...)
-      kept <- attr(reliability, 'kept') # TODO: accumulate over reps
-      n <- reliability[,"n"]
-      rel <- rel + n * reliability[,"index.corrected"]
-      opt <- opt + n * reliability[,"optimism"]
+      kept     <- attr(reliability, 'kept') # TODO: accumulate over reps
+      keepinfo <- attr(reliability, 'keepinfo')
+      n    <- reliability[,"n"]
+      rel  <- rel + n * reliability[,"index.corrected"]
+      opt  <- opt + n * reliability[,"optimism"]
       nrel <- nrel + n
-      B <- B + max(n)	
+      B    <- B + max(n)	
     }
 
   mean.corrected <- rel/nrel
@@ -153,7 +151,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
     }
 
   e <- fit$y[,2]
-
+  pred.obs <- keepinfo$pred.obs
   if(cmethod=='KM')
     {
       mean.predicted <- pred.obs[,"x"]

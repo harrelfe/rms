@@ -166,7 +166,10 @@ average \code{training-test} except for \code{method=".632"} - is .632 times
 }
 \item{n}{
 number of successful repetitions with the given index non-missing
-}}
+}.
+Also contains an attribute \code{keepinfo} if \code{measure} returned
+such an attribute when run on the original fit.
+}
 \details{
 For \code{method=".632"}, the program stops with an error if every observation
 is not omitted at least once from a bootstrap sample.  Efron's ".632" method

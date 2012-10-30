@@ -11,6 +11,7 @@ Changes in version 3.6-0 (2012-10-26)
    * Added type= to plot.Predict to allow user to specify a different default line/point type (especially useful when x is categorical)
    * Corrected bug in offset in psm - made default offset the length of X
    * Corrected bug in calibrate.psm (fixed -> parms)
+   * predab.resample, calibrate.cph, calibrate.default, calibrate.psm: stopped putting results from overall initial fit into .Global and instead had predab.resample put them in attribute keepinfo, obtained from measure() 
 
 Changes in version 3.5-0 (2012-03-24)
    * contrast.rms: saved conf.type and conf.int in returned object, added to print method

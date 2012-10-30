@@ -74,8 +74,8 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
           dist <- if(what=='observed') pred.obs$actualseq
           else                         pred.obs$actualseq - pred
         }
-      
-      if(iter==0) storeTemp(pred.obs)
+
+      if(iter == 0) structure(dist, keepinfo=list(pred.obs=pred.obs)) else
       dist
     }
 
@@ -102,12 +102,13 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
                         strata=FALSE,
                         tol=tol, pred=pred, orig.cuts=cuts, maxiter=maxiter,
                         rel.tolerance=rel.tolerance, maxdim=maxdim, ...)
-      kept <- attr(reliability, 'kept') # TODO: accumulate over reps
-      n <- reliability[,"n"]
-      rel <- rel + n * reliability[,"index.corrected"]
-      opt <- opt + n * reliability[,"optimism"]
-      nrel <- nrel + n
-      B <- B + max(n)	
+      kept     <- attr(reliability, 'kept') # TODO: accumulate over reps
+      keepinfo <- attr(reliability, 'keepinfo')
+      n        <- reliability[,"n"]
+      rel      <- rel + n * reliability[,"index.corrected"]
+      opt      <- opt + n * reliability[,"optimism"]
+      nrel     <- nrel + n
+      B        <- B + max(n)	
       if(pr) print(reliability)
     }
 
@@ -120,6 +121,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
       print(rel)
     }
 
+  pred.obs <- keepinfo$pred.obs
   if(cmethod=='KM')
     {
       pred <- pred.obs[,"x"]

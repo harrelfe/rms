@@ -56,8 +56,8 @@ calibrate.default <- function(fit, predy,
       smo <- if(is.function(smoother)) smoother(x, y) else
        lowess(x, y, iter=0)
       cal <- approx(smo, xout=predy, ties=function(x)x[1])$y
-      if(iter==0) storeTemp(cal,".orig.cal")
-      cal-predy
+      if(iter==0) structure(cal - predy, keepinfo=list(orig.cal=cal)) else
+      cal - predy
     }
 
   fitit <- function(x, y, model, penalty.matrix=NULL, xcol=NULL, ...)
@@ -87,8 +87,9 @@ calibrate.default <- function(fit, predy,
                        smoother=smoother, predy=predy, model=model, kint=kint,
                        penalty.matrix=penalty.matrix, ...)
 
-  z <- cbind(predy, calibrated.orig=.orig.cal,
-             calibrated.corrected=.orig.cal - z[,"optimism"],
+  orig.cal <- attr(z, 'keepinfo')$orig.cal
+  z <- cbind(predy, calibrated.orig=orig.cal,
+             calibrated.corrected=orig.cal - z[,"optimism"],
              z)
   structure(z, class="calibrate.default", call=call, kint=kint, model=model,
             lev.name=lev.name, yvar.name=yvar.name, n=n, freq=fit$freq,
