@@ -1,5 +1,5 @@
 bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE, 
-                    loglik=coef.reps, pr=FALSE, maxit=15, group=NULL,
+                    loglik=FALSE, pr=FALSE, maxit=15, group=NULL,
                     stat=NULL)
 {
 
@@ -150,7 +150,15 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
           else j <- sample(1:n, n, replace=TRUE)
 
           ## Note: If Strata is NULL, NULL[j] is still NULL
-          f <- fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE], maxit=maxit, 
+          Yj <- Y[j,,drop=FALSE]
+          if(nfit == 'lrm') {
+            uy <- sort(unique(Yj))
+            if(i > 1 && !identical(uy, uy1))
+              stop('different unique Y values across bootstrap resamples for lrm')
+            uy1 <- uy
+          }
+            
+          f <- fitter(X[j,,drop=FALSE], Yj, maxit=maxit, 
                       penalty.matrix=penalty.matrix, strata=Strata[j])
           
           if(length(f$fail) && f$fail) next
@@ -224,8 +232,15 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
               j <- sample(clusters, nc, replace=TRUE)
               obs <- unlist(Obsno[j])
             }
-          
-          f <- fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE], 
+          Yobs <- Y[obs,,drop=FALSE]
+          if(nfit == 'lrm') {
+            uy <- sort(unique(Yobs))
+            if(i > 1 && !identical(uy, uy1))
+              stop('different unique Y values across bootstrap resamples for lrm')
+            uy1 <- uy
+          }
+
+          f <- fitter(X[obs,,drop=FALSE], Yobs, 
                       maxit=maxit, penalty.matrix=penalty.matrix,
                       strata=Strata[obs])
           

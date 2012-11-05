@@ -84,7 +84,12 @@ Predict(x, ..., fun,
 	these names will be taken as the values of the new \code{.set.}
 	variable added to the concatenated data frames.  See an example below.
   }
-  \item{fun}{an optional transformation of the linear predictor}
+  \item{fun}{an optional transformation of the linear predictor.
+	Specify \code{fun='Mean'} if the fit is a proportional odds model
+	fit and you ran \code{bootcov} with \code{coef.reps=TRUE}.  This
+	will let the mean function be re-estimated for each bootstrap rep to
+	properly account for all sources of uncertainty in estimating the
+	mean response.}
   \item{type}{
 	defaults to providing predictions.  Set to \code{"model.frame"} to
 	return a data frame of predictor settings used.  Set to \code{"x"}

@@ -80,7 +80,7 @@ A comprehensive example demonstrates the use of all of the functions.
 }
 \usage{
 bootcov(fit, cluster, B=200, fitter, 
-        coef.reps=FALSE, loglik=coef.reps,
+        coef.reps=FALSE, loglik=FALSE,
         pr=FALSE, maxit=15, group, stat=NULL)
 
 
@@ -135,14 +135,14 @@ samples.  Default is taken from the class of \code{fit} if it is
 }
 \item{coef.reps}{
 set to \code{TRUE} if you want to store a matrix of all bootstrap regression
-coefficient estimates in the returned component \code{boot.Coef}.  For
-\code{models} set \code{loglik=FALSE} to get \code{coef.reps=TRUE} to work.
+coefficient estimates in the returned component \code{boot.Coef}.
 }
 \item{loglik}{
-set to \code{TRUE} to store -2 log likelihoods for each bootstrap model, evaluated
-against the original \code{x} and \code{y} data.  The default is to do this when
-\code{coef.reps} is specified as \code{TRUE}.  The use of \code{loglik=TRUE} assumes that
-an \code{oos.loglik} method exists for the type of model being analyzed,
+set to \code{TRUE} to store -2 log likelihoods for each bootstrap model,
+evaluated against the original \code{x} and \code{y} data.  The default
+is to do this when \code{coef.reps} is specified as \code{TRUE}.  The
+use of \code{loglik=TRUE} assumes that an \code{oos.loglik} method
+exists for the type of model being analyzed, 
 to calculate out-of-sample -2 log likelihoods (see \code{rmsMisc}).
 After the \code{B} -2 log likelihoods (stored in the element named
 \code{boot.loglik} in the returned fit object), the \code{B+1} element is

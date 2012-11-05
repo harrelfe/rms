@@ -1,3 +1,8 @@
+Changes in version 3.6-1 (2012-11-05)
+   * bootcov: caught error if lrm fit and two bootstrap resamples don't yield same set of unique Y values
+   * bootcov: set loglik to default to FALSE
+   * Predict: implemented fun='Mean' to get proper penalty for estimating the mean function for proportional odds models
+
 Changes in version 3.6-0 (2012-10-26)
    * Gls: Updated optimization calls - had become inconsistent with gls and failed if > 1 correlation parameter (thanks: Mark Seeto <markseeto@gmail.com>); removed opmeth argument
    * print.fastbw: added argument: estimates
