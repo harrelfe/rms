@@ -362,7 +362,7 @@ y   <- ifelse(runif(n)<=plogis(L), 1, 0)
 
 
 f <- lrm(y ~ sex*pol(age,2), x=TRUE, y=TRUE)
-b <- bootcov(f, B=50, coef.reps=TRUE, pr=TRUE)   # better: B=500
+b <- bootcov(f, B=50, coef.reps=TRUE, loglik=TRUE, pr=TRUE)   # better: B=500
 
 
 par(mfrow=c(2,3))
@@ -469,7 +469,7 @@ vertex
 # x in [0,1], i.e., original fit is the constrained MLE
 
 
-g <- bootcov(f, B=50, coef.reps=TRUE)
+g <- bootcov(f, B=50, coef.reps=TRUE, loglik=TRUE)
 bootcoef <- g$boot.Coef    # 100x3 matrix
 vertex <- -bootcoef[,2]/(2*bootcoef[,3])
 table(cut2(vertex, c(0,1)))
