@@ -1,6 +1,6 @@
 Changes in version 3.6-1 (2012-11-05)
    * bootcov: caught error if lrm fit and two bootstrap resamples don't yield same set of unique Y values
-   * bootcov: set loglik to default to FALSE
+   * bootcov: set loglik to default to FALSE and added code to fill in missing intercepts in coef vector for prop. odds model when levels of Y not resampled
    * Predict: implemented fun='Mean' to get proper penalty for estimating the mean function for proportional odds models
 
 Changes in version 3.6-0 (2012-10-26)

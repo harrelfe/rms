@@ -18,6 +18,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
 
 
   sc.pres <- match('scale',names(fit),0) > 0
+  ns <- fit$non.slopes
 
   if(nfit=='psm')
     {
@@ -98,6 +99,47 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
       p <- p + 1
       vname <- c(vname, "log scale")
     }
+
+  ## Function to carry non-NA values backwards and replace NAs at the
+  ## right end with zeros.  This will cause cell proportions for unsampled
+  ## Y values to be zero for the purpose of computing means
+  ## The zero placements will mess up bootstrap covariance matrix however
+  fillInTheBlanks <- function(S) {
+    ## http://stackoverflow.com/questions/1782704/propagating-data-within-a-vector/1783275#1783275
+    ## NA in S are replaced with observed values
+    ## accepts a vector possibly holding NA values and returns a vector
+    ## where all observed values are carried forward and the first is
+    ## also carried backward.  cfr na.locf from zoo library.
+    L <- !is.na(S)
+    c(S[L][1], S[L])[cumsum(L)+1]
+  }
+  ## vn = names of full coefficient vector
+  ## ns = # non-slopes (intercepts) in full vector (target)
+  ## nc = # non-slopes for current fit in cof
+  fill <- function(cof, vn, ns) {
+    p <- length(vn)
+    if(length(cof) == p) return(cof)
+    nc <- ns - (p - length(cof))
+    cints <- cof[1:nc]  ## current intercepts
+    ints <- rep(NA, ns)
+    names(ints) <- vn[1:ns]
+    ints[names(cints)] <- cints
+    ## Set not just last intercept to -Inf if missing but set all
+    ## NA intercepts at the right end to -Inf.  This will later lead to
+    ## cell probabilities of zero for bootstrap-omitted levels of Y
+    if(is.na(ints[ns])) {
+      l <- ns
+      if(ns > 1) {
+        for(j in (ns-1):1) {
+          if(!is.na(ints[j])) break
+          l <- j
+        }
+      }
+      ints[l:ns] <- -Inf  ## probability zero of exceeding unobserved high Y
+    }
+    #### CHANGE TO FILL IN ONLY INTERCEPTS
+    c(rev(fillInTheBlanks(rev(ints))), cof[-(1:nc)])
+  }
     
   bar <- rep(0, p)
   cov <- matrix(0, nrow=p, ncol=p, dimnames=list(vname,vname))
@@ -130,6 +172,8 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
       ngroup <- length(group.inds)
     }
   else ngroup <- 0
+
+  anyinf <- FALSE
   
   if(missing(cluster))
     {
@@ -150,25 +194,25 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
           else j <- sample(1:n, n, replace=TRUE)
 
           ## Note: If Strata is NULL, NULL[j] is still NULL
-          Yj <- Y[j,,drop=FALSE]
-          if(nfit == 'lrm') {
-            uy <- sort(unique(Yj))
-            if(i > 1 && !identical(uy, uy1))
-              stop('different unique Y values across bootstrap resamples for lrm')
-            uy1 <- uy
-          }
             
-          f <- fitter(X[j,,drop=FALSE], Yj, maxit=maxit, 
+          f <- fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE], maxit=maxit, 
                       penalty.matrix=penalty.matrix, strata=Strata[j])
           
           if(length(f$fail) && f$fail) next
           
-          cof <- as.vector(f$coef)
+#          cof <- as.vector(f$coef)
+          cof <- f$coefficients
           if(any(is.na(cof))) next   # glm
           b <- b + 1
           
-          if(sc.pres) cof <- c(cof, log(f$scale))
-          
+          if(sc.pres) cof <- c(cof, 'log scale' = log(f$scale))
+
+          ## Index by names used since some intercepts may be missing in a
+          ## bootstrap resample from an ordinal logistic model
+          ## Missing coefficients represent values of Y not appearing in the
+          ## bootstrap sample.  Carry backwards the next non-NA intercept
+          cof <- fill(cof, vname, ns)
+          if(any(is.infinite(cof))) anyinf <- TRUE
           if(coef.reps) coefs[b,] <- cof
           
           if(length(stat)) stats[b] <- f$stats[stat]
@@ -232,28 +276,22 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
               j <- sample(clusters, nc, replace=TRUE)
               obs <- unlist(Obsno[j])
             }
-          Yobs <- Y[obs,,drop=FALSE]
-          if(nfit == 'lrm') {
-            uy <- sort(unique(Yobs))
-            if(i > 1 && !identical(uy, uy1))
-              stop('different unique Y values across bootstrap resamples for lrm')
-            uy1 <- uy
-          }
 
-          f <- fitter(X[obs,,drop=FALSE], Yobs, 
+          f <- fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE], 
                       maxit=maxit, penalty.matrix=penalty.matrix,
                       strata=Strata[obs])
           
           if(length(f$fail) && f$fail) next
           
-          cof <- as.vector(f$coef)
+          cof <- f$coefficients
           if(any(is.na(cof))) next  # glm
           b <- b + 1
           
-          if(sc.pres) cof <- c(cof, log(f$scale))
-          
+          if(sc.pres) cof <- c(cof, 'log scale' = log(f$scale))
+
+          cof <- fill(cof, vname, ns)
+          if(any(is.infinite(cof))) anyinf <- TRUE
           if(coef.reps) coefs[b,] <- cof
-          
           if(length(stat)) stats[b] <- f$stats[stat]
           
           bar <- bar + cof
@@ -272,6 +310,8 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=FALSE,
       
       Loglik <- Loglik[1:b]
     }
+
+  if(anyinf) warning('at least one resample excluded highest Y values, invalidating bootstrap covariance matrix estimate')
   
   bar <- bar/b
   fit$B <- b
