@@ -97,7 +97,6 @@ bj <- function(formula=formula(data), data,
 }
 
 bj.fit <- function(x, y, control = NULL) {
-  
   if(ncol(y) != 2)
 	stop("y is not a right-censored Surv object")
   status <- y[, 2]
@@ -407,8 +406,8 @@ residuals.bj <- function(object,
 
 
 validate.bj <-
-  function(fit,method="boot",B=40,
-           bw=FALSE,rule="aic",type="residual",sls=.05,aics=0,
+  function(fit, method="boot", B=40,
+           bw=FALSE, rule="aic", type="residual", sls=.05, aics=0,
            force=NULL, estimates=TRUE, pr=FALSE,
            dxy=TRUE, tol=1e-7, rel.tolerance=1e-3, maxiter=15, ...)
 {
@@ -442,10 +441,10 @@ bj.fit2 <- function(x,y,iter=0,maxiter=15,
                     init=NULL, rel.tolerance=1e-3, tol=1e-7, ...)
 {
   e <- y[,2]
-  if(sum(e)<1)return(list(fail=TRUE))
+  if(sum(e) < 1)return(list(fail=TRUE))
   x <- x	#Get around lazy evaluation creating complex expression
-  f <- bj.fit(as.matrix(x),y,
-              control=list(iter.max=maxiter,eps=rel.tolerance,tol=tol))
+  f <- bj.fit(as.matrix(x), y,
+              control=list(iter.max=maxiter, eps=rel.tolerance, tol=tol))
   if(f$fail) warning('bj.fit failed')
   f
 }

@@ -1,7 +1,12 @@
+Changes in version 3.6-2 (2012-12-09)
+   * bootcov, predab.resample: captured errors in all fits (to ignore bootstrap rep) using tryCatch.  Thanks: Max Gordoin <max@gforge.se>
+   * predab.resample: made as.matrix(y) conditional to handle change in the survival package whereby the "type" attribute did not exist for a matrix
+   * anova.rms: added new parameter vnames to allow use of variable labels instead of names in anova table; added vinfo attribute
+
 Changes in version 3.6-1 (2012-11-05)
-   * bootcov: caught error if lrm fit and two bootstrap resamples don't yield same set of unique Y values
-   * bootcov: set loglik to default to FALSE and added code to fill in missing intercepts in coef vector for prop. odds model when levels of Y not resampled
-   * Predict: implemented fun='Mean' to get proper penalty for estimating the mean function for proportional odds models
+   * bootcov: set loglik to default to FALSE and added code to fill in missing intercepts in coef vector for prop. odds model when levels of Y not resampled; see coef.reps to default to TRUE
+   * Predict: implemented fun='mean' to get proper penalty for estimating the mean function for proportional odds models
+   * Added usebootcov argument to Predict to allow the user to force the use of bootstrap covariance matrix even when coef.reps=TRUE was in effect for bootcov
 
 Changes in version 3.6-0 (2012-10-26)
    * Gls: Updated optimization calls - had become inconsistent with gls and failed if > 1 correlation parameter (thanks: Mark Seeto <markseeto@gmail.com>); removed opmeth argument

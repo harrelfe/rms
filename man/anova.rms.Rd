@@ -33,7 +33,8 @@ to \code{latex.default} for conversion to LaTeX.
 }
 \usage{
 \method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9, 
-      test=c('F','Chisq'), india=TRUE, indnl=TRUE, ss=TRUE)
+      test=c('F','Chisq'), india=TRUE, indnl=TRUE, ss=TRUE,
+      vnames=c('names','labels'))
 
 \method{print}{anova.rms}(x, which=c('none','subscripts','names','dots'), \dots)
 
@@ -83,9 +84,11 @@ For an \code{ols} fit, set \code{test="Chisq"} to use Wald \eqn{\chi^2} tests ra
 \item{indnl}{set to \code{FALSE} to exclude individual tests of
   nonlinearity from the table}
 \item{ss}{
-For an \code{ols} fit, set \code{ss=FALSE} to suppress printing partial sums of squares, mean
-squares, and the Error SS and MS.
+For an \code{ols} fit, set \code{ss=FALSE} to suppress printing partial
+sums of squares, mean squares, and the Error SS and MS.
 }
+\item{vnames}{set to \code{'labels'} to use variable labels rather than
+  variable names in the output}
 \item{x}{for \code{print,plot,text} is the result of \code{anova}.
 }
 \item{which}{
@@ -170,7 +173,9 @@ digits to the right for mean squares (default is \code{NA})
 \value{
 \code{anova.rms} returns a matrix of class \code{anova.rms} containing factors 
 as rows and \eqn{\chi^2}{chi-square}, d.f., and \eqn{P}-values as
-columns (or d.f., partial \eqn{SS, MS, F, P}).
+columns (or d.f., partial \eqn{SS, MS, F, P}).  An attribute
+\code{vinfo} provides list of variables involved in each row and the
+type of test done.
 \code{plot.anova.rms} invisibly returns the vector of quantities
 plotted.  This vector has a names attribute describing the terms for
 which the statistics in the vector are calculated.

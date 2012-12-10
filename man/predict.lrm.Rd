@@ -102,6 +102,8 @@ m(lp)
 dd <- datadist(x1,x2); options(datadist='dd')
 m
 plot(Predict(f, x1, fun=m), ylab='Predicted Mean')
+# Note: Run f through bootcov with coef.reps=TRUE to get proper confidence
+# limits for predicted means from the prop. odds model
 options(datadist=NULL)
 }
 \keyword{models}

@@ -3,6 +3,7 @@ Predict <-
            fun, type=c("predictions","model.frame","x"),
            np=200,
            conf.int=.95, conf.type=c('mean','individual','simultaneous'),
+           usebootcov=FALSE,
            adj.zero=FALSE, ref.zero=FALSE,
            non.slopes, time=NULL, loglog=FALSE, digits=4, name, factors=NULL) {
 
@@ -160,12 +161,12 @@ Predict <-
       stop("wrong # values in non.slopes")
 
     beta <- fit$coefficients
-    bootdone <- length(boot.Coef <- fit$boot.Coef)
+    bootdone <- length(boot.Coef <- fit$boot.Coef) && !usebootcov
     if(bootdone && (conf.type == 'individual'))
       stop('conf.type="individual" not compatible with bootcov with coef.reps=TRUE')
-    isMean <- !missing(fun) && !is.function(fun) && fun=='Mean'
+    isMean <- !missing(fun) && !is.function(fun) && fun=='mean'
     if(isMean && !bootdone)
-      stop('specifying fun="Mean" does not make sense when not bootstrapping')
+      stop('specifying fun="mean" does not make sense when not running bootcov (with coef.reps=TRUE)')
   
     if(!length(time)) {
       xx <- predictrms(fit, settings, non.slopes=non.slopes,

@@ -80,8 +80,8 @@ A comprehensive example demonstrates the use of all of the functions.
 }
 \usage{
 bootcov(fit, cluster, B=200, fitter, 
-        coef.reps=FALSE, loglik=FALSE,
-        pr=FALSE, maxit=15, group, stat=NULL)
+        coef.reps=TRUE, loglik=FALSE,
+        pr=FALSE, maxit=15, group=NULL, stat=NULL)
 
 
 bootplot(obj, which, X,
@@ -294,7 +294,7 @@ x <- exp(rnorm(200))
 logit <- 1 + x/2
 y <- ifelse(runif(200) <= plogis(logit), 1, 0)
 f <- lrm(y ~ pol(x,2), x=TRUE, y=TRUE)
-g <- bootcov(f, B=50, pr=TRUE, coef.reps=TRUE)
+g <- bootcov(f, B=50, pr=TRUE)
 anova(g)    # using bootstrap covariance estimates
 fastbw(g)   # using bootstrap covariance estimates
 beta <- g$boot.Coef[,1]
@@ -362,7 +362,7 @@ y   <- ifelse(runif(n)<=plogis(L), 1, 0)
 
 
 f <- lrm(y ~ sex*pol(age,2), x=TRUE, y=TRUE)
-b <- bootcov(f, B=50, coef.reps=TRUE, loglik=TRUE, pr=TRUE)   # better: B=500
+b <- bootcov(f, B=50, loglik=TRUE, pr=TRUE)   # better: B=500
 
 
 par(mfrow=c(2,3))

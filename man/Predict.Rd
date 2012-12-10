@@ -21,7 +21,10 @@ When the first argument to \code{Predict} is a fit object created by
 \code{bootcov} with \code{coef.reps=TRUE}, confidence limits come from
 the stored matrix of bootstrap repetitions of coefficients, using 
 bootstrap percentile nonparametric confidence limits.  Such confidence
-intervals do not make distributional assumptions.
+intervals do not make distributional assumptions.  You can force
+\code{Predict} to instead use the bootstrap covariance matrix by setting
+\code{usebootcov=TRUE}.  If \code{coef.reps} was \code{FALSE},
+\code{usebootcov=TRUE} is the default.
 
 There is a \code{plot} method for \code{Predict} objects that makes it
 easy to show predicted values and confidence bands.
@@ -44,6 +47,7 @@ Predict(x, ..., fun,
         type = c("predictions", "model.frame", "x"),
         np = 200, conf.int = 0.95,
         conf.type = c("mean", "individual","simultaneous"),
+        usebootcov=FALSE,
         adj.zero = FALSE, ref.zero = FALSE,
         non.slopes, time = NULL, loglog = FALSE, digits=4, name, factors=NULL)
 
@@ -85,7 +89,7 @@ Predict(x, ..., fun,
 	variable added to the concatenated data frames.  See an example below.
   }
   \item{fun}{an optional transformation of the linear predictor.
-	Specify \code{fun='Mean'} if the fit is a proportional odds model
+	Specify \code{fun='mean'} if the fit is a proportional odds model
 	fit and you ran \code{bootcov} with \code{coef.reps=TRUE}.  This
 	will let the mean function be re-estimated for each bootstrap rep to
 	properly account for all sources of uncertainty in estimating the
@@ -112,6 +116,9 @@ Predict(x, ..., fun,
 	confidence bands for mean predictions with family-wise coverage of
 	\code{conf.int}.
   }
+  \item{usebootcov}{set to \code{TRUE} to force the use of the bootstrap
+	covariance matrix estimator even when bootstrap coefficient reps are
+	present} 
   \item{adj.zero}{
 	Set to \code{TRUE} to adjust all non-plotted variables to 0 (or
 	reference cell for categorical variables) and to omit intercept(s)
@@ -288,7 +295,7 @@ x2 <- runif(300)
 ddist <- datadist(x1,x2); options(datadist='ddist')
 y  <- exp(x1+ x2 - 1 + rnorm(300))
 f  <- ols(log(y) ~ pol(x1,2) + x2, x=TRUE, y=TRUE)  # x y for bootcov
-fb <- bootcov(f, B=100, coef.reps=TRUE)
+fb <- bootcov(f, B=100)
 pb <- Predict(fb, x1, x2=c(.25,.75))
 p1 <- Predict(f,  x1, x2=c(.25,.75))
 p <- rbind(normal=p1, boot=pb)
