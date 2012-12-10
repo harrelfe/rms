@@ -3,6 +3,8 @@ Changes in version 3.6-2 (2012-12-09)
    * predab.resample: made as.matrix(y) conditional to handle change in the survival package whereby the "type" attribute did not exist for a matrix
    * anova.rms: added new parameter vnames to allow use of variable labels instead of names in anova table; added vinfo attribute
    * residuals.lrm: removed intercept from partial residuals for binary models
+   * moved comprehensive examples in rmsOverview to ~/rms/demo/all.R; greatly speeds up package checking but demo needs to be run separately for better checking, using demo(all, 'rms')
+   * Fixed survfit.formula to not use .Global environment
 
 Changes in version 3.6-1 (2012-11-05)
    * bootcov: set loglik to default to FALSE and added code to fill in missing intercepts in coef vector for prop. odds model when levels of Y not resampled; see coef.reps to default to TRUE
