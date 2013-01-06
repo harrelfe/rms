@@ -1,6 +1,6 @@
 residuals.lrm <-
   function(object, 
-           type=c("ordinary","score","score.binary","pearson",
+           type=c("li.shepherd", "ordinary","score","score.binary","pearson",
              "deviance","pseudo.dep","partial",
              "dfbeta","dfbetas","dffit","dffits","hat","gof","lp1"),
            pl=FALSE, xlim, ylim, kint=1, label.curves=TRUE, 
@@ -17,10 +17,10 @@ residuals.lrm <-
   if(kint < 1 | kint > k) stop(paste('kint must be from 1-',k,sep=''))
 
   cof <- object$coefficients
-  ordone <- type %in% c('partial','gof','score','score.binary')
+  ordone <- type %in% c('li.shepherd','partial','gof','score','score.binary')
   ## residuals explicitly handled for ordinal model
   if(ordone && !missing(kint)) 
-    stop('may not specify kint for partial, score, score.binary, or gof')
+    stop('may not specify kint for li.shepherd, partial, score, score.binary, or gof')
 
   if(k > 1 && kint !=1 && !ordone) L <- L - cof[1] + cof[kint]
   P <- plogis(L)
@@ -165,6 +165,16 @@ residuals.lrm <-
       }
     }
     return(if(dopl)invisible(naresid(naa, u)) else naresid(naa, u))
+  }
+  if(type=="li.shepherd") {
+    if(length(X <- object$x)==0)
+      stop("you did not use x=T in the fit")
+    N <- length(Y)
+    px <- 1/(1 + exp(outer(cof[1:k],
+                           as.vector(X%*%cof[-(1:k)]), "+")))
+    low.x = rbind(0,px)[cbind(Y+1L,1:N)]
+    hi.x = 1 - rbind(px,1)[cbind(Y+1L,1:N)]
+    return(hi.x - low.x)
   }
   
   if(type=="pearson") return(naresid(naa,(Y-P)/sqrt(P*(1-P))))
