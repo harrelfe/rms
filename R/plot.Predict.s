@@ -171,7 +171,7 @@ plot.Predict <-
       bar <- ''
       f <- if(!missing(formula)) gsub(' .*','',as.character(formula)[2])
       else varying[1]
-      iv <- var.inner(as.formula(paste('~', f)))
+      iv <- all.vars(as.formula(paste('~', f)))
       if(missing(xlab)) xlab <- labelPlotmath(label[iv], units[iv])
       if(missing(formula))
         {
