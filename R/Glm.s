@@ -34,7 +34,7 @@ Glm <-
   attr(mf,'Design') <- NULL
   nact <- attr(mf,'na.action')
     
-  switch(method, model.frame = return(mf), glm.fit = 1, glm.fit.null = 1,
+  switch(method, model.frame = return(mf), glm.fit = 1, 
          stop(paste("invalid `method':", method)))
   xvars <- as.character(attr(mt, "variables"))[-1]
   if ((yvar <- attr(mt, "response")) > 0)
@@ -54,10 +54,9 @@ Glm <-
   if (length(offset) > 1 && length(offset) != NROW(Y))
     stop(paste("Number of offsets is", length(offset), ", should equal",
                NROW(Y), "(number of observations)"))
-  fit <- (if (is.empty.model(mt)) glm.fit.null
-  else glm.fit)(x = X, y = Y, weights = weights, start = start,
-                offset = offset, family = family, control = control,
-                intercept = attr(mt, "intercept") > 0)
+  fit <- glm.fit(x = X, y = Y, weights = weights, start = start,
+                 offset = offset, family = family, control = control,
+                 intercept = attr(mt, "intercept") > 0)
   if (length(offset) && attr(mt, "intercept") > 0)
     {
       fit$null.deviance <- if (is.empty.model(mt))
@@ -77,9 +76,7 @@ Glm <-
                      Design=desatr, na.action=nact, fitFunction='Glm',
                      assign=DesignAssign(desatr,1,mt),
                      g=GiniMd(fit$linear.predictors)))
-  class(fit) <- c('Glm', 'rms',
-                  if (is.empty.model(mt)) "glm.null", "glm",
-                  "lm")
+  class(fit) <- c('Glm', 'rms', 'glm', 'lm')
   fit
 }
 

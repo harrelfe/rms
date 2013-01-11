@@ -37,7 +37,7 @@ title='General Linear Model', \dots)
 }
 \value{a fit object like that produced by \code{\link{glm}} but with
   \code{rms} attributes and a \code{class} of \code{"rms"},
-  \code{"Glm"}, and \code{"glm"} or \code{"glm.null"}.  The \code{g}
+  \code{"Glm"}, \code{"glm"}, and \code{"lm"}.  The \code{g}
   element of the fit object is the \eqn{g}-index.
 }
 \seealso{\code{\link{glm}},\code{\link{rms}},\code{\link{GiniMd}},
