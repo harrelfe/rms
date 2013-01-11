@@ -89,7 +89,7 @@ des.args <- function(x,parms.allowed,call.args) {
   name <- nam[1]
   if(name=="") {
     form <- formula(call("~",as.name("...y..."),call.args[[2]]))
-    name <- all.vars(form)
+    name <- var.inner(form)
   }
   pa <- parms.allowed
   argu <- function(x,karg, arg.name, parms.all, nm)	{

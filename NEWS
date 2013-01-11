@@ -1,3 +1,7 @@
+Changes in version 3.6-3 (2013-01-11)
+   * Added Li-Shepherd residuals in residuals.lrm.s, become new default (same as ordinary residuals for binary models)
+
+
 Changes in version 3.6-2 (2012-12-09)
    * bootcov, predab.resample: captured errors in all fits (to ignore bootstrap rep) using tryCatch.  Thanks: Max Gordoin <max@gforge.se>
    * predab.resample: made as.matrix(y) conditional to handle change in the survival package whereby the "type" attribute did not exist for a matrix
