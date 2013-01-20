@@ -1,43 +1,41 @@
 Surv <- function(time, time2, event,
-	      type=c('right', 'left', 'interval', 'counting', 'interval2'),
-		       origin=0)
+	      type=c('right', 'left', 'interval', 'counting', 'interval2',
+            'mstate'), origin=0)
 {
-  nam  <- as.character(sys.call())[-1]
+  nam   <- as.character(sys.call())[-1]
   mtype <- missing(type)
-  type <- match.arg(type)
- 
-  
+  type  <- match.arg(type)
+   
   ng  <- (!missing(time)) + (!missing(time2)) + (!missing(event))
-  if (missing(type))
-    {
-      if (ng==1 || ng==2) type <- 'right'
-      else if (ng==3)     type <- 'counting'
-      else stop("Invalid number of arguments")
+  if (mtype || type == 'mstate') {
+    if (ng==1 || ng==2) type <- 'right'
+    else if (ng==3)     type <- 'counting'
+    else stop("No time variable!")
 	}
-  if(ng==1)
-    {
-      tvar <- time
-      svar <- NULL
-      nam  <- nam[1]
-    }
-  else if (type=='right' || type=='left')
-    {
-      tvar <- time
-      svar <- time2
-      nam <- nam[1:2]
-    }
-  else
-    {
-      tvar <- time2
-      svar <- event
-      nam  <- nam[2:3]
-    }
+  if(ng==1) {
+    tvar <- time
+    svar <- NULL
+    tnam  <- deparse(substitute(time))
+  }
+  else if (type=='right' || type=='left') {
+    tvar <- time
+    svar <- if(missing(event)) time2 else event
+    tnam <- deparse(substitute(time))
+    snam <- if(missing(event)) deparse(substitute(time2)) else
+                               deparse(substitute(event))
+  }
+  else {
+    tvar <- time2
+    svar <- if(!missing(event)) event
+    tnam <- deparse(substitute(time2))
+    snam <- if(!missing(event)) deparse(substitute(event)) 
+  }
 
   g <- list()
-  if(!missing(time )) g$time  <- time
-  if(!missing(time2)) g$time2 <- time2
-  if(!missing(event)) g$event <- event
-  if(!mtype)          g$type  <- type
+  if(!missing(time ))  g$time   <- time
+  if(!missing(time2))  g$time2  <- time2
+  if(!missing(event))  g$event  <- event
+  if(!mtype)           g$type   <- type
   if(!missing(origin)) g$origin <- origin
   
   surv <- survival:::Surv
@@ -46,12 +44,12 @@ Surv <- function(time, time2, event,
   uni <- valueUnit(tvar)
   if(!length(uni)) uni <- "Day"
   tlab <- attr(tvar, "label")
-  if(!length(tlab)) tlab <- nam[1]
+  if(!length(tlab)) tlab <- tnam
   elab <- attr(svar, "label")
-  if(!length(elab) && length(nam)>1) elab <- nam[2]
+  if(!length(elab)) elab <- snam
   valueUnit(ss) <- uni
-  attr(ss,"time.label") <- tlab
-  attr(ss,"event.label") <- elab
+  if(length(tlab) && tlab != '') attr(ss,"time.label")  <- tlab
+  if(length(elab) && elab != '') attr(ss,"event.label") <- elab
   ss
 }
 
@@ -63,12 +61,12 @@ Surv <- function(time, time2, event,
     cl <- class(x)
     class(x) <- NULL
     x <- NextMethod('[')
-    class(x) <- cl
     attributes(x) <- c(attributes(x), atr)
+    class(x) <- cl
 	x
   }
   else {
-    oldClass(x) <- NULL
+    class(x) <- NULL
     NextMethod("[")
   }
 }
