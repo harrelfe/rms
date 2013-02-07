@@ -160,7 +160,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   Dxy <- stats["Dxy"]
   C <- stats["C"]
   R2 <- stats["R2"]
-  B <- sum((p-y)^2)/n
+  B <- mean((p-y)^2)
   spi <- unname(Spi(p, y))
   stats <- c(Dxy, C, R2, D, lr, p.lr, U, U.chisq, p.U, Q, B, f$coef, emax,
              spi)
