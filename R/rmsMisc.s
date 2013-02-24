@@ -1004,6 +1004,7 @@ prStats <- function(labels, w, latex=FALSE)
             k[k=='gp']    <- '$g_{p}$'
             k[k=='gr']    <- '$g_{r}$'
             k[k=='max $|$deriv$|$'] <- 'max $|$deriv$|$~'
+            k[k=='mean $|$Y-Yhat$|$'] <- 'mean $|Y-\\hat{Y}|$'
             z[1:length(k),i] <- paste(k, '~\\hfill ', w[[i]], sep='')
           }
         for(j in 1:maxl) cat(paste(z[j,], collapse='&'), '\\\\ \n', sep='')

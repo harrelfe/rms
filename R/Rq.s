@@ -35,7 +35,8 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
   
   stats <- c(n=length(fit$residuals),
              p=length(fit$coefficients),
-             g=GiniMd(fit$fitted.values))
+             g=GiniMd(fit$fitted.values),
+             mad=mean(abs(fit$residuals), na.rm=TRUE))
   
   fit <- c(fit,
            list(
@@ -128,8 +129,10 @@ print.Rq <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
     
     s <- x$stats
     n <- s['n']; p <- s['p']; errordf <- n - p; g <- s['g']
+    mad <- s['mad']
 
-    misc <- reVector(Obs=n, p=p, 'Residual d.f.'=errordf)
+    misc <- reVector(Obs=n, p=p, 'Residual d.f.'=errordf,
+                     'mean |Y-Yhat|'=mad)
     disc <- reVector(g=g)
     headings <- list('', c('Discrimination', 'Index'))
     data     <- list(misc, c(disc,3))

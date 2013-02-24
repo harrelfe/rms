@@ -120,9 +120,12 @@ will attempt to return information stored with the fit object if the
 appropriate options were used with the modeling function (e.g., \code{x, y, linear.predictors, se.fit}).
 }
 \item{se.fit}{
-Defaults to \code{FALSE}.  If \code{type="linear.predictors"}, set \code{se.fit=TRUE} to return
-a list with components \code{linear.predictors} and \code{se.fit} instead of just
-a vector of fitted values.
+Defaults to \code{FALSE}.  If \code{type="linear.predictors"}, set
+\code{se.fit=TRUE} to return a list with components
+\code{linear.predictors} and \code{se.fit} instead of just a vector of
+fitted values.   For Cox model fits, standard errors of linear
+predictors are computed after subtracting the original column means from
+the new design matrix.
 }
 \item{conf.int}{
 Specify \code{conf.int} as a positive fraction to obtain upper and lower

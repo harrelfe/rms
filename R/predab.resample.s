@@ -205,10 +205,11 @@ predab.resample <-
            "in bootstrap samples.\nRe--run with larger B")
     
     W <- apply(W / nomit, 2, sum) / n
-    cat("\n\nWeights for .632 method (ordinary bootstrap weights ",
-        format(1 / B), ")\n", sep="")
-    
-    print(summary(W))
+    if(pr) {
+      cat("\n\nWeights for .632 method (ordinary bootstrap weights ",
+          format(1 / B), ")\n", sep="")
+      print(summary(W))
+    }
   }
   
   for(i in 1:B) {
