@@ -1,13 +1,17 @@
 ## Check ability of quantile regression to estimate stratified medians
 require(quantreg)
-sm <- function(n) {
+sm <- function(n, eps=1e-6) {
   y <- exp(rnorm(n))
   x <- c(rep(0, n/2), rep(1, n/2))
   y[x==1] <- y[x==1] * 1.4
-  f <- rq(y ~ x)
+  qrmed <- matrix(NA, nrow=2, ncol=2,
+                  dimnames=list(c('br','fn'),c('x=0','x=1')))
+  for(m in c('br','fn')) {
+    f <- if(m == 'br') rq(y ~ x, method=m) else rq(y ~ x, method=m, eps=eps)
+    qrmed[m,] <- c(coef(f)[1], sum(coef(f)))
+  }
   sampmed <- tapply(y, x, median)
-  qrmed   <- c(coef(f)[1], sum(coef(f)))
-  print(rbind(sampmed,qrmed))
+  print(rbind(qrmed,sample=sampmed))
 }
 for(i in 1:10) sm(100)
 for(i in 1:10) sm(1000)
@@ -20,13 +24,15 @@ cse <- function(n) {
   x <- c(rep(0, n/2), rep(1, n/2))
   sem <- sd(y[x==0])/sqrt(n/2)
   semr <- sem*sqrt(pi/2)
-  print(c(n=n, sem=sem, semr=semr)) # semr: asympt. se(median)
+  res <- vector('numeric', 6)
+  names(res) <- c('SEMean','Asympt SEMedian','iid','nid','ker','boot')
+  res[1:2] <- c(sem, semr)
   f <- rq(y ~ x)
   for(m in c('iid', 'nid', 'ker', 'boot')) { # nid is default
-    cat(m, '\n')
     s <- coef(summary(f, se=m))['(Intercept)','Std. Error']
-    cat('se method:', m, '  se=', s, '\n')
+    res[m] <- s
   }
+  print(t(t(round(res,3))))
 }
 for(i in 1:10) cse(100)
 for(i in 1:10) cse(5000)
