@@ -46,14 +46,14 @@ arguments \code{x, parms, label, name} except that \code{parms} does not
 apply to \code{asis, matrx, strat}.
 }
 \synopsis{
-asis(\dots)
-matrx(\dots)
-pol(\dots)
-lsp(\dots)
-rcs(\dots)
-catg(\dots)
-scored(\dots)
-strat(\dots)
+asis(...)
+matrx(...)
+pol(...)
+lsp(...)
+rcs(...)
+catg(...)
+scored(...)
+strat(...)
 \%ia\%(x1, x2)
 }
 \usage{

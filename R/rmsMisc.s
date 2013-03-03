@@ -1069,8 +1069,11 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE, latex=FALSE)
     f
   }
 
-logLik.ols <- function(object, ...)
-  stats:::logLik.lm(object)
+logLik.ols <- function(object, ...) {
+  ll <- stats:::logLik.lm(object)
+  attr(ll, 'df') <- object$stats['d.f.'] + 2
+  ll
+}
 
 logLik.rms <- function(object, ...)
   {
@@ -1078,7 +1081,8 @@ logLik.rms <- function(object, ...)
     if(inherits(object, 'psm')) dof <- dof + 1  # for sigma
     nobs <- nobs(object)
     w <- object$loglik
-    if(length(w)) return(structure(w[length(w)], nobs=nobs, df=dof, class='logLik'))
+    if(length(w)) return(structure(w[length(w)], nobs=nobs, df=dof,
+                                   class='logLik'))
     w <- object$deviance
     structure(-0.5*w[length(w)], nobs=nobs, df=dof, class='logLik')
   }
