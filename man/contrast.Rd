@@ -23,8 +23,12 @@ estimates in a model containing treatment by center interactions.  For
 the latter case, you can specify \code{type="average"} and an optional
 \code{weights} vector to average the within-center treatment contrasts.
 The design contrast matrix computed by \code{contrast.rms} can be used
-by the \code{bootplot} and \code{confplot} functions to obtain bootstrap
-nonparametric confidence intervals for contrasts.
+by other functions.
+
+If \code{usebootcoef=TRUE}, the fit was run through \code{bootcov}, and
+\code{conf.type="individual"}, the confidence intervals are bootstrap
+nonparametric percentile confidence intervals, obtained on sample
+quantiles of the contrast evaluated on all bootstrap samples.
 
 By omitting the \code{b} argument, \code{contrast} can be used to obtain
 an average or weighted average of a series of predicted values, along
@@ -49,7 +53,7 @@ with \code{xYplot} or \code{Dotplot} (see the last example before the
 contrast(fit, \dots)
 \method{contrast}{rms}(fit, a, b, cnames=NULL, 
          type=c("individual", "average", "joint"),
-         conf.type=c("individual","simultaneous"),
+         conf.type=c("individual","simultaneous"), usebootcoef=TRUE,
          weights="equal", conf.int=0.95, tol=1e-7, expand=TRUE, \dots)
 
 \method{print}{contrast.rms}(x, X=FALSE, fun=function(u)u, jointonly=FALSE, ...)
@@ -99,7 +103,12 @@ and no averaging.
   intervals with simultaneous (family-wise) coverage, thus adjusting for
   multiple comparisons.  Note that individual P-values are not adjusted
   for multiplicity.
-  }
+}
+\item{usebootcoef}{
+  If \code{fit} was the result of \code{bootcov} but you want to use the
+  bootstrap covariance matrix instead of the nonparametric percentile
+  method for confidence intervals (which uses all the bootstrap
+  coefficients), specify \code{usebootcoef=FALSE}.}
 \item{weights}{
 a numeric vector, used when \code{type="average"}, to obtain weighted contrasts
 }
@@ -136,7 +145,9 @@ residual degrees of freedom (this is \code{NULL} if the model was not
 matrix, contrast names (or \code{NULL}), and a logical vector denoting
 which contrasts are redundant with the other contrasts.  If there are
 any redundant contrasts, when the results of \code{contrast} are
-printed, and asterisk is printed at the start of the corresponding lines.
+printed, and asterisk is printed at the start of the corresponding
+lines.  The object also contains \code{ctype} indicating what method was
+used for compute confidence intervals.
 }
 \author{
 Frank Harrell\cr
@@ -231,9 +242,9 @@ g(x1=1) - g(x1=0)
 summary(fit, x1=c(0,1))                    # method 4
 k <- contrast(fit, list(x1=1), list(x1=0)) # method 5
 print(k, X=TRUE)
-fit <- update(fit, x=TRUE, y=TRUE)               # method 6
-b <- bootcov(fit, B=500, coef.reps=TRUE)
-bootplot(b, X=k$X)    # bootstrap distribution and CL
+fit <- update(fit, x=TRUE, y=TRUE)         # method 6
+b <- bootcov(fit, B=500)
+contrast(fit, list(x1=1), list(x1=0))
 
 
 # In a model containing age, race, and sex,

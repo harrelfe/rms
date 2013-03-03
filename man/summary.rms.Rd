@@ -23,10 +23,17 @@ The longest confidence bar on each page is labeled with confidence levels
 (unless this bar has been ignored due to \code{clip}).  By default, the
 following confidence levels are all shown: .7, .8, .9, .95, and .99, using 
 levels of gray scale (colors for Windows).
+
+If \code{usebootcoef=TRUE} and the fit was run through \code{bootcov},
+the confidence intervals are bootstrap nonparametric percentile
+confidence intervals, obtained on sample quantiles of the contrast
+evaluated on all bootstrap samples.
+
 }
 \usage{
 \method{summary}{rms}(object, \dots, est.all=TRUE, antilog,
-conf.int=.95, abbrev=FALSE, vnames=c("names","labels"))
+conf.int=.95, abbrev=FALSE, vnames=c("names","labels"),
+usebootcoef=TRUE)
 
 \method{print}{summary.rms}(x, \dots)
 
@@ -94,6 +101,11 @@ factor levels for categorical variables in the model.
 \item{vnames}{
   Set to \code{"labels"} to use variable labels to label effects.
   Default is \code{"names"} to use variable names.}
+\item{usebootcoef}{
+  If \code{fit} was the result of \code{bootcov} but you want to use the
+  bootstrap covariance matrix instead of the nonparametric percentile
+  method for confidence intervals (which uses all the bootstrap
+  coefficients), specify \code{usebootcoef=FALSE}.}
 \item{x}{result of \code{summary}}
 \item{title}{
 \code{title} to pass to \code{latex}.  Default is name of fit object passed to

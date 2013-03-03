@@ -1,4 +1,3 @@
-
 # Value adjusted to is irrelevant when the factor does not interact with
 # other factors.  Form of factors is as follows: factor1=value1,factor2=val2:
 # Values:
@@ -17,7 +16,8 @@
 # in ...
 
 summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
-                           abbrev=FALSE, vnames=c("names","labels"))
+                        abbrev=FALSE, vnames=c("names","labels"),
+                        usebootcoef=TRUE)
 {	
   obj.name <- as.character(sys.call())[2]
   at <- object$Design
@@ -77,6 +77,8 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
 
   zcrit <- qnorm((1+conf.int)/2)
   cll <- paste(signif(conf.int,3))
+  bcoef <- if(usebootcoef) object$boot.Coef
+  if(length(bcoef)) bcoef <- bcoef[,nrp1:lc,drop=FALSE]
 
   jf <- 0
   if(nf>0) for(i in jw) {
@@ -128,8 +130,17 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
     xd <- matrix(xx[even,]-xx[odd,],nrow=m)
     xb <- xd %*% beta
     se <- drop((((xd %*% var) * xd) %*% rep(1,ncol(xd)))^.5)
-    low <- xb - zcrit*se
-    up <- xb + zcrit*se
+    if(length(bcoef)) {
+      best <- xd %*% t(bcoef)
+      lim <- apply(best, 1, quantile,
+                   probs=c((1-conf.int)/2, 1 - (1-conf.int)/2),
+                   na.rm=TRUE)
+      low <- lim[1,]
+      up  <- lim[2,]
+    } else {
+      low <- xb - zcrit*se
+      up <- xb + zcrit*se
+    }
     lm <- as.matrix(lims[,name[k],drop=FALSE])
     stats <- cbind(lm[1,],lm[3,],lm[3,]-lm[1,],xb,se,low,up,1)
     lab <- if(vnames=='names') name[k] else labels[k]
@@ -166,8 +177,17 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
         xd <- matrix(xx[2,]-xx[1,],nrow=1)
         xb <- (xd %*% beta)
         se <- sqrt((xd %*% var) %*% t(xd))
-        low <- xb - zcrit*se
-        up <- xb + zcrit*se
+        if(length(bcoef)) {
+          best <- xd %*% t(bcoef)
+          lim <- apply(best, 1, quantile,
+                       probs=c((1-conf.int)/2, 1 - (1-conf.int)/2),
+                       na.rm=TRUE)
+          low <- lim[1,]
+          up  <- lim[2,]
+        } else {
+          low <- xb - zcrit*se
+          up <- xb + zcrit*se
+        }
         stats <- rbind(stats,cbind(ki,kj,NA,
                                    xb,se,low,up,1))
         lab <-c(lab,
@@ -205,11 +225,11 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                       format(xadj[[nm]][1])," ",sep="")
   }
   attr(stats,"adjust") <- adjust
+  attr(stats, "conf.type") <-
+    if(length(bcoef)) 'bootstrap nonparametric percentile' else 'z'
   
   stats
 }
-
-
 
 print.summary.rms <- function(x, ...)
 {
@@ -220,8 +240,10 @@ print.summary.rms <- function(x, ...)
                            c("Factor", dimnames(x)[[2]][1:7]))
   cat(attr(x,"heading"),"\n\n")
   print(cstats,quote=FALSE)
-  if((A <- attr(x,"adjust"))!="") cat("\nAdjusted to:", A,"\n\n")
-  
+  if((A <- attr(x,"adjust"))!="") cat("\nAdjusted to:", A,"\n")
+  if(attr(x, 'conf.type') == 'bootstrap nonparametric percentile')
+    cat('\nBootstrap nonparametric percentile confidence intervals\n')
+  cat('\n')
   invisible()
 }
 
