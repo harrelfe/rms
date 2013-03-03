@@ -23,8 +23,8 @@ the stored matrix of bootstrap repetitions of coefficients, using
 bootstrap percentile nonparametric confidence limits.  Such confidence
 intervals do not make distributional assumptions.  You can force
 \code{Predict} to instead use the bootstrap covariance matrix by setting
-\code{usebootcov=TRUE}.  If \code{coef.reps} was \code{FALSE},
-\code{usebootcov=TRUE} is the default.
+\code{usebootcoef=FALSE}.  If \code{coef.reps} was \code{FALSE},
+\code{usebootcoef=FALSE} is the default.
 
 There is a \code{plot} method for \code{Predict} objects that makes it
 easy to show predicted values and confidence bands.
@@ -47,7 +47,7 @@ Predict(x, ..., fun,
         type = c("predictions", "model.frame", "x"),
         np = 200, conf.int = 0.95,
         conf.type = c("mean", "individual","simultaneous"),
-        usebootcov=FALSE,
+        usebootcoef=TRUE,
         adj.zero = FALSE, ref.zero = FALSE,
         non.slopes, time = NULL, loglog = FALSE, digits=4, name, factors=NULL)
 
@@ -116,7 +116,7 @@ Predict(x, ..., fun,
 	confidence bands for mean predictions with family-wise coverage of
 	\code{conf.int}.
   }
-  \item{usebootcov}{set to \code{TRUE} to force the use of the bootstrap
+  \item{usebootcoef}{set to \code{FALSE} to force the use of the bootstrap
 	covariance matrix estimator even when bootstrap coefficient reps are
 	present} 
   \item{adj.zero}{

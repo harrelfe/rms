@@ -3,7 +3,7 @@ Predict <-
            fun, type=c("predictions","model.frame","x"),
            np=200,
            conf.int=.95, conf.type=c('mean','individual','simultaneous'),
-           usebootcov=FALSE,
+           usebootcoef=TRUE,
            adj.zero=FALSE, ref.zero=FALSE,
            non.slopes, time=NULL, loglog=FALSE, digits=4, name, factors=NULL) {
 
@@ -161,7 +161,7 @@ Predict <-
       stop("wrong # values in non.slopes")
 
     beta <- fit$coefficients
-    bootdone <- length(boot.Coef <- fit$boot.Coef) && !usebootcov
+    bootdone <- length(boot.Coef <- fit$boot.Coef) && usebootcoef
     if(bootdone && (conf.type == 'individual'))
       stop('conf.type="individual" not compatible with bootcov with coef.reps=TRUE')
     isMean <- !missing(fun) && !is.function(fun) && fun=='mean'
