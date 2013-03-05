@@ -16,6 +16,7 @@ Surv <- function(time, time2, event,
     tvar <- time
     svar <- NULL
     tnam  <- deparse(substitute(time))
+    snam <- ''
   }
   else if (type=='right' || type=='left') {
     tvar <- time
