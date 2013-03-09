@@ -79,10 +79,10 @@ Predict <-
       stop("ref.zero=TRUE does not make sense with time given")
 
     if(fname=='') factors <- dotlist ## name not an argument
-  else {
-    factors <- list()
-    for(g in fname) factors[[g]] <- NA
-  }
+    else {
+      factors <- list()
+      for(g in fname) factors[[g]] <- NA
+    }
     nf <- length(factors)
     fnam <- names(factors)
     
@@ -151,7 +151,7 @@ Predict <-
       attr(settings, 'info') <- info
       return(settings)
     }
-  ##Number of non-slopes
+    ##Number of non-slopes
     nrp <- num.intercepts(fit)
     if(missing(non.slopes)) {
       non.slopes <- rep(0, nrp)
@@ -162,8 +162,10 @@ Predict <-
 
     beta <- fit$coefficients
     bootdone <- length(boot.Coef <- fit$boot.Coef) && usebootcoef
-    if(bootdone && (conf.type == 'individual'))
-      stop('conf.type="individual" not compatible with bootcov with coef.reps=TRUE')
+    if(bootdone && conf.type %in% c('individual','simultaneous')) {
+      warning('bootstrap estimates ignored when conf.type="simultaneous" or "individual"')
+      bootdone <- FALSE
+    }
     isMean <- !missing(fun) && !is.function(fun) && fun=='mean'
     if(isMean && !bootdone)
       stop('specifying fun="mean" does not make sense when not running bootcov (with coef.reps=TRUE)')
