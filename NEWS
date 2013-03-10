@@ -1,9 +1,13 @@
-Changes in version 3.6-4 (2013-02-??)
+Changes in version 3.7-0 (2013-03-10)
    * Cleaned up label logic in Surv, made it work with interval2 (thanks:Chris Andrews)
    * Fixed bug in val.prob - wrong denominator for Brier score if obs removed for logistic calibration
    * Fixed inconsistency in predictrms where predict() for Cox models used a design matrix that was centered on medians and modes rather than means (thanks: David van Klaveren <d.vanklaveren.1@erasmusmc.nl>)
    * Added mean absolute prediction error to Rq output
    * Made pr argument passed to predab.resample more encompassing
+   * Fixed logLik method for ols
+   * Made contrast.rms and summary.rms automatically compute bootstrap nonparametric confidence limits if fit was run through bootcov
+   * Fixed bug in Predict where conf.type='simultaneous' was being ignored if bootstrap coefficients were present
+   * For plot.Predict made default gray scale shaded confidence bands darker
 
 Changes in version 3.6-3 (2013-01-11)
    * Added Li-Shepherd residuals in residuals.lrm.s, become new default (same as ordinary residuals for binary models)

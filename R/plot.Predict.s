@@ -1,7 +1,7 @@
 plot.Predict <-
   function(x, formula, groups=NULL, cond=NULL, varypred=FALSE, subset,
            xlim, ylim, xlab, ylab,
-           data=NULL, subdata, col.fill=gray(seq(.95, .75, length=5)),
+           data=NULL, subdata, col.fill=gray(seq(.825, .55, length=5)),
            adj.subtitle, cex.adj, cex.axis, perim=NULL,
            digits=4, nlevels=3, nlines=FALSE, addpanel,
            scat1d.opts=list(frac=0.025, lwd=0.3), type=NULL, ...)
