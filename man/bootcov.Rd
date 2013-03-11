@@ -81,7 +81,7 @@ A comprehensive example demonstrates the use of all of the functions.
 \usage{
 bootcov(fit, cluster, B=200, fitter, 
         coef.reps=TRUE, loglik=FALSE,
-        pr=FALSE, maxit=15, group=NULL, stat=NULL)
+        pr=FALSE, maxit=15, eps=0.0001, group=NULL, stat=NULL)
 
 
 bootplot(obj, which, X,
@@ -151,9 +151,8 @@ the -2 log likelihood for the original model fit.
 \item{pr}{
 set to \code{TRUE} to print the current sample number to monitor progress.
 }
-\item{maxit}{
-maximum number of iterations, to pass to \code{fitter}
-}
+\item{maxit}{maximum number of iterations, to pass to \code{fitter}}
+\item{eps}{argument to pass to various fitters}
 \item{group}{
 a grouping variable used to stratify the sample upon bootstrapping.
 This allows one to handle k-sample problems, i.e., each bootstrap

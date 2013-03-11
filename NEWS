@@ -8,6 +8,7 @@ Changes in version 3.7-0 (2013-03-10)
    * Made contrast.rms and summary.rms automatically compute bootstrap nonparametric confidence limits if fit was run through bootcov
    * Fixed bug in Predict where conf.type='simultaneous' was being ignored if bootstrap coefficients were present
    * For plot.Predict made default gray scale shaded confidence bands darker
+   * For bootcov exposed eps argument to fitters and default to lower value
 
 Changes in version 3.6-3 (2013-01-11)
    * Added Li-Shepherd residuals in residuals.lrm.s, become new default (same as ordinary residuals for binary models)

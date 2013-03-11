@@ -1,6 +1,6 @@
 bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE, 
-                    loglik=FALSE, pr=FALSE, maxit=15, group=NULL,
-                    stat=NULL) {
+                    loglik=FALSE, pr=FALSE, maxit=15, eps=.0001,
+                    group=NULL, stat=NULL) {
 
   coxcph <- inherits(fit,'coxph') || inherits(fit,'cph') ||
     (length(fit$fitFunction) && any(c('cph','coxph') %in%
@@ -45,20 +45,20 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
              else function(x,y,...) {
                lm.fit.qr.bare(x,y,tolerance=1e-11,intercept=FALSE)
              }, 
-             lrm=function(x,y,maxit=15,penalty.matrix,...) {
-               lrm.fit(x,y,maxit=maxit,tol=1E-11,
+             lrm=function(x,y,maxit=15,eps=.0001,penalty.matrix,...) {
+               lrm.fit(x,y,maxit=maxit,tol=1E-11,eps=eps,
                        penalty.matrix=penalty.matrix)
              }, 
-             cph=function(x,y,strata=NULL,maxit=15,...) {
+             cph=function(x,y,strata=NULL,maxit=15,eps=.0001,...) {
                coxphFit(x,y, strata=strata, iter.max=maxit, 
-                        eps=.0001, method="efron", toler.chol=1e-11, type='right')
+                        eps=eps, method="efron", toler.chol=1e-11, type='right')
              },
              psm=function(x,y,maxit=15,...) {
                survreg.fit2(x, y, dist=dist, parms=parms, fixed=fixed,
                             offset=NULL, init=NULL, maxiter=maxit)
              },
              bj=function(x,y,maxit=15,eps=.0001,...) {
-               bj.fit(x,y, control=list(iter.max=maxit,eps=1e-4))
+               bj.fit(x,y, control=list(iter.max=maxit,eps=eps))
              },
              Glm=function(x,y,...) {
                glm.fit(x,as.vector(y), family=fitFamily)
@@ -184,9 +184,10 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       ## Note: If Strata is NULL, NULL[j] is still NULL
       
       f <- tryCatch(fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE], maxit=maxit, 
+                           eps=eps,
                            penalty.matrix=penalty.matrix, strata=Strata[j]),
                     error=function(...) list(fail=TRUE))
-          
+      
       if(length(f$fail) && f$fail) next
           
       cof <- f$coefficients
@@ -259,7 +260,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       }
       
       f <- tryCatch(fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE], 
-                           maxit=maxit, penalty.matrix=penalty.matrix,
+                           maxit=maxit, eps=eps, penalty.matrix=penalty.matrix,
                            strata=Strata[obs]),
                     error=function(...) list(fail=TRUE))
           
