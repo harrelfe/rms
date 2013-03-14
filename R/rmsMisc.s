@@ -1103,3 +1103,30 @@ nobs.rms <- function(object, ...)
     else if(any(names(st) == 'Obs')) unname(st['Obs'])
     else unname(st['n'])
   }
+
+setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
+                       'Cross-Validation'), label, usetk=TRUE) {
+  type <- match.arg(type)
+  if(!missing(label)) type <- label
+  pbo <- .Options$showprogress
+  if(!length(pbo)) pbo <- 'tk'
+  if(is.logical(pbo)) {
+    pbo <- if(pbo) 'tk' else 'none'
+  }
+  if(pbo=='none') return(function(i, ...){invisible()})
+  if(pbo=='tk' && usetk && require(tcltk)) {
+    pb <- tkProgressBar(type, 'Iteration: ', 0, n)
+    upb <- function(i, n, pb) {
+      setTkProgressBar(pb, i, label=sprintf('Iteration: %d', i))
+      if(i == n) close(pb)
+    }
+    formals(upb) <- list(i=0, n=n, pb=pb)
+    return(upb)
+  }
+  upb <- function(i, n) {
+    cat('Iteration: ', i, ' of ', n, '\r', sep='')
+    if(i == n) cat('\n')
+  }
+  formals(upb) <- list(i=0, n=n)
+  upb
+}

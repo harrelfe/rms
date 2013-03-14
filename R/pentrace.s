@@ -285,7 +285,6 @@ pentrace <- function(fit, penalty, penalty.matrix,
                  results.all=mat, Coefficients=Coef), class="pentrace")
 }
 
-
 plot.pentrace <- function(x, method=c('points','image'),
 						  which=c('effective.df','aic','aic.c','bic'), 
 						  pch=2, add=FALSE, ylim, ...)
@@ -303,26 +302,32 @@ plot.pentrace <- function(x, method=c('points','image'),
   if(length(x) == 5)
     {  ## only one variable given to penalty=
 
-      if('effective.df' %in% which)
-        if(!add)
-          plot(penalty, effective.df, xlab="Penalty", ylab="Effective d.f.",
-               type="l", ...)
+      if('effective.df' %in% which) {
+        if(add) lines(penalty, effective.df) else
+        plot(penalty, effective.df, xlab="Penalty", ylab="Effective d.f.",
+             type="l", ...)
+        if(length(which) == 1) return(invisible())
+      }
+      
       if(!add) plot(penalty, aic, 
                     ylim=if(missing(ylim))range(c(aic,bic)) else ylim,
-                    xlab="Penalty", ylab="Information Criterion", 
+                    xlab="Penalty",
+                    ylab=expression(paste("Information Criterion (", chi^2,
+                        " scale)")),
                     type=if('aic' %in% which)"l" else "n", lty=1, ...)
       else
-        if('aic' %in% which) lines(penalty, aic, lty=2, ...)
-      if('bic' %in% which) lines(penalty, bic,  lty=3, ...)
+        if('aic' %in% which) lines(penalty, aic,   lty=2, ...)
+      if('bic' %in% which)   lines(penalty, bic,   lty=3, ...)
       if('aic.c' %in% which) lines(penalty, aic.c, lty=1, ...)
-      if(!add)title(sub=paste(if('aic.c' %in% which) "Solid: AIC_c",
-                      if('aic' %in% which) "Dotted: AIC",
-                      if('bic' %in% which) "Dashed: BIC",sep='  '),
-                    adj=0,cex=.75)
+      if(!add && length(setdiff(which, 'effective.df')) > 1)
+        title(sub=paste(if('aic.c' %in% which) "Solid: AIC_c",
+                if('aic' %in% which) "Dotted: AIC",
+                if('bic' %in% which) "Dashed: BIC",sep='  '),
+              adj=0,cex=.75)
       
       return(invisible())
     }
-
+  
   ## At least two penalty factors
   if(add) stop('add=T not implemented for >=2 penalty factors')
 
