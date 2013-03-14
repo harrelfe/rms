@@ -211,9 +211,10 @@ predab.resample <-
       print(summary(W))
     }
   }
-  
+  pb <- setPb(B, type=if(method=='crossvalidation') 'Cross' else 'Boot',
+              onlytk=!pr)
   for(i in 1:B) {
-    if(pr) cat('Iteration',i,'\r')
+    pb(i)
     
     switch(method,
            crossvalidation = {

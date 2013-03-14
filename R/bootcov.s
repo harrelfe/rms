@@ -169,8 +169,9 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   
   if(missing(cluster)) {
     b <- 0
+    pb <- setPb(B, type='Boot', onlytk=!pr)
     for(i in 1:B) {
-      if(pr) cat(i,"\r")
+      pb(i)
       
       if(ngroup) {
         j <- integer(n)
@@ -235,8 +236,10 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     Obsno <- split(1:n, cluster)
     
     b <- 0
+    pb <- setPb(B, type='Boot', onlytk=!pr)
+
     for(i in 1:B) {
-      if(pr) cat(i,"\r")
+      pb(i)
       
       ## Begin addition Bill Pikounis
       if(ngroup) {
@@ -451,3 +454,37 @@ confplot <- function(obj, X, against,
   if(missing(against)) list(fitted=fitted, upper=upper, lower=lower)
   else invisible(list(fitted=fitted, upper=upper, lower=lower))
 }
+
+# Construct object suitable for boot:boot.ci
+# Use boot package to get BCa confidence limits for a linear combination of
+# model coefficients, e.g. bootcov results boot.Coef
+# If boot.ci fails return only ordinary percentile CLs
+bootBCa <- function(estimate, estimates, n, seed, conf.int=0.95) {
+  if(!require(boot)) stop('boot package not installed')
+  w <- list(sim= 'ordinary',
+            stype = 'i',
+            t0 = estimate,
+            t  = as.matrix(estimates),
+            R  = length(estimates),
+            data    = 1:n,
+            strata  = rep(1, n),
+            weights = rep(1/n, n),
+            seed = seed,
+            statistic = function(...) 1e10,
+            call = match.call())
+  np <- boot.ci(w, type='perc', conf=conf.int)$percent
+  m  <- length(np)
+  np <- np[c(m-1, m)]
+  bca <- try(boot.ci(w, type='bca', conf=conf.int), silent=TRUE)
+  if(inherits(bca, 'try-error')) {
+    bca <- NULL
+    warning('could not obtain BCa bootstrap confidence interval')
+  } else {
+    bca <- bca$bca
+    m <- length(bca)
+    bca <- bca[c(m-1, m)]
+  }
+  list(np=np, bca=bca)
+}
+
+      
