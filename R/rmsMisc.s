@@ -1106,7 +1106,7 @@ nobs.rms <- function(object, ...)
 
 setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
                        'Cross-Validation'),
-                  label, usetk=TRUE, onlytk=FALSE) {
+                  label, usetk=TRUE, onlytk=FALSE, every=1) {
   type <- match.arg(type)
   if(!missing(label)) type <- label
   pbo <- .Options$showprogress
@@ -1117,18 +1117,20 @@ setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
   if(pbo=='none') return(function(i, ...){invisible()})
   if(pbo=='tk' && usetk && require(tcltk)) {
     pb <- tkProgressBar(type, 'Iteration: ', 0, n)
-    upb <- function(i, n, pb) {
-      setTkProgressBar(pb, i, label=sprintf('Iteration: %d', i))
+    upb <- function(i, n, every, pb) {
+      if(i %% every == 0)
+        setTkProgressBar(pb, i, label=sprintf('Iteration: %d', i))
       if(i == n) close(pb)
     }
-    formals(upb) <- list(i=0, n=n, pb=pb)
+    formals(upb) <- list(i=0, n=n, every=every, pb=pb)
     return(upb)
   }
   if(onlytk) return(function(...) {invisible()})
-  upb <- function(i, n) {
-    cat('Iteration: ', i, ' of ', n, '\r', sep='')
+  upb <- function(i, n, every) {
+    if(i %% every == 0)
+      cat('Iteration: ', i, ' of ', n, '\r', sep='')
     if(i == n) cat('\n')
   }
-  formals(upb) <- list(i=0, n=n)
+  formals(upb) <- list(i=0, n=n, every=every)
   upb
 }

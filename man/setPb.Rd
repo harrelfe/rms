@@ -18,7 +18,7 @@ window will be more than the time required to do the simulations.
 \usage{
 setPb(n, type = c("Monte Carlo Simulation", "Bootstrap",
                   "Cross-Validation"),
-         label, usetk = TRUE, onlytk=FALSE)
+         label, usetk = TRUE, onlytk=FALSE, every=1)
 }
 \arguments{
   \item{n}{maximum number of iterations}
@@ -30,6 +30,7 @@ setPb(n, type = c("Monte Carlo Simulation", "Bootstrap",
   \item{onlytk}{set to \code{TRUE} to not write to the console even if
 	\code{tcltk} is unavailable and \code{showprogressbar} is not
 	\code{FALSE} or \code{"none"}}
+  \item{every}{print a message for every \code{every} iterations}
 }
 \value{a function that should be called by the user once per iteration,
   specifying the iteration number as the sole argument}
@@ -39,7 +40,7 @@ setPb(n, type = c("Monte Carlo Simulation", "Bootstrap",
 \dontrun{
 pb <- setPb(1000)
 for(i in 1:1000) {
-   pb(i)
+   pb(i)   # pb(i, every=10) to only show for multiples of 10
    # your calculations
   }
 # Force rms functions to do simulations to not report progress
