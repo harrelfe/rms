@@ -18,7 +18,7 @@ window will be more than the time required to do the simulations.
 \usage{
 setPb(n, type = c("Monte Carlo Simulation", "Bootstrap",
                   "Cross-Validation"),
-         label, usetk = TRUE)
+         label, usetk = TRUE, onlytk=FALSE)
 }
 \arguments{
   \item{n}{maximum number of iterations}
@@ -27,6 +27,9 @@ setPb(n, type = c("Monte Carlo Simulation", "Bootstrap",
   \item{label}{used to customize the bar label if present, overriding \code{type}}
   \item{usetk}{set to \code{FALSE} to override, acting as though the
 	\code{tcltk} package were not installed}
+  \item{onlytk}{set to \code{TRUE} to not write to the console even if
+	\code{tcltk} is unavailable and \code{showprogressbar} is not
+	\code{FALSE} or \code{"none"}}
 }
 \value{a function that should be called by the user once per iteration,
   specifying the iteration number as the sole argument}

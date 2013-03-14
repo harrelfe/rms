@@ -1105,7 +1105,8 @@ nobs.rms <- function(object, ...)
   }
 
 setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
-                       'Cross-Validation'), label, usetk=TRUE) {
+                       'Cross-Validation'),
+                  label, usetk=TRUE, onlytk=FALSE) {
   type <- match.arg(type)
   if(!missing(label)) type <- label
   pbo <- .Options$showprogress
@@ -1123,6 +1124,7 @@ setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
     formals(upb) <- list(i=0, n=n, pb=pb)
     return(upb)
   }
+  if(onlytk) return(function(...) {invisible()})
   upb <- function(i, n) {
     cat('Iteration: ', i, ' of ', n, '\r', sep='')
     if(i == n) cat('\n')
