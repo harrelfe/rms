@@ -193,7 +193,7 @@ Efron B, Tibshirani R (1997). Improvements on cross-validation: The .632+ bootst
 \seealso{
 \code{\link{rms}}, \code{\link{validate}}, \code{\link{fastbw}},
 \code{\link{lrm}}, \code{\link{ols}}, \code{\link{cph}},
-\code{\link{bootcov}}
+\code{\link{bootcov}}, \code{\link{setPb}}
 }
 \examples{
 # See the code for validate.ols for an example of the use of

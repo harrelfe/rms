@@ -285,7 +285,7 @@ Chicago, August 1996.
 \code{\link[survival]{survival-internal}}, 
 \code{\link{predab.resample}}, \code{\link{rmsMisc}},
 \code{\link{Predict}}, \code{\link{gendata}}, 
-\code{\link{contrast.rms}}, \code{\link{Predict}}
+\code{\link{contrast.rms}}, \code{\link{Predict}}, \code{\link{setPb}}
 }
 \examples{
 set.seed(191)

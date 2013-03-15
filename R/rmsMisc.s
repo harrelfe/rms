@@ -1114,6 +1114,10 @@ setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
   if(is.logical(pbo)) {
     pbo <- if(pbo) 'tk' else 'none'
   }
+  if(missing(every)) {
+    evo <- .Options$showevery
+    if(length(evo)) every <- evo
+  }
   if(pbo=='none') return(function(i, ...){invisible()})
   if(pbo=='tk' && usetk && require(tcltk)) {
     pb <- tkProgressBar(type, 'Iteration: ', 0, n)

@@ -11,6 +11,7 @@ Changes in version 3.7-0 (2013-03-10)
    * For bootcov exposed eps argument to fitters and default to lower value
    * Fixed bug in plot.pentrace regarding effective.df plotting
    * Added setPb function for pop-up progress bars for simulations
+   * Added progress bars for predab.resample (for validate, calibrate) and bootcov
 
 Changes in version 3.6-3 (2013-01-11)
    * Added Li-Shepherd residuals in residuals.lrm.s, become new default (same as ordinary residuals for binary models)

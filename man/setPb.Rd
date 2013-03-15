@@ -13,7 +13,10 @@ iteration number and intended number of iterations, the same as if
 \code{tcltk} is not installed.  It is not recommended that the
 \code{"tk"} be used for simulations requiring fewer than 10 seconds for
 more than 100 iterations, as the time required to update the pop-up
-window will be more than the time required to do the simulations.
+window will be more than the time required to do the simulations.  This
+problem can be solved by specifying, for example, \code{every=10} to
+\code{setPb} or to the function created by \code{setPb}, or by using
+\code{options(showevery=10)} before \code{setPb} is called.
 }
 \usage{
 setPb(n, type = c("Monte Carlo Simulation", "Bootstrap",
