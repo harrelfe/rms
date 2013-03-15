@@ -6,7 +6,7 @@ Author: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Maintainer: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Depends: Hmisc (>= 3.10-1), survival (>= 2.36-14)
 Imports: survival
-Suggests: lattice, quantreg, nlme, rpart, polspline, multcomp, boot
+Suggests: lattice, quantreg, nlme, rpart, polspline, multcomp, boot, tcltk
 Description: Regression modeling, testing, estimation, validation,
 	graphics, prediction, and typesetting by storing enhanced model design
 	attributes in the fit.  rms is a collection of 229 functions that
