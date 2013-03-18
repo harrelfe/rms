@@ -20,7 +20,8 @@ plotting predicted values but there is also a \code{print} method.
 When the first argument to \code{Predict} is a fit object created by
 \code{bootcov} with \code{coef.reps=TRUE}, confidence limits come from
 the stored matrix of bootstrap repetitions of coefficients, using 
-bootstrap percentile nonparametric confidence limits.  Such confidence
+bootstrap percentile nonparametric confidence limits or BCa limits.
+Such confidence 
 intervals do not make distributional assumptions.  You can force
 \code{Predict} to instead use the bootstrap covariance matrix by setting
 \code{usebootcoef=FALSE}.  If \code{coef.reps} was \code{FALSE},
@@ -47,7 +48,7 @@ Predict(x, ..., fun,
         type = c("predictions", "model.frame", "x"),
         np = 200, conf.int = 0.95,
         conf.type = c("mean", "individual","simultaneous"),
-        usebootcoef=TRUE,
+        usebootcoef=TRUE, boot.type=c("percentile","bca"),
         adj.zero = FALSE, ref.zero = FALSE,
         non.slopes, time = NULL, loglog = FALSE, digits=4, name, factors=NULL)
 
@@ -118,7 +119,9 @@ Predict(x, ..., fun,
   }
   \item{usebootcoef}{set to \code{FALSE} to force the use of the bootstrap
 	covariance matrix estimator even when bootstrap coefficient reps are
-	present} 
+	present}
+  \item{boot.type}{set to \code{'bca'} to compute BCa confidence
+	limits.  The default is to compute percentile intervals}
   \item{adj.zero}{
 	Set to \code{TRUE} to adjust all non-plotted variables to 0 (or
 	reference cell for categorical variables) and to omit intercept(s)
@@ -205,7 +208,8 @@ f.harrell@vanderbilt.edu
 \code{\link{contrast.rms}}, \code{\link{summary.rms}},  
 \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{survest}},
 \code{\link{survplot}}, \code{\link{rmsMisc}},
-\code{\link[Hmisc]{transace}}, \code{rbind}, \code{\link{bootcov}}
+\code{\link[Hmisc]{transace}}, \code{rbind}, \code{\link{bootcov}},
+\code{\link{bootBCa}}, \code{\link[boot]{boot.ci}}
 }
 \examples{
 n <- 1000    # define sample size

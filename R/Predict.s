@@ -3,13 +3,14 @@ Predict <-
            fun, type=c("predictions","model.frame","x"),
            np=200,
            conf.int=.95, conf.type=c('mean','individual','simultaneous'),
-           usebootcoef=TRUE,
+           usebootcoef=TRUE, boot.type=c('percentile','bca'),
            adj.zero=FALSE, ref.zero=FALSE,
            non.slopes, time=NULL, loglog=FALSE, digits=4, name, factors=NULL) {
 
     fit       <- x
     type      <- match.arg(type)
     conf.type <- match.arg(conf.type)
+    boot.type <- match.arg(boot.type)
     
     oldopt <- options(digits=digits)
     on.exit(options(oldopt))
@@ -183,22 +184,23 @@ Predict <-
       if(bootdone) {
         X <- predictrms(fit, settings, non.slopes=non.slopes,
                         ref.zero=ref.zero, type='x')
-        pred <- X %*% t(boot.Coef)
+        pred <- t(X %*% t(boot.Coef))
         if(isMean) {
           m <- Mean(fit)
           xb <- m(xb)
-          for(k in 1:ncol(pred))
-              pred[,k] <- m(pred[,k], intercepts=boot.Coef[k, 1:nrp])
+          for(k in 1:nrow(pred))
+              pred[k,] <- m(pred[k,], intercepts=boot.Coef[k, 1:nrp])
         }
-        lim  <- apply(pred, 1, quantile,
-                      probs=c((1-conf.int)/2,
-                        1-(1-conf.int)/2), na.rm=TRUE)
+        lim <- bootBCa(xb, pred, type=boot.type, n=nobs(fit), seed=fit$seed,
+                       conf.int=conf.int)
+        if(!is.matrix(lim)) lim <- as.matrix(lim)
         xx$lower <- lim[1,]
         xx$upper <- lim[2,]
       }
     }
     else {   ## time specified
-      if(bootdone) stop('time may not be specified if bootcov was used with coef.reps=TRUE')
+      if(bootdone)
+        stop('time may not be specified if bootcov was used with coef.reps=TRUE')
       xx <- survest(fit, settings, times=time, loglog=loglog, 
                     conf.int=conf.int)
       xb <- as.vector(xx$surv)

@@ -17,13 +17,21 @@
 
 summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                         abbrev=FALSE, vnames=c("names","labels"),
-                        usebootcoef=TRUE)
+                        conf.type=c('individual','simultaneous'),
+                        usebootcoef=TRUE, boot.type=c('percentile','bca'),
+                        verbose=FALSE)
 {	
   obj.name <- as.character(sys.call())[2]
   at <- object$Design
   labels <- at$label
 
   vnames <- match.arg(vnames)
+  conf.type <- match.arg(conf.type)
+  boot.type <- match.arg(boot.type)
+  blabel <-
+    if(boot.type == 'percentile') 'bootstrap nonparametric percentile'
+  else 'bootstrap BCa'
+  if(conf.type == 'simultaneous') require(multcomp)
   
   assume <- at$assume.code
   if(is.null(assume)) stop("fit does not have design information")
@@ -40,7 +48,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   nf <- length(factors)
 
   if(est.all) which <- (1:length(assume))[assume!=9]
-  if(nf>0) {
+  if(nf > 0) {
     jw <- charmatch(names(factors),name,0)
     if(any(jw==0))stop(paste("factor name(s) not in the design:",
              paste(names(factors)[jw==0],collapse=" ")))
@@ -70,33 +78,33 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   lc <- length(object$coef)
   ##Number of non-slopes:
   nrp <- num.intercepts(object)
-  nrp1 <- nrp+1
+  nrp1 <- nrp + 1
   ## Exclude non slopes
   beta <- object$coef[nrp1:lc]
-  var <- vcov(object, regcoef.only=TRUE)[nrp1:lc,nrp1:lc]
+  var <- vcov(object, regcoef.only=TRUE)[nrp1:lc, nrp1:lc]
 
-  zcrit <- qnorm((1+conf.int)/2)
+  zcrit <- if(length(idf <- object$df.residual)) qt((1 + conf.int)/2, idf)
+   else qnorm((1 + conf.int)/2)
   cll <- paste(signif(conf.int,3))
   bcoef <- if(usebootcoef) object$boot.Coef
-  if(length(bcoef)) bcoef <- bcoef[,nrp1:lc,drop=FALSE]
+  if(length(bcoef)) bcoef <- bcoef[, nrp1:lc, drop=FALSE]
 
   jf <- 0
-  if(nf>0) for(i in jw) {
-    jf <- jf+1
+  if(nf > 0) for(i in jw) {
+    jf <- jf + 1
     z <- value.chk(at, i, factors[[jf]], 0, Limval)
     lz <- length(z)
-    if(lz==1 && !is.na(z)) lims[2,i] <-  z
-    if(lz==2) {
+    if(lz == 1 && !is.na(z)) lims[2,i] <-  z
+    if(lz == 2) {
       if(!is.na(z[1])) lims[1,i] <- z[1]
       if(!is.na(z[2])) lims[3,i] <- z[2]
     }
     else
       if(lz==3) lims[!is.na(z),i] <- z[!is.na(z)]
-    if(lz<1 | lz>3) stop("must specify 1,2, or 3 values for a factor")
+    if(lz < 1 | lz > 3) stop("must specify 1,2, or 3 values for a factor")
   }
-  adj <- lims[2,,drop=FALSE]
+  adj <- lims[2,, drop=FALSE]
   isna <- sapply(adj, is.na)
-
 
   if(any(isna))
     stop(paste("adjustment values not defined here or with datadist for",
@@ -105,19 +113,18 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
              !ucat[which]]
   m <- length(k)
   if(m) {
-    isna <- is.na(lims[1,name[k],drop=FALSE]+lims[3,name[k],drop=FALSE])
+    isna <- is.na(lims[1, name[k], drop=FALSE] + lims[3, name[k], drop=FALSE])
     ##note char. excluded from k
     if(any(isna)) stop(paste("ranges not defined here or with datadist for",
                              paste(name[k[isna]], collapse=" ")))
   }
   
-  xadj <- oldUnclass(rms.levels(adj, at))
-  m <- length(k)
+  xadj <- unclass(rms.levels(adj, at))
   if(m) {
     adj <- xadj
-    M <- 2*m
-    odd <- seq(1,M,by=2)
-    even<- seq(2,M,by=2)
+    M <- 2 * m
+    odd  <- seq(1, M, by=2)
+    even <- seq(2, M, by=2)
     ##Extend data frame
     for(i in 1:length(adj)) adj[[i]] <- rep(adj[[i]], M)
     
@@ -127,31 +134,39 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
       adj[[name[l]]][(2*i-1):(2*i)] <- lims[c(1,3),name[l]]
     }
     xx <- predictrms(object, newdata=adj, type="x", incl.non.slopes=FALSE)
-    xd <- matrix(xx[even,]-xx[odd,],nrow=m)
+    xd <- matrix(xx[even,] - xx[odd,], nrow=m)
     xb <- xd %*% beta
     se <- drop((((xd %*% var) * xd) %*% rep(1,ncol(xd)))^.5)
-    if(length(bcoef)) {
-      best <- xd %*% t(bcoef)
-      lim <- apply(best, 1, quantile,
-                   probs=c((1-conf.int)/2, 1 - (1-conf.int)/2),
-                   na.rm=TRUE)
+    if(conf.type == 'simultaneous' && length(xb) > 1) {
+      if(verbose) {
+        cat('Confidence intervals are simultaneous for these estimates:\n')
+        print(as.vector(xb))
+      }
+      u <- confint(glht(object, xd, df=if(length(idf)) idf else 0),
+                   level=conf.int)$confint
+      low <- u[,'lwr']
+      up  <- u[,'upr']
+    } else if(length(bcoef)) {
+      best <- t(xd %*% t(bcoef))
+      lim <- bootBCa(xb, best, type=boot.type, n=nobs(object), seed=object$seed,
+                     conf.int=conf.int)
       low <- lim[1,]
       up  <- lim[2,]
     } else {
       low <- xb - zcrit*se
       up <- xb + zcrit*se
     }
-    lm <- as.matrix(lims[,name[k],drop=FALSE])
-    stats <- cbind(lm[1,],lm[3,],lm[3,]-lm[1,],xb,se,low,up,1)
+    lm <- as.matrix(lims[, name[k], drop=FALSE])
+    stats <- cbind(lm[1,], lm[3,], lm[3,] - lm[1,], xb, se, low, up, 1)
     lab <- if(vnames=='names') name[k] else labels[k]
     if(antilog) {
       stats <- rbind(stats,
                      cbind(stats[,1:3,drop=FALSE],
-                           exp(xb),NA,exp(low),exp(up), 2))
-      lab <- c(lab,rep(paste("",scale[2]),m))
+                           exp(xb), NA, exp(low), exp(up), 2))
+      lab <- c(lab, rep(paste("", scale[2]), m))
       w <- integer(M)
       w[odd] <- 1:m
-      w[even]<- m+(1:m)
+      w[even]<- m + (1:m)
       stats <- stats[w,]
       lab <- lab[w]
     }
@@ -172,16 +187,24 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
         adj <- xadj
         adj[[name[i]]] <- c(iref,j)
         adj <- as.data.frame(adj)
-        xx <- predictrms(object,newdata=adj,
-                         type="x",incl.non.slopes=FALSE)
-        xd <- matrix(xx[2,]-xx[1,],nrow=1)
-        xb <- (xd %*% beta)
+        xx <- predictrms(object, newdata=adj,
+                         type="x", incl.non.slopes=FALSE)
+        xd <- matrix(xx[2,] - xx[1,], nrow=1)
+        xb <- xd %*% beta
         se <- sqrt((xd %*% var) %*% t(xd))
-        if(length(bcoef)) {
-          best <- xd %*% t(bcoef)
-          lim <- apply(best, 1, quantile,
-                       probs=c((1-conf.int)/2, 1 - (1-conf.int)/2),
-                       na.rm=TRUE)
+        if(conf.type == 'simultaneous' && length(xb) > 1) {
+          if(verbose) {
+            cat('Confidence intervals are simultaneous for these estimates:\n')
+            print(as.vector(xb))
+          }
+          u <- confint(glht(object, xd, df=if(length(idf)) idf else 0),
+                       level=conf.int)$confint
+          low <- u[,'lwr']
+          up  <- u[,'upr']
+        } else if(length(bcoef)) {
+          best <- t(xd %*% t(bcoef))
+          lim <- bootBCa(xb, best, type=boot.type,
+                         n=nobs(object), seed=object$seed, conf.int=conf.int)
           low <- lim[1,]
           up  <- lim[2,]
         } else {
@@ -226,7 +249,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   }
   attr(stats,"adjust") <- adjust
   attr(stats, "conf.type") <-
-    if(length(bcoef)) 'bootstrap nonparametric percentile' else 'z'
+    if(length(bcoef)) blabel else 'z'
   
   stats
 }
@@ -241,8 +264,12 @@ print.summary.rms <- function(x, ...)
   cat(attr(x,"heading"),"\n\n")
   print(cstats,quote=FALSE)
   if((A <- attr(x,"adjust"))!="") cat("\nAdjusted to:", A,"\n")
-  if(attr(x, 'conf.type') == 'bootstrap nonparametric percentile')
-    cat('\nBootstrap nonparametric percentile confidence intervals\n')
+  blab <- if(attr(x, 'conf.type') == 'bootstrap nonparametric percentile')
+    'Bootstrap nonparametric percentile confidence intervals'
+  else if(attr(x, 'conf.type') == 'bootstrap BCa')
+    'Bootstrap BCa confidence intervals'
+  else ''
+  if(blab != '') cat('\n', blab, '\n', sep='')
   cat('\n')
   invisible()
 }

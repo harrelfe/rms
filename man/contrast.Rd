@@ -27,8 +27,8 @@ by other functions.
 
 If \code{usebootcoef=TRUE}, the fit was run through \code{bootcov}, and
 \code{conf.type="individual"}, the confidence intervals are bootstrap
-nonparametric percentile confidence intervals, obtained on sample
-quantiles of the contrast evaluated on all bootstrap samples.
+nonparametric percentile confidence intervals or BCa intervals, obtained
+on contrasts evaluated on all bootstrap samples.
 
 By omitting the \code{b} argument, \code{contrast} can be used to obtain
 an average or weighted average of a series of predicted values, along
@@ -54,6 +54,7 @@ contrast(fit, \dots)
 \method{contrast}{rms}(fit, a, b, cnames=NULL, 
          type=c("individual", "average", "joint"),
          conf.type=c("individual","simultaneous"), usebootcoef=TRUE,
+         boot.type=c("percentile","bca"),
          weights="equal", conf.int=0.95, tol=1e-7, expand=TRUE, \dots)
 
 \method{print}{contrast.rms}(x, X=FALSE, fun=function(u)u, jointonly=FALSE, ...)
@@ -106,9 +107,11 @@ and no averaging.
 }
 \item{usebootcoef}{
   If \code{fit} was the result of \code{bootcov} but you want to use the
-  bootstrap covariance matrix instead of the nonparametric percentile
+  bootstrap covariance matrix instead of the nonparametric percentile or BCa
   method for confidence intervals (which uses all the bootstrap
   coefficients), specify \code{usebootcoef=FALSE}.}
+\item{boot.type}{set to \code{'bca'} to compute BCa confidence
+	limits.  The default is to compute percentile intervals}
 \item{weights}{
 a numeric vector, used when \code{type="average"}, to obtain weighted contrasts
 }

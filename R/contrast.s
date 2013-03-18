@@ -4,18 +4,22 @@ contrast.rms <-
   function(fit, a, b, cnames=NULL,
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'), usebootcoef=TRUE,
+           boot.type=c('percentile','bca'),
            weights='equal', conf.int=0.95, tol=1e-7, expand=TRUE, ...)
 {
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
+  boot.type <- match.arg(boot.type)
   if(conf.type == 'simultaneous') require(multcomp)
   
   zcrit <- if(length(idf <- fit$df.residual)) qt((1+conf.int)/2, idf) else
               qnorm((1+conf.int)/2)
   bcoef <- if(usebootcoef) fit$boot.Coef
   if(length(bcoef) && conf.type != 'simultaneous')
-    conf.type <- 'bootstrap nonparametric percentile'
-
+    conf.type <-
+      if(boot.type=='percentile') 'bootstrap nonparametric percentile'
+      else 'bootstrap BCa'
+  
   da <- do.call('gendata', list(fit, factors=a, expand=expand))
   xa <- predict(fit, da, type='x')
   ma <- nrow(xa)
@@ -86,10 +90,9 @@ contrast.rms <-
   P <- if(length(idf)) 2*(1-pt(abs(Z), idf)) else 2*(1-pnorm(abs(Z)))
   if(conf.type != 'simultaneous') {
     if(length(bcoef)) {
-      best <- X %*% t(bcoef)
-      lim <- apply(best, 1, quantile,
-                   probs=c((1-conf.int)/2, 1 - (1-conf.int)/2),
-                   na.rm=TRUE)
+      best <- t(X %*% t(bcoef))
+      lim <- bootBCa(est, best, type=boot.type, n=nobs(fit), seed=fit$seed,
+                     conf.int=conf.int)
       lower <- lim[1,]
       upper <- lim[2,]
     } else {

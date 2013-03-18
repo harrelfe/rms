@@ -166,10 +166,12 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   else ngroup <- 0
 
   anyinf <- FALSE
-  
+
+  if(!exists('.Random.seed')) runif(1)
+  seed <- .Random.seed
   if(missing(cluster)) {
     b <- 0
-    pb <- setPb(B, type='Boot', onlytk=!pr)
+    pb <- setPb(B, type='Boot', onlytk=!pr, every=20)
     for(i in 1:B) {
       pb(i)
       
@@ -213,7 +215,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       
       if(loglik) Loglik[b] <- oosl(f, matxv(X,cof), Y)
     }
-    if(pr) cat('\n')
+    ## if(pr) cat('\n')
   }
   else {
     if(length(cluster) > n) {
@@ -236,7 +238,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     Obsno <- split(1:n, cluster)
     
     b <- 0
-    pb <- setPb(B, type='Boot', onlytk=!pr)
+    pb <- setPb(B, type='Boot', onlytk=!pr, every=20)
 
     for(i in 1:B) {
       pb(i)
@@ -277,7 +279,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       
       cof <- fill(cof, vname, ns)
       if(any(is.infinite(cof))) anyinf <- TRUE
-      if(coef.reps) coefs[b,] <- cof
+      if(coef.reps)    coefs[b,] <- cof
       if(length(stat)) stats[b] <- f$stats[stat]
       
       bar <- bar + cof
@@ -285,7 +287,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       cov <- cov + cof %*% t(cof)
       if(loglik) Loglik[b] <- oosl(f, matxv(X,cof), Y)
     }
-    if(pr) cat('\n')
+    ## if(pr) cat('\n')
   }
   
   if(b < B) {
@@ -299,7 +301,8 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   if(anyinf) warning('at least one resample excluded highest Y values, invalidating bootstrap covariance matrix estimate')
   
   bar <- bar/b
-  fit$B <- b
+  fit$B    <- b
+  fit$seed <- seed
   names(bar) <- vname
   fit$boot.coef <- bar
   if(coef.reps) fit$boot.Coef <- coefs
@@ -459,32 +462,45 @@ confplot <- function(obj, X, against,
 # Use boot package to get BCa confidence limits for a linear combination of
 # model coefficients, e.g. bootcov results boot.Coef
 # If boot.ci fails return only ordinary percentile CLs
-bootBCa <- function(estimate, estimates, n, seed, conf.int=0.95) {
-  if(!require(boot)) stop('boot package not installed')
-  w <- list(sim= 'ordinary',
-            stype = 'i',
-            t0 = estimate,
-            t  = as.matrix(estimates),
-            R  = length(estimates),
-            data    = 1:n,
-            strata  = rep(1, n),
-            weights = rep(1/n, n),
-            seed = seed,
-            statistic = function(...) 1e10,
-            call = match.call())
-  np <- boot.ci(w, type='perc', conf=conf.int)$percent
-  m  <- length(np)
-  np <- np[c(m-1, m)]
-  bca <- try(boot.ci(w, type='bca', conf=conf.int), silent=TRUE)
-  if(inherits(bca, 'try-error')) {
-    bca <- NULL
-    warning('could not obtain BCa bootstrap confidence interval')
-  } else {
-    bca <- bca$bca
-    m <- length(bca)
-    bca <- bca[c(m-1, m)]
+bootBCa <- function(estimate, estimates, type=c('percentile','bca'),
+                    n, seed, conf.int=0.95) {
+  type <- match.arg(type)
+  if(type=='bca' && !require(boot)) stop('boot package not installed')
+  estimate <- as.vector(estimate)
+  ne <- length(estimate)
+  if(!is.matrix(estimates)) estimates <- as.matrix(estimates)
+  if(ncol(estimates) != ne)
+    stop('no. columns in estimates != length of estimate')
+  if(type == 'percentile') {
+    a <- apply(estimates, 2, quantile,
+                 probs=c((1-conf.int)/2, 1-(1-conf.int)/2), na.rm=TRUE)
+    if(ne == 1) a <- as.vector(a)
+    return(a)
   }
-  list(np=np, bca=bca)
+  lim <- matrix(NA, nrow=2, ncol=ne, dimnames=list(c('Lower','Upper'),NULL))
+  R <- nrow(estimates)
+  for(i in 1:ne) {
+    w <- list(sim= 'ordinary',
+              stype = 'i',
+              t0 = estimate[i],
+              t  = estimates[,i,drop=FALSE],
+              R  = R,
+              data    = 1:n,
+              strata  = rep(1,   n),
+              weights = rep(1/n, n),
+              seed = seed,
+              statistic = function(...) 1e10,
+              call = match.call())
+    bca <- try(boot.ci(w, type='bca', conf=conf.int), silent=TRUE)
+    if(inherits(bca, 'try-error')) {
+      bca <- c(NA,NA)
+    warning('could not obtain BCa bootstrap confidence interval')
+    } else {
+      bca <- bca$bca
+      m <- length(bca)
+      bca <- bca[c(m-1, m)]
+    }
+    lim[,i] <- bca
+  }
+  if(ne==1) as.vector(lim) else lim
 }
-
-      

@@ -1,4 +1,4 @@
-Changes in version 3.7-0 (2013-03-10)
+Changes in version 3.7-0 (2013-03-15)
    * Cleaned up label logic in Surv, made it work with interval2 (thanks:Chris Andrews)
    * Fixed bug in val.prob - wrong denominator for Brier score if obs removed for logistic calibration
    * Fixed inconsistency in predictrms where predict() for Cox models used a design matrix that was centered on medians and modes rather than means (thanks: David van Klaveren <d.vanklaveren.1@erasmusmc.nl>)
@@ -12,6 +12,10 @@ Changes in version 3.7-0 (2013-03-10)
    * Fixed bug in plot.pentrace regarding effective.df plotting
    * Added setPb function for pop-up progress bars for simulations
    * Added progress bars for predab.resample (for validate, calibrate) and bootcov
+   * Added bootBCa function
+   * Added seed to bootcov object
+   * Added boot.type='bca' to Predict, contrast.rms, summary.rms
+   * Improved summary.rms to use t critical values if df.residual defined
 
 Changes in version 3.6-3 (2013-01-11)
    * Added Li-Shepherd residuals in residuals.lrm.s, become new default (same as ordinary residuals for binary models)

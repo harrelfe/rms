@@ -130,7 +130,8 @@ variances estimates that are too low.
  \code{y}; useful for sample surveys as opposed to the default of
  frequency weighting 
  }
-\item{\dots}{arguments that are passed to \code{lrm.fit}}
+\item{\dots}{arguments that are passed to \code{lrm.fit}, or from
+    \code{print}, to \code{\link{prModFit}}}
 \item{digits}{number of significant digits to use}
 \item{strata.coefs}{set to \code{TRUE} to print the (experimental)
   strata coefficients}

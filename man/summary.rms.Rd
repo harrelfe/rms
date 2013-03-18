@@ -26,14 +26,15 @@ levels of gray scale (colors for Windows).
 
 If \code{usebootcoef=TRUE} and the fit was run through \code{bootcov},
 the confidence intervals are bootstrap nonparametric percentile
-confidence intervals, obtained on sample quantiles of the contrast
+confidence intervals or BCa intervals, obtained on contrasts
 evaluated on all bootstrap samples.
 
 }
 \usage{
 \method{summary}{rms}(object, \dots, est.all=TRUE, antilog,
 conf.int=.95, abbrev=FALSE, vnames=c("names","labels"),
-usebootcoef=TRUE)
+conf.type=c('individual','simultaneous'),
+usebootcoef=TRUE, boot.type=c("percentile","bca"), verbose=FALSE)
 
 \method{print}{summary.rms}(x, \dots)
 
@@ -101,11 +102,24 @@ factor levels for categorical variables in the model.
 \item{vnames}{
   Set to \code{"labels"} to use variable labels to label effects.
   Default is \code{"names"} to use variable names.}
+\item{conf.type}{
+  The default type of confidence interval computed for a given
+  individual (1 d.f.) contrast is a pointwise confidence interval.  Set
+  \code{conf.type="simultaneous"} to use the \code{multcomp} package's
+  \code{glht} and \code{confint} functions to compute confidence
+  intervals with simultaneous (family-wise) coverage, thus adjusting for
+  multiple comparisons.  Contrasts are simultaneous only over groups of
+  intervals computed together.  
+}
 \item{usebootcoef}{
   If \code{fit} was the result of \code{bootcov} but you want to use the
   bootstrap covariance matrix instead of the nonparametric percentile
-  method for confidence intervals (which uses all the bootstrap
+  or BCa methods for confidence intervals (which uses all the bootstrap
   coefficients), specify \code{usebootcoef=FALSE}.}
+\item{boot.type}{set to \code{'bca'} to compute BCa confidence
+	limits.  The default is to compute percentile intervals}
+\item{verbose}{set to \code{TRUE} when \code{conf.type='simultaneous'}
+  to get output describing scope of simultaneous adjustments}
 \item{x}{result of \code{summary}}
 \item{title}{
 \code{title} to pass to \code{latex}.  Default is name of fit object passed to
