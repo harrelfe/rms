@@ -50,10 +50,10 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   if(est.all) which <- (1:length(assume))[assume!=9]
   if(nf > 0) {
     jw <- charmatch(names(factors),name,0)
-    if(any(jw==0))stop(paste("factor name(s) not in the design:",
-             paste(names(factors)[jw==0],collapse=" ")))
+    if(any(jw==0)) stop(paste("factor name(s) not in the design:",
+             paste(names(factors)[jw==0], collapse=" ")))
     if(!est.all) which <- jw
-    if(any(assume[which]==9))
+    if(any(assume[which] == 9))
       stop("cannot estimate effects for interaction terms alone")
   }
   
@@ -73,8 +73,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
     ucat[i] <- name[i] %in% names(values) &&
   length(V <- values[[name[i]]]) && is.character(V)
   
-  stats <- NULL
-  lab <- NULL
+  stats <- lab <- NULL
   lc <- length(object$coef)
   ##Number of non-slopes:
   nrp <- num.intercepts(object)
@@ -142,7 +141,9 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
         cat('Confidence intervals are simultaneous for these estimates:\n')
         print(as.vector(xb))
       }
-      u <- confint(glht(object, xd, df=if(length(idf)) idf else 0),
+      u <- confint(glht(object,
+                        cbind(matrix(0, nrow=nrow(xd), ncol=nrp), xd),
+                        df=if(length(idf)) idf else 0),
                    level=conf.int)$confint
       low <- u[,'lwr']
       up  <- u[,'upr']
@@ -197,7 +198,9 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
             cat('Confidence intervals are simultaneous for these estimates:\n')
             print(as.vector(xb))
           }
-          u <- confint(glht(object, xd, df=if(length(idf)) idf else 0),
+          u <- confint(glht(object,
+                            cbind(matrix(0, nrow=nrow(xd), ncol=nrp), xd),
+                            df=if(length(idf)) idf else 0),
                        level=conf.int)$confint
           low <- u[,'lwr']
           up  <- u[,'upr']

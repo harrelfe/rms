@@ -212,7 +212,10 @@ predab.resample <-
     }
   }
   pb <- setPb(B, type=if(method=='crossvalidation') 'Cross' else 'Boot',
-              onlytk=!pr)
+              onlytk=!pr,
+              every=1*(B < 20) + 5*(B >= 20 & B < 50) +
+              10*(B >= 50 & B < 100) + 20*(B >= 100 & B < 1000) +
+              50*(B >= 1000))
   for(i in 1:B) {
     pb(i)
     

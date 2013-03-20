@@ -16,6 +16,7 @@ Changes in version 3.7-0 (2013-03-15)
    * Added seed to bootcov object
    * Added boot.type='bca' to Predict, contrast.rms, summary.rms
    * Improved summary.rms to use t critical values if df.residual defined
+   * Added simultaneous contrasts to summary.rms
 
 Changes in version 3.6-3 (2013-01-11)
    * Added Li-Shepherd residuals in residuals.lrm.s, become new default (same as ordinary residuals for binary models)
