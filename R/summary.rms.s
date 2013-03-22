@@ -151,8 +151,13 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
       best <- t(xd %*% t(bcoef))
       lim <- bootBCa(xb, best, type=boot.type, n=nobs(object), seed=object$seed,
                      conf.int=conf.int)
-      low <- lim[1,]
-      up  <- lim[2,]
+      if(is.matrix(lim)) {
+        low <- lim[1,]
+        up  <- lim[2,]
+      } else {
+        low <- lim[1]
+        up <- lim[2]
+      }
     } else {
       low <- xb - zcrit*se
       up <- xb + zcrit*se
