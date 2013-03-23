@@ -128,7 +128,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   loglik <- -2 * sum(sumwty*logb(sumwty/sum(sumwty)))
   ## loglik <-  -2 * sum(numy * logb(numy/n))
   
-  if(nxin>0)
+  if(nxin > 0)
     {
       if(len.penmat==0) penalty.matrix <- matrix(0,nrow=nx,ncol=nx)
       if(nrow(penalty.matrix)!=nx || ncol(penalty.matrix)!=nx) 
@@ -165,7 +165,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
       initial <- z$coef
     }
 
-  if(nxin>0) {
+  if(nxin > 0) {
     ##Fit model with intercept(s), offset, and any fitted covariables
 	z <- 
       .Fortran("lrmfit", coef=initial, nxin, est, x, y, offset,
@@ -249,8 +249,8 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   r2     <- 1 - exp(-model.lr / sumwt)
   r2.max <- 1 - exp(-llnull / sumwt)
   r2     <- r2 / r2.max
-  lp <- matxv(x, kof, kint=1)
   kmid <- floor((kint + 1) / 2)
+  lp <- if(nxin > 0) matxv(x, kof, kint=1) else rep(kof[1], n)
   lpmid <- lp - kof[1] + kof[kmid] 
   prob <- plogis(lpmid)
   event <- y > (kmid - 1)
@@ -258,7 +258,6 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   B <- sum(weights*(prob - event)^2) / sum(weights)
   g  <- GiniMd(lpmid)
   gp <- GiniMd(prob)
-  
   stats <- c(n, max(abs(z$u[elements])), model.lr, model.df,
              model.p, z$opts[8], z$opts[9],
              z$opts[10], z$opts[11], r2, B, g, exp(g), gp)
