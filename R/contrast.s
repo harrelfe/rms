@@ -93,8 +93,13 @@ contrast.rms <-
       best <- t(X %*% t(bcoef))
       lim <- bootBCa(est, best, type=boot.type, n=nobs(fit), seed=fit$seed,
                      conf.int=conf.int)
-      lower <- lim[1,]
-      upper <- lim[2,]
+      if(is.matrix(lim)) {
+        lower <- lim[1,]
+        upper <- lim[2,]
+      } else {
+        lower <- lim[1]
+        upper <- lim[2]
+      }
     } else {
       lower <- est - zcrit*se
       upper <- est + zcrit*se
