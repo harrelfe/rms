@@ -856,7 +856,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                     latex(U, file='', first.hline.double=FALSE,
                           table=FALSE, longtable=TRUE,
                           lines.page=lines.page,
-                          col.just=rep('r',4), rowlabel='',
+                          col.just=rep('r',ncol(U)), rowlabel='',
                           math.col.names=TRUE)
                   }
                 else

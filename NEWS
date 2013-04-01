@@ -18,6 +18,7 @@ Changes in version 3.7-0 (2013-03-24)
    * Improved summary.rms to use t critical values if df.residual defined
    * Added simultaneous contrasts to summary.rms
    * Fixed calculation of Brier score, g, gp in lrm.fit by handling special case of computing linear predictor when there are no predictors in the model
+   * Fixed bug in prModFit preventing successful latex'ing of penalized lrms
 
 Changes in version 3.6-3 (2013-01-11)
    * Added Li-Shepherd residuals in residuals.lrm.s, become new default (same as ordinary residuals for binary models)
