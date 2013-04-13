@@ -190,7 +190,6 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
                            eps=eps,
                            penalty.matrix=penalty.matrix, strata=Strata[j]),
                     error=function(...) list(fail=TRUE))
-      
       if(length(f$fail) && f$fail) next
           
       cof <- f$coefficients
@@ -215,7 +214,6 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       
       if(loglik) Loglik[b] <- oosl(f, matxv(X,cof), Y)
     }
-    ## if(pr) cat('\n')
   }
   else {
     if(length(cluster) > n) {
@@ -268,7 +266,6 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
                            maxit=maxit, eps=eps, penalty.matrix=penalty.matrix,
                            strata=Strata[obs]),
                     error=function(...) list(fail=TRUE))
-          
       if(length(f$fail) && f$fail) next
       
       cof <- f$coefficients
@@ -287,7 +284,6 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       cov <- cov + cof %*% t(cof)
       if(loglik) Loglik[b] <- oosl(f, matxv(X,cof), Y)
     }
-    ## if(pr) cat('\n')
   }
   
   if(b < B) {
