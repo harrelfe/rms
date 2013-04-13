@@ -16,7 +16,7 @@ factors were selected at each repetition.
 \usage{
 predab.resample(fit.orig, fit, measure, 
                 method=c("boot","crossvalidation",".632","randomization"),
-                bw=FALSE, B=50, pr=FALSE,
+                bw=FALSE, B=50, pr=FALSE, prmodsel=TRUE,
                 rule="aic", type="residual", sls=.05, aics=0,
                 tol=1e-12, force=NULL, estimates=TRUE,
                 non.slopes.in.x=TRUE, kint=1,
@@ -68,32 +68,38 @@ quantiles of predicted probabilities that are used as cut points in other sample
 The vector created by measure should have \code{names()} associated with it.
 }
 \item{method}{
-The default is \code{"boot"} for ordinary bootstrapping (Efron, 1983, Eq. 2.10).  
-Use \code{".632"} for Efron's \code{.632} method (Efron, 1983, Section 6 and Eq. 6.10),
-\code{"crossvalidation"}
-for grouped cross--validation, \code{"randomization"} for the randomization method. May
-be abbreviated down to any level, e.g. \code{"b"}, \code{"."}, \code{"cross"}, \code{"rand"}.
+The default is \code{"boot"} for ordinary bootstrapping (Efron, 1983,
+Eq. 2.10).   Use \code{".632"} for Efron's \code{.632} method (Efron,
+1983, Section 6 and Eq. 6.10), \code{"crossvalidation"} for grouped
+cross--validation, \code{"randomization"} for the randomization
+method. May be abbreviated down to any level, e.g. \code{"b"},
+\code{"."}, \code{"cross"}, \code{"rand"}.
 }
 \item{bw}{
-Set to \code{TRUE} to do fast backward step-down for each training sample. Default is \code{FALSE}.
+Set to \code{TRUE} to do fast backward step-down for each training
+sample. Default is \code{FALSE}. 
 }
 \item{B}{
-Number of repetitions, default=50. For \code{method="crossvalidation"}, this is also
-the number of groups the original sample is split into.
+Number of repetitions, default=50. For \code{method="crossvalidation"},
+this is also the number of groups the original sample is split into.
 }
 \item{pr}{
 \code{TRUE} to print results for each sample. Default is \code{FALSE}.
 }
+\item{prmodsel}{
+set to \code{FALSE} to suppress printing of model selection output such
+as that from \code{\link{fastbw}}.}
 \item{rule}{
-Stopping rule for fastbw, \code{"aic"} or \code{"p"}. Default is \code{"aic"} to use Akaike's
-information criterion.
+Stopping rule for fastbw, \code{"aic"} or \code{"p"}. Default is
+\code{"aic"} to use Akaike's information criterion.
 }
 \item{type}{
-Type of statistic to use in stopping rule for fastbw, \code{"residual"} (the default) or
-\code{"individual"}.
+Type of statistic to use in stopping rule for fastbw, \code{"residual"}
+(the default) or \code{"individual"}.
 }
 \item{sls}{
-Significance level for stopping in fastbw if \code{rule="p"}. Default is \code{.05}.
+Significance level for stopping in fastbw if \code{rule="p"}. Default is
+\code{.05}. 
 }
 \item{aics}{
 Stopping criteria for \code{rule="aic"}. Stops deleting factors when

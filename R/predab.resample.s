@@ -5,7 +5,7 @@ predab.resample <-
            method=c("boot","crossvalidation",".632","randomization"),
            bw=FALSE,
            B=50,
-           pr=FALSE,
+           pr=FALSE, prmodsel=TRUE,
            rule="aic",
            type="residual",
            sls=.05,
@@ -141,7 +141,7 @@ predab.resample <-
     fbw <- fastbw(fit.orig, rule=rule, type=type, sls=sls, aics=aics,
                   eps=tol, force=force)
 
-    print(fbw, estimates=estimates)
+    if(prmodsel) print(fbw, estimates=estimates)
 
     orig.col.kept <- fbw$parms.kept
     if(!length(orig.col.kept))
@@ -295,7 +295,7 @@ predab.resample <-
         f <- fastbw(f, rule=rule, type=type, sls=sls, aics=aics,
                     eps=tol, force=force)
         
-        if(pr) print(f, estimates=estimates)
+        if(pr && prmodsel) print(f, estimates=estimates)
         
         varin[j + 1, f$factors.kept] <- TRUE
         col.kept <- f$parms.kept
