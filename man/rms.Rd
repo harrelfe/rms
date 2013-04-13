@@ -32,9 +32,6 @@ along the \code{label} attribute of a variable.  In this way, when an
 \code{na.action} function is called to subset out NAs, labels are still
 defined for variables in the model.
 }
-\synopsis{
-Design(mf, allow.offset=TRUE, intercept=1)
-}
 \usage{
 Design(mf, allow.offset=TRUE, intercept=1)
 # not to be called by the user; called by fitting routines

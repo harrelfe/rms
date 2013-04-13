@@ -45,17 +45,6 @@ In the list below, functions \code{asis} through \code{strat} can have
 arguments \code{x, parms, label, name} except that \code{parms} does not
 apply to \code{asis, matrx, strat}.
 }
-\synopsis{
-asis(...)
-matrx(...)
-pol(...)
-lsp(...)
-rcs(...)
-catg(...)
-scored(...)
-strat(...)
-\%ia\%(x1, x2)
-}
 \usage{
 asis(x, parms, label, name)
 matrx(x, label, name)
