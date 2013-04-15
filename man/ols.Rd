@@ -168,7 +168,7 @@ options(datadist="d")   # No d -> no summary, plot without giving all details
 f <- ols(sqrt(distance) ~ rcs(x1,4) + scored(x2), x=TRUE)
 # could use d <- datadist(f); options(datadist="d") at this point,
 # but predictor summaries would not be stored in the fit object for
-# use with plot.Design, summary.Design.  In that case, the original
+# use with Predict, summary.rms.  In that case, the original
 # dataset or d would need to be accessed later, or all variable values
 # would have to be specified to summary, plot
 anova(f)

@@ -8,7 +8,7 @@
   \code{strat}, \code{matrx}), fitting functions (e.g.,
   \code{lrm},\code{cph}, \code{psm}, or \code{ols}), and generic
   analysis functions (\code{anova.rms}, \code{summary.rms},
-  \code{Predict},  \code{plot.Design}, \code{survplot},
+  \code{Predict},  \code{plot.Predict}, \code{survplot},
   \code{fastbw}, \code{validate}, \code{calibrate}, \code{specs.rms},
   \code{which.influence}, \code{latex.rms}, \code{nomogram},
   \code{datadist}, \code{gendata})
@@ -43,7 +43,7 @@ Design(mf, allow.offset=TRUE, intercept=1)
 # f <- fitting.function(formula = y ~ rcs(x1,4) + rcs(x2,5) + x1\%ia\%x2 +
 #                       rcs(x1,4)\%ia\%rcs(x2,5) +
 #                       strat(sex)*age + strat(race)*bp)
-# See Design.trans for rcs, strat, etc.
+# See rms.trans for rcs, strat, etc.
 # \%ia\% is restricted interaction - not doubly nonlinear
 # for x1 by x2 this uses the simple product only, but pools x1*x2
 # effect with nonlinear function for overall tests
@@ -112,7 +112,7 @@ anova(f)                     # Works since Varcov(f) (=Varcov.lm(f)) works
 fastbw(f)
 options(datadist=NULL)
 f <- ols(y ~ x1*x2)          # Saves enough information to do fastbw, anova
-anova(f)                     # Will not do plot.Design since distributions
+anova(f)                     # Will not do Predict since distributions
 fastbw(f)                    # of predictors not saved
 plot(f, x1=seq(100,300,by=.5), x2=.5) 
                              # all values defined - don't need datadist
