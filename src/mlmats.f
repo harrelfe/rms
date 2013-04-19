@@ -39,7 +39,7 @@ C----------------------------------------------------------------------------
 C-----------------------------------------------------------------------------
 C     Computes dot product of b and x, each of length n, returns result in z
 C-----------------------------------------------------------------------------
-      DOUBLE PRECISION b(1),x(1),z
+      DOUBLE PRECISION b(n),x(n),z
       z=0D0
         DO i=1,n
         z=z+b(i)*x(i)
@@ -52,7 +52,7 @@ C     MULTIPLIES N*N SYMMETRIC MATRIX M STORED IN COMPRESSED FORMAT BY
 C     THE N*1 VECTOR V AND RETURNS THE N*1 VECTOR PRODUCT P
 C-----------------------------------------------------------------------------
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      DOUBLE PRECISION M(1),V(1),P(1)
+      DOUBLE PRECISION M(*),V(N),P(N)
       DO 20 I=1,N
       PI=0D0
       II=I*(I-1)/2
@@ -72,7 +72,7 @@ C     V IS AN N X N SYMMETRIC MATRIX AND A IS AN N X 1 VECTOR.
 C     THIS ROUTINE RETURNS P=A'VA
 C-----------------------------------------------------------------------------
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      DOUBLE PRECISION  A(1),V(1)
+      DOUBLE PRECISION  A(N),V(*)
       P=0D0
       K=0
       DO 10 I=1,N
@@ -210,7 +210,7 @@ C       tol is tolerance, e.g. 1d-7.
 C       IF irank (output) < k, result is not computed.  Index of singular
 C       column will be stored in pivot(k) if irank<k.
 C-----------------------------------------------------------------------
-        DOUBLE PRECISION a(1),b(k),aib(k),tol,wv1(k,k),wv2(k),wv3(*)
+        DOUBLE PRECISION a(*),b(k),aib(k),tol,wv1(k,k),wv2(k),wv3(*)
         INTEGER pivot(k),dim(2)
         CALL sqtria(wv1, a, k, 2)
         dim(1)=k
@@ -263,9 +263,9 @@ C       is immediately usable.  Use .FALSE. if further inversions will
 C       be done.
 C-----------------------------------------------------------------------
         IMPLICIT DOUBLE PRECISION (a-h, o-z)
-        DOUBLE PRECISION x(n,n), t(1), s(1), eps
+        DOUBLE PRECISION x(n,n), t(*), s(n), eps
         INTEGER idx(ne)
-        LOGICAL swept(1),lswept(1),negate
+        LOGICAL swept(n),lswept(n),negate
         LOGICAL logeq
         k=0
          DO i=1,n
