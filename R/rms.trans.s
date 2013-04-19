@@ -128,22 +128,21 @@ des.args <- function(x,parms.allowed,call.args) {
 }
 
 ## Function to list all attributes of new sub-design matrix
-set.atr <- function(xd,x,z,colnames,assume,code,parms,nonlinear) {
+set.atr <- function(xd, x, z, colnames, assume, code, parms, nonlinear) {
   ##Note: x argument isn't used
-  ## Added z$units 9Jun99
   if(is.matrix(xd))
     list(dim=dim(xd),dimnames=list(NULL,colnames),class="rms",
          name=z$name, label=z$label, assume=assume, assume.code=code,
          parms=parms, 
          nonlinear=nonlinear,colnames=colnames,units=z$units)
-  else list(dim=dim(xd),class="rms",
+  else list(dim=dim(xd), class="rms",
             name=z$name, label=z$label, assume=assume, assume.code=code,
             parms=parms, 
             nonlinear=nonlinear,colnames=colnames,units=z$units)
 }
 
 ## asis transformation - no transformation	
-asis<-function(...) {
+asis <- function(...) {
   cal <- sys.call()
   xx <- list(...)
   z <- des.args(xx, FALSE, cal)
@@ -154,7 +153,7 @@ asis<-function(...) {
   if(!(is.numeric(xd) | is.logical(xd))) {
     stop(paste(z$name,"is not numeric"))
   }
-
+  
   attributes(xd) <- set.atr(xd,xd,z,z$name,"asis",1,NULL,FALSE)
   xd
 }
@@ -165,7 +164,9 @@ matrx <- function(...) {
 
   cal <- sys.call()
   xx <- list(...)
+#  prn(xx);prn(cal)
   z <- des.args(xx, FALSE, cal)
+#  prn(z)
 
   xd <- xx[[1]]
   nc <- ncol(xd)
@@ -261,14 +262,13 @@ lsp <- function(...) {
 }
 
 ## Restricted cubic spline expansion
-rcs <- function(...)
-{
+rcs <- function(...) {
   
   cal <- sys.call()
   xx <- list(...)
-  z <- des.args(xx,TRUE,cal)
+  z <- des.args(xx, TRUE, cal)
   x <- xx[[1]]
-  if(!is.numeric(x)) stop(paste(z$name,"is not numeric"))
+  if(!is.numeric(x)) stop(paste(z$name, "is not numeric"))
 
   nknots <- .Options$nknots
   if(!length(nknots)) nknots <- 5
@@ -276,29 +276,25 @@ rcs <- function(...)
   parms <- z$parms
   if(!length(parms)) parms <- nknots
 
-  if(length(parms)==1)
-    {
-      nknots <- parms
-      knots <- NULL
-      if(nknots==0)
-        {
-          attributes(x) <- set.atr(x, x, z, z$name, "asis", 1, NULL, FALSE)
-          return(x)
-        }
+  if(length(parms)==1) {
+    nknots <- parms
+    knots <- NULL
+    if(nknots==0) {
+      attributes(x) <- set.atr(x, x, z, z$name, "asis", 1, NULL, FALSE)
+      return(x)
     }
-  else
-    {
-      nknots <- length(parms)
-      knots <- parms
-    }
-
+  }
+  else {
+    nknots <- length(parms)
+    knots <- parms
+  }
+  
   pc <- length(.Options$rcspc) && .Options$rcspc
   
-  if(!length(knots))
-    {
-      xd <- rcspline.eval(x, nk=nknots, inclx=TRUE, pc=pc)
-      knots <- attr(xd,"knots")
-    }
+  if(!length(knots)) {
+    xd <- rcspline.eval(x, nk=nknots, inclx=TRUE, pc=pc)
+    knots <- attr(xd,"knots")
+  }
   else xd <- rcspline.eval(x, knots=knots, inclx=TRUE, pc=pc)
 
   parms  <- knots
@@ -334,7 +330,7 @@ catg <- function(...) {
 
   if(is.null(parms)) {
     if(is.character(y)) {
-      parms <- sort(unique(y[y!="" & y!=" "]))
+      parms <- sort(unique(y[y != "" & y != " "]))
     } else {
       parms <- as.character(sort(unique(y[!is.na(y)])))
     }
@@ -356,9 +352,7 @@ catg <- function(...) {
   }
 
   lp <- length(parms)
-  if(lp<2){
-    stop(paste(nam,"has <2 category levels"))
-  }
+  if(lp < 2) stop(paste(nam,"has <2 category levels"))
 
   attributes(x) <- list(levels=parms,class=c("factor","rms"),
                         name=nam,label=z$label,assume="category",assume.code=5,
@@ -378,38 +372,30 @@ scored <- function(...) {
   x <- xx[[1]]
   if(is.category(x)) {
     levx <- as.numeric(levels(x))
-    if(any(is.na(levx))) {
-      stop(paste("levels for",nam,"not numeric"))
-    }
-    if(is.null(parms)) {
-      parms <- levx
-    }
+    if(any(is.na(levx))) stop(paste("levels for",nam,"not numeric"))
+    if(is.null(parms)) parms <- levx
 
-    ## .Options$warn <- -1   #suppress warning about NAs  14Sep00
+    ## .Options$warn <- -1   #suppress warning about NAs
     oldopt <- options(warn=-1)
     on.exit(options(oldopt))
     x <- levx[x]
   }
 
-  if(!is.numeric(x)){
-    stop(paste(nam,"is not a numeric variable"))
-  }
+  if(!is.numeric(x)) stop(paste(nam,"is not a numeric variable"))
 
   y <- sort(unique(x[!is.na(x)]))
-  if(is.null(parms)) {
-    parms <- y
-  }
+  if(is.null(parms)) parms <- y
 
   parms <- sort(parms)
   n.unique <- length(parms)
-  if(n.unique<3) {
+  if(n.unique < 3) {
     stop("scored specified with <3 levels")
   }
   lp <- length(parms)-1
 
   ## Form contrast matrix of the form linear | dummy | dummy ...
 
-  xd <- matrix(double(1),nrow=length(y),ncol=lp)
+  xd <- matrix(double(1), nrow=length(y), ncol=lp)
   xd[,1] <- y
   name <- character(lp)
   name[1] <- nam
@@ -428,7 +414,8 @@ scored <- function(...) {
   attributes(x) <- c(attributes(x),
                      list(name=nam,label=z$label,assume="scored",assume.code=7,
                           parms=parms,
-                          nonlinear=c(FALSE,rep(TRUE,lp-1)),colnames=name,contrasts=xd))
+                          nonlinear=c(FALSE,rep(TRUE,lp-1)), colnames=name,
+                          contrasts=xd))
   x
 }
 
@@ -443,23 +430,17 @@ strat <- function(...) {
     oldClass(y) <- "factor"
   }
   parms <- z$parms
-  if(is.null(parms)) {
-    parms <- levels(y)
-  }
+  if(is.null(parms)) parms <- levels(y)
   if(is.null(parms)) {
     if(is.character(y)) {
       parms <- sort(unique(y[y!="" & y!=" "]))
-    } else {
-      parms <- as.character(sort(unique(y[!is.na(y)])))
-    }
+    } else parms <- as.character(sort(unique(y[!is.na(y)])))
   }
 
   nam <- z$name
   if(!is.factor(y)) {
     x <- factor(y,levels=parms)
-  } else {
-    x <- y
-  }
+  } else x <- y
 
   if((is.character(y) & any(y!="" & y!=" " & is.na(x))) ||
      (is.numeric(y) & any(!is.na(y) & is.na(x)))) {
@@ -491,7 +472,6 @@ strat <- function(...) {
 gparms <- function(fit,...) {
   name <- as.character(sys.call())[3]
   atr <- fit$Design
-  ## if(!length(atr)) atr <- getOldDesign(fit)   # 13Apr01
   atr$parms[[name]]
 }
 
@@ -504,6 +484,7 @@ gparms <- function(fit,...) {
 ##	for the factor type, and returns x
 ## Last argument is object returned from Getlim (see Design.Misc)
 ## First argument is Design list
+
 value.chk <- function(f, i, x, n, limval, type.range="plot")
 {
   as     <- f$assume.code[i]
@@ -512,74 +493,64 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
   isna   <- length(x)==1 && is.na(x)
   values <- limval$values[[name]]
   charval <- !is.null(values) && is.character(values)
-  if(isna & as!=7)
-    {
-      if(is.null(limval) || match(name, dimnames(limval$limits)[[2]], 0)==0 ||
-         is.na(limval$limits["Adjust to",name]))
+  if(isna & as!=7) {
+    if(is.null(limval) || match(name, dimnames(limval$limits)[[2]], 0)==0 ||
+       is.na(limval$limits["Adjust to",name]))
       stop(paste("variable",name,"does not have limits defined by datadist"))
-
+    
     limits <- limval$limits[,name]
     lim    <- if(type.range=="full") limits[6:7] else limits[4:5]
-    }
+  }
 
-  if(as<5 | as==6)
-    {
-      if(isna)
-        {
-          if(is.null(values))
-            {
-              if(n==0) x <- limits[1:3]
-              else {
-                if(n>0) x <- seq(oldUnclass(lim[1]), #handles chron
-                                 oldUnclass(lim[2]),length=n)
-                else x <- pretty(oldUnclass(lim[1:2]), n=-n)
-                oldClass(x) <- oldClass(lim)
-              }
-            } else x <- values
-        } else
-      {
+  if(as<5 | as==6) {
+      if(isna) {
+        if(is.null(values)) {
+          if(n==0) x <- limits[1:3]
+          else {
+            if(n>0) x <- seq(oldUnclass(lim[1]), #handles chron
+                             oldUnclass(lim[2]),length=n)
+            else x <- pretty(oldUnclass(lim[1:2]), n=-n)
+            oldClass(x) <- oldClass(lim)
+          }
+        } else x <- values
+      } else {
         if(is.character(x) && !charval)
           stop(paste("character value not allowed for variable",
                      name))   #Allow any numeric value
-        if(charval)
-          {
-            j <- match(x, values, 0)
-            if(any(j==0))
-              stop(paste("illegal values for categorical variable:",
-                         paste(x[j==0],collapse=" "),"\nPossible levels:",
-                         paste(values,collapse=" ")))
-          }	
+        if(charval) {
+          j <- match(x, values, 0)
+          if(any(j==0))
+            stop(paste("illegal values for categorical variable:",
+                       paste(x[j==0],collapse=" "),"\nPossible levels:",
+                       paste(values,collapse=" ")))
+        }	
       }
     } else if(as==5|as==8) {
       if(isna) x <- parms
-      else
-        {
-          j <- match(x, parms, 0)  #match converts x to char if needed
-          if(any(j==0))
-            stop(paste("illegal levels for categorical variable:",
-                       paste(x[j==0],collapse=" "),"\nPossible levels:",
-                       paste(parms,collapse=" ")))
-          x
-        }
-    }
-    else if(as==7)
-      {
-        if(isna) x <- parms
-        else if(is.character(x))
-          stop(paste("character value not allowed for",
-                     "variable",name))
-        else
-          {
-            j <- match(x, parms, 0)
-            if(any(j==0))
-              {
-                stop(paste("illegal levels for categorical variable:",
-                           paste(x[j==0],collapse=" "),"\n","Possible levels:",
-                           paste(parms,collapse=" ")))
-              }
-          }
+      else {
+        j <- match(x, parms, 0)  #match converts x to char if needed
+        if(any(j==0))
+          stop(paste("illegal levels for categorical variable:",
+                     paste(x[j==0],collapse=" "),"\nPossible levels:",
+                     paste(parms,collapse=" ")))
+        x
       }
-
+    }
+    else if(as==7) {
+      if(isna) x <- parms
+      else if(is.character(x))
+        stop(paste("character value not allowed for",
+                   "variable",name))
+      else {
+        j <- match(x, parms, 0)
+        if(any(j==0)) {
+          stop(paste("illegal levels for categorical variable:",
+                     paste(x[j==0],collapse=" "),"\n","Possible levels:",
+                     paste(parms,collapse=" ")))
+        }
+      }
+    }
+  
   invisible(x)
 }
 
@@ -590,50 +561,42 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
 ##such as y ~ rcs(x1) + rcs(x2) + x1 %ia% x2 or x1 %ia% rcs(x2)
 ##or rcs(x1) %ia% x2
 
-"%ia%" <- function(x1, x2)
-{
+"%ia%" <- function(x1, x2) {
   a1 <- attributes(x1)
   a2 <- attributes(x2)
   nam <- as.character(sys.call())[-1]
 
-  redo <- function(x,nam)
-    {
-      if(is.null(attr(x,"assume.code")))
-        {
-          if(!is.null(oldClass(x)) && oldClass(x)[1]=="ordered")
-            x <- scored(x, name=nam)
-          else if(is.character(x) | is.category(x))
-            x <- catg(x, name=nam)
-          else if(is.matrix(x)) x <- matrx(x, name=nam)
-          else x <- asis(x, name=nam)
-        }
+  redo <- function(x,nam) {
+      if(is.null(attr(x,"assume.code"))) {
+        if(!is.null(oldClass(x)) && oldClass(x)[1]=="ordered")
+          x <- scored(x, name=nam)
+        else if(is.character(x) | is.category(x))
+          x <- catg(x, name=nam)
+        else if(is.matrix(x)) x <- matrx(x, name=nam)
+        else x <- asis(x, name=nam)
+      }
       ass <- attr(x,"assume.code")
       nam <- attr(x,"name")
-
-      if(ass==5)
-        {
-          colnames <- attr(x,"colnames")
-          len <- length(attr(x,"parms"))-1
-        } else if(ass==8)
-          {
-            prm <- attr(x,"parms")
-            colnames <- paste(nam,"=",prm[-1],sep="")
-            len <- length(prm)-1
-          } else if(ass==7)
-            {
-              prm <- attr(x,"parms")
-              colnames <- c(nam,paste(nam,"=",prm[-(1:2)],sep=""))
-              len <- length(prm)-1
-            } else
-      {
-        if(is.null(ncol(x)))
-          {
-            len <- 1
-            colnames <- nam
-          } else {
-            colnames <- dimnames(x)[[2]]
-            len <- ncol(x)
-          }
+      
+      if(ass==5) {
+        colnames <- attr(x,"colnames")
+        len <- length(attr(x,"parms"))-1
+      } else if(ass==8) {
+        prm <- attr(x,"parms")
+        colnames <- paste(nam,"=",prm[-1],sep="")
+        len <- length(prm)-1
+      } else if(ass==7) {
+        prm <- attr(x,"parms")
+        colnames <- c(nam,paste(nam,"=",prm[-(1:2)],sep=""))
+        len <- length(prm)-1
+      } else {
+        if(is.null(ncol(x))) {
+          len <- 1
+          colnames <- nam
+        } else {
+          colnames <- dimnames(x)[[2]]
+          len <- ncol(x)
+        }
       }
 
       attr(x,"colnames") <- colnames
@@ -669,26 +632,24 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
   if(!is.factor(x1)) x1 <- as.matrix(x1)
   if(!is.factor(x2)) x2 <- as.matrix(x2)
 
-  for(i in 1:l1)
-    {
-      if(as1==5 | as1==8) x1i <- oldUnclass(x1)==(i+1)
-      else x1i <- x1[,i]
-
-      for(j in 1:l2)
-        {
-          ## Remove doubly nonlinear terms
-          if(nl1[i] & nl2[j]) break
-
-          k <- k + 1
-          if(as2==5 | as2==8) x2j <- oldUnclass(x2)==(j+1)
-          else x2j <- x2[,j]
-
-          x[,k] <- x1i * x2j
-          name[k] <- paste(n1[i],"*",n2[j])
-          parms[,k+1] <- c(nl1[i],nl2[j])
-          nonlinear[k] <- nl1[i] | nl2[j]
-        }
+  for(i in 1:l1) {
+    if(as1==5 | as1==8) x1i <- oldUnclass(x1)==(i+1)
+    else x1i <- x1[,i]
+    
+    for(j in 1:l2) {
+      ## Remove doubly nonlinear terms
+      if(nl1[i] & nl2[j]) break
+      
+      k <- k + 1
+      if(as2==5 | as2==8) x2j <- oldUnclass(x2)==(j+1)
+      else x2j <- x2[,j]
+      
+      x[,k] <- x1i * x2j
+      name[k] <- paste(n1[i],"*",n2[j])
+      parms[,k+1] <- c(nl1[i],nl2[j])
+      nonlinear[k] <- nl1[i] | nl2[j]
     }
+  }
   
   dimnames(x) <- list(NULL, name)
   attr(x,"ia") <- c(a1$name, a2$name)
