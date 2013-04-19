@@ -68,8 +68,8 @@ x1 \%ia\% x2
 \arguments{
   \item{\dots}{
 	The arguments \dots above contain the following.
-	\itemize{
-	  \item \code{x}: a predictor variable (or a function of one).  If
+	\describe{
+	  \item{\code{x}}{a predictor variable (or a function of one).  If
 	  you specify e.g. \code{pol(pmin(age,10),3)}, a cubic polynomial
 	  will be fitted in \code{pmin(age,10)} (\code{pmin} is the S vector
 	  element--by--element function). The predictor will be labeled
@@ -77,8 +77,8 @@ x1 \%ia\% x2
 	  original units on the axes. If you use a function such as
 	  \code{pmin}, the predictor is taken as the first argument, and
 	  other arguments must be defined in the frame in effect when
-	  predicted values, etc., are computed.
-	  \item \code{parms}: parameters of transformation (e.g. number or
+	  predicted values, etc., are computed.}
+	  \item{\code{parms}}{parameters of transformation (e.g. number or
 	  location of knots). For \code{pol} the argument is the order of
 	  the polynomial, e.g. \code{2} for quadratic (the usual
 	  default). For \code{lsp} it is a vector of knot locations
@@ -100,11 +100,11 @@ x1 \%ia\% x2
 	  if variable is an S category variable). If omitted, will use
 	  \code{unique(x)}, or \code{levels(x)} if \code{x} is
 	  \code{category} or \code{factor}. \code{parms} is not used for
-	  \code{matrix}.
-	  \item \code{label}: label of predictor for plotting (default =
-	  \code{"label"} attribute or variable name)
-	  \item \code{name}: Name to use for predictor in model. Default is
-	  name of argument to function.
+	  \code{matrix}.}
+	  \item{\code{label}}{label of predictor for plotting (default =
+	  \code{"label"} attribute or variable name)}
+	  \item{\code{name}}{Name to use for predictor in model. Default is
+	  name of argument to function.}
 	}
 }
 \item{x1,x2}{two continuous variables for which to form a
