@@ -112,7 +112,7 @@ y <- ifelse(runif(n) < plogis(L), 1, 0)
 
 f <- lrm(y ~ sex*rcs(cholesterol)+pol(age,2)+blood.pressure, x=TRUE, y=TRUE)
 #Validate full model fit
-validate(f, B=10)              # normally B=150
+validate(f, B=10)              # normally B=300
 validate(f, B=10, group=y)  
 # two-sample validation: make resamples have same numbers of
 # successes and failures as original sample

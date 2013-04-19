@@ -240,7 +240,7 @@ f <- psm(Surv(d.time,death) ~ sex*pol(age,2),
 anova(f)
 fastbw(f)  # if deletes sex while keeping age*sex ignore the result
 f <- update(f, x=TRUE,y=TRUE)       # so can validate, compute certain resids
-validate(f, dxy=TRUE, B=10)      # ordinarily use B=150 or more
+validate(f, dxy=TRUE, B=10)      # ordinarily use B=300 or more
 plot(Predict(f, age, sex))   # needs datadist since no explicit age, hosp.
 survplot(f, age=c(20,60))     # needs datadist since hospital not set here
 # latex(f)

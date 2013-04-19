@@ -287,8 +287,7 @@ x2 <- runif(n)
 y  <- (x1-.5)^2 + x2 + runif(n)
 group <- c(rep('a', n/2), rep('b', n/2))
 A <- NULL
-for(g in c('a','b'))
-  {
+for(g in c('a','b')) {
     f <- ols(y ~ pol(x1,2) + pol(x2,2) + pol(x1,2) \%ia\% pol(x2,2),
              subset=group==g)
     a <- plot(anova(f),

@@ -84,7 +84,7 @@ distance <- (x1 + x2/3 + rnorm(200))^2
 f <- Rq(sqrt(distance) ~ rcs(x1,4) + scored(x2) + x3, x=TRUE, y=TRUE)
 
 #Validate full model fit (from all observations) but for x1 < .75
-validate(f, B=20, subset=x1 < .75)   # normally B=150
+validate(f, B=20, subset=x1 < .75)   # normally B=300
 
 #Validate stepwise model with typical (not so good) stopping rule
 validate(f, B=20, bw=TRUE, rule="p", sls=.1, type="individual")

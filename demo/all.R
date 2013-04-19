@@ -63,10 +63,10 @@ for(method in c('contour','persp','image')) {
 
 
 cat('Doing 25 bootstrap repetitions to validate model\n')
-validate(f, B=25)   # in practice try to use 150
+validate(f, B=25)   # in practice try to use 300
 
 cat('Doing 25 bootstrap reps to check model calibration\n')
-cal <- calibrate(f, B=25)   # use 150 in practice
+cal <- calibrate(f, B=25)   # use 300 in practice
 plot(cal)
 title('Calibration of Unpenalized Model')
 
@@ -358,12 +358,12 @@ survplot(f, sex, n.risk=TRUE)
 # First must add data (design matrix and Srv) to fit object
 f <- update(f, x=TRUE, y=TRUE)
 validate(f, B=10, dxy=TRUE, u=5)  # use t=5 for Dxy (only)
-# Use B=150 in practice
+# Use B=300 in practice
 # Validate model for accuracy of predicting survival at t=1
 # Get Kaplan-Meier estimates by divided subjects into groups
 # of size 200 (for other values of u must put time.inc=u in
 # call to cph)
-cal <- calibrate(f, B=10, u=1, m=200)  # B=150 in practice
+cal <- calibrate(f, B=10, u=1, m=200)  # B=300 in practice
 plot(cal)
 # Check proportional hazards assumption for age terms
 z <- cox.zph(f, 'identity')
