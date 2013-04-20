@@ -1,4 +1,4 @@
-Changes in version 3.7-0 (2013-04-15)
+Changes in version 3.7-0 (2013-04-22)
    * Cleaned up label logic in Surv, made it work with interval2 (thanks:Chris Andrews)
    * Fixed bug in val.prob - wrong denominator for Brier score if obs removed for logistic calibration
    * Fixed inconsistency in predictrms where predict() for Cox models used a design matrix that was centered on medians and modes rather than means (thanks: David van Klaveren <d.vanklaveren.1@erasmusmc.nl>)
@@ -20,6 +20,10 @@ Changes in version 3.7-0 (2013-04-15)
    * Fixed calculation of Brier score, g, gp in lrm.fit by handling special case of computing linear predictor when there are no predictors in the model
    * Fixed bug in prModFit preventing successful latex'ing of penalized lrms
    * Removed \synopsis from two Rd files
+   * Added prmodsel argument to predab.resample
+   * Correct Rd files to change Design to rms
+   * Restricted NAMESPACE to functions expected to be called by users
+   * Improved Fortran code to use better dimensions for array declarations
 
 Changes in version 3.6-3 (2013-01-11)
    * Added Li-Shepherd residuals in residuals.lrm.s, become new default (same as ordinary residuals for binary models)

@@ -55,14 +55,6 @@ rcs(\dots)
 catg(\dots)
 scored(\dots)
 strat(\dots)
-%asis(x, parms, label, name)
-%matrx(x, label, name)
-%pol(x, parms, label, name)
-%lsp(x, parms, label, name)
-%rcs(x, parms, label, name)
-%catg(x, parms, label, name)
-%scored(x, parms, label, name)
-%strat(x, label, name)
 x1 \%ia\% x2
 }
 \arguments{
