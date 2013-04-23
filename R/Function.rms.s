@@ -155,116 +155,110 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
   Nam <- list();  nam.coef <- list()
   assig <- object$assign
 
-  for(i in (1:p))
-    {
-      ass <- ac[i]
-      nam <- name[i]
-      prm <- at$parms[[nam]]
-      if(any(ass==c(5,7,8))) prm <- chr(at$parms[[nam]],digits=digits)
-
-      k <- assig[[TL[i]]]
-      coef <- Coef[k]
-      nam.coef[[i]] <- names(coef)
-      cof <- format.sep(coef,digits)
-      cof <- ifelse(coef<=0, cof, paste("+", cof, sep=""))
-      
-      switch(ass,
-             {
-               nam <- name[i]; Nam[[i]] <- nam
-               q <- paste(cof, '*', nam, sep="")
-             },
-
-             {
-               q <- ""; pow <- 1:prm
-               nams <- ifelse(pow==1,nam,paste(nam,"^",pow,"",sep=""))
-               Nam[[i]] <- nams
-               for(j in pow) q <- paste(q, cof[j], "*", nams[j], sep="")
-             },
-
-             {  
-               q <- paste(cof[1], "*", nam, sep="")
-               nams <- nam
-               kn <- format.sep(-prm,digits)
-               for(j in 1:length(prm))
-                 {
-                   zz <- paste("pmax(", nam, if(prm[j]<0) "+" else NULL, 
-                               if(prm[j]!=0) kn[j] else NULL, 
-                               ",0)", sep="")
-                   nams <- c(nams, zz)
-                   q <- paste(q, cof[j+1], "*", zz, sep="")
-                 }
-               Nam[[i]] <- nams
-             },
-             
-             {
-               q <- attr(rcspline.restate(prm, coef, x=nam, digits=digits),
-                         'function.text')
-               if(coef[1]>=0) q <- paste('+',q,sep='')
-               nn <- nam
-               for(j in 1:(length(prm)-2))
-                 {
-                   nam <- paste(nam, "'", sep=""); nn <- c(nn, nam)
-                 }
-               Nam[[i]] <- nn       #Two.Way only needs first name
+  for(i in (1:p)) {
+    ass <- ac[i]
+    nam <- name[i]
+    prm <- at$parms[[nam]]
+    if(any(ass==c(5,7,8))) prm <- chr(at$parms[[nam]],digits=digits)
+    
+    k <- assig[[TL[i]]]
+    coef <- Coef[k]
+    nam.coef[[i]] <- names(coef)
+    cof <- format.sep(coef,digits)
+    cof <- ifelse(coef<=0, cof, paste("+", cof, sep=""))
+    
+    switch(ass,
+           {
+             nam <- name[i]; Nam[[i]] <- nam
+             q <- paste(cof, '*', nam, sep="")
+           },
+           
+           {
+             q <- ""; pow <- 1:prm
+             nams <- ifelse(pow==1,nam,paste(nam,"^",pow,"",sep=""))
+             Nam[[i]] <- nams
+             for(j in pow) q <- paste(q, cof[j], "*", nams[j], sep="")
+           },
+           
+           {  
+             q <- paste(cof[1], "*", nam, sep="")
+             nams <- nam
+             kn <- format.sep(-prm,digits)
+             for(j in 1:length(prm)) {
+               zz <- paste("pmax(", nam, if(prm[j]<0) "+" else NULL, 
+                           if(prm[j]!=0) kn[j] else NULL, 
+                           ",0)", sep="")
+               nams <- c(nams, zz)
+               q <- paste(q, cof[j+1], "*", zz, sep="")
+             }
+             Nam[[i]] <- nams
+           },
+           
+           {
+             q <- attr(rcspline.restate(prm, coef, x=nam, digits=digits),
+                       'function.text')
+             if(coef[1]>=0) q <- paste('+',q,sep='')
+             nn <- nam
+             for(j in 1:(length(prm)-2)) {
+               nam <- paste(nam, "'", sep=""); nn <- c(nn, nam)
+             }
+             Nam[[i]] <- nn       #Two.Way only needs first name
                                         #for 2nd-order ia with 1 d.f. (restr ia)
                                         #Three.Way needs original design matrix
-             } ,
-             {
-               nn <- paste('(',nam,'==',prm[-1],')',sep='')
-               Nam[[i]] <- nn
-               q <- ''
-               for(j in 1:(length(prm)-1))
-                 {
-                   vv <- paste(cof[j], nn[j], sep="*")
-                   q <- paste(q, vv, sep="")
-                 }
-             },
+           } ,
+           {
+             nn <- paste('(',nam,'==',prm[-1],')',sep='')
+             Nam[[i]] <- nn
+             q <- ''
+             for(j in 1:(length(prm)-1)) {
+               vv <- paste(cof[j], nn[j], sep="*")
+               q <- paste(q, vv, sep="")
+             }
+           },
+           
+           q <- '',
+           
+           {
+             q <- paste(cof[1], "*", nam, sep="")
+             nams <- nam
+             for(j in 3:length(prm)) {
+               zz <- prm[j]
+               vv <- paste(cof[j-1], "*(", nam, "==", zz, ")", sep="")
+               nams <- c(nams, zz)
+               q <- paste(q, vv, sep="")
+             }
+             Nam[[i]] <- nams
+           },
+           ##Strat factor doesn't exist as main effect, but keep variable
+           ##names and their lengths if they will appear in interactions later
+           {
+             ## was if(!length(Nam[[i]]) && any...
+             if(any(interaction==i)) {
+               nam.coef[[i]] <- paste(name[i], "=", prm[-1], sep="")
+               Nam[[i]] <- prm[-1]
+             }
+             q <- "" },
+           
+           {  
+             if(prm[3,1] == 0) 
+               q <- Two.Way(prm,Nam,nam.coef,cof,coef,object,
+                            name, at, digits)
+             else q <- Three.Way(prm,Nam,nam.coef,cof,coef,
+                                 object,at, digits)
              
-             q <- '',
-             
-             {
-               q <- paste(cof[1], "*", nam, sep="")
-               nams <- nam
-               for(j in 3:length(prm))
-                 {
-                   zz <- prm[j]
-                   vv <- paste(cof[j-1], "*(", nam, "==", zz, ")", sep="")
-                   nams <- c(nams, zz)
-                   q <- paste(q, vv, sep="")
-                 }
-               Nam[[i]] <- nams 
-             },
-             ##Strat factor doesn't exist as main effect, but keep variable
-             ##names and their lengths if they will appear in interactions later
-             {
-               if(!length(Nam[[i]]) && any(interaction==i))
-                 {
-                   nam.coef[[i]] <- paste(name[i], "=", prm[-1], sep="")
-                   Nam[[i]] <- prm[-1]
-                 }
-               q <- "" },
-             
-             {  
-               if(prm[3,1]==0) 
-                 q <- Two.Way(prm,Nam,nam.coef,cof,coef,object,
-                              name, at, digits)
-              else q <- Three.Way(prm,Nam,nam.coef,cof,coef,
-                                  object,at, digits)
-            
-             }, 
-             {
-               nam <- names(coef)
-               q <- ""
-               nam <- paste("(", nam, ")", sep="")
-               Nam[[i]] <- nam
-               for(j in 1:length(prm))
-                 {
-                   vv <- paste(cof[j], '*', nam[j], sep="")
-                   q <- paste(q, vv, sep="")
-                 }
-             }) 
-      z <- paste(z, q, sep='')
-    }
+           }, 
+           {
+             nam <- names(coef)
+             q <- ""
+             nam <- paste("(", nam, ")", sep="")
+             Nam[[i]] <- nam
+             for(j in 1:length(prm)) {
+               vv <- paste(cof[j], '*', nam[j], sep="")
+               q <- paste(q, vv, sep="")
+             }
+           }) 
+    z <- paste(z, q, sep='')
+  }
   z <- paste(z, '}')
   eval(parse(text=z))
 }
