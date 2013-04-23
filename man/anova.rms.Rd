@@ -303,42 +303,40 @@ dotplot(group ~ partialR2 | Variable, data=A, xlab=ex)
 dotplot(Variable ~ partialR2, groups=group, data=A, xlab=ex,
         auto.key=list(corner=c(.5,.5)))
 
+
 # Suppose that a researcher wants to make a big deal about a variable 
 # because it has the highest adjusted chi-square.  We use the
 # bootstrap to derive 0.95 confidence intervals for the ranks of all
 # the effects in the model.  We use the plot method for anova, with
 # pl=FALSE to suppress actual plotting of chi-square - d.f. for each
-# bootstrap repetition.  We rank the negative of the adjusted
-# chi-squares so that a rank of 1 is assigned to the highest.
-# It is important to tell plot.anova.rms not to sort the results,
-# or every bootstrap replication would have ranks of 1,2,3 for the stats.
+# bootstrap repetition.  
+# It is important to tell plot.anova.rms not to sort the results, or
+# every bootstrap replication would have ranks of 1,2,3,... for the stats.
 
-n <- 200
-mydata <- data.frame(x1=runif(n), x2=runif(n),
-                     sex=factor(sample(c('female','male'),n,TRUE)))
-set.seed(9)  # so can reproduce example
-mydata$y <- with(mydata,
- ifelse(runif(n) <= plogis(x1 - .5 + .5*(x2-.5) + .5*(sex=='male')),1,0))
-f <- lrm(y ~ rcs(x1,4) + pol(x2,2) + sex, data=mydata)
+n <- 300
+set.seed(1)
+d <- data.frame(x1=runif(n), x2=runif(n),  x3=runif(n),
+   x4=runif(n), x5=runif(n), x6=runif(n),  x7=runif(n),
+   x8=runif(n), x9=runif(n), x10=runif(n), x11=runif(n),
+   x12=runif(n))
+d$y <- with(d, 1*x1 + 2*x2 + 3*x3 +  4*x4  + 5*x5 + 6*x6 +
+               7*x7 + 8*x8 + 9*x9 + 10*x10 + 11*x11 +
+              12*x12 + 9*rnorm(n))
 
-if(require(boot)) {
-   b <- boot(mydata, function(data, i, ...)
-            rank(-plot(anova(update(f, data=data, subset=i)),
-                  sort='none', pl=FALSE)),
-            R=25)  # should really do R=500 but will take a while
-   Rank <- b$t0
-   lim <- t(apply(b$t, 2, quantile, probs=c(.025,.975)))
-
-   # Use the Hmisc Dotplot function to display ranks and their confidence
-   # intervals.  Sort the categories by descending adj. chi-square, for ranks
-   original.chisq <- plot(anova(f), sort='none', pl=FALSE)
-   predictor <- as.factor(names(original.chisq))
-   predictor <- reorder(predictor, -original.chisq)
-
-   Dotplot(predictor ~ Cbind(Rank, lim), pch=3, xlab='Rank', 
-           main=expression(paste(
-    'Ranks and 0.95 Confidence Limits for ',chi^2,' - d.f.')))
-}
+f <- ols(y ~ x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12, data=d)
+B <- 20   # actually use B=1000
+ranks <- matrix(NA, nrow=B, ncol=12)
+rankvars <- function(fit)
+  rank(plot(anova(fit), sort='none', pl=FALSE))
+Rank <- rankvars(f)
+for(i in 1:B) {
+  j <- sample(1:n, n, TRUE)
+  bootfit <- update(f, data=d, subset=j)
+  ranks[i,] <- rankvars(bootfit)
+  }
+lim <- t(apply(ranks, 2, quantile, probs=c(.025,.975)))
+predictor <- factor(names(Rank), names(Rank))
+Dotplot(predictor ~ Cbind(Rank, lim), pch=3, xlab='Rank') 
 }
 \keyword{models}
 \keyword{regression}
