@@ -1,4 +1,4 @@
-export(asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineRelatedPredictors,confplot,contrast,coxphFit,cph,cr.setup,datadist,effective.df,fastbw,formatNP,gendata,gIndex,GiniMd,Glm,Gls,groupkm,Hazard,hazard.ratio.plot,histdensity,"%ia%",ie.setup,interactions.containing,legend.nomabbrev,lm.pfit,lrm,lrm.fit,lrtest,lsp,matinv,matrx,Newlabels,Newlevels,nomogram,num.intercepts,ols,ols.influence,oos.loglik,pantext,Penalty.matrix,Penalty.setup,pentrace,perimeter,perlcode,plot.lrm.partial,plot.xmean.ordinaly,pol,pphsm,predab.resample,Predict,psm,rcs,related.predictors,reVector,robcov,Rq,sascode,scored,sensuc,setPb,show.influence,specs,strat,Surv,"[.Surv",survdiffplot,survest,Survival,survplot,univarLR,validate,val.prob,val.probg,val.surv,vif,which.influence)
+export(asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineRelatedPredictors,confplot,contrast,coxphFit,cph,cr.setup,datadist,effective.df,fastbw,formatNP,gendata,gIndex,GiniMd,Glm,Gls,groupkm,Hazard,hazard.ratio.plot,histdensity,"%ia%",ie.setup,interactions.containing,legend.nomabbrev,lm.pfit,lrm,lrm.fit,lrtest,lsp,matinv,matrx,Newlabels,Newlevels,nomogram,num.intercepts,ols,ols.influence,oos.loglik,pantext,Penalty.matrix,Penalty.setup,pentrace,perimeter,perlcode,plot.lrm.partial,plot.xmean.ordinaly,pol,pphsm,predab.resample,Predict,psm,rcs,related.predictors,reVector,robcov,Rq,sascode,scored,sensuc,setPb,show.influence,specs,strat,survreg.auxinfo,Surv,"[.Surv",survdiffplot,survest,Survival,survplot,univarLR,validate,val.prob,val.probg,val.surv,vif,which.influence)
 
 useDynLib(rms)
 
@@ -105,6 +105,8 @@ S3method(Quantile, cph)
 S3method(Quantile, psm)
 S3method(Quantile, rms)
 
+S3method(rbind, Predict)
+
 S3method(residuals, bj)
 S3method(residuals, cph)
 S3method(residuals, Glm)
@@ -139,5 +141,14 @@ S3method(validate, psm)
 S3method(validate, rms)
 S3method(validate, rpart)
 S3method(validate, Rq)
+
+S3method(vcov, cph)
+S3method(vcov, Glm)
+S3method(vcov, Gls)
+S3method(vcov, lrm)
+S3method(vcov, ols)
+S3method(vcov, pphsm)
+S3method(vcov, psm)
+S3method(vcov, rms)
 
 S3method("[", rms)

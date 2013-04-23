@@ -26,15 +26,14 @@ levels of gray scale (colors for Windows).
 
 If \code{usebootcoef=TRUE} and the fit was run through \code{bootcov},
 the confidence intervals are bootstrap nonparametric percentile
-confidence intervals or BCa intervals, obtained on contrasts
+confidence intervals, basic bootstrap, or BCa intervals, obtained on contrasts
 evaluated on all bootstrap samples.
-
 }
 \usage{
 \method{summary}{rms}(object, \dots, est.all=TRUE, antilog,
 conf.int=.95, abbrev=FALSE, vnames=c("names","labels"),
 conf.type=c('individual','simultaneous'),
-usebootcoef=TRUE, boot.type=c("percentile","bca"), verbose=FALSE)
+usebootcoef=TRUE, boot.type=c("percentile","bca","basic"), verbose=FALSE)
 
 \method{print}{summary.rms}(x, \dots)
 
@@ -113,11 +112,12 @@ factor levels for categorical variables in the model.
 }
 \item{usebootcoef}{
   If \code{fit} was the result of \code{bootcov} but you want to use the
-  bootstrap covariance matrix instead of the nonparametric percentile
-  or BCa methods for confidence intervals (which uses all the bootstrap
+  bootstrap covariance matrix instead of the nonparametric percentile,
+  basic, or BCa methods for confidence intervals (which uses all the bootstrap
   coefficients), specify \code{usebootcoef=FALSE}.}
 \item{boot.type}{set to \code{'bca'} to compute BCa confidence
-	limits.  The default is to compute percentile intervals}
+	limits or to \code{'basic'} to use the basic bootstrap.  The default
+	is to compute percentile intervals.} 
 \item{verbose}{set to \code{TRUE} when \code{conf.type='simultaneous'}
   to get output describing scope of simultaneous adjustments}
 \item{x}{result of \code{summary}}

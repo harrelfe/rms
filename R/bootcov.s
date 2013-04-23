@@ -458,7 +458,7 @@ confplot <- function(obj, X, against,
 # Use boot package to get BCa confidence limits for a linear combination of
 # model coefficients, e.g. bootcov results boot.Coef
 # If boot.ci fails return only ordinary percentile CLs
-bootBCa <- function(estimate, estimates, type=c('percentile','bca'),
+bootBCa <- function(estimate, estimates, type=c('percentile','bca','basic'),
                     n, seed, conf.int=0.95) {
   type <- match.arg(type)
   if(type=='bca' && !require(boot)) stop('boot package not installed')
@@ -487,16 +487,16 @@ bootBCa <- function(estimate, estimates, type=c('percentile','bca'),
               seed = seed,
               statistic = function(...) 1e10,
               call = match.call())
-    bca <- try(boot.ci(w, type='bca', conf=conf.int), silent=TRUE)
-    if(inherits(bca, 'try-error')) {
-      bca <- c(NA,NA)
+    cl <- try(boot.ci(w, type=type, conf=conf.int), silent=TRUE)
+    if(inherits(cl, 'try-error')) {
+      cl <- c(NA,NA)
     warning('could not obtain BCa bootstrap confidence interval')
     } else {
-      bca <- bca$bca
-      m <- length(bca)
-      bca <- bca[c(m-1, m)]
+      cl <- if(type=='bca') cl$bca else cl$basic
+      m <- length(cl)
+      cl <- cl[c(m-1, m)]
     }
-    lim[,i] <- bca
+    lim[,i] <- cl
   }
   if(ne==1) as.vector(lim) else lim
 }

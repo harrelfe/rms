@@ -4,7 +4,7 @@ contrast.rms <-
   function(fit, a, b, cnames=NULL,
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'), usebootcoef=TRUE,
-           boot.type=c('percentile','bca'),
+           boot.type=c('percentile','bca','basic'),
            weights='equal', conf.int=0.95, tol=1e-7, expand=TRUE, ...)
 {
   type <- match.arg(type)
@@ -16,9 +16,10 @@ contrast.rms <-
               qnorm((1+conf.int)/2)
   bcoef <- if(usebootcoef) fit$boot.Coef
   if(length(bcoef) && conf.type != 'simultaneous')
-    conf.type <-
-      if(boot.type=='percentile') 'bootstrap nonparametric percentile'
-      else 'bootstrap BCa'
+    conf.type <- switch(boot.type,
+                        percentile = 'bootstrap nonparametric percentile',
+                        bca = 'bootstrap BCa',
+                        basic = 'basic bootstrap')
   
   da <- do.call('gendata', list(fit, factors=a, expand=expand))
   xa <- predict(fit, da, type='x')

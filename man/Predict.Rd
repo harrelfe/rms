@@ -20,8 +20,8 @@ plotting predicted values but there is also a \code{print} method.
 When the first argument to \code{Predict} is a fit object created by
 \code{bootcov} with \code{coef.reps=TRUE}, confidence limits come from
 the stored matrix of bootstrap repetitions of coefficients, using 
-bootstrap percentile nonparametric confidence limits or BCa limits.
-Such confidence 
+bootstrap percentile nonparametric confidence limits, basic bootstrap,
+or BCa limits.  Such confidence 
 intervals do not make distributional assumptions.  You can force
 \code{Predict} to instead use the bootstrap covariance matrix by setting
 \code{usebootcoef=FALSE}.  If \code{coef.reps} was \code{FALSE},
@@ -48,7 +48,7 @@ Predict(x, ..., fun,
         type = c("predictions", "model.frame", "x"),
         np = 200, conf.int = 0.95,
         conf.type = c("mean", "individual","simultaneous"),
-        usebootcoef=TRUE, boot.type=c("percentile","bca"),
+        usebootcoef=TRUE, boot.type=c("percentile","bca","basic"),
         adj.zero = FALSE, ref.zero = FALSE,
         non.slopes, time = NULL, loglog = FALSE, digits=4, name, factors=NULL)
 
@@ -121,7 +121,8 @@ Predict(x, ..., fun,
 	covariance matrix estimator even when bootstrap coefficient reps are
 	present}
   \item{boot.type}{set to \code{'bca'} to compute BCa confidence
-	limits.  The default is to compute percentile intervals}
+	limits or \code{'basic'} to use the basic bootstrap.  The default is
+	to compute percentile intervals} 
   \item{adj.zero}{
 	Set to \code{TRUE} to adjust all non-plotted variables to 0 (or
 	reference cell for categorical variables) and to omit intercept(s)
@@ -277,7 +278,7 @@ ddist <- datadist(age, sex)
 Srv <- Surv(t,e)
 
 # Fit log-normal survival model and plot median survival time vs. age
-f <- psm(Surv(t, e) ~ rcs(age), dist=if(.R.)'lognormal' else 'gaussian')
+f <- psm(Surv(t, e) ~ rcs(age), dist='lognormal')
 med <- Quantile(f)       # Creates function to compute quantiles
                          # (median by default)
 Predict(f, age, fun=function(x)med(lp=x))

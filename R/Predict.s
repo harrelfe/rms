@@ -3,7 +3,7 @@ Predict <-
            fun, type=c("predictions","model.frame","x"),
            np=200,
            conf.int=.95, conf.type=c('mean','individual','simultaneous'),
-           usebootcoef=TRUE, boot.type=c('percentile','bca'),
+           usebootcoef=TRUE, boot.type=c('percentile','bca','basic'),
            adj.zero=FALSE, ref.zero=FALSE,
            non.slopes, time=NULL, loglog=FALSE, digits=4, name, factors=NULL) {
 

@@ -2,7 +2,7 @@ pphsm <- function(fit)
 {
   warning("at present, pphsm does not return the correct covariance matrix")
 
-  clas <- c(oldClass(fit), fit$fitFunction)
+  clas <- c(class(fit), fit$fitFunction)
   if(!any(c('psm','survreg') %in% clas))
     stop("fit must be created by psm or survreg")
   if(fit$dist %nin% c('exponential','weibull'))
@@ -10,8 +10,7 @@ pphsm <- function(fit)
 
   fit$coefficients <- -fit$coefficients/fit$scale
   fit$scale.pred   <- c("log Relative Hazard","Hazard Ratio")
-  oldClass(fit) <- c("pphsm",oldClass(fit))
-
+  class(fit) <- c("pphsm", class(fit))
   fit
 }
 
@@ -33,18 +32,16 @@ print.pphsm <- function(x, digits = max(options()$digits - 4, 3),
   print(c(x$coef, x$icoef[2]), digits=digits)
 
   correl <- x$correl
-  if (correlation && !is.null(x$correl))
-    {  ## FEH
-      p <- dim(correl)[2]
-      if (p > 1)
-        {
-          cat("\nCorrelation of Coefficients:\n")
-          ll <- lower.tri(correl)
-          correl[ll] <- format(round(correl[ll], digits = digits))
-          correl[!ll] <- ""
-          print(correl[-1, -p, drop = FALSE], quote = FALSE)
-        }
-    }
+  if (correlation && !is.null(x$correl)) {  ## FEH
+    p <- dim(correl)[2]
+      if (p > 1) {
+        cat("\nCorrelation of Coefficients:\n")
+        ll <- lower.tri(correl)
+        correl[ll] <- format(round(correl[ll], digits = digits))
+        correl[!ll] <- ""
+        print(correl[-1, -p, drop = FALSE], quote = FALSE)
+      }
+  }
   cat("\n")
   
   invisible()

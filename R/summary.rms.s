@@ -18,7 +18,8 @@
 summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                         abbrev=FALSE, vnames=c("names","labels"),
                         conf.type=c('individual','simultaneous'),
-                        usebootcoef=TRUE, boot.type=c('percentile','bca'),
+                        usebootcoef=TRUE,
+                        boot.type=c('percentile','bca','basic'),
                         verbose=FALSE)
 {	
   obj.name <- as.character(sys.call())[2]
@@ -28,9 +29,10 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   vnames <- match.arg(vnames)
   conf.type <- match.arg(conf.type)
   boot.type <- match.arg(boot.type)
-  blabel <-
-    if(boot.type == 'percentile') 'bootstrap nonparametric percentile'
-  else 'bootstrap BCa'
+  blabel <- switch(boot.type,
+                   percentile = 'bootstrap nonparametric percentile',
+                   bca = 'bootstrap BCa',
+                   basic = 'basic bootstrap')
   if(conf.type == 'simultaneous') require(multcomp)
   
   assume <- at$assume.code
@@ -277,11 +279,12 @@ print.summary.rms <- function(x, ...)
   cat(attr(x,"heading"),"\n\n")
   print(cstats,quote=FALSE)
   if((A <- attr(x,"adjust"))!="") cat("\nAdjusted to:", A,"\n")
-  blab <- if(attr(x, 'conf.type') == 'bootstrap nonparametric percentile')
-    'Bootstrap nonparametric percentile confidence intervals'
-  else if(attr(x, 'conf.type') == 'bootstrap BCa')
-    'Bootstrap BCa confidence intervals'
-  else ''
+  blab <- switch(attr(x, 'conf.type'),
+                 'bootstrap nonparametric percentile' = 
+                  'Bootstrap nonparametric percentile confidence intervals',
+                 'bootstrap BCa' = 'Bootstrap BCa confidence intervals',
+                 'basic bootstrap' = 'Basic bootstrap confidence intervals',
+                 '')
   if(blab != '') cat('\n', blab, '\n', sep='')
   cat('\n')
   invisible()

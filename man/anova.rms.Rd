@@ -313,36 +313,31 @@ dotplot(Variable ~ partialR2, groups=group, data=A, xlab=ex,
 # It is important to tell plot.anova.rms not to sort the results,
 # or every bootstrap replication would have ranks of 1,2,3 for the stats.
 
-
-mydata <- data.frame(x1=runif(200), x2=runif(200),
-                     sex=factor(sample(c('female','male'),200,TRUE)))
+n <- 200
+mydata <- data.frame(x1=runif(n), x2=runif(n),
+                     sex=factor(sample(c('female','male'),n,TRUE)))
 set.seed(9)  # so can reproduce example
-mydata$y <- ifelse(runif(200)<=plogis(mydata$x1-.5 + .5*(mydata$x2-.5) + 
-                   .5*(mydata$sex=='male')),1,0)
+mydata$y <- with(mydata,
+ ifelse(runif(n) <= plogis(x1 - .5 + .5*(x2-.5) + .5*(sex=='male')),1,0))
+f <- lrm(y ~ rcs(x1,4) + pol(x2,2) + sex, data=mydata)
 
+if(require(boot)) {
+   b <- boot(mydata, function(data, i, ...)
+            rank(-plot(anova(update(f, data=data, subset=i)),
+                  sort='none', pl=FALSE)),
+            R=25)  # should really do R=500 but will take a while
+   Rank <- b$t0
+   lim <- t(apply(b$t, 2, quantile, probs=c(.025,.975)))
 
-if(require(boot))
-   {
-      b <- boot(mydata, function(data, i, ...) rank(-plot(anova(
-                lrm(y ~ rcs(x1,4)+pol(x2,2)+sex,data,subset=i)), 
-                sort='none', pl=FALSE)),
-                R=25)  # should really do R=500 but will take a while
-      Rank <- b$t0
-      lim <- t(apply(b$t, 2, quantile, probs=c(.025,.975)))
+   # Use the Hmisc Dotplot function to display ranks and their confidence
+   # intervals.  Sort the categories by descending adj. chi-square, for ranks
+   original.chisq <- plot(anova(f), sort='none', pl=FALSE)
+   predictor <- as.factor(names(original.chisq))
+   predictor <- reorder(predictor, -original.chisq)
 
-
-# Use the Hmisc Dotplot function to display ranks and their confidence
-# intervals.  Sort the categories by descending adj. chi-square, for ranks
-      original.chisq <- plot(anova(lrm(y ~ rcs(x1,4)+pol(x2,2)+sex,
-                       data=mydata)),
-                       sort='none', pl=FALSE)
-      predictor <- as.factor(names(original.chisq))
-      predictor <- reorder(predictor, -original.chisq)
-
-      Dotplot(predictor ~ Cbind(Rank, lim), pch=3, xlab='Rank', 
-              main=if(.R.) expression(paste(
-      'Ranks and 0.95 Confidence Limits for ',chi^2,' - d.f.')) else
-      'Ranks and 0.95 Confidence Limits for Chi-square - d.f.')
+   Dotplot(predictor ~ Cbind(Rank, lim), pch=3, xlab='Rank', 
+           main=expression(paste(
+    'Ranks and 0.95 Confidence Limits for ',chi^2,' - d.f.')))
 }
 }
 \keyword{models}

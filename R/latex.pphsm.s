@@ -9,12 +9,13 @@ latex.pphsm <-
   whichThere <- length(which)
   w <- if(length(caption)) paste('\\begin{center} \\bf',caption,'\\end{center}')
 
-  sc <- exp(object$parms)
+  sc <- object$scale
   at <- object$Design
 
   if(!whichThere & !inline)
     {
-      dist <- paste("\\exp\\{-t^{",format(1/sc),"} \\exp(X\\hat{\\beta})\\}")
+      dist <- paste("\\exp\\{-t^{",format(1/sc, digits=digits),
+                    "} \\exp(X\\hat{\\beta})\\}")
       w <- c(w,paste("\\[{\\rm Prob}\\{T\\geq t\\} = ",dist,
                      "{\\rm \\ \\ where} \\\\ \\]",sep=""))
     }				

@@ -24,6 +24,10 @@ Changes in version 3.7-0 (2013-04-22)
    * Correct Rd files to change Design to rms
    * Restricted NAMESPACE to functions expected to be called by users
    * Improved Fortran code to use better dimensions for array declarations
+   * Added the basic bootstrap for confidence limits for bootBCa, contrast, Predict, summary
+   * Fixed bug in latex.pphsm, neatened pphsm code
+   * Neatened code in rms.s
+   * Improved code for bootstrapping ranks of variables in anova.rms help file
 
 Changes in version 3.6-3 (2013-01-11)
    * Added Li-Shepherd residuals in residuals.lrm.s, become new default (same as ordinary residuals for binary models)

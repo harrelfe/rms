@@ -10,7 +10,7 @@ statistics when \code{estimate} has length greater than 1.  In that
 case, \code{estimates} must have the same number of columns as
 \code{estimate} has values.
 }
-\usage{bootBCa(estimate, estimates, type=c('percentile','bca'),
+\usage{bootBCa(estimate, estimates, type=c('percentile','bca','basic'),
                n, seed, conf.int = 0.95)}
 \arguments{
   \item{estimate}{original whole-sample estimate}
@@ -44,6 +44,7 @@ est <- X %*% coef(b)
 ests <- t(X %*% t(b$boot.Coef))
 bootBCa(est, ests, n=100, seed=seed)
 bootBCa(est, ests, type='bca', n=100, seed=seed)
+bootBCa(est, ests, type='basic', n=100, seed=seed)
 }}
 \keyword{bootstrap}
 
