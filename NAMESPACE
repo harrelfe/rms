@@ -3,15 +3,16 @@ export(asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineR
 useDynLib(rms)
 
 import(Hmisc)
-
 importFrom(survival, coxph.fit, coxph.control, survfit, survreg.fit)
 importFrom(stats, nobs)
 
 S3method(AIC, rms)
 S3method(anova, rms)
+
 S3method(calibrate, cph)
 S3method(calibrate, default)
 S3method(calibrate, psm)
+
 S3method(contrast, rms)
          
 S3method(Function, cph)
@@ -74,7 +75,7 @@ S3method(predict, ols)
 S3method(predict, psm)
 S3method(predict, Rq)
 
-S3method(print, anova.rms)
+S3method(print, `anova.rms`)
 S3method(print, bj)
 S3method(print, calibrate)
 S3method(print, contrast.rms)
