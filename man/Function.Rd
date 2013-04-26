@@ -74,7 +74,8 @@ Vanderbilt University\cr
 f.harrell@vanderbilt.edu
 }
 \seealso{
-\code{\link{latex.rms}}, \code{\link[Hmisc]{transcan}}, \code{\link{predict.rms}}, \code{\link{rms}}, \code{\link{rms.trans}}
+\code{\link{latex.rms}}, \code{\link[Hmisc]{transcan}},
+\code{\link{predict.rms}}, \code{\link{rms}}, \code{\link{rms.trans}} 
 }
 \examples{
 set.seed(1331)
@@ -100,7 +101,7 @@ options(datadist=NULL)
 \dontrun{
 # Make self-contained functions for computing survival probabilities
 # using a log-normal regression
-f <- psm(Surv(d.time, death) ~ rcs(age,4)*sex, dist='gaussian')
+f <- psm(Srv(d.time, death) ~ rcs(age,4)*sex, dist='gaussian')
 g <- Function(f)
 surv <- Survival(f)
 # Compute 2 and 5-year survival estimates for 50 year old male

@@ -2,7 +2,7 @@ validate.psm <-
   function(fit, method="boot", B=40,
            bw=FALSE, rule="aic", type="residual", sls=.05, aics=0,
            force=NULL, estimates=TRUE, pr=FALSE,
-           dxy=FALSE, tol=1e-12, rel.tolerance=1e-5, maxiter=15, ...)
+           dxy=TRUE, tol=1e-12, rel.tolerance=1e-5, maxiter=15, ...)
 {
 
   xb <- fit$linear.predictors
@@ -18,7 +18,7 @@ validate.psm <-
 
   
   distance <- function(x, y, fit, iter, evalfit=FALSE,
-                       fit.orig, dxy=FALSE, dist,parms,
+                       fit.orig, dxy=TRUE, dist,parms,
                        tol=1e-12, maxiter=15, rel.tolerance=1e-5, ...)
     {
       ##Assumes y is matrix with 1st col=time, 2nd=event indicator
@@ -63,7 +63,7 @@ validate.psm <-
       nam <- c("R2", "Intercept", "Slope", "D", "U", "Q", "g")
       if(dxy)
         {
-          Dxy <- rcorr.cens(x,y)["Dxy"]
+          Dxy <- dxy.cens(x,y)["Dxy"]
           z <- c(Dxy, z)
           nam <- c("Dxy", nam)
         }

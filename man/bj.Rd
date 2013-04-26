@@ -59,7 +59,7 @@ bjplot(fit, which=1:dim(X)[[2]])
 \method{validate}{bj}(fit, method="boot", B=40,
          bw=FALSE,rule="aic",type="residual",sls=.05,aics=0,
          force=NULL, estimates=TRUE, pr=FALSE,
-		 dxy=TRUE, tol=1e-7, rel.tolerance=1e-3, maxiter=15, \dots)
+		 tol=1e-7, rel.tolerance=1e-3, maxiter=15, \dots)
 
 bj.fit(x, y, control)
 }
@@ -79,7 +79,8 @@ bj.fit(x, y, control)
     \code{x=TRUE} to include the design matrix in the fit object. 
   }
   \item{y}{
-    a \code{Surv} object to pass to \code{bj.fit} as the two-column response
+    a \code{Srv} or \code{Surv} object to pass to \code{bj.fit} as the
+	two-column response 
     variable.  Only right censoring is allowed, and there need not be any
     censoring.  For \code{bj}, set \code{y} to \code{TRUE} to include the
     two-column response matrix, with the 
@@ -106,8 +107,6 @@ bj.fit(x, y, control)
     set to \code{"model.frame"} or \code{"model.matrix"} to return one of those
     objects rather than the model fit.
   }
-  \item{dxy}{set to \code{FALSE} to prevent Somers' \eqn{D_{xy}} from
-    being computed by \code{validate} (saves time for very large datasets)}
   \item{time.inc}{
     setting for default time spacing.
     Default is 30 if time variable has \code{units="Day"}, 1 otherwise, unless
@@ -220,11 +219,11 @@ bj.fit(x, y, control)
   Jin Z, Lin DY, Ying Z. On least-squares regression with censored data.  Biometrika 2006; 93:147--161.
 }
 \seealso{
-  \code{\link{rms}}, \code{\link{psm}}, \code{\link{survreg}}, \code{\link{cph}}, \code{\link[survival]{Surv}},
+  \code{\link{rms}}, \code{\link{psm}}, \code{\link{survreg}}, \code{\link{cph}}, \code{\link[survival]{Surv}},\code{\link{Srv}},
   \code{\link[Hmisc]{na.delete}},
   \code{\link[Hmisc]{na.detail.response}}, \code{\link{datadist}},
   \code{\link[Hmisc]{rcorr.cens}}, \code{\link{GiniMd}},
-   \code{\link{prModFit}}
+  \code{\link{prModFit}}, \code{\link{dxy.cens}}
 }
 \examples{
 set.seed(1)
@@ -237,7 +236,7 @@ hospital <- factor(sample(c('a','b'),200,TRUE))
 dd <- datadist(age, hospital)
 options(datadist="dd")
 
-f <- bj(Surv(ftime, stroke) ~ rcs(age,5) + hospital, x=TRUE, y=TRUE)
+f <- bj(Srv(ftime, stroke) ~ rcs(age,5) + hospital, x=TRUE, y=TRUE)
 # add link="identity" to use a censored normal regression model instead
 # of a lognormal one
 anova(f)
@@ -246,7 +245,7 @@ validate(f, B=15)
 plot(Predict(f, age, hospital))
 # needs datadist since no explicit age,hosp.
 coef(f)               # look at regression coefficients
-coef(psm(Surv(ftime, stroke) ~ rcs(age,5) + hospital, dist='lognormal'))
+coef(psm(Srv(ftime, stroke) ~ rcs(age,5) + hospital, dist='lognormal'))
                       # compare with coefficients from likelihood-based
                       # log-normal regression model
                       # use dist='gau' not under R 

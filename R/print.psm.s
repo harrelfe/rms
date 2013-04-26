@@ -18,7 +18,8 @@ print.psm <- function(x, correlation = FALSE, digits=4,
   lr <- reVector('LR chi2'     = stats['Model L.R.'],
                  'd.f.'        = stats['d.f.'],
                  'Pr(> chi2)'  = stats['P'])
-  disc <- reVector('R2'=stats['R2'], g=stats['g'], gr=stats['gr'])
+  disc <- reVector('R2'=stats['R2'], 'Dxy'=stats['Dxy'],
+                   g=stats['g'], gr=stats['gr'])
 
   headings <- list('',
                    c('Model Likelihood','Ratio Test'),

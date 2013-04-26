@@ -85,7 +85,7 @@ f.harrell@vanderbilt.edu
 }
 \seealso{
 \code{\link[rpart]{rpart}}, \code{\link[Hmisc]{somers2}},
-\code{\link[Hmisc]{rcorr.cens}}, \code{\link{locator}},
+\code{\link{dxy.cens}}, \code{\link{locator}},
 \code{\link{legend}} 
 }
 \examples{

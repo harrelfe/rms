@@ -37,8 +37,9 @@ cph(formula = formula(data), data=parent.frame(),
 }
 \arguments{
   \item{formula}{
-    an S formula object with a \code{Surv} object on the left-hand side.
-    The \code{terms} can specify any S model formula with up to third-order interactions.  The \code{strat}
+    an S formula object with a \code{Srv} or \code{Surv} object on the
+          left-hand side.  The \code{terms} can specify any S model
+          formula with up to third-order interactions.  The \code{strat} 
     function may appear in the terms, as a main effect or an interacting
     factor.  To stratify on both race and sex, you would include both
     terms \code{strat(race)} and \code{strat(sex)}.  Stratification
@@ -113,8 +114,9 @@ cph(formula = formula(data), data=parent.frame(),
     returned fit object.
   }
   \item{y}{
-    default is \code{FALSE}.  Set to \code{TRUE} to return the vector of response values (\code{Surv}
-    object) as element \code{y} of the fit.
+    default is \code{FALSE}.  Set to \code{TRUE} to return the vector of
+    response values (\code{Surv} object) as element \code{y} of the
+    fit.
   }
   \item{se.fit}{
     default is \code{FALSE}.  Set to \code{TRUE} to compute the estimated standard errors of
@@ -232,7 +234,8 @@ cph(formula = formula(data), data=parent.frame(),
   }
   \item{stats}{
     vector containing the named elements \code{Obs}, \code{Events}, \code{Model L.R.}, \code{d.f.},
-    \code{P}, \code{Score}, \code{Score P}, \code{R2}, \code{g}-index,
+    \code{P}, \code{Score}, \code{Score P}, \code{R2}, Somers'
+    \code{Dxy}, \code{g}-index, 
     and \code{gr}, the \code{g}-index on the hazard ratio scale
   }
   \item{var}{
@@ -289,7 +292,7 @@ cph(formula = formula(data), data=parent.frame(),
 }
 \seealso{
   \code{\link[survival]{coxph}}, \code{\link[survival]{survival-internal}},
-  \code{\link[survival]{Surv}}, \code{\link{residuals.cph}},
+  \code{\link[survival]{Surv}}, \code{\link{Srv}}, \code{\link{residuals.cph}},
   \code{\link[survival]{cox.zph}}, \code{\link{survfit.cph}},
   \code{\link{survest.cph}}, \code{\link[survival]{survfit.coxph}}, 
   \code{\link{survplot}}, \code{\link{datadist}},
@@ -301,7 +304,8 @@ cph(formula = formula(data), data=parent.frame(),
   \code{\link[Hmisc]{na.delete}},
   \code{\link[Hmisc]{na.detail.response}},  \code{\link{print.cph}},
   \code{\link{latex.cph}}, \code{\link{vif}}, \code{\link{ie.setup}},
-  \code{\link{GiniMd}}
+  \code{\link{GiniMd}}, \code{\link{dxy.cens}},
+  \code{\link[survival]{survConcordance}}
 }
 \examples{
 # Simulate data from a population model in which the log hazard
@@ -322,7 +326,7 @@ dt <- pmin(dt, cens)
 units(dt) <- "Year"
 dd <- datadist(age, sex)
 options(datadist='dd')
-Srv <- Surv(dt,e)
+Srv <- Srv(dt,e)
 
 f <- cph(Srv ~ rcs(age,4) + sex, x=TRUE, y=TRUE)
 cox.zph(f, "rank")             # tests of PH
@@ -381,7 +385,7 @@ comb$upper <- p$fit + z*p$se.fit
 comb
 
 
-# g <- cph(Surv(hospital.charges) ~ age, surv=TRUE)
+# g <- cph(Srv(hospital.charges) ~ age, surv=TRUE)
 # Cox model very useful for analyzing highly skewed data, censored or not
 # m <- Mean(g)
 # m(0)                           # Predicted mean charge for reference age
@@ -405,7 +409,7 @@ f <- cph(S ~ age + ie.status, x=TRUE, y=TRUE)
 
 #Get estimated survival curve for a 50-year old who has an intervening
 #non-fatal event at 5 days
-new <- data.frame(S=Surv(c(0,5), c(5,999), c(FALSE,FALSE)), age=rep(50,2),
+new <- data.frame(S=Srv(c(0,5), c(5,999), c(FALSE,FALSE)), age=rep(50,2),
                   ie.status=c(0,1))
 g <- survfit(f, new)
 plot(c(0,g$time), c(1,g$surv[,2]), type='s', 
@@ -418,7 +422,7 @@ plot(c(0,g$time), c(1,g$surv[,2]), type='s',
 
 
 #Compare with estimates when there is no intervening event
-new2 <- data.frame(S=Surv(c(0,5), c(5, 999), c(FALSE,FALSE)), age=rep(50,2),
+new2 <- data.frame(S=Srv(c(0,5), c(5, 999), c(FALSE,FALSE)), age=rep(50,2),
                    ie.status=c(0,0))
 g2 <- survfit(f, new2)
 lines(c(0,g2$time), c(1,g2$surv[,2]), type='s', lty=2)

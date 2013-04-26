@@ -249,9 +249,10 @@ psm <- function(formula=formula(data),
   df <- length(fit$coef)-1
   P  <- if(df==0) NA else 1-pchisq(logtest,df)
   gindex <- GiniMd(fit$linear.predictors)
-  stats <- c(nnn, logtest, df, P, R2, gindex, exp(gindex))
+  Dxy <- dxy.cens(fit$linear.predictors, Y)
+  stats <- c(nnn, logtest, df, P, R2, Dxy, gindex, exp(gindex))
   names(stats) <- c("Obs", "Events", "Model L.R.", "d.f.", "P",
-                    "R2","g","gr")
+                    "R2","Dxy","g","gr")
   if(length(weights)) stats <- c(stats, 'Sum of Weights'=sum(weights))
   fit <- c(fit, list(stats=stats, maxtime=maxtime, units=time.units,
                      time.inc=time.inc, scale.pred=scale.pred,

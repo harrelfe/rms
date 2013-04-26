@@ -16,8 +16,7 @@ units of measurement).
 }
 \arguments{
   \item{formula}{
-    a formula object, which must have a
-    \code{Surv} object as the
+    a formula object, which must have a \code{Srv} or \code{Surv} object as the
     response on the left of the \code{~} operator and, if desired, terms
     separated by + operators on the right.
     One of the terms may be a \code{strata} object.
@@ -45,7 +44,7 @@ details. Methods defined for survfit objects are
 \code{\link{plot}},
 \code{\link{lines}},
 \code{\link{coxph}},
-\code{\link{Surv}},
+\code{\link{Srv}},
 \code{\link{strata}}.
 }
 \author{Thomas Lumley \email{tlumley@u.washington.edu} and Terry Therneau}
@@ -53,13 +52,13 @@ details. Methods defined for survfit objects are
 \examples{
 require(survival)
 #fit a Kaplan-Meier and plot it
-fit <- survfit(Surv(time, status) ~ x, data = aml)
+fit <- survfit(Srv(time, status) ~ x, data = aml)
 plot(fit, lty = 2:3)
 legend(100, .8, c("Maintained", "Nonmaintained"), lty = 2:3)
 
 #fit a Cox proportional hazards model and plot the
 #predicted survival for a 60 year old
-fit <- coxph(Surv(futime, fustat) ~ age, data = ovarian)
+fit <- coxph(Srv(futime, fustat) ~ age, data = ovarian)
 plot(survfit(fit, newdata=data.frame(age=60)),
      xscale=365.25, xlab = "Years", ylab="Survival")
 
@@ -77,15 +76,15 @@ plot(survfit(fit, newdata=data.frame(age=60)),
 tdata <- data.frame(time  =c(1,1,1,2,2,2,3,3,3,4,4,4),
                     status=rep(c(1,0,2),4),
                     n     =c(12,3,2,6,2,4,2,0,2,3,3,5))
-fit  <- survfit(Surv(time, time, status, type='interval') ~1,
+fit  <- survfit(Srv(time, time, status, type='interval') ~1,
                 data=tdata, weights=n)
 
 #
 # Time to progression/death for patients with monoclonal gammopathy
 #  Competing risk curves (cumulative incidence)
-fit1 <- survfit(Surv(stop, event=='progression') ~1, data=mgus1,
+fit1 <- survfit(Srv(stop, event=='progression') ~1, data=mgus1,
                     subset=(start==0))
-fit2 <- survfit(Surv(stop, status) ~1, data=mgus1,
+fit2 <- survfit(Srv(stop, status) ~1, data=mgus1,
                     subset=(start==0), etype=event) #competing risks
 # CI curves are always plotted from 0 upwards, rather than 1 down
 plot(fit2, fun='event', xscale=365.25, xmax=7300, mark.time=FALSE,

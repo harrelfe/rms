@@ -2,20 +2,18 @@
 \alias{groupkm}
 \title{Kaplan-Meier Estimates vs. a Continuous Variable}
 \description{
-Function to divide \code{x} (e.g. age, or predicted survival at time \code{u} created by
-\code{survest}) into \code{g} quantile groups, get Kaplan-Meier estimates at time \code{u}
-(a scaler), and to return a matrix with columns \code{x}=mean \code{x} in
-quantile, \code{n}=number of subjects, \code{events}=no. events, and 
-\code{KM}=K-M survival at time \code{u},
-\code{std.err} = s.e. of -log K-M.  Confidence intervals are based on 
--log S(t).
-Instead of supplying \code{g}, the user can supply the minimum number of subjects
-to have
-in the quantile group (\code{m}, default=50).
-If \code{cuts} is given (e.g. \code{cuts=c(0,.1,.2,\dots,.9,.1)}), it overrides \code{m} and \code{g}.
-Calls Therneau's \code{survfitKM} in the \code{survival} package to get
-Kaplan-Meiers estimates and standard errors.
-}
+Function to divide \code{x} (e.g. age, or predicted survival at time
+\code{u} created by \code{survest}) into \code{g} quantile groups, get
+Kaplan-Meier estimates at time \code{u} (a scaler), and to return a
+matrix with columns \code{x}=mean \code{x} in quantile, \code{n}=number
+of subjects, \code{events}=no. events, and \code{KM}=K-M survival at
+time \code{u}, \code{std.err} = s.e. of -log K-M.  Confidence intervals
+are based on -log S(t).  Instead of supplying \code{g}, the user can
+supply the minimum number of subjects to have in the quantile group
+(\code{m}, default=50).  If \code{cuts} is given
+(e.g. \code{cuts=c(0,.1,.2,\dots,.9,.1)}), it overrides \code{m} and
+\code{g}.  Calls Therneau's \code{survfitKM} in the \code{survival}
+package to get Kaplan-Meiers estimates and standard errors.  }
 \usage{
 groupkm(x, Srv, m=50, g, cuts, u, 
         pl=FALSE, loglog=FALSE, conf.int=.95, xlab, ylab,
@@ -24,7 +22,8 @@ groupkm(x, Srv, m=50, g, cuts, u,
 \arguments{
 \item{x}{variable to stratify}
 \item{Srv}{
-a "Surv" object - n x 2 matrix containing survival time and event/censoring
+a \code{Srv} or \code{Surv} object - n x 2 matrix containing survival
+time and event/censoring 
 1/0 indicator.  Units of measurement come from the "units" attribute
 of the survival time variable.  "Day" is the default.
 }
@@ -65,7 +64,9 @@ in interval), \code{events} (number of events in interval), \code{KM} (Kaplan-Me
 estimate), \code{std.err} (standard error of -log \code{KM})
 }
 \seealso{
-\code{\link[survival]{survfit}}, \code{\link[Hmisc]{errbar}}, \code{\link[Hmisc]{cut2}}, \code{\link[survival]{Surv}}, \code{\link[Hmisc]{units}}
+\code{\link[survival]{survfit}}, \code{\link[Hmisc]{errbar}},
+\code{\link[Hmisc]{cut2}}, \code{\link[survival]{Surv}},
+\code{\link{Srv}}, \code{\link[Hmisc]{units}}
 }
 \examples{
 n <- 1000
@@ -78,7 +79,7 @@ label(d.time) <- 'Follow-up Time'
 e <- ifelse(d.time <= cens,1,0)
 d.time <- pmin(d.time, cens)
 units(d.time) <- "Year"
-groupkm(age, Surv(d.time, e), g=10, u=5, pl=TRUE)
+groupkm(age, Srv(d.time, e), g=10, u=5, pl=TRUE)
 #Plot 5-year K-M survival estimates and 0.95 confidence bars by 
 #decile of age.  If omit g=10, will have >= 50 obs./group.
 }

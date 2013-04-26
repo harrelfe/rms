@@ -22,7 +22,8 @@ see \code{\link[survival]{survfit.coxph}}
 }
 \item{newdata,se.fit,conf.int,individual,type,vartype,conf.type,id}{see
   \code{\link[survival]{survfit}}.  If \code{individual} is \code{TRUE},
-  there must be exactly one \code{Surv} object in \code{newdata}.  This
+  there must be exactly one \code{Srv} or \code{Surv} object in
+  \code{newdata}.  This 
   object is used to specify time intervals for time-dependent covariate
   paths.  To get predictions for multiple subjects with time-dependent
   covariates, specify a vector \code{id} which specifies unique

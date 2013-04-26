@@ -1,42 +1,10 @@
 \name{rms-internal}
 \title{Internal rms functions}
-\alias{addOffset4ModelFrame}
-\alias{as.character.Surv}
-\alias{axisf}
-\alias{bj.fit2}
 \alias{coxphFit}
-\alias{des.args}
-\alias{[.rms}
-\alias{DesignAssign}
-\alias{rms.levels}
-\alias{formula.rms}
-\alias{gparms}
-\alias{is.na.Surv}
-\alias{is.Surv}
 \alias{lm.pfit}
-\alias{lrm.fit.strat}
-\alias{Math.Surv}
 \alias{ols.influence}
-\alias{Ops.Surv}
-\alias{print.summary.survreg2}
-\alias{set.atr}
-\alias{summary.Glmd}
-\alias{Summary.Surv}
-\alias{Surv}
-\alias{[.Surv}
-\alias{survfit.cph.null}
 \alias{survreg.auxinfo}
-\alias{survreg.fit2}
 \alias{val.probg}
-\alias{value.chk}
-\alias{Hazard.rms}
-\alias{Mean.rms}
-\alias{Quantile.rms}
-\alias{summary.Glm}
-\alias{Survival.rms}
-\alias{validate.rms}
-\alias{vcov.rms}
-\alias{oos.loglik.rms}
 \description{Internal rms functions}
 \details{These are not to be called by the user or are undocumented.}
 \keyword{internal}

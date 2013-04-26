@@ -7,9 +7,10 @@ Creates several new variables which help set up a dataset for modeling
 with \code{cph} or \code{coxph} when there is a single binary time-dependent
 covariable which turns on at a given time, and stays on.  This is
 typical when analyzing the impact of an intervening event.
-\code{ie.setup} creates a \code{Surv} object using the start time, stop time
+\code{ie.setup} creates a \code{Srv} object using the start time, stop time
 format.  It also creates a binary indicator for the intervening event,
-and a variable called \code{subs} that is useful when \code{attach}-ing a dataframe.
+and a variable called \code{subs} that is useful when \code{attach}-ing
+a dataframe. 
 \code{subs} has observation numbers duplicated for subjects having an
 intervening event, so those subject's baseline covariables (that are
 not time-dependent) can be duplicated correctly.
@@ -33,13 +34,15 @@ the corresponding values of ie.time must be NA.
 \item{break.ties}{
 Occasionally intervening events are recorded as happening at exactly
 the same time as the termination of follow-up for some subjects.
-The \code{Surv} function will not allow this.  To randomly break the ties
+The \code{Surv} and \code{Srv} functions will not allow this.  To
+randomly break the ties 
 by subtracting a random number from such tied intervening event times,
 specify \code{break.ties=TRUE}.  The random number is uniform between zero and
 the minimum difference between any two untied \code{failure.time}s.
 }}
 \value{
-a list with components \code{S, ie.status, subs, reps}.  \code{S} is a \code{Surv}
+a list with components \code{S, ie.status, subs, reps}.  \code{S} is a
+\code{Srv}
 object containing start and stop times for intervals of observation, 
 along with event indicators.  \code{ie.status} is one if the intervening
 event has occurred at the start of the interval, zero otherwise.
@@ -61,7 +64,7 @@ f.harrell@vanderbilt.edu
 }
 \seealso{
 \code{\link{cph}}, \code{\link[survival]{coxph}},
-\code{\link[survival]{Surv}}, \code{\link{cr.setup}},
+\code{\link[survival]{Surv}}, \code{\link{Srv}}, \code{\link{cr.setup}},
 \code{\link{predab.resample}} 
 }
 \examples{

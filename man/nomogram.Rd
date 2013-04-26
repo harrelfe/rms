@@ -442,7 +442,7 @@ death <- ifelse(d.time <= cens,1,0)
 d.time <- pmin(d.time, cens)
 
 
-f <- psm(Surv(d.time,death) ~ sex*age, dist='lognormal')
+f <- psm(Srv(d.time,death) ~ sex*age, dist='lognormal')
 med  <- Quantile(f)
 surv <- Survival(f)  # This would also work if f was from cph
 plot(nomogram(f, fun=function(x) med(lp=x), funlabel="Median Survival Time"))

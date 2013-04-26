@@ -40,7 +40,7 @@ f.harrell@vanderbilt.edu
 }
 \examples{
 set.seed(1)
-S <- Surv(runif(100))
+S <- Srv(runif(100))
 x <- runif(100)
 dd <- datadist(x); options(datadist='dd')
 f <- psm(S ~ x, dist="exponential")

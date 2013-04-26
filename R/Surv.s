@@ -1,6 +1,6 @@
-Surv <- function(time, time2, event,
-	      type=c('right', 'left', 'interval', 'counting', 'interval2',
-            'mstate'), origin=0)
+Srv <- function(time, time2, event,
+                type=c('right', 'left', 'interval', 'counting', 'interval2',
+                  'mstate'), origin=0)
 {
   nam   <- as.character(sys.call())[-1]
   mtype <- missing(type)
@@ -39,8 +39,7 @@ Surv <- function(time, time2, event,
   if(!mtype)           g$type   <- type
   if(!missing(origin)) g$origin <- origin
   
-  surv <- survival:::Surv
-  ss <- do.call('surv', g)
+  ss <- do.call('Surv', g)
 
   uni <- valueUnit(tvar)
   if(!length(uni)) uni <- "Day"
@@ -51,10 +50,11 @@ Surv <- function(time, time2, event,
   valueUnit(ss) <- uni
   if(length(tlab) && tlab != '') attr(ss,"time.label")  <- tlab
   if(length(elab) && elab != '') attr(ss,"event.label") <- elab
+  class(ss) <- c('Srv', class(ss))
   ss
 }
 
-"[.Surv" <- function(x, ..., drop=FALSE)
+"[.Srv" <- function(x, ..., drop=FALSE)
 {
   atr <- attributes(x)
   atr$dim <- NULL; atr$dimnames <- NULL

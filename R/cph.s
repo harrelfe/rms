@@ -38,7 +38,7 @@ cph <- function(formula=formula(data),
     ## I allow a formula with no right hand side
     ## The dummy function stops an annoying warning message "Looking for
     ##  'formula' of mode function, ignored one of mode ..."
-    if (inherits(formula,"Surv")) {
+    if (inherits(formula,"Surv") || inherits(formula,"Srv")) {
       xx <- function(x) formula(x)
       
       formula <- xx(paste(deparse(substitute(formula)), 1, sep="~"))
@@ -111,8 +111,8 @@ cph <- function(formula=formula(data),
       
     xpres <- length(asm) && any(asm != 8)
     Y <- model.extract(X, 'response')
-    if(!inherits(Y,"Surv"))
-      stop("response variable should be a Surv object")
+    if(!(inherits(Y,"Surv") || inherits(Y,"Srv")))
+      stop("response variable should be a Srv or Surv object")
     n <- nrow(Y)
     
     weights <- model.extract(X, 'weights')
@@ -137,8 +137,8 @@ cph <- function(formula=formula(data),
     Terms <- terms(formula)
     yy <- attr(terms(formula),"variables")[1]
     Y <- eval(yy, data)
-    if(!inherits(Y,"Surv"))
-      stop("response variable should be a Surv object")
+    if(!(inherits(Y,"Surv") || inherits(Y,"Srv")))
+      stop("response variable should be a Srv or Surv object")
     
     Y <- Y[!is.na(Y)]
     assign  <- NULL
@@ -240,10 +240,11 @@ cph <- function(formula=formula(data),
     R2 <- (1 - exp(-logtest/n))/R2.max
     P  <- 1 - pchisq(logtest,nvar)
     gindex <- GiniMd(f$linear.predictors)
+    dxy <- dxy.cens(f$linear.predictors, Y, type='hazard')['Dxy']
     stats <- c(n, nevent, logtest, nvar, P, f$score, 
-               1-pchisq(f$score,nvar), R2, gindex, exp(gindex))
+               1-pchisq(f$score,nvar), R2, dxy, gindex, exp(gindex))
     names(stats) <- c("Obs", "Events", "Model L.R.", "d.f.", "P", 
-                      "Score", "Score P", "R2", "g", "gr")
+                      "Score", "Score P", "R2", "Dxy", "g", "gr")
   }
   else {
     stats <- c(n, nevent)
@@ -584,13 +585,14 @@ print.cph <- function(x, digits=4, table=TRUE, conf.int=FALSE,
                      'Score chi2'  = stats['Score'],
                      'Pr(> chi2)'  = stats['Score P'])
     disc <- reVector(R2 = stats['R2'],
+                     Dxy = stats['Dxy'],
                      g  = stats['g'],
                      gr = stats['gr'])
     k <- k + 1
     headings <- list('', 'Model Tests', c('Discrimination', 'Indexes'))
     data     <- list(c(misc, c(NA,NA,digits)),
-                     c(lr, c(2,NA,4,2,4)),
-                     c(disc,3))
+                     c(lr,   c(2,NA,4,2,4)),
+                     c(disc, 3))
     z[[k]] <- list(type='stats', list(headings=headings, data=data))
     
     beta <- x$coef

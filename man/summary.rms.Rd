@@ -21,8 +21,8 @@ the results, and \code{plot.summary.rms}
 plots shaded confidence bars to display the results graphically.
 The longest confidence bar on each page is labeled with confidence levels
 (unless this bar has been ignored due to \code{clip}).  By default, the
-following confidence levels are all shown: .7, .8, .9, .95, and .99, using 
-levels of gray scale (colors for Windows).
+following confidence levels are all shown: .9, .95, and .99, using 
+blue of different transparencies.
 
 If \code{usebootcoef=TRUE} and the fit was run through \code{bootcov},
 the confidence intervals are bootstrap nonparametric percentile
@@ -40,8 +40,11 @@ usebootcoef=TRUE, boot.type=c("percentile","bca","basic"), verbose=FALSE)
 \method{latex}{summary.rms}(object, title, table.env=TRUE, \dots)
 
 \method{plot}{summary.rms}(x, at, log=FALSE,
-    q=c(0.7, 0.8, 0.9, 0.95, 0.99), xlim, nbar, cex=1, nint=10,
-    cex.c=.5, cex.t=1, clip=c(-1e30,1e30), main, \dots)
+    q=c(0.9, 0.95, 0.99), xlim, nbar, cex=1, nint=10,
+    cex.main=1, clip=c(-1e30,1e30), main,
+    col=rgb(red=.1,green=.1,blue=.8,alpha=c(.1,.4,.7)),
+    col.points=rgb(red=.1,green=.1,blue=.8,alpha=1), pch=17, lwd=3,
+\dots)
 }
 \arguments{
 \item{object}{
@@ -59,45 +62,35 @@ other factors (this will only matter for factors that interact with age).
 Specify e.g. \code{age=c(40,60)} to estimate the effect of increasing age from
 40 to 60. Specify \code{age=c(40,50,60)} to let age range from 40 to 60 and
 be adjusted to 50 when testing other interacting factors. For category
-factors, a single value specifies the reference cell and the adjustment value. For
-example, if \code{treat} has levels \code{"a", "b"} and \code{"c"} and \code{treat="b"}
-is given to \code{summary}, treatment \code{a} will be compared to \code{b}
-and \code{c} will be compared to \code{b}. Treatment \code{b} will be used when estimating
-the effect of other factors. Category variables can have category labels
-listed (in quotes), or an unquoted number that is a legal level, if all levels 
-are numeric.  You need only use the first few
-letters of each variable name - enough for unique identification.
-For variables not defined with \code{datadist}, you must specify 3 values, none
-of which are \code{NA}.
+factors, a single value specifies the reference cell and the adjustment
+    value. For example, if \code{treat} has levels \code{"a", "b"} and
+    \code{"c"} and \code{treat="b"} is given to \code{summary},
+    treatment \code{a} will be compared to \code{b} and \code{c} will be
+    compared to \code{b}. Treatment \code{b} will be used when
+    estimating the effect of other factors. Category variables can have
+    category labels listed (in quotes), or an unquoted number that is a
+    legal level, if all levels  are numeric.  You need only use the
+    first few letters of each variable name - enough for unique
+    identification. For variables not defined with \code{datadist}, you
+    must specify 3 values, none of which are \code{NA}.
 
 Also represents other arguments to pass to \code{latex}, is ignored for
-\code{print}, or other optional arguments passed to \code{confbar}.  The
-most important of these is \code{q}, the vector of confidence levels,
-and \code{col}, which is a vector corresponding to \code{q} specifying
-the colors for the regions of the bars.  \code{q} defaults to
-\code{c(.7,.8,.9,.95,.99)} and \code{col} to \code{c(1,.8,.5,.2,.065)}
-for UNIX, so that lower confidence levels (inner regions of bars)
-corresponding with darker shades.  Specify for example \code{col=1:5} to
-use actual colors.  For Windows, the default is \code{col=c(1,4,3,2,5)},
-which by default represents black, blue, green, red, yellow.  If you
-specify \code{q} you may have to specify \code{col}.
+\code{print} and \code{plot}.
 }
 \item{est.all}{
 Set to \code{FALSE} to only estimate effects of variables listed. Default is \code{TRUE}.
 }
 \item{antilog}{
-Set to \code{FALSE} to suppress printing of anti-logged effects. Default is \code{TRUE}
-if the model was fitted by \code{lrm} or \code{cph}.
+Set to \code{FALSE} to suppress printing of anti-logged effects. Default
+is \code{TRUE} if the model was fitted by \code{lrm} or \code{cph}.
 Antilogged effects will be odds ratios for logistic models and hazard ratios
 for proportional hazards models.
 }
 \item{conf.int}{
-Defaults to \code{.95} for \code{95\%} confidence intervals of effects.
-}
+Defaults to \code{.95} for \code{95\%} confidence intervals of effects.}
 \item{abbrev}{
 Set to \code{TRUE} to use the \code{abbreviate} function to shorten
-factor levels for categorical variables in the model.
-}
+factor levels for categorical variables in the model.}
 \item{vnames}{
   Set to \code{"labels"} to use variable labels to label effects.
   Default is \code{"names"} to use variable names.}
@@ -136,8 +129,8 @@ anti-logs.
 \item{q}{scalar or vector of confidence coefficients to depict}
 \item{xlim}{
 X-axis limits for \code{plot} in units of the linear predictors (log scale
-if \code{log=TRUE}).  If \code{at} is specified and \code{xlim} is omitted, \code{xlim} is
-derived from the range of \code{at}.
+if \code{log=TRUE}).  If \code{at} is specified and \code{xlim} is
+omitted, \code{xlim} is derived from the range of \code{at}.
 }
 \item{nbar}{
 Sets up plot to leave room for \code{nbar} horizontal bars.  Default is the
@@ -146,18 +139,10 @@ value to keep too much surrounding space from appearing around horizontal
 bars.  If \code{nbar} is smaller than the number of bars, the plot is divided
 into multiple pages with up to \code{nbar} bars on each page.
 }
-\item{cex}{
-\code{cex} parameter for factor labels.
-}
-\item{nint}{
-Number of tick mark numbers for \code{pretty}.
-}
-\item{cex.c}{
-\code{cex} parameter for \code{confbar}, for quantile labels.
-}
-\item{cex.t}{
-\code{cex} parameter for main title.  Set to \code{0} to suppress the title.
-}
+\item{cex}{\code{cex} parameter for factor labels.}
+\item{nint}{Number of tick mark numbers for \code{pretty}.}
+\item{cex.main}{\code{cex} parameter for main title.  Set to \code{0} to
+  suppress the title.}
 \item{clip}{
 confidence limits outside the interval \code{c(clip[1], clip[2])} will be
 ignored, and \code{clip} also be respected when computing \code{xlim}
@@ -169,6 +154,10 @@ when \code{xlim} is not specified.  \code{clip} should be in the units of
 main title.  Default is inferred from the model and value of \code{log},
 e.g., \code{"log Odds Ratio"}.
 }
+\item{col}{vector of colors, one per value of \code{q}}
+\item{col.points}{color for points estimates}
+\item{pch}{symbol for point estimates.  Default is solid triangle.}
+\item{lwd}{line width for confidence intervals}
 }
 \value{
 For \code{summary.rms}, a matrix of class \code{summary.rms} 
@@ -188,11 +177,13 @@ It requires the \code{latex} function in Hmisc.
 }
 \author{
 Frank Harrell\cr
+Hui Nian\cr  
 Department of Biostatistics, Vanderbilt University\cr
 f.harrell@vanderbilt.edu
 }
 \seealso{
-\code{\link{datadist}}, \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{rmsMisc}},
+\code{\link{datadist}}, \code{\link{rms}}, \code{\link{rms.trans}},
+\code{\link{rmsMisc}}, 
 \code{\link[Hmisc]{Misc}}, \code{\link{pretty}}, \code{\link{contrast.rms}}
 }
 \examples{

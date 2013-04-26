@@ -51,7 +51,7 @@ significance of the \eqn{Z} statistic.
 }
 \usage{
 # fit <- lrm(formula=y ~ x + other.predictors, x=TRUE, y=TRUE)  #or
-# fit <- cph(formula=Surv(event.time,event.indicator) ~ x + other.predictors,
+# fit <- cph(formula=Srv(event.time,event.indicator) ~ x + other.predictors,
 #            x=TRUE, y=TRUE)
 
 sensuc(fit,  
@@ -110,15 +110,16 @@ purposes of constraining the association between \eqn{U} and \eqn{Y}.
 For binary logistic models, \code{event} is left at its default value, which
 is the identify function, i.e, the original \eqn{Y} values are taken as the
 events (no other choice makes any sense here).  For Cox models, the 
-default \code{event} function takes the last column of the \code{Surv} object
+default \code{event} function takes the last column of the \code{Srv} or
+                   \code{Surv} object
 stored with the fit.  For rare events (high proportion of censored
 observations), odds ratios approximate hazard ratios, so the default is OK.  
 For other cases, the survival times should be considered (probably in
 conjunction with the event indicators), although it may not be possible
 to get a high enough hazard ratio between \eqn{U} and \eqn{Y} by sampling \eqn{U} by
 temporarily making \eqn{Y} binary.  See the last example which is
-for a 2-column \code{Surv} object (first column of response variable=event time, 
-second=event indicator).  When
+for a 2-column \code{Srv} or \code{Surv} object (first column of
+response variable=event time,  second=event indicator).  When
 dichotomizing survival time at a given point, it is advantageous to choose
 the cutpoint so that not many censored survival times preceed the cutpoint.
 Note that in fitting Cox models to examine sensitivity to \eqn{U}, the original
@@ -231,10 +232,10 @@ plot(g)
 # Fit a Cox model and check sensitivity to an unmeasured confounder
 
 
-# f <- cph(Surv(d.time,death) ~ treatment + pol(age,2)*sex, x=TRUE, y=TRUE)
+# f <- cph(Srv(d.time,death) ~ treatment + pol(age,2)*sex, x=TRUE, y=TRUE)
 # sensuc(f, event=function(y) y[,2] & y[,1] < 365.25 )
 # Event = failed, with event time before 1 year
-# Note: Analysis uses f$y which is a 2-column Surv object
+# Note: Analysis uses f$y which is a 2-column Srv object
 }
 \keyword{regression}
 \keyword{htest}

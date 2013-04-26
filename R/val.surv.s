@@ -225,7 +225,7 @@ plot.val.surv <- function(x, group, g.group=4,
       est.surv <- est.surv[nma]
       S <- S[nma,,drop=FALSE]
       f <- survival:::survfitKM(factor(rep(1,length(est.surv))),
-                     Surv(1-est.surv,S[,2]),
+                     Srv(1-est.surv,S[,2]),
                      se.fit = FALSE, conf.type = "none")
       tt <- c(0, f$time)
       ss <- c(1, f$surv)
@@ -247,7 +247,7 @@ plot.val.surv <- function(x, group, g.group=4,
     {
       s <- if(i==(ng+1)) rep(TRUE,length(est.surv)) else group==lg[i]
       f <- survival:::survfitKM(factor(rep(1,sum(s))),
-                     Surv(1-est.surv[s],S[s,2]),
+                     Srv(1-est.surv[s],S[s,2]),
                      se.fit = FALSE, conf.type = "none")
       curves[[i]] <- list(x=c(0,f$time), y=1-c(1,f$surv))
     }  

@@ -1,22 +1,31 @@
 \name{validate.cph}
 \alias{validate.cph}
 \alias{validate.psm}
+\alias{dxy.cens}
 \title{Validation of a Fitted Cox or Parametric Survival Model's Indexes
   of Fit}
 \description{
   This is the version of the \code{validate} function specific to models
-  fitted with \code{cph} or \code{psm}. 
+  fitted with \code{cph} or \code{psm}.  Also included is a small
+  function \code{dxy.cens} that retrieves \eqn{D_{xy}}{Dxy} and its
+  standard error from the \code{survival} package's
+  \code{survConcordance.fit} function.  This allows for incredibly fast
+  computation of \eqn{D_{xy}}{Dxy} or the c-index even for hundreds of
+  thousands of observations.  \code{dxy.cens} negates \eqn{D_{xy}}{Dxy}
+  if log relative hazard is being predicted.
 }
 \usage{
-# fit <- cph(formula=Surv(ftime,event) ~ terms, x=TRUE, y=TRUE, \dots)
+# fit <- cph(formula=Srv(ftime,event) ~ terms, x=TRUE, y=TRUE, \dots)
 \method{validate}{cph}(fit, method="boot", B=40, bw=FALSE, rule="aic",
 type="residual", sls=.05, aics=0, force=NULL, estimates=TRUE,
-pr=FALSE, dxy=FALSE, u, tol=1e-9, \dots)
+pr=FALSE, dxy=TRUE, u, tol=1e-9, \dots)
 
 \method{validate}{psm}(fit, method="boot",B=40,
         bw=FALSE, rule="aic", type="residual", sls=.05, aics=0,
         force=NULL, estimates=TRUE, pr=FALSE,
-        dxy=FALSE, tol=1e-12, rel.tolerance=1e-5, maxiter=15, \dots)
+        dxy=TRUE, tol=1e-12, rel.tolerance=1e-5, maxiter=15, \dots)
+
+dxy.cens(x, y, type=c('time','hazard'))
 }
 \arguments{
   \item{fit}{
@@ -42,8 +51,11 @@ pr=FALSE, dxy=FALSE, u, tol=1e-9, \dots)
     twice its degrees of freedom), or \code{"p"} to use \eqn{P}-values.
   }
   \item{type}{
-    \code{"residual"} or \code{"individual"} - stopping rule is for individual factors or
-    for the residual \eqn{\chi^2}{chi-square} for all variables deleted
+    \code{"residual"} or \code{"individual"} - stopping rule is for
+	individual factors or for the residual \eqn{\chi^2}{chi-square} for
+	all variables deleted.  For \code{dxy.cens}, specify
+	\code{type="hazard"} if \code{x} is on the hazard or cumulative
+	hazard (or their logs) scale, causing negation of the correlation index.
   }
   \item{sls}{
     significance level for a factor to be kept in a model, or for judging the
@@ -58,15 +70,21 @@ pr=FALSE, dxy=FALSE, u, tol=1e-9, \dots)
   \item{tol,\dots}{see \code{\link{validate}} or \code{\link{predab.resample}}}
   \item{dxy}{
     set to \code{TRUE} to validate Somers' \eqn{D_{xy}}{Dxy}  using
-    \code{rcorr.cens}, which takes longer.
+    \code{dxy.cens}, which is fast until n > 500,000.  Uses the
+        \code{survival} package's \code{survConcordance.fit} service
+        function for \code{survConcordance}.
   }
   \item{u}{
-    must be specified if the model has any stratification factors and \code{dxy=TRUE}.
+    must be specified if the model has any stratification factors and
+	\code{dxy=TRUE}. 
     In that case, strata are not included in \eqn{X\beta}{X beta} and the
     survival curves may cross.  Predictions at time \code{t=u} are
     correlated with observed survival times.  Does not apply to
     \code{validate.psm}.
   }
+  \item{x}{a numeric vector}
+  \item{y}{a \code{Srv} or \code{Surv} object that may be uncensored or
+	right-censored}
 }
 \details{
   Statistics validated include the Nagelkerke \eqn{R^2}, 
@@ -91,13 +109,12 @@ pr=FALSE, dxy=FALSE, u, tol=1e-9, \dots)
   The values corresponting to the row \eqn{D_{xy}}{Dxy} are equal to \eqn{2 *
     (C - 0.5)} where C is the C-index or concordance probability.
   If the user is correlating the linear predictor (predicted log hazard)
-  with survival time and she wishes to get the more usual correlation
-  using predicted survival time or predicted survival probability,
-  \eqn{D_{xy}}{Dxy} should be negated.
+  with survival time, \eqn{D_{xy}}{Dxy} is automatically negated. 
   
 }
 \section{Side Effects}{
-  prints a summary, and optionally statistics for each re-fit (if \code{pr=TRUE})
+  prints a summary, and optionally statistics for each re-fit (if
+  \code{pr=TRUE}) 
 }
 \author{
   Frank Harrell\cr
@@ -109,7 +126,7 @@ pr=FALSE, dxy=FALSE, u, tol=1e-9, \dots)
   \code{\link{fastbw}}, \code{\link{rms}}, \code{\link{rms.trans}},
   \code{\link{calibrate}}, \code{\link[Hmisc]{rcorr.cens}},
   \code{\link{cph}}, \code{\link[survival]{survival-internal}},
-  \code{\link{gIndex}}
+  \code{\link{gIndex}}, \code{\link[survival]{survConcordance}}
 }
 \examples{
 n <- 1000
@@ -123,7 +140,7 @@ dt <- -log(runif(n))/h
 e <- ifelse(dt <= cens,1,0)
 dt <- pmin(dt, cens)
 units(dt) <- "Year"
-S <- Surv(dt,e)
+S <- Srv(dt,e)
 
 f <- cph(S ~ age*sex, x=TRUE, y=TRUE)
 # Validate full model fit
@@ -134,7 +151,7 @@ validate(f, B=10)               # normally B=150
 # one to choose a single time at which to predict S(t|X)
 f <- cph(S ~ rcs(age)*strat(sex), 
          x=TRUE, y=TRUE, surv=TRUE, time.inc=2)
-validate(f, dxy=TRUE, u=2, B=10)   # normally B=150
+validate(f, u=2, B=10)   # normally B=150
 # Note u=time.inc
 }
 \keyword{models}

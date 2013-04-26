@@ -104,8 +104,8 @@ the limits will be computed from the data.  For \code{what="hazard"}, default
 limits are computed from the first hazard function plotted.
 }
 \item{xlab}{
-x-axis label.  Default is \code{units} attribute of failure time variable given to
-\code{Surv}.
+x-axis label.  Default is \code{units} attribute of failure time
+variable given to \code{Srv} or \code{Surv}.
 }
 \item{ylab}{
 y-axis label.  Default is \code{"Survival Probability"} or 
@@ -312,7 +312,7 @@ dt <- pmin(dt, cens)
 units(dt) <- "Year"
 dd <- datadist(age, sex)
 options(datadist='dd')
-S <- Surv(dt,e)
+S <- Srv(dt,e)
 
 # When age is in the model by itself and we predict at the mean age,
 # approximate confidence intervals are ok

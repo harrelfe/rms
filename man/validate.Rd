@@ -99,10 +99,9 @@ validate(fit, method="boot", B=40,
   of model. For \code{validate.cph} and \code{validate.psm}, see \code{validate.lrm},
   which is similar. \cr
   For \code{validate.cph} and \code{validate.psm}, there is
-  an extra argument \code{dxy}, which if \code{TRUE} causes the \code{rcorr.cens}
+  an extra argument \code{dxy}, which if \code{TRUE} causes the \code{dxy.cens}
   function to be invoked to compute the Somers' \eqn{D_{xy}}{Dxy} rank correlation
-  to be computed at each resample (this takes a bit longer than
-  the likelihood based statistics). The values corresponting to the row
+  to be computed at each resample. The values corresponting to the row
   \eqn{D_{xy}}{Dxy} are equal to \eqn{2 * (C - 0.5)} where C is the
   C-index or concordance probability. \cr
   
@@ -133,7 +132,8 @@ f.harrell@vanderbilt.edu
 \code{\link{validate.ols}}, \code{\link{validate.cph}},
 \code{\link{validate.lrm}}, \code{\link{validate.rpart}}, 
 \code{\link{predab.resample}}, \code{\link{fastbw}}, \code{\link{rms}},
-\code{\link{rms.trans}}, \code{\link{calibrate}} 
+\code{\link{rms.trans}}, \code{\link{calibrate}},
+\code{\link{dxy.cens}}, \code{\link[survival]{survConcordance}}
 }
 \examples{
 # See examples for validate.cph, validate.lrm, validate.ols
@@ -150,7 +150,7 @@ dt <- -log(runif(n))/h
 e <- ifelse(dt <= cens,1,0)
 dt <- pmin(dt, cens)
 units(dt) <- "Year"
-S <- Surv(dt,e)
+S <- Srv(dt,e)
 
 
 f <- psm(S ~ age*sex, x=TRUE, y=TRUE)  # Weibull model

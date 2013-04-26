@@ -86,7 +86,7 @@ label(dt) <- 'Follow-up Time'
 e <- ifelse(dt <= cens,1,0)
 dt <- pmin(dt, cens)
 units(dt) <- "Year"
-S <- Surv(dt,e)
+S <- Srv(dt,e)
 
 f <- psm(S ~ lsp(age,c(40,70)))
 survest(f, data.frame(age=seq(20,80,by=5)), times=2)

@@ -54,12 +54,12 @@ validate.rpart <- function(fit, method, B, bw, rule, type, sls, aics,
               ## tree with factor binary y
               b.app[j] <- mean((yhat - y[s])^2)
               dyx.app[j] <- if(binary) somers2(yhat, y[s])["Dxy"] else
-              rcorr.cens(yhat, y[s])["Dxy"]
+              dxy.cens(yhat, y[s])["Dxy"]
               s <- rand == i
               yhat <- predict(papp, newdata = m[s,  ])
               b.val[j] <- mean((yhat - y[s])^2)
               dyx.val[j] <- if(binary) somers2(yhat, y[s])["Dxy"] else
-              rcorr.cens(yhat, y[s])["Dxy"]
+              dxy.cens(yhat, y[s])["Dxy"]
             }
         }
       pdyx.app[l] <- mean(dyx.app)
