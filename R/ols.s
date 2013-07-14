@@ -52,8 +52,8 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       if(model) m <- X
       X <- model.matrix(Terms, X)
       if(length(atr$colnames)) 
-        dimnames(X)[[2]] <- c("Intercept",atr$colnames)
-      else dimnames(X)[[2]] <- c("Intercept",dimnames(X)[[2]][-1])
+        dimnames(X)[[2]] <- c("Intercept", atr$colnames)
+      else dimnames(X)[[2]] <- c("Intercept", dimnames(X)[[2]][-1])
       if(method=="model.matrix") return(X)				   }
   
   ##Model with no covariables:
@@ -83,8 +83,8 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
           names(fit$linear.predictors) <- names(Y)
         }
       if(model) fit$model <- m
-      if(x) fit$x <- matrix(1, ncol=1, nrow=n, 
-                            dimnames=list(NULL,"Intercept"))
+      if(x) fit$x <- NULL #matrix(1, ncol=1, nrow=n, 
+                           # dimnames=list(NULL,"Intercept"))
       if(y) fit$y <- Y
       fit$fitFunction <- c('ols','lm')
       oldClass(fit) <- c("ols","rms","lm")
@@ -148,7 +148,6 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       fit$linear.predictors <- Y-fit$residuals
       names(fit$linear.predictors) <- names(Y)
     }
-  if(x) fit$x <- X
   if(y) fit$y <- Y
   if(se.fit)
     {
@@ -156,6 +155,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       names(se) <- names(Y)
       fit$se.fit <- se
     }
+  if(x) fit$x <- X[, -1, drop=FALSE]
   fit <- c(fit, list(call=call, terms=Terms, Design=atr,
                      non.slopes=1, na.action=nact,
                      scale.pred=scale, fail=FALSE,
@@ -205,12 +205,12 @@ predict.ols <-
              "adjto.data.frame", "model.frame"),
            se.fit=FALSE, conf.int=FALSE,
            conf.type=c('mean','individual','simultaneous'),
-           incl.non.slopes, non.slopes, kint=1,
+           kint=1,
            na.action=na.keep, expand.na=TRUE, center.terms=type=="terms", ...)
   {
     type <- match.arg(type)
     predictrms(object, newdata, type, se.fit, conf.int, conf.type,
-               incl.non.slopes, non.slopes, kint,
+               kint=kint,
                na.action, expand.na, center.terms, ...)
   }
 

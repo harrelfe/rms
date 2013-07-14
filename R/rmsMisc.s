@@ -5,17 +5,22 @@
 #lrm - one or more intercepts (>1 if ordinal model)
 #cph - no intercepts,   etc.
 
-num.intercepts <- function(fit)
+num.intercepts <- function(fit, type=c('fit', 'var', 'coef'))
 {
-   nrp <- fit$non.slopes
-   ## changed is.null(nrp) to below, fit$coefficients to fit$coef 14Aug01
-   if(!length(nrp))
-   {
-	nm1 <- names(fit$coef)[1]  # 14Sep00
-	nrp <- 1*(nm1=="Intercept" | nm1=="(Intercept)")
-   }
-   nrp
+  type <- match.arg(type)
+  nrp <- fit$non.slopes
+  if(!length(nrp))  {
+    nm1 <- names(fit$coef)[1]
+    nrp <- 1*(nm1=="Intercept" | nm1=="(Intercept)")
+  }
+  if(type == 'fit') return(nrp)
+  w <- if(type == 'var') fit$var else fit$coefficients
+  i <- attr(w, 'intercepts')
+  li <- length(i)
+  if(!li) return(nrp)
+  if(li == 1 && i == 0) 0 else li
 }
+
 
 DesignAssign <- function(atr, non.slopes, Terms) {
   ## Given Design attributes and number of intercepts creates S-Plus
@@ -32,9 +37,9 @@ DesignAssign <- function(atr, non.slopes, Terms) {
   asc <- atr$assume.code
   assign <- list()
   j <- non.slopes + 1
-  if(length(params)) for(i in 1:length(ll)) {
-    if(asc[i]==8) next
-    assign[[ll[i]]] <- j:(j+params[i]-1)
+  if(length(params)) for(i in 1 : length(ll)) {
+    if(asc[i] == 8) next
+    assign[[ll[i]]] <- j : (j+params[i]-1)
     j <- j + params[i]
   }
   assign
@@ -44,24 +49,58 @@ DesignAssign <- function(atr, non.slopes, Terms) {
 #rows and columns corresponding to parameters such as scale parameters
 #in parametric survival models
 
-vcov.lrm <- function(object, regcoef.only=TRUE, ...)
-  vcov.rms(object, regcoef.only=regcoef.only, ...)  # for fastbw etc.
+vcov.lrm <- function(object, regcoef.only=TRUE, intercepts='all', ...) {
+  if(!length(intercepts) ||
+     (length(intercepts) == 1) && intercepts == 'all')
+    return(vcov.rms(object, regcoef.only=regcoef.only, ...))
+  ns <- num.intercepts(object)
+  v <- object$var
+  p <- ncol(v)
+  nx <- p - ns
+  if(intercepts == 'none') intercepts <- integer(0)
+  i <- if(nx == 0) intercepts else c(intercepts, (ns+1):p)
+  v[i, i, drop=FALSE]
+}
+
 vcov.ols <- function(object, regcoef.only=TRUE, ...)
   vcov.rms(object, regcoef.only=regcoef.only, ...)
+
 vcov.cph <- function(object, regcoef.only=TRUE, ...)
   vcov.rms(object, regcoef.only=regcoef.only, ...)
+
 vcov.psm <- function(object, regcoef.only=TRUE, ...)
   vcov.rms(object, regcoef.only=regcoef.only, ...)
 
-vcov.rms <- function(object, regcoef.only=TRUE, ...)
+vcov.orm <- function(object, regcoef.only=TRUE,
+                     intercepts='mid', ...) {
+  if(!length(intercepts)) return(object$var)
+  iat <- attr(object$var, 'intercepts')  # handle fit.mult.impute
+  iref <- object$interceptRef
+  if(is.character(intercepts)) {
+      switch(intercepts,
+             mid = return(object$var),
+             all = return(as.matrix(solve(object$info.matrix))),
+             none= return(object$var[-1, -1, drop=FALSE]) )
+  }
+  p  <- ncol(object$info.matrix)
+  ns <- num.intercepts(object)
+  nx <- p - ns
+  i <- if(nx == 0) intercepts else c(intercepts, (ns+1):p)
+  as.matrix(solve(object$info.matrix)[i,i])
+}
+
+vcov.rms <- function(object, regcoef.only=TRUE, intercepts='all', ...)
   {
     cov <- object$var
     if(!length(cov)) stop("fit does not have variance-covariance matrix")
-    if(regcoef.only)
-      {
-        p <- length(object$coefficients)
-        cov <- cov[1:p, 1:p, drop=FALSE]
-      }
+    if(regcoef.only) {
+      p <- length(object$coefficients)
+      cov <- cov[1:p, 1:p, drop=FALSE]
+    }
+    if(length(intercepts) && intercepts == 'none') {
+      ns <- num.intercepts(object)
+      if(ns > 0) cov <- cov[-(1:ns), -(1:ns), drop=FALSE]
+    }
     cov
   }
 
@@ -782,117 +821,100 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
       cat('\\Needspace{', needspace, '}\n', sep='')
     if(title != '') catl(title, pre=1, bold=TRUE)
 
-    if(long)
-      {
-        bverb()
-        dput(x$call)
-        cat('\n')
-        everb()
-      }
+    if(long) {
+      bverb()
+      dput(x$call)
+      cat('\n')
+      everb()
+    }
 
-    for(z in w)
-      {
-        type <- z$type
-        obj  <- z[[2]]
-        titl <- z$title
-        tex  <- z$tex
-        if(!length(tex)) tex <- FALSE
-        if(type == 'naprint.delete' && latex) {
-          type <- 'latex.naprint.delete'
-          tex <- TRUE
-        }
-
-        preskip <- z$preskip
-        if(!length(preskip)) preskip <- 0
-        if(!tex && length(titl)) catl(titl, pre=preskip, skip=1)
-        if(type == 'stats')
-          {
-            prStats(obj[[1]], obj[[2]], latex=latex)
-            if(!latex) cat('\n')
-          }
-        else if(type == 'coefmatrix')
-          {
-            if(coefs)
-              {
-                errordf <- obj$errordf
-                beta <- obj$coef
-                se   <- obj$se
-                Z    <- beta/se
-                P    <- if(length(errordf)) 2*(1 - pt(abs(Z), errordf)) else
-                        1 - pchisq(Z^2, 1)
-                pad <- function(x)
-                  if(latex) paste('~', x, '~', sep='') else x
-                U    <- cbind('\\textrm{~Coef~}' =
-                              pad(formatNP(beta, digits, latex=latex)),
-                              '\\textrm{~S.E.~}' =
-                              pad(formatNP(se,   digits, latex=latex)),
-                              '\\textrm{Wald~} Z'  =
-                              formatNP(Z,    2, latex=latex),
-                              '\\textrm{Pr}(>|Z|)' =
-                              formatNP(P, 4, latex=latex, pvalue=TRUE))
-                if(!latex)
-                  colnames(U) <- c('Coef', 'S.E.', 'Wald Z', 'Pr(>|Z|)')
-                if(length(errordf))
-                  colnames(U)[3:4] <- if(latex) c('t', '\\textrm{Pr}(>|t|)') else
-                                                c('t',   'Pr(>|t|)')
-                rownames(U) <- names(beta)
-                if(length(obj$aux))
-                  {
-                    U <- cbind(U, formatNP(obj$aux, digits, latex=latex))
-                    colnames(U)[ncol(U)] <- obj$auxname
-                  }
-                if(latex)
-                  {
-                    cat(skipt(1, latex=TRUE))
-                    rownames(U) <- latexTranslate(names(beta))
-                    if(is.numeric(coefs))
-                      {
-                        U <- U[1:coefs,,drop=FALSE]
-                        U <- rbind(U, rep('', ncol(U)))
-                        rownames(U)[nrow(U)] <- '\\dots'
-                      }
-                    if(!missing(needspace) && latex)
-                      cat('\\Needspace{', needspace, '}\n', sep='')
-                    latex(U, file='', first.hline.double=FALSE,
-                          table=FALSE, longtable=TRUE,
-                          lines.page=lines.page,
-                          col.just=rep('r',ncol(U)), rowlabel='',
-                          math.col.names=TRUE)
-                  }
-                else
-                  {
-                    if(is.numeric(coefs))
-                      {
-                        U <- U[1:coefs,,drop=FALSE]
-                        U <- rbind(U, rep('', ncol(U)))
-                        rownames(U)[nrow(U)] <- '. . .'
-                      }
-                    print(U, quote=FALSE)
-                    cat('\n')
-                  }
-              }
-          }
-        else {
-          if(tex)
-            {
-              cat('\\begin{center}\n')
-              if(length(titl)) cat(titl, '\n\n')
-            }
-          else
-            {
-              bverb()
-              cat(skipt(preskip, latex=tex))
-            }
-          do.call(type, obj)
-          ## unlike do.call, eval(call(...)) dispatches on class of ...
-          if(tex) cat('\\end{center}\n')
-          else
-            {
-              cat('\n')
-              everb()
-            }
-        }
+    for(z in w) {
+      type <- z$type
+      obj  <- z[[2]]
+      titl <- z$title
+      tex  <- z$tex
+      if(!length(tex)) tex <- FALSE
+      if(type == 'naprint.delete' && latex) {
+        type <- 'latex.naprint.delete'
+        tex <- TRUE
       }
+      
+      preskip <- z$preskip
+      if(!length(preskip)) preskip <- 0
+      if(!tex && length(titl)) catl(titl, pre=preskip, skip=1)
+      if(type == 'stats') {
+        prStats(obj[[1]], obj[[2]], latex=latex)
+        if(!latex) cat('\n')
+      } else if(type == 'coefmatrix') {
+        if(coefs) {
+          errordf <- obj$errordf
+          beta <- obj$coef
+          se   <- obj$se
+          Z    <- beta/se
+          P    <- if(length(errordf)) 2*(1 - pt(abs(Z), errordf)) else
+          1 - pchisq(Z^2, 1)
+          pad <- function(x)
+            if(latex) paste('~', x, '~', sep='') else x
+          U    <- cbind('\\textrm{~Coef~}' =
+                        pad(formatNP(beta, digits, latex=latex)),
+                        '\\textrm{~S.E.~}' =
+                        pad(formatNP(se,   digits, latex=latex)),
+                        '\\textrm{Wald~} Z'  =
+                        formatNP(Z,    2, latex=latex),
+                        '\\textrm{Pr}(>|Z|)' =
+                        formatNP(P, 4, latex=latex, pvalue=TRUE))
+          if(!latex)
+            colnames(U) <- c('Coef', 'S.E.', 'Wald Z', 'Pr(>|Z|)')
+          if(length(errordf))
+            colnames(U)[3:4] <- if(latex) c('t', '\\textrm{Pr}(>|t|)') else
+          c('t',   'Pr(>|t|)')
+          rownames(U) <- names(beta)
+          if(length(obj$aux)) {
+            U <- cbind(U, formatNP(obj$aux, digits, latex=latex))
+            colnames(U)[ncol(U)] <- obj$auxname
+          }
+          if(latex) {
+            cat(skipt(1, latex=TRUE))
+            rownames(U) <- latexTranslate(names(beta))
+            if(is.numeric(coefs)) {
+              U <- U[1:coefs,,drop=FALSE]
+              U <- rbind(U, rep('', ncol(U)))
+              rownames(U)[nrow(U)] <- '\\dots'
+            }
+            if(!missing(needspace) && latex)
+              cat('\\Needspace{', needspace, '}\n', sep='')
+            latex(U, file='', first.hline.double=FALSE,
+                  table=FALSE, longtable=TRUE,
+                  lines.page=lines.page,
+                  col.just=rep('r',ncol(U)), rowlabel='',
+                  math.col.names=TRUE)
+          } else {
+            if(is.numeric(coefs)) {
+              U <- U[1:coefs,,drop=FALSE]
+              U <- rbind(U, rep('', ncol(U)))
+              rownames(U)[nrow(U)] <- '. . .'
+            }
+            print(U, quote=FALSE)
+            cat('\n')
+          }
+        }
+      } else {
+        if(tex) {
+          cat('\\begin{center}\n')
+          if(length(titl)) cat(titl, '\n\n')
+        } else {
+          bverb()
+          cat(skipt(preskip, latex=tex))
+        }
+        do.call(type, obj)
+        ## unlike do.call, eval(call(...)) dispatches on class of ...
+        if(tex) cat('\\end{center}\n')
+          else {
+            cat('\n')
+            everb()
+          }
+      }
+    }
     cat('\n')
   }
 
@@ -947,88 +969,84 @@ prStats <- function(labels, w, latex=FALSE)
     ## Find maximum width used for each column
     p <- length(labels)
     width <- numeric(p)
-    for(i in 1:p)
-      {
-        width[i] <- max(nchar(labels[[i]]))
-        u <- w[[i]]
-        dig <- NA
-        if(any(names(u)==''))
-          {
-            dig <- u[names(u)=='']
-            u   <- u[names(u)!='']
-          }
-        lu <- length(u)
-        dig <- rep(dig, length=lu)
-        fu <- character(lu)
-        for(j in 1:length(u))
-          {
-            dg <- dig[j]
-            fu[j] <- if(is.na(dg)) format(u[j]) else
-            if(dg < 0) formatNP(u[j], -dg, pvalue=TRUE, latex=latex) else
-            formatNP(u[j], dg, latex=latex)
-          }
-        names(fu) <- names(u)
-        w[[i]] <- fu
-        for(j in 1:length(u))
-          width[i] <- max(width[i],
-                          1 + nchar(names(u))[j] + nchar(fu[j]))
+    for(i in 1:p) {
+      width[i] <- max(nchar(labels[[i]]))
+      u <- w[[i]]
+      dig <- NA
+      if(any(names(u)=='')) {
+        dig <- u[names(u)=='']
+        u   <- u[names(u)!='']
       }
-    if(latex)
-      {
-        cat('\\centerline{\\begin{tabular}{|', rep('c|',p), '}\\hline\n',
-            sep='')
-        if(sum(nchar(unlist(labels))) > 0)
-          {
-            maxl <- max(sapply(labels, length))
-            for(i in 1:maxl)
-              {
-                lab <- sapply(labels, function(x) if(length(x) < i)'' else x[i])
-                cat(paste(lab, collapse='&'), '\\\\ \n', sep='')
-              }
-            cat('\\hline\n')
-          }
-        maxl <- max(sapply(w, length))
-        z <- matrix('', nrow=maxl, ncol=p)
-        for(i in 1:p)
-          {
-            k <- latexTranslate(names(w[[i]]), greek=TRUE)
-            k[k=='Dxy']   <- '$D_{xy}$'
-            k[k=='LR chi2']  <- 'LR $\\chi^{2}$'
-            k[k=='Score chi2'] <- 'Score $\\chi^{2}$'
-            k[k=='Pr($>$ chi2)'] <- 'Pr$(>\\chi^{2})$'
-            k[k=='$\\tau$-a'] <- '$\\tau_{a}$'
-            k[k=='R2']    <- '$R^{2}$'
-            k[k=='R2 adj'] <- '$R^{2}_{\\textrm{adj}}$'
-            k[k=='C']     <- '$C$'
-            k[k=='g']     <- '$g$'
-            k[k=='gp']    <- '$g_{p}$'
-            k[k=='gr']    <- '$g_{r}$'
-            k[k=='max $|$deriv$|$'] <- 'max $|$deriv$|$~'
-            k[k=='mean $|$Y-Yhat$|$'] <- 'mean $|Y-\\hat{Y}|$'
-            z[1:length(k),i] <- paste(k, '~\\hfill ', w[[i]], sep='')
-          }
-        for(j in 1:maxl) cat(paste(z[j,], collapse='&'), '\\\\ \n', sep='')
+      lu <- length(u)
+      dig <- rep(dig, length=lu)
+      fu <- character(lu)
+      for(j in 1:length(u)) {
+        dg <- dig[j]
+        fu[j] <- if(is.na(dg)) format(u[j]) else
+        if(dg < 0) formatNP(u[j], -dg, pvalue=TRUE, latex=latex) else
+        formatNP(u[j], dg, latex=latex)
+      }
+      names(fu) <- names(u)
+      w[[i]] <- fu
+      for(j in 1:length(u))
+        width[i] <- max(width[i],
+                        1 + nchar(names(u))[j] + nchar(fu[j]))
+    }
+    if(latex) {
+      cat('\\centerline{\\begin{tabular}{|', rep('c|',p), '}\\hline\n',
+          sep='')
+      if(sum(nchar(unlist(labels))) > 0) {
+        maxl <- max(sapply(labels, length))
+        for(i in 1:maxl) {
+          lab <- sapply(labels, function(x) if(length(x) < i) '' else x[i])
+          cat(paste(lab, collapse='&'), '\\\\ \n', sep='')
+        }
         cat('\\hline\n')
-        cat('\\end{tabular}}\n\n')
-        return()
       }
+      maxl <- max(sapply(w, length))
+      z <- matrix('', nrow=maxl, ncol=p)
+      for(i in 1:p) {
+        k <- latexTranslate(names(w[[i]]), greek=TRUE)
+        k[k=='Dxy']   <- '$D_{xy}$'
+        k[k=='LR chi2']  <- 'LR $\\chi^{2}$'
+        k[k=='Score chi2'] <- 'Score $\\chi^{2}$'
+        k[k=='Pr($>$ chi2)'] <- 'Pr$(>\\chi^{2})$'
+        k[k=='$\\tau$-a'] <- '$\\tau_{a}$'
+        k[k=='R2']    <- '$R^{2}$'
+        k[k=='R2 adj'] <- '$R^{2}_{\\textrm{adj}}$'
+        k[k=='C']     <- '$C$'
+        k[k=='g']     <- '$g$'
+        k[k=='gp']    <- '$g_{p}$'
+        k[k=='gr']    <- '$g_{r}$'
+        k[k=='max $|$deriv$|$'] <- '$\\max|\\frac{\\partial\\log L}{\\partial \\beta}|$'
+        k[k=='mean $|$Y-Yhat$|$'] <- 'mean $|Y-\\hat{Y}|$'
+        k[k=='Unique Y'] <- 'Unique $Y$'
+        k[k=='Median Y'] <- '$Y_{0.5}$'
+        k[k=='$|$Pr(Y$\\geq$median)-0.5$|$'] <-
+          '$|\\overline{\\mathrm{Pr}(Y\\geq Y_{0.5})-\\frac{1}{2}}|$'
+        z[1:length(k),i] <- paste(k, '~\\hfill ', w[[i]], sep='')
+      }
+      for(j in 1:maxl) cat(paste(z[j,], collapse='&'), '\\\\ \n', sep='')
+      cat('\\hline\n')
+      cat('\\end{tabular}}\n\n')
+      return()
+    }
     z <- labs <- character(0)
-    for(i in 1:p)
-      {
-        wid <- width[i]
-        lab <- labels[[i]]
-        for(j in 1:length(lab))
-          lab[j] <- paste(spaces((wid - nchar(lab[j]))/2), lab[j], sep='')
-        labs <- c(labs, paste(lab, collapse='\n'))
-        u   <- w[[i]]
-        a <- ''
-        for(i in 1:length(u))
-          a <- paste(a, names(u)[i],
-                     spaces(wid - nchar(u[i]) - nchar(names(u[i]))),
-                     u[i],
-                     if(i < length(u)) '\n', sep='')
-        z <- c(z, a)
-      }
+    for(i in 1:p) {
+      wid <- width[i]
+      lab <- labels[[i]]
+      for(j in 1:length(lab))
+        lab[j] <- paste(spaces((wid - nchar(lab[j]))/2), lab[j], sep='')
+      labs <- c(labs, paste(lab, collapse='\n'))
+      u   <- w[[i]]
+      a <- ''
+      for(i in 1:length(u))
+        a <- paste(a, names(u)[i],
+                   spaces(wid - nchar(u[i]) - nchar(names(u[i]))),
+                   u[i],
+                   if(i < length(u)) '\n', sep='')
+      z <- c(z, a)
+    }
     res <- rbind(labs, z)
     rownames(res) <- NULL
     print.char.matrix(res, vsep='', hsep='    ', csep='',
@@ -1057,15 +1075,15 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE, latex=FALSE)
       format(x, scientific=1)
     sci <- grep('e', f)
     if(latex && length(sci)) f[sci] <- paste('$', latexSN(f[sci]), '$', sep='')
+    f <- ifelse(is.na(x), '', f)
     if(!pvalue) return(f)
     if(!length(digits)) stop('must specify digits if pvalue=TRUE')
-    s <- x < 10^(-digits)
-    if(any(s))
-      {
-        w <- paste('0.', paste(rep('0', digits-1), collapse=''), '1', sep='')
-        f[s] <- if(latex) paste('$<', w, '$', sep='') else
-        paste('<', w, sep='')
-      }
+    s <- !is.na(x) & x < 10^(-digits)
+    if(any(s)) {
+      w <- paste('0.', paste(rep('0', digits-1), collapse=''), '1', sep='')
+      f[s] <- if(latex) paste('$<', w, '$', sep='') else
+      paste('<', w, sep='')
+    }
     f
   }
 

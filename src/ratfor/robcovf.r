@@ -1,8 +1,9 @@
-# Computes sum of (within cluster sum of U)(within cluster sum of U)'
-#
+## Usage: ratfor -o ../robcovf.f robcovf.r
+## Computes sum of (within cluster sum of U)(within cluster sum of U)'
+##
 SUBROUTINE robcovf(n, p, nc, start, len, u, s, v, w)
 IMPLICIT REAL*8 (a-h,o-z)
-INTEGER p, start(p), len(p)
+INTEGER p, start(nc), len(nc)
 REAL*8 u(n,p), s(p), v(p,p), w(p,p)
 
 do i=1,p		{

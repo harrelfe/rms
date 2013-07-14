@@ -83,7 +83,7 @@ bj <- function(formula=formula(data), data,
   fit$formula <- as.vector(attr(Terms, "formula"))
   fit$call    <- call
   fit$Design  <- atr
-  if (x) fit$x <- X
+  if (x) fit$x <- X[, -1, drop=FALSE]
   if (y)
     {
       oldClass(Y) <- 'Surv'
@@ -242,7 +242,7 @@ bjplot <- function(fit, which=1:dim(X)[[2]])
 {
   if(!all(c('x','y') %in% names(fit)))
 	stop('must specify x=TRUE,y=TRUE to bj to use bjplot')
-  X <- (fit$x)[,-1,drop=FALSE]
+  X <- fit$x
   Y <- fit$y
   xnam <- dimnames(X)[[2]]
   yy <- fit$y.imputed
@@ -373,12 +373,12 @@ predict.bj <-
              "adjto.data.frame", "model.frame"),
            se.fit=FALSE, conf.int=FALSE,
            conf.type=c('mean','individual','simultaneous'),
-           incl.non.slopes, non.slopes, kint=1,
+           kint=1,
            na.action=na.keep, expand.na=TRUE, center.terms=type=="terms", ...)
   {
     type <- match.arg(type)
     predictrms(object, newdata, type, se.fit, conf.int, conf.type,
-               incl.non.slopes, non.slopes, kint,
+               kint,
                na.action, expand.na, center.terms, ...)
   }
 

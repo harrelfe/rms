@@ -5,11 +5,11 @@
 
 predictrms <-
   function(fit, newdata=NULL,
-           type=c("lp","x","data.frame","terms","cterms","ccterms","adjto",
-             "adjto.data.frame","model.frame"),
+           type=c("lp", "x", "data.frame", "terms", "cterms", "ccterms",
+             "adjto", "adjto.data.frame", "model.frame"),
            se.fit=FALSE, conf.int=FALSE,
-           conf.type=c('mean','individual','simultaneous'),
-           incl.non.slopes=NULL, non.slopes=NULL, kint=1,
+           conf.type=c('mean', 'individual', 'simultaneous'),
+           kint=NULL,
            na.action=na.keep, expand.na=TRUE,
            center.terms=type=="terms", ref.zero=FALSE, ...)
 {
@@ -20,50 +20,37 @@ predictrms <-
     if(missing(newdata) || !length(newdata))
       stop('newdata must be given if conf.type="simultaneous"')
   }
-  ## R does not preserve missing(x)
-  mnon.slopes <- missing(non.slopes) || !length(non.slopes)  # was missing( )
 
   at        <- fit$Design
   assume    <- at$assume.code
   Limval    <- Getlim(at, allow.null=TRUE, need.all=FALSE)
   Values    <- Limval$values
-  non.ia    <- assume != 9
-  non.strat <- assume != 8
+  non.ia    <- assume != 9L
+  non.strat <- assume != 8L
   f <- sum(non.ia)
-  nstrata   <- sum(assume==8)
+  nstrata   <- sum(assume == 8L)
   somex     <- any(non.strat)
   rnam      <- NULL
   cox <- inherits(fit, "cph") ||
-          (length(fit$fitFunction) && any(fit$fitFunction=='cph'))
+          (length(fit$fitFunction) && any(fit$fitFunction == 'cph'))
   naa <- fit$na.action
   if(!expand.na)
     naresid <- function(a,b) b #don't really call naresid if drop NAs
 
-  parms <- at$parms
-  name  <- at$name
-  coeff <- fit$coefficients
-  nrp   <- num.intercepts(fit)
+  parms   <- at$parms
+  name    <- at$name
+  coeff   <- fit$coefficients
+  nrp     <- num.intercepts(fit)
+  nrpcoef <- num.intercepts(fit, 'coef')
+  if(!length(kint)) kint <- fit$interceptRef  # orm or lrm otherwise NULL
 
-  if(mnon.slopes) {
-    non.slopes <- rep(0,nrp)
-    non.slopes[kint] <- 1
-  }
-  else if(nrp>0 & length(non.slopes)!=nrp)
-    stop("length of non.slopes incompatible with fit")
-
-  int.pres <- nrp > 0
-  if(somex) cov <- vcov(fit, regcoef.only=TRUE)    #remove scale params
-  if(missing(incl.non.slopes) || !length(incl.non.slopes))
-    incl.non.slopes <- !mnon.slopes | (!missing(kint)) | 
-                        int.pres | type!="x"
-  int.pres <- int.pres & incl.non.slopes
+  int.pres <- nrp > 0L
 
   assign <- fit$assign
-
-  nama <- names(assign)[1]
+  nama <- names(assign)[1L]
   asso <- 1*(nama=="Intercept" | nama=="(Intercept)")
 
-  Center <- if(cox)fit$center else 0
+  Center <- if(cox) fit$center else 0.
 
   oldopts <- options(contrasts=c(factor="contr.treatment",ordered="contr.poly"),
                      Design.attr=at)
@@ -78,8 +65,8 @@ predictrms <-
   off <- attr(Terms, 'offset')
   if(length(off)) Terms <- drop.terms(Terms, off)
   
-  attr(Terms,"response")  <- 0
-  attr(Terms,"intercept") <- 1
+  attr(Terms,"response")  <- 0L
+  attr(Terms,"intercept") <- 1L
   ##Need intercept whenever design matrix is generated to get
   ##current list of dummy variables for factor variables
   stra <- attr(Terms, "specials")$strat
@@ -87,33 +74,74 @@ predictrms <-
   Terms.ns <- if(length(stra)) Terms[-stra] else Terms
 
   if(conf.int) {
-    vconstant <- 0
+    vconstant <- 0.
     if(conf.type=='individual') {
       vconstant <- fit$stats['Sigma']^2
       if(is.na(vconstant))
         stop('conf.type="individual" requires that fit be from ols')
     }
-    zcrit <- if(length(idf <- fit$df.residual)) qt((1+conf.int)/2, idf) else
-    qnorm((1+conf.int)/2)
+    zcrit <- if(length(idf <- fit$df.residual))
+      qt((1. + conf.int) / 2., idf) else qnorm((1. + conf.int) / 2.)
   }
 
+  ## Form design matrix for adjust-to values
+  Adjto <- function(type) {
+    adjto <- list()
+    ii <- 0L
+    for(i in (1L : length(assume))[non.ia]) {
+      ii <- ii + 1L
+      xi <- Getlimi(name[i], Limval, need.all=TRUE)[2L]
+      if(assume[i] %in% c(5L, 8L))
+        xi <- factor(xi, parms[[name[i]]])
+      else
+        if(assume[i] == 7L) xi <- scored(xi, name=name[i])
+        else
+          if(assume[i] == 10L)
+            xi <- matrix(parms[[name[i]]], nrow=1) #matrx col medians
+      adjto[[ii]] <- xi
+    }
+    names(adjto) <- name[non.ia]
+    attr(adjto, "row.names") <- "1"
+    class(adjto) <- "data.frame"
+    if(type == "adjto.data.frame") return(adjto)
+    adjto <- model.frame(Terms, adjto)
+    adjto <- if(int.pres) model.matrix(Terms.ns,adjto)[, -1, drop=FALSE]
+    
+    if(type=="adjto") {
+      k <- (nrpcoef + 1L) : length(coeff)
+      nck <- names(coeff)[k]
+      if(is.matrix(adjto))
+        dimnames(adjto) <- list(dimnames(adjto)[[1L]], nck)
+      else names(adjto) <- nck
+    }
+    adjto
+  }
+
+  adjto <- NULL
+  
   if(type != "adjto" & type != "adjto.data.frame") {
     X <- NULL
     if(missing(newdata) || !length(newdata)) {
-      if(type=="lp" && length(fit$linear.predictors)) {
-        LP <- naresid(naa, fit$linear.predictors)
-        if(kint > 1)
-          LP <- LP - fit$coefficients[1] + fit$coefficients[kint]
+      flp <- fit$linear.predictors
+      if(type == "lp" && length(flp)) {
+        LP  <- naresid(naa, flp)
+        if(int.pres) {
+          lpkint <- attr(flp, 'intercepts')
+          if(!length(lpkint)) lpkint <- 1L
+          if(length(kint) && kint != lpkint)
+            {
+              LP <- LP - coeff[lpkint] + coeff[kint]
+            }
+        }
         if(length(stra <- fit$Strata))
           attr(LP, "strata") <- naresid(naa, stra)
-        if(!se.fit && !conf.int)return(LP)
+        if(!se.fit && !conf.int) return(LP)
         else
           if(length(fit$se.fit)) {
-            if(kint>1)
-              warning("se.fit is retrieved from the fit but it corresponded to kint=1")
+            if(nrp > 1L)
+              warning("se.fit is retrieved from the fit but it corresponded to kint")
             retlist <- list(linear.predictors=LP)
-            if(se.fit) retlist$se.fit <-
-              naresid(naa, fit$se.fit)
+            if(se.fit) retlist$se.fit <- naresid(naa, fit$se.fit)
             if(conf.int) {
               plminus <- zcrit*sqrt(retlist$se.fit^2 + vconstant)
               retlist$lower <- LP - plminus
@@ -121,77 +149,77 @@ predictrms <-
             }
             return(retlist)
           }
-      }
+      }   # end type='lp'
       else
         if(type=="x") return(structure(naresid(naa, fit$x),
              strata=if(length(stra <- fit$Strata))
              naresid(naa, stra) else NULL))
-      X <- fit$x
+      X <- fit[['x']]
       rnam <- dimnames(X)[[1]]
-      if(!any(names(fit)=="x")) X <- NULL  #fit$x can get fit$xref
       if(!length(X))
         stop("newdata not given and fit did not store x")
-    }
+    }   # end no newdata
     if(!length(X)) {
       if(!is.data.frame(newdata)) {
         if(is.list(newdata)) {
-          loc <- if(!length(names(newdata))) 1:f else name[assume!=9]
-          new <- matrix(double(1),
-                        nrow=length(newdata[[1]]),
+          loc <- if(!length(names(newdata))) 1L : f else name[assume != 9L]
+          new <- matrix(double(1L),
+                        nrow=length(newdata[[1L]]),
                         ncol=length(newdata))
-          for(j in 1:ncol(new)) new[,j] <- newdata[[loc[j]]]
+          for(j in 1L : ncol(new)) new[,j] <- newdata[[loc[j]]]
           newdata <- new
         }
         if(!is.matrix(newdata)) newdata <- matrix(newdata, ncol=f)
         if(ncol(newdata) != f)
           stop("# columns in newdata not= # factors in design")
         X  <- list()
-        k  <- 0
-        ii <- 0
-        for(i in (1:length(assume))[non.ia]) {
-          ii <- ii+1
-          xi <- newdata[,ii]
+        k  <- 0L
+        ii <- 0L
+        for(i in (1L : length(assume))[non.ia]) {
+          ii <- ii + 1L
+          xi <- newdata[, ii]
           as <- assume[i]
           allna <- all(is.na(xi))
-          if(as==5 | as==8) {
+          if(as == 5L | as == 8L) {
             xi <- as.integer(xi)
             levels(xi) <- parms[[name[i]]]
             class(xi) <- "factor"
           }
-          else if(as==10) {
-            if(i==1) ifact <- 1
-            else ifact <- 1 + sum(assume[1:(i-1)]!=8)
+          else if(as == 10L) {
+            if(i == 1) ifact <- 1L
+            else ifact <- 1L + sum(assume[1L : (i - 1L)] != 8L)
             ##	Accounts for assign not being output for strata factors
-            ncols <- length(assign[[ifact+asso]])
+            ncols <- length(assign[[ifact + asso]])
             if(allna) {
-              xi <- matrix(double(1),
+              xi <- matrix(double(1L),
                            nrow=length(xi), ncol=ncols)
-              for(j in 1:ncol(xi)) xi[,j] <- parms[[name[i]]][j]
+              for(j in 1L : ncol(xi)) xi[,j] <- parms[[name[i]]][j]
             }
             else xi <- matrix(xi, nrow=length(xi), ncol=ncols)
           }
           ##	Duplicate single value for all parts of matrix
-          k <- k + 1
+          k <- k + 1L
           X[[k]] <- xi
         }
         names(X) <- name[non.ia]
-        attr(X, "row.names") <- as.character(1:nrow(newdata))
+        attr(X, "row.names") <- as.character(1L : nrow(newdata))
         class(X) <- "data.frame"
         newdata <- X
-        ##Note: data.frame() converts matrix variables to individual variables
+        ## Note: data.frame() converts matrix variables to individual variables
         if(type=="data.frame") return(newdata)
-      }
+      }  # end !is.data.frame(newdata)
       else {
         ## Need to convert any factors to have all levels in original fit
         ## Otherwise, wrong dummy variables will be generated by model.matrix
+        
         nm <- names(newdata)
-        for(i in 1:ncol(newdata)) {
+        for(i in 1L : ncol(newdata)) {
           j <- match(nm[i], name)
           if(!is.na(j)) {
             asj <- assume[j]
-            w <- newdata[,i]
-            V <- NULL
-            if(asj==5 | asj==7 | asj==8 | 
+            w   <- newdata[,i]
+            V   <- NULL
+            if(asj %in% c(5L, 7L, 8L) | 
                (name[j] %in% names(Values) &&
                 length(V <- Values[[name[j]]]) && is.character(V))) {
               if(length(Pa <- parms[[name[j]]])) V <- Pa
@@ -207,7 +235,7 @@ predictrms <-
             }
           }
         }
-      }
+      }  # is.data.frame(newdata)
       X <- model.frame(Terms, newdata, na.action=na.action, ...)
       if(type=="model.frame") return(X)
       naa <- attr(X, "na.action")
@@ -216,131 +244,81 @@ predictrms <-
       strata <- list()
       nst <- 0
       ii <- 0
-      for(i in 1:ncol(X)) {
-        ii <- ii + 1
+      for(i in 1L : ncol(X)) {
+        ii <- ii + 1L
         xi <- X[[i]]
         asi <- attr(xi, "assume.code")
         as <- assume[ii]
-        if(!length(asi) && as==7) {
-          attr(X[,i],"contrasts") <- 
-            attr(scored(xi,name=name[ii]),"contrasts")
-          if(length(xi)==1) warning("a bug in model.matrix can produce incorrect results\nwhen only one observation is being predicted for an ordered variable")
+        if(!length(asi) && as == 7L) {
+          attr(X[,i], "contrasts") <- 
+            attr(scored(xi, name=name[ii]), "contrasts")
+          if(length(xi) == 1L) warning("a bug in model.matrix can produce incorrect results\nwhen only one observation is being predicted for an ordered variable")
         }
-            
-        if(as==8) {
-          nst <- nst+1
+        
+        if(as == 8L) {
+          nst <- nst + 1L
           ste <- paste(name[ii], parms[[name[ii]]], sep='=')
           strata[[nst]] <- factor(ste[X[,i]], ste)
         }
       }
       X <- if(!somex) NULL
-      else
-        if(int.pres && nrp==1) model.matrix(Terms.ns, X)
-        else
-          model.matrix(Terms.ns, X)[,-1,drop=FALSE]
+      else model.matrix(Terms.ns, X)[, -1L, drop=FALSE]
       
-      if(nstrata > 0) {
-        names(strata) <- paste("S",1:nstrata,sep="")
+      if(nstrata > 0L) {
+        names(strata) <- paste("S", 1L : nstrata, sep="")
         strata <- interaction(as.data.frame(strata), drop=FALSE)
       }
-    }
-    else strata <- attr(X,"strata")
-    added.col <- if(incl.non.slopes & (nrp>1 | !int.pres)) nrp else 0
-    if(incl.non.slopes & nrp > 0 & somex & added.col > 0) {
-      xx <- matrix(double(1),
-                   nrow=nrow(X), ncol=added.col)
-      for(j in 1:nrp) xx[,j] <- non.slopes[j]
-    }
-    else xx <- NULL
-  }
-  
-  ## For models with multiple intercepts, delete elements of covariance matrix
-  ## containing unused intercepts
-  elements.to.delete <- 9999
-  if(somex && nrp>1) {
-    i <- (1:nrp)[non.slopes==0]; cov <- cov[-i,-i,drop=FALSE] 
-    elements.to.delete <- i
-  }
-  
-  if(type=="adjto" | type=="adjto.data.frame" | ref.zero |
-     (center.terms && type %in% c("terms","cterms","ccterms")) | 
-     (cox & (se.fit | conf.int))) {
-    ## Form design matrix for adjust-to values
-    adjto <- list()
-    ii <- 0
-    for(i in (1:length(assume))[non.ia]) {
-      ii <- ii+1
-      xi <- Getlimi(name[i], Limval, need.all=TRUE)[2]
-      if(assume[i]==5 | assume[i]==8)
-        xi <- factor(xi,parms[[name[i]]])
-      else
-        if(assume[i]==7) xi <- scored(xi, name=name[i])
-        else
-          if(assume[i]==10)
-            xi <- matrix(parms[[name[i]]],nrow=1) #matrx col medians
-      adjto[[ii]] <- xi
-    }
-    names(adjto) <- name[non.ia]
-    attr(adjto,"row.names") <- "1"
-    class(adjto) <- "data.frame"
-    if(type=="adjto.data.frame") return(adjto)
-    adjto <- model.frame(Terms, adjto)
-    adjto <- if(int.pres) model.matrix(Terms.ns, adjto) else
-    model.matrix(Terms.ns,adjto)[, -1, drop=FALSE]
-    
-    if(type=="adjto") {
-      k <- if(int.pres) 1:length(coeff) else (nrp+1):length(coeff)
-      if(is.matrix(adjto))
-        dimnames(adjto) <- list(dimnames(adjto)[[1]],names(coeff)[k])
-      else names(adjto) <- names(coeff)[k]
-      return(adjto)
-    }
-  }
-  
-  if(length(xx) && type %nin% c("terms","cterms","ccterms") &&
-     incl.non.slopes) {
-    X <- cbind(xx, X)
-    dimnames(X) <- list(rnam, names(coeff))
-    if(cox & (se.fit | conf.int)) adjto <- c(xx[1,], adjto)
-  }
-  
-  else if(somex) dimnames(X) <- 
-    list(rnam,names(coeff)[(1 + length(coeff) - ncol(X)):length(coeff)])
+    }   # end !length(X)
+    else strata <- attr(X, "strata")
+  }   # if(end adj.to adj.to.data.frame)
+  cov <- vcov(fit, regcoef.only=TRUE, intercepts=kint)
+  covnoint <- if(nrp == 0) cov
+  else 
+    vcov(fit, regcoef.only=TRUE, intercepts='none')
 
+  if(type %in% c('adjto.data.frame', 'adjto')) return(Adjto(type))
+  
   if(type=="x") return(
-       structure(naresid(naa,X),
-                 strata=if(nstrata > 0)  naresid(naa,strata) else NULL,
-                 na.action=if(expand.na)NULL else naa)
+       structure(naresid(naa, X),
+                 strata=if(nstrata > 0)  naresid(naa, strata) else NULL,
+                 na.action=if(expand.na) NULL else naa)
        )
   
-  if(type=="lp") {
+  if(type == "lp") {
     if(somex) {
-      if(any(elements.to.delete==9999)) cof <- coeff
-      else {
-        cof <- coeff[-elements.to.delete]
-        X <- X[,-elements.to.delete,drop=FALSE]
-      }
-      xb <- matxv(X, cof) - Center
+      xb <- matxv(X, coeff, kint=kint) - Center
       names(xb) <- rnam
     }
     else {
       xb <- numeric(0)
       if(nstrata > 0) attr(xb, 'strata') <- naresid(naa, strata)
-      return(structure(if(se.fit) list(linear.predictors=xb,
-                                       se.fit=rep(NA, length(xb))) else
+      return(structure(if(se.fit)
+                       list(linear.predictors=xb,
+                            se.fit=rep(NA, length(xb))) else
                        xb,
                        na.action=if(expand.na) NULL else naa))
     }
     xb <- naresid(naa, xb)
-    if(nstrata > 0) attr(xb,"strata") <- naresid(naa,strata)
-    ycenter <- if(ref.zero && somex) matxv(adjto, cof) - Center else 0
+    if(nstrata > 0) attr(xb, "strata") <- naresid(naa, strata)
+    ycenter <- if(ref.zero && somex) {
+      if(!length(adjto)) adjto <- Adjto(type)
+      matxv(adjto, coeff, kint=kint) - Center
+      } else 0.
     
     if(ref.zero || ((se.fit || conf.int) && somex)) {
       dx <- dim(X)
-      n <- dx[1]; p <- dx[2]
+      n <- dx[1L]; p <- dx[2L]
       if(cox)      X <- X - rep(fit$means, rep.int(n, p)) else
-      if(ref.zero) X <- X - rep(adjto,     rep.int(n, p))
-      se <- drop(sqrt(((X %*% cov) * X) %*% rep(1, ncol(X))))
+      if(ref.zero) {
+        if(!length(adjto)) adjto <- Adjto(type)
+        X <- X - rep(adjto, rep.int(n, p))
+      }
+      se <- drop(if(ref.zero || nrp == 0L)
+                 sqrt(((X %*% covnoint) * X) %*% rep(1L, ncol(X)))
+      else {
+        Xx <- cbind(Intercept=1., X)
+        sqrt(((Xx %*% cov) * Xx) %*% rep(1L, ncol(Xx)))
+      })
       names(se) <- rnam
       
       sef <- naresid(naa, se)
@@ -354,8 +332,9 @@ predictrms <-
                            na.action=if(expand.na) NULL else naa)
       if(conf.int) {
         if(conf.type == 'simultaneous') {
-          u <- confint(glht(fit, X,
-                            df=if(length(idf)) idf else 0),
+          u <- confint(glht(fit,
+                            if(num.intercepts.not.in.X == 0L) X else Xx,
+                            df=if(length(idf)) idf else 0L),
                        level=conf.int)$confint
           retlist$lower <- u[,'lwr']
           retlist$upper <- u[,'upr']
@@ -368,7 +347,7 @@ predictrms <-
       return(retlist)
     }
     else return(structure(xb - ycenter, na.action=if(expand.na)NULL else naa))
-  }
+  }   ## end if type='lp'
 
   if(type %in% c("terms", "cterms", "ccterms")) {
     if(!somex)
@@ -379,32 +358,34 @@ predictrms <-
                     list(rnam, name[usevar]))
     if(se.fit) se <- fitted
     if(center.terms) {
+      if(!length(adjto)) adjto <- Adjto(type)
       if(ncol(adjto) != ncol(X)) {
-        if(dimnames(adjto)[[2]][1] %in% c('Intercept','(Intercept)') &&
-           dimnames(X)[[2]][1]    %nin% c('Intercept','(Intercept)'))
-          adjto <- adjto[,-1,drop=FALSE]
+        if(dimnames(adjto)[[2L]][1L] %in% c('Intercept','(Intercept)') &&
+           dimnames(X)[[2L]][1L]    %nin% c('Intercept','(Intercept)'))
+          adjto <- adjto[, -1L, drop=FALSE]
         if(ncol(adjto) != ncol(X)) stop('program logic error')
       }
-      X <- sweep(X, 2, adjto) # center columns
+      X <- sweep(X, 2L, adjto) # center columns
     }
     num.intercepts.not.in.X <- length(coeff) - ncol(X)
-    j <- 0
-    for(i in (1:length(assume))[usevar]) {
-      j <- j+1
-      if(assume[i]!=8) { # non-strat factor; otherwise leave fitted=0
-        k <- assign[[j+asso]]
+    j <- 0L
+    for(i in (1L : length(assume))[usevar]) {
+      j <- j + 1L
+      if(assume[i] != 8L) { # non-strat factor; otherwise leave fitted=0
+        k <- assign[[j + asso]]
         ko <- k - num.intercepts.not.in.X
-        fitted[,j] <- matxv(X[,ko,drop=FALSE], coeff[k])
+        fitted[, j] <- matxv(X[, ko, drop=FALSE], coeff[k])
         if(se.fit) se[,j] <-
-          (((X[, ko, drop=FALSE]  %*% cov[ko, ko, drop=FALSE]) * 
-            X[, ko, drop=FALSE]) %*% rep(1, length(ko)))^.5
+          (((X[, ko, drop=FALSE]  %*% cov[k, k, drop=FALSE]) * 
+             X[, ko, drop=FALSE]) %*% rep(1., length(ko)))^.5
       }
     }
-    if(type=="cterms") {
+    if(type == "cterms") {
       ## Combine all related interation terms with main effect terms
       w <- fitted[, non.ia, drop=FALSE]  # non-interaction terms
-      for(i in 1:f) {
-        ia <- interactions.containing(at, i) # subscripts of interaction terms related to predictor i
+      for(i in 1L : f) {
+        ia <- interactions.containing(at, i)
+        ## subscripts of interaction terms related to predictor i
         if(length(ia)) w[, i] <- rowSums(fitted[, c(i,ia), drop=FALSE])
       }
       fitted <- w
@@ -415,8 +396,8 @@ predictrms <-
         f <- length(z$names)
         w <- matrix(NA, ncol=f, nrow=nrow(fitted))
         colnames(w) <- sapply(z$names, paste, collapse=', ')
-        for(i in 1:f)
-          w[,i] <- rowSums(fitted[,z$namesia[[i]], drop=FALSE])
+        for(i in 1L : f)
+          w[,i] <- rowSums(fitted[, z$namesia[[i]], drop=FALSE])
         fitted <- w
       }
     

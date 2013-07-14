@@ -1,11 +1,11 @@
 \name{validate.lrm}
 \alias{validate.lrm}
-\title{
-Resampling Validation of a Logistic Model
-}
+\alias{validate.orm}
+\title{Resampling Validation of a Logistic or Ordinal Regression Model}
 \description{
 The \code{validate} function when used on an object created by
-\code{lrm} does resampling validation of a logistic regression model,
+\code{lrm} or \code{orm} does resampling validation of a logistic
+regression model, 
 with or without backward step-down variable deletion.  It provides
 bias-corrected Somers' \eqn{D_{xy}} rank correlation, R-squared index,
 the intercept and slope of an overall logistic calibration equation, the
@@ -19,43 +19,52 @@ probability score) \eqn{Q = D - U}, and the Brier or quadratic
 probability score, \eqn{B} (the last 3 are not computed for ordinal
 models), the \eqn{g}-index, and \code{gp}, the \eqn{g}-index on the
 probability scale.  The corrected slope can be thought of as shrinkage
-factor that takes into account overfitting.
+factor that takes into account overfitting.  For \code{orm} fits, a
+subset of the above indexes is provided, Spearman's \eqn{\rho} is
+substituted for \eqn{D_{xy}}, and a new index is reported: \code{pdm}, the mean
+	absolute difference between 0.5 and the predicted probability that
+	\eqn{Y\geq} the marginal median of \eqn{Y}.
 }
 
 \usage{
-# fit <- lrm(formula=response ~ terms, x=TRUE, y=TRUE)
+# fit <- lrm(formula=response ~ terms, x=TRUE, y=TRUE) or orm
 \method{validate}{lrm}(fit, method="boot", B=40,
          bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0,
          force=NULL, estimates=TRUE,
          pr=FALSE,  kint, Dxy.method=if(k==1) 'somers2' else 'lrm',
          emax.lim=c(0,1), \dots)
+\method{validate}{orm}(fit, method="boot", B=40, bw=FALSE, rule="aic",
+         type="residual",	sls=.05, aics=0, force=NULL, estimates=TRUE,
+         pr=FALSE,  ...)
 }
 \arguments{
 \item{fit}{
-a fit derived by \code{lrm}. The options \code{x=TRUE} and \code{y=TRUE}
-must have been specified.
+a fit derived by \code{lrm} or \code{orm}. The options \code{x=TRUE} and
+\code{y=TRUE} must have been specified.
 }
 \item{method,B,bw,rule,type,sls,aics,force,estimates,pr}{see \code{\link{validate}} and \code{\link{predab.resample}}}
 \item{kint}{
 In the case of an ordinal model, specify which intercept to validate.
-Default is the middle intercept.
+Default is the middle intercept.  For \code{validate.orm},
+intercept-specific quantities are not validated so this does not matter.
 }
 \item{Dxy.method}{
 \code{"lrm"} to use \code{lrm}s computation of \eqn{D_{xy}} correlation,
-which rounds 
-predicted probabilities to nearest .002.  Use \code{Dxy.method="somers2"} (the
-default) to instead use the more accurate but slower \code{somers2} function.  This
-will matter most when the model is extremely predictive.
-The default is \code{"lrm"} for ordinal models, since \code{somers2} only handles
-binary response variables.
+which rounds predicted probabilities to nearest .002.  Use
+\code{Dxy.method="somers2"} (the default) to instead use the more
+accurate but slower \code{somers2} function.  This will matter most when
+the model is extremely predictive. The default is \code{"lrm"} for
+ordinal models, since \code{somers2} only handles binary response
+variables. 
 }
 \item{emax.lim}{
-range of predicted probabilities over which to compute the maximum error.  Default is entire range.
+range of predicted probabilities over which to compute the maximum
+error.  Default is entire range. 
 }
 \item{\dots}{
-other arguments to pass to \code{lrm.fit} (now only \code{maxit} and \code{tol} are
-allowed) and to \code{predab.resample} (note especially the \code{group},
-\code{cluster}, and \code{subset} parameters)
+other arguments to pass to \code{lrm.fit} (now only \code{maxit} and
+\code{tol} are allowed) and to \code{predab.resample} (note especially
+the \code{group}, \code{cluster}, and \code{subset} parameters)
 }}
 \value{
 a matrix with rows corresponding to \eqn{D_{xy}},
@@ -64,6 +73,8 @@ a matrix with rows corresponding to \eqn{D_{xy}},
 columns for the original index, resample estimates, indexes applied to
 the whole or omitted sample using the model derived from the resample,
 average optimism, corrected index, and number of successful re-samples.
+For \code{validate.orm} not all columns are provided, Spearman's rho
+is returned instead of \eqn{D_{xy}}, and \code{pdm} is reported.
 }
 \section{Side Effects}{
 prints a summary, and optionally statistics for each re-fit
@@ -93,7 +104,8 @@ Sen. New York: North-Holland, p. 333--343.
 \seealso{
 \code{\link{predab.resample}}, \code{\link{fastbw}}, \code{\link{lrm}},
 \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{calibrate}}, 
-\code{\link[Hmisc]{somers2}}, \code{\link{cr.setup}}, \code{\link{gIndex}}
+\code{\link[Hmisc]{somers2}}, \code{\link{cr.setup}},
+\code{\link{gIndex}}, \code{\link{orm}}
 }
 \examples{
 n <- 1000    # define sample size

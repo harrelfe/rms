@@ -5,7 +5,7 @@ Predict <-
            conf.int=.95, conf.type=c('mean','individual','simultaneous'),
            usebootcoef=TRUE, boot.type=c('percentile','bca','basic'),
            adj.zero=FALSE, ref.zero=FALSE,
-           non.slopes, time=NULL, loglog=FALSE, digits=4, name, factors=NULL) {
+           kint=NULL, time=NULL, loglog=FALSE, digits=4, name, factors=NULL) {
 
     fit       <- x
     type      <- match.arg(type)
@@ -33,17 +33,17 @@ Predict <-
       res <- vector('list', length(nams))
       names(res) <- nams
     
-      i <- 0
+      i <- 0L
       info <- NULL # handles case where nams is empty, when no predictors
       for(nam in nams) {
-        i <- i + 1
+        i <- i + 1L
         m$name <- nam
         lv     <- eval(m)
         j <- attr(lv, 'info')
-        if(i==1) info <- j
+        if(i == 1L) info <- j
         else {
           info$varying <- c(info$varying, j$varying)
-          info$adjust  <- c(info$adjust, j$adjust)
+          info$adjust  <- c(info$adjust,  j$adjust)
         }
         attr(lv, 'info') <- NULL
         lv$.predictor. <- nam
@@ -55,7 +55,7 @@ Predict <-
       return(lv)
     }
     
-    f <- sum(assume!=9)	##limit list to main effects factors
+    f <- sum(assume != 9)	##limit list to main effects factors
     parms  <- at$parms
     label  <- at$label
     values <- at$values
@@ -68,8 +68,8 @@ Predict <-
       ylab <- scale[1]
       if(length(time))
         ylab <- ylabPlotmath <-
-          if(loglog) paste("log[-log S(",format(time),")]",sep="")
-          else paste(format(time),yunits,"Survival Probability")
+          if(loglog) paste("log[-log S(", format(time), ")]", sep="")
+          else paste(format(time), yunits, "Survival Probability")
       else if(scale[1] == 'X * Beta')
         ylabPlotmath <- expression(X*hat(beta))
       else ylabPlotmath <- ylab
@@ -84,62 +84,62 @@ Predict <-
       factors <- list()
       for(g in fname) factors[[g]] <- NA
     }
-    nf <- length(factors)
+    nf   <- length(factors)
     fnam <- names(factors)
     
     if(nf < 1) stop("must specify predictors to vary")
     
-    which <- charmatch(fnam, name, 0)
-    if(any(which==0))
+    which <- charmatch(fnam, name, 0L)
+    if(any(which == 0L))
       stop(paste("predictors(s) not in model:",
-                 paste(names(factors)[which==0],collapse=" ")))
+                 paste(names(factors)[which == 0L], collapse=" ")))
 
-    if(any(assume[which]==9))
+    if(any(assume[which] == 9L))
       stop("cannot plot interaction terms")
 
     lim <- Getlim(at, allow.null=TRUE, need.all=FALSE)
 
     fnam   <- names(factors)
     nf     <- length(factors)
-    xadjdf <- lim$limits[2,,drop=FALSE]
+    xadjdf <- lim$limits[2L, , drop=FALSE]
     xadj   <- unclass(xadjdf)
     varying <- NULL
 
-    if(nf==0) return(as.data.frame(xadj))
+    if(nf == 0L) return(as.data.frame(xadj))
     if(nf < f) { ## number of arguments < total number of predictors
       ## Some non-varying predictors
       settings <- xadj
       if(adj.zero) for(x in names(settings)) {
         i <- match(x, name)
-        settings[[x]] <- if(assume[i] %in% c(5,8)) parms[[i]][1]
+        settings[[x]] <- if(assume[i] %in% c(5L, 8L)) parms[[i]][1]
         else if(length(V <- lim$values[[x]]) & is.character(V)) V[1]
-        else 0
+        else 0L
       }
       for(n in fnam) settings[[n]] <- factors[[n]]
     }
     else settings <- factors
     
-  for(i in 1:nf) {
+  for(i in 1L : nf) {
     n <- fnam[i]
     v <- settings[[n]]
     lv <- length(v)
-    if(lv == 0) stop('a predictor has zero length')
-    if(lv == 1 && is.na(v))
-      settings[[n]] <- value.chk(at, which(name==n), NA, np, lim)
-    if(length(settings[[n]]) > 1) varying <- c(varying, n)
+    if(lv == 0L) stop('a predictor has zero length')
+    if(lv == 1L && is.na(v))
+      settings[[n]] <- value.chk(at, which(name == n), NA, np, lim)
+    if(length(settings[[n]]) > 1L) varying <- c(varying, n)
   }
     if(prod(sapply(settings,length)) > 1e5)
       stop('it is not sensible to predict more than 100,000 combinations')
     settings <- expand.grid(settings)
     adjust <- NULL
-    for(n in name[assume != 9 & name %nin% fnam])
+    for(n in name[assume != 9L & name %nin% fnam])
       adjust <- paste(adjust, n, "=", 
                       if(is.factor(xadj[[n]])) as.character(xadj[[n]])
-                      else format(xadj[[n]])," ",sep="")
+                      else format(xadj[[n]]), " ", sep="")
     
-    j <- assume != 9
-    label <- label[j]
-    units <- units[j]
+    j <- assume != 9L
+    label  <- label[j]
+    units  <- units[j]
     assume <- assume[j]
     names(label) <- names(units) <- names(assume) <- name[j]
     at <- list(label=label, units=units, assume.code=assume)
@@ -153,13 +153,14 @@ Predict <-
       return(settings)
     }
     ##Number of non-slopes
-    nrp <- num.intercepts(fit)
-    if(missing(non.slopes)) {
-      non.slopes <- rep(0, nrp)
-      if(!adj.zero) non.slopes[1] <- 1
+    nrp     <- num.intercepts(fit)
+    nrpcoef <- num.intercepts(fit, 'coef')
+    if(!length(kint)) {
+      kint <- fit$interceptRef
+      if(!length(kint)) kint <- 1L
     }
-    if(nrp>0 && length(non.slopes) != nrp)
-      stop("wrong # values in non.slopes")
+    if(nrp > 0L && (kint < 1L || kint > nrp))
+      stop('illegal intercept number for kint')
 
     beta <- fit$coefficients
     bootdone <- length(boot.Coef <- fit$boot.Coef) && usebootcoef
@@ -172,30 +173,31 @@ Predict <-
       stop('specifying fun="mean" does not make sense when not running bootcov (with coef.reps=TRUE)')
   
     if(!length(time)) {
-      xx <- predictrms(fit, settings, non.slopes=non.slopes,
+      xx <- predictrms(fit, settings, kint=kint,
                        conf.int=conf.int, conf.type=conf.type,
                        ref.zero=ref.zero)
       if(length(attr(xx,"strata")) && any(is.na(attr(xx,"strata"))))
         warning("Computed stratum NA.  Requested stratum may not\nexist or reference values may be illegal strata combination\n")
       
-      if(length(xx)==0)
+      if(length(xx) == 0L)
         stop("model has no covariables and survival not plotted")
       xb <- if(is.list(xx)) xx$linear.predictors else xx
       if(bootdone) {
-        X <- predictrms(fit, settings, non.slopes=non.slopes,
+        X <- predictrms(fit, settings, kint=kint,
                         ref.zero=ref.zero, type='x')
-        pred <- t(X %*% t(boot.Coef))
+        pred <- t(matxv(X, boot.Coef,
+                        kint=kint,  bmat=TRUE))
         if(isMean) {
           m <- Mean(fit)
           xb <- m(xb)
-          for(k in 1:nrow(pred))
-              pred[k,] <- m(pred[k,], intercepts=boot.Coef[k, 1:nrp])
+          for(k in 1L : nrow(pred))
+              pred[k,] <- m(pred[k,], intercepts=boot.Coef[k, 1L : nrp])
         }
         lim <- bootBCa(xb, pred, type=boot.type, n=nobs(fit), seed=fit$seed,
                        conf.int=conf.int)
         if(!is.matrix(lim)) lim <- as.matrix(lim)
-        xx$lower <- lim[1,]
-        xx$upper <- lim[2,]
+        xx$lower <- lim[1L, ]
+        xx$upper <- lim[2L, ]
       }
     }
     else {   ## time specified
@@ -240,7 +242,7 @@ print.Predict <- function(x, ...) {
   invisible()
 }
 
-perimeter <- function(x, y, xinc=diff(range(x))/10, n=10,
+perimeter <- function(x, y, xinc=diff(range(x))/10., n=10.,
                       lowess.=TRUE) {
 
   s <- !is.na(x+y)
@@ -252,24 +254,24 @@ perimeter <- function(x, y, xinc=diff(range(x))/10, n=10,
   i <- order(x)
   x <- x[i]
   y <- y[i]
-  s <- n:(m-n+1)
+  s <- n : (m - n + 1L)
   x <- x[s]
   y <- y[s]
 
-  x <- round(x/xinc)*xinc
+  x <- round(x / xinc) * xinc
 
   g <- function(y, n) {
     y <- sort(y)
     m <- length(y)
-    if(n > (m-n+1)) c(NA,NA)
-    else c(y[n], y[m-n+1])
+    if(n > (m - n + 1L)) c(NA,NA)
+    else c(y[n], y[m - n + 1L])
   }
   
   r <- unlist(tapply(y, x, g, n=n))
-  i <- seq(1, length(r), by=2)
+  i <- seq(1L, length(r), by=2)
   rlo <- r[i]
   rhi <- r[-i]
-  s <- !is.na(rlo+rhi)
+  s <- !is.na(rlo + rhi)
   if(!any(s))
     stop("no intervals had sufficient y observations")
 
@@ -291,7 +293,7 @@ rbind.Predict <- function(..., rename) {
   ns <- length(d)
   if(ns==1) return(d[[1]])
   
-  info <- attr(d[[1]], 'info')
+  info <- attr(d[[1L]], 'info')
   
   if(!missing(rename)) {
     trans <- function(input, rename) {
@@ -316,7 +318,7 @@ rbind.Predict <- function(..., rename) {
   .set. <- rep(sets, obs.each.set)
   .set. <- factor(.set., levels=unique(.set.))
 
-  if(!missing(rename)) for(i in 1:ns)
+  if(!missing(rename)) for(i in 1L : ns)
     names(d[[i]]) <- trans(names(d[[i]]), rename)
 
   result <- do.call('rbind.data.frame', d)

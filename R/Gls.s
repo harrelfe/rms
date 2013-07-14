@@ -262,7 +262,7 @@ Gls <-
                    boot.Corr=if(B > 0) bootcorr,
                    Nboot=if(B > 0) Nboot,
                    var=if(B > 0) var(bootcoef),
-                   x=if(x) X)
+                   x=if(x) X[, -1, drop=FALSE])
     
     ## Last 2 lines FEH 29mar03
     if (inherits(data, "groupedData"))
@@ -378,9 +378,14 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
   invisible()
 }
 
-vcov.Gls <- function(object, ...)
-  if(any(names(object)=='var') && length(object$var))
-  object$var else object$varBeta
+vcov.Gls <- function(object, intercepts='all', ...)
+  {
+    v <- if(any(names(object)=='var') && length(object$var))
+      object$var else object$varBeta
+    if(length(intercepts) == 1 && intercepts == 'none')
+      v <- v[-1, -1, drop=FALSE]
+    v
+  }
 
 predict.Gls <- 
   function(object, newdata,
@@ -388,12 +393,12 @@ predict.Gls <-
              "adjto.data.frame", "model.frame"),
            se.fit=FALSE, conf.int=FALSE,
            conf.type=c('mean','individual','simultaneous'),
-           incl.non.slopes, non.slopes, kint=1,
+           kint=1,
            na.action=na.keep, expand.na=TRUE, center.terms=type=="terms", ...)
   {
     type <- match.arg(type)
     predictrms(object, newdata, type, se.fit, conf.int, conf.type,
-               incl.non.slopes, non.slopes, kint,
+               kint=kint,
                na.action, expand.na, center.terms, ...)
   }
     

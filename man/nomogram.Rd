@@ -45,7 +45,7 @@
 \usage{
 nomogram(fit, ..., adj.to, lp=TRUE, lp.at=NULL,
          fun=NULL, fun.at=NULL, fun.lp.at=NULL, funlabel="Predicted Value",
-         interact=NULL, intercept=1,  conf.int=FALSE, 
+         interact=NULL, kint=NULL,  conf.int=FALSE, 
          conf.lp=c("representative", "all", "none"),
          est.all=TRUE, abbrev=FALSE, minlength=4, maxscale=100, nint=10, 
          vnames=c("labels","names"),
@@ -142,9 +142,10 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
     you must do this.  Examples: \code{interact = list(age = seq(10,70,by=10),
       treat = c("A","B","D"))}.
   }
-  \item{intercept}{
-    for models such as the ordinal logistic model with multiple intercepts,
+  \item{kint}{
+    for models such as the ordinal models with multiple intercepts,
     specifies which one to use in evaluating the linear predictor.
+		Default is to use \code{fit$interceptRef} if it exists, or 1.
   }
   \item{conf.int}{
     confidence levels to display for each scoring.  Default is \code{FALSE} to display

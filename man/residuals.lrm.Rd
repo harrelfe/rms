@@ -1,51 +1,50 @@
 \name{residuals.lrm}
 \alias{residuals.lrm}
+\alias{residuals.orm}
 \alias{plot.lrm.partial}
-\title{Residuals from a Logistic Regression Model Fit}
+\title{Residuals from an \code{lrm} or \code{orm} Fit}
 \description{
 For a binary logistic model fit, computes the following residuals, letting
 \eqn{P} denote the predicted probability of the higher category of \eqn{Y},
 \eqn{X} denote the design matrix (with a column of 1s for the intercept), and
 \eqn{L} denote the logit or linear predictors: ordinary or Li-Shepherd
-(\eqn{Y-P}), score 
-(\eqn{X (Y-P)}), pearson (\eqn{(Y-P)/\sqrt{P(1-P)}}), deviance (for \eqn{Y=0} is
-\eqn{-\sqrt{2|\log(1-P)|}}, for \eqn{Y=1} is \eqn{\sqrt{2|\log(P)|}},
-pseudo dependent variable used in influence statistics 
-(\eqn{L + (Y-P)/(P(1-P))}), and partial (\eqn{X_{i}\beta_{i} +
-  (Y-P)/(P(1-P))}). 
+(\eqn{Y-P}), score (\eqn{X (Y-P)}), pearson (\eqn{(Y-P)/\sqrt{P(1-P)}}),
+deviance (for \eqn{Y=0} is \eqn{-\sqrt{2|\log(1-P)|}}, for \eqn{Y=1} is
+\eqn{\sqrt{2|\log(P)|}}, pseudo dependent variable used in influence
+statistics  (\eqn{L + (Y-P)/(P(1-P))}), and partial (\eqn{X_{i}\beta_{i}
+	+ (Y-P)/(P(1-P))}). 
 
 
 Will compute all these residuals for an ordinal logistic model, using
-as temporary binary responses dichotomizations of \eqn{Y}, along with the corresponding
-\eqn{P}, the probability that \eqn{Y \geq} cutoff.  For
+as temporary binary responses dichotomizations of \eqn{Y}, along with
+the corresponding \eqn{P}, the probability that \eqn{Y \geq} cutoff.  For
 \code{type="partial"}, all 
 possible dichotomizations are used, and for \code{type="score"}, the actual
 components of the first derivative of the log likelihood are used for
 an ordinal model.  For \code{type="li.shepherd"} the residual is
-\eqn{Pr(W<Y) - Pr(W>Y)} where Y is the observed response and W is a
+\eqn{Pr(W < Y) - Pr(W > Y)} where Y is the observed response and W is a
 random variable from the fitted distribution.
 Alternatively, specify \code{type="score.binary"}
 to use binary model score residuals but for all cutpoints of \eqn{Y}
 (plotted only, not returned). The \code{score.binary}, 
-\code{partial}, and perhaps \code{score} residuals are useful for checking the proportional odds assumption.
-If the option \code{pl=TRUE} is used to plot the \code{score} or \code{score.binary} residuals, 
-a score residual plot is
-made for each column of the design (predictor) matrix, with \code{Y} cutoffs on the
+\code{partial}, and perhaps \code{score} residuals are useful for
+checking the proportional odds assumption. 
+If the option \code{pl=TRUE} is used to plot the \code{score} or
+\code{score.binary} residuals, a score residual plot is made for each
+column of the design (predictor) matrix, with \code{Y} cutoffs on the 
 x-axis and the mean +- 1.96 standard errors of the score residuals on
 the y-axis.  You can instead use a box plot to display these residuals,
 for both \code{score.binary} and \code{score}.
 Proportional odds dictates a horizontal \code{score.binary} plot.  Partial
 residual plots use smooth nonparametric estimates, separately for each
 cutoff of \eqn{Y}.  One examines that plot for parallelism of the curves
-to check the proportional odds assumption, as
-well as to see if the predictor behaves linearly.
-
+to check the proportional odds assumption, as well as to see if the
+predictor behaves linearly. 
 
 Also computes a variety of influence statistics and the 
 le Cessie - van Houwelingen - Copas - Hosmer unweighted sum of squares test
 for global goodness of fit, done separately for each cutoff of \eqn{Y} in the
 case of an ordinal model.
-
 
 The \code{plot.lrm.partial} function computes partial residuals for a series
 of binary logistic model fits that all used the same predictors and that
@@ -53,9 +52,16 @@ specified \code{x=TRUE, y=TRUE}.  It then computes smoothed partial residual
 relationships (using \code{lowess} with \code{iter=0}) and plots them separately
 for each predictor, with residual plots from all model fits shown on the
 same plot for that predictor.
+
+Score residuals are not yet implemented for \code{orm} fits when
+\code{family} is not \code{"logistic"}.
 }
 \usage{
 \method{residuals}{lrm}(object, type=c("li.shepherd","ordinary",
+ "score", "score.binary", "pearson", "deviance", "pseudo.dep",
+ "partial", "dfbeta", "dfbetas", "dffit", "dffits", "hat", "gof", "lp1"),
+           pl=FALSE, xlim, ylim, kint, label.curves=TRUE, which, \dots)
+\method{residuals}{orm}(object, type=c("li.shepherd","ordinary",
  "score", "score.binary", "pearson", "deviance", "pseudo.dep",
  "partial", "dfbeta", "dfbetas", "dffit", "dffits", "hat", "gof", "lp1"),
            pl=FALSE, xlim, ylim, kint, label.curves=TRUE, which, \dots)
@@ -63,9 +69,7 @@ same plot for that predictor.
 \method{plot}{lrm.partial}(\dots, labels, center=FALSE, ylim)
 }
 \arguments{
-\item{object}{
-object created by \code{lrm}
-}
+\item{object}{object created by \code{lrm} or \code{orm}}
 \item{\dots}{
 for \code{residuals}, applies to \code{type="partial"}  when \code{pl}
 is not \code{FALSE}.  These are extra arguments passed to the smoothing
@@ -80,20 +84,18 @@ linear predictors, derived by subtracting the \code{dffit} from the original
 linear predictor values.
 }
 \item{pl}{
-applies only to \code{type="partial"}, \code{"score"}, and \code{"score.binary"}.  
-For score residuals in an ordinal model, set \code{pl=TRUE} to get means and 
-approximate 0.95 confidence bars
+applies only to \code{type="partial"}, \code{"score"}, and
+\code{"score.binary"}.  For score residuals in an ordinal model, set
+\code{pl=TRUE} to get means and approximate 0.95 confidence bars
 vs. \eqn{Y}, separately for each \eqn{X}.  Alternatively, specify
-\code{pl="boxplot"} to use \code{boxplot} to
-draw the plot, with notches and with width proportional to the square
-root of the cell sizes.
-For partial residuals, set \code{pl=TRUE} (which uses \code{lowess}) or \code{pl="supsmu"}
-to get smoothed partial
-residual plots for all columns of \eqn{X} using \code{supsmu}.
-Use \code{pl="loess"} to use \code{loess} and get confidence bands (\code{"loess"} is not
-implemented for ordinal responses).  Under R, \code{pl="loess"} uses
-\code{lowess} and does not provide confidence bands.
-If there is more than one \eqn{X},
+\code{pl="boxplot"} to use \code{boxplot} to draw the plot, with notches
+and with width proportional to the square root of the cell sizes.  For
+partial residuals, set \code{pl=TRUE} (which uses \code{lowess}) or
+\code{pl="supsmu"} to get smoothed partial residual plots for all
+columns of \eqn{X} using \code{supsmu}. Use \code{pl="loess"} to use
+\code{loess} and get confidence bands (\code{"loess"} is not implemented
+for ordinal responses).  Under R, \code{pl="loess"} uses \code{lowess}
+and does not provide confidence bands.  If there is more than one \eqn{X},
 you should probably use \code{par(mfrow=c( , ))} before calling \code{resid}.
 Note that \code{pl="loess"} results in \code{plot.loess} being called, which
 requires a large memory allocation.
@@ -102,26 +104,29 @@ requires a large memory allocation.
 plotting range for x-axis (default = whole range of predictor)
 }
 \item{ylim}{
-plotting range for y-axis (default = whole range of residuals,
-range of all confidence intervals for \code{score} or \code{score.binary} or range
-of all smoothed curves for \code{partial} if
-\code{pl=TRUE}, or 0.1 and 0.9 quantiles of the residuals for \code{pl="boxplot"}.)
+plotting range for y-axis (default = whole range of residuals, range of
+all confidence intervals for \code{score} or \code{score.binary} or
+range of all smoothed curves for \code{partial} if \code{pl=TRUE}, or
+0.1 and 0.9 quantiles of the residuals for \code{pl="boxplot"}.) 
 }
 \item{kint}{
-for an ordinal model for residuals other than \code{li.shepherd}, \code{partial}, \code{score}, or
-\code{score.binary}, specifies
+for an ordinal model for residuals other than \code{li.shepherd},
+\code{partial}, \code{score}, or \code{score.binary}, specifies
 the intercept (and the cutoff of \eqn{Y}) to use for the calculations.
 Specifying \code{kint=2}, for example, means to use \eqn{Y \geq} 3rd level.
 }
 \item{label.curves}{
-set to \code{FALSE} to suppress curve labels when \code{type="partial"}.  The default,
-\code{TRUE}, causes \code{labcurve} to be invoked to label curves where they are most
-separated.  \code{label.curves} can be a list containing the \code{opts} parameter
-for \code{labcurve}, to send options to \code{labcurve}, such as \code{tilt}.  The
-default for \code{tilt} here is \code{TRUE}.
+set to \code{FALSE} to suppress curve labels when \code{type="partial"}.
+The default, \code{TRUE}, causes \code{labcurve} to be invoked to label
+curves where they are most separated.  \code{label.curves} can be a list
+containing the \code{opts} parameter for \code{labcurve}, to send
+options to \code{labcurve}, such as \code{tilt}.  The default for
+\code{tilt} here is \code{TRUE}. 
 }
 \item{which}{
-a vector of integers specifying column numbers of the design matrix for which to compute or plot residuals, for \code{type="partial","score","score.binary"}.
+a vector of integers specifying column numbers of the design matrix for
+which to compute or plot residuals, for
+\code{type="partial","score","score.binary"}.  
 }
 \item{labels}{
 for \code{plot.lrm.partial} this specifies a vector of character strings 
@@ -130,7 +135,8 @@ the fit objects are used as labels.  The \code{labcurve} function is used
 to label the curve with the \code{labels}.
 }
 \item{center}{
-for \code{plot.lrm.partial} this causes partial residuals for every model to have a mean of zero before smoothing and plotting
+for \code{plot.lrm.partial} this causes partial residuals for every
+model to have a mean of zero before smoothing and plotting 
 }}
 \value{
 a matrix (\code{type="partial","dfbeta","dfbetas","score"}), 
@@ -146,12 +152,12 @@ For the goodness-of-fit test, the le Cessie-van Houwelingen normal test
 statistic for the unweighted sum of squared errors (Brier score times \eqn{n})
 is used.  For an ordinal response variable, the test 
 for predicting the probability that \eqn{Y\geq j} is done separately for
-all \eqn{j} (except the first).  Note that the test statistic can have strange behavior 
-(i.e., it is far too large) if the model has no predictive value.
+all \eqn{j} (except the first).  Note that the test statistic can have
+strange behavior  (i.e., it is far too large) if the model has no
+predictive value. 
 
-
-For most of the values of \code{type}, you must have specified \code{x=TRUE, y=TRUE} to
-\code{lrm}.
+For most of the values of \code{type}, you must have specified
+\code{x=TRUE, y=TRUE} to \code{lrm} or \code{orm}.
 
 
 There is yet no literature on interpreting score residual plots for the
@@ -187,9 +193,10 @@ Copas JB.  Applied Statistics 38:71--80, 1989.
 Li C, Shepherd BE.  Biometrika 99:473-480, 2012.
 }
 \seealso{
-\code{\link{lrm}}, \code{\link{naresid}}, \code{\link{which.influence}},
-\code{\link{loess}}, \code{\link{supsmu}}, \code{\link{lowess}},
-\code{\link{boxplot}}, \code{\link[Hmisc]{labcurve}}
+	\code{\link{lrm}}, \code{\link{orm}},
+	\code{\link{naresid}}, \code{\link{which.influence}},
+	\code{\link{loess}}, \code{\link{supsmu}}, \code{\link{lowess}},
+	\code{\link{boxplot}}, \code{\link[Hmisc]{labcurve}}
 }
 \examples{
 set.seed(1)
@@ -302,7 +309,6 @@ for(j in 1:2) {     # 1: prop.odds   2: non-prop. odds
   title(ti)
 }
 par(mfrow=c(1,1))
-
 
 \dontrun{
 # Get data used in Hosmer et al. paper and reproduce their calculations

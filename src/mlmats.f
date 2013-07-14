@@ -17,7 +17,7 @@ C       k=2 : converts lower triangular matrix vtri to n x n uncompressed
 C               square matrix
 C       F. Harrell 6Sep90
 C----------------------------------------------------------------------------
-        DOUBLE PRECISION vsq(n,n),vtri(*)
+        DOUBLE PRECISION vsq(n,n),vtri(n*(n+1)/2)
         IF(k.EQ.1) THEN
                 l=0
                 DO i=1,n
@@ -52,7 +52,7 @@ C     MULTIPLIES N*N SYMMETRIC MATRIX M STORED IN COMPRESSED FORMAT BY
 C     THE N*1 VECTOR V AND RETURNS THE N*1 VECTOR PRODUCT P
 C-----------------------------------------------------------------------------
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      DOUBLE PRECISION M(*),V(N),P(N)
+      DOUBLE PRECISION M(N*(N+1)/2),V(N),P(N)
       DO 20 I=1,N
       PI=0D0
       II=I*(I-1)/2
@@ -72,7 +72,7 @@ C     V IS AN N X N SYMMETRIC MATRIX AND A IS AN N X 1 VECTOR.
 C     THIS ROUTINE RETURNS P=A'VA
 C-----------------------------------------------------------------------------
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      DOUBLE PRECISION  A(N),V(*)
+      DOUBLE PRECISION  A(N),V(N*(N+1)/2)
       P=0D0
       K=0
       DO 10 I=1,N
@@ -105,8 +105,8 @@ C
 C       F. Harrell 20 Nov 90
 C
 C----------------------------------------------------------------------------
-        DOUBLE PRECISION a(n),wv1(nidx),wv2(nidx),wv3(*),wv4(nidx),
-     &          v(n,n),eps,vsub(nidx,nidx),p
+        DOUBLE PRECISION a(n),wv1(nidx),wv2(nidx),wv3(2*nidx),
+     &          wv4(nidx), v(n,n), eps, vsub(nidx,nidx), p
         INTEGER idx(nidx),pivot(nidx),dim(2)
         k=nidx
 C       CALL intpr("k",1,k,1)
@@ -158,7 +158,7 @@ C
 C     F. Harrell 6 Sep90
 C----------------------------------------------------------------------------
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      DOUBLE PRECISION  A(n),V(n,n),s(nidx),vsub(*)
+      DOUBLE PRECISION  A(n),V(n,n),s(nidx),vsub(nidx*(nidx+1)/2)
       INTEGER idx(nidx)
       LOGICAL swept(nidx)
         l=0
@@ -210,7 +210,8 @@ C       tol is tolerance, e.g. 1d-7.
 C       IF irank (output) < k, result is not computed.  Index of singular
 C       column will be stored in pivot(k) if irank<k.
 C-----------------------------------------------------------------------
-        DOUBLE PRECISION a(*),b(k),aib(k),tol,wv1(k,k),wv2(k),wv3(*)
+        DOUBLE PRECISION a(k*(k+1)/2),b(k),aib(k),tol,wv1(k,k),
+     &     wv2(k),wv3(2*k)
         INTEGER pivot(k),dim(2)
         CALL sqtria(wv1, a, k, 2)
         dim(1)=k
@@ -263,7 +264,7 @@ C       is immediately usable.  Use .FALSE. if further inversions will
 C       be done.
 C-----------------------------------------------------------------------
         IMPLICIT DOUBLE PRECISION (a-h, o-z)
-        DOUBLE PRECISION x(n,n), t(*), s(n), eps
+        DOUBLE PRECISION x(n,n), t(n*(n+1)/2), s(n), eps
         INTEGER idx(ne)
         LOGICAL swept(n),lswept(n),negate
         LOGICAL logeq
@@ -329,7 +330,7 @@ C     This causes all elements for the idx portion to be negated to be
 C     in usual form (this assumes you are through calling ginv for the
 C     matrix).
 C
-      DOUBLE PRECISION T(*),S(N),E
+      DOUBLE PRECISION T(N*(N+1)/2),S(N),E
       INTEGER idx(ne)
       LOGICAL SWEPT(N)
       LOGICAL NEG,trick
@@ -387,7 +388,7 @@ C     S should be set to diagonal elements of T on input.
 C     Modified F. Harrell 25Sep90 to allow E=0 to effectively turn
 C     off singularity checking.
 C
-      DOUBLE PRECISION A,B,E,S(N),T(*),ZERO,ONE
+      DOUBLE PRECISION A,B,E,S(N),T(N*(N+1)/2),ZERO,ONE
       LOGICAL SWEPT(N)
       DATA ZERO,ONE /0.0D0,1.0E0/
 C

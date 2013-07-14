@@ -2,12 +2,12 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
 {
   method <- match.arg(method)
   
-  var   <- vcov(fit)
+  var   <- vcov(fit, intercepts='all')
   vname <- dimnames(var)[[1]]
   
   if(inherits(fit, "ols") ||
      (length(fit$fitFunction) && any(fit$fitFunction=='ols')))
-    var <- fit$df.residual * var/sum(fit$residuals^2)  #back to X'X
+    var <- fit$df.residual * var / sum(fit$residuals^2)  #back to X'X
   else
     if(method=='efron') stop('method="efron" only works for ols fits')
 
@@ -16,22 +16,22 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
   n <- nrow(X)
   if(missing(cluster)) cluster <- 1:n
   else if(any(is.na(cluster))) stop("cluster contains NAs")
-  if(length(cluster)!=n)
+  if(length(cluster) != n)
     stop("length of cluster does not match number of observations used in fit")
   cluster <- as.factor(cluster)
 
   p <- ncol(var)
-  j <- is.na(X %*% rep(1, p))
+  j <- is.na(X %*% rep(1, ncol(X)))
   if(any(j))
     {
-      X <- X[!j,,drop=FALSE]
+      X       <- X[!j,, drop=FALSE]
       cluster <- cluster[!j]
-      n <- length(cluster)
+      n       <- length(cluster)
     }
 
   j <- order(cluster)
   X <- X[j,,drop=FALSE]
-  clus.size <- table(cluster)
+  clus.size  <- table(cluster)
   clus.start <- c(1,1+cumsum(clus.size))
   nc <- length(levels(cluster))
   clus.start <- clus.start[-(nc+1)]

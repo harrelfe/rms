@@ -7,11 +7,10 @@ Glm <-
   call <- match.call()
   if (is.character(family)) family <- get(family)
   if (is.function(family))  family <- family()
-  if (!length(family$family))
-    {
-      print(family)
-      stop("`family' not recognized")
-    }
+  if (!length(family$family)) {
+    print(family)
+    stop("`family' not recognized")
+  }
   mt <- terms(formula, data = data)
   if (missing(data)) data <- environment(formula)
   mf <- match.call(expand.dots = FALSE)
@@ -23,28 +22,30 @@ Glm <-
   mf[[1]] <- as.name("model.frame")
 
   dul <- .Options$drop.unused.levels
-  if(!length(dul) || dul)
-    {
-      on.exit(options(drop.unused.levels=dul))
-      options(drop.unused.levels=FALSE)
-    }
-
+  if(!length(dul) || dul) {
+    on.exit(options(drop.unused.levels=dul))
+    options(drop.unused.levels=FALSE)
+  }
+  
   mf <- Design(eval(mf, parent.frame()))
   desatr <- attr(mf,'Design')
-  attr(mf,'Design') <- NULL
-  nact <- attr(mf,'na.action')
+  attr(mf, 'Design') <- NULL
+  nact <- attr(mf, 'na.action')
     
   switch(method, model.frame = return(mf), glm.fit = 1, 
          stop(paste("invalid `method':", method)))
   xvars <- as.character(attr(mt, "variables"))[-1]
   if ((yvar <- attr(mt, "response")) > 0)
     xvars <- xvars[-yvar]
-  xlev <- if (length(xvars) > 0)
-    {
-      xlev <- lapply(mf[xvars], levels)
-      xlev[!sapply(xlev, is.null)]
-    }
+  xlev <- if (length(xvars) > 0) {
+    xlev <- lapply(mf[xvars], levels)
+    xlev[!sapply(xlev, is.null)]
+  }
   X <- if (!is.empty.model(mt)) model.matrix(mt, mf, contrasts)
+  colnames(X) <- if(attr(mt, 'intercept') > 0)
+    c('Intercept', desatr$colnames)
+    else desatr$colnames
+
   Y <- model.response(mf, "numeric")
   weights <- model.weights(mf)
   offset <- model.offset(mf)
@@ -61,13 +62,13 @@ Glm <-
     {
       fit$null.deviance <- if (is.empty.model(mt))
         fit$deviance
-      else glm.fit(x = X[, "(Intercept)", drop = FALSE], y = Y,
+      else glm.fit(x = X[, "Intercept", drop = FALSE], y = Y,
                    weights = weights, start = start, offset = offset,
                    family = family, control = control,
                    intercept = TRUE)$deviance
     }
   if (model) fit$model <- mf
-  if (x)  fit$x <- X
+  if (x)  fit$x <- X[, -1, drop=FALSE]
   if (!y) fit$y <- NULL
   fit <- c(fit, list(call = call, formula = formula, terms = mt,
                      data = data, offset = offset, control = control,
@@ -94,7 +95,6 @@ print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE,
 
   cof <- coef(x)
   lr <- x$null.deviance - x$deviance
-  names(cof) <- ifelse(names(cof)=='(Intercept)','Intercept',names(cof))
   dof <- x$rank - (names(cof)[1]=='Intercept')
   pval <- 1 - pchisq(lr, dof)
 
@@ -121,11 +121,15 @@ print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE,
 
 summary.Glm <- function(...) summary.rms(...)
 
-vcov.Glm <- function(object, ...)
-  if(length(v <- object$var)) v else stats:::vcov.glm(object, ...)
+vcov.Glm <- function(object, regcoef.only=TRUE, intercepts='all', ...) {
+  v <- object$var
+  if(!length(v)) v <- stats:::vcov.glm(object, ...)
+  ns <- num.intercepts(object, 'var')
+  if(ns > 0 && length(intercepts)==1 && intercepts=='none')
+    v <- v[-(1 : ns), -(1 : ns), drop=FALSE]
+  v
+}
 
-## Varcov.Glm <- function(object, ...) vcov.
-#  Varcov.glm(object, regcoef.only, ...)
 # Varcov.glm <- function(object, ...)
 #{
 #  if(length(object$var))
@@ -143,12 +147,12 @@ predict.Glm <-
              "adjto.data.frame", "model.frame"),
            se.fit=FALSE, conf.int=FALSE,
            conf.type=c('mean','individual','simultaneous'),
-           incl.non.slopes, non.slopes, kint=1,
+           kint=1,
            na.action=na.keep, expand.na=TRUE, center.terms=type=="terms", ...)
   {
     type <- match.arg(type)
     predictrms(object, newdata, type, se.fit, conf.int, conf.type,
-               incl.non.slopes, non.slopes, kint,
+               kint,
                na.action, expand.na, center.terms, ...)
   }
 

@@ -22,12 +22,14 @@ C       for solving system of equations using Fortran routines called
 C       by S function solve).
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      DOUBLE PRECISION BETA(*),U(*),V(*),LOGLIK,C(nvi),wv(*),
-     &     deltab(nvi),vsq(nvi,nvi),penalt(*),wt(*)
-      DOUBLE PRECISION opts(*),prc(4)
-      DOUBLE PRECISION X(*),offset(*)
+      DOUBLE PRECISION BETA(nvi),U(nvi),V(nvi*(nvi+1)/2),LOGLIK,
+     &     C(nvi), wv(2*nvi),
+     &     deltab(nvi),vsq(nvi,nvi),penalt(nvi,nvi),wt(NOBS)
+      DOUBLE PRECISION opts(12),prc(4)
+      DOUBLE PRECISION X(NOBS,NX),offset(NOBS)
 C     Dimensions of X, penalt, wt not needed until inside LLOGIT
-      INTEGER IDX(*),R(*),ftable(501,*),numy(*),pivot(nvi)
+      INTEGER IDX(nxin), R(NOBS), ftable(501,nvi-nxin+1),
+     &     numy(nvi-nxin+1), pivot(nvi)
       LOGICAL DVRG,ofpres,piter,normwt
       eps   = opts(1)
       dlike = opts(2)
@@ -125,9 +127,9 @@ C     NOTE: V IS NOT INVERTED.
          IF(dvrg)opts(6)=1d0
          RETURN
          END
-      SUBROUTINE LLOGIT(BETA,IDX,X,R,offset,U,V,C,LOGLIK,
-     &  NOBS,NMAX,nxm,ofpres,NVI,KINT,DVRG,ftable,calcc,penalt,
-     &  wt,normwt)
+      SUBROUTINE LLOGIT(BETA, IDX, X, R, offset, U, V, C,
+     & LOGLIK, NOBS, NMAX, nxm, ofpres, NVI, KINT, DVRG,
+     & ftable, calcc, penalt, wt, normwt)
 C
 C     ROUTINE TO CALCULATE LOGISTIC LOG LIKELIHOOD AND ITS DERIVATIVES AT BETA
 C     FOR VARIABLES IDX(1),IDX(2),...,IDX(NVI-KINT).
@@ -147,10 +149,10 @@ C     Penalties for intercept terms assumed to be zero
 C     Log likelihood is penalized by 0.5 times beta'*penalt*beta
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      DOUBLE PRECISION BETA(*),U(*),V(*),C(*),LOGLIK,penalt(nvi,nvi),
-     & wt(nmax)
-      DOUBLE PRECISION X(NMAX,NXm),offset(nmax)
-      INTEGER IDX(*),R(NMAX),ftable(501,*)
+      DOUBLE PRECISION BETA(nvi),U(nvi),V(nvi*(nvi+1)/2),
+     & C(nvi), LOGLIK, penalt(nvi,nvi), wt(nmax)
+      DOUBLE PRECISION X(NMAX,nxm),offset(nmax)
+      INTEGER IDX(nxm),R(NMAX),ftable(501,KINT+1)
       LOGICAL DVRG,ofpres,calcc,normwt
       PROB(BB)=1D0/(1D0 + DEXP(-DMIN1(DMAX1(BB,-30D0),30D0)))
       NV=NVI
@@ -194,9 +196,9 @@ C
 C       Get middle category for predicted prob.
 C
       IF(calcc) THEN
-         mid=kint1/2
-         DO i=1,501
-            DO j=1,kint1
+         mid=kint1 / 2
+         DO i=1, 501
+            DO j=1, kint1
                ftable(i,j)=0
             ENDDO
          ENDDO
@@ -331,8 +333,9 @@ C     0<IY<KINT
       END
       SUBROUTINE gcorr(ftable, kint, numy, nx, c, somer,
      &     gamma, taua)
-      INTEGER ftable(501,*),numy(*)
-      DOUBLE PRECISION fn,c,somer,gamma,taua,con,dis,tie,k,ic,nn
+      INTEGER ftable(501, kint + 1), numy(kint + 1)
+      DOUBLE PRECISION fn, c, somer, gamma, taua, con, dis, tie,
+     &   k, ic, nn
       kint1=kint + 1
       con=0d0
       dis=0d0

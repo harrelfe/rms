@@ -25,44 +25,42 @@ validate.lrm <- function(fit,method="boot",
                       Dxy.method="somers2",
                       penalty.matrix, kint, ...)
     {
-      if(evalfit)
-        {	#Fit was for bootstrap sample
-          stats <- fit$stats
-          lr <- stats["Model L.R."]
-          Dxy <- if(Dxy.method=="lrm") stats["Dxy"] else
-            somers2(x,y)["Dxy"]
-          intercept <- 0
-          shrink <- 1
-          n  <- stats["Obs"]
-          D  <- (lr - 1)/n
-          U  <- -2/n
-          Q  <- D - U
-          R2 <- stats["R2"]
-          g  <- stats['g']
-          gp <- stats['gp']
-        }
-      else
-        {	
-          k <- fit$non.slopes
-          null.model <- length(fit$coefficients)==k
-          refit <- if(null.model) lrm.fit(y=y) else lrm.fit(x,y,tol=1e-13)
-          kr <- refit$non.slopes
-          ##Model with no variables = null model
-          stats <- refit$stats
-          lr <- stats["Model L.R."]
-          Dxy <- if(Dxy.method=="lrm") stats["Dxy"] else
-            somers2(x,y)["Dxy"]
-          intercept <- refit$coefficients[kint]
-          shrink <- if(null.model) 1 else refit$coefficients[kr + 1]
-          n <- stats["Obs"]
-          D <- (lr-1)/n
-          L01 <- -2 * sum( (y >= kint)*x - logb(1 + exp(x)), na.rm=TRUE)
-          U <- (L01 - refit$deviance[2] - 2)/n
-          Q <- D - U
-          R2 <- stats["R2"]
-          g  <- GiniMd(shrink*x)
-          gp <- GiniMd(plogis(intercept + shrink*x))
-        }
+      if(evalfit) {	# Fit was for bootstrap sample
+        stats <- fit$stats
+        lr <- stats["Model L.R."]
+        Dxy <- if(Dxy.method=="lrm") stats["Dxy"] else
+        somers2(x,y)["Dxy"]
+        intercept <- 0
+        shrink <- 1
+        n  <- stats["Obs"]
+        D  <- (lr - 1)/n
+        U  <- -2/n
+        Q  <- D - U
+        R2 <- stats["R2"]
+        g  <- stats['g']
+        gp <- stats['gp']
+      }
+      else {	
+        k <- fit$non.slopes
+        null.model <- length(fit$coefficients)==k
+        refit <- if(null.model) lrm.fit(y=y) else lrm.fit(x,y,tol=1e-13)
+        kr <- refit$non.slopes
+        ## Model with no variables = null model
+        stats <- refit$stats
+        lr <- stats["Model L.R."]
+        Dxy <- if(Dxy.method=="lrm") stats["Dxy"] else
+        somers2(x,y)["Dxy"]
+        intercept <- refit$coefficients[kint]
+        shrink <- if(null.model) 1 else refit$coefficients[kr + 1]
+        n <- stats["Obs"]
+        D <- (lr-1)/n
+        L01 <- -2 * sum( (y >= kint)*x - logb(1 + exp(x)), na.rm=TRUE)
+        U <- (L01 - refit$deviance[2] - 2)/n
+        Q <- D - U
+        R2 <- stats["R2"]
+        g  <- GiniMd(shrink*x)
+        gp <- GiniMd(plogis(intercept + shrink*x))
+      }
       P <- plogis(x)  # 1/(1+exp(-x))
       B <- sum(((y >= kint) - P)^2)/n
       z <- c(Dxy, R2, intercept, shrink, D, U, Q, B, g, gp)
@@ -95,6 +93,73 @@ validate.lrm <- function(fit,method="boot",
                         "B", "g", "gp"),
                       c("index.orig","training","test","optimism",
                         "index.corrected","n"))
-  ## if(k > 1) z <- z[-(7:9),,drop=FALSE]
+  structure(z, class='validate', kept=kept)
+}
+
+
+validate.orm <- function(fit, method="boot",
+	B=40, bw=FALSE, rule="aic", type="residual",
+	sls=.05, aics=0, force=NULL, estimates=TRUE, pr=FALSE,  ...)
+{
+  k <- fit$non.slopes
+  y <- fit$y
+  if(length(y)==0) stop("fit did not use x=TRUE, y=TRUE")
+  if(!is.factor(y)) y <- factor(y)
+  
+  penalty.matrix <- fit$penalty.matrix
+  
+  discrim <- function(x, y, fit, iter, evalfit=FALSE, pr=FALSE,
+                      penalty.matrix, ...)
+    {
+      if(evalfit) {	 # Fit was for bootstrap sample
+        stats <- fit$stats
+        lr  <- stats["Model L.R."]
+        rho <- stats["rho"]
+        shrink <- 1
+        n   <- stats["Obs"]
+        R2  <- stats["R2"]
+        g   <- stats['g']
+        pdm <- stats['pdm']
+      }
+      else {
+        k <- fit$non.slopes
+        null.model <- length(fit$coefficients)==k
+        refit <- if(null.model) ormfit2(y=y) else ormfit2(x, y, tol=1e-13)
+        kr <- refit$non.slopes
+        ## Model with no variables = null model
+        stats <- refit$stats
+        lr <- stats["Model L.R."]
+        rho <- stats['rho']
+        shrink <- if(null.model) 1 else refit$coefficients[kr + 1]
+        n  <- stats["Obs"]
+        R2 <- stats["R2"]
+        g  <- GiniMd(shrink*x)
+        pdm <- stats['pdm']
+      }
+      z <- c(rho, R2, shrink, g, pdm)
+      names(z) <- c("rho", "R2", "Slope", "g", "pdm")
+      z
+    }
+  
+  ormfit2 <- function(x, y, maxit=12, tol=1e-7, penalty.matrix=NULL, 
+                      xcol=NULL, ...)
+    {
+      if(length(xcol) && length(penalty.matrix) > 0)
+        penalty.matrix <- penalty.matrix[xcol, xcol, drop=FALSE]
+      # x has names() like y >= ... - DROP ??
+      # predab.resample is getting constant x as if an intercept
+      orm.fit(x, y, maxit=maxit, penalty.matrix=penalty.matrix, tol=tol)
+    }
+
+  z <- predab.resample(fit, method=method, fit=ormfit2, measure=discrim, pr=pr,
+                       B=B, bw=bw, rule=rule, type=type, sls=sls, aics=aics,
+                       force=force, estimates=estimates, 
+                       non.slopes.in.x=FALSE,
+                       penalty.matrix=penalty.matrix,
+                       allow.varying.intercepts=TRUE, ...)
+  kept <- attr(z, 'kept')
+  dimnames(z) <- list(c("rho", "R2", "Slope", "g", "pdm"),
+                      c("index.orig","training","test","optimism",
+                        "index.corrected","n"))
   structure(z, class='validate', kept=kept)
 }

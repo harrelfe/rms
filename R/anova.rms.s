@@ -4,9 +4,10 @@
 anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9, 
                       test=c('F','Chisq'),
                       india=TRUE, indnl=TRUE, ss=TRUE,
-                      vnames=c('names','labels')) {
-  ava <- function(idx,coef,cov,tol) {
-    chisq <- coef[idx] %*% solvet(cov[idx,idx], coef[idx], tol=tol)
+                      vnames=c('names', 'labels')) {
+
+  ava <- function(idx, coef, cov, tol) {
+    chisq <- coef[idx] %*% solvet(cov[idx, idx], coef[idx], tol=tol)
     c(chisq, length(idx))
   }
   
@@ -23,7 +24,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   
   if(!is.ols) ss <- FALSE
 
-  at <- object$Design
+  at     <- object$Design
   assign <- object$assign
   name   <- at$name
   labels <- at$label
@@ -36,39 +37,40 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   nia <- if(!length(ia)) 0 else ncol(ia)
   
   assume <- at$assume.code
-  parms <- at$parms
-  f <- length(assume)
+  parms  <- at$parms
+  f      <- length(assume)
 
   ## If using labels instead of names, substitute labels in interaction labels,
   ## e.g. change x1 * x2 to label(x1) * label(x2)
   if(vnames == 'labels' && any(assume == 9)) {
     for(i in which(assume == 9)) {
       parmi <- parms[[name[i]]]
-      parmi <- parmi[,1][parmi[,1] > 0]
+      parmi <- parmi[, 1][parmi[, 1] > 0]
       namelab[i] <- paste(labels[parmi], collapse=' * ')
     }
   }
 
-  ncall <- names(sys.call())[-(1:2)]
-  alist <- as.character(sys.call())[-(1:2)]
-  if(length(alist) && length(ncall)) alist <- alist[ncall=='']
+  ncall <- names(sys.call())[-(1 : 2)]
+  alist <- as.character(sys.call())[-(1 : 2)]
+  if(length(alist) && length(ncall)) alist <- alist[ncall == '']
   which <- if(length(alist)) {
     jw <- charmatch(alist, name, 0)
-    if(any(jw==0))
+    if(any(jw == 0))
       stop(paste("factor names not in design: ",
-                 paste(alist[jw==0], collapse=" ")))
+                 paste(alist[jw == 0], collapse=" ")))
     jw
   }
-  else 1:f
+  else 1 : f
 
   if(length(object$est) && !length(object$u))
     stop("est in fit indicates score statistics but no u in fit")
 
-  if(itype==1) {
+  if(itype == 1) {
     if(!length(object$coefficients))
       stop("estimates not available for Wald statistics")
     
     coef <- object$coefficients
+    cik  <- attr(coef, 'intercepts')
   }
   else {
     if(!length(object$u))
@@ -76,25 +78,31 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     coef <- object$u
   }
 
-  np <- length(coef)
-
-  ## Compute # intercepts to skip in testing
-  nrp <- num.intercepts(object)
-  if(itype==2 & nrp!=0)
+  cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
+  ## Omit row/col for scale parameters
+  ## Compute # intercepts nrpcoef to skip in testing
+  nrp     <- num.intercepts(object)
+  nrpcoef <- num.intercepts(object, 'coef')
+  if(nrpcoef > 0) {
+    coef <- coef[-(1 : nrpcoef)]
+    for(j in 1:length(assign))
+      assign[[j]] <- assign[[j]] - nrpcoef
+  }
+    
+  if(itype == 2 & nrp != 0)
     stop("fit score statistics and x are incompatible")
   
   nc <- length(coef)
   
-  cov <- vcov(object, regcoef.only=TRUE)  #Omit row/col for scale parameters
 
   stats <- NULL
   lab   <- NULL
   W     <- vinfo <- list()
   s     <- 0
   all.slopes <- rep(FALSE, nc)
-  all.ia <- rep(FALSE, nc)
+  all.ia     <- rep(FALSE, nc)
   all.nonlin <- rep(FALSE, nc)
-  num.ia <- 0
+  num.ia     <- 0
   num.nonlin <- 0
   issue.warn <- FALSE
   
@@ -111,14 +119,14 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     
     ## Factor no. according to model matrix is 1 + number of non-strata factors
     ## before this factor
-    if(j!=8) {
+    if(j != 8) {
       ##ignore strata
-      jfact <- if(i==1) 1 else 1 + sum(assume[1:(i-1)]!=8)
+      jfact <- if(i==1) 1 else 1 + sum(assume[1 : (i - 1)] != 8)
       
-      main.index <- assign[[jfact+asso]]
+      main.index <- assign[[jfact + asso]]
       nonlin.ia.index <- NULL	#Should not have to be here. Bug in S?
       all.slopes[main.index] <- TRUE
-      ni <- if(nia==0) 0 else sum(ia==i)
+      ni <- if(nia == 0) 0 else sum(ia == i)
       
       if(nia==0) ni <- 0
       else

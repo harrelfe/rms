@@ -7,7 +7,9 @@
   \code{Surv} objects.  The subsetting method preserves these extra attributes.
 }
 \usage{
-Srv(time, time2, event, type = c("right", "left", "interval", "counting", "interval2", "mstate"), origin = 0)
+Srv(time, time2, event,
+    type = c("right", "left", "interval", "counting", "interval2",
+             "mstate"), origin = 0)
 }
 \arguments{
   \item{time,time2,event,type,origin}{see \code{\link[survival]{Surv}}}}

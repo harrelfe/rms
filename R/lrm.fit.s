@@ -71,7 +71,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
       storage.mode(x) <- "double"
       dx <- dim(x)
       nx <- dx[2]
-      if(dx[1]!=n)stop("x and y must have same length")
+      if(dx[1] != n)stop("x and y must have same length")
       if(missing(est)) est <- 1:nx
       else
         if(length(est))
@@ -94,20 +94,17 @@ lrm.fit <- function(x, y, offset=0, initial, est,
 
   ofpres <- !all(offset == 0)
   opts[5] <- ofpres
-  if(ofpres)
-    {
-      if(length(offset) != n)stop("offset and y must have same length")
-      storage.mode(offset) <- "double"
-    }
+  if(ofpres && length(offset) != n) stop("offset and y must have same length")
+  storage.mode(offset) <- "double"
   
   if(n < 3) stop("must have >=3 non-missing observations")
-  kint <- as.integer(length(ylevels)-1)
-  ftable <- integer(501*(kint+1))
+  kint <- as.integer(length(ylevels) - 1)
+  ftable <- integer(501 * (kint + 1))
   levels(y) <- ylevels
   numy <- table(y)
   names(numy) <- ylevels
-  y <- as.integer(y-1)
-  nvi <- as.integer(nxin+kint)
+  y <- as.integer(y - 1)
+  nvi <- as.integer(nxin + kint)
   
   sumwty <- tapply(weights, y, sum)
   sumwt  <- sum(sumwty)
@@ -116,9 +113,9 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   
   if(missing(initial))
     {
-      ncum <- rev(cumsum(rev(sumwty)))[2:(kint+1)]
+      ncum <- rev(cumsum(rev(sumwty)))[2 : (kint + 1)]
       pp   <- ncum/sumwt
-      initial <- log(pp/(1-pp))
+      initial <- log(pp / (1 - pp))
       if(ofpres) initial <- initial - mean(offset)
     }
   if(length(initial) < nvi)
@@ -144,7 +141,8 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   if(nxin==0 & !ofpres)
     {
       loglik <- rep(loglik,2)
-      z <- list(coef=initial, u=rep(0,kint), opts=c(rep(0,7), .5, 0, 0, 0))
+      z <- list(coef=initial, u=rep(0,kint),
+                opts=as.double(c(rep(0,7), .5, 0, 0, 0, 0)))
     }
 
   if(ofpres)
@@ -179,9 +177,9 @@ lrm.fit <- function(x, y, offset=0, initial, est,
 	if(irank < nvi) {
       cat("singular information matrix in lrm.fit (rank=",irank,
           ").  Offending variable(s):\n")
-      cat(paste(xname[est[z$pivot[nvi:(irank+1)]-kint]],
+      cat(paste(xname[est[z$pivot[nvi : (irank + 1)] - kint]],
                 collapse=" "),"\n")
-      return(structure(list(fail=TRUE),class="lrm"))
+      return(structure(list(fail=TRUE), class="lrm"))
     }
 	loglik <- c(loglik, z$loglik)
   }
@@ -192,15 +190,15 @@ lrm.fit <- function(x, y, offset=0, initial, est,
     ##Set up for score statistics - last model is not refitted but derivatives
     ##with respect to all other columns of x are evaluated
     initial <- rep(0,nx)
-    if(length(est))initial[est] <- z$coef[(kint+1):nvi]
-    initial <- c(z$coef[1:kint], initial)
-    nvi <- as.integer(kint+nx)
+    if(length(est)) initial[est] <- z$coef[(kint + 1) : nvi]
+    initial <- c(z$coef[1 : kint], initial)
+    nvi <- as.integer(kint + nx)
     opts[3] <- 1	#Max no. iterations 
     z <-
-      .Fortran("lrmfit",coef=initial,nx,1:nx,x,y,offset,
-               u=double(nvi),double(nvi*(nvi+1)),double(1),n,nx,
-               sumw,nvi,v=double(nvi*nvi),double(nvi),double(nvi),
-               double(nvi),integer(nvi),opts=opts,ftable,penmat,weights,
+      .Fortran("lrmfit", coef=initial, nx, 1:nx, x, y, offset,
+               u=double(nvi), double(nvi*(nvi+1)), double(1), n, nx,
+               sumw, nvi, v=double(nvi*nvi), double(nvi), double(nvi),
+               double(nvi), integer(nvi), opts=opts, ftable, penmat, weights,
                PACKAGE="rms")
   }
   

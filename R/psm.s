@@ -224,7 +224,7 @@ psm <- function(formula=formula(data),
   fit$dist <- dist
   fit$df.resid <- n-sum(fit$df) ##used for anova.survreg
   if (model) fit$model <- m
-  if (x)     fit$x <- X
+  if (x)     fit$x <- X[, -1, drop=FALSE]
   ##if (y)     fit$y <- Y   #FEH
   if (length(parms)) fit$parms <- parms
   ## Start FEH
@@ -306,12 +306,12 @@ predict.psm <-
              "adjto.data.frame",  "model.frame"),
            se.fit=FALSE, conf.int=FALSE,
            conf.type=c('mean','individual','simultaneous'),
-           incl.non.slopes, non.slopes, kint=1,
+           kint=1,
            na.action=na.keep, expand.na=TRUE, center.terms=type=="terms", ...) {
     type <- match.arg(type)
     predictrms(object, newdata, type, se.fit, conf.int, conf.type,
-               incl.non.slopes, non.slopes, kint,
-               na.action, expand.na, center.terms, ...)
+               kint=1, na.action=na.action, expand.na=expand.na,
+               center.terms=center.terms, ...)
   }
 
 

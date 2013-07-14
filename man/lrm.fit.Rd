@@ -8,7 +8,7 @@ likelihood estimation is used.
 }
 \usage{
 lrm.fit(x, y, offset, initial, est, maxit=12, eps=.025,
-        tol=1E-7, trace=FALSE, penalty.matrix, weights, normwt)
+        tol=1e-7, trace=FALSE, penalty.matrix, weights, normwt)
 }
 \arguments{
 \item{x}{
@@ -33,15 +33,15 @@ maximum no. iterations (default=\code{12}). Specifying \code{maxit=1}
 causes logist to compute statistics at initial estimates.
 }
 \item{eps}{
-difference in \preformatted{-2  log} likelihood for declaring convergence.
-Default is \code{.025}.  If the \preformatted{-2 log} likelihood gets
-worse by eps/10 while the maximum absolute first directive of
-\preformatted{-2 log} likelihood is below 1E-9, convergence is still
+difference in \eqn{-2  log} likelihood for declaring convergence.
+Default is \code{.025}.  If the \eqn{-2 log} likelihood gets
+worse by eps/10 while the maximum absolute first derivative of
+\eqn{-2 log} likelihood is below 1e-9, convergence is still
 declared.  This handles the case where the initial estimates are MLEs,
 to prevent endless step-halving.
 }
 \item{tol}{
-Singularity criterion. Default is 1E-7
+Singularity criterion. Default is 1e-7
 }
 \item{trace}{
 set to \code{TRUE} to print -2 log likelihood, step-halving

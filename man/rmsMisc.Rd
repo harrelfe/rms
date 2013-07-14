@@ -1,11 +1,13 @@
 \name{rmsMisc}
 \alias{rmsMisc}
 \alias{calibrate.rms}
+\alias{vcov.rms}
 \alias{vcov.cph}
 \alias{vcov.Glm}
 \alias{vcov.Gls}
 \alias{vcov.lrm}
 \alias{vcov.ols}
+\alias{vcov.orm}
 \alias{vcov.psm}
 \alias{oos.loglik}
 \alias{oos.loglik.ols}
@@ -52,8 +54,13 @@ functions allow some fitting functions not in the \code{rms} series
 \code{fastbw}, and similar functions. 
 
 
-For \code{vcov}, there are these functions: \code{vcov.default},
-\code{vcov.lm}, \code{vcov.glm}.  The \code{oos.loglik} function for
+For \code{vcov}, there are several functions.  The method for \code{orm}
+fits is a bit different because the covariance matrix stored in the fit
+object only deals with the middle intercept.  See the \code{intercepts}
+argument for more options.  There is a method for \code{lrm} that also
+allows non-default intercept(s) to be selected (default is first).
+
+The \code{oos.loglik} function for
 each type of model implemented computes the -2 log likelihood for
 out-of-sample data (i.e., data not necessarily used to fit the model)
 evaluated at the parameter estimates from a model fit.  Vectors for the
@@ -130,7 +137,7 @@ terminal, automatically ready for \code{Sweave}.  The work of printing
 summary statistics is done by \code{prStats}, which uses the Hmisc
 \code{print.char.matrix} function to print overall model statistics if
 \code{latex=FALSE}, otherwise it generates customized LaTeX code.  The
-LaTeX longtable package must be in effect to use these
+LaTeX longtable and epic packages must be in effect to use these
 LaTeX functions.
 
 \code{reVector} allows one to rename a subset of a named vector,
@@ -149,11 +156,13 @@ formatted values with "< 0.0001" (if \code{digits=4}).
 dot chart of frequency of variable \code{NA}s related to model fits.
 }
 \usage{
+\method{vcov}{rms}(object, regcoef.only=TRUE, intercepts='all', \dots)
 \method{vcov}{cph}(object, regcoef.only=TRUE, \dots)
-\method{vcov}{Glm}(object, \dots)
-\method{vcov}{Gls}(object, \dots)
-\method{vcov}{lrm}(object, regcoef.only=TRUE, \dots)
+\method{vcov}{Glm}(object, regcoef.only=TRUE, intercepts='all', \dots)
+\method{vcov}{Gls}(object, intercepts='all', \dots)
+\method{vcov}{lrm}(object, regcoef.only=TRUE, intercepts='all', \dots)
 \method{vcov}{ols}(object, regcoef.only=TRUE, \dots)
+\method{vcov}{orm}(object, regcoef.only=TRUE, intercepts='mid', \dots)
 \method{vcov}{psm}(object, regcoef.only=TRUE, \dots)
 
 oos.loglik(fit, \dots)
@@ -164,7 +173,7 @@ oos.loglik(fit, \dots)
 \method{oos.loglik}{psm}(fit, lp, y, \dots)
 \method{oos.loglik}{Glm}(fit, lp, y, \dots)
 
-num.intercepts(fit)
+num.intercepts(fit, type=c('fit', 'var', 'coef'))
 
 Getlim(at, allow.null=FALSE, need.all=TRUE)
 Getlimi(name, Limval, need.all=TRUE)
@@ -215,6 +224,13 @@ formatNP(x, digits=NULL, pvalue=FALSE, latex=FALSE)
   \code{p} rows and columns of the covariance matrix to be returned,
   where \code{p} is the length of \code{object$coef}.
 }
+\item{intercepts}{set to \code{"none"} to omit any rows and columns
+	related to intercepts.  Set to an integer scalar
+	or vector to include particular intercept elements.  Set to
+	\code{'all'} to include all intercepts, or for \code{orm} to
+	\code{"mid"} to use the default for \code{orm}.  The default is to use the
+	first for \code{lrm} and the median intercept for \code{orm}.
+	}
 \item{at}{
 \code{Design} element of a fit
 }
@@ -257,7 +273,13 @@ predictor).  For \code{AIC.rms}, \code{type} specifies the basis on
 which to return AIC.  The default is minus twice the maximized log
 likelihood plus \code{k} times the degrees of freedom counting
 intercept(s).  Specify \code{type='chisq'} to get a penalized model
-likelihood ratio chi-square instead.
+likelihood ratio chi-square instead.  For \code{num.intercepts} the
+default is to return the formal number of intercepts used when fitting
+the model.  Set \code{type='var'} to return the actual number of
+intercepts stored in the \code{var} object, or \code{type='coef'} to
+return the actual number in the fitted coefficients.  The former will be
+less than the number fitted for \code{orm} fits, and the latter for
+\code{orm} fits passed through \code{\link[Hmisc]{fit.mult.impute}}.
 }
 \item{term.order}{
 1 for all parameters, 2 for all parameters associated with either nonlinear

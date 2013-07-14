@@ -193,9 +193,7 @@ matrix is returned under the name \code{var.from.info.matrix}.
 is returned if \code{penalty>0}.  It is the vector whose sum is the effective
 d.f. of the model (counting intercept terms).
 }
-\item{u}{
-vector of first derivatives of log-likelihood
-}
+\item{u}{vector of first derivatives of log-likelihood}
 \item{deviance}{
 -2 log likelihoods (counting penalty components)
 When an offset variable is present, three
@@ -207,15 +205,9 @@ the intercept(s)-only model and the model with intercept(s) and predictors.
 \item{est}{
 vector of column numbers of \code{X} fitted (intercepts are not counted)
 }
-\item{non.slopes}{
-number of intercepts in model
-}
-\item{penalty}{
-see above
-}
-\item{penalty.matrix}{
-the penalty matrix actually used in the estimation
-}
+\item{non.slopes}{number of intercepts in model}
+\item{penalty}{see above}
+\item{penalty.matrix}{the penalty matrix actually used in the estimation}
 }
 \author{
 Frank Harrell\cr
@@ -342,7 +334,7 @@ for(penlty in seq(0,.15,by=.005)) {
     X <- f$x    # saves time for future runs - don't have to use rcs etc.
     Y <- f$y    # this also deletes rows with NAs (if there were any)
     penalty.matrix <- diag(diag(var(X)))
-    Xnew <- predict(f, new.data, type="x", incl.non.slopes=FALSE)  
+    Xnew <- predict(f, new.data, type="x")  
     # expand design matrix for new data
     Ynew <- new.data$y
   } else f <- lrm.fit(X,Y, penalty.matrix=penlty*penalty.matrix)

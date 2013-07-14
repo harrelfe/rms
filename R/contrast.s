@@ -12,14 +12,16 @@ contrast.rms <-
   boot.type <- match.arg(boot.type)
   if(conf.type == 'simultaneous') require(multcomp)
   
-  zcrit <- if(length(idf <- fit$df.residual)) qt((1+conf.int)/2, idf) else
-              qnorm((1+conf.int)/2)
+  zcrit <- if(length(idf <- fit$df.residual)) qt((1 + conf.int) / 2, idf) else
+              qnorm((1 + conf.int) / 2)
   bcoef <- if(usebootcoef) fit$boot.Coef
+  nrp <- num.intercepts(fit, 'coef')
+
   if(length(bcoef) && conf.type != 'simultaneous')
     conf.type <- switch(boot.type,
                         percentile = 'bootstrap nonparametric percentile',
-                        bca = 'bootstrap BCa',
-                        basic = 'basic bootstrap')
+                        bca        = 'bootstrap BCa',
+                        basic      = 'basic bootstrap')
   
   da <- do.call('gendata', list(fit, factors=a, expand=expand))
   xa <- predict(fit, da, type='x')
@@ -38,14 +40,14 @@ contrast.rms <-
   if(type!='average' && !length(cnames)) {
     ## If two lists have same length, label contrasts by any variable
     ## that has the same length and values in both lists
-    if(ma==mb) {
+    if(ma == mb) {
       if(ncol(da) != ncol(db)) stop('program logic error')
       if(any(sort(names(da)) != sort(names(db))))
         stop('program logic error')
       k <- integer(0)
       nam <- names(da)
       for(j in 1:length(da))
-        if(all(as.character(da[[nam[j]]])==as.character(db[[nam[j]]])))
+        if(all(as.character(da[[nam[j]]]) == as.character(db[[nam[j]]])))
           k <- c(k, j)
       if(length(k)) vary <- da[k]
     } else if(max(ma, mb) > 1) {
@@ -66,32 +68,32 @@ contrast.rms <-
     stop('number of rows must be the same for observations generated\nby a and b unless one has one observation')
 
   X <- xa - xb
-  p <- ncol(X)
   m <- nrow(X)
+  if(nrp > 0) X <- cbind(matrix(0., nrow=m, ncol=nrp), X)
   
   if(is.character(weights)) {
-    if(weights!='equal') stop('weights must be "equal" or a numeric vector')
-    weights <- rep(1, m)
+    if(weights != 'equal') stop('weights must be "equal" or a numeric vector')
+    weights <- rep(1,  m)
   }
   else
     if(length(weights) > 1 && type != 'average')
       stop('can specify more than one weight only for type="average"')
     else
-      if(length(weights) != m) stop(paste('there must be',m,'weights'))
+      if(length(weights) != m) stop(paste('there must be', m, 'weights'))
   weights <- as.vector(weights)
   if(m > 1 && type=='average')
     X <- matrix(apply(weights*X, 2, sum) / sum(weights), nrow=1,
-                dimnames=list(NULL,dimnames(X)[[2]]))
-  
-  est <- drop(X %*% coef(fit))
+                dimnames=list(NULL, dimnames(X)[[2]]))
+
+  est <- matxv(X, coef(fit))
   v <- X %*% vcov(fit, regcoef.only=FALSE) %*% t(X)
   ndf <- if(is.matrix(v))nrow(v) else 1
   se <- if(ndf==1) sqrt(v) else sqrt(diag(v))
-  Z <- est/se
-  P <- if(length(idf)) 2*(1-pt(abs(Z), idf)) else 2*(1-pnorm(abs(Z)))
+  Z <- est / se
+  P <- if(length(idf)) 2 * (1 - pt(abs(Z), idf)) else 2 * (1 - pnorm(abs(Z)))
   if(conf.type != 'simultaneous') {
     if(length(bcoef)) {
-      best <- t(X %*% t(bcoef))
+      best <- t(matxv(X, bcoef, bmat=TRUE))
       lim <- bootBCa(est, best, type=boot.type, n=nobs(fit), seed=fit$seed,
                      conf.int=conf.int)
       if(is.matrix(lim)) {
@@ -141,9 +143,9 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u)u,
                                jointonly=FALSE, ...)
 {
   edf <- x$df.residual
-  sn <- if(length(edf))'t' else 'Z'
-  pn <- if(length(edf))'Pr(>|t|)' else 'Pr(>|z|)'
-  w <- x[1:(x$nvary + 6)]
+  sn <- if(length(edf)) 't' else 'Z'
+  pn <- if(length(edf)) 'Pr(>|t|)' else 'Pr(>|z|)'
+  w <- x[1 : (x$nvary + 6)]
   w$Z <- round(w$Z, 2)
   w$Pvalue <- round(w$Pvalue, 4)
   no <- names(w)
@@ -167,7 +169,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u)u,
 
   # Print w
   if(!jointonly) {
-    print(as.matrix(w),quote=FALSE)
+    print(as.matrix(w), quote=FALSE)
     if(any(x$redundant)) cat('\nRedundant contrasts are denoted by *\n')
   }
   
@@ -176,14 +178,14 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u)u,
     cat('\nJoint test for all contrasts=0:\n\n')
     ndf <- sum(!x$redundant)
     if(length(edf)) {
-      Fstat <- jstat/ndf
+      Fstat <- jstat / ndf
       Pval <- 1 - pf(Fstat, ndf, edf)
-      cat('F(',ndf,',',edf,')=',round(Fstat,3),', P=', round(Pval,4),
+      cat('F(', ndf, ',', edf, ')=', round(Fstat,3),', P=', round(Pval,4),
           '\n', sep='')
     } else {
       Pval <- 1 - pchisq(jstat, ndf)
-      cat('Chi-square=', round(jstat,2),' with ', ndf, ' d.f.  P=',
-          round(Pval,4),'\n', sep='')
+      cat('Chi-square=', round(jstat, 2),' with ', ndf, ' d.f.  P=',
+          round(Pval, 4),'\n', sep='')
     }
   }
   if(!jointonly && length(edf))cat('\nError d.f.=',edf,'\n')

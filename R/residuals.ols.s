@@ -9,25 +9,26 @@ residuals.ols <-
   
   if(type=="ordinary") return(naresid(naa, object$residuals))
   
-  if(!length(object$x))stop("did not specify x=T in fit")
-  
-  if(type=="score") return(naresid(naa, object$x*object$residuals))
+  if(!length(object$x))stop("did not specify x=TRUE in fit")
+
+  X <- cbind(Intercept=1, object$x)
+  if(type=="score") return(naresid(naa, X * object$residuals))
   
   infl <- ols.influence(object)
   
-  if(type=="hscore") return(naresid(naa, object$x *
-       (object$residuals/(1-infl$hat))))
+  if(type=="hscore") return(naresid(naa, X *
+       (object$residuals / (1 - infl$hat))))
   
-  if(type=="dfbeta"|type=="dfbetas")
+  if(type=="dfbeta" | type=="dfbetas")
     {
       r <- t(coef(object) - t(coef(infl)))
-      if(type=="dfbetas") r <- sweep(r,2,diag(object$var)^.5,"/")
+      if(type=="dfbetas") r <- sweep(r, 2, diag(object$var)^.5, "/")
     }
   else
     if(type=="dffit") r <- (infl$hat * object$residuals)/(1 - infl$hat)
     else
-      if(type=="dffits") r <- (infl$hat^.5)*object$residuals/
-        (infl$sigma*(1-infl$hat))
+      if(type=="dffits") r <- (infl$hat^.5)*object$residuals /
+        (infl$sigma * (1 - infl$hat))
       else
         if(type=="hat") r <- infl$hat
 
@@ -59,14 +60,12 @@ ols.influence <- function(lm, x)
   na <- is.na(beta)
   beta <- beta[!na]
   p <- GET(lm, "rank")
-  if(!length(p))
-    p <- sum(!na)
+  if(!length(p)) p <- sum(!na)
   R <- lm$qr$qr
-  if(p < max(dim(R)))
-    R <- R[1:p, 1:p]
+  if(p < max(dim(R))) R <- R[1:p, 1:p]
   qr <- GET(lm, "qr")
   if(!length(qr)) {
-    lm.x <- GET(lm, "x")
+    lm.x <- cbind(Intercept=1, GET(lm, "x"))
     if(length(wt))
       lm.x <- lm.x * sqrt(wt)
     if(any(na))

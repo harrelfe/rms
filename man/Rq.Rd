@@ -84,7 +84,7 @@ RqFit(fit, wallow=TRUE, passdots=FALSE)
   is Roger Koenker.
 }
 \seealso{
-  \code{\link[quantreg]{rq}}, \code{\link{prModFit}}
+  \code{\link[quantreg]{rq}}, \code{\link{prModFit}}, \code{\link{orm}}
 }
 \examples{
 \dontrun{

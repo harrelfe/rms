@@ -50,7 +50,7 @@ Predict(x, ..., fun,
         conf.type = c("mean", "individual","simultaneous"),
         usebootcoef=TRUE, boot.type=c("percentile","bca","basic"),
         adj.zero = FALSE, ref.zero = FALSE,
-        non.slopes, time = NULL, loglog = FALSE, digits=4, name, factors=NULL)
+        kint=NULL, time = NULL, loglog = FALSE, digits=4, name, factors=NULL)
 
 \method{print}{Predict}(x, \dots)
 
@@ -133,13 +133,11 @@ Predict(x, ..., fun,
 	before plotting so that the reference value of the \code{x}-variable
 	yields \code{y=0}.  This is done before applying function \code{fun}.
   }
-  \item{non.slopes}{
+  \item{kint}{
 	This is only useful in a multiple intercept model such as the ordinal
 	logistic model. There to use to second of three intercepts, for example,
-	specify \code{non.slopes=c(0,1,0)}. The default is
-	\code{non.slopes=rep(0,k)} if \code{adj.zero=TRUE}, where \code{k}
-	is the number of intercepts in the model.  If \code{adj.zero=FALSE},
-	the default is \code{(1,0,0,\dots,0)}, i.e., the first intercept is used.
+	specify \code{kint=2}. The default is 1 for \code{lrm} and the middle
+	intercept corresponding to the median \code{y} for \code{orm}.
   }
   \item{time}{
 	Specify a single time \code{u} to cause function \code{survest} to
