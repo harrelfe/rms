@@ -37,3 +37,39 @@ cse <- function(n) {
 for(i in 1:10) cse(100)
 for(i in 1:10) cse(5000)
 # nid does appear to work best
+
+## Compare mean squared error of quantile estimator of median y | x=E
+## in 5-sample problem with orm logistic family estimator.  Also include sample quantile
+cmse <- function(n) {   # n = # obs per each of 5 samples
+  x <- factor(rep(c('a','b','c','d','e'), n))
+  y <- rnorm(5*n)
+  s <- x == 'e'
+  y[s] <- y[s] + 3
+  sampmed <- median(y[s])
+  f <- rq(y ~ x)
+  qrmed <- coef(f)[1] + coef(f)['xe']
+  f <- orm(y ~ x, family=probit)
+  if(f$fail) return(c(NA, NA, NA))
+  qu <- Quantile(f)
+  iref <- f$interceptRef
+  ormmed <- qu(.5, z <- coef(f)[iref] + coef(f)['x=e'])
+  ormmean <- Mean(f)(z)
+  c(sampmed=sampmed, qrmed=qrmed, ormmed=ormmed, ormmean=ormmean)
+}
+require(rms)
+mse <- c(0, 0, 0, 0)
+n <- 50
+B <- 1000
+m <- 0
+for(i in 1:B) {
+  cat(i, '\r')
+  ms <- cmse(n)
+  if(!is.na(ms[1])) {
+    m <- m + 1
+    mse <- mse + (ms - 3) ^ 2
+  }
+}
+m
+sqrt(mse/m)   # .123 .124 .126 logistic n=100
+              # .173 .176 .172 probit n=50
+              # .169 .171 .165 .139 probit n=50   .139=rmse for mean from orm

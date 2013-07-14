@@ -10,6 +10,7 @@ contrast.rms            General Contrasts of Regression Coefficients
 cph                     Cox Proportional Hazards Model and Extensions
 cr.setup                Continuation Ratio Ordinal Logistic Setup
 datadist                Distribution Summaries for Predictor Variables
+ExProb                  Function Generator For Exceedance Probabilities
 fastbw                  Fast Backward Variable Selection
 Function.rms            Compose an S Function to Compute X beta from a
                         Fit
@@ -32,6 +33,8 @@ matinv                  Total and Partial Matrix Inversion using
 nomogram                Draw a Nomogram Representing a Regression Fit
 ols                     Linear Model Estimation Using Ordinary Least
                         Squares
+orm                     Ordinal Regression Model
+orm.fit                 Ordinal Regression Model Fitter
 pentrace                Trace AIC and BIC vs. Penalty
 plot.Predict            Plot Effects of Variables Estimated by a
                         Regression Model Fit
@@ -47,7 +50,7 @@ print.cph               Print cph Results
 print.ols               Print ols
 psm                     Parametric Survival Model
 residuals.cph           Residuals for a cph Fit
-residuals.lrm           Residuals from a Logistic Regression Model Fit
+residuals.lrm           Residuals from an 'lrm' or 'orm' Fit
 residuals.ols           Residuals for ols
 rms                     rms Methods and Generic Functions
 rmsMisc                 Miscellaneous Design Attributes and Utility
@@ -59,6 +62,7 @@ Rq                      rms Package Interface to quantreg Package
 sensuc                  Sensitivity to Unmeasured Covariables
 setPb                   Progress Bar for Simulations
 specs.rms               rms Specifications for Models
+Srv                     Front-end to 'survival' package 'Surv' function
 summary.rms             Summary of Effects in Model
 survest.cph             Cox Survival Estimates
 survest.psm             Parametric Survival Estimates
@@ -69,7 +73,8 @@ validate                Resampling Validation of a Fitted Model's
                         Indexes of Fit
 validate.cph            Validation of a Fitted Cox or Parametric
                         Survival Model's Indexes of Fit
-validate.lrm            Resampling Validation of a Logistic Model
+validate.lrm            Resampling Validation of a Logistic or Ordinal
+                        Regression Model
 validate.ols            Validation of an Ordinary Linear Model
 validate.rpart          Dxy and Mean Squared Error by Cross-validating
                         a Tree Sequence

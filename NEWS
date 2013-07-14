@@ -1,4 +1,4 @@
-Changes in version 3.7-0 (2013-04-22)
+Changes in version 4.0-0 (2013-07-10)
    * Cleaned up label logic in Surv, made it work with interval2 (thanks:Chris Andrews)
    * Fixed bug in val.prob - wrong denominator for Brier score if obs removed for logistic calibration
    * Fixed inconsistency in predictrms where predict() for Cox models used a design matrix that was centered on medians and modes rather than means (thanks: David van Klaveren <d.vanklaveren.1@erasmusmc.nl>)
@@ -10,7 +10,7 @@ Changes in version 3.7-0 (2013-04-22)
    * For plot.Predict made default gray scale shaded confidence bands darker
    * For bootcov exposed eps argument to fitters and default to lower value
    * Fixed bug in plot.pentrace regarding effective.df plotting
-   * Added setPb function for pop-up progress bars for simulations
+   * Added setPb function for pop-up progress bars for simulations; turn off using options(showprogress=FALSE) or options(showprogress='console')
    * Added progress bars for predab.resample (for validate, calibrate) and bootcov
    * Added bootBCa function
    * Added seed to bootcov object
@@ -28,6 +28,27 @@ Changes in version 3.7-0 (2013-04-22)
    * Fixed bug in latex.pphsm, neatened pphsm code
    * Neatened code in rms.s
    * Improved code for bootstrapping ranks of variables in anova.rms help file
+   * Fixed bug in Function.rms - undefined Nam[[i]] if strat.  Thanks: douglaswilkins@yahoo.com
+   * Made quantreg be loaded at end of search list in Rq so it doesn't override latex generic in Hmisc
+   * Improved plot.summary.rms to use blue of varying transparency instead of polygons to show confidence intervals, and to use only three confidence levels by default: 0.9 0.95 0.99
+   * Changed Surv to Srv; use of Surv in fitting functions will result in lack of time labels and assumption of Day as time unit; no longer override Surv in survival
+   * Changed calculation of Dxy (and c-index) to use survival package survConcordance service function when analyzing (censored) survival time; very fast
+   * Changed default dxy to TRUE in validate.cph, validate.psm
+   * Dxy is now negated if correlating Cox model log relative hazard with survival time
+   * Removed dxy argument from validate.bj as it always computed
+   * Added Dxy to standard output of cph, psm
+   * Added help file for Srv
+   * Removed reference to ps.slide from survplot help page
+   * Added the general ordinal regression fitting function orm (and orm.fit) which efficiently handles thousands of intercepts because of sparse matrix representation of the information matrix; implements 5 distribution families
+   * Added associated functions print.orm, vcov.orm, predict.orm, Mean.orm, Quantile.orm, latex.orm, validate.orm
+   * Changed predab.resample to allow number of intercepts from resample to resample
+   * Fixed bug in Mean.cph (thanks: Komal Kapoor <komal.bitsgoa@gmail.com>)
+   * Removed incl.non.slopes and non.slopes arguments from all predict methods
+   * Changed all functions to expect predict(..., type='x') to not return intercept columns, and all fitting functions to not store column of ones if x=TRUE
+   * Changed nomogram argument intercept to kint, used default as fit$interceptRef
+   * Made bootcov behave in a special way for orm, to use linear interpolation to select a single intercept targeted at median Y
+   * Revamped all of rms to never store intercepts in design matrices in fit objects and to add intercepts on demand inside predictrms
+   * Added new function generator ExProb to compute exceedance probabilities from orm fits
 
 Changes in version 3.6-3 (2013-01-11)
    * Added Li-Shepherd residuals in residuals.lrm.s, become new default (same as ordinary residuals for binary models)

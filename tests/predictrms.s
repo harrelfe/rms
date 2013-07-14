@@ -53,3 +53,26 @@ sum((f$se.fit-se.center.mean)^2)
 
 ## predict$.se.fit is no longer equal to median centered se
 sum((p$se.fit-se.center.median)^2)
+
+
+## Check ref.zero=TRUE
+set.seed(1)
+n <- 30
+x1 <- 100 + rnorm(n)
+x2 <-   5 + rnorm(n)
+x3 <- c(rep('a', 5), rep('b', 5), rep('c', 20))
+dd <- datadist(x1, x2, x3); options(datadist='dd'); dd
+resid <- rnorm(n)
+y <- x1 + x2 + .5*(x3 == 'b') + 1*(x3 == 'c') + resid
+
+f <- ols(y ~ pol(x1, 2) + x2 + x3)
+f
+w <- data.frame(x1=100.4, x2=4.5, x3='c')
+predict(f, w, conf.int=.95) 
+predict(f, w, type='adjto')
+c(median(x1), median(x1)^2, median(x2))
+k <- coef(f)
+ycenter <- k[1] + k[2]*median(x1) + k[3]*median(x1)^2 + k[4]*median(x2) + k[6]
+ycenter
+predict(f, w, conf.int=.95, ref.zero=TRUE)
+k[1] + k[2]*100.4 + k[3]*100.4^2 + k[4]*4.5 + k[6] - ycenter

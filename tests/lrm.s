@@ -1,16 +1,32 @@
 require(rms)
-n <- 50000
+n <- 400000
 x1 <- runif(n)
 x2 <- runif(n)
 x3 <- runif(n)
+x4 <- runif(n)
+x5 <- runif(n)
+x6 <- runif(n)
+x7 <- runif(n)
+x8 <- runif(n)
+x9 <- runif(n)
+x10 <- runif(n)
+X <- cbind(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10)
 L <- x1 + x2 + x3 - 1.5
 y <- ifelse(runif(n) <= plogis(L), 1, 0)
-system.time(f <- glm(y ~ x1 + x2 + x3, family=binomial))
+fm <- y ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10
+system.time(f <- glm(fm, family=binomial))
 print(summary(f), digits=7)
-system.time(g <- lrm(y ~ x1 + x2 + x3))
+system.time(g <- lrm(fm))
+system.time(lrm.fit(X, y))
 print(g, digits=7)
 coef(f) - coef(g)
 sqrt(diag(vcov(f)))/sqrt(diag(vcov(g)))
+system.time(h <- orm(fm))
+system.time(i <- orm.fit(X, y))
+Rprof('orm.fit.out')
+of <- orm.fit(X, y)
+Rprof(NULL)
+system('R CMD Rprof orm.fit.out')
 
 require(MASS)
 n <- 300
@@ -54,7 +70,7 @@ x19 <- w(25)
 x20 <- w(27)
 f <- lrm(y ~ x1+x2+x3+x4+x5+x6+x7+x8+x9+x10+x11+x12+x13+x14+x15+x16+x17+x18+x19+x20)
 
-source('~/R/rms/R/lrm.s');source('~/R/Hmisc/R/latexDotchart.s');source('~/R/rms/R/rmsMisc.s')
+
 sink('/tmp/t.tex')
 cat('\\documentclass{report}\\usepackage{color,epic,longtable}\\begin{document}',
     sep='\n')
