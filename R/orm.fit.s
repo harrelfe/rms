@@ -118,16 +118,19 @@ orm.fit <- function(x=NULL, y,
       initial <- c(initial, rep(0, p - length(initial)))
   
   loglik <- -2 * sum(numy * log(numy / n))
-  
-  if(nx > 0) {
+
+  if(len.penmat) {
+    if(nx > 0) {
       if(len.penmat == 0) penalty.matrix <- matrix(0, nrow=nx, ncol=nx)
       if(nrow(penalty.matrix) != nx || ncol(penalty.matrix) != nx) 
-          stop(paste("penalty.matrix does not have", nx, "rows and columns"))
+        stop(paste("penalty.matrix does not have", nx, "rows and columns"))
       penmat <- rbind(
-          matrix(0, ncol=kint+nx, nrow=kint),
-          cbind(matrix(0, ncol=kint, nrow=nx), penalty.matrix))
+        matrix(0, ncol=kint+nx, nrow=kint),
+        cbind(matrix(0, ncol=kint, nrow=nx), penalty.matrix))
+    }
+    else penmat <- matrix(0, ncol=kint, nrow=kint)
   }
-  else penmat <- matrix(0, ncol=kint, nrow=kint)
+  else penmat <- NULL
   
   if(nx==0 & !ofpres) {
       loglik <- rep(loglik, 2)
