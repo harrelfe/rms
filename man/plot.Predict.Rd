@@ -38,7 +38,7 @@
      data=NULL, subdata, col.fill=gray(seq(.825, .55, length=5)),
      adj.subtitle, cex.adj, cex.axis, perim=NULL, digits=4, nlevels=3,
      nlines=FALSE, addpanel, scat1d.opts=list(frac=0.025, lwd=0.3),
-     type=NULL, ...)
+     type=NULL, yscale=NULL, ...)
 
 pantext(object, x, y, cex=.5, adj=0, fontfamily="Courier", lattice=TRUE)
 
@@ -159,6 +159,11 @@ default is 4 significant digits.
 \item{type}{a value (\code{"l","p","b"}) to override default choices
   related to showing or connecting points.  Especially  useful for
   discrete x coordinate variables.}
+\item{yscale}{a \code{lattice} scale \code{list} for the \code{y}-axis
+	to be added to what is automatically generated for the \code{x}-axis.
+	Example:
+	\code{yscale=list(at=c(.005,.01,.05),labels=format(c(.005,.01,.05)))}.
+  See \link[lattice]{xyplot}}
 \item{\dots}{
   extra arguments to pass to \code{xYplot} or \code{Dotplot}.  Some
   useful ones are \code{label.curves} and \code{abline}.

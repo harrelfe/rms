@@ -4,7 +4,7 @@ plot.Predict <-
            data=NULL, subdata, col.fill=gray(seq(.825, .55, length=5)),
            adj.subtitle, cex.adj, cex.axis, perim=NULL,
            digits=4, nlevels=3, nlines=FALSE, addpanel,
-           scat1d.opts=list(frac=0.025, lwd=0.3), type=NULL, ...)
+           scat1d.opts=list(frac=0.025, lwd=0.3), type=NULL, yscale=NULL, ...)
 {
   require(lattice)
   if(varypred)
@@ -157,6 +157,7 @@ plot.Predict <-
       scales <- list(x=list(relation='free', limits=limits,
                        at=at, labels=labels))
       if(!missing(cex.axis)) scales$x$cex <- cex.axis
+      if(length(yscale)) scales$y <- yscale
       r <- list(formula=formula, groups=gr, subset=subset, type=if(length(type))type else 'l',
                 method=if(conf.int & (!length(type) || type != 'p')) 'filled bands' else 'bars',
                 col.fill=col.fill,
@@ -321,7 +322,10 @@ plot.Predict <-
                 method=if(conf.int & (!length(type) || type!='p')) 'filled bands' else 'bars',
                 col.fill=col.fill,
                 xlab=xlab, ylab=ylab, ylim=ylim, panel=pan)
-      if(length(xscale)) r$scales <- xscale
+      scales <- NULL
+      if(length(xscale)) scales <- xscale
+      if(length(yscale)) scales$y <- yscale
+      r$scales <- scales
       if(!missing(xlim)) r$xlim   <- xlim
       if(!conf.int)      r$method <- NULL
       if(length(gname))  r$groups <- x[[gname]]
