@@ -319,7 +319,8 @@ plot(r, groups='.set.')
 options(datadist=NULL)
 \dontrun{
 ## Simulate power and type I error for orm logistic and probit regression
-## for both likelihood ratio and score chi-square tests, and compare with t-test
+## for likelihood ratio, Wald, and score chi-square tests, and compare
+## with t-test
 require(rms)
 set.seed(5)
 nsim <- 2000
@@ -327,7 +328,8 @@ r <- NULL
 for(beta in c(0, .4)) {
   for(n in c(10, 50, 300)) {
     cat('beta=', beta, '  n=', n, '\n\n')
-    plogistic <- pprobit <- plogistics <- pprobits <- ptt <- numeric(nsim)
+    plogistic <- pprobit <- plogistics <- pprobits <- plogisticw <-
+      pprobitw <- ptt <- numeric(nsim)
     x <- c(rep(0, n/2), rep(1, n/2))
     pb <- setPb(nsim, every=25, label=paste('beta=', beta, '  n=', n))
     for(j in 1:nsim) {
@@ -335,30 +337,34 @@ for(beta in c(0, .4)) {
       y <- beta*x + rnorm(n)
       tt <- t.test(y ~ x)
       ptt[j] <- tt$p.value
-      f <- orm(y ~ x)$stats
-      plogistic[j]  <- f['P']
-      plogistics[j] <- f['Score P']
-      f <- orm(y ~ x, family=probit)$stats
-      pprobit[j]  <- f['P']
-      pprobits[j] <- f['Score P']
+      f <- orm(y ~ x)
+      plogistic[j]  <- f$stats['P']
+      plogistics[j] <- f$stats['Score P']
+      plogisticw[j] <- 1 - pchisq(coef(f)['x']^2 / vcov(f)[2,2], 1)
+      f <- orm(y ~ x, family=probit)
+      pprobit[j]  <- f$stats['P']
+      pprobits[j] <- f$stats['Score P']
+      pprobitw[j] <- 1 - pchisq(coef(f)['x']^2 / vcov(f)[2,2], 1)
     }
     if(beta == 0) plot(ecdf(plogistic))
     r <- rbind(r, data.frame(beta         = beta, n=n,
-                             ttest        = mean(ptt < 0.05),
-                             logisticlr   = mean(plogistic < 0.05),
+                             ttest        = mean(ptt        < 0.05),
+                             logisticlr   = mean(plogistic  < 0.05),
                              logisticscore= mean(plogistics < 0.05),
-                             probit       = mean(pprobit < 0.05),
-                             probitscore  = mean(pprobits < 0.05)))
+                             logisticwald = mean(plogisticw < 0.05),
+                             probit       = mean(pprobit    < 0.05),
+                             probitscore  = mean(pprobits   < 0.05),
+                             probitwald   = mean(pprobitw   < 0.05)))
   }
 }
 print(r)
-#   beta   n  ttest logisticlr logisticscore probit probitscore
-# 1  0.0  10 0.0435     0.1060        0.0655 0.0920      0.0920
-# 2  0.0  50 0.0515     0.0635        0.0615 0.0620      0.0620
-# 3  0.0 300 0.0595     0.0595        0.0590 0.0605      0.0605
-# 4  0.4  10 0.0755     0.1595        0.1070 0.1430      0.1430
-# 5  0.4  50 0.2950     0.2960        0.2935 0.3120      0.3120
-# 6  0.4 300 0.9240     0.9215        0.9205 0.9230      0.9230
+#  beta   n  ttest logisticlr logisticscore logisticwald probit probitscore probitwald
+#1  0.0  10 0.0435     0.1060        0.0655        0.043 0.0920      0.0920     0.0820
+#2  0.0  50 0.0515     0.0635        0.0615        0.060 0.0620      0.0620     0.0620
+#3  0.0 300 0.0595     0.0595        0.0590        0.059 0.0605      0.0605     0.0605
+#4  0.4  10 0.0755     0.1595        0.1070        0.074 0.1430      0.1430     0.1285
+#5  0.4  50 0.2950     0.2960        0.2935        0.288 0.3120      0.3120     0.3120
+#6  0.4 300 0.9240     0.9215        0.9205        0.920 0.9230      0.9230     0.9230
 }
 }
 \keyword{category}
