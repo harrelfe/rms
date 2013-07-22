@@ -229,9 +229,16 @@ y <- ifelse(runif(n) < plogis(L), 1, 0)
 
 fit <- lrm(y ~ treat + scored(num.diseases) + rcs(age) +
                log(cholesterol+10) + treat:log(cholesterol+10))
-anova(fit)                       # Test all factors
-anova(fit, treat, cholesterol)   # Test these 2 by themselves
-                                 # to get their pooled effects
+a <- anova(fit)                       # Test all factors
+b <- anova(fit, treat, cholesterol)   # Test these 2 by themselves
+                                      # to get their pooled effects
+a
+b
+# Add a new line to the plot with combined effects
+s <- rbind(a, 'treat+cholesterol'=b['TOTAL',])
+class(s) <- 'anova.rms'
+plot(s)
+
 g <- lrm(y ~ treat*rcs(age))
 dd <- datadist(treat, num.diseases, age, cholesterol)
 options(datadist='dd')
