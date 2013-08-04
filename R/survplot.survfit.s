@@ -13,7 +13,7 @@ survplot.survfit <-
            y.n.risk, cex.n.risk=.6, pr=FALSE, ...) {
 
   conf <- match.arg(conf)
-  polyg <- ordGridFun(grid=grid)$polygon
+  polyg <- ordGridFun(grid=FALSE)$polygon
   conf.int <- fit$conf.int
   if(!length(conf.int) | conf=="none") conf.int <- 0
 
@@ -276,7 +276,7 @@ survdiffplot <-
   if(missing(xlim)) xlim <- c(mintime,maxtime)
   
   if(grid) {dots <- FALSE; if(is.logical(grid)) grid <- .05}
-  polyg <- ordGridFun(grid=grid)$polygon
+  polyg <- ordGridFun(grid=FALSE)$polygon
 
   times <- sort(unique(c(fit$time, seq(mintime, maxtime, by=time.inc))))
 
