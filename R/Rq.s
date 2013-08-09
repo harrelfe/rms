@@ -73,7 +73,7 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
   
   ## Remove the following since summary.rq has done its job
   if(!model) fit$model <- NULL
-  if(!x) fit$x <- NULL
+  if(!x) fit$x <- NULL else fit$x <- X
   if(!y) fit$y <- NULL
   class(fit) <- c('rms',
                   if (method == "lasso") "lassorq"
@@ -90,9 +90,11 @@ RqFit <- function(fit, wallow=TRUE, passdots=FALSE)
       {
         if(!wallow) stop('weights not implemented')
         g <- if(passdots) function(x, y, weights, tau, method, ...)
-          rq.wfit(x, y, tau = tau, weights=weights, method=method, ...)
+          rq.wfit(cbind(Intercept=1., x), y, tau = tau, weights=weights,
+                  method=method, ...)
         else function(x, y, weights, tau, method, ...)
-          rq.wfit(x, y, tau = tau, weights=weights, method=method)
+          rq.wfit(cbind(Intercept=1., x), y, tau = tau, weights=weights,
+                  method=method)
         formals(g) <- eval(substitute(
                        alist(x=,y=, weights=,tau=deftau,method=defmethod,...=),
                        list(deftau=fit$tau, defmethod=fit$method)))
@@ -100,10 +102,10 @@ RqFit <- function(fit, wallow=TRUE, passdots=FALSE)
     else
       {
         g <- if(passdots) function(x, y, tau, method, ...)
-          rq.fit(x, y, tau = tau, method=method, ...)
+          rq.fit(cbind(Intercept=1., x), y, tau = tau, method=method, ...)
         else
           function(x, y, tau, method, ...)
-            rq.fit(x, y, tau = tau, method=method)
+            rq.fit(cbind(Intercept=1., x), y, tau = tau, method=method)
         formals(g) <-
           eval(substitute(alist(x=,y=, tau=deftau, method=defmethod,...=),
                           list(deftau=fit$tau, defmethod=fit$method)))

@@ -37,7 +37,10 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     with(fit,
          ifelse(is.numeric(yunique), yunique[interceptRef + 1L],
                 interceptRef + 1L))
-  
+
+  ## See if ordinal regression being done
+  ordinal <- nfit == 'orm' || (nfit == 'lrm' && length(unique(Y)) > 2)
+    
   penalty.matrix <- fit$penalty.matrix
 
   if(missing(fitter)) {
@@ -45,12 +48,13 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       switch(nfit,
              ols=if(length(penalty.matrix)) {
                function(x, y, penalty.matrix,...) {
-                 lm.pfit(x, y, penalty.matrix=penalty.matrix, tol=1e-11,
-                         regcoef.only=TRUE)
+                 lm.pfit(cbind(Intercept=1., x), y,
+                         penalty.matrix=penalty.matrix,
+                         tol=1e-11, regcoef.only=TRUE)
                }
              }
              else function(x, y, ...) {
-               lm.fit.qr.bare(x, y, tolerance=1e-11, intercept=FALSE)
+               lm.fit.qr.bare(x, y, tolerance=1e-11, intercept=TRUE)
              }, 
              lrm=function(x, y, maxit=15, eps=.0001, penalty.matrix,...) {
                lrm.fit(x, y, maxit=maxit, tol=1E-11, eps=eps,
@@ -68,7 +72,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
                bj.fit(x, y, control=list(iter.max=maxit, eps=eps))
              },
              Glm=function(x, y, ...) {
-               glm.fit(x,as.vector(y), family=fitFamily)
+               glm.fit(cbind(1., x), as.vector(y), family=fitFamily)
              },
              Rq=RqFit(fit, wallow=FALSE),
              orm=function(x, y, maxit=14L, eps=.005, tol=1e-7,
@@ -196,8 +200,8 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     if(length(group) != n)
       stop('length of group does not match # rows used in fit')
 
-    group.inds <- split(1:n, group)  ## see bootstrap()
-    ngroup <- length(group.inds)
+    group.inds <- split(1:n, group)
+    ngroup     <- length(group.inds)
   }
   else ngroup <- 0
 
@@ -238,7 +242,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       ## bootstrap resample from an ordinal logistic model
       ## Missing coefficients represent values of Y not appearing in the
       ## bootstrap sample.  Carry backwards the next non-NA intercept
-      cof <- fill(cof, vname, ns)
+      if(ordinal) cof <- fill(cof, vname, ns)
       if(any(is.infinite(cof))) anyinf <- TRUE
       if(coef.reps) coefs[b,] <- cof
       
