@@ -93,7 +93,7 @@ plot.gIndex <- function(x, what=c('pre', 'post'),
                ascending=sort(x),
                none=x)
 
-      dotchart2(x, xlab=xlab, pch=pch, ...)
+      dotchart3(x, xlab=xlab, pch=pch, ...)
       invisible(x)
   }
                           

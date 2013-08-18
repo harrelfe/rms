@@ -609,9 +609,9 @@ plot.anova.rms <-
         an <- pmax(0, an)
         pan <- pretty(an)
         tan <- trans(an); names(tan) <- nan
-        dotchart2(tan, xlab=xlab, pch=pch,
+        dotchart3(tan, xlab=xlab, pch=pch,
                   axisat=trans(pan), axislabels=pan, ...)
-      } else dotchart2(an, xlab=xlab, pch=pch, ...)
+      } else dotchart3(an, xlab=xlab, pch=pch, ...)
     }
     invisible(an)
   }
