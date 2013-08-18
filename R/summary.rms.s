@@ -48,7 +48,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   if(antilog & length(scale) < 2) scale <- c("","Antilog")
   ## Hazard ratio is antilog of negative of difference if orm and
   ## ratio pertains
-  logRatioAdj <- if(inherits(object, 'orm')) -1 else 1
+  logRatioAdj <- if(inherits(object, 'orm') && object$family == 'loglog') -1 else 1
 
   factors <- rmsArgs(substitute(list(...)))
   nf <- length(factors)
