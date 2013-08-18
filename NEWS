@@ -1,3 +1,13 @@
+Changes in version 4.0-1 (2013-)
+   * Fixed orm.fit to not create penalty matrix if not needed (penalties are not yet implemented anyway)
+   * Added yscale argument to plot.Predict
+   * Added Wald test simulation to orm help file
+   * Added example in help file for plot.anova.rms of adding a line combining the effects of two predictors in dot chart
+   * Fixed grid interpretation error in survplot.survfit
+   * Changed plot.anova.rms to use dotchart3 instead of dotchart2
+   * Fixed bug in summary.rms - was taking reciprocal of effect ratio with orm even if not loglog family (thanks: Yong Hao Pua <puayonghao@gmail.com>
+   * Removed link to print.lm, summary.lm in ols.Rd
+
 Changes in version 4.0-0 (2013-07-10)
    * Cleaned up label logic in Surv, made it work with interval2 (thanks:Chris Andrews)
    * Fixed bug in val.prob - wrong denominator for Brier score if obs removed for logistic calibration
