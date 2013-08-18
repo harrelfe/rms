@@ -229,7 +229,6 @@ orm.fit <- function(x=NULL, y,
 
 ormfit <- function(x, y, kint, nx, initial, offset, penmat=NULL,
                    maxit=12L, eps=.005, tol=1e-7, trace=FALSE, fam) {
-  require(SparseM)
   n <- length(y)
   p <- as.integer(kint + nx)
   ymax <- kint + 1L

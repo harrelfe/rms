@@ -123,7 +123,6 @@ validate.cph <- function(fit, method="boot",
 }
 
 dxy.cens <- function(x, y, type=c('time','hazard')) {
-  require(survival)
   type <- match.arg(type)
   if(!is.Surv(y)) y <- Surv(y)
   i <- is.na(x) | is.na(y)

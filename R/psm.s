@@ -4,7 +4,6 @@ psm <- function(formula=formula(data),
                 init=NULL,  scale=0,
                 control=survreg.control(),
                 parms=NULL, model=FALSE, x=FALSE, y=TRUE, time.inc, ...) {
-  require(survival)
   
   call <- match.call()
   m <- match.call(expand.dots=FALSE)

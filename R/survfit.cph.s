@@ -2,7 +2,6 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
                         individual=FALSE, type=NULL, vartype=NULL,
                         conf.type=c('log', 'log-log', 'plain', 'none'),
                         id, ...) {
-  require(survival)
   object <- formula
   Call <- match.call()
   Call[[1]] <- as.name("survfit")  ## nicer output for the user

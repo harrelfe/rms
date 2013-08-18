@@ -21,7 +21,6 @@ cph <- function(formula=formula(data),
                 vartype=NULL,
                 ...)
 {
-  require(survival)
   method <- match.arg(method)
   call   <- match.call()
   m      <- match.call(expand.dots=FALSE)
