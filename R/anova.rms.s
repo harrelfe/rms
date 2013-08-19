@@ -542,7 +542,7 @@ plot.anova.rms <-
            pch=16, rm.totals=TRUE, rm.ia=FALSE,
            rm.other=NULL, newnames,
            sort=c("descending","ascending","none"),
-           pl=TRUE, trans=NULL, ...) {
+           pl=TRUE, trans=NULL, ntrans=40, ...) {
     what <- match.arg(what)
     sort <- match.arg(sort)
 
@@ -607,7 +607,7 @@ plot.anova.rms <-
       if(length(trans)) {
         nan <- names(an)
         an <- pmax(0, an)
-        pan <- pretty(an)
+        pan <- pretty(an, n=ntrans)
         tan <- trans(an); names(tan) <- nan
         dotchart3(tan, xlab=xlab, pch=pch,
                   axisat=trans(pan), axislabels=pan, ...)

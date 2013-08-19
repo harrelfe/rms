@@ -43,7 +43,8 @@ to \code{latex.default} for conversion to LaTeX.
             "proportion R2"), 
      xlab=NULL, pch=16, 
      rm.totals=TRUE, rm.ia=FALSE, rm.other=NULL, newnames,
-     sort=c("descending","ascending","none"), pl=TRUE, trans=NULL, \dots)
+     sort=c("descending","ascending","none"), pl=TRUE, trans=NULL,
+     ntrans=40, \dots)
 
 \method{latex}{anova.rms}(object, title, psmall=TRUE, dec.chisq=2,
       dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, table.env=TRUE,
@@ -139,7 +140,13 @@ analyze the vector of statistics returned.
   set to a function to apply that transformation to the statistics
   being plotted, and to truncate negative values at zero.  A good choice
   is \code{trans=sqrt}.
-  }
+}
+\item{ntrans}{\code{n} argument to \code{\link{pretty}}, specifying the
+	number of values for which to place tick marks.  This should be larger
+	than usual because of nonlinear scaling, to provide a sufficient
+	number of tick marks on the left (stretched) part of the chi-square
+	scale.
+}
 \item{title}{
 title to pass to \code{latex}, default is name of fit object passed to
 \code{anova} prefixed with \code{"anova."}.  For Windows, the default is
