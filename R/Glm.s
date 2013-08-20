@@ -139,7 +139,7 @@ vcov.Glm <- function(object, regcoef.only=TRUE, intercepts='all', ...) {
 #  s$cov.unscaled * s$dispersion
 #}
 
-residuals.Glm <- function(object, ...) residuals.glm(object, ...)
+# residuals.Glm <- function(object, ...) residuals.glm(object, ...)
 
 predict.Glm <- 
   function(object, newdata,

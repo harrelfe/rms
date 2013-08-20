@@ -604,14 +604,14 @@ print.rms <- function(x, ...)
   print(x, ...)
 }
 
-residuals.rms <- function(object, ...)
-{
-  fitter <- object$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  oldClass(object) <- fitter[1]
-  residuals(object, ...)
-}
+#residuals.rms <- function(object, ...)
+#{
+#  fitter <- object$fitFunction
+#  if(!length(fitter))
+#    stop("fit's main class is 'rms' but no fitFunction element is present")
+#  oldClass(object) <- fitter[1]
+#  residuals(object, ...)
+#}
 
 validate.rms <- function(fit, ...)
 {
