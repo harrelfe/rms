@@ -73,7 +73,7 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
   
   ## Remove the following since summary.rq has done its job
   if(!model) fit$model <- NULL
-  if(!x) fit$x <- NULL else fit$x <- X
+  if(!x) fit$x <- NULL else fit$x <- X[, -1, drop=FALSE]
   if(!y) fit$y <- NULL
   class(fit) <- c('rms',
                   if (method == "lasso") "lassorq"

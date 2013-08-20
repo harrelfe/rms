@@ -13,15 +13,13 @@ validate.Rq <-
       w$fail <- FALSE
       w
     }
-    else {
-      function(...) {
-        w <- Rqfit(...)
-        w$fail <- FALSE
-        w
-      }
+    else function(...) {
+      w <- Rqfit(...)
+      w$fail <- FALSE
+      w
     }
     
-  fit.orig <- fit
+  fit.orig      <- fit
   fit.orig$fail <- FALSE
   
   discrim <- function(x, y, fit, iter, evalfit=FALSE, u=NULL, rel=NULL,
@@ -36,7 +34,7 @@ validate.Rq <-
       else {
         if(length(fit$coef)==1) {intercept <- median(y)-mean(x); slope <- 1}
         else {
-          cof <- Rqfit(cbind(1,x), y)$coefficients
+          cof <- Rqfit(x, y)$coefficients
           ##Note x is really x*beta from other fit
           intercept <- cof[1]
           slope     <- cof[2]
