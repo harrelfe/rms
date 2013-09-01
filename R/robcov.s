@@ -5,8 +5,7 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
   var   <- vcov(fit, intercepts='all')
   vname <- dimnames(var)[[1]]
   
-  if(inherits(fit, "ols") ||
-     (length(fit$fitFunction) && any(fit$fitFunction=='ols')))
+  if(inherits(fit, "ols"))
     var <- fit$df.residual * var / sum(fit$residuals^2)  #back to X'X
   else
     if(method=='efron') stop('method="efron" only works for ols fits')

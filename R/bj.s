@@ -76,9 +76,8 @@ bj <- function(formula=formula(data), data,
   if (length(nact)) fit$na.action <- nact
   
   fit <- c(fit, list(maxtime=maxtime, units=time.units,
-                     time.inc=time.inc, non.slopes=1, assign=assgn,
-                     fitFunction='bj'))
-  oldClass(fit) <-  c("bj", "rms")
+                     time.inc=time.inc, non.slopes=1, assign=assgn))
+  class(fit) <-  c("bj", "rms")
   fit$terms   <- Terms
   fit$formula <- as.vector(attr(Terms, "formula"))
   fit$call    <- call
@@ -86,7 +85,7 @@ bj <- function(formula=formula(data), data,
   if (x) fit$x <- X[, -1, drop=FALSE]
   if (y)
     {
-      oldClass(Y) <- 'Surv'
+      class(Y) <- 'Surv'
       attr(Y,'type') <- atY$type
       fit$y <- Y
     }
@@ -399,7 +398,7 @@ residuals.bj <- function(object,
   attr(r,'time.label') <- if(type=='censored') 
     'Residual' else 'Normalized Residual'
   attr(r,'event.label') <- aty$event.label
-  oldClass(r) <- c('residuals.bj','Surv')
+  class(r) <- c('residuals.bj','Surv')
   if (!is.null(object$na.action)) naresid(object$na.action, r)
   else r
 }

@@ -586,129 +586,6 @@ Newlevels.rms <- function(fit, levels, ...)
   fit
 }
 
-rmsFit <- function(fit)
-{
-  cl <- oldClass(fit)
-  if(cl[1]=='rms') return(fit)
-  fit$fitFunction <- cl
-  oldClass(fit) <- 'rms'
-  fit
-}
-
-print.rms <- function(x, ...)
-{
-  fitter <- x$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  oldClass(x) <- fitter[1]
-  print(x, ...)
-}
-
-#residuals.rms <- function(object, ...)
-#{
-#  fitter <- object$fitFunction
-#  if(!length(fitter))
-#    stop("fit's main class is 'rms' but no fitFunction element is present")
-#  oldClass(object) <- fitter[1]
-#  residuals(object, ...)
-#}
-
-validate.rms <- function(fit, ...)
-{
-  fitter <- fit$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  oldClass(fit) <- fitter[1]
-  validate(fit, ...)
-}
-
-calibrate.rms <- function(fit, ...)
-{
-  fitter <- fit$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  oldClass(fit) <- fitter[1]
-  calibrate(fit, ...)
-}
-
-Survival.rms <- function(object, ...)
-{
-  fitter <- object$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  oldClass(object) <- fitter[1]
-  Survival(object, ...)
-}
-
-Quantile.rms <- function(object, ...)
-{
-  fitter <- object$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  oldClass(object) <- fitter[1]
-  Quantile(object, ...)
-}
-
-Mean.rms <- function(object, ...)
-{
-  fitter <- object$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  oldClass(object) <- fitter[1]
-  Mean(object, ...)
-}
-
-Hazard.rms <- function(object, ...)
-{
-  fitter <- object$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  oldClass(object) <- fitter[1]
-  Hazard(object, ...)
-}
-
-latex.rms <-
-  function(object, title,
-           file=paste(first.word(deparse(substitute(object))),
-             'tex',sep='.'), ...)
-{
-  fitter <- object$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  oldClass(object) <- fitter[1]
-  ## Need to brute-force dispatch because of SV4 problem in latex in Hmisc
-  if(existsFunction(p <- paste('latex',fitter[1],sep='.')))
-    do.call(p, list(object, file=file, ...))
-  else
-    latexrms(object, file=file, ...)
-}
-
-survest.rms <- function(fit, ...)
-{
-  fitter <- fit$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  f <- paste('survest',fitter[1],sep='.')
-  do.call(f, list(fit,...))
-}
-
-
-oos.loglik.rms <- function(fit, ...)
-{
-  fitter <- fit$fitFunction
-  if(!length(fitter))
-    stop("fit's main class is 'rms' but no fitFunction element is present")
-  f <- paste('oos.loglik',fitter[1],sep='.')
-  do.call(f, list(fit,...))
-}
-
-#getOldDesign <- function(fit) {
-#  at <- attr(fit$terms,'Design')
-#  if(is.null(at))
-#    stop('fit was not created by a Design library fitting function')
-#  at
-#}
-
 univarLR <- function(fit)
 {
   ## Computes all univariable LR chi-square statistics
@@ -936,7 +813,7 @@ latex.naprint.delete <- function(object, ...) {
   
   if(length(g <- object$na.detail.response)) {
     cat("\nStatistics on Response by Missing/Non-Missing Status of Predictors\n\n")
-    print(oldUnclass(g))
+    print(unclass(g))
     cat("\n")           
   }
   

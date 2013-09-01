@@ -138,8 +138,7 @@ orm <- function(formula, data, subset, na.action=na.delete,
                  scale.pred=if(f$family=='logistic')
                   c("log odds","Odds Ratio") else
                   if(f$family=='loglog') c("log hazard", "Hazard Ratio"),
-                 terms=Terms, assign=ass, na.action=nact, 
-                 fitFunction='orm'))
+                 terms=Terms, assign=ass, na.action=nact))
   class(f) <- c("orm","rms")
   f
 }

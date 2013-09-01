@@ -77,12 +77,9 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
   Coef <- matrix(NA, nrow=f, ncol=pt, dimnames=list(NULL, names(beta)))
   d    <- 0
 
-  fcl <- class(fit)
-  dor2 <- length(fcl) &&
-   (any(fcl=='ols') || (length(fit$fitFunction) &&
-          any(fit$fitFunction=='ols'))) && 
-   (length(fit$y) || (length(fit$fitted.values) &&
-                      length(fit$residuals)))
+  dor2 <- inherits(fit, 'ols') &&
+    (length(fit$y) || (length(fit$fitted.values) &&
+                       length(fit$residuals)))
   if(dor2) {
     ## X <- fit$x
     Y   <- if(length(fit$y))fit$y else fit$fitted.values + fit$residuals

@@ -259,7 +259,7 @@ cph <- function(formula=formula(data),
                  na.action=nact,
                  fail = FALSE, non.slopes = 0, stats = stats, method=method,
                  maxtime = maxtime, time.inc = time.inc,
-                 units = time.units, fitFunction=c('cph','coxph')))
+                 units = time.units))
 
   if(xpres) {
     f$center <- sum(f$means * f$coefficients)

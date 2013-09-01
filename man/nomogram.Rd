@@ -398,7 +398,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
 }
 \seealso{
   \code{\link{rms}}, \code{\link{plot.Predict}}, \code{\link{plot.summary.rms}}, \code{\link{axis}}, \code{\link{pretty}}, \code{\link{approx}},
-  \code{\link{latex.rms}}, \code{\link{rmsMisc}}
+  \code{\link{latexrms}}, \code{\link{rmsMisc}}
 }
 \examples{
 n <- 1000    # define sample size

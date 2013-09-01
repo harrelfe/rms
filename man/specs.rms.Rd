@@ -36,7 +36,7 @@ Department of Biostatistics, Vanderbilt University\cr
 f.harrell@vanderbilt.edu
 }
 \seealso{
-\code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{latex.rms}}, \code{\link{datadist}}
+\code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{latexrms}}, \code{\link{datadist}}
 }
 \examples{
 set.seed(1)

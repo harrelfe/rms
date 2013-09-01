@@ -74,7 +74,7 @@ Glm <-
                      data = data, offset = offset, control = control,
                      method = method,
                      contrasts = attr(X, "contrasts"), xlevels = xlev,
-                     Design=desatr, na.action=nact, fitFunction='Glm',
+                     Design=desatr, na.action=nact,
                      assign=DesignAssign(desatr,1,mt),
                      g=GiniMd(fit$linear.predictors)))
   class(fit) <- c('Glm', 'rms', 'glm', 'lm')

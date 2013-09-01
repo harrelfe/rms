@@ -271,7 +271,6 @@ Gls <-
         attr(estOut, "labels") <- attr(data, "labels")
       }
     attr(estOut, "namBetaFull") <- colnames(X)
-    estOut$fitFunction <- 'Gls'
     class(estOut) <- c('Gls','rms','gls')
     estOut
   }

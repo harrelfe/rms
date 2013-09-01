@@ -8,7 +8,7 @@
 \code{Function} is a class of functions for creating other S functions.
 \code{Function.rms} is the method for creating S functions to compute
 X beta, based on a model fitted with \code{rms} in effect.  
-Like \code{latex.rms}, \code{Function.rms} simplifies restricted cubic
+Like \code{latexrms}, \code{Function.rms} simplifies restricted cubic
 spline functions and factors out terms in second-order interactions.
 \code{Function.rms} will not work for models that have third-order
 interactions involving restricted cubic splines.
@@ -74,7 +74,7 @@ Vanderbilt University\cr
 f.harrell@vanderbilt.edu
 }
 \seealso{
-\code{\link{latex.rms}}, \code{\link[Hmisc]{transcan}},
+\code{\link{latexrms}}, \code{\link[Hmisc]{transcan}},
 \code{\link{predict.rms}}, \code{\link{rms}}, \code{\link{rms.trans}} 
 }
 \examples{

@@ -10,7 +10,7 @@
   analysis functions (\code{anova.rms}, \code{summary.rms},
   \code{Predict},  \code{plot.Predict}, \code{survplot},
   \code{fastbw}, \code{validate}, \code{calibrate}, \code{specs.rms},
-  \code{which.influence}, \code{latex.rms}, \code{nomogram},
+  \code{which.influence}, \code{latexrms}, \code{nomogram},
   \code{datadist}, \code{gendata})
   that help automate many
 analysis steps, e.g. fitting restricted interactions and multiple
@@ -80,7 +80,7 @@ f.harrell@vanderbilt.edu
 \code{\link{rms.trans}}, \code{\link{rmsMisc}}, \code{\link{cph}}, \code{\link{lrm}}, \code{\link{ols}}, \code{\link{specs.rms}}, \code{\link{anova.rms}},
 \code{\link{summary.rms}}, \code{\link{Predict}}, \code{\link{gendata}}, \code{\link{fastbw}}, \code{\link{predictrms}}.
 \code{\link{validate}}, \code{\link{calibrate}}, \code{\link{which.influence}},
-\code{\link[Hmisc]{latex}}, \code{\link{latex.rms}}, \code{\link{model.frame.default}}, \code{\link{datadist}}, \code{\link[Hmisc]{describe}},
+\code{\link[Hmisc]{latex}}, \code{\link{latexrms}}, \code{\link{model.frame.default}}, \code{\link{datadist}}, \code{\link[Hmisc]{describe}},
 \code{\link{nomogram}}, \code{\link{vif}}, \code{\link[Hmisc]{dataRep}}
 }
 \examples{

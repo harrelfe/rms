@@ -2,12 +2,9 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
                     loglik=FALSE, pr=FALSE, maxit=15, eps=.0001,
                     group=NULL, stat=NULL) {
 
-  coxcph <- inherits(fit,'coxph') || inherits(fit,'cph') ||
-    (length(fit$fitFunction) && any(c('cph','coxph') %in%
-                                    fit$fitFunction))
+  coxcph <- inherits(fit,'coxph') || inherits(fit,'cph')
 
-  nfit <- fit$fitFunction[1]
-  if(!length(nfit)) nfit <- setdiff(oldClass(fit),'Design')[1]
+  nfit <- class(fit)[1]
   
   if(length(fit$weights) && (coxcph || nfit[1]=='Rq'))
     stop('does not handle weights')

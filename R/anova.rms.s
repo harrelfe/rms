@@ -16,8 +16,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   misstest <- missing(test)
   test <- match.arg(test)
   vnames <- match.arg(vnames)
-  is.ols <- inherits(object,'ols') ||
-   (length(object$fitFunction) && any(object$fitFunction=='ols'))
+  is.ols <- inherits(object,'ols')
 
   if(misstest) test <- if(is.ols) 'F' else 'Chisq'
   if(!is.ols && test=='F') stop('F-test not allowed for this type of model')

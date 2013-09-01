@@ -1,6 +1,5 @@
 \name{latexrms}
 \alias{latexrms}
-\alias{latex.rms}
 \alias{latex.bj}
 \alias{latex.Glm}
 \alias{latex.Gls}
@@ -21,9 +20,6 @@ latexrms(object,
  append=FALSE, which=1:p, varnames, columns=65, prefix=NULL, inline=FALSE,
  before=if(inline)"" else "& &", after="", intercept, pretrans=TRUE,
  digits=.Options$digits, size="")
-
-\method{latex}{rms}(object, title,
- file=paste(first.word(deparse(substitute(object))),'tex',sep='.'), \dots)
 }
 \arguments{
 \item{object}{
@@ -94,10 +90,7 @@ a fit object created by a fitting function in the \code{rms} series
   coefficients and other numbers}
 \item{size}{a LaTeX font size to use for the output, without the slash.
  Default is current size.}
-\item{title}{ignored}
-\item{\dots}{other arguments in \dots will be passed to \code{latexrms}
- and \code{latex.default}}
-  }
+}
 \value{a file name of class \code{"latex"}}
 \author{
 Frank Harrell\cr

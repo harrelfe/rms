@@ -2,8 +2,8 @@ pphsm <- function(fit)
 {
   warning("at present, pphsm does not return the correct covariance matrix")
 
-  clas <- c(class(fit), fit$fitFunction)
-  if(!any(c('psm','survreg') %in% clas))
+  clas <- class(fit)[1]
+  if(clas %nin% c('psm', 'survreg'))
     stop("fit must be created by psm or survreg")
   if(fit$dist %nin% c('exponential','weibull'))
     stop("fit must have used dist='weibull' or 'exponential'")

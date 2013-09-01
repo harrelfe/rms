@@ -1,7 +1,6 @@
 which.influence <- function(fit, cutoff=.2)
 {
-  cox <- inherits(fit,"cph") || (length(fit$fitFunction) &&
-                                 any(fit$fitFunction=='cph'))
+  cox <- inherits(fit,"cph")
   
   stats <- resid(fit, "dfbetas")
   rnam  <- which(!is.na(stats[,1]))

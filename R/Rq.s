@@ -55,7 +55,6 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
                 model     = mf,
                 Design    = desatr,
                 assign    = DesignAssign(desatr, 1, mt),
-                fitFunction=c("Rq", "rq"),
                 stats     = stats))
   attr(fit, "na.message") <- attr(m, "na.message")
   

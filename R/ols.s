@@ -86,8 +86,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       if(x) fit$x <- NULL #matrix(1, ncol=1, nrow=n, 
                            # dimnames=list(NULL,"Intercept"))
       if(y) fit$y <- Y
-      fit$fitFunction <- c('ols','lm')
-      oldClass(fit) <- c("ols","rms","lm")
+      class(fit) <- c("ols","rms","lm")
       return(fit)
     }
   
@@ -158,10 +157,9 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
   if(x) fit$x <- X[, -1, drop=FALSE]
   fit <- c(fit, list(call=call, terms=Terms, Design=atr,
                      non.slopes=1, na.action=nact,
-                     scale.pred=scale, fail=FALSE,
-                     fitFunction=c('ols','lm')))
+                     scale.pred=scale, fail=FALSE))
   fit$assign <- assig
-  oldClass(fit) <- c("ols","rms","lm")
+  class(fit) <- c("ols","rms","lm")
   fit
 }
 

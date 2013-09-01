@@ -195,9 +195,8 @@ psm <- function(formula=formula(data),
                 dist= dlist, scale=scale, nstrat=nstrata, 
                 strata, parms=parms)
   
-  ## Next line: FEH added fitFunction='psm'
   if (is.character(fit))
-    fit <- list(fail=fit, fitFunction='psm')  #error message
+    fit <- list(fail=fit)  #error message
   else {
     if (scale==0) {
       nvar <- length(fit$coef) - nstrata
@@ -232,7 +231,7 @@ psm <- function(formula=formula(data),
   fit$assign <- DesignAssign(atr, 1, Terms)
   fit$formula <- formula
   if(y) {
-    oldClass(Y) <- 'Surv'
+    class(Y) <- 'Surv'
     attr(Y,'type') <- atY$type
     fit$y <- Y
   }
@@ -255,9 +254,8 @@ psm <- function(formula=formula(data),
   if(length(weights)) stats <- c(stats, 'Sum of Weights'=sum(weights))
   fit <- c(fit, list(stats=stats, maxtime=maxtime, units=time.units,
                      time.inc=time.inc, scale.pred=scale.pred,
-                     non.slopes=1, Design=atr, fail=FALSE,
-                     fitFunction=c("psm", "survreg", "glm", "lm")))
-  oldClass(fit) <-
+                     non.slopes=1, Design=atr, fail=FALSE))
+  class(fit) <-
     if (any(pterms)) c('psm','rms','survreg.penal','survreg')
     else
       c('psm','rms','survreg')
@@ -343,7 +341,7 @@ residuals.psm <-
   attr(r,'units') <- ' '
   attr(r,'time.label') <- 'Normalized Residual'
   attr(r,'event.label') <- aty$event.label
-  oldClass(r) <- c('residuals.psm.censored.normalized','Surv')
+  class(r) <- c('residuals.psm.censored.normalized','Surv')
   g <- survreg.auxinfo[[dist]]$survival
   formals(g) <- list(times=NULL, lp=0, parms=0)
   attr(r,'theoretical') <- g

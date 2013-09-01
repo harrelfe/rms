@@ -35,7 +35,6 @@
 \alias{Newlabels.rms}
 \alias{Newlevels.rms}
 \alias{rmsArgs}
-\alias{rmsFit}
 \alias{print.rms}
 \alias{print.lrtest}
 \alias{survest.rms}
@@ -117,13 +116,6 @@ fit object.  Likewise, \code{Newlevels} can be used to create a new fit object
 with levels of categorical predictors changed.  These two functions are
  especially useful when constructing nomograms.
 
-
-\code{rmsFit} is used to convert a fit from non-rms functions (e.g.,
-\code{glm}) that were invoked with rms in effect to rms functions so
-that \code{anova.rms} will be called by \code{anova()}, etc.  So that the
-original fit's \code{residuals} and \code{print} methods, if they exist, will be
-called, there is a function \code{print.rms} to dispatch them.
-
 \code{rmsArgs} handles \dots arguments to functions such as
 \code{Predict}, \code{summary.rms}, \code{nomogram} so that variables to
 vary may be specified without values (after an equals sign).
@@ -198,8 +190,6 @@ Newlabels(fit, \dots)
 Newlevels(fit, \dots)
 \method{Newlabels}{rms}(fit, labels, \dots)
 \method{Newlevels}{rms}(fit, levels, \dots)
-
-rmsFit(fit)  # fit from glm, lm, etc.,then use anova etc. on result
 
 prModFit(x, title, w, digits=4, coefs=TRUE, latex=FALSE, lines.page=40,
 long=TRUE, needspace, \dots)
@@ -370,9 +360,6 @@ for \code{c}-category predictors,  puts a \code{c-1} x \code{c-1} sub-matrix in
 in parameter values about the mean, including a portion for the reference
 cell in which the parameter is by definition zero.
 \code{Newlabels} returns a new fit object with the labels adjusted.
-\code{rmsFit} returns the original object but with \code{oldClass} of
-\code{"rms"} and with a new attribute \code{"fitFunction"} containing the
-original vector of classes.
 
 \code{reVector} returns a vector of named (by its arguments) elements.
 \code{formatNP} returns a character vector.

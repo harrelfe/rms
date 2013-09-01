@@ -31,8 +31,7 @@ predictrms <-
   nstrata   <- sum(assume == 8L)
   somex     <- any(non.strat)
   rnam      <- NULL
-  cox <- inherits(fit, "cph") ||
-          (length(fit$fitFunction) && any(fit$fitFunction == 'cph'))
+  cox <- inherits(fit, "cph")
   naa <- fit$na.action
   if(!expand.na)
     naresid <- function(a,b) b #don't really call naresid if drop NAs

@@ -167,9 +167,9 @@ lrm <- function(formula, data,subset, na.action=na.delete,
                  scale.pred=c("log odds","Odds Ratio"),
                  terms=Terms, assign=ass, na.action=nact, fail=FALSE,
                  interceptRef=1,
-                 nstrata=nstrata, fitFunction=c('lrm','glm')))
+                 nstrata=nstrata))
   
-  oldClass(f) <- c("lrm","rms","glm")
+  class(f) <- c("lrm","rms","glm")
   f
 }
 
