@@ -34,14 +34,14 @@ pentrace <- function(fit, penalty, penalty.matrix,
 
   if(missing(fitter))
     fitter <- switch(clas,
-                     ols=function(x,y,maxit,...)lm.pfit(x,y,...), 
-                     lrm=function(x,y,maxit=12,...)
-                     lrm.fit(x,y,maxit=maxit,...), 
-                     cph=function(x,y,maxit=12,...)coxphFit(x,y,
+                     ols=function(x, y, maxit, ...) lm.pfit(x, y, ...), 
+                     lrm=function(x, y, maxit=12, ...)
+                     lrm.fit(x, y, maxit=maxit, ...), 
+                     cph=function(x, y, maxit=12, ...) coxphFit(x, y,
                                         strata=Strata, iter.max=maxit, 
                                         eps=.0001, method="efron",
                                         toler.chol=tol),
-                     psm=function(x,y,maxit=12,...) survreg.fit2(x, y,
+                     psm=function(x, y, maxit=12,...) survreg.fit2(x, y,
                                         dist=dist, parms=parms, fixed=fixed,
                                         offset=NULL,
                                         init=NULL, maxiter=maxit))
@@ -92,7 +92,7 @@ pentrace <- function(fit, penalty, penalty.matrix,
   if(method=='optimize') {
     stop('method="optimize" not yet implemented in R')
   
-    if((islist && nrow(penalty)>1) || (!islist && length(penalty)>1)) 
+    if((islist && nrow(penalty) > 1) || (!islist && length(penalty) > 1)) 
       stop('may not specify multiple potential penalties when method="optimize"')
 
     objective <- function(pen, X, Y, z) { 
@@ -139,12 +139,12 @@ pentrace <- function(fit, penalty, penalty.matrix,
         lr <- f.nopenalty$stats["Model L.R."]
       }
       obj <- switch(z$which,
-                    aic.c <- lr - 2*df*(1 + (df+1)/(n-df-1)),
-                    aic   <- lr - 2*df,
-                    bic   <- lr - df*logb(n))
+                    aic.c <- lr - 2*df*(1 + (df + 1) / (n - df - 1)),
+                    aic   <- lr - 2 * df,
+                    bic   <- lr - df * logb(n))
       if(tdf) obj <- abs(df - z$target.df)
       if(pr) {
-        w <- if(tdf)df else obj
+        w <- if(tdf) df else obj
         names(w) <- NULL
         pp <- if(islist) unlist(pen) else c(Penalty=pen)
         print(c(pp, Objective=w))

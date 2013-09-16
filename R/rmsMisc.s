@@ -394,26 +394,25 @@ rms.levels <- function(df, at)
 Penalty.matrix <- function(at, X)
 {
   d1 <- dimnames(X)[[2]][1]
-  if(d1=='Intercept' || d1=='(Intercept)') X <- X[,-1,drop=FALSE]
+  if(d1 %in% c('Intercept', '(Intercept)')) X <- X[, -1, drop=FALSE]
   
   d <- dim(X)
   n <- d[1]; p <- d[2]
-  center <- as.vector(rep(1/n,n) %*% X)   # see scale() function
-  v <- as.vector(rep(1/(n-1),n) %*%
-                 (X - rep(center,rep(n,p)))^2)
+  center <- as.vector(rep(1 / n, n) %*% X)   # see scale() function
+  v <- as.vector(rep(1 / (n - 1), n) %*%
+                 (X - rep(center, rep(n, p)))^2)
   
-  pen <- if(p==1) as.matrix(v) else as.matrix(diag(v))    
+  pen <- if(p == 1) as.matrix(v) else as.matrix(diag(v))    
   ## works even if X one column
 
   is <- 1
   ac <- at$assume
-  for(i in (1:length(at$name))[ac!="strata"])
-    {
-      len <- length(at$nonlinear[[i]])
-      ie <- is + len - 1
-      if(ac[i] == "category") pen[is:ie,is:ie] <- diag(len) - 1/(len+1)
-      is <- ie+1
-    }
+  for(i in (1 : length(at$name))[ac != "strata"]) {
+    len <- length(at$nonlinear[[i]])
+    ie <- is + len - 1
+    if(ac[i] == "category") pen[is : ie, is : ie] <- diag(len) - 1 / (len + 1)
+    is <- ie + 1
+  }
   pen
 }
 
