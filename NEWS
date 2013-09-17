@@ -1,4 +1,4 @@
-Changes in version 4.0-1 (2013-09-05)
+Changes in version 4.0-1 (2013-09-16)
    * Fixed orm.fit to not create penalty matrix if not needed (penalties are not yet implemented anyway)
    * Added yscale argument to plot.Predict
    * Added Wald test simulation to orm help file
@@ -11,6 +11,8 @@ Changes in version 4.0-1 (2013-09-05)
    * Fixed handling of intercepts in Rq, validate.Rq
    * Removed residuals.Glm, residuals.rms (also from Rd, NAMESPACE)
    * Removed other .rms methods and other remnants from fooling S+ dispatcher
+   * Fixed bug in lm.pfit when penalty used (thanks: Yong Hao Pua <puayonghao@gmail.com>)
+
 
 Changes in version 4.0-0 (2013-07-10)
    * Cleaned up label logic in Surv, made it work with interval2 (thanks:Chris Andrews)
