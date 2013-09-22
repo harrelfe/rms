@@ -5,7 +5,6 @@ bj <- function(formula=formula(data), data,
 {
   call <- match.call()
   m <- match.call(expand.dots=FALSE)
-  require(survival) || stop('survival package not available')
   mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
               names(m), 0)
   m <- m[c(1, mc)]
