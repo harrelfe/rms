@@ -280,7 +280,7 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
 {
   ## Following taken from print.gls with changes marked FEH
 
-  summary.gls <- nlme:::summary.gls
+  summary.gls <- getS3method('summary', 'gls')
 
   k <- 0
   z <- list()

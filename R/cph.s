@@ -220,7 +220,7 @@ cph <- function(formula=formula(data),
     fit2 <- c(f, list(x=X, y=Y, method=method))
     if(length(stra)) fit2$strata <- Strata
     
-    r <- survival:::residuals.coxph(fit2, type='dfbeta', collapse=cluster)
+    r <- getS3method('residuals', 'coxph')(fit2, type='dfbeta', collapse=cluster)
     f$var <- t(r) %*% r
   }
   

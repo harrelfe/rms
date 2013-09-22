@@ -123,7 +123,7 @@ summary.Glm <- function(...) summary.rms(...)
 
 vcov.Glm <- function(object, regcoef.only=TRUE, intercepts='all', ...) {
   v <- object$var
-  if(!length(v)) v <- stats:::vcov.glm(object, ...)
+  if(!length(v)) v <- getS3method('vcov', 'glm')(object, ...)
   ns <- num.intercepts(object, 'var')
   if(ns > 0 && length(intercepts)==1 && intercepts=='none')
     v <- v[-(1 : ns), -(1 : ns), drop=FALSE]

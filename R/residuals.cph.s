@@ -19,5 +19,5 @@ residuals.cph <-
       attr(terms,'specials')$strata <- attr(terms,'specials')$strat
       object$terms <- terms
     }
-    survival:::residuals.coxph(object, type=type, ...)
+    getS3method('residuals', 'coxph')(object, type=type, ...)
   }

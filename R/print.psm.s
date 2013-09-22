@@ -30,7 +30,7 @@ print.psm <- function(x, correlation = FALSE, digits=4,
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
 
-  summary.survreg <- survival:::summary.survreg
+  summary.survreg <- getS3method('summary', 'survreg')
   if(!x$fail) x$fail <- NULL    # summary.survreg uses NULL for OK
   s <- summary.survreg(x, correlation=correlation)
   k <- k + 1
@@ -38,22 +38,20 @@ print.psm <- function(x, correlation = FALSE, digits=4,
                  list(coef = s$table[,'Value'],
                       se   = s$table[,'Std. Error']))
 
-  if (correlation && length(correl <- s$correlation))
-      {
-        p <- ncol(correl)
-        if (p > 1)
-          {
-            cat("\nCorrelation of Coefficients:\n")
-            ll <- lower.tri(correl)
-            correl[ll] <- format(round(correl[ll], digits = digits))
-            correl[!ll] <- ""
-            k <- k + 1
-            z[[k]] <- list(type='print',
-                           list(correl[-1, -p, drop = FALSE], quote = FALSE),
-                           title='Correlation of Coefficients')
-          }
-      }
-
+  if (correlation && length(correl <- s$correlation)) {
+    p <- ncol(correl)
+    if (p > 1) {
+      cat("\nCorrelation of Coefficients:\n")
+      ll <- lower.tri(correl)
+      correl[ll] <- format(round(correl[ll], digits = digits))
+      correl[!ll] <- ""
+      k <- k + 1
+      z[[k]] <- list(type='print',
+                     list(correl[-1, -p, drop = FALSE], quote = FALSE),
+                     title='Correlation of Coefficients')
+    }
+  }
+  
   prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex, ...)
   invisible()
 }
@@ -149,24 +147,21 @@ print.summary.survreg2 <-
     else
       if (length(x$scale) == 1) 
         cat("\nScale=", format(x$scale, digits = digits), "\n")
-      else
-        {
-          cat("\nScale:\n")
-          print(x$scale, digits = digits, ...)
-        }
-
-    if (correlation && length(correl))
-      {
-        p <- dim(correl)[2]
-        if (p > 1)
-          {
-            cat("\nCorrelation of Coefficients:\n")
-            ll <- lower.tri(correl)
-            correl[ll] <- format(round(correl[ll], digits = digits))
-            correl[!ll] <- ""
-            print(correl[-1, -p, drop = FALSE], quote = FALSE)
-          }
+      else {
+        cat("\nScale:\n")
+        print(x$scale, digits = digits, ...)
       }
+    
+    if (correlation && length(correl)) {
+      p <- dim(correl)[2]
+      if (p > 1) {
+        cat("\nCorrelation of Coefficients:\n")
+        ll <- lower.tri(correl)
+        correl[ll] <- format(round(correl[ll], digits = digits))
+        correl[!ll] <- ""
+        print(correl[-1, -p, drop = FALSE], quote = FALSE)
+      }
+    }
     cat("\n")
     invisible(NULL)
   }

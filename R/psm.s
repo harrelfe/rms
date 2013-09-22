@@ -322,7 +322,7 @@ residuals.psm <-
     if(type == 'score')
       stop('score residuals not implemented')
     ## TODO
-    return(survival:::residuals.survreg(object, type=type))
+    return(getS3method('residuals', 'survreg')(object, type=type))
   }
   
   y <- object$y

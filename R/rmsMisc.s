@@ -964,7 +964,7 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE, latex=FALSE)
   }
 
 logLik.ols <- function(object, ...) {
-  ll <- stats:::logLik.lm(object)
+  ll <- getS3method('logLik', 'lm')(object)
   attr(ll, 'df') <- object$stats['d.f.'] + 2
   ll
 }
