@@ -88,7 +88,9 @@ Adjusted \code{ols} fits do not have the corrected standard errors printed with
 \code{adjfit} is the result of \code{robcov}.
 }
 \seealso{
-\code{\link{bootcov}}, \code{\link{naresid}}, \code{\link{residuals.cph}}
+\code{\link{bootcov}}, \code{\link{naresid}},
+\code{\link{residuals.cph}}, \code{http://gforge.se/gmisc} interfaces
+\code{rms} to the \code{sandwich} package
 }
 \examples{
 # In OLS test against more manual approach
