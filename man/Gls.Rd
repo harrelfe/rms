@@ -106,14 +106,17 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
 }
 \author{Jose Pinheiro,
   Douglas Bates \email{bates@stat.wisc.edu},
+	Saikat DebRoy,
+	Deepayan Sarkar,
+	R-core \email{R-core@R-project.org},
   Frank Harrell \email{f.harrell@vanderbilt.edu},
   Patrick Aboyoun
 } 
 \seealso{
-  \code{\link{gls}}
-  \code{\link{glsControl}}, \code{\link{glsObject}},
-  \code{\link{varFunc}}, \code{\link{corClasses}},
-  \code{\link{varClasses}}, \code{\link{GiniMd}}, \code{\link{prModFit}}
+  \code{\link[nlme]{gls}}
+  \code{\link[nlme]{glsControl}}, \code{\link[nlme]{glsObject}},
+  \code{\link{varFunc}}, \code{\link[nlme]{corClasses}},
+  \code{\link[nlme]{varClasses}}, \code{\link{GiniMd}}, \code{\link{prModFit}}
 }
 \examples{
 \dontrun{
