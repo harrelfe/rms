@@ -139,7 +139,7 @@ contrast.rms <-
   structure(res, class='contrast.rms')
 }
 
-print.contrast.rms <- function(x, X=FALSE, fun=function(u)u,
+print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
                                jointonly=FALSE, ...)
 {
   edf <- x$df.residual
@@ -150,7 +150,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u)u,
   w$Pvalue <- round(w$Pvalue, 4)
   no <- names(w)
   no[no=='SE'] <- 'S.E.'
-  no[no=='Z'] <- sn
+  no[no=='Z']  <- sn
   no[no=='Pvalue'] <- pn
   
   cnames <- x$cnames
@@ -160,7 +160,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u)u,
   attr(w,'row.names') <- cnames
   attr(w,'class') <- 'data.frame'
   w$Contrast <- fun(w$Contrast)
-  w$SE       <- fun(w$SE)
+  if(!all(1:10 == fun(1:10))) w$SE <- rep(NA, length(w$SE))
   w$Lower    <- fun(w$Lower)
   w$Upper    <- fun(w$Upper)
 
@@ -198,4 +198,3 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u)u,
   }
   invisible()
 }
-
