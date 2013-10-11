@@ -13,6 +13,7 @@ Changes in version 4.0-1 (2013-09-16)
    * Removed other .rms methods and other remnants from fooling S+ dispatcher
    * Fixed bug in lm.pfit when penalty used (thanks: Yong Hao Pua <puayonghao@gmail.com>)
    * Fixed bug in calibrate.default for ols (thanks: Andy Bush)
+   * Change print.contrast.rms to insert NA for SE if fun is not the identity function
 
 Changes in version 4.0-0 (2013-07-10)
    * Cleaned up label logic in Surv, made it work with interval2 (thanks:Chris Andrews)

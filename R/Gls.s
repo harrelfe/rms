@@ -1,3 +1,7 @@
+## This is a modification of the gls function in the nlme package.
+## gls is authored by Jose Pinheiro, Douglas Bates, Saikat DebRoy,
+## Deepayan Sarkar, and R-core
+
 Gls <-
   function (model, data = sys.frame(sys.parent()), correlation = NULL, 
     weights = NULL, subset, method = c("REML", "ML"), na.action = na.omit, 

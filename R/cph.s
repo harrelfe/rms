@@ -1,3 +1,5 @@
+## This is a modification of the R survival package's coxph function
+## written by Terry Therneau and ported to R by Thomas Lumley
 cph <- function(formula=formula(data),
                 data=parent.frame(),
                 weights,
