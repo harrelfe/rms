@@ -280,7 +280,7 @@ cq(exp(y))
 
 # Compare predicted mean with ols for a continuous x
 set.seed(3)
-n <- 500
+n <- 200
 x1 <- rnorm(n)
 y <- x1 + rnorm(n)
 dd <- datadist(x1); options(datadist='dd')
