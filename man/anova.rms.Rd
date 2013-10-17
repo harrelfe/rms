@@ -40,11 +40,11 @@ to \code{latex.default} for conversion to LaTeX.
 
 \method{plot}{anova.rms}(x, 
      what=c("chisqminusdf","chisq","aic","P","partial R2","remaining R2",
-            "proportion R2"), 
+            "proportion R2", "proportion chisq"), 
      xlab=NULL, pch=16, 
      rm.totals=TRUE, rm.ia=FALSE, rm.other=NULL, newnames,
-     sort=c("descending","ascending","none"), pl=TRUE, trans=NULL,
-     ntrans=40, \dots)
+     sort=c("descending","ascending","none"), margin=NULL, pl=TRUE,
+     trans=NULL, ntrans=40, \dots)
 
 \method{latex}{anova.rms}(object, title, psmall=TRUE, dec.chisq=2,
       dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, table.env=TRUE,
@@ -107,7 +107,7 @@ what type of statistic to plot.  The default is the Wald
 \eqn{\chi^2}{chi-square} 
 statistic for each factor (adding in the effect of higher-ordered
 factors containing that factor) minus its degrees of freedom.  The
-last three choice for \code{what} only apply to \code{ols} models.
+R2 choices for \code{what} only apply to \code{ols} models.
 }
 \item{xlab}{
 x-axis label, default is constructed according to \code{what}.
@@ -129,9 +129,14 @@ a list of other predictor names to omit from the chart
 \item{newnames}{
 a list of substitute predictor names to use, after omitting any.
 }
-\item{sort}{
-default is to sort bars in descending order of the summary statistic
+\item{sort}{default is to sort bars in descending order of the summary statistic
 }
+\item{margin}{set to a vector of character strings to write text for
+	selected statistics in the right margin of the dot chart.  The
+	character strings can be any combination of \code{"chisq"},
+	\code{"d.f."}, \code{"P"}, \code{"partial R2"},
+	\code{"proportion R2"}, and \code{"proportion chisq"}.
+	Default is to not draw any statistics in the margin.} 
 \item{pl}{
 set to \code{FALSE} to suppress plotting.  This is useful when you only wish to
 analyze the vector of statistics returned.
@@ -255,7 +260,8 @@ s <- anova(g)
 # It's specified here to make R pass its package-building checks
 plot(p, addpanel=pantext(s, 28, 1.9,  fontfamily='Helvetica'))
 
-plot(s)                          # new plot - dot chart of chisq-d.f.
+plot(s, margin=c('chisq', 'proportion chisq'))
+# new plot - dot chart of chisq-d.f. with 2 other stats in right margin
 # latex(s)                       # nice printout - creates anova.g.tex
 options(datadist=NULL)
 
