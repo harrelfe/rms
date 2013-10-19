@@ -35,7 +35,8 @@
 \method{plot}{Predict}(x, formula, groups=NULL,
      cond=NULL, varypred=FALSE, subset,
      xlim, ylim, xlab, ylab, 
-     data=NULL, subdata, col.fill=gray(seq(.825, .55, length=5)),
+     data=NULL, subdata, anova=NULL, pval=FALSE, cex.anova=.85,
+     col.fill=gray(seq(.825, .55, length=5)),
      adj.subtitle, cex.adj, cex.axis, perim=NULL, digits=4, nlevels=3,
      nlines=FALSE, addpanel, scat1d.opts=list(frac=0.025, lwd=0.3),
      type=NULL, yscale=NULL, ...)
@@ -109,6 +110,13 @@ variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm}, or \cod
   vertical bar (this assumes \code{b} is a \code{factor} in
   \code{data}.  Another example:
   \code{subdata=sex==c('male','female')[current.row()]}.}
+\item{anova}{an object returned by \code{\link{anova.rms}}.  If
+	\code{anova} is specified, the overall test of association for
+	predictor plotted is added as text to each panel, located at the spot
+	at which the panel is most empty.}
+\item{pval}{specify \code{pval=TRUE} for \code{anova} to include not
+	only the test statistic but also the P-value}
+\item{cex.anova}{character size for the test statistic printed on the panel}
 \item{col.fill}{
   a vector of colors used to fill confidence bands for successive
   superposed groups.  Default is inceasingly dark gray scale.
@@ -251,7 +259,9 @@ options(datadist='ddist')
 
 fit <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
                x=TRUE, y=TRUE)
-plot(Predict(fit))       # Plot effects of all 4 predictors
+an <- anova(fit)
+# Plot effects of all 4 predictors with test statistics from anova, and P
+plot(Predict(fit), anova=an, pval=TRUE)
 plot(Predict(fit), data=llist(blood.pressure,age))
                          # rug plot for two of the predictors
 

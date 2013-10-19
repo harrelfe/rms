@@ -1,7 +1,8 @@
 plot.Predict <-
   function(x, formula, groups=NULL, cond=NULL, varypred=FALSE, subset,
            xlim, ylim, xlab, ylab,
-           data=NULL, subdata, col.fill=gray(seq(.825, .55, length=5)),
+           data=NULL, subdata, anova=NULL, pval=FALSE, cex.anova=.85,
+           col.fill=gray(seq(.825, .55, length=5)),
            adj.subtitle, cex.adj, cex.axis, perim=NULL,
            digits=4, nlevels=3, nlines=FALSE, addpanel,
            scat1d.opts=list(frac=0.025, lwd=0.3), type=NULL, yscale=NULL, ...)
@@ -71,6 +72,34 @@ plot.Predict <-
   oldopt <- options(digits=digits)
   on.exit(options(oldopt))
 
+  if(length(anova)) {
+    vi <- attr(anova, 'vinfo')
+    aname  <- sapply(vi, function(x) paste(x$name, collapse=','))
+    atype  <- sapply(vi, function(x) x$type)
+    wanova <- atype %in% c('main effect', 'combined effect')
+    test   <- if('F' %in% colnames(anova)) 'F' else 'Chi-Square'
+    stat   <- round(anova[wanova, test], 1)
+    pstat  <- anova[wanova, 'P']
+    dof    <- anova[wanova, 'd.f.']
+    stat <- if(test == 'Chi-Square')
+      paste('chi[', dof, ']^2 == ',  stat, sep='')
+    else
+      paste('F[paste(', dof, ',",",', anova['ERROR', 'd.f.'], ')] == ',
+            stat, sep='')
+    if(pval) {
+      pval <- formatNP(pstat, digits=3, pvalue=TRUE)
+      pval <- ifelse(grepl('<', pval), paste('P', pval, sep=''),
+                     paste('P==', pval, sep=''))
+      stat <- paste(stat, pval, sep='~~')
+    }
+    names(stat) <- aname[wanova]
+    tanova <- function(name, x, y) {
+      z <- largest.empty(x, y, grid=TRUE)
+      ltext(z$x, z$y, parse(text=stat[name]), cex=cex.anova)
+#      putKeyEmpty(x, y, parse(text=stat[name]), type='n', grid=TRUE) }
+    }
+  } else tanova <- function(...) {}
+    
   if(predpres)
     {
       if(!missing(formula))
@@ -128,7 +157,7 @@ plot.Predict <-
           lev    <- levs[[pn]]
           col <- trellis.par.get('superpose.line')$col
           if(!length(lev) && length(unique(x[!is.na(x)])) > nlevels)
-            {
+            { # continuous x
               yy <- y
               if(length(perim))
                 {
@@ -138,6 +167,7 @@ plot.Predict <-
                     attr(yy, 'other')[j,] <- NA
                 }
               panel.xYplot(x, yy, ...)
+              tanova(names(levs)[pn], x, yy)
               if(length(data) && length(xd <- data[[names(levs)[pn]]]))
                 {
                   xd <- xd[!is.na(xd)]
@@ -146,11 +176,14 @@ plot.Predict <-
                 }
             }
           else
-            {
+            { # discrete x
               panel.points(x, y, pch=19)
               yoth <- attr(y, 'other')
-              if(length(yoth)) for(u in unique(x))
-                llines(c(u,u), yoth[x==u,])
+              yo   <- length(yoth)
+              if(yo) for(u in unique(x))
+                llines(c(u, u), yoth[x==u, ])
+              tanova(names(levs)[pn], if(yo) c(x, x, x) else x,
+                     if(yo) c(y, yoth[, 1], yoth[, 1]) else y)
             }
           addpanel(x, y, ...)
         }
@@ -167,7 +200,7 @@ plot.Predict <-
       if(length(sub   )) r$sub    <- sub
     }
   else
-    {
+    { # predictor not listed
       v <- character(0)
       bar <- ''
       f <- if(!missing(formula)) gsub(' .*','',as.character(formula)[2])
@@ -235,7 +268,7 @@ plot.Predict <-
           if(bar != '') f <- paste(f, '|', bar)
         }
       else
-        {
+        { # formula given
           f <- as.character(formula)[2]
           xvar <- gsub(' .*', '', f)
           if(length(grep('\\|', f)))
@@ -280,6 +313,7 @@ plot.Predict <-
                 attr(yy, 'other')[j,] <- NA
             }
           panel.xYplot(x, yy, groups=groups, subscripts=subscripts, ...)
+          tanova(xvar, x, yy)
           col <- trellis.par.get('superpose.line')$col
 
           xd <- data[[xvar]]
