@@ -295,8 +295,8 @@ plot(p, perim=per)       # suppress output for age < 30 but leave scale alone
 p <- Predict(fit, age, blood.pressure=c(120,140,160),
              cholesterol=c(180,200,215), sex)
 plot(p, ~ age | blood.pressure*cholesterol, subset=sex=='male')
-plot(p, ~ age | cholesterol*blood.pressure, subset=sex=='female')
-plot(p, ~ blood.pressure|cholesterol*round(age,-1), subset=sex=='male')
+# plot(p, ~ age | cholesterol*blood.pressure, subset=sex=='female')
+# plot(p, ~ blood.pressure|cholesterol*round(age,-1), subset=sex=='male')
 plot(p)
 
 # Plot the age effect as an odds ratio

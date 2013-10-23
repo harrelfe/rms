@@ -364,7 +364,7 @@ for(penlty in seq(0,.15,by=.005)) {
 #best penalty is not specific to how the sample was split.  This
 #problem is addressed in the last example.
 #
-penalties <- seq(0,.7,by=.1)   # really use by=.02
+penalties <- seq(0,.7,length=3)   # really use by=.02
 index <- matrix(NA, nrow=length(penalties), ncol=11,
 	        dimnames=list(format(penalties),
           c("Dxy","R2","Intercept","Slope","Emax","D","U","Q","B","g","gp")))
@@ -396,8 +396,8 @@ for(i in 1:9)
 options(datadist=NULL)
 
 # Example of weighted analysis
-x <- 1:5
-y <- c(0,1,0,1,0)
+x    <- 1:5
+y    <- c(0,1,0,1,0)
 reps <- c(1,2,3,2,1)
 lrm(y ~ x, weights=reps)
 x <- rep(x, reps)
