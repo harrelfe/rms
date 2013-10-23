@@ -113,7 +113,8 @@ variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm}, or \cod
 \item{anova}{an object returned by \code{\link{anova.rms}}.  If
 	\code{anova} is specified, the overall test of association for
 	predictor plotted is added as text to each panel, located at the spot
-	at which the panel is most empty.}
+	at which the panel is most empty unless there is significant empty
+	space at the top or bottom of the panel; these areas are given preference.}
 \item{pval}{specify \code{pval=TRUE} for \code{anova} to include not
 	only the test statistic but also the P-value}
 \item{cex.anova}{character size for the test statistic printed on the panel}
