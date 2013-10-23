@@ -96,7 +96,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   nm <- sum(!i)
   if(nm>0) warning(paste(nm,
     "observations deleted from logistic calibration due to probs. of 0 or 1"))
-  f <- lrm.fit(logit[i], y[i])
+  f <- lrm.fit(logit[i], y[i], initial=c(0., 1.), maxit=1L)
   stats <- f$stats
   n <- stats["Obs"]
   predprob <- seq(emax.lim[1], emax.lim[2], by=.0005)
