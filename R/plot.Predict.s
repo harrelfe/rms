@@ -94,9 +94,25 @@ plot.Predict <-
     }
     names(stat) <- aname[wanova]
     tanova <- function(name, x, y) {
-      z <- largest.empty(x, y, grid=TRUE)
-      ltext(z$x, z$y, parse(text=stat[name]), cex=cex.anova)
-#      putKeyEmpty(x, y, parse(text=stat[name]), type='n', grid=TRUE) }
+      ## See if an area is available near the top or bottom of the
+      ## current panel
+      cpl <- current.panel.limits()
+      xlim <- cpl$xlim
+      ylim <- cpl$ylim
+      dy   <- diff(ylim)
+      if(!any(y > ylim[2] - dy / 7)) {
+        z <- list(x = mean(xlim), y = ylim[2] - .025 * dy)
+        adj <- c(.5, 1)
+      }
+      else if(!any(y < ylim[1] + dy / 7)) {
+        z <- list(x = mean(xlim), y = ylim[1] + .025 * dy)
+        adj <- c(.5, 0)
+      }
+      else {
+        z <- largest.empty(x, y, grid=TRUE, method='maxdim')
+        adj <- if(z$y > mean(ylim)) c(.5, 1) else c(.5, 0)
+      }
+      ltext(z$x, z$y, parse(text=stat[name]), cex=cex.anova, adj=adj)
     }
   } else tanova <- function(...) {}
     
@@ -182,8 +198,9 @@ plot.Predict <-
               yo   <- length(yoth)
               if(yo) for(u in unique(x))
                 llines(c(u, u), yoth[x==u, ])
-              tanova(names(levs)[pn], if(yo) c(x, x, x) else x,
-                     if(yo) c(y, yoth[, 1], yoth[, 1]) else y)
+              tanova(names(levs)[pn],
+                     if(yo) c(x,         x,         x) else x,
+                     if(yo) c(y, yoth[, 1], yoth[, 2]) else y)
             }
           addpanel(x, y, ...)
         }

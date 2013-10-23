@@ -576,19 +576,32 @@ plot.anova.rms <-
       if("Partial SS" %nin% colnames(x))
         stop('to plot R2 you must have an ols model and must not have specified ss=FALSE to anova')
       
-      sse <- x['ERROR','Partial SS']
-      ssr <- x['TOTAL','Partial SS']
+      sse <- x ['ERROR', 'Partial SS']
+      ssr <- x ['TOTAL', 'Partial SS']
+      pss <- an[, 'Partial SS']
       sst <- sse + ssr
     }
     
+    dof <- an[, 'd.f.']
+    P   <- an[, 'P']
+
+    if(any(colnames(an) == 'F')) {
+      chisq    <- an[, 'F'] * dof
+      totchisq <- x['TOTAL', 'F'] * x['TOTAL', 'd.f.']
+    }
+    else {
+      chisq    <- an[, 'Chi-Square']
+      totchisq <- x['TOTAL', 'Chi-Square']
+    }
+
     w <- switch(what,
-                chisq        = chisq,
-                chisqminusdf = chisq - dof,
-                aic          = chisq - 2 * dof,
-                P            = P,
-                "partial R2" = an[,"Partial SS"]/sst,
-                "remaining R2"  = (ssr - an[, "Partial SS"]) / sst,
-                "proportion R2" = an[, "Partial SS"] / ssr,
+                chisq           = chisq,
+                chisqminusdf    = chisq - dof,
+                aic             = chisq - 2 * dof,
+                P               = P,
+                "partial R2"    = pss / sst,
+                "remaining R2"  = (ssr - pss) / sst,
+                "proportion R2" = pss / ssr,
                 "proportion chisq" = chisq / totchisq)
     
     if(missing(newnames))
@@ -601,17 +614,9 @@ plot.anova.rms <-
                 none       =  1 : length(w))
     w     <- w [is]
     an    <- an[is,, drop=FALSE ]
-
-    dof <- an[, 'd.f.']
-    P   <- an[, 'P']
-    if(any(colnames(an) == 'F')) {
-      chisq    <- an[, 'F'] * dof
-      totchisq <- x['TOTAL', 'F'] * x['TOTAL', 'd.f.']
-    }
-    else {
-      chisq    <- an[, 'Chi-Square']
-      totchisq <- x['TOTAL', 'Chi-Square']
-    }
+    chisq <- chisq[is]
+    dof   <- dof[is]
+    P     <- P[is]
 
     if(pl) {
       auxtitle <- auxdata <- NULL
@@ -620,46 +625,35 @@ plot.anova.rms <-
         left <- max(floor(log10(m)) + 1, 1)
         nFm(x, left, right)
       }
-      pst <- function(old, new, sep='  ')
-        if(length(old)) paste(old, new, sep=sep) else new
 
       if(any(c('partial R2', 'remaining R2') %in% margin)) {
         if("Partial SS" %nin% colnames(x))
           stop('to show R2 you must have an ols model and must not have specified ss=FALSE to anova')
-        sse <- x['ERROR','Partial SS']
-        ssr <- x['TOTAL','Partial SS']
+        sse <- x['ERROR', 'Partial SS']
+        ssr <- x['TOTAL', 'Partial SS']
         sst <- sse + ssr
+        pss <- an[, 'Partial SS']
       }
 
-      if('chisq' %in% margin) {
-        auxtitle <- 'chi^2'
-        auxdata <- fn(if(any(colnames(an) == 'F')) an[, 'F'] * dof
-                      else an[, 'Chi-Square'], 1)
-      }
-      if('proportion chisq' %in% margin) {
-        auxtitle <- pst(auxtitle, 'Proportion~chi^2',      '~~')
-        auxdata  <- pst(auxdata,  fn(chisq / totchisq, 2), '  ')
-      }
-      if('d.f.' %in% margin) {
-        auxtitle <- pst(auxtitle, 'd.f.',     '~~')
-        auxdata  <- pst(auxdata,  fn(dof, 0), '  ')
-      }
-      if('P' %in% margin) {
-        auxtitle <- pst(auxtitle, 'P',      '~~')
-        auxdata  <- pst(auxdata,  fn(P, 4), '  ')
-      }
-      if('partial R2' %in% margin) {
-        pr2 <- an[, "Partial SS"] / sst
-        auxtitle <- pst(auxtitle, 'Partial~R^2', '~~')
-        auxdata  <- pst(auxdata,  fn(pr2, 2),    '  ')
-      }
-      if('proportion R2' %in% margin) {
-        pr2 <- an[, "Partial SS"] / ssr
-        auxtitle <- pst(auxtitle, 'Proportion~R^2', '~~')
-        auxdata  <- pst(auxdata,  fn(pr2, 2),       '  ')
+      if(length(margin)) for(marg in margin) {
+        aux <-
+          switch(marg, 
+                 chisq = list('chi^2', fn(chisq, 1)),
+                 'proportion chisq' =
+                 list('Proportion~chi^2', fn(chisq / totchisq, 2)),
+                 'd.f.' = list('d.f.', fn(dof, 0)),
+                 P = list('P', fn(P, 4)),
+                 'partial R2' = list('Partial~R^2',       fn(pss / sst, 2)),
+                 'proportion R2' = list('Proportion~R^2', fn(pss / ssr, 2)))
+        
+        if(length(auxtitle)) auxtitle <- paste(auxtitle, aux[[1]], sep='~~')
+         else auxtitle <- aux[[1]]
+        if(length(auxdata))  auxdata  <- paste(auxdata,  aux[[2]], sep='  ')
+         else auxdata  <- aux[[2]]
       }
       ## convert to expression
       if(length(auxtitle)) auxtitle <- parse(text = auxtitle)
+      
       if(length(trans)) {
         nan <- names(w)
         w <- pmax(0, w)
@@ -671,5 +665,5 @@ plot.anova.rms <-
       } else dotchart3(w, xlab=xlab, pch=pch,
                        auxtitle=auxtitle, auxdata=auxdata, ...)
     }
-    invisible(an)
+    invisible(w)
   }
