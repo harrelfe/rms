@@ -14,7 +14,7 @@ survplot.rms <-
            lty, lwd=par('lwd'),
            col=1, col.fill=gray(seq(.95, .75, length=5)),
            adj.subtitle=TRUE, loglog=FALSE, fun, n.risk=FALSE, logt=FALSE,
-           dots=FALSE, dotsize=.003, grid=FALSE,
+           dots=FALSE, dotsize=.003, grid=NULL,
            srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,
            y.n.risk, cex.n.risk=.6, pr=FALSE)
 {
@@ -50,7 +50,7 @@ survplot.rms <-
   if(what=="hazard" & loglog)
     stop('may not specify loglog=T with what="hazard"')
 
-  if(use.fun | logt | what=="hazard") { dots <- FALSE; grid <- FALSE }
+  if(use.fun | logt | what=="hazard") { dots <- FALSE; grid <- NULL }
   
   cox <- inherits(fit,"cph")
   if(cox) {
@@ -95,8 +95,7 @@ survplot.rms <-
   if(missing(xlim)) 
     xlim <- if(logt)logb(c(maxtime/100,maxtime)) else c(0,maxtime)
 
-
-  if(grid) {dots <- FALSE; if(is.logical(grid)) grid <- .05}
+  if(length(grid) && is.logical(grid)) grid <- if(grid) gray(.8) else NULL
 
   if(is.logical(conf.int)) {
     if(conf.int) conf.int <- .95	else conf.int <- 0
@@ -175,22 +174,22 @@ survplot.rms <-
                  seq(xlim[1], max(pretty(xlim)), time.inc), labels=TRUE)
         
         mgp.axis(2, at=pretty(ylim))
-        if(!logt & (dots|grid)) {
+        if(!logt & (dots || length(grid))) {
           xlm <- pretty(xlim)
-          xlm <- c(xlm[1],xlm[length(xlm)])
-          xp <- seq(xlm[1],xlm[2],by=time.inc)
-          yd <- ylim[2]-ylim[1]
-          if(yd<=.1)yi <- .01
-          else if(yd<=.2) yi <- .025
-          else if(yd<=.4) yi <- .05
+          xlm <-  c(xlm[1], xlm[length(xlm)])
+          xp <- seq(xlm[1], xlm[2],by=time.inc)
+          yd <- ylim[2] - ylim[1]
+          if(yd <= .1) yi <- .01
+          else if(yd <= .2) yi <- .025
+          else if(yd <= .4) yi <- .05
           else yi <- .1
-          yp <- seq(ylim[2],ylim[1] +
-                    if(n.risk && missing(y.n.risk))yi else 0, 
-                    by=-yi)
-          if(dots) for(tt in xp)symbols(rep(tt,length(yp)),yp,
-                                        circles=rep(dotsize,length(yp)),
-                                        inches=dotsize,add=TRUE)
-          else abline(h=yp, v=xp, col=grid)
+          yp <- seq(ylim[2], ylim[1] +
+                    if(n.risk && missing(y.n.risk)) yi else 0, 
+                    by=- yi)
+          if(dots) for(tt in xp)symbols(rep(tt, length(yp)), yp,
+                                        circles=rep(dotsize, length(yp)),
+                                        inches=dotsize, add=TRUE)
+          else abline(h=yp, v=xp, col=grid, xpd=FALSE)
         }
       }
       tim <- time[s]; srv <- surv[s]

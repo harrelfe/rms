@@ -7,8 +7,7 @@ survplot.survfit <-
            lty,lwd=par('lwd'),
            col=1, col.fill=gray(seq(.95, .75, length=5)),
            loglog=FALSE, fun, n.risk=FALSE, logt=FALSE,
-           dots=FALSE, dotsize=.003,
-           grid=FALSE,
+           dots=FALSE, dotsize=.003, grid=NULL,
            srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,
            y.n.risk, cex.n.risk=.6, pr=FALSE, ...) {
 
@@ -66,11 +65,11 @@ survplot.survfit <-
   }
   else if(missing(ylim)) ylim <- c(0, 1)
 
-  if(grid) {
+  if(length(grid)) {
     dots <- FALSE
-    if(is.logical(grid)) grid <- .05
+    if(is.logical(grid)) grid <- if(grid) gray(.8) else NULL
   }
-  if(logt | trans) { dots <- FALSE; grid <- FALSE }
+  if(logt | trans) { dots <- FALSE; grid <- NULL }
 
   olev <- slev <- names(fit$strata)
   if(levels.only) slev <- gsub('.*=', '', slev)
@@ -126,11 +125,11 @@ survplot.survfit <-
                labels=TRUE)
       
       mgp.axis(2, at=pretty(ylim))
-      if(dots | grid) {
+      if(dots || length(grid)) {
         xlm <- pretty(xlim)
-        xlm <- c(xlm[1], xlm[length(xlm)])
-        xp <- seq(xlm[1], xlm[2], by=time.inc)
-        yd <- ylim[2] - ylim[1]
+        xlm <-   c(xlm[1], xlm[length(xlm)])
+        xp  <- seq(xlm[1], xlm[2], by=time.inc)
+        yd  <- ylim[2] - ylim[1]
         if(yd <= .1) yi <- .01
         else if(yd <=.2 ) yi <- .025
         else if(yd <=.4 ) yi <- .05
@@ -142,7 +141,7 @@ survplot.survfit <-
           for(tt in xp)symbols(rep(tt, length(yp)), yp,
                                circles=rep(dotsize, length(yp)),
                                inches=dotsize, add=TRUE)
-        else abline(h=yp, v=xp, col=grid)
+        else abline(h=yp, v=xp, col=grid, xpd=FALSE)
       }
     }
     tim <- time[s]; srv <- surv[s]
@@ -243,7 +242,7 @@ survdiffplot <-
            ylab="Difference in Survival Probability", time.inc,
            conf.int, conf=c("shaded", "bands", "none"),
            add=FALSE, lty=1, lwd=par('lwd'), col=1,
-           n.risk=FALSE,  grid=FALSE,
+           n.risk=FALSE,  grid=NULL,
            srt.n.risk=0, adj.n.risk=1,
            y.n.risk, cex.n.risk=.6) {
 
@@ -272,11 +271,12 @@ survdiffplot <-
   
   if(missing(xlim)) xlim <- c(mintime, maxtime)
   
-  if(grid) {dots <- FALSE; if(is.logical(grid)) grid <- .05}
+  if(length(grid) && is.logical(grid))
+    grid <- if(grid) gray(.8) else NULL
+  
   polyg <- ordGridFun(grid=FALSE)$polygon
 
   times <- sort(unique(c(fit$time, seq(mintime, maxtime, by=time.inc))))
-
   
   f <- summary(fit, times=times)
   
@@ -314,6 +314,16 @@ survdiffplot <-
     mgp.axis(1, at=seq(xlim[1], max(pretty(xlim)), time.inc),
              labels=TRUE)
     }
+
+  if(length(grid)) {
+    xlm <- pretty(xlim)
+    xlm <-   c(xlm[1], xlm[length(xlm)])
+    xp  <- seq(xlm[1], xlm[2], by=time.inc)
+    ylm <- pretty(ylim)
+    yp  <- seq(min(ylm), max(ylm), by=ylm[2] - ylm[1])
+    abline(h=yp, v=xp, col=grid, xpd=FALSE)
+  }
+
   k <- !is.na(times + lo + hi)
   
   switch(conf,
@@ -339,7 +349,7 @@ survdiffplot <-
     
     if(!add) {
       mar <- par()$mar
-      if(mar[4]<4) {mar[4] <- mar[4]+2; par(mar=mar)}
+      if(mar[4] < 4) {mar[4] <- mar[4] + 2; par(mar=mar)}
     }
     oxpd <- par('xpd')
     par(xpd=NA)

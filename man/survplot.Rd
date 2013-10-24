@@ -40,7 +40,7 @@ survplot(fit, \dots)
          col=1, col.fill=gray(seq(.95, .75, length=5)),
          adj.subtitle=TRUE, loglog=FALSE, fun,
          n.risk=FALSE, logt=FALSE, dots=FALSE, dotsize=.003,
-         grid=FALSE, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1, 
+         grid=NULL, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1, 
          y.n.risk, cex.n.risk=.6, pr=FALSE)
 \method{survplot}{survfit}(fit, xlim, 
          ylim, xlab, ylab, time.inc,
@@ -49,15 +49,14 @@ survplot(fit, \dots)
          levels.only=FALSE, lty,lwd=par('lwd'),
          col=1, col.fill=gray(seq(.95, .75, length=5)),
          loglog=FALSE,fun,n.risk=FALSE,logt=FALSE,
-         dots=FALSE,dotsize=.003,
-         grid=FALSE,
+         dots=FALSE,dotsize=.003, grid=NULL,
          srt.n.risk=0,sep.n.risk=.056,adj.n.risk=1,
          y.n.risk,cex.n.risk=.6, pr=FALSE, \dots)
 survdiffplot(fit, order=1:2,
            xlim, ylim, xlab, ylab="Difference in Survival Probability",
            time.inc, conf.int, conf=c("shaded", "bands","none"),
            add=FALSE, lty=1, lwd=par('lwd'), col=1,
-           n.risk=FALSE, grid=FALSE,
+           n.risk=FALSE, grid=NULL,
            srt.n.risk=0, adj.n.risk=1,
            y.n.risk, cex.n.risk=.6)
 }
@@ -241,16 +240,15 @@ numbers using \code{y.n.risk}.
 character size for number of subjects at risk (when \code{n.risk} is \code{TRUE})
 }
 \item{dots}{
-set to \code{TRUE} to plot a grid of dots.  Will be plotted at every \code{time.inc} (see
-\code{cph}) and at survival increments of .1 (if \code{d>.4}), .05 (if \code{.2 < d <= .4}), or .025
-(if \code{d <= .2}), where \code{d} is the range of survival displayed.
+ set to \code{TRUE} to plot a grid of dots.  Will be plotted at every
+ \code{time.inc} (see \code{cph}) and at survival increments of .1 (if
+ \code{d>.4}), .05 (if \code{.2 < d <= .4}), or .025 (if \code{d <= .2}),
+ where \code{d} is the range of survival displayed. 
 }
-\item{dotsize}{
-size of dots in inches
-}
+\item{dotsize}{size of dots in inches}
 \item{grid}{
-defaults to \code{FALSE}. Set to a color shading to plot faint lines. Set to \code{1}
-to plot solid lines.  Default is \code{.05} if \code{TRUE}.
+ defaults to \code{NULL} (not drawing grid lines). Set to \code{TRUE} to
+ plot \code{gray(.8)} grid lines, or specify any color.
 }
 \item{pr}{
 set to \code{TRUE} to print survival curve coordinates used in the plots
