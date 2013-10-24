@@ -17,6 +17,7 @@ Changes in version 4.0-1 (2013-10-19)
    * Added margin argument to plot.anova.rms to print selected stats in right margin of dot chart
    * Added anova argument to plot.Predict to allow overall association test statistics to be added to panels
    * Fixed bug in val.prob in which the logistic model was re-fitted instead of fixing coefficients at 0,1.  This resulted in model statistics (including c-index) to always be favorable even when predictions were worse than change.  Thanks: Kirsen Van Hoorde <Kirsten.VanHoorde@esat.kuleuven.be>
+   * Fixed bug in survdiffplot where conf.int was always overridden by value from survfit.  Thanks: Kamil Fijorek <kamilfijorek@gmail.com>
 
 Changes in version 4.0-0 (2013-07-10)
    * Cleaned up label logic in Surv, made it work with interval2 (thanks:Chris Andrews)

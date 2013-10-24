@@ -55,8 +55,7 @@ survplot(fit, \dots)
          y.n.risk,cex.n.risk=.6, pr=FALSE, \dots)
 survdiffplot(fit, order=1:2,
            xlim, ylim, xlab, ylab="Difference in Survival Probability",
-           time.inc, conf.int=.95,
-           conf=c("shaded", "bands","none"),
+           time.inc, conf.int, conf=c("shaded", "bands","none"),
            add=FALSE, lty=1, lwd=par('lwd'), col=1,
            n.risk=FALSE, grid=FALSE,
            srt.n.risk=0, adj.n.risk=1,
@@ -130,15 +129,19 @@ ignored for fits from \code{survfit}.
 }
 \item{conf.int}{
 Default is \code{FALSE}.  Specify e.g. \code{.95} to plot 0.95 confidence bands.
-For fits from parametric survival models, or Cox models with \code{x=TRUE} and \code{y=TRUE}
-specified to the fit, the exact asymptotic formulas will be used to
-compute standard errors, and confidence limits are based on \code{log(-log S(t))}.
-If \code{x=TRUE} and \code{y=TRUE} were not specified to \code{cph} but \code{surv=TRUE} was, the
-standard errors stored for the underlying survival curve(s) will be used.
-These agree with the former if predictions are requested at the mean
-value of X beta or if there are only stratification factors in the model.
-This argument is ignored for fits from \code{survfit}, which must have previously
-specified confidence interval specifications.
+For fits from parametric survival models, or Cox models with
+\code{x=TRUE} and \code{y=TRUE} specified to the fit, the exact
+asymptotic formulas will be used to compute standard errors, and
+confidence limits are based on \code{log(-log S(t))} if \code{loglog=TRUE}. 
+If \code{x=TRUE} and \code{y=TRUE} were not specified to \code{cph} but
+\code{surv=TRUE} was, the standard errors stored for the underlying
+survival curve(s) will be used. These agree with the former if
+predictions are requested at the mean value of X beta or if there are
+only stratification factors in the model. This argument is ignored for
+fits from \code{survfit}, which must have previously specified
+confidence interval specifications.  For \code{survdiffplot} if
+\code{conf.int} is not specified, the level used in the call to
+\code{survfit} will be used.
 }
 \item{conf}{
 \code{"bars"} for confidence bars at each \code{time.inc} time point. If the fit

@@ -20,6 +20,6 @@ Description: Regression modeling, testing, estimation, validation,
 	ordinary linear models,	the Buckley-James model, generalized least
 	squares for serially or spatially correlated observations, generalized
 	linear models, and quantile regression.
-License: GPL (>= 2), 
+License: GPL (>= 2)
 URL: http://biostat.mc.vanderbilt.edu/rms
 LazyLoad: yes
