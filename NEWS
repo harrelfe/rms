@@ -1,4 +1,4 @@
-Changes in version 4.1-0 (2013-10-24)
+Changes in version 4.1-0 (2013-11-10)
    * Fixed orm.fit to not create penalty matrix if not needed (penalties are not yet implemented anyway)
    * Added yscale argument to plot.Predict
    * Added Wald test simulation to orm help file
@@ -19,6 +19,7 @@ Changes in version 4.1-0 (2013-10-24)
    * Fixed bug in val.prob in which the logistic model was re-fitted instead of fixing coefficients at 0,1.  This resulted in model statistics (including c-index) to always be favorable even when predictions were worse than change.  Thanks: Kirsen Van Hoorde <Kirsten.VanHoorde@esat.kuleuven.be>
    * Fixed bug in survdiffplot where conf.int was always overridden by value from survfit.  Thanks: Kamil Fijorek <kamilfijorek@gmail.com>
    * Fixed bug in grid= for survplot.* and survdiffplot.  Thanks: Kamil Fijorek
+   * Fixed rms.s to account for possible offset in names(nmiss).  Thanks: Larry Hunsicker
 
 Changes in version 4.0-0 (2013-07-10)
    * Cleaned up label logic in Surv, made it work with interval2 (thanks:Chris Andrews)

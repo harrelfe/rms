@@ -297,7 +297,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     if(length(nact) && length(nmiss <- nact$nmiss)) {
       jia <- grep('%ia%',names(nmiss), fixed=TRUE)
       if(length(jia)) nmiss <- nmiss[-jia]
-      jz <- which(names(nmiss) != '(weights)')
+      jz <- which(names(nmiss) != '(weights)' & ! grepl('offset\\(', names(nmiss)))
       if(response.pres) jz <- jz[jz > 1]
       names(nmiss)[jz] <- fname[asm != 9]
       attr(mf, 'na.action')$nmiss <- nmiss
