@@ -244,6 +244,7 @@
     \bold{\code{ols}}         \tab Ordinary least squares linear model     \tab \code{lm}\cr
     \bold{\code{lrm}}         \tab Binary and ordinal logistic regression  \tab \code{glm}\cr
     \tab model                                   \tab \code{cr.setup}\cr
+    \bold{\code{orm}}         \tab Ordinal regression model                \tab \code{lrm}\cr
     \bold{\code{psm}}         \tab Accelerated failure time parametric     \tab \code{survreg}\cr
     \tab survival model                          \tab \cr
     \bold{\code{cph}}         \tab Cox proportional hazards regression     \tab \code{coxph}\cr
