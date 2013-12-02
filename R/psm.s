@@ -232,7 +232,7 @@ psm <- function(formula=formula(data),
   fit$formula <- formula
   if(y) {
     class(Y) <- 'Surv'
-    attr(Y,'type') <- atY$type
+    attr(Y, 'type') <- atY$type
     fit$y <- Y
   }
   scale.pred <-
@@ -240,17 +240,21 @@ psm <- function(formula=formula(data),
       c('log(T)','Survival Time Ratio')
     else 'T'
   
-  logtest <- 2*diff(fit$loglik)
+  logtest <- 2 * diff(fit$loglik)
   Nn <- if(length(weights)) sum(weights) else nnn[1]
-  R2.max <- 1 - exp(2*fit$loglik[1]/Nn)
-  R2 <- (1 - exp(-logtest/Nn))/R2.max
-  df <- length(fit$coef)-1
-  P  <- if(df==0) NA else 1-pchisq(logtest,df)
+  R2.max <- 1 - exp(2. * fit$loglik[1] / Nn)
+  R2 <- (1 - exp(-logtest/Nn)) / R2.max
+  df <- length(fit$coef) - 1
+  P  <- if(df == 0) NA else 1. - pchisq(logtest, df)
   gindex <- GiniMd(fit$linear.predictors)
-  Dxy <- dxy.cens(fit$linear.predictors, Y)
+  Dxy <- if(type == 'right') dxy.cens(fit$linear.predictors, Y)
+  else {
+    warning('Dxy not computed since right censoring not in effect')
+    NA
+  }
   stats <- c(nnn, logtest, df, P, R2, Dxy, gindex, exp(gindex))
   names(stats) <- c("Obs", "Events", "Model L.R.", "d.f.", "P",
-                    "R2","Dxy","g","gr")
+                    "R2", "Dxy", "g", "gr")
   if(length(weights)) stats <- c(stats, 'Sum of Weights'=sum(weights))
   fit <- c(fit, list(stats=stats, maxtime=maxtime, units=time.units,
                      time.inc=time.inc, scale.pred=scale.pred,
