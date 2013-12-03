@@ -1,3 +1,6 @@
+Changes in version 4.1-1 (2014-01-01)
+   * rcs: respect system option fractied, passed to rcspline.eval; can be used to get old behavior
+
 Changes in version 4.1-0 (2013-12-05)
    * Fixed orm.fit to not create penalty matrix if not needed (penalties are not yet implemented anyway)
    * Added yscale argument to plot.Predict

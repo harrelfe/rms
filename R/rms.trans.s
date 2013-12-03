@@ -279,7 +279,7 @@ rcs <- function(...) {
   if(length(parms)==1) {
     nknots <- parms
     knots <- NULL
-    if(nknots==0) {
+    if(nknots == 0) {
       attributes(x) <- set.atr(x, x, z, z$name, "asis", 1, NULL, FALSE)
       return(x)
     }
@@ -290,12 +290,14 @@ rcs <- function(...) {
   }
   
   pc <- length(.Options$rcspc) && .Options$rcspc
+  fractied <- .Options$fractied
+  if(!length(fractied)) fractied <- 0.05
   
   if(!length(knots)) {
-    xd <- rcspline.eval(x, nk=nknots, inclx=TRUE, pc=pc)
+    xd <- rcspline.eval(x, nk=nknots, inclx=TRUE, pc=pc, fractied=fractied)
     knots <- attr(xd,"knots")
   }
-  else xd <- rcspline.eval(x, knots=knots, inclx=TRUE, pc=pc)
+  else xd <- rcspline.eval(x, knots=knots, inclx=TRUE, pc=pc, fractied=fractied)
 
   parms  <- knots
   nknots <- length(parms)

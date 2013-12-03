@@ -31,9 +31,11 @@ here solve that problem.
 \code{asis} is the identity transformation, \code{pol} is an ordinary
 (non-orthogonal) polynomial, \code{rcs} is a linear tail-restricted
 cubic spline function (natural spline, for which the
-\code{rcspline.eval} function generates the design matrix and the
+\code{rcspline.eval} function generates the design matrix, the
 presence of system option \code{rcspc} causes \code{rcspline.eval} to be
-invoked with \code{pc=TRUE}), \code{catg} is for a categorical variable,
+invoked with \code{pc=TRUE}, and the presence of system option \code{fractied}
+causes this value to be passed to \code{rcspline.eval} as the \code{fractied}
+argument), \code{catg} is for a categorical variable,
 \code{scored} is for an ordered categorical variable, \code{strat} is
 for a stratification factor in a Cox model, \code{matrx} is for a matrix
 predictor, and \code{\%ia\%} represents restricted interactions in which
@@ -113,6 +115,9 @@ f.harrell@vanderbilt.edu
 \examples{
 \dontrun{
 options(knots=4, poly.degree=2)
+# To get the old behavior of rcspline.eval knot placement (which didnt' handle
+# clumping at the lowest or highest value of the predictor very well):
+# options(fractied = 1.0)   # see rcspline.eval for details
 country <- factor(country.codes)
 blood.pressure <- cbind(sbp=systolic.bp, dbp=diastolic.bp)
 fit <- lrm(Y ~ sqrt(x1)*rcs(x2) + rcs(x3,c(5,10,15)) + 
