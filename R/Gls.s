@@ -10,7 +10,8 @@ Gls <-
             
 {
     require(nlme)
-    glsEstimate <- nlme:::glsEstimate
+    if(!existsFunction('glsEstimate'))
+		stop('nlme package must be version 3.1-113 or later')
     
     Call <- match.call()
     controlvals <- glsControl()
@@ -242,10 +243,10 @@ Gls <-
     
     if (controlvals$apVar && FALSE)
       apVar <-
-        nlme:::glsApVar(glsSt, glsFit$sigma,
-                        .relStep  = controlvals[[".relStep"]],  
-                        minAbsPar = controlvals[["minAbsParApVar"]],
-                        natural   = controlvals[["natural"]])
+        glsApVar(glsSt, glsFit$sigma,
+                 .relStep  = controlvals[[".relStep"]],  
+                 minAbsPar = controlvals[["minAbsParApVar"]],
+                 natural   = controlvals[["natural"]])
     else
       apVar <- "Approximate variance-covariance matrix not available"
     dims <- attr(glsSt, "conLin")[["dims"]]
