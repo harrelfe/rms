@@ -55,7 +55,7 @@ nomogram(fit, ..., adj.to, lp=TRUE, lp.at=NULL,
 \method{print}{nomogram}(x, dec=0, \dots)
 
 \method{plot}{nomogram}(x, lplabel="Linear Predictor", fun.side,
- col.conf=c(1,if(under.unix).3 else 12),
+ col.conf=c(1, 0.3),
  conf.space=c(.08,.2), label.every=1, force.label=FALSE, 
  xfrac=.35, cex.axis=.85, cex.var=1, col.grid=NULL,
  varname.label=TRUE, varname.label.sep="=", ia.space=.7, 
