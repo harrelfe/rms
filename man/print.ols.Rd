@@ -29,7 +29,6 @@ title="Linear Regression Model", \dots)
 \item{\dots}{other parameters to pass to \code{print} or \code{format}}
 }
 \seealso{
-  \code{\link{ols}}, \code{\link{lm}}, \code{\link{print.lm}},
-	\code{\link{prModFit}}
+  \code{\link{ols}}, \code{\link{lm}},\code{\link{prModFit}}
 }
 \keyword{print}

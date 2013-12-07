@@ -72,7 +72,7 @@ predab.resample <-
 
   y <- fit.orig$y
   
-  if(is.category(y)) y <- unclass(y)
+  if(is.factor(y)) y <- unclass(y)
 
   if(!is.Surv(y)) y <- as.matrix(y)
 

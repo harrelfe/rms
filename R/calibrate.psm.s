@@ -54,7 +54,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
     {
       ##Assumes y is matrix with 1st col=time, 2nd=event indicator
       if(sum(y[,2]) < 5) return(NA)
-      oldClass(fit) <- 'psm'   # for survest.psm which uses Survival.psm
+      class(fit) <- 'psm'   # for survest.psm which uses Survival.psm
       fit$dist <- fit.orig$dist
       psurv <- survest.psm(fit, linear.predictors=x,
                            times=u, conf.int=FALSE)$surv

@@ -117,7 +117,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
           xi <- scored(xi, name=nam, label=lab)
           attr(mf[,i],"contrasts") <- attr(xi,"contrasts")
         }
-        else if(is.character(xi) | is.category(xi)) {
+        else if(is.character(xi) | is.factor(xi)) {
           if(is.ordered(xi) &&
              .Options$contrasts[2]!='contr.treatment')
             warning(paste('Variable',nam,'is an ordered factor.\n',

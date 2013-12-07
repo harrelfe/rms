@@ -34,7 +34,7 @@ residuals.lrm <-
   if(!is.factor(Y)) Y <- factor(Y)
   lev  <- levels(Y)
   lev2 <- names(cof)[1:k]
-  Y <- oldUnclass(Y) - 1
+  Y <- unclass(Y) - 1
   if(!ordone && k > 1) Y <- Y >= kint
   if(k > 1 && missing(kint) && !ordone)
     warning(paste('using first intercept and ',
@@ -108,7 +108,7 @@ residuals.lrm <-
   if(type=='score.binary') {
     if(k==1)  stop('score.binary only applies to ordinal models')
     if(!dopl) stop('score.binary only applies if you are plotting')
-    if(!length(X <- oldUnclass(object$x)))
+    if(!length(X <- unclass(object$x)))
       stop('you did not specify x=TRUE for the fit')
     xname <- dimnames(X)[[2]]
     yname <- as.character(formula(object))[2]
@@ -130,7 +130,7 @@ residuals.lrm <-
   }
   
   if(type=="score") {
-    if(!length(X <- oldUnclass(object$x)))
+    if(!length(X <- unclass(object$x)))
       stop("you did not specify x=TRUE for the fit")
     if(isorm && object$family != 'logistic')
       stop('score residuals not yet implemented for orm with non-logistic family')
@@ -196,7 +196,7 @@ residuals.lrm <-
   }
   
   if(type=="partial") {
-    if(!length(X <- oldUnclass(object$x)))
+    if(!length(X <- unclass(object$x)))
       stop("you did not specify x=TRUE in the fit")
     cof.int <- cof[1:k]
     cof     <- cof[-(1:k)]
@@ -218,7 +218,7 @@ residuals.lrm <-
       }
     }
     if(dopl) {
-      xname <- atx$dimnames[[2]]; X <- oldUnclass(X)
+      xname <- atx$dimnames[[2]]; X <- unclass(X)
       for(i in 1:dx[2]) {
         if(pl == "loess") {
           if(k > 1)
@@ -296,7 +296,7 @@ residuals.lrm <-
 ##}
 
   if(type %in% c("dfbeta", "dfbetas", "dffit", "dffits", "hat", "lp1")) {
-    if(length(X <- oldUnclass(object$x)) == 0)
+    if(length(X <- unclass(object$x)) == 0)
       stop("you did not specify x=TRUE for the fit")
     v <- P * (1 - P)
     g <- lm(L + (Y - P) / v ~ X, weights=v)

@@ -39,7 +39,7 @@ gendata <- function(fit, ..., nobs, viewvals=FALSE, expand=TRUE, factors)
              paste(names(factors)[which==0],collapse=" ")))
     settings <- if(nf<length(nam)) predictrms(fit, type="adjto.data.frame")
      else list()
-    settings <- oldUnclass(settings)
+    settings <- unclass(settings)
     if(nf>0) for(i in 1:nf) settings[[fnam[i]]] <- factors[[i]]
     if(nf==0) return(as.data.frame(settings))
     if(expand) expand.grid(settings) else as.data.frame(settings)

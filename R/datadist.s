@@ -108,7 +108,7 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
             }
             else
               {	 	# regular numeric variable
-                clx <- oldClass(x)
+                clx <- class(x)
                 y <- x[!is.na(x)]
                 n <- length(y)
                 if(n < 2)
@@ -132,7 +132,7 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
                           q.display <- 10/max(n,200)
                           q.display <- c(q.display, 1 - q.display)
                         }
-                      q <- quantile(oldUnclass(y),q.display)	}  #chron obj. not work here
+                      q <- quantile(unclass(y),q.display)	}  #chron obj. not work here
                     limits[4] <- q[1]; limits[5] <- q[2]
                     ## check for very poorly distributed categorical numeric variable
                     if(limits[4]==limits[5]) limits[4:5] <- r
@@ -140,14 +140,14 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
                     ## Use low category if binary var, middle if 3-level, median otherwise
                     if(nunique < 3) limits[2] <- values[1] else
                     if(nunique==3) limits[2] <- values[2] else
-                    limits[2] <- median(oldUnclass(y))
+                    limits[2] <- median(unclass(y))
                     
                     if(nunique < 4) q <- r else
-                    q <- quantile(oldUnclass(y), q.effect)
+                    q <- quantile(unclass(y), q.effect)
                     limits[1] <- q[1]; limits[3] <- q[2]
                     if(limits[1]==limits[3]) limits[c(1,3)] <- r
                     if(nunique > n.unique) values <- NULL
-                    oldClass(limits) <- clx
+                    class(limits) <- clx
                   }
               }
           Limits[[nam[i]]] <- limits
@@ -163,7 +163,7 @@ datadist <- function(..., data, q.display, q.effect=c(.25,.75),
   ##data.frame(Limits) gives error with chron objects
   
   d <- list(limits=Limits, values=Values)
-  oldClass(d) <- "datadist"
+  class(d) <- "datadist"
   d
 }
 

@@ -1,4 +1,8 @@
-Changes in version 4.1-0 (2013-12-04)
+Changes in version 4.1-1 (2014-01-01)
+   * Removed use of under.unix in anova.rms, latex.summary, plot.nomogram
+   * Removed use of oldUnclass, oldClass, is.category
+
+Changes in version 4.1-0 (2013-12-05)
    * Fixed orm.fit to not create penalty matrix if not needed (penalties are not yet implemented anyway)
    * Added yscale argument to plot.Predict
    * Added Wald test simulation to orm help file

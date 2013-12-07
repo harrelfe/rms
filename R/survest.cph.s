@@ -216,7 +216,7 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
       if(is.numeric(str) && any(str < 1 | str>length(strata.levels)))
         stop('illegal stratum number')
       
-      if(is.category(str) || is.numeric(str)) return(as.integer(str))
+      if(is.factor(str) || is.numeric(str)) return(as.integer(str))
       
       i <- match(str, strata.levels, nomatch=0)
       if(any(i == 0)) stop(paste('illegal strata:',

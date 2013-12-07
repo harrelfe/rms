@@ -4,7 +4,7 @@ sensuc <- function(fit,
 				   or.method=c('x:u y:u','u|x,y'),
 				   event=function(y) if(is.matrix(y))y[,ncol(y)] else 1*y)
 {
-  type <- oldClass(fit)[1]
+  type <- class(fit)[1]
   if(type %nin% c('lrm','cph')) stop('fit must be from lrm or cph')
   
   or.method <- match.arg(or.method)

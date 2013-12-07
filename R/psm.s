@@ -376,7 +376,7 @@ survplot.residuals.psm.censored.normalized <-
     }
   else {
     if(is.character(x)) x <- as.factor(x)
-    if(!is.category(x) && length(unique(x))>5) x <- cut2(x, g=g)
+    if(!is.factor(x) && length(unique(x))>5) x <- cut2(x, g=g)
     s <- is.na(r[,1]) | is.na(x)
     if(any(s)) {r <- r[!s,]; x <- x[!s,drop=TRUE]}
     survplot(survfit(r ~ x, data=data.frame(x,r)),  xlab='Residual',

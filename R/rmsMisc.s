@@ -129,7 +129,7 @@ oos.loglik.lrm <- function(fit, lp, y, ...) {
   if(missing(lp)) return(fit$deviance[length(fit$deviance)])
   ns <- fit$non.slopes
   if(ns > 1) stop('ordinal y case not implemented')
-  y <- as.integer(as.category(y)) - 1
+  y <- as.integer(as.factor(y)) - 1
   s <- !is.na(lp + y)
   lp <- lp[s];  y <- y[s]
   p <- plogis(lp)
@@ -573,7 +573,7 @@ Newlevels.rms <- function(fit, levels, ...)
       if(length(at$limits))
         {
           m <- match(at$limits[[n]], at$parms[[n]])
-          if(is.category(at$limits[[n]]))
+          if(is.factor(at$limits[[n]]))
             attr(at$limits[[n]],'levels') <- levs
           else
             at$limits[[n]] <- levs[m]

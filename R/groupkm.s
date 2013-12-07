@@ -37,7 +37,7 @@ groupkm <- function(x, Srv, m=50, g,
     q <- cut2(x, m=m)
   if(any(table(q) < 2)) warning('one interval had < 2 observations')
 
-  q <- oldUnclass(q)  #need integer
+  q <- unclass(q)  #need integer
   g <- length(levels(q))
 
   km      <- double(g)

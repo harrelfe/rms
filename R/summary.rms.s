@@ -7,7 +7,7 @@
 #	c(lo,hi): use range for effect (lo,hi), adjust to default value
 #	c(lo,w,hi): use range (lo,hi), adjust to w.  Any of 3 can be NA.
 # For categories and strata values can be character
-# values that are original values before translating to is.category -
+# values that are original values before translating to factors -
 # only enough letters are needed to uniquely identify the category 
 # This applies to category and strata vars.  Default adjusted to is
 # from second element of limits vector.
@@ -296,10 +296,7 @@ print.summary.rms <- function(x, ...)
 
 latex.summary.rms <-
   function(object, 
-           title=if(under.unix)
-           paste('summary', attr(object, 'obj.name'), sep='.') else
-           paste("sum", substring(first.word(attr(object, "obj.name")),
-                                 1,5), sep=""),
+           title=paste('summary', attr(object, 'obj.name'), sep='.'),
            table.env=TRUE, ...)
 { 
 

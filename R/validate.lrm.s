@@ -15,7 +15,7 @@ validate.lrm <- function(fit,method="boot",
   y <- fit$y
   if(length(y)==0) stop("fit did not use x=TRUE,y=TRUE")
   if(!is.factor(y)) y <- factor(y)   ## was category 11Apr02
-  fit$y <- oldUnclass(y)-1  #mainly for Brier score (B)
+  fit$y <- unclass(y) - 1  #mainly for Brier score (B)
   
   if(missing(kint)) kint <- floor((k+1)/2)
   

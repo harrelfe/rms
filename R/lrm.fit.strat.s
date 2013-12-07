@@ -7,7 +7,7 @@ lrm.fit.strat <- function(x, y, strata, offset=0, initial,
   len.penmat <- length(penalty.matrix)
   lev    <- levels(strata)
   nstrat <- length(lev)
-  strata <- oldUnclass(strata)
+  strata <- unclass(strata)
   n <- length(y)
   
   if(!length(weights)) {
@@ -37,8 +37,8 @@ lrm.fit.strat <- function(x, y, strata, offset=0, initial,
   
   nxin <- nx
   
-  if(!is.category(y)) y <- as.category(y)
-  y <- oldUnclass(y)   # in case is.factor
+  if(!is.factor(y)) y <- as.factor(y)
+  y <- unclass(y)   # in case is.factor
   ylevels <- levels(y)
   
   if(n < 3)stop("must have >=3 non-missing observations")
@@ -226,7 +226,7 @@ lrm.fit.strat <- function(x, y, strata, offset=0, initial,
                   vcov=vcov,
                   ## info.matrix=rbind(cbind(A,B),cbind(t(B),diag(dd))))
                   info.matrix=A)
-  oldClass(retlist) <- c("lrm","lm")
+  class(retlist) <- c("lrm","lm")
   retlist
 }
 

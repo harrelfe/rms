@@ -88,8 +88,8 @@ lrm.fit <- function(x, y, offset=0, initial, est,
 
   nxin <- length(est)
   
-  if(!is.category(y)) y <- as.category(y)
-  y <- oldUnclass(y)   # in case is.factor
+  if(!is.factor(y)) y <- as.factor(y)
+  y <- unclass(y)   # in case is.factor
   ylevels <- levels(y)
 
   ofpres <- !all(offset == 0)
@@ -283,6 +283,6 @@ lrm.fit <- function(x, y, offset=0, initial, est,
                   info.matrix=info.matrix,
                   weights=if(wtpres) weights else NULL)
   
-  oldClass(retlist) <- 'lrm'
+  class(retlist) <- 'lrm'
   retlist
 }

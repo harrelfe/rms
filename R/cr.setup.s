@@ -1,8 +1,8 @@
 cr.setup <- function(y)
 {
   yname <- as.character(substitute(y))
-  if(!is.category(y)) y <- factor(y, exclude=NA)
-  y       <- oldUnclass(y)   # in case is.factor
+  if(!is.factor(y)) y <- factor(y, exclude=NA)
+  y       <- unclass(y)   # in case is.factor
   ylevels <- levels(y)
   kint    <- length(ylevels) - 1
   y       <- as.integer(y-1)

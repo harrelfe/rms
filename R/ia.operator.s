@@ -15,9 +15,9 @@
     {
       if(is.null(attr(x,"assume.code")))
         {
-          if(!is.null(oldClass(x)) && oldClass(x)[1]=="ordered")
+          if(!is.null(class(x)) && class(x)[1]=="ordered")
             x <- scored(x, name=nam)
-          else if(is.character(x) | is.category(x)) x <- catg(x, name=nam)
+          else if(is.character(x) | is.factor(x)) x <- catg(x, name=nam)
           else if(is.matrix(x)) x <- matrx(x, name=nam)
           else x <- asis(x, name=nam)
         }
@@ -87,14 +87,14 @@
   if(!is.factor(x2)) x2 <- as.matrix(x2)
   for(i in 1:l1)
     {
-      if(as1==5 | as1==8) x1i <- oldUnclass(x1)==(i+1)
+      if(as1==5 | as1==8) x1i <- unclass(x1)==(i+1)
       else x1i <- x1[,i]
       for(j in 1:l2)
         {
           ##Remove doubly nonlinear terms
           if(nl1[i] & nl2[j]) break
           k <- k + 1
-          if(as2==5 | as2==8) x2j <- oldUnclass(x2)==(j+1)
+          if(as2==5 | as2==8) x2j <- unclass(x2)==(j+1)
           else x2j <- x2[,j]
           x[,k] <- x1i * x2j
           name[k] <- paste(n1[i],"*",n2[j])

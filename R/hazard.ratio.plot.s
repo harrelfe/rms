@@ -16,7 +16,7 @@ hazard.ratio.plot <-
   else
 	{
       nam <- label(x)
-      x <- as.matrix(oldUnclass(x))
+      x <- as.matrix(unclass(x))
       if(!length(nam)) nam <- ""
     }
 

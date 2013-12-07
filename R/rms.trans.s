@@ -322,13 +322,8 @@ catg <- function(...) {
   nam <- z$name
   y <- xx[[1]]
   parms <- z$parms
-  if(is.category(y) & !is.factor(y)) {
-    oldClass(y) <- "factor"
-  }
 
-  if(is.null(parms) & is.category(y)) {
-    parms <- levels(y)
-  }
+  if(is.null(parms) & is.factor(y)) parms <- levels(y)
 
   if(is.null(parms)) {
     if(is.character(y)) {
@@ -372,7 +367,7 @@ scored <- function(...) {
   parms <- z$parms
   nam <- z$name
   x <- xx[[1]]
-  if(is.category(x)) {
+  if(is.factor(x)) {
     levx <- as.numeric(levels(x))
     if(any(is.na(levx))) stop(paste("levels for",nam,"not numeric"))
     if(is.null(parms)) parms <- levx
@@ -411,7 +406,7 @@ scored <- function(...) {
   dimnames(xd) <- list(NULL, name)
 
   x <- ordered(x)
-  oldClass(x) <- c("ordered","factor","rms")  # 17Jul01
+  class(x) <- c("ordered","factor","rms")
 
   attributes(x) <- c(attributes(x),
                      list(name=nam,label=z$label,assume="scored",assume.code=7,
@@ -428,9 +423,6 @@ strat <- function(...) {
   xx <- list(...)
   y <- xx[[1]]
   z <- des.args(xx,TRUE,cal)
-  if(is.category(y) & !is.factor(y)) {
-    oldClass(y) <- "factor"
-  }
   parms <- z$parms
   if(is.null(parms)) parms <- levels(y)
   if(is.null(parms)) {
@@ -463,7 +455,7 @@ strat <- function(...) {
   ats$dimnames <- NULL
   ats$dim <- NULL
   ats$names <- NULL
-  oldClass(x) <- NULL
+  class(x) <- NULL
   y <- x[..., drop = drop]
   attributes(y) <- c(attributes(y), ats)
   y
@@ -509,10 +501,10 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
         if(is.null(values)) {
           if(n==0) x <- limits[1:3]
           else {
-            if(n>0) x <- seq(oldUnclass(lim[1]), #handles chron
-                             oldUnclass(lim[2]),length=n)
-            else x <- pretty(oldUnclass(lim[1:2]), n=-n)
-            oldClass(x) <- oldClass(lim)
+            if(n>0) x <- seq(unclass(lim[1]), #handles chron
+                             unclass(lim[2]),length=n)
+            else x <- pretty(unclass(lim[1:2]), n=-n)
+            class(x) <- class(lim)
           }
         } else x <- values
       } else {
@@ -570,9 +562,9 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
 
   redo <- function(x,nam) {
       if(is.null(attr(x,"assume.code"))) {
-        if(!is.null(oldClass(x)) && oldClass(x)[1]=="ordered")
+        if(!is.null(class(x)) && class(x)[1]=="ordered")
           x <- scored(x, name=nam)
-        else if(is.character(x) | is.category(x))
+        else if(is.character(x) | is.factor(x))
           x <- catg(x, name=nam)
         else if(is.matrix(x)) x <- matrx(x, name=nam)
         else x <- asis(x, name=nam)
@@ -635,7 +627,7 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
   if(!is.factor(x2)) x2 <- as.matrix(x2)
 
   for(i in 1:l1) {
-    if(as1==5 | as1==8) x1i <- oldUnclass(x1)==(i+1)
+    if(as1==5 | as1==8) x1i <- unclass(x1)==(i+1)
     else x1i <- x1[,i]
     
     for(j in 1:l2) {
@@ -643,7 +635,7 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
       if(nl1[i] & nl2[j]) break
       
       k <- k + 1
-      if(as2==5 | as2==8) x2j <- oldUnclass(x2)==(j+1)
+      if(as2==5 | as2==8) x2j <- unclass(x2)==(j+1)
       else x2j <- x2[,j]
       
       x[,k] <- x1i * x2j

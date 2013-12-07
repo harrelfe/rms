@@ -14,7 +14,7 @@ Function.rms <- function(object, intercept=NULL,
   adj.to    <- Getlim(at, allow.null=TRUE, need.all=TRUE)$limits['Adjust to',]
 
 
-  chr <- function(y, digits) if(is.category(y)||is.character(y)) 
+  chr <- function(y, digits) if(is.factor(y) || is.character(y)) 
     paste('"',as.character(y),'"',sep='') else format.sep(y, digits)
 
   adj.to <- unlist(lapply(adj.to,chr,digits=digits))
@@ -269,7 +269,7 @@ Function.cph <-
 
 sascode <- function(object, file="", append=FALSE)
 {
-  chr <- function(y) if(is.category(y)||is.character(y))
+  chr <- function(y) if(is.factor(y) || is.character(y))
     paste('"',as.character(y),'"',sep='') else as.character(y)
   
   n <- names(object)[names(object)!='']

@@ -21,7 +21,7 @@ plot.xmean.ordinaly <- function(x, data, subset, na.action,
 
   dopl <- function(x, y, cr, xname, yname)
     {
-      s <- !is.na(oldUnclass(Y)+x)
+      s <- !is.na(unclass(Y)+x)
       y <- y[s]
       x <- x[s]
       n <- length(x)
@@ -52,7 +52,7 @@ plot.xmean.ordinaly <- function(x, data, subset, na.action,
           xc <- x[s]
           cohort <- u$cohort
           xcohort <- matrix(0, nrow=length(xc), ncol=length(levels(cohort))-1)
-          xcohort[col(xcohort)==oldUnclass(cohort)-1] <- 1  # generate dummies
+          xcohort[col(xcohort)==unclass(cohort)-1] <- 1  # generate dummies
           cof <- lrm.fit(cbind(xcohort, xc), yc)$coefficients
           cumprob <- rep(1, n)
           for(j in 1:k)
@@ -79,7 +79,7 @@ plot.xmean.ordinaly <- function(x, data, subset, na.action,
   for(i in 1:nx)
     {
       x <- X[[resp+i]]
-      if(is.category(x))
+      if(is.factor(x))
         {
           f <- table(x)
           ncat <- length(f)

@@ -1,6 +1,6 @@
 plot.nomogram <-
   function(x, lplabel="Linear Predictor",
-           fun.side, col.conf=c(1,if(under.unix).3 else 12),
+           fun.side, col.conf=c(1, .3),
            conf.space=c(.08,.2), 
            label.every=1, force.label=FALSE, 
            xfrac=.35, cex.axis=.85, cex.var=1,

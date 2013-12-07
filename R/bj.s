@@ -184,7 +184,7 @@ bj.fit <- function(x, y, control = NULL) {
       state[ehat == max(ehat)] <- 1
       S <- structure(cbind(ehat, state), class = "Surv", type = "right")
       KM.ehat <-
-        survfitKM(dummystrat, S, conf.type = "none", se.fit = FALSE)
+        survival:::survfitKM(dummystrat, S, conf.type = "none", se.fit = FALSE)
       n.risk <- KM.ehat$n.risk
       surv <- KM.ehat$surv
       repeats <- c(diff( - n.risk), n.risk[length(n.risk)])

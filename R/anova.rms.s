@@ -476,11 +476,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 
 latex.anova.rms <-
   function(object,
-           title=if(under.unix)
-           paste('anova',attr(object,'obj.name'),sep='.')
-            else
-           paste("ano",substring(first.word(attr(object,"obj.name")),
-                                 1,5),sep=""), 
+           title=paste('anova',attr(object,'obj.name'),sep='.'),
            psmall=TRUE,
            dec.chisq=2, dec.F=2, dec.ss=NA,
            dec.ms=NA, dec.P=4, table.env=TRUE, caption=NULL, ...) {

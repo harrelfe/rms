@@ -433,7 +433,7 @@ nomogram <-
       w <- w[s]
       fat <- fat[s]
       fat.orig <- fat
-      fat <- if(is.category(fat)) as.character(fat) else Format(fat)
+      fat <- if(is.factor(fat)) as.character(fat) else Format(fat)
       scaled <- (w - Intercept) * sc
       iset <- iset + 1
       nset <- c(nset, funlabel[i])
