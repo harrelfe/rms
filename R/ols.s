@@ -126,7 +126,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       a <- diag(sqrt(multiplier))
       penalty.matrix <- a %*% penalty.matrix %*% a
     }
-    fit <- lm.pfit(X, Y,
+    fit <- lm.pfit(X[, -1, drop=FALSE], Y,
                    penalty.matrix=penalty.matrix, tol=tol,
                    var.penalty=var.penalty)
     fit$penalty <- penalty
