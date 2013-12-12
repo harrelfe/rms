@@ -115,7 +115,6 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
   }
   else {
     p <- length(atr$colnames)
-    prn(atr$colnames)
     if(missing(penalty.matrix)) penalty.matrix <- Penalty.matrix(atr, X)
     if(nrow(penalty.matrix) != p || ncol(penalty.matrix) != p) 
       stop('penalty matrix does not have', p, 'rows and columns')
