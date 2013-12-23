@@ -16,6 +16,9 @@ survplot.survfit <-
   conf.int <- fit$conf.int
   if(!length(conf.int) | conf=="none") conf.int <- 0
 
+  opar <- par(no.readonly=TRUE); opar$new <- NULL
+  on.exit(par(opar))
+
   units <- fit$units
   if(!length(units)) units <- "Day"
   maxtime <- fit$maxtime
@@ -97,7 +100,7 @@ survplot.survfit <-
   
   if(n.risk && !add) {
     mar <- par()$mar
-    if(mar[4]<4) {mar[4] <- mar[4]+2; par(mar=mar)}
+    if(mar[4] < 4) {mar[4] <- mar[4] + 2; par(mar=mar)}
   }
   ## One curve for each value of y, excl style used for C.L.
   lty <- if(missing(lty)) seq(ns+1)[-2] else rep(lty, length=ns)
@@ -107,9 +110,7 @@ survplot.survfit <-
   if(labelc || conf=='bands') curves <- vector('list',ns)
   Tim <- Srv <- list()
   
-  oxpd <- par('xpd')
   par(xpd=NA)
-  on.exit(par(xpd=oxpd))
 
   for(i in 1:ns) {
     st <- stemp == i
@@ -250,6 +251,9 @@ survdiffplot <-
   if(missing(conf.int)) conf.int <- fit$conf.int
   if(!length(conf.int) | conf=="none") conf.int <- 0
 
+  opar <- par(no.readonly=TRUE); opar$new <- NULL
+  on.exit(par(opar))
+  
   units <- fit$units
   if(!length(units)) units <- "Day"
   maxtime <- fit$maxtime
@@ -353,7 +357,6 @@ survdiffplot <-
     }
     oxpd <- par('xpd')
     par(xpd=NA)
-    on.exit(par(xpd=oxpd))
     
     tt <- nrisktimes
     tt[1] <- xlim[1]

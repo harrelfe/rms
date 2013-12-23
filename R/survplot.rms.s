@@ -25,6 +25,9 @@ survplot.rms <-
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
   conf <- match.arg(conf)
+
+  opar <- par(no.readonly=TRUE); opar$new <- NULL
+  on.exit(par(opar))
   
   psmfit <- inherits(fit,'psm')
   if(what=="hazard" && !psmfit)
@@ -67,7 +70,6 @@ survplot.rms <-
   
   oxpd <- par('xpd')
   par(xpd=NA)
-  on.exit(par(xpd=oxpd))
   
   ## Compute confidence limits for survival based on -log survival,
   ## constraining to be in [0,1]; d = std.error of cum hazard * z value
