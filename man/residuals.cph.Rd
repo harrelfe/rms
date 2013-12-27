@@ -61,7 +61,7 @@ based on weighted residuals", unpublished manuscript, Feb 1993.
 \code{\link{cph}}, \code{\link[survival]{coxph}}, \code{\link[survival]{residuals.coxph}}, \code{\link{cox.zph}}, \code{\link{naresid}}
 }
 \examples{
-# fit <- cph(Srv(start, stop, event) ~ (age + surgery)* transplant, 
+# fit <- cph(Surv(start, stop, event) ~ (age + surgery)* transplant, 
 #            data=jasa1)
 # mresid <- resid(fit, collapse=jasa1$id)
 
@@ -83,7 +83,7 @@ death  <- ifelse(d.time <= cens,1,0)
 d.time <- pmin(d.time, cens)
 
 
-f <- cph(Srv(d.time, death) ~ age + blood.pressure + cholesterol, iter.max=0)
+f <- cph(Surv(d.time, death) ~ age + blood.pressure + cholesterol, iter.max=0)
 res <- resid(f) # This re-inserts rows for NAs, unlike f$resid
 yl <- quantile(res, c(10/length(res),1-10/length(res)), na.rm=TRUE)
 # Scale all plots from 10th smallest to 10th largest residual
@@ -98,7 +98,7 @@ mtext("Smoothed Martingale Residuals", outer=TRUE)
 
 
 # Assess PH by estimating log relative hazard over time
-f <- cph(Srv(d.time,death) ~ age + sex + blood.pressure, x=TRUE, y=TRUE)
+f <- cph(Surv(d.time,death) ~ age + sex + blood.pressure, x=TRUE, y=TRUE)
 r <- resid(f, "scaledsch")
 tt <- as.numeric(dimnames(r)[[1]])
 par(mfrow=c(3,2))

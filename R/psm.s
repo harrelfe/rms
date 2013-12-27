@@ -183,11 +183,11 @@ psm <- function(formula=formula(data),
     assign <- attrassign(X,newTerms)
     pcols <- assign[-1][pterms]
     
-    fit <- survival:::survpenal.fit(X, Y, weights, offset, init=init,
-                                    controlvals = control,
-                                    dist= dlist, scale=scale,
-                                    strata=strata, nstrat=nstrata,
-                                    pcols, pattr,assign, parms=parms)
+    fit <- survpenal.fit(X, Y, weights, offset, init=init,
+                         controlvals = control,
+                         dist= dlist, scale=scale,
+                         strata=strata, nstrat=nstrata,
+                         pcols, pattr,assign, parms=parms)
   }
   else fit <-
     survreg.fit(X, Y, weights, offset, 

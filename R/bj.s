@@ -184,7 +184,7 @@ bj.fit <- function(x, y, control = NULL) {
       state[ehat == max(ehat)] <- 1
       S <- structure(cbind(ehat, state), class = "Surv", type = "right")
       KM.ehat <-
-        survival:::survfitKM(dummystrat, S, conf.type = "none", se.fit = FALSE)
+        survfitKM(dummystrat, S, conf.type = "none", se.fit = FALSE)
       n.risk <- KM.ehat$n.risk
       surv <- KM.ehat$surv
       repeats <- c(diff( - n.risk), n.risk[length(n.risk)])
@@ -255,8 +255,8 @@ bjplot <- function(fit, which=1:dim(X)[[2]])
   m <- order(fit$y[, 1],  - fit$y[, 2])
   resd <- S[m, 1]
   cens <- S[m, 2]
-  KM.ehat <- survival:::survfitKM(dummystrat, S, 
-						conf.type = "none", se.fit = FALSE)
+  KM.ehat <- survfitKM(dummystrat, S, 
+                       conf.type = "none", se.fit = FALSE)
   repeats <- c(diff( - KM.ehat$n.risk), KM.ehat$n.risk[length(KM.ehat$n.risk)])
   if(length(KM.ehat$time) != N)
     {

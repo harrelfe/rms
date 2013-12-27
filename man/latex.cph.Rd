@@ -85,7 +85,7 @@ f.harrell@vanderbilt.edu
 \examples{
 \dontrun{
 units(ftime) <- "Day"
-f <- cph(Srv(ftime, death) ~ rcs(age)+sex, surv=TRUE, time.inc=60)
+f <- cph(Surv(ftime, death) ~ rcs(age)+sex, surv=TRUE, time.inc=60)
 w <- latex(f)  #Interprets fitted model and makes table of S0(t)
                #for t=0,60,120,180,\dots   Creates file f.tex
 w              #displays image, if viewer installed

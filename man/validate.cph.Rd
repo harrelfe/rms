@@ -15,7 +15,7 @@
   if log relative hazard is being predicted.
 }
 \usage{
-# fit <- cph(formula=Srv(ftime,event) ~ terms, x=TRUE, y=TRUE, \dots)
+# fit <- cph(formula=Surv(ftime,event) ~ terms, x=TRUE, y=TRUE, \dots)
 \method{validate}{cph}(fit, method="boot", B=40, bw=FALSE, rule="aic",
 type="residual", sls=.05, aics=0, force=NULL, estimates=TRUE,
 pr=FALSE, dxy=TRUE, u, tol=1e-9, \dots)
@@ -83,7 +83,7 @@ dxy.cens(x, y, type=c('time','hazard'))
     \code{validate.psm}.
   }
   \item{x}{a numeric vector}
-  \item{y}{a \code{Srv} or \code{Surv} object that may be uncensored or
+  \item{y}{a \code{Surv} object that may be uncensored or
 	right-censored}
 }
 \details{
@@ -140,7 +140,7 @@ dt <- -log(runif(n))/h
 e <- ifelse(dt <= cens,1,0)
 dt <- pmin(dt, cens)
 units(dt) <- "Year"
-S <- Srv(dt,e)
+S <- Surv(dt,e)
 
 f <- cph(S ~ age*sex, x=TRUE, y=TRUE)
 # Validate full model fit

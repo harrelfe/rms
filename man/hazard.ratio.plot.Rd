@@ -22,7 +22,7 @@ hazard.ratio.plot(x, Srv, which, times=, e=30, subset,
 \item{x}{
 a vector or matrix of predictors
 }
-\item{Srv}{a \code{Srv} or \code{Surv} object}
+\item{Srv}{a \code{Surv} object}
 \item{which}{
 a vector of column numbers of \code{x} for which to estimate hazard
 ratios across time and make plots.
@@ -89,7 +89,7 @@ f.harrell@vanderbilt.edu
 \seealso{
 \code{\link[survival]{cox.zph}}, \code{\link{residuals.cph}},
 \code{\link[survival]{survival-internal}}, \code{\link{cph}},
-\code{\link[survival]{coxph}}, \code{\link[survival]{Surv}}, \code{\link{Srv}}
+\code{\link[survival]{coxph}}, \code{\link[survival]{Surv}}
 }
 \examples{
 n <- 500
@@ -102,6 +102,6 @@ label(d.time) <- 'Follow-up Time'
 e <- ifelse(d.time <= cens,1,0)
 d.time <- pmin(d.time, cens)
 units(d.time) <- "Year"
-hazard.ratio.plot(age, Srv(d.time,e), e=20, legendloc='ll')
+hazard.ratio.plot(age, Surv(d.time,e), e=20, legendloc='ll')
 }
 \keyword{survival}

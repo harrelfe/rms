@@ -28,7 +28,7 @@ groupkm <- function(x, Srv, m=50, g,
   x[abs(x) < 1e-10] <- 0 #cut2 doesn't work with tiny x
   e <- Srv[,2]
   if(nrow(Srv) != length(x)) stop("lengths of x and Srv must match")
-  unit <- attr(Srv, "units")
+  unit <- units(Srv)
   if(is.null(unit) || unit=="") unit <- "Day"
   if(!missing(cuts)) q <- cut2(x, cuts)
   else
@@ -67,7 +67,7 @@ groupkm <- function(x, Srv, m=50, g,
         {
           pred[i] <- mean(x[s], na.rm=TRUE)
           dummystrat <- as.factor(rep(1, nobs))
-          f <- survival:::survfitKM(dummystrat,Srv[s,]) 
+          f <- survfitKM(dummystrat,Srv[s,]) 
           ##doesn't need conf.int since only need s.e.
           tt <- c(0, f$time)
           ss <- c(1, f$surv)

@@ -150,7 +150,7 @@ dt <- -log(runif(n))/h
 e <- ifelse(dt <= cens,1,0)
 dt <- pmin(dt, cens)
 units(dt) <- "Year"
-S <- Srv(dt,e)
+S <- Surv(dt,e)
 
 
 f <- psm(S ~ age*sex, x=TRUE, y=TRUE)  # Weibull model
