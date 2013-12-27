@@ -25,8 +25,8 @@ hazard.ratio.plot <-
   nx <- ncol(x)
   if(missing(which)) which <- 1:nx
 
-  labele <- attr(Srv, "event.label")
-  if(!length(labele)) labele <- ""
+  labele <- attr(Srv, "inputAttributes")$event$label
+  if(! length(labele)) labele <- ""
 
   isna <- is.na(matxv(x,rep(1,nx)) + y + event)
 
@@ -40,9 +40,9 @@ hazard.ratio.plot <-
   if(!missing(times))uft<-c(0,sort(times),1000000)
   else
     {
-      nblock<-max(round(sum(event)/e),2)
-      uft<-c(0,quantile(y[event==1],
-                        seq(0,1,length=nblock+1))[2:nblock], 1000000)
+      nblock <- max(round(sum(event) / e), 2)
+      uft<-c(0, quantile(y[event == 1],
+                        seq(0, 1, length=nblock + 1))[2 : nblock], 1000000)
       uft <- unique(uft)
     }
   thr <- NULL

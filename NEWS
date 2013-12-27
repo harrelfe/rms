@@ -3,6 +3,7 @@ Changes in version 4.1-1 (2014-01-01)
    * Removed use of oldUnclass, oldClass, is.category
    * Fixed class of Rq object; had failed with bootcov.  Thanks: Max Gordon
    * survplot: preserved par()
+   * Srv: removed, changed all uses to Surv() for new survival package that preserves attributes for Surv inputs
 
 Changes in version 4.1-0 (2013-12-05)
    * Fixed orm.fit to not create penalty matrix if not needed (penalties are not yet implemented anyway)

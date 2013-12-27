@@ -13,7 +13,7 @@ survfit.formula <- function(formula, data, ...)
   else model.frame(formula, data=data)
   Y <- model.extract(g, 'response')
   f$units <- valueUnit(Y)
-  f$time.label <- attr(Y, "time.label")
+  f$time.label <- attr(Y, "inputAttributes")$time$label
   f$call <- match.call()
   f
 }

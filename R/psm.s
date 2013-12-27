@@ -336,15 +336,15 @@ residuals.psm <-
   scale <- object$scale
   dist  <- object$dist
   
-  r <- (y[,-ncy,drop=FALSE]-object$linear.predictors)/scale
-  r <- cbind(r, y[,ncy])
+  r <- (y[, -ncy, drop=FALSE] - object$linear.predictors) / scale
+  label(r) <- 'Normalized Residual'
+  ev <- y[, ncy]
+  label(ev) <- aty$inputAttributes$event$label
   ## Moved the following line here from bottom
+  r <- Surv(r, ev)
   if(length(object$na.action)) r <- naresid(object$na.action, r)
   attr(r,'dist') <- dist
   attr(r,'type') <- aty$type
-  attr(r,'units') <- ' '
-  attr(r,'time.label') <- 'Normalized Residual'
-  attr(r,'event.label') <- aty$event.label
   class(r) <- c('residuals.psm.censored.normalized','Surv')
   g <- survreg.auxinfo[[dist]]$survival
   formals(g) <- list(times=NULL, lp=0, parms=0)
