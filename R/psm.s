@@ -339,7 +339,8 @@ residuals.psm <-
   r <- (y[, -ncy, drop=FALSE] - object$linear.predictors) / scale
   label(r) <- 'Normalized Residual'
   ev <- y[, ncy]
-  label(ev) <- aty$inputAttributes$event$label
+  lab <- aty$inputAttributes$event$label
+  if(length(lab)) label(ev) <- lab
   ## Moved the following line here from bottom
   r <- Surv(r, ev)
   if(length(object$na.action)) r <- naresid(object$na.action, r)
