@@ -202,7 +202,10 @@ survplot.survfit <-
                 y = c(fun(1), blower, rev(c(fun(1), bupper))),
                 col = col.fill[i], type = "s")
       }
-      else if(conf != 'diffbands') {
+      else if(conf == 'diffbands')
+        survdiffplot(fit, conf=conf)
+
+      else {
         j <- if(ns ==1) TRUE else vs == olev[i]
         tt <- v$time[j]  #may not get predictions at all t
         ss <- v$surv[j]
@@ -237,9 +240,6 @@ survplot.survfit <-
       lines(curves[[i]][[1]], curves[[i]][[2]],
             lty=lty[i], lwd=lwd[i], col=col[i], type='s')
 
-  if(conf == 'diffbands') {
-    survdiffplot(fit, conf=conf, col=col.fill)
-  }
   if(labelc) labcurve(curves, sleva, type='s', lty=lty, lwd=lwd,
                       opts=label.curves, col.=col)
   
@@ -320,7 +320,7 @@ survdiffplot <-
     hi <- surv + 0.5 * z * se
     k <- !is.na(times + lo + hi)
     polyg(c(times[k], rev(times[k])), c(lo[k], rev(hi[k])),
-           col=col[1], type='s')
+           col=gray(.9), type='s')
     return(invisible(slev))
   }
   lo <- surv - z * se
@@ -354,6 +354,7 @@ survdiffplot <-
            lines(times, lo, col=gray(.7))
            lines(times, hi, col=gray(.7))
          },
+         diffbands=NULL,
          none=NULL)
   lines(times, surv, type='s', lwd=lwd, col=col)
   abline(h=0, col=gray(.7))
