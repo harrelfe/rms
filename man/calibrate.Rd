@@ -219,7 +219,7 @@ set.seed(1)
 d.time <- rexp(200)
 x1 <- runif(200)
 x2 <- factor(sample(c('a','b','c'),200,TRUE))
-f <- cph(Srv(d.time) ~ pol(x1,2)*x2, x=TRUE, y=TRUE, surv=TRUE, time.inc=2)
+f <- cph(Surv(d.time) ~ pol(x1,2)*x2, x=TRUE, y=TRUE, surv=TRUE, time.inc=2)
 #or f <- psm(S ~ \dots)
 pa <- 'polspline' \%in\% row.names(installed.packages())
 if(pa) {

@@ -135,7 +135,7 @@ dt <- pmin(dt, cens)
 units(dt) <- "Year"
 dd <- datadist(age, sex)
 options(datadist='dd')
-Srv <- Srv(dt,e)
+Srv <- Surv(dt,e)
 
 
 f <- cph(Srv ~ age*strat(sex), x=TRUE, y=TRUE) #or surv=T

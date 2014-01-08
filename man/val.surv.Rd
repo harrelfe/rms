@@ -88,7 +88,7 @@ a data frame for which \code{val.surv} should obtain predicted survival
 probabilities.  If omitted, survival estimates are made for all of the
 subjects used in \code{fit}.
 }
-\item{S}{an \code{\link{Srv}} or \code{\link[survival]{Surv}} object}
+\item{S}{an \code{\link[survival]{Surv}} object}
 \item{est.surv}{
 a vector of estimated survival probabilities corresponding to times in
 the first column of \code{S}.
@@ -206,7 +206,7 @@ units(t) <- 'Year'
 label(t) <- 'Time to Event'
 ev <- ifelse(t <= cens, 1, 0)
 t <- pmin(t, cens)
-S <- Srv(t, ev)
+S <- Surv(t, ev)
 
 # First validate true model used to generate data
 

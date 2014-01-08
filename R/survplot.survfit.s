@@ -1,10 +1,10 @@
 survplot.survfit <-
   function(fit, xlim, 
            ylim, xlab, ylab, time.inc,
-           conf=c("bands","bars","none"), add=FALSE, 
+           conf=c("bands","bars","diffbands","none"), add=FALSE, 
            label.curves=TRUE,
            abbrev.label=FALSE, levels.only=FALSE,
-           lty,lwd=par('lwd'),
+           lty, lwd=par('lwd'),
            col=1, col.fill=gray(seq(.95, .75, length=5)),
            loglog=FALSE, fun, n.risk=FALSE, logt=FALSE,
            dots=FALSE, dotsize=.003, grid=NULL,
@@ -15,6 +15,9 @@ survplot.survfit <-
   polyg <- ordGridFun(grid=FALSE)$polygon
   conf.int <- fit$conf.int
   if(!length(conf.int) | conf=="none") conf.int <- 0
+
+  opar <- par(c('mar', 'xpd'))
+  on.exit(par(opar))
 
   units <- fit$units
   if(!length(units)) units <- "Day"
@@ -96,9 +99,10 @@ survplot.survfit <-
   yd <- ylim[2] - ylim[1]
   
   if(n.risk && !add) {
-    mar <- par()$mar
-    if(mar[4]<4) {mar[4] <- mar[4]+2; par(mar=mar)}
+    mar <- opar$mar
+    if(mar[4] < 4) {mar[4] <- mar[4] + 2; par(mar=mar)}
   }
+  
   ## One curve for each value of y, excl style used for C.L.
   lty <- if(missing(lty)) seq(ns+1)[-2] else rep(lty, length=ns)
   lwd <- rep(lwd, length=ns)
@@ -107,9 +111,7 @@ survplot.survfit <-
   if(labelc || conf=='bands') curves <- vector('list',ns)
   Tim <- Srv <- list()
   
-  oxpd <- par('xpd')
   par(xpd=NA)
-  on.exit(par(xpd=oxpd))
 
   for(i in 1:ns) {
     st <- stemp == i
@@ -120,7 +122,7 @@ survplot.survfit <-
     if(i==1 & !add) {
       plot(time, surv, xlab=xlab, xlim=xlim,
            ylab=ylab, ylim=ylim, type="n", axes=FALSE)
-      mgp.axis(1,at=if(logt)pretty(xlim) else
+      mgp.axis(1, at=if(logt) pretty(xlim) else
                seq(xlim[1], max(pretty(xlim)), time.inc),
                labels=TRUE)
       
@@ -138,9 +140,10 @@ survplot.survfit <-
                   ylim[1] + if(n.risk && missing(y.n.risk)) yi else 0,
                   by = -yi)
         if(dots)
-          for(tt in xp)symbols(rep(tt, length(yp)), yp,
-                               circles=rep(dotsize, length(yp)),
-                               inches=dotsize, add=TRUE)
+          for(tt in xp)
+            symbols(rep(tt, length(yp)), yp,
+                    circles=rep(dotsize, length(yp)),
+                    inches=dotsize, add=TRUE)
         else abline(h=yp, v=xp, col=grid, xpd=FALSE)
       }
     }
@@ -168,16 +171,18 @@ survplot.survfit <-
       }
     }
     if(logt) {
-      if(conf != 'bands')
+      if(conf %nin% c('bands', 'diffbands'))
         lines(tim, srv, type="s", lty=lty[i], col=col[i], lwd=lwd[i])
-      if(labelc || conf=='bands') curves[[i]] <- list(tim,srv)
+      if(labelc || conf %in% c('bands', 'diffbands'))
+        curves[[i]] <- list(tim,srv)
     }
 	  else {
       xxx <- c(mintime,tim)
       yyy <- c(fun(1),srv)
-      if(conf != 'bands')
+      if(conf %nin% c('bands', 'diffbands'))
         lines(xxx, yyy, type="s", lty=lty[i], col=col[i], lwd=lwd[i])
-      if(labelc || conf=='bands') curves[[i]] <- list(xxx, yyy)
+      if(labelc || conf %in% c('bands', 'diffbands'))
+        curves[[i]] <- list(xxx, yyy)
     }
     if(pr) {
       zest <- rbind(time[s],surv[s])
@@ -187,7 +192,7 @@ survplot.survfit <-
       print(zest, digits=3)
     }
     if(conf.int > 0) {
-      if(conf=="bands") {
+      if(conf=='bands') {
         if(logt)
           polyg(x = c(tim, max(tim), rev(tim)),
                 y = c(blower, rev(bupper), max(bupper)),
@@ -197,6 +202,9 @@ survplot.survfit <-
                 y = c(fun(1), blower, rev(c(fun(1), bupper))),
                 col = col.fill[i], type = "s")
       }
+      else if(conf == 'diffbands')
+        survdiffplot(fit, conf=conf)
+
       else {
         j <- if(ns ==1) TRUE else vs == olev[i]
         tt <- v$time[j]  #may not get predictions at all t
@@ -222,14 +230,16 @@ survplot.survfit <-
       text(tt[1], yy, nri[1], cex=cex.n.risk,
            adj=adj.n.risk, srt=srt.n.risk)
       text(tt[-1], yy, nri[-1], cex=cex.n.risk, adj=1)
-      if(slevp)text(xlim[2]+xd*.025,
+      if(slevp) text(xlim[2] + xd * .025,
                     yy, adj=0, sleva[i], cex=cex.n.risk)
     }
   }
   
-  if(conf=='bands') for(i in 1:ns)
-    lines(curves[[i]][[1]], curves[[i]][[2]],
-          lty=lty[i], lwd=lwd[i], col=col[i], type='s')
+  if(conf %in% c('bands', 'diffbands'))
+    for(i in 1:ns)
+      lines(curves[[i]][[1]], curves[[i]][[2]],
+            lty=lty[i], lwd=lwd[i], col=col[i], type='s')
+
   if(labelc) labcurve(curves, sleva, type='s', lty=lty, lwd=lwd,
                       opts=label.curves, col.=col)
   
@@ -240,7 +250,7 @@ survplot.survfit <-
 survdiffplot <-
   function(fit, order=1:2, xlim, ylim, xlab,
            ylab="Difference in Survival Probability", time.inc,
-           conf.int, conf=c("shaded", "bands", "none"),
+           conf.int, conf=c("shaded", "bands", "diffbands", "none"),
            add=FALSE, lty=1, lwd=par('lwd'), col=1,
            n.risk=FALSE,  grid=NULL,
            srt.n.risk=0, adj.n.risk=1,
@@ -248,8 +258,11 @@ survdiffplot <-
 
   conf <- match.arg(conf)
   if(missing(conf.int)) conf.int <- fit$conf.int
-  if(!length(conf.int) | conf=="none") conf.int <- 0
+  if(! length(conf.int) | conf == "none") conf.int <- 0
 
+  opar <- par(c('xpd', 'mar'))
+  on.exit(par(opar))
+  
   units <- fit$units
   if(!length(units)) units <- "Day"
   maxtime <- fit$maxtime
@@ -264,7 +277,7 @@ survdiffplot <-
   }
   if(n.risk && !length(fit$n.risk)) {
     n.risk <- FALSE
-    warning("fit does not have number at risk\nIs probably from a parametric model\nn.risk set to F")
+    warning("fit does not have number at risk\nIs probably from a parametric model\nn.risk set to FALSE")
     }
 
   if(missing(xlab)) xlab <- if(units==' ') 'Time' else paste(units, "s", sep="")
@@ -298,10 +311,18 @@ survdiffplot <-
   b <- h(slev[order[2]], times, f)
 
 
-  surv  <- a$surv - b$surv
+  surv  <- if(conf == 'diffbands') (a$surv + b$surv) / 2 else a$surv - b$surv
   se    <- sqrt(a$se^2 + b$se^2)
 
   z  <- qnorm((1 + conf.int) / 2)
+  if(conf == 'diffbands') {
+    lo <- surv - 0.5 * z * se
+    hi <- surv + 0.5 * z * se
+    k <- !is.na(times + lo + hi)
+    polyg(c(times[k], rev(times[k])), c(lo[k], rev(hi[k])),
+           col=gray(.9), type='s')
+    return(invisible(slev))
+  }
   lo <- surv - z * se
   hi <- surv + z * se
 
@@ -333,6 +354,7 @@ survdiffplot <-
            lines(times, lo, col=gray(.7))
            lines(times, hi, col=gray(.7))
          },
+         diffbands=NULL,
          none=NULL)
   lines(times, surv, type='s', lwd=lwd, col=col)
   abline(h=0, col=gray(.7))
@@ -348,12 +370,10 @@ survdiffplot <-
     yd         <- ylim[2] - ylim[1]
     
     if(!add) {
-      mar <- par()$mar
+      mar <- opar$mar
       if(mar[4] < 4) {mar[4] <- mar[4] + 2; par(mar=mar)}
     }
-    oxpd <- par('xpd')
     par(xpd=NA)
-    on.exit(par(xpd=oxpd))
     
     tt <- nrisktimes
     tt[1] <- xlim[1]

@@ -51,7 +51,7 @@ ie.setup <- function(failure.time, event, ie.time, break.ties=FALSE)
         stop()
       }
 
-    S <- Srv(start, end, ev)
+    S <- Surv(start, end, ev)
 
     list(S=S, ie.status=ie.status, subs=subs, reps=reps)
   }

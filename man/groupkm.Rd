@@ -22,7 +22,7 @@ groupkm(x, Srv, m=50, g, cuts, u,
 \arguments{
 \item{x}{variable to stratify}
 \item{Srv}{
-a \code{Srv} or \code{Surv} object - n x 2 matrix containing survival
+a \code{Surv} object - n x 2 matrix containing survival
 time and event/censoring 
 1/0 indicator.  Units of measurement come from the "units" attribute
 of the survival time variable.  "Day" is the default.
@@ -66,7 +66,7 @@ estimate), \code{std.err} (standard error of -log \code{KM})
 \seealso{
 \code{\link[survival]{survfit}}, \code{\link[Hmisc]{errbar}},
 \code{\link[Hmisc]{cut2}}, \code{\link[survival]{Surv}},
-\code{\link{Srv}}, \code{\link[Hmisc]{units}}
+\code{\link[Hmisc]{units}}
 }
 \examples{
 n <- 1000
@@ -79,7 +79,7 @@ label(d.time) <- 'Follow-up Time'
 e <- ifelse(d.time <= cens,1,0)
 d.time <- pmin(d.time, cens)
 units(d.time) <- "Year"
-groupkm(age, Srv(d.time, e), g=10, u=5, pl=TRUE)
+groupkm(age, Surv(d.time, e), g=10, u=5, pl=TRUE)
 #Plot 5-year K-M survival estimates and 0.95 confidence bars by 
 #decile of age.  If omit g=10, will have >= 50 obs./group.
 }

@@ -331,6 +331,7 @@ predictrms <-
                            na.action=if(expand.na) NULL else naa)
       if(conf.int) {
         if(conf.type == 'simultaneous') {
+          num.intercepts.not.in.X <- length(coeff) - ncol(X)
           u <- confint(glht(fit,
                             if(num.intercepts.not.in.X == 0L) X else Xx,
                             df=if(length(idf)) idf else 0L),
@@ -366,12 +367,12 @@ predictrms <-
       }
       X <- sweep(X, 2L, adjto) # center columns
     }
-    num.intercepts.not.in.X <- length(coeff) - ncol(X)
     j <- 0L
     for(i in (1L : length(assume))[usevar]) {
       j <- j + 1L
       if(assume[i] != 8L) { # non-strat factor; otherwise leave fitted=0
         k <- assign[[j + asso]]
+        num.intercepts.not.in.X <- length(coeff) - ncol(X)
         ko <- k - num.intercepts.not.in.X
         fitted[, j] <- matxv(X[, ko, drop=FALSE], coeff[k])
         if(se.fit) se[,j] <-

@@ -62,7 +62,6 @@ Rq                      rms Package Interface to quantreg Package
 sensuc                  Sensitivity to Unmeasured Covariables
 setPb                   Progress Bar for Simulations
 specs.rms               rms Specifications for Models
-Srv                     Front-end to 'survival' package 'Surv' function
 summary.rms             Summary of Effects in Model
 survest.cph             Cox Survival Estimates
 survest.psm             Parametric Survival Estimates

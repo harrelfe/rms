@@ -50,14 +50,13 @@ bj <- function(formula=formula(data), data,
   
   if(method=='model.matrix') return(X)
   
-  time.units <- attr(Y, "units")
-  if(is.null(time.units)) time.units <- "Day"
-  if(missing(time.inc))
-    {
-      time.inc <- switch(time.units,Day=30,Month=1,Year=1,maxtime/10)
-      if(time.inc >= maxtime | maxtime/time.inc > 25) 
-         time.inc <- max(pretty(c(0, maxtime)))/10
-    }
+  time.units <- units(Y)
+  if(is.null(time.units) || time.units=='') time.units <- "Day"
+  if(missing(time.inc))  {
+    time.inc <- switch(time.units,Day=30,Month=1,Year=1,maxtime/10)
+    if(time.inc >= maxtime | maxtime/time.inc > 25) 
+      time.inc <- max(pretty(c(0, maxtime)))/10
+  }
   rnam <- dimnames(Y)[[1]]
   dimnames(X) <- list(rnam, c("(Intercept)",atr$colnames))
   
@@ -184,7 +183,7 @@ bj.fit <- function(x, y, control = NULL) {
       state[ehat == max(ehat)] <- 1
       S <- structure(cbind(ehat, state), class = "Surv", type = "right")
       KM.ehat <-
-        survival:::survfitKM(dummystrat, S, conf.type = "none", se.fit = FALSE)
+        survfitKM(dummystrat, S, conf.type = "none", se.fit = FALSE)
       n.risk <- KM.ehat$n.risk
       surv <- KM.ehat$surv
       repeats <- c(diff( - n.risk), n.risk[length(n.risk)])
@@ -255,8 +254,8 @@ bjplot <- function(fit, which=1:dim(X)[[2]])
   m <- order(fit$y[, 1],  - fit$y[, 2])
   resd <- S[m, 1]
   cens <- S[m, 2]
-  KM.ehat <- survival:::survfitKM(dummystrat, S, 
-						conf.type = "none", se.fit = FALSE)
+  KM.ehat <- survfitKM(dummystrat, S, 
+                       conf.type = "none", se.fit = FALSE)
   repeats <- c(diff( - KM.ehat$n.risk), KM.ehat$n.risk[length(KM.ehat$n.risk)])
   if(length(KM.ehat$time) != N)
     {
@@ -389,16 +388,17 @@ residuals.bj <- function(object,
   aty <- attributes(y)
   if('y' %nin% names(object)) stop('did not use y=TRUE with fit')
   ncy <- ncol(y)
-  r <- y[,-ncy,drop=FALSE] - object$linear.predictors
-  if(type=='censored.normalized') r <- r/object$stats['sigma']
-  r <- cbind(r, y[,ncy])
-  attr(r,'type') <- aty$type
-  attr(r,'units') <- ' '
-  attr(r,'time.label') <- if(type=='censored') 
+  r <- y[, - ncy, drop=FALSE] - object$linear.predictors
+  if(type=='censored.normalized') r <- r / object$stats['sigma']
+  label(r) <- if(type=='censored') 
     'Residual' else 'Normalized Residual'
-  attr(r,'event.label') <- aty$event.label
-  class(r) <- c('residuals.bj','Surv')
-  if (!is.null(object$na.action)) naresid(object$na.action, r)
+  ev <- y[, ncy]
+  lab <- aty$inputAttributes$event$label
+  if(length(lab)) label(ev) <- lab
+  r <- Surv(r, ev)
+  attr(r,'type') <- aty$type
+  class(r) <- c('residuals.bj', 'Surv')
+  if (length(object$na.action)) naresid(object$na.action, r)
   else r
 }
 

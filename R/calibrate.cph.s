@@ -75,13 +75,13 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
 
       if(length(orig.cuts))
         {
-          pred.obs <- groupkm(cox, Srv(y[,1], y[,2]), u=u, cuts=orig.cuts)
+          pred.obs <- groupkm(cox, Surv(y[,1], y[,2]), u=u, cuts=orig.cuts)
           dist <- if(what=="observed") pred.obs[,"KM"]
           else                         pred.obs[,"KM"] - pred.obs[,"x"]
         }
       else
         {
-          pred.obs <- val.surv(fit, S=Srv(y[,1], y[,2]), u=u,
+          pred.obs <- val.surv(fit, S=Surv(y[,1], y[,2]), u=u,
                                est.surv=cox,
                                pred=pred, maxdim=maxdim)
           dist <- if(what=='observed') pred.obs$actualseq
@@ -103,10 +103,10 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
       f <- if(length(x))
         {
           if(length(strata))
-            cph(Srv(etime,e) ~ x + strat(strata), surv=TRUE, time.inc=u)
-          else cph(Srv(etime,e) ~ x, surv=TRUE, time.inc=u)
+            cph(Surv(etime,e) ~ x + strat(strata), surv=TRUE, time.inc=u)
+          else cph(Surv(etime,e) ~ x, surv=TRUE, time.inc=u)
         }
-      else cph(Srv(etime,e) ~ strat(strata), surv=TRUE, time.inc=u)
+      else cph(Surv(etime,e) ~ strat(strata), surv=TRUE, time.inc=u)
       
       ## Get predicted survival at times 0, u, 2u, 3u, ...
       attr(f$terms, "Design") <- NULL

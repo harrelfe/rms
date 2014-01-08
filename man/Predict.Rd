@@ -273,10 +273,10 @@ e <- ifelse(t<=cens,1,0)
 t <- pmin(t, cens)
 units(t) <- "Year"
 ddist <- datadist(age, sex)
-Srv <- Srv(t,e)
+Srv <- Surv(t,e)
 
 # Fit log-normal survival model and plot median survival time vs. age
-f <- psm(Srv(t, e) ~ rcs(age), dist='lognormal')
+f <- psm(Srv ~ rcs(age), dist='lognormal')
 med <- Quantile(f)       # Creates function to compute quantiles
                          # (median by default)
 Predict(f, age, fun=function(x)med(lp=x))

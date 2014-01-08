@@ -78,10 +78,10 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
   if(!model) fit$model <- NULL
   if(!x) fit$x <- NULL else fit$x <- X[, -1, drop=FALSE]
   if(!y) fit$y <- NULL
-  class(fit) <- c('rms',
+  class(fit) <- c('Rq', 'rms',
                   if (method == "lasso") "lassorq"
                   else if (method == "scad") "scadrq",
-                  "Rq", "rq")
+                  "rq")
   fit
 }
 

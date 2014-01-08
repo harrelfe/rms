@@ -39,7 +39,7 @@ cph <- function(formula=formula(data),
     ## I allow a formula with no right hand side
     ## The dummy function stops an annoying warning message "Looking for
     ##  'formula' of mode function, ignored one of mode ..."
-    if (inherits(formula,"Surv") || inherits(formula,"Srv")) {
+    if (inherits(formula,"Surv")) {
       xx <- function(x) formula(x)
       
       formula <- xx(paste(deparse(substitute(formula)), 1, sep="~"))
@@ -112,8 +112,8 @@ cph <- function(formula=formula(data),
       
     xpres <- length(asm) && any(asm != 8)
     Y <- model.extract(X, 'response')
-    if(!(inherits(Y,"Surv") || inherits(Y,"Srv")))
-      stop("response variable should be a Srv or Surv object")
+    if(! inherits(Y,"Surv"))
+      stop("response variable should be a Surv object")
     n <- nrow(Y)
     
     weights <- model.extract(X, 'weights')
@@ -138,8 +138,8 @@ cph <- function(formula=formula(data),
     Terms <- terms(formula)
     yy <- attr(terms(formula),"variables")[1]
     Y <- eval(yy, data)
-    if(!(inherits(Y,"Surv") || inherits(Y,"Srv")))
-      stop("response variable should be a Srv or Surv object")
+    if(! inherits(Y,"Surv"))
+      stop("response variable should be a Surv object")
     
     Y <- Y[!is.na(Y)]
     assign  <- NULL
@@ -176,12 +176,12 @@ cph <- function(formula=formula(data),
     fitter <-
       if( method=="breslow" || method =="efron") {
         if (ytype== 'right') coxph.fit
-        else if (ytype=='counting') survival:::agreg.fit
+        else if (ytype=='counting') agreg.fit
         else
           stop(paste("Cox model doesn't support \"", ytype,
                      "\" survival data", sep=''))
       }
-      else if (method=='exact') survival:::agexact.fit
+      else if (method=='exact') agexact.fit
       else
         stop(paste ("Unknown method", method))
     
@@ -377,9 +377,9 @@ coxphFit <- function(..., method, strata=NULL, rownames=NULL, offset=NULL,
                      init=NULL, toler.chol=1e-9, eps=.0001, iter.max=10,
                      type) {
   if( method == "breslow" || method == "efron")
-    fitter <- if (type == 'right') coxph.fit else survival:::agreg.fit
+    fitter <- if (type == 'right') coxph.fit else agreg.fit
   else if (method == 'exact')
-    fitter <- survival:::agexact.fit
+    fitter <- agexact.fit
   else stop("Unkown method ", method)
 
   res <- fitter(..., strata=strata, rownames=rownames,

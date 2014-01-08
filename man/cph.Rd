@@ -37,7 +37,7 @@ cph(formula = formula(data), data=parent.frame(),
 }
 \arguments{
   \item{formula}{
-    an S formula object with a \code{Srv} or \code{Surv} object on the
+    an S formula object with a \code{Surv} object on the
           left-hand side.  The \code{terms} can specify any S model
           formula with up to third-order interactions.  The \code{strat} 
     function may appear in the terms, as a main effect or an interacting
@@ -292,7 +292,7 @@ cph(formula = formula(data), data=parent.frame(),
 }
 \seealso{
   \code{\link[survival]{coxph}}, \code{\link[survival]{survival-internal}},
-  \code{\link[survival]{Surv}}, \code{\link{Srv}}, \code{\link{residuals.cph}},
+  \code{\link[survival]{Surv}}, \code{\link{residuals.cph}},
   \code{\link[survival]{cox.zph}}, \code{\link{survfit.cph}},
   \code{\link{survest.cph}}, \code{\link[survival]{survfit.coxph}}, 
   \code{\link{survplot}}, \code{\link{datadist}},
@@ -326,9 +326,9 @@ dt <- pmin(dt, cens)
 units(dt) <- "Year"
 dd <- datadist(age, sex)
 options(datadist='dd')
-Srv <- Srv(dt,e)
+S <- Surv(dt,e)
 
-f <- cph(Srv ~ rcs(age,4) + sex, x=TRUE, y=TRUE)
+f <- cph(S ~ rcs(age,4) + sex, x=TRUE, y=TRUE)
 cox.zph(f, "rank")             # tests of PH
 anova(f)
 plot(Predict(f, age, sex)) # plot age effect, 2 curves for 2 sexes
@@ -342,7 +342,7 @@ plot(cox.zph(f,"identity"))    #Easier approach for last few lines
 # latex(f)
 
 
-f <- cph(Srv ~ age + strat(sex), surv=TRUE)
+f <- cph(S ~ age + strat(sex), surv=TRUE)
 g <- Survival(f)   # g is a function
 g(seq(.1,1,by=.1), stratum="sex=Male", type="poly") #could use stratum=2
 med <- Quantile(f)
@@ -353,7 +353,7 @@ plot(Predict(f, age, fun=function(x) med(lp=x)))  #plot median survival
 # coxph
 # Use more stringent convergence criteria to match with coxph
 
-f <- cph(Srv ~ pol(age,2)*strat(sex), x=TRUE, eps=1e-9, iter.max=20)
+f <- cph(S ~ pol(age,2)*strat(sex), x=TRUE, eps=1e-9, iter.max=20)
 coef(f)
 se <- predict(f, se.fit=TRUE)$se.fit
 require(lattice)
@@ -371,7 +371,7 @@ comb$upper <- p$linear.predictors + z*p$se.fit
 comb
 
 age2 <- age^2
-f2 <- coxph(Srv ~ (age + age2)*strata(sex))
+f2 <- coxph(S ~ (age + age2)*strata(sex))
 coef(f2)
 se <- predict(f2, se.fit=TRUE)$se.fit
 xyplot(se ~ age | sex, main='From coxph')
@@ -385,7 +385,7 @@ comb$upper <- p$fit + z*p$se.fit
 comb
 
 
-# g <- cph(Srv(hospital.charges) ~ age, surv=TRUE)
+# g <- cph(Surv(hospital.charges) ~ age, surv=TRUE)
 # Cox model very useful for analyzing highly skewed data, censored or not
 # m <- Mean(g)
 # m(0)                           # Predicted mean charge for reference age
@@ -409,7 +409,7 @@ f <- cph(S ~ age + ie.status, x=TRUE, y=TRUE)
 
 #Get estimated survival curve for a 50-year old who has an intervening
 #non-fatal event at 5 days
-new <- data.frame(S=Srv(c(0,5), c(5,999), c(FALSE,FALSE)), age=rep(50,2),
+new <- data.frame(S=Surv(c(0,5), c(5,999), c(FALSE,FALSE)), age=rep(50,2),
                   ie.status=c(0,1))
 g <- survfit(f, new)
 plot(c(0,g$time), c(1,g$surv[,2]), type='s', 
@@ -422,7 +422,7 @@ plot(c(0,g$time), c(1,g$surv[,2]), type='s',
 
 
 #Compare with estimates when there is no intervening event
-new2 <- data.frame(S=Srv(c(0,5), c(5, 999), c(FALSE,FALSE)), age=rep(50,2),
+new2 <- data.frame(S=Surv(c(0,5), c(5, 999), c(FALSE,FALSE)), age=rep(50,2),
                    ie.status=c(0,0))
 g2 <- survfit(f, new2)
 lines(c(0,g2$time), c(1,g2$surv[,2]), type='s', lty=2)

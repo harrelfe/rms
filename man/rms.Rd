@@ -93,7 +93,7 @@ dist <- datadist(data=2)     # can omit if not using summary, plot, survplot,
                              # run datadist once, for all candidate variables
 dist <- datadist(age,race,bp,sex,height)   # alternative
 options(datadist="dist")
-f <- cph(Srv(d.time, death) ~ rcs(age,4)*strat(race) +
+f <- cph(Surv(d.time, death) ~ rcs(age,4)*strat(race) +
          bp*strat(sex)+lsp(height,60),x=TRUE,y=TRUE)
 anova(f)
 anova(f,age,height)          # Joint test of 2 vars

@@ -82,7 +82,7 @@ lwd=3, \dots)
 \arguments{
   \item{formula}{
     an S statistical model formula. Interactions up to third order are
-    supported. The left hand side must be a \code{Srv} or \code{Surv} object.
+    supported. The left hand side must be a \code{Surv} object.
   }
   \item{object}{a fit created by \code{psm}.  For \code{survplot} with
     residuals from \code{psm}, \code{object} is the result of
@@ -104,7 +104,7 @@ lwd=3, \dots)
     of \code{residuals.psm}.  For \code{print} it is the result of \code{psm}.
   }
   \item{y}{
-    set to \code{TRUE} to include the \code{Srv()} matrix
+    set to \code{TRUE} to include the \code{Surv()} matrix
   }
   \item{time.inc}{
     setting for default time spacing. Used in constructing time axis
@@ -184,7 +184,7 @@ lwd=3, \dots)
   well as what \code{rms} stores and \code{units} and \code{time.inc}.
   \code{Hazard}, \code{Survival}, and \code{Quantile} return S-functions.
   \code{residuals.psm} with \code{type="censored.normalized"} returns a
-  \code{Srv} object which has a special attribute \code{"theoretical"}
+  \code{Surv} object which has a special attribute \code{"theoretical"}
   which is used by the \code{lines} 
   routine.  This is the assumed standardized survival function as a function
   of time or transformed time.
@@ -213,7 +213,7 @@ lwd=3, \dots)
   \code{\link{residuals.survreg}}, \code{\link{survreg.object}},  
   \code{\link{survreg.distributions}},
   \code{\link{pphsm}}, \code{\link{survplot}}, \code{\link{survest}},
-  \code{\link[survival]{Surv}}, \code{\link{Srv}}, 
+  \code{\link[survival]{Surv}}, 
   \code{\link[Hmisc]{na.delete}},
   \code{\link[Hmisc]{na.detail.response}}, \code{\link{datadist}},
   \code{\link{latex.psm}}, \code{\link{GiniMd}}, \code{\link{prModFit}}
@@ -233,7 +233,7 @@ death <- ifelse(d.time <= cens,1,0)
 d.time <- pmin(d.time, cens)
 
 
-f <- psm(Srv(d.time,death) ~ sex*pol(age,2), 
+f <- psm(Surv(d.time,death) ~ sex*pol(age,2), 
          dist='lognormal')
 # Log-normal model is a bad fit for proportional hazards data
 
@@ -268,7 +268,7 @@ med(c(.25,.5), f$linear.predictors)
 
 
 # fit a model with no predictors
-f <- psm(Srv(d.time,death) ~ 1, dist="weibull")
+f <- psm(Surv(d.time,death) ~ 1, dist="weibull")
 f
 pphsm(f)          # print proportional hazards form
 g <- survest(f)
@@ -276,7 +276,7 @@ plot(g$time, g$surv, xlab='Time', type='l',
      ylab=expression(S(t)))
 
 
-f <- psm(Srv(d.time,death) ~ age, 
+f <- psm(Surv(d.time,death) ~ age, 
          dist="loglogistic", y=TRUE)
 r <- resid(f, 'cens') # note abbreviation
 survplot(survfit(r ~ 1), conf='none') 
