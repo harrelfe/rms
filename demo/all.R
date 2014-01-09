@@ -327,7 +327,7 @@ units(t) <- "Year"
 age.dec <- cut2(age, g=10, levels.mean=TRUE)
 dd <- datadist(age, sex, age.dec)
 options(datadist='dd')
-Srv <- Srv(t,e)
+Srv <- Surv(t,e)
 
 
 # Fit a model that doesn't assume anything except
@@ -492,7 +492,7 @@ validate(f, B=10)
 cal <- calibrate(f, B=10)
 plot(cal)
 
-S <- Srv(c(1,4,2,3,5,8,6,7,20,18,19,9,12,10,11,13,16,14,15,17))
+S <- Surv(c(1,4,2,3,5,8,6,7,20,18,19,9,12,10,11,13,16,14,15,17))
 survplot(survfit(S ~ x3))
 f <- psm(S ~ rcs(x1,3)+x2+x3, x=TRUE,y=TRUE)
 f

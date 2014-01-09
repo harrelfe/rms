@@ -12,7 +12,7 @@ e <- ifelse(ft<=cens,1,0)
 print(table(e))
 ft <- pmin(ft, cens)
 units(ft) <- "Year"
-Srv <- Srv(ft, e)
+Srv <- Surv(ft, e)
 dd <- datadist(age, sex)
 options(datadist="dd")
 f <- cph(Srv ~ rcs(age,4)+offset(1*(sex=="Male")), eps=1e-9)
@@ -31,7 +31,7 @@ t.uncens <- -log(runif(n))/h
 e <- ifelse(t.uncens <= cens, 1, 0)
 print(table(e))
 ft <- pmin(t.uncens, cens)
-f <- cph(Srv(ft, e) ~ age + sex, x=TRUE)
+f <- cph(Surv(ft, e) ~ age + sex, x=TRUE)
 f
 S <- var(f$x)
 
@@ -40,21 +40,21 @@ cens <- 40*runif(n)
 e <- ifelse(t.uncens <= cens, 1, 0)
 print(table(e))
 ft <- pmin(t.uncens, cens)
-g <- cph(Srv(ft, e) ~ age + sex)
+g <- cph(Surv(ft, e) ~ age + sex)
 g
 
 cens <- 5*runif(n)
 e <- ifelse(t.uncens <= cens, 1, 0)
 print(table(e))
 ft <- pmin(t.uncens, cens)
-i <- cph(Srv(ft, e) ~ age + sex)
+i <- cph(Surv(ft, e) ~ age + sex)
 i
 
 cens <- 2*runif(n)
 e <- ifelse(t.uncens <= cens, 1, 0)
 print(table(e))
 ft <- pmin(t.uncens, cens)
-j <- cph(Srv(ft, e) ~ age + sex)
+j <- cph(Surv(ft, e) ~ age + sex)
 j
 
 # Compute Kent and O'Quigley rho squared W,A tilde
