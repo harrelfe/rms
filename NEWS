@@ -5,7 +5,10 @@ Changes in version 4.1-1 (2014-01-07)
    * survplot: preserved par()
    * Srv: removed, changed all uses to Surv() for new survival package that preserves attributes for Surv inputs
    * survplot.survfit, survdiffplot: added conf='diffbands'
+<<<<<<< HEAD
    * predictrms: fixed num. intercepts calculation order
+=======
+>>>>>>> d1060d0516f009b49cea82599a92a2bc748a798b
 
 Changes in version 4.1-0 (2013-12-05)
    * Fixed orm.fit to not create penalty matrix if not needed (penalties are not yet implemented anyway)
