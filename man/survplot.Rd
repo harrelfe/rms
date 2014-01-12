@@ -56,7 +56,7 @@ survplot(fit, \dots)
          dots=FALSE,dotsize=.003, grid=NULL,
          srt.n.risk=0,sep.n.risk=.056,adj.n.risk=1,
          y.n.risk,cex.n.risk=.6, pr=FALSE, \dots)
-survdiffplot(fit, order=1:2,
+survdiffplot(fit, order=1:2, fun=function(y) y,
            xlim, ylim, xlab, ylab="Difference in Survival Probability",
            time.inc, conf.int, conf=c("shaded", "bands","diffbands","none"),
            add=FALSE, lty=1, lwd=par('lwd'), col=1,
@@ -100,9 +100,10 @@ in any stratum, stored in \code{fit$maxtime}.  If \code{logt=TRUE},
 default is \code{(1, log(maxtime))}.
 }
 \item{ylim}{
-y-axis limits.  Default is \code{c(0,1)} for survival, and \code{c(-5,1.5)} if \code{loglog=TRUE}.
-If \code{fun} or \code{loglog=TRUE} are given and \code{ylim} is not, 
-the limits will be computed from the data.  For \code{what="hazard"}, default
+y-axis limits.  Default is \code{c(0,1)} for survival, and
+\code{c(-5,1.5)} if \code{loglog=TRUE}. If \code{fun} or
+\code{loglog=TRUE} are given and \code{ylim} is not, the limits will be
+computed from the data.  For \code{what="hazard"}, default 
 limits are computed from the first hazard function plotted.
 }
 \item{xlab}{
@@ -162,9 +163,10 @@ Survival curves not overlapping the shaded area are approximately
 significantly different at the \code{1 - conf.int} level.
 }
 \item{what}{
-defaults to \code{"survival"} to plot survival estimates.  Set to \code{"hazard"} or
-an abbreviation to plot the hazard function (for \code{psm} fits only).
-Confidence intervals are not available for \code{what="hazard"}.
+defaults to \code{"survival"} to plot survival estimates.  Set to
+\code{"hazard"} or an abbreviation to plot the hazard function (for
+\code{psm} fits only). Confidence intervals are not available for
+\code{what="hazard"}. 
 }
 \item{add}{
 set to \code{TRUE} to add curves to an existing plot.
@@ -215,7 +217,7 @@ set to \code{TRUE} to plot \code{log(-log Survival)} instead of \code{Survival}
 }
 \item{fun}{
 specifies any function to translate estimates and confidence limits
-before plotting
+before plotting.
 }
 \item{logt}{
 set to \code{TRUE} to plot \code{log(t)} instead of \code{t} on the x-axis
@@ -270,7 +272,8 @@ set to \code{TRUE} to print survival curve coordinates used in the plots
   that the second group is subtracted from the first.  Specify
   \code{order=2:1} to instead subtract the first from the second.  A
   subtitle indicates what was done.
-  }
+}
+\item{fun}??
 }
 \value{
 list with components adjust (text string specifying adjustment levels)

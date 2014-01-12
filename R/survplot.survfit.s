@@ -19,6 +19,7 @@ survplot.survfit <-
   opar <- par(c('mar', 'xpd'))
   on.exit(par(opar))
 
+  fit.orig <- fit
   units <- fit$units
   if(!length(units)) units <- "Day"
   maxtime <- fit$maxtime
@@ -185,10 +186,10 @@ survplot.survfit <-
         curves[[i]] <- list(xxx, yyy)
     }
     if(pr) {
-      zest <- rbind(time[s],surv[s])
-      dimnames(zest) <- list(c("Time","Survival"),
-                             rep("",sum(s)))
-      if(slevp)cat("\nEstimates for ", slev[i],"\n\n")
+      zest <- rbind(time[s], surv[s])
+      dimnames(zest) <- list(c("Time", "Survival"),
+                             rep("", sum(s)))
+      if(slevp)cat("\nEstimates for ", slev[i], "\n\n")
       print(zest, digits=3)
     }
     if(conf.int > 0) {
@@ -203,7 +204,7 @@ survplot.survfit <-
                 col = col.fill[i], type = "s")
       }
       else if(conf == 'diffbands')
-        survdiffplot(fit, conf=conf)
+        survdiffplot(fit.orig, conf=conf, fun=fun)
 
       else {
         j <- if(ns ==1) TRUE else vs == olev[i]
@@ -248,7 +249,7 @@ survplot.survfit <-
 
 
 survdiffplot <-
-  function(fit, order=1:2, xlim, ylim, xlab,
+  function(fit, order=1:2, fun=function(y) y, xlim, ylim, xlab,
            ylab="Difference in Survival Probability", time.inc,
            conf.int, conf=c("shaded", "bands", "diffbands", "none"),
            add=FALSE, lty=1, lwd=par('lwd'), col=1,
@@ -290,7 +291,8 @@ survdiffplot <-
   polyg <- ordGridFun(grid=FALSE)$polygon
 
   times <- sort(unique(c(fit$time, seq(mintime, maxtime, by=time.inc))))
-  
+
+  ## Note: summary.survfit computes standard errors on S(t) scale
   f <- summary(fit, times=times)
   
   slev <- levels(f$strata)
@@ -311,7 +313,8 @@ survdiffplot <-
   b <- h(slev[order[2]], times, f)
 
 
-  surv  <- if(conf == 'diffbands') (a$surv + b$surv) / 2 else a$surv - b$surv
+  surv  <- if(conf == 'diffbands') (fun(a$surv) + fun(b$surv)) / 2
+   else fun(a$surv) - fun(b$surv)
   se    <- sqrt(a$se^2 + b$se^2)
 
   z  <- qnorm((1 + conf.int) / 2)
