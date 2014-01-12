@@ -273,7 +273,6 @@ set to \code{TRUE} to print survival curve coordinates used in the plots
   \code{order=2:1} to instead subtract the first from the second.  A
   subtitle indicates what was done.
 }
-\item{fun}??
 }
 \value{
 list with components adjust (text string specifying adjustment levels)
