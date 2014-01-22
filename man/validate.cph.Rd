@@ -12,7 +12,9 @@
   \code{survConcordance.fit} function.  This allows for incredibly fast
   computation of \eqn{D_{xy}}{Dxy} or the c-index even for hundreds of
   thousands of observations.  \code{dxy.cens} negates \eqn{D_{xy}}{Dxy}
-  if log relative hazard is being predicted.
+  if log relative hazard is being predicted.  If \code{y} is a
+	left-censored \code{Surv} object, times are negated and a
+	right-censored object is created, then \eqn{D_{xy}}{Dxy} is negated.
 }
 \usage{
 # fit <- cph(formula=Surv(ftime,event) ~ terms, x=TRUE, y=TRUE, \dots)

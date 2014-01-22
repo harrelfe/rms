@@ -8,6 +8,7 @@ Changes in version 4.1-1 (2014-01-22)
 <<<<<<< HEAD
    * predictrms: fixed num. intercepts calculation order
    * survplot, survdiffplot: used original standard error for survdiffplot, and fun
+   * dyx.cens: allow left-censoring
 
 Changes in version 4.1-0 (2013-12-05)
    * Fixed orm.fit to not create penalty matrix if not needed (penalties are not yet implemented anyway)

@@ -124,7 +124,15 @@ validate.cph <- function(fit, method="boot",
 
 dxy.cens <- function(x, y, type=c('time','hazard')) {
   type <- match.arg(type)
+  negate <- FALSE
   if(!is.Surv(y)) y <- Surv(y)
+   else {
+     type <- attr(y, 'type')
+     if(length(type) == 1 && type == 'left') {
+       y <- Surv(y[,1], y[,2])   # right censored
+       negate <- TRUE
+     }
+   }
   i <- is.na(x) | is.na(y)
   if(any(i)) {
     x <- x[!i]
@@ -133,9 +141,10 @@ dxy.cens <- function(x, y, type=c('time','hazard')) {
   k <- survConcordance.fit(y, x)
   cindex <- (k[1] + k[3]/2)/sum(k[1:3])
   cindex <- 1 - cindex  # survConcordance c=larger risk score, shorter T
-  se     <- k[5]/(2*sum(k[1:3]))
-  dxy    <- 2*(cindex - .5)
-  se     <- 2*se
+  se     <- k[5] / (2 * sum(k[1 : 3]))
+  dxy    <- 2 * (cindex - .5)
+  se     <- 2 * se
+  if(negate) dxy <- -dxy
   if(type == 'hazard') dxy <- -dxy
   structure(c(dxy=dxy, se=se), names=c('Dxy','se'))
 }
