@@ -1,4 +1,4 @@
-Changes in version 4.1-1 (2014-01-12)
+Changes in version 4.1-1 (2014-01-22)
    * Removed use of under.unix in anova.rms, latex.summary, plot.nomogram
    * Removed use of oldUnclass, oldClass, is.category
    * Fixed class of Rq object; had failed with bootcov.  Thanks: Max Gordon
