@@ -247,9 +247,9 @@ psm <- function(formula=formula(data),
   df <- length(fit$coef) - 1
   P  <- if(df == 0) NA else 1. - pchisq(logtest, df)
   gindex <- GiniMd(fit$linear.predictors)
-  Dxy <- if(type == 'right') dxy.cens(fit$linear.predictors, Y)
+  Dxy <- if(type %in% c('right', 'left')) dxy.cens(fit$linear.predictors, Y)
   else {
-    warning('Dxy not computed since right censoring not in effect')
+    warning('Dxy not computed since right or left censoring not in effect')
     NA
   }
   stats <- c(nnn, logtest, df, P, R2, Dxy, gindex, exp(gindex))
