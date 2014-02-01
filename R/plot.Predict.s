@@ -209,10 +209,12 @@ plot.Predict <-
       if(!missing(cex.axis)) scales$x$cex <- cex.axis
       if(length(yscale)) scales$y <- yscale
       r <- list(formula=formula, groups=gr, subset=subset, type=if(length(type))type else 'l',
-                method=if(conf.int & (!length(type) || type != 'p')) 'filled bands' else 'bars',
+                method=if(conf.int & (!length(type) || type != 'p'))
+                  'filled bands' else 'bars',
                 col.fill=col.fill,
                 xlab='', ylab=ylab, ylim=ylim,
-                panel=pan, scales=scales)
+                panel=pan, scales=scales,
+                between=list(x=.5))
       if(length(dotlist)) r <- c(r, dotlist)
       if(length(sub   )) r$sub    <- sub
     }
@@ -279,7 +281,7 @@ plot.Predict <-
                 }
               r <- Dotplot(formula, groups=groups, subset=subset,
                            xlim=ylim, xlab=ylab, ylab=xlab,
-                           sub=sub, data=x, ...)
+                           sub=sub, data=x, between=list(x=.5), ...)
               return(r)
             }
           if(bar != '') f <- paste(f, '|', bar)
@@ -372,7 +374,8 @@ plot.Predict <-
                 type=if(length(type)) type else if(xdiscrete) 'b' else 'l',
                 method=if(conf.int & (!length(type) || type!='p')) 'filled bands' else 'bars',
                 col.fill=col.fill,
-                xlab=xlab, ylab=ylab, ylim=ylim, panel=pan)
+                xlab=xlab, ylab=ylab, ylim=ylim, panel=pan,
+                between=list(x=.5))
       scales <- NULL
       if(length(xscale)) scales <- xscale
       if(length(yscale)) scales$y <- yscale
