@@ -81,7 +81,7 @@ orm.fit <- function(x=NULL, y,
   if(ynumeric) {
     mediany <- quantile(y, probs=.5, type=1L)
     yu <- sort(unique(y))
-    kmid <- which(yu == mediany) - 1L
+    kmid <- max(1, which(yu == mediany) - 1L)
   }
   # For large n, as.factor is slow
   # if(!is.factor(y)) y <- as.factor(y)
@@ -95,7 +95,7 @@ orm.fit <- function(x=NULL, y,
   }
   if(!ynumeric) {
     mediany <- quantile(y, probs=.5, type=1L)
-    kmid    <- which(1L : length(ylevels) == mediany) - 1L
+    kmid    <- max(1, which(1L : length(ylevels) == mediany) - 1L)
   }
 
   kint <- length(ylevels) - 1L
@@ -158,7 +158,7 @@ orm.fit <- function(x=NULL, y,
   ## closest to the median y
 
   i <- if(nx > 0) c(kmid, (kint + 1):p) else kmid
-  v <- tryCatch(as.matrix(solve(z$v, tol=tol)[i,i]))
+  v <- tryCatch(as.matrix(solve(z$v, tol=tol)[i, i]))
   if(inherits(v, 'try-error')) {
     cat('Singular information matrix\n')
     return(structure(list(fail=TRUE), class="orm"))
