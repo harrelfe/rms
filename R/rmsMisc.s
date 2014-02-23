@@ -1004,8 +1004,8 @@ setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
   type <- match.arg(type)
   if(!missing(label)) type <- label
   pbo <- .Options$showprogress
-  if(!length(pbo)) pbo <- 'tk'
-  if(is.logical(pbo)) {
+  if(!length(pbo)) pbo <- 'console'
+  else if(is.logical(pbo)) {
     pbo <- if(pbo) 'tk' else 'none'
   }
   if(missing(every)) {

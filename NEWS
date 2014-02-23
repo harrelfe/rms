@@ -1,3 +1,10 @@
+Changes in version 4.1-2 (2014-02-??)
+   * psm: Fixed bug to allow computation of Dxy with left censoring
+   * val.prob: Fixed recently introduced bug that made calibration intercept and slope always 0,1.  Thanks: Lars.Engerstrom@lio.se
+   * plot.Predict: added between to leave space between panels
+   * orm.fit: fixed error in kmid calculation when heavy ties at first level of y.  Thanks: Yuwei Zhu
+   * setPb: changed default to now use tktcl to show progress bars for simulations
+
 Changes in version 4.1-1 (2014-01-22)
    * Removed use of under.unix in anova.rms, latex.summary, plot.nomogram
    * Removed use of oldUnclass, oldClass, is.category
@@ -5,7 +12,6 @@ Changes in version 4.1-1 (2014-01-22)
    * survplot: preserved par()
    * Srv: removed, changed all uses to Surv() for new survival package that preserves attributes for Surv inputs
    * survplot.survfit, survdiffplot: added conf='diffbands'
-<<<<<<< HEAD
    * predictrms: fixed num. intercepts calculation order
    * survplot, survdiffplot: used original standard error for survdiffplot, and fun
    * dyx.cens: allow left-censoring
