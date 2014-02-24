@@ -104,9 +104,10 @@ predictrms <-
     class(adjto) <- "data.frame"
     if(type == "adjto.data.frame") return(adjto)
     adjto <- model.frame(Terms, adjto)
-    adjto <- if(int.pres) model.matrix(Terms.ns,adjto)[, -1, drop=FALSE]
-    
-    if(type=="adjto") {
+    adjto <- if(int.pres) model.matrix(Terms.ns, adjto)[, -1, drop=FALSE]
+    else
+      model.matrix(Terms.ns, adjto)
+    if(type == 'adjto') {
       k <- (nrpcoef + 1L) : length(coeff)
       nck <- names(coeff)[k]
       if(is.matrix(adjto))
@@ -283,6 +284,7 @@ predictrms <-
                  na.action=if(expand.na) NULL else naa)
        )
   
+
   if(type == "lp") {
     if(somex) {
       xb <- matxv(X, coeff, kint=kint) - Center
