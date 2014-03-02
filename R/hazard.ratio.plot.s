@@ -25,6 +25,7 @@ hazard.ratio.plot <-
   nx <- ncol(x)
   if(missing(which)) which <- 1:nx
 
+  ## TODO: label(Srv, type='event')
   labele <- attr(Srv, "inputAttributes")$event$label
   if(! length(labele)) labele <- ""
 

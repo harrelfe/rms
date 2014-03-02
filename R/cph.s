@@ -115,8 +115,7 @@ cph <- function(formula=formula(data),
     if(! inherits(Y, "Surv"))
       stop("response variable should be a Surv object")
     n <- nrow(Y)
-    iat <- attr(Y, 'inputAttributes')
-    
+
     weights <- model.extract(X, 'weights')
     offset <- model.offset(X)
 ##  Cox ph fitter routines expect null if no offset
@@ -141,34 +140,33 @@ cph <- function(formula=formula(data),
     Y <- eval(yy, data)
     if(! inherits(Y,"Surv"))
       stop("response variable should be a Surv object")
-    iat <- attr(Y, 'inputAttributes')
     
     Y <- Y[!is.na(Y)]
     assign  <- NULL
     xpres   <- FALSE
     nullmod <- TRUE
-    nact <- NULL
+    nact    <- NULL
   }
 
   ny <- ncol(Y)
-  time.units <- iat$time$units
   maxtime <- max(Y[,ny-1])
 
   rnam <- dimnames(Y)[[1]]
   if(xpres) dimnames(X) <- list(rnam, atr$colnames)
 
   if(method=="model.matrix") return(X)
-  
-  if(!length(time.units)) time.units <- "Day"
+
+  time.units <- units(Y)
+  if(! length(time.units) || time.units == '') time.units <- "Day"
   
   if(missing(time.inc)) {
     time.inc <- switch(time.units,
-                       Day=30,
-                       Month=1,
-                       Year=1,
-                       maxtime/10)
+                       Day   = 30,
+                       Month = 1,
+                       Year  = 1,
+                       maxtime / 10)
     
-    if(time.inc >= maxtime | maxtime / time.inc >25)
+    if(time.inc >= maxtime | maxtime / time.inc > 25)
       time.inc <- max(pretty(c(0, maxtime))) / 10
   }
 

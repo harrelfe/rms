@@ -393,8 +393,8 @@ residuals.bj <- function(object,
   label(r) <- if(type=='censored') 
     'Residual' else 'Normalized Residual'
   ev <- y[, ncy]
-  lab <- aty$inputAttributes$event$label
-  if(length(lab)) label(ev) <- lab
+  label(ev) <- label(y)
+  units(r)  <- units(y)
   r <- Surv(r, ev)
   attr(r,'type') <- aty$type
   class(r) <- c('residuals.bj', 'Surv')

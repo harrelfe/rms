@@ -40,13 +40,12 @@ psm <- function(formula=formula(data),
   
   ## Start FEH
   atY <- attributes(Y)
-  iat <- atY$inputAttributes
   
   ncy <- ncol(Y)
   maxtime <- max(Y[, - ncy])
   nnn <- c(nrow(Y), sum(Y[, ncy]))
-  time.units <- iat$time$units
-  if(!length(time.units)) time.units <- "Day"
+  time.units <- units(Y)
+  if(!length(time.units) || time.units == '') time.units <- "Day"
   if(missing(time.inc)) {
     time.inc <- switch(time.units, Day=30, Month=1, Year=1, maxtime / 10)
     if(time.inc >= maxtime | maxtime / time.inc > 25)
