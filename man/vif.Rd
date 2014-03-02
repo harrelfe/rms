@@ -32,7 +32,7 @@ Statistical Methods in Chronic Disease Epidemiology, Eds SH Moolgavkar and
 RL Prentice, pp. 140--147.  New York: Wiley; 1986.
 }
 \seealso{
-\code{\link{rmsMisc}} (for \code{\link{num.intercepts}}
+\code{\link{rmsMisc}} (for \code{\link[Hmisc]{num.intercepts}}
 }
 \examples{
 set.seed(1)

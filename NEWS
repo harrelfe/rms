@@ -1,9 +1,16 @@
-Changes in version 4.1-2 (2014-02-??)
+Changes in version 4.1-3 (2014-03-??)
+   * num.intercepts: removed (is in Hmisc)
+	 * survfit.formula, cph, psm: changed to use inputAttributes attribute of Surv objects (introduced earlier in survival package so that rms could drop its customized Surv function)
+   * Exported survfit.formula
+
+Changes in version 4.1-2 (2014-02-28)
    * psm: Fixed bug to allow computation of Dxy with left censoring
    * val.prob: Fixed recently introduced bug that made calibration intercept and slope always 0,1.  Thanks: Lars.Engerstrom@lio.se
    * plot.Predict: added between to leave space between panels
    * orm.fit: fixed error in kmid calculation when heavy ties at first level of y.  Thanks: Yuwei Zhu
    * setPb: changed default to now use tktcl to show progress bars for simulations
+   * predictrms: fixed bug with type='terms'
+   * val.surv: handle case where survival estimates=0 or 1 when using log-log transform
 
 Changes in version 4.1-1 (2014-01-22)
    * Removed use of under.unix in anova.rms, latex.summary, plot.nomogram

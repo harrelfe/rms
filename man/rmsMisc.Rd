@@ -15,7 +15,6 @@
 \alias{oos.loglik.cph}
 \alias{oos.loglik.psm}
 \alias{oos.loglik.Glm}
-\alias{num.intercepts}
 \alias{Getlim}
 \alias{Getlimi}
 \alias{related.predictors}
@@ -163,8 +162,6 @@ oos.loglik(fit, \dots)
 \method{oos.loglik}{psm}(fit, lp, y, \dots)
 \method{oos.loglik}{Glm}(fit, lp, y, \dots)
 
-num.intercepts(fit, type=c('fit', 'var', 'coef'))
-
 Getlim(at, allow.null=FALSE, need.all=TRUE)
 Getlimi(name, Limval, need.all=TRUE)
 
@@ -261,13 +258,7 @@ predictor).  For \code{AIC.rms}, \code{type} specifies the basis on
 which to return AIC.  The default is minus twice the maximized log
 likelihood plus \code{k} times the degrees of freedom counting
 intercept(s).  Specify \code{type='chisq'} to get a penalized model
-likelihood ratio chi-square instead.  For \code{num.intercepts} the
-default is to return the formal number of intercepts used when fitting
-the model.  Set \code{type='var'} to return the actual number of
-intercepts stored in the \code{var} object, or \code{type='coef'} to
-return the actual number in the fitted coefficients.  The former will be
-less than the number fitted for \code{orm} fits, and the latter for
-\code{orm} fits passed through \code{\link[Hmisc]{fit.mult.impute}}.
+likelihood ratio chi-square instead.  
 }
 \item{term.order}{
 1 for all parameters, 2 for all parameters associated with either nonlinear
@@ -340,8 +331,7 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   output is a vector to be formatted in LaTeX.}
 }
 \value{
-\code{vcov} returns a variance-covariance matrix, and \code{num.intercepts}
-returns an integer with the number of intercepts in the model.
+\code{vcov} returns a variance-covariance matrix
 \code{oos.loglik} returns a scalar -2 log likelihood value.
 \code{Getlim} returns a list with components \code{limits} and \code{values}, either
 stored in \code{fit} or retrieved from the object created by \code{datadist} and

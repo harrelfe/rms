@@ -12,8 +12,9 @@ survfit.formula <- function(formula, data, ...)
   g <- if(missing(data)) model.frame(formula)
   else model.frame(formula, data=data)
   Y <- model.extract(g, 'response')
-  f$units <- valueUnit(Y)
-  f$time.label <- attr(Y, "inputAttributes")$time$label
+  iat <- attr(Y, 'inputAttributes')
+  f$units      <- iat$time$units
+  f$time.label <- iat$time$label
   f$call <- match.call()
   f
 }

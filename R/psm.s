@@ -40,15 +40,17 @@ psm <- function(formula=formula(data),
   
   ## Start FEH
   atY <- attributes(Y)
+  iat <- atY$inputAttributes
+  
   ncy <- ncol(Y)
-  maxtime <- max(Y[,-ncy])
-  nnn <- c(nrow(Y),sum(Y[,ncy]))
-  time.units <- attr(Y,'units')
+  maxtime <- max(Y[, - ncy])
+  nnn <- c(nrow(Y), sum(Y[, ncy]))
+  time.units <- iat$time$units
   if(!length(time.units)) time.units <- "Day"
   if(missing(time.inc)) {
-    time.inc <- switch(time.units,Day=30,Month=1,Year=1,maxtime/10)
-    if(time.inc>=maxtime | maxtime/time.inc>25)
-      time.inc <- max(pretty(c(0,maxtime)))/10
+    time.inc <- switch(time.units, Day=30, Month=1, Year=1, maxtime / 10)
+    if(time.inc >= maxtime | maxtime / time.inc > 25)
+      time.inc <- max(pretty(c(0, maxtime))) / 10
   }
   ## End FEH
 
@@ -59,17 +61,17 @@ psm <- function(formula=formula(data),
   dropx <- NULL
   if (length(cluster)) {
     if (missing(robust)) robust <- TRUE
-    tempc <- untangle.specials(Terms, 'cluster', 1:10)
+    tempc <- untangle.specials(Terms, 'cluster', 1 : 10)
     ord <- attr(Terms, 'order')[tempc$terms]
-    if (any(ord>1)) stop ("Cluster can not be used in an interaction")
-    cluster <- strata(m[,tempc$vars], shortlabel=TRUE)  #allow multiples
+    if (any(ord > 1)) stop ("Cluster can not be used in an interaction")
+    cluster <- strata(m[, tempc$vars], shortlabel=TRUE)  #allow multiples
     dropx <- tempc$terms
   }
   if (length(strats)) {
     temp <- untangle.specials(Terms, 'strata', 1)
     dropx <- c(dropx, temp$terms)
     if (length(temp$vars)==1) strata.keep <- m[[temp$vars]]
-    else strata.keep <- strata(m[,temp$vars], shortlabel=TRUE)
+    else strata.keep <- strata(m[, temp$vars], shortlabel=TRUE)
     strata <- as.numeric(strata.keep)
     nstrata <- max(strata)
   }
@@ -78,14 +80,14 @@ psm <- function(formula=formula(data),
     strata <- 0
   }
   
-  if (length(dropx)) newTerms<-Terms[-dropx]
+  if (length(dropx)) newTerms <- Terms[-dropx]
   else
-    newTerms<-Terms
+    newTerms <- Terms
   X <- model.matrix(newTerms,m)
   
   ## Start FEH
   rnam <- dimnames(Y)[[1]]
-  dimnames(X) <- list(rnam, c("(Intercept)",atr$colnames))
+  dimnames(X) <- list(rnam, c("(Intercept)", atr$colnames))
   ## End FEH except for 23nov02 and later changes
   
   n <- nrow(X)

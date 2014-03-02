@@ -211,7 +211,8 @@ from http://biostat.mc.vanderbilt.edu/FHHandouts.
 \seealso{
 \code{\link{orm.fit}}, \code{\link{predict.orm}}, \code{\link[SparseM]{solve}},
 \code{\link{rms.trans}}, \code{\link{rms}}, \code{\link[MASS]{polr}},
-\code{\link{latex.orm}},  \code{\link{vcov.orm}}, \code{\link{num.intercepts}},
+\code{\link{latex.orm}},  \code{\link{vcov.orm}},
+\code{\link[Hmisc]{num.intercepts}},
 \code{\link{residuals.orm}}, \code{\link[Hmisc]{na.delete}},
 \code{\link[Hmisc]{na.detail.response}},
 \code{\link{pentrace}}, \code{\link{rmsMisc}}, \code{\link{vif}},
