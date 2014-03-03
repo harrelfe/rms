@@ -219,10 +219,11 @@ cph <- function(formula=formula(data),
     ## X and Y are there
     if(!length(cluster)) cluster <- FALSE
     
-    fit2 <- c(f, list(x=X, y=Y, method=method))
+    fit2 <- c(f, list(x=X, y=Y, weights=weights, method=method))
     if(length(stra)) fit2$strata <- Strata
     
-    r <- getS3method('residuals', 'coxph')(fit2, type='dfbeta', collapse=cluster)
+    r <- getS3method('residuals', 'coxph')(fit2, type='dfbeta',
+                                           collapse=cluster)
     f$var <- t(r) %*% r
   }
   
