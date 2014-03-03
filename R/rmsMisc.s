@@ -991,8 +991,8 @@ setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
     evo <- .Options$showevery
     if(length(evo)) every <- evo
   }
-  if(pbo=='none') return(function(i, ...){invisible()})
-  if(pbo=='tk' && usetk && require(tcltk)) {
+  if(pbo == 'none') return(function(i, ...){invisible()})
+  if(pbo == 'tk' && usetk && require(tcltk)) {
     pb <- tkProgressBar(type, 'Iteration: ', 0, n)
     upb <- function(i, n, every, pb) {
       if(i %% every == 0)
