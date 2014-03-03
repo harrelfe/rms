@@ -31,9 +31,9 @@
   the fit must have specified \code{y=TRUE}.  A \code{lines} method for these
   residuals automatically draws a curve with the assumed standardized
   survival distribution.  A \code{survplot} method runs the standardized
-  censored residuals through \code{survfit} to get Kaplan-Meier estimates,
+  censored residuals through \code{npsurv} to get Kaplan-Meier estimates,
   with optional stratification (automatically grouping a continuous
-  variable into quantiles) and then through \code{survplot.survfit} to plot
+  variable into quantiles) and then through \code{survplot.npsurv} to plot
   them.  Then \code{lines} is invoked to show the theoretical curve.  Other
   types of residuals are computed by \code{residuals} using
   \code{residuals.survreg}.
@@ -279,10 +279,10 @@ plot(g$time, g$surv, xlab='Time', type='l',
 f <- psm(Surv(d.time,death) ~ age, 
          dist="loglogistic", y=TRUE)
 r <- resid(f, 'cens') # note abbreviation
-survplot(survfit(r ~ 1), conf='none') 
+survplot(npsurv(r ~ 1), conf='none') 
                       # plot Kaplan-Meier estimate of 
                       # survival function of standardized residuals
-survplot(survfit(r ~ cut2(age, g=2)), conf='none')  
+survplot(npsurv(r ~ cut2(age, g=2)), conf='none')  
                       # both strata should be n(0,1)
 lines(r)              # add theoretical survival function
 #More simply:

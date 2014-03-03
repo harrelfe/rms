@@ -31,6 +31,8 @@ lrm.fit                 Logistic Model Fitter
 matinv                  Total and Partial Matrix Inversion using
                         Gauss-Jordan Sweep Operator
 nomogram                Draw a Nomogram Representing a Regression Fit
+npsurv                  Nonparametric Survival Estimates for Censored
+                        Data
 ols                     Linear Model Estimation Using Ordinary Least
                         Squares
 orm                     Ordinal Regression Model
@@ -66,7 +68,6 @@ summary.rms             Summary of Effects in Model
 survest.cph             Cox Survival Estimates
 survest.psm             Parametric Survival Estimates
 survfit.cph             Cox Predicted Survival
-survfit.formula         Compute a Survival Curve for Censored Data
 survplot                Plot Survival Curves and Hazard Functions
 validate                Resampling Validation of a Fitted Model's
                         Indexes of Fit

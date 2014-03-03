@@ -252,10 +252,10 @@ coef(psm(Surv(ftime, stroke) ~ rcs(age,5) + hospital, dist='lognormal'))
 
 
 r <- resid(f, 'censored.normalized')
-survplot(survfit(r ~ 1), conf='none') 
+survplot(npsurv(r ~ 1), conf='none') 
                       # plot Kaplan-Meier estimate of 
                       # survival function of standardized residuals
-survplot(survfit(r ~ cut2(age, g=2)), conf='none')  
+survplot(npsurv(r ~ cut2(age, g=2)), conf='none')  
                       # may desire both strata to be n(0,1)
 options(datadist=NULL)
 }

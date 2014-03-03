@@ -50,8 +50,8 @@ a function to transform estimates and optional confidence intervals
 \value{
 see \code{survest.cph}. If the model has no predictors, predictions are
 made with respect to varying time only, and the returned object
-is of class \code{"survfit"} so the survival curve can be plotted
-with survplot.survfit. If \code{times} is omitted, the
+is of class \code{"npsurv"} so the survival curve can be plotted
+with \code{survplot.npsurv}. If \code{times} is omitted, the
 entire survival curve or hazard from \code{t=0,\dots,fit$maxtime} is estimated, with
 increments computed to yield 200 points where \code{fit$maxtime} is the
 maximum survival time in the data used in model fitting. Otherwise,

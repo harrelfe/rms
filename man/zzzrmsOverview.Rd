@@ -248,6 +248,8 @@
     \bold{\code{psm}}         \tab Accelerated failure time parametric     \tab \code{survreg}\cr
     \tab survival model                          \tab \cr
     \bold{\code{cph}}         \tab Cox proportional hazards regression     \tab \code{coxph}\cr
+		\bold{\code{npsurv}}      \tab Nonparametric survival estimates \tab
+\code{survfit.formula} \cr
     \bold{\code{bj}}          \tab Buckley-James censored least squares    \tab \code{survreg}\cr
     \tab linear model                            \tab \cr
     \bold{\code{Glm}}        \tab Version of \code{glm} for use with rms \tab \code{glm}\cr
@@ -304,7 +306,7 @@
     \bold{\code{nomogram}}    \tab Draws a nomogram for the fitted model       \tab \code{latex, plot} \cr
     \bold{\code{survest}}     \tab Estimate survival probabilities             \tab \code{survfit} \cr
     \tab  (for \code{psm, cph}) \tab \cr
-    \bold{\code{survplot}}    \tab Plot survival curves (psm, cph)             \tab plot.survfit \cr
+    \bold{\code{survplot}}    \tab Plot survival curves (psm, cph, npsurv)             \tab plot.survfit \cr
     \bold{\code{validate}}    \tab Validate indexes of model fit using         \tab val.prob \cr
     \tab resampling \tab \cr
     \bold{\code{calibrate}}   \tab Estimate calibration curve for model \tab \cr

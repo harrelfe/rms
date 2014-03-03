@@ -372,7 +372,7 @@ survplot.residuals.psm.censored.normalized <-
     r <- fit
     
     if(missing(x)) {
-      survplot(survfit(r ~ 1), conf='none', xlab='Residual', 
+      survplot(npsurv(r ~ 1), conf='none', xlab='Residual', 
                col=if(missing(col))par('col') else col, ...)
       if(!missing(main)) title(main)
     }
@@ -381,7 +381,7 @@ survplot.residuals.psm.censored.normalized <-
     if(!is.factor(x) && length(unique(x))>5) x <- cut2(x, g=g)
     s <- is.na(r[,1]) | is.na(x)
     if(any(s)) {r <- r[!s,]; x <- x[!s,drop=TRUE]}
-    survplot(survfit(r ~ x, data=data.frame(x,r)),  xlab='Residual',
+    survplot(npsurv(r ~ x, data=data.frame(x,r)),  xlab='Residual',
              conf='none',
              col=if(missing(col))1:length(levels(x)) else par('col'), ...)
     if(missing(main)) {

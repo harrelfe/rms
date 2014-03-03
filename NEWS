@@ -1,3 +1,10 @@
+Changes in version 4.2-0 (2014-03-??)
+   * Deprecated survfit.formula so would not overlap with function in survival
+   * Added function npsurv, survplot.npsurv
+   * REMOVED survfit.formula
+   * Used new type argument to label.Surv for fitting functions
+   * cph: added weights argument to residuals.coxph (Thanks: Thomas Lumley)
+
 Changes in version 4.1-3 (2014-03-02)
    * num.intercepts: removed (is in Hmisc)
 	 * survfit.formula, cph, psm: changed to use inputAttributes attribute of Surv objects (introduced earlier in survival package so that rms could drop its customized Surv function)

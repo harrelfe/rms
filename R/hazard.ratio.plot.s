@@ -25,8 +25,7 @@ hazard.ratio.plot <-
   nx <- ncol(x)
   if(missing(which)) which <- 1:nx
 
-  ## TODO: label(Srv, type='event')
-  labele <- attr(Srv, "inputAttributes")$event$label
+  labele <- label(Srv, type='event')
   if(! length(labele)) labele <- ""
 
   isna <- is.na(matxv(x,rep(1,nx)) + y + event)
