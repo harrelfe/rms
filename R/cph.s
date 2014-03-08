@@ -223,7 +223,7 @@ cph <- function(formula=formula(data),
     if(length(stra)) fit2$strata <- Strata
     
     r <- getS3method('residuals', 'coxph')(fit2, type='dfbeta',
-                                           collapse=cluster)
+                                           collapse=cluster, weighted=TRUE)
     f$var <- t(r) %*% r
   }
   

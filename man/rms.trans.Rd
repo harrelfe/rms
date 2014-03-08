@@ -9,9 +9,7 @@
 \alias{strat}
 \alias{matrx}
 \alias{\%ia\%}
-\title{
-rms Special Transformation Functions
-}
+\title{rms Special Transformation Functions}
 \description{
 This is a series of functions (\code{asis}, \code{pol}, \code{lsp},
 \code{rcs}, \code{catg}, \code{scored}, \code{strat}, \code{matrx}, and
@@ -26,7 +24,7 @@ for each predictor are done by \code{anova.rms}).  Many of the functions
 are called implicitly.  Some S functions such as \code{ns} derive data-dependent
 transformations that are not always "remembered" when predicted values are
 later computed, so the predictions may be incorrect. The functions listed
-here solve that problem when used in the \code{rms} context.. 
+here solve that problem when used in the \code{rms} context.
 
 \code{asis} is the identity transformation, \code{pol} is an ordinary
 (non-orthogonal) polynomial, \code{rcs} is a linear tail-restricted
