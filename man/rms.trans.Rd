@@ -22,11 +22,11 @@ knots and nonlinear term indicators) that are carried through to fits
 \code{survplot}, \code{fastbw}, \code{validate}, \code{specs},
 \code{which.influence}, \code{nomogram} and \code{latex.rms} use these 
 attributes to automate certain analyses (e.g., automatic tests of linearity
-for each predictor are done by \code{anova.rms}). Many of the functions
+for each predictor are done by \code{anova.rms}).  Many of the functions
 are called implicitly.  Some S functions such as \code{ns} derive data-dependent
-transformations that are not "remembered" when predicted values are
-later computed, so the predictions will be incorrect. The functions listed
-here solve that problem. 
+transformations that are not always "remembered" when predicted values are
+later computed, so the predictions may be incorrect. The functions listed
+here solve that problem when used in the \code{rms} context.. 
 
 \code{asis} is the identity transformation, \code{pol} is an ordinary
 (non-orthogonal) polynomial, \code{rcs} is a linear tail-restricted
