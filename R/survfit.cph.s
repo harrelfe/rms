@@ -8,7 +8,7 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
   censor <- FALSE
 
   type <- object$type
-  if (!length(type)) {
+  if (! length(type)) {
     ## Use the appropriate one from the model
     w <- c("exact", "breslow", "efron")
     survtype <- match(object$method, w)
@@ -56,7 +56,7 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
   if (!missid) individual <- TRUE
   else if (missid && individual) id <- rep(0, n)
   else id <- NULL
-  if (individual && type != "counting") 
+  if (individual && attr(y, 'type') != "counting") 
     stop("The individual option is  only valid for start-stop data")
   
   ## Compute confidence limits for survival based on -log survival,

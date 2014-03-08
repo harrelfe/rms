@@ -170,9 +170,9 @@ cph <- function(formula=formula(data),
       time.inc <- max(pretty(c(0, maxtime))) / 10
   }
 
+  ytype <- attr(Y, 'type')
   if(nullmod) f <- NULL
   else {
-    ytype <- attr(Y, "type")
     fitter <-
       if( method=="breslow" || method =="efron") {
         if (ytype== 'right') coxph.fit
