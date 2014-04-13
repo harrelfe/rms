@@ -1,4 +1,4 @@
-Changes in version 4.2-0 (2014-03-??)
+Changes in version 4.2-0 (2014-04-13)
    * Deprecated survfit.formula so would not overlap with function in survival
    * Added function npsurv, survplot.npsurv
    * REMOVED survfit.formula
