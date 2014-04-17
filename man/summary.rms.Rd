@@ -43,8 +43,8 @@ usebootcoef=TRUE, boot.type=c("percentile","bca","basic"), verbose=FALSE)
     q=c(0.9, 0.95, 0.99), xlim, nbar, cex=1, nint=10,
     cex.main=1, clip=c(-1e30,1e30), main,
     col=rgb(red=.1,green=.1,blue=.8,alpha=c(.1,.4,.7)),
-    col.points=rgb(red=.1,green=.1,blue=.8,alpha=1), pch=17, lwd=3,
-\dots)
+    col.points=rgb(red=.1,green=.1,blue=.8,alpha=1), pch=17,
+    lwd=if(length(q) == 1) 3 else 2 : (length(q) + 1), \dots)
 }
 \arguments{
 \item{object}{
@@ -157,7 +157,7 @@ e.g., \code{"log Odds Ratio"}.
 \item{col}{vector of colors, one per value of \code{q}}
 \item{col.points}{color for points estimates}
 \item{pch}{symbol for point estimates.  Default is solid triangle.}
-\item{lwd}{line width for confidence intervals}
+\item{lwd}{line width for confidence intervals, corresponding to \code{q}}
 }
 \value{
 For \code{summary.rms}, a matrix of class \code{summary.rms} 

@@ -56,8 +56,8 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   if(est.all) which <- (1:length(assume))[assume!=9]
   if(nf > 0) {
     jw <- charmatch(names(factors), name, 0)
-    if(any(jw==0)) stop(paste("factor name(s) not in the design:",
-             paste(names(factors)[jw==0], collapse=" ")))
+    if(any(jw == 0)) stop(paste("factor name(s) not in the design:",
+             paste(names(factors)[jw == 0], collapse=" ")))
     if(!est.all) which <- jw
     if(any(assume[which] == 9))
       stop("cannot estimate effects for interaction terms alone")
@@ -71,7 +71,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   oldopt <- options(drop.factor.levels=FALSE)
   on.exit(options(oldopt))
 
-  lims <- Limval$limits[1:3,, drop=FALSE]
+  lims <- Limval$limits[1 : 3 , , drop=FALSE]
   
   ##Find underlying categorical variables
   ucat <- rep(FALSE, length(assume))
@@ -89,23 +89,23 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   var <- vcov(object, regcoef.only=TRUE, intercepts='none')
 
   zcrit <- if(length(idf <- object$df.residual)) qt((1 + conf.int)/2, idf)
-   else qnorm((1 + conf.int)/2)
+   else qnorm((1 + conf.int) / 2)
   cll <- paste(signif(conf.int, 3))
   bcoef <- if(usebootcoef) object$boot.Coef
-  if(length(bcoef)) bcoef <- bcoef[, nrp1:lc, drop=FALSE]
+  if(length(bcoef)) bcoef <- bcoef[, nrp1 : lc, drop=FALSE]
 
   jf <- 0
   if(nf > 0) for(i in jw) {
     jf <- jf + 1
     z <- value.chk(at, i, factors[[jf]], 0, Limval)
     lz <- length(z)
-    if(lz == 1 && !is.na(z)) lims[2,i] <-  z
+    if(lz == 1 && !is.na(z)) lims[2, i] <-  z
     if(lz == 2) {
-      if(!is.na(z[1])) lims[1,i] <- z[1]
-      if(!is.na(z[2])) lims[3,i] <- z[2]
+      if(!is.na(z[1])) lims[1, i] <- z[1]
+      if(!is.na(z[2])) lims[3, i] <- z[2]
     }
     else
-      if(lz==3) lims[!is.na(z),i] <- z[!is.na(z)]
+      if(lz == 3) lims[!is.na(z), i] <- z[!is.na(z)]
     if(lz < 1 | lz > 3) stop("must specify 1,2, or 3 values for a factor")
   }
   adj <- lims[2,, drop=FALSE]
@@ -113,7 +113,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
 
   if(any(isna))
     stop(paste("adjustment values not defined here or with datadist for",
-               paste(name[assume != 9][isna],collapse=" ")))
+               paste(name[assume != 9][isna], collapse=" ")))
   k <- which[assume[which] %nin% c(8, 5, 10) & !ucat[which]]
   m <- length(k)
   if(m) {
@@ -172,12 +172,12 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
     lab <- if(vnames=='names') name[k] else labels[k]
     if(antilog) {
       stats <- rbind(stats,
-                     cbind(stats[,1:3,drop=FALSE],
+                     cbind(stats[, 1 : 3,drop=FALSE],
                            exp(logRatioAdj * xb), NA, exp(low), exp(up), 2))
       lab <- c(lab, rep(paste("", scale[2]), m))
       w <- integer(M)
       w[odd] <- 1 : m
-      w[even]<- m + (1:m)
+      w[even]<- m + (1 : m)
       stats <- stats[w,]
       lab <- lab[w]
     }
@@ -222,11 +222,11 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
             up  <- lim[2,]
           } else {
             low <- lim[1]
-            up <- lim[2]
+            up  <- lim[2]
           }
         } else {
           low <- xb - zcrit*se
-          up <- xb + zcrit*se
+          up  <- xb + zcrit*se
         }
         stats <- rbind(stats,cbind(ki, kj, NA,
                                    xb, se, low, up, 1))
@@ -248,7 +248,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                 "Diff.", "Effect", "S.E.",
                 paste("Lower", cll), paste("Upper", cll), "Type"))
   
-  attr(stats,"heading") <-
+  attr(stats, "heading") <-
     paste("             Effects              Response : ",
           as.character(formula(object))[2], sep='')
   attr(stats,"class") <- c("summary.rms", "matrix")
@@ -265,7 +265,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                       as.character(xadj[[nm]])[1] else
                       format(xadj[[nm]][1]), " ", sep="")
   }
-  attr(stats,"adjust") <- adjust
+  attr(stats, "adjust") <- adjust
   attr(stats, "conf.type") <-
     if(length(bcoef)) blabel else 'z'
   
@@ -278,10 +278,10 @@ print.summary.rms <- function(x, ...)
   for(i in 1:3) cstats <- cbind(cstats, format(signif(x[,i], 5)))
   for(i in 4:7) cstats <- cbind(cstats, format(round(x[,i], 2)))
   dimnames(cstats) <- list(rep("", nrow(cstats)), 
-                           c("Factor", dimnames(x)[[2]][1:7]))
+                           c("Factor", dimnames(x)[[2]][1 : 7]))
   cat(attr(x,"heading"), "\n\n")
-  print(cstats,quote=FALSE)
-  if((A <- attr(x,"adjust")) != "") cat("\nAdjusted to:", A, "\n")
+  print(cstats, quote=FALSE)
+  if((A <- attr(x, "adjust")) != "") cat("\nAdjusted to:", A, "\n")
   blab <- switch(attr(x, 'conf.type'),
                  'bootstrap nonparametric percentile' = 
                   'Bootstrap nonparametric percentile confidence intervals',
@@ -332,14 +332,14 @@ plot.summary.rms <-
            cex.main=1, clip=c(-1e30, 1e30), main,
            col=rgb(red=.1, green=.1, blue=.8, alpha=c(.1,.4,.7)),
            col.points=rgb(red=.1, green=.1, blue=.8, alpha=1),
-           pch=17, lwd=3, ...)
+           pch=17, lwd=if(length(q) == 1) 3 else 2 : (length(q) + 1), ...)
 {
   confbar <-
     function(y, est, se, q, col, col.points,
-             pch=17, lwd=3, clip=c(-1e30, 1e30),
-             fun = function(x) x, 
-             qfun= function(x) ifelse(x==.5, qnorm(x),
-               ifelse(x < .5, qnorm(x/2), qnorm((1 + x) / 2)))) {
+             pch=17, lwd=rep(3, length(q)), clip=c(-1e30, 1e30),
+             fun  = function(x) x, 
+             qfun = function(x) ifelse(x==.5, qnorm(x),
+               ifelse(x < .5, qnorm(x / 2), qnorm((1 + x) / 2)))) {
 
       n <- length(q)
       q <- c(1 - rev(q), .5, q)
@@ -348,11 +348,11 @@ plot.summary.rms <-
       a <- fun(est + se * qfun(q))
       a[a < clip[1]] <- NA; a[a > clip[2]] <- NA
       m <- length(q)
-      segments(c(a[1], a[m]), y, c(a[2], a[m-1]), y, col=col[1], lwd=lwd)
-      if(n > 1) segments(c(a[2], a[m-1]), y, c(a[3],a[m-2]),
-                         col=col[2], lwd=lwd)
-      if(n > 2) segments(c(a[3], a[m-2]), y, c(a[4],a[m-3]),
-                         col=col[3], lwd=lwd)
+      segments(c(a[1], a[m]), y, c(a[2], a[m - 1]), y, col=col[1], lwd=lwd[1])
+      if(n > 1) segments(c(a[2], a[m - 1]), y, c(a[3], a[m - 2]),
+                         col=col[2], lwd=lwd[2])
+      if(n > 2) segments(c(a[3], a[m - 2]), y, c(a[4], a[m - 3]),
+                         col=col[3], lwd=lwd[3])
       names(a) <- format(q)
       invisible(a)
     }
@@ -372,7 +372,7 @@ plot.summary.rms <-
   else {
     fun <- function(x) x
     if(log) {
-      if(length(scale)==2) tlab <- scale[2]
+      if(length(scale) == 2) tlab <- scale[2]
       else tlab <- paste("exp(", scale[1], ")", sep="")
     }
     else tlab <- scale[1]
@@ -383,7 +383,7 @@ plot.summary.rms <-
   n     <- length(effect)
   out   <- qnorm((max(q) + 1) / 2)
   if(missing(xlim) && !missing(at))
-    xlim <- range(if(log)logb(at) else at) else
+    xlim <- range(if(log) logb(at) else at) else
   if(missing(xlim)) {
     xlim <- fun(range(c(effect - out * se, effect + out * se)))
     xlim[1] <- max(xlim[1], clip[1])
@@ -395,7 +395,7 @@ plot.summary.rms <-
   fmt <- function(k) {
     m <- length(k)
     f <- character(m)
-    for(i in 1:m) f[i] <- format(k[i])
+    for(i in 1 : m) f[i] <- format(k[i])
     f
   }
   lb <- ifelse(is.na(x[, 'Diff.']), lab,
@@ -411,13 +411,13 @@ plot.summary.rms <-
   if(missing(nbar)) nbar <- n
   npage <- ceiling(n/nbar)
   is <- 1
-  for(p in 1:npage) {
+  for(p in 1 : npage) {
     ie <- min(is + nbar - 1, n)
     plot(1:nbar, rep(0,nbar), xlim=xlim, ylim=c(1,nbar),
          type="n", axes=FALSE, 
          xlab="", ylab="")
     if(cex.main > 0) title(tlab, cex=cex.main)
-    lines(fun(c(0,0)), c(nbar - (ie - is), nbar), lty=2)
+    lines(fun(c(0, 0)), c(nbar - (ie - is), nbar), lty=2)
     if(log) {
       pxlim <- pretty(exp(xlim), n=nint)
       pxlim <- sort(unique(c(pxlim, augment)))
@@ -434,21 +434,21 @@ plot.summary.rms <-
       if(!missing(at)) pxlim <- at
       axis(3, pxlim)
     }
-    imax <- (is:ie)[outer.widths[is:ie]==max(outer.widths[is:ie])][1]
-    for(i in is:ie) {
+    imax <- (is : ie)[outer.widths[is : ie] == max(outer.widths[is : ie])][1]
+    for(i in is : ie) {
       confbar(nbar - (i - is + 1) + 1, effect[i], se[i], q=q,
               col=col, col.points=col.points,
-              fun=fun, clip=clip)
+              fun=fun, clip=clip, lwd=lwd)
       mtext(lb[i], 2, 0, at=nbar - (i - is + 1) + 1, cex=cex,
             adj=1, las=1)
     }
     if(adjust != "") {
       adjto <- paste("Adjusted to:", adjust, sep="")
       xx <- par('usr')[2]
-      if(nbar > ie) text(xx, nbar-(ie-is+1), adjto, adj=1, cex=cex)
+      if(nbar > ie) text(xx, nbar - (ie - is + 1), adjto, adj=1, cex=cex)
       else title(sub=adjto, adj=1, cex=cex)
     }
-    is <- ie+1
+    is <- ie + 1
   }
   invisible()
 }
