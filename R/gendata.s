@@ -40,7 +40,19 @@ gendata <- function(fit, ..., nobs, viewvals=FALSE, expand=TRUE, factors)
     settings <- if(nf<length(nam)) predictrms(fit, type="adjto.data.frame")
      else list()
     settings <- unclass(settings)
-    if(nf>0) for(i in 1:nf) settings[[fnam[i]]] <- factors[[i]]
-    if(nf==0) return(as.data.frame(settings))
+    if(nf > 0) for(i in 1 : nf) settings[[fnam[i]]] <- factors[[i]]
+    attr(settings, 'row.names') <- NULL
+    ## Starting in R 3.1.0, as.data.frame.labelled or as.data.frame.list
+    ## quit working when length vary
+    nmax <- max(sapply(settings, length))
+    for(i in 1 : length(settings)) {
+      si <- settings[[i]]
+      if(inherits(si, 'labelled') && length(si) < n) {
+        si <- rep(si, length=n)
+        settings[[i]] <- si
+      }
+    }
+        
+    if(nf == 0) return(as.data.frame(settings))
     if(expand) expand.grid(settings) else as.data.frame(settings)
   }
