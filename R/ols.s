@@ -14,7 +14,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
   m$drop.unused.levels <- TRUE
   m[[1]] <- as.name("model.frame")
   ##X's present) 
-  if(length(attr(terms(formula),"term.labels"))) {
+  if(length(attr(terms(formula), "term.labels"))) {
     ## R's model.frame.default gives wrong model frame if [.factor
     ## removes unused factor levels
     dul <- .Options$drop.unused.levels
@@ -22,18 +22,20 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       on.exit(options(drop.unused.levels=dul))
       options(drop.unused.levels=FALSE)
     }
-    
-    X <- Design(eval.parent(m))
+
+    X      <- eval.parent(m)
+    offset <- model.offset(X)
+    X      <- Design(X)
     options(drop.unused.levels=dul)
-    atrx <- attributes(X)
-    atr <- atrx$Design
-    nact <- atrx$na.action
+    atrx  <- attributes(X)
+    atr   <- atrx$Design
+    nact  <- atrx$na.action
     Terms <- atrx$terms
     assig <- DesignAssign(atr, 1, Terms)
     
     penpres <- FALSE
-    if(!missing(penalty) && any(unlist(penalty) != 0)) penpres <- TRUE
-    if(!missing(penalty.matrix) && any(penalty.matrix != 0)) penpres <- TRUE
+    if(! missing(penalty)        && any(unlist(penalty) != 0)) penpres <- TRUE
+    if(! missing(penalty.matrix) && any(penalty.matrix  != 0)) penpres <- TRUE
     
     if(penpres && missing(var.penalty))
       warning('default for var.penalty has changed to "simple"')
@@ -60,20 +62,20 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     if(length(weights))
       stop('weights not implemented when no covariables are present')
     assig <- NULL
-    yy <- attr(terms(formula),"variables")[1]
-    Y <- eval(yy,sys.parent(2))
+    yy <- attr(terms(formula), "variables")[1]
+    Y <- eval(yy, sys.parent(2))
     nmiss <- sum(is.na(Y))
     if(nmiss==0) nmiss <- NULL else names(nmiss) <- as.character(yy)
-    Y <- Y[!is.na(Y)]
+    Y <- Y[! is.na(Y)]
     yest <- mean(Y)
     coef <- yest
     n <- length(Y)
-    if(!length(sigma)) sigma <- sqrt(sum((Y-yest)^2)/(n-1))
-    cov <- matrix(sigma*sigma/n, nrow=1, ncol=1,
+    if(! length(sigma)) sigma <- sqrt(sum((Y - yest) ^ 2) / (n - 1))
+    cov <- matrix(sigma * sigma / n, nrow=1, ncol=1,
                   dimnames=list("Intercept","Intercept"))
     fit <- list(coefficients=coef, var=cov,
                 non.slopes=1, fail=FALSE, residuals=Y-yest,
-                df.residual=n-1, intercept=TRUE)
+                df.residual=n - 1, intercept=TRUE)
     if(linear.predictors) {
       fit$linear.predictors <- rep(yest,n); 
       names(fit$linear.predictors) <- names(Y)
@@ -88,11 +90,11 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
   
   if(!penpres) {
     fit <- if(length(weights))
-      lm.wfit(X, Y, weights, method=method,  ...)
+      lm.wfit(X, Y, weights, method=method, offset=offset, ...)
     else 
-      lm.fit(X, Y, method=method, ...)
+      lm.fit (X, Y,          method=method, offset=offset, ...)
     cov.unscaled <- chol2inv(fit$qr$qr)
-    r <- fit$residuals
+    r    <- fit$residuals
     yhat <- Y - r
     if(length(weights)) { ## see summary.lm
       sse <- sum(weights * r^2)
@@ -102,15 +104,15 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       if(!length(sigma)) sigma <- sqrt(sse/fit$df.residual)
     }
     else {
-      sse <- sum(fit$residuals^2)
-      if(!length(sigma)) sigma <- sqrt(sse/fit$df.residual)
-      r2 <- 1-sse/sum((Y-mean(Y))^2)
+      sse <- sum(fit$residuals ^ 2)
+      if(!length(sigma)) sigma <- sqrt(sse / fit$df.residual)
+      r2 <- 1 - sse/sum((Y - mean(Y)) ^ 2)
     }
-    fit$var <- sigma*sigma*cov.unscaled
+    fit$var <- sigma * sigma * cov.unscaled
     cnam <- dimnames(X)[[2]]
     dimnames(fit$var) <- list(cnam, cnam)
-    fit$stats <- c(n=n,'Model L.R.'=-n*logb(1-r2),
-                   'd.f.'=length(fit$coef)-1, R2=r2, g=GiniMd(yhat),
+    fit$stats <- c(n=n,'Model L.R.'= - n * logb(1. - r2),
+                   'd.f.'=length(fit$coef) - 1, R2=r2, g=GiniMd(yhat),
                    Sigma=sigma)
   }
   else {
@@ -126,7 +128,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       a <- diag(sqrt(multiplier))
       penalty.matrix <- a %*% penalty.matrix %*% a
     }
-    fit <- lm.pfit(X[, -1, drop=FALSE], Y,
+    fit <- lm.pfit(X[, -1, drop=FALSE], Y, offset=offset,
                    penalty.matrix=penalty.matrix, tol=tol,
                    var.penalty=var.penalty)
     fit$penalty <- penalty
@@ -134,12 +136,13 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
   
   if(model) fit$model <- m
   if(linear.predictors) {
-    fit$linear.predictors <- Y-fit$residuals
+    fit$linear.predictors <- Y - fit$residuals
+    if(length(offset)) fit$linear.predictors <- fit$linear.predictors + offset
     names(fit$linear.predictors) <- names(Y)
   }
   if(y) fit$y <- Y
   if(se.fit) {
-    se <- drop((((X %*% fit$var) * X) %*% rep(1, ncol(X)))^0.5)
+    se <- drop((((X %*% fit$var) * X) %*% rep(1, ncol(X))) ^ 0.5)
     names(se) <- names(Y)
     fit$se.fit <- se
   }
@@ -148,14 +151,16 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
                      non.slopes=1, na.action=nact,
                      scale.pred=scale, fail=FALSE))
   fit$assign <- assig
-  class(fit) <- c("ols","rms","lm")
+  class(fit) <- c("ols", "rms", "lm")
   fit
 }
 
 
-lm.pfit <- function(X, Y, penalty.matrix, tol=1e-7, regcoef.only=FALSE,
+lm.pfit <- function(X, Y, offset=NULL, penalty.matrix, tol=1e-7,
+                    regcoef.only=FALSE,
                     var.penalty=c('simple', 'sandwich'))
 {
+  if(length(offset)) Y <- Y - offset
   var.penalty <- match.arg(var.penalty)
   X <- cbind(Intercept=1, X)
   p <- ncol(X) - 1
@@ -167,10 +172,10 @@ lm.pfit <- function(X, Y, penalty.matrix, tol=1e-7, regcoef.only=FALSE,
   if(regcoef.only) return(list(coefficients=coef))
   yhat <- drop(X %*% coef)
   res  <- Y - yhat
-  n <- length(Y)
-  sse <- sum(res^2)
-  s2 <- drop( (sse + t(coef) %*% pm %*% coef) / n )
-  var <- if(var.penalty=='simple') s2 * Z else s2 * Z %*% xpx %*% Z
+  n    <- length(Y)
+  sse  <- sum(res^2)
+  s2   <- drop( (sse + t(coef) %*% pm %*% coef) / n )
+  var  <- if(var.penalty=='simple') s2 * Z else s2 * Z %*% xpx %*% Z
   cnam <- dimnames(X)[[2]]
   dimnames(var) <- list(cnam, cnam)
   sst <- (n - 1) * var(Y)

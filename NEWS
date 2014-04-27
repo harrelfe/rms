@@ -1,5 +1,7 @@
 Changes in version 4.2-1 (2014-05-??)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly
+   * gendata: Starting in R 3.1.0, as.data.frame.labelled or as.data.frame.list quit working when length vary; workaround
+   * predictrms, ols: handle offset in formula.  Thanks: Max Gordon
 
 Changes in version 4.2-0 (2014-04-13)
    * Deprecated survfit.formula so would not overlap with function in survival
