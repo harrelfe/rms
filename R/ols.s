@@ -8,7 +8,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
   m <- match.call(expand.dots = FALSE)
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
+  mc <- match(c("formula", "data", "subset", "weights", "na.action", "offset"), 
               names(m), 0)
   m <- m[c(1, mc)]
   m$na.action <- na.action
@@ -26,6 +26,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
 
     X      <- eval.parent(m)
     if (missing(offset)) offset <- model.offset(X)
+    else offset <- X[,"(offset)"]
     X      <- Design(X)
     options(drop.unused.levels=dul)
     atrx  <- attributes(X)

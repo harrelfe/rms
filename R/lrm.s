@@ -8,7 +8,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
   m <- match.call(expand.dots=FALSE)
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
+  mc <- match(c("formula", "data", "subset", "weights", "na.action", "offset"), 
              names(m), 0)
   m <- m[c(1, mc)]
   m$na.action <- na.action
@@ -40,6 +40,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
 
     Y <- model.extract(X, 'response')
     if (missing(offset)) offset <- model.offset(X)
+    else offset <- X[,"(offset)"]
     if(!length(offset)) offset <- 0
     weights <- wt <- model.extract(X, 'weights')
     if(length(weights))

@@ -67,10 +67,20 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   response.pres <- attr(Terms, 'response') > 0
   
   offs <- attr(Terms, "offset")
-  if(!length(offs)) offs <- 0
+  if(is.null(offs)){
+    # stats::model.frame generates a (offset) variable
+    # if the model was specified with a offset parameter
+    # and no offset in the formula
+    if ("(offset)" %in% names(mf) &&
+          !"(offset)" %in% attr(Terms, "term.labels")){
+      offs <- which("(offset)" == names(mf))
+    }else{
+      offs <- 0
+    }
+  } 
   if(offs>0 & !allow.offset)
-	stop("offset variable not allowed in formula")
-
+    stop("offset variable not allowed in formula")
+  
 
   factors <- attr(Terms, "factors")
   if(length(factors) && response.pres) factors <- factors[-1,,drop=FALSE]
@@ -191,7 +201,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
 
     ## S-Plus, if only offset in model, has factors as 2 rows 0 cols
     if(nrf || length(fname.incl.dup))
-      if((nrf-(offs > 0)) != length(fname.incl.dup))
+      if((nrf-length(attr(Terms, "offset"))) != length(fname.incl.dup))
         stop("program logic error 1")
     if(length(factors)) for(i in 1:ncol(factors)) {
       f <- factors[,i]
