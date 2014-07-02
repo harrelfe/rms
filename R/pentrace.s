@@ -1,10 +1,10 @@
-pentrace <- function(fit, penalty, penalty.matrix,
-					 method=c('grid','optimize'),
-					 which=c('aic.c','aic','bic'), target.df=NULL,
-					 fitter, pr=FALSE,
-                     tol=1e-7, keep.coef=FALSE, complex.more=TRUE,
-                     verbose=FALSE,
-                     maxit=12, subset)
+pentrace <-
+  function(fit, penalty, penalty.matrix,
+					 method=c('grid', 'optimize'),
+					 which=c('aic.c', 'aic', 'bic'), target.df=NULL,
+           fitter, pr=FALSE,
+           tol=1e-7, keep.coef=FALSE, complex.more=TRUE,
+           verbose=FALSE, maxit=12, subset, noaddzero=FALSE)
 {
   ## Need to check Strata for cph
 
@@ -13,14 +13,14 @@ pentrace <- function(fit, penalty, penalty.matrix,
   tdf    <- length(target.df)
   if(tdf) method <- 'optimize'
   
-  if(!length(X <- fit$x) | !length(Y <- as.matrix(fit$y)))
-    stop("you did not specify x=T and y=T in the fit")
+  if(! length(X <- fit$x) || ! length(Y <- as.matrix(fit$y)))
+    stop("you did not specify x=TRUE and y=TRUE in the fit")
   fit$x <- fit$y <- NULL
   
-  if(length(pn <- fit$penalty)>0 && max(unlist(pn))!=0) 
-    warning('you should not have specified penalty= in fit so that unpenalized model can be a candidate for the best model')
+##  if(length(pn <- fit$penalty) > 0 && max(unlist(pn)) != 0) 
+##    warning('you did not specify penalty= in fit so that unpenalized model can be a candidate for the best model')
 
-  sc.pres <- match("parms",names(fit),0) > 0
+  sc.pres <- match("parms", names(fit), 0) > 0
 
   fixed <- NULL
   dist  <- fit$dist
@@ -85,7 +85,7 @@ pentrace <- function(fit, penalty, penalty.matrix,
     np <- nrow(penalty)
   }
   else {
-    if(method=='grid') penalty <- c(0, penalty[penalty>0])
+    if(method == 'grid' && ! noaddzero) penalty <- c(0, penalty[penalty > 0])
     np <- length(penalty)
   }
   
@@ -171,7 +171,7 @@ pentrace <- function(fit, penalty, penalty.matrix,
   df <- aic <- bic <- aic.c <-
     if(islist) double(length(penalty[[1]])) else double(length(penalty))
   
-  for(i in 1:np) {
+  for(i in 1 : np) {
     if(islist) {
       pen     <- penalty[i,]
       penfact <- Penalty.setup(atr, pen)$multiplier
@@ -186,7 +186,7 @@ pentrace <- function(fit, penalty, penalty.matrix,
     
     if(unpenalized) f <- fit
     else { 
-      if(length(penfact)==1 || !islist) pm <- penfact*penalty.matrix
+      if(length(penfact) == 1 || !islist) pm <- penfact * penalty.matrix
       else {
         a <- diag(sqrt(penfact))
         pm <- a %*% penalty.matrix %*% a
@@ -217,16 +217,16 @@ pentrace <- function(fit, penalty, penalty.matrix,
         else
           solvet(f.nopenalty$var, tol=tol) # -> vcov
       dag <- diag(info.matrix.unpenalized %*% v)
-      df[i] <- if(ns==0)sum(dag) else sum(dag[-(1:ns)])
+      df[i] <- if(ns == 0)sum(dag) else sum(dag[- (1 : ns)])
       lr <- f.nopenalty$stats["Model L.R."]
       if(verbose) {
         cat('non slopes',ns,'\neffective.df.diagonal:\n')
         print(dag)
       }
     }
-    aic[i]   <- lr - 2*df[i]
-    bic[i]   <- lr - df[i]*logb(n)
-    aic.c[i] <- lr - 2*df[i]*(1 + (df[i]+1)/(n-df[i]-1))
+    aic[i]   <- lr - 2 * df[i]
+    bic[i]   <- lr - df[i] * logb(n)
+    aic.c[i] <- lr - 2 * df[i] * (1 + (df[i] + 1) / (n - df[i] - 1))
     obj <- switch(which, aic.c=aic.c[i], aic=aic[i], bic=bic[i])
     
     if(obj > obj.best) {
@@ -234,11 +234,13 @@ pentrace <- function(fit, penalty, penalty.matrix,
       df.best <- df[i]
       obj.best <- obj
       f.best <- f
-      var.adj.best <- if(unpenalized || isols) f$var else v %*% info.matrix.unpenalized %*% v
+      var.adj.best <- if(unpenalized || isols) f$var
+      else
+        v %*% info.matrix.unpenalized %*% v
       diag.best <- dag
     }
     if(pr) {
-      d <- if(islist)as.data.frame(pen, row.names='') else
+      d <- if(islist) as.data.frame(pen, row.names='') else
       data.frame(penalty=pen, row.names='')
       d$df <- df[i]
       d$aic <- aic[i]
@@ -250,9 +252,9 @@ pentrace <- function(fit, penalty, penalty.matrix,
   mat <- if(islist) as.data.frame(penalty)
   else
     data.frame(penalty=penalty)
-  mat$df <- df
-  mat$aic <- aic
-  mat$bic <- bic
+  mat$df    <- df
+  mat$aic   <- aic
+  mat$bic   <- bic
   mat$aic.c <- aic.c
   
   structure(list(penalty=pen.best, df=df.best, objective=obj.best, 
@@ -260,8 +262,8 @@ pentrace <- function(fit, penalty, penalty.matrix,
                  results.all=mat, Coefficients=Coef), class="pentrace")
 }
 
-plot.pentrace <- function(x, method=c('points','image'),
-						  which=c('effective.df','aic','aic.c','bic'), 
+plot.pentrace <- function(x, method=c('points', 'image'),
+						  which=c('effective.df', 'aic', 'aic.c', 'bic'), 
 						  pch=2, add=FALSE, ylim, ...)
 {
   method <- match.arg(method)
@@ -284,14 +286,14 @@ plot.pentrace <- function(x, method=c('points','image'),
     }
     
     if(!add) plot(penalty, aic, 
-                  ylim=if(missing(ylim))range(c(aic,bic)) else ylim,
+                  ylim=if(missing(ylim)) range(c(aic, bic)) else ylim,
                   xlab="Penalty",
                   ylab=expression(paste("Information Criterion (", chi^2,
                       " scale)")),
                   type=if('aic' %in% which)"l" else "n", lty=1, ...)
     else
       if('aic' %in% which) lines(penalty, aic,   lty=2, ...)
-    if('bic' %in% which)   lines(penalty, bic,   lty=3, ...)
+    if('bic'   %in% which) lines(penalty, bic,   lty=3, ...)
     if('aic.c' %in% which) lines(penalty, aic.c, lty=1, ...)
     if(!add && length(setdiff(which, 'effective.df')) > 1)
       title(sub=paste(if('aic.c' %in% which) "Solid: AIC_c",
@@ -303,7 +305,7 @@ plot.pentrace <- function(x, method=c('points','image'),
   }
   
   ## At least two penalty factors
-  if(add) stop('add=T not implemented for >=2 penalty factors')
+  if(add) stop('add=TRUE not implemented for >=2 penalty factors')
   
   X1 <- x[[1]]
   X2 <- x[[2]]
