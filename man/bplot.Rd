@@ -47,15 +47,15 @@ perimeter(x, y, xinc=diff(range(x))/10, n=10, lowess.=TRUE)
 	perspective plot or \code{contourplot} for a contour plot.
 	}
 \item{xlab}{
-  Label for \eqn{x}-axis. Default is given by \code{Predict}.
+  Character string label for \eqn{x}-axis. Default is given by \code{Predict}.
 }
 \item{ylab}{
-  Label for \eqn{y}-axis
+  Character string abel for \eqn{y}-axis
 }
 \item{zlab}{
-  \eqn{z}-axis label for perspective (wireframe) plots.
-       Default comes from \code{Predict}.  \code{zlab} will often be
-       specified if \code{fun} was specified to \code{Predict}.
+  Character string \eqn{z}-axis label for perspective (wireframe) plots.
+  Default comes from \code{Predict}.  \code{zlab} will often be
+  specified if \code{fun} was specified to \code{Predict}.
   }
 \item{adj.subtitle}{
 Set to \code{FALSE} to suppress subtitling the graph with the list of
