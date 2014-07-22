@@ -166,7 +166,7 @@ plot.Predict <-
         { # continuous x
           yy <- y
           if(length(perim)) {
-            j <- perim(x, lev)
+            j <- perim(x, NULL)
             yy[j] <- NA
             if(length(attr(yy, 'other'))) attr(yy, 'other')[j, ] <- NA
           }
@@ -293,14 +293,29 @@ plot.Predict <-
         if(!missing(cex.axis)) xscale$x$cex <- cex.axis
         x[[xvar]] <- as.integer(xv)
       }
-      
+
+      ## Continuing: no predpres case
       pan <- function(x, y, groups=NULL, subscripts, ...) {
+        x <- x[subscripts]
+        y <- y[subscripts]
+        if(length(groups)) groups <- groups[subscripts]
+        subscripts <- seq(along = x)
         yy <- y
         if(length(perim)) {
-          j <- !perim(x, NULL)
-          yy[j] <- NA
-          if(length(attr(yy,'other')))
-            attr(yy, 'other')[j,] <- NA
+          if(! length(groups)) {
+            j <- ! perim(x, NULL)
+            yy[j] <- NA
+            if(length(attr(yy, 'other'))) attr(yy, 'other')[j, ] <- NA
+          }
+          else { ## perim and groups specified
+            for(w in levels(groups)) {
+              i  <- which(groups == w)
+              j <- ! perim(x[i], w)
+              yy[i[j]] <- NA
+              if(length(attr(yy, 'other')))
+                attr(yy, 'other')[i[j], ] <- NA
+            }
+          }
         }
         panel.xYplot(x, yy, groups=groups, subscripts=subscripts, ...)
         tanova(xvar, x, yy)
