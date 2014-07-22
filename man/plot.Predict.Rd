@@ -142,6 +142,9 @@ curve being plotted.  The function's returned value must be a logical
 vector whose length is the same as that of the first argument, with
 values \code{TRUE} if the corresponding point should be plotted for the
 current curve, \code{FALSE} otherwise.  See one of the latter examples.
+If a predictor is not specified to \code{plot}, \code{NULL} is passed as
+the second argument to \code{perim}, although it makes little sense to
+use \code{perim} when the same \code{perim} is used for multiple predictors.
 }
 \item{digits}{
 Controls how numeric variables used for panel labels are formatted. The

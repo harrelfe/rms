@@ -4,6 +4,7 @@ Changes in version 4.2-1 (2014-07-??)
    * predictrms, ols: handle offset in formula.  Thanks: Max Gordon
    * pentrace: neatened code, added new argument noaddzero if user wants to prevent unpenalized model from being tried; add new test script in tests
    * bplot: fixed bug whereby xlabrot was ignored.  Thanks: Sven Krackow <sven.krackow@gmail.com>; new test for bplot in tests directory
+   * plot.Predict: fixed bug in which 2nd argument to perim was not correct
 
 Changes in version 4.2-0 (2014-04-13)
    * Deprecated survfit.formula so would not overlap with function in survival
