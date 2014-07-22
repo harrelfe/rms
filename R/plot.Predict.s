@@ -308,7 +308,7 @@ plot.Predict <-
             if(length(attr(yy, 'other'))) attr(yy, 'other')[j, ] <- NA
           }
           else { ## perim and groups specified
-            for(w in levels(groups)) {
+            for(w in if(is.factor(groups)) levels(groups) else unique(groups)) {
               i  <- which(groups == w)
               j <- ! perim(x[i], w)
               yy[i[j]] <- NA
