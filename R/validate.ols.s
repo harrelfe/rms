@@ -96,7 +96,7 @@ validate.ols <- function(fit, method="boot",
   
   predab.resample(fit.orig, method=method, fit=ols.fit, measure=discrim,
                   pr=pr, B=B, bw=bw, rule=rule, type=type, sls=sls, aics=aics,
-                  force=force, estimates=estimates, tolerance=tolerance,
+                  force=force, estimates=estimates, tol=tolerance,
                   backward=bw,u=u, penalty.matrix=penalty.matrix,
                   rel=rel, ...)
 }
