@@ -7,7 +7,7 @@ Changes in version 4.2-1 (2014-08-??)
    * plot.Predict: fixed bug in which 2nd argument to perim was not correct
    * validate.ols: Shane McIntosh fixed the passing of the tolerance argument to predab.resample
    * predictrms: computed offset earlier so always defined no matter the value of type
-   * plot.Predict: added scaletrans argument
+   * plot.Predict: added scaletrans argument, fixed use of subscripts in pan
 
 Changes in version 4.2-0 (2014-04-13)
    * Deprecated survfit.formula so would not overlap with function in survival

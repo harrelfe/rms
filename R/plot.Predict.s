@@ -192,7 +192,7 @@ plot.Predict <-
         }
       addpanel(x, y, ...)
     }
-    scalesas <- list(x=list(relation='free', limits=limits,
+    scales <- list(x=list(relation='free', limits=limits,
                      at=at, labels=labels))
     if(!missing(cex.axis)) scales$x$cex <- cex.axis
     if(length(yscale)) scales$y <- yscale
@@ -297,10 +297,8 @@ plot.Predict <-
 
       ## Continuing: no predpres case
       pan <- function(x, y, groups=NULL, subscripts, ...) {
-        x <- x[subscripts]
-        y <- y[subscripts]
+        ogroups <- groups
         if(length(groups)) groups <- groups[subscripts]
-        subscripts <- seq(along = x)
         yy <- y
         if(length(perim)) {
           if(! length(groups)) {
@@ -318,7 +316,7 @@ plot.Predict <-
             }
           }
         }
-        panel.xYplot(x, yy, groups=groups, subscripts=subscripts, ...)
+        panel.xYplot(x, yy, groups=ogroups, subscripts=subscripts, ...)
         tanova(xvar, x, yy)
         col <- trellis.par.get('superpose.line')$col
         
