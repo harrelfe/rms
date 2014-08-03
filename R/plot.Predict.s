@@ -192,7 +192,7 @@ plot.Predict <-
         }
       addpanel(x, y, ...)
     }
-    scales <- list(x=list(relation='free', limits=limits,
+    scalesas <- list(x=list(relation='free', limits=limits,
                      at=at, labels=labels))
     if(!missing(cex.axis)) scales$x$cex <- cex.axis
     if(length(yscale)) scales$y <- yscale
@@ -202,7 +202,7 @@ plot.Predict <-
               'filled bands' else 'bars',
               col.fill=col.fill,
               xlab='', ylab=ylab, ylim=ylim,
-              panel=pan, scales=scales,
+              panel=pan, scales=scaletrans(scales),
               between=list(x=.5))
     if(length(dotlist)) r <- c(r, dotlist)
     if(length(sub   )) r$sub    <- sub
@@ -363,7 +363,7 @@ plot.Predict <-
       scales <- NULL
       if(length(xscale)) scales <- xscale
       if(length(yscale)) scales$y <- yscale
-      r$scales <- scales
+      r$scales <- scaletrans(scales)
       if(!missing(xlim)) r$xlim   <- xlim
       if(!conf.int)      r$method <- NULL
       if(length(gname))  r$groups <- x[[gname]]
