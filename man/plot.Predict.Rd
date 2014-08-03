@@ -39,7 +39,7 @@
      col.fill=gray(seq(.825, .55, length=5)),
      adj.subtitle, cex.adj, cex.axis, perim=NULL, digits=4, nlevels=3,
      nlines=FALSE, addpanel, scat1d.opts=list(frac=0.025, lwd=0.3),
-     type=NULL, yscale=NULL, ...)
+     type=NULL, yscale=NULL, scaletrans=function(z) z, ...)
 
 pantext(object, x, y, cex=.5, adj=0, fontfamily="Courier", lattice=TRUE)
 
@@ -176,6 +176,11 @@ default is 4 significant digits.
 	Example:
 	\code{yscale=list(at=c(.005,.01,.05),labels=format(c(.005,.01,.05)))}.
   See \link[lattice]{xyplot}}
+\item{scaletrans}{a function that operates on the \code{scale} object
+	created by \code{plot.Predict} to produce a modified \code{scale}
+	object that is passed to the lattice graphics function.  This is
+	useful for adding other \code{scales} options or for changing the
+	\code{x}-axis limits for one predictor.}
 \item{\dots}{
   extra arguments to pass to \code{xYplot} or \code{Dotplot}.  Some
   useful ones are \code{label.curves} and \code{abline}.
