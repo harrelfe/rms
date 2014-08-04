@@ -30,9 +30,10 @@ the first two types of penalty factors are plotted, showing only the \eqn{AIC}.
 \usage{
 pentrace(fit, penalty, penalty.matrix, 
          method=c('grid','optimize'),
-         which=c('aic.c','aic','bic'), target.df,
+         which=c('aic.c','aic','bic'), target.df=NULL,
          fitter, pr=FALSE, tol=1e-7,
-         keep.coef=FALSE, complex.more=TRUE, verbose=FALSE, maxit=12, subset)
+         keep.coef=FALSE, complex.more=TRUE, verbose=FALSE, maxit=12,
+         subset, noaddzero=FALSE)
 
 effective.df(fit, object)
 
@@ -134,10 +135,11 @@ a logical or integer vector specifying rows of the design and response
 matrices to subset in fitting models.  This is most useful for
 bootstrapping \code{pentrace} to see if the best penalty can be estimated
 with little error so that variation due to selecting the optimal
-penalty can
-be safely ignored when bootstrapping standard errors of regression
+penalty can be safely ignored when bootstrapping standard errors of regression
 coefficients and measures of predictive accuracy.  See an example below.
 }
+\item{noaddzero}{set to \code{TRUE} to not add an unpenalized model to
+     the list of models to fit}
 \item{x}{a result from \code{pentrace}}
 \item{pch}{used for \code{method="points"}}
 \item{add}{
