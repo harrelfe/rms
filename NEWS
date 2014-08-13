@@ -1,7 +1,13 @@
-Changes in version 4.2-1 (2014-05-??)
+Changes in version 4.2-1 (2014-08-??)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly
    * gendata: Starting in R 3.1.0, as.data.frame.labelled or as.data.frame.list quit working when length vary; workaround
    * predictrms, ols: handle offset in formula.  Thanks: Max Gordon
+   * pentrace: neatened code, added new argument noaddzero if user wants to prevent unpenalized model from being tried; add new test script in tests
+   * bplot: fixed bug whereby xlabrot was ignored.  Thanks: Sven Krackow <sven.krackow@gmail.com>; new test for bplot in tests directory
+   * plot.Predict: fixed bug in which 2nd argument to perim was not correct
+   * validate.ols: Shane McIntosh fixed the passing of the tolerance argument to predab.resample
+   * predictrms: computed offset earlier so always defined no matter the value of type
+   * plot.Predict: added scaletrans argument, fixed use of subscripts in pan
 
 Changes in version 4.2-0 (2014-04-13)
    * Deprecated survfit.formula so would not overlap with function in survival

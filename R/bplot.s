@@ -44,14 +44,12 @@ bplot <-
   label   <- at$label
   units   <- at$units
 
-  if(missing(xlab))
-    xlab  <- list(label=labelPlotmath(label[nx], units[nx]),
-                  rot=xlabrot, cex=cex.lab)
-  if(missing(ylab))
-    ylab  <- list(label=labelPlotmath(label[ny], units[ny]),
-                  rot=ylabrot, cex=cex.lab)
-  if(missing(zlab))
-    zlab  <- list(label=info$ylabPlotmath, rot=zlabrot, cex=cex.lab)
+  if(missing(xlab)) xlab <- labelPlotmath(label[nx], units[nx])
+  xlab <- list(label=xlab, rot=xlabrot, cex=cex.lab)
+  if(missing(ylab)) ylab <- labelPlotmath(label[ny], units[ny])
+  ylab <- list(label=ylab, rot=ylabrot, cex=cex.lab)
+  if(missing(zlab)) zlab <- info$ylabPlotmath
+  zlab  <- list(label=zlab, rot=zlabrot, cex=cex.lab)
   
   adjust  <- info$adjust
   

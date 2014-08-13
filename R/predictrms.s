@@ -63,6 +63,10 @@ predictrms <-
   
   ## Get Terms ignoring offset(s)
   off <- attr(Terms, 'offset')
+  offset <- if(! length(off)) 0
+  else
+    model.offset(model.frame(Terms, newdata, na.action=na.action, ...))
+
   ## Terms.nooff <- if(length(off)) drop.terms(Terms, off) else Terms
   ## Only works correctly if offset is at the end of the formula
   ## bug in drop.terms
@@ -126,7 +130,7 @@ predictrms <-
 
   adjto <- NULL
   
-  if(type != "adjto" & type != "adjto.data.frame") {
+  if(type %nin% c('adjto', 'adjto.data.frame')) {
     X <- NULL
     if(missing(newdata) || !length(newdata)) {
       flp <- fit$linear.predictors
@@ -244,9 +248,6 @@ predictrms <-
         }
       }  # is.data.frame(newdata)
       X <- model.frame(Terms.nooff, newdata, na.action=na.action, ...)
-      offset <- if(! length(off)) 0
-       else
-         model.offset(model.frame(Terms, newdata, na.action=na.action, ...))
       if(type == "model.frame") return(X)
       naa <- attr(X, "na.action")
       rnam <- row.names(X)

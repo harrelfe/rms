@@ -39,7 +39,7 @@
      col.fill=gray(seq(.825, .55, length=5)),
      adj.subtitle, cex.adj, cex.axis, perim=NULL, digits=4, nlevels=3,
      nlines=FALSE, addpanel, scat1d.opts=list(frac=0.025, lwd=0.3),
-     type=NULL, yscale=NULL, ...)
+     type=NULL, yscale=NULL, scaletrans=function(z) z, ...)
 
 pantext(object, x, y, cex=.5, adj=0, fontfamily="Courier", lattice=TRUE)
 
@@ -142,6 +142,9 @@ curve being plotted.  The function's returned value must be a logical
 vector whose length is the same as that of the first argument, with
 values \code{TRUE} if the corresponding point should be plotted for the
 current curve, \code{FALSE} otherwise.  See one of the latter examples.
+If a predictor is not specified to \code{plot}, \code{NULL} is passed as
+the second argument to \code{perim}, although it makes little sense to
+use \code{perim} when the same \code{perim} is used for multiple predictors.
 }
 \item{digits}{
 Controls how numeric variables used for panel labels are formatted. The
@@ -173,6 +176,11 @@ default is 4 significant digits.
 	Example:
 	\code{yscale=list(at=c(.005,.01,.05),labels=format(c(.005,.01,.05)))}.
   See \link[lattice]{xyplot}}
+\item{scaletrans}{a function that operates on the \code{scale} object
+	created by \code{plot.Predict} to produce a modified \code{scale}
+	object that is passed to the lattice graphics function.  This is
+	useful for adding other \code{scales} options or for changing the
+	\code{x}-axis limits for one predictor.}
 \item{\dots}{
   extra arguments to pass to \code{xYplot} or \code{Dotplot}.  Some
   useful ones are \code{label.curves} and \code{abline}.
