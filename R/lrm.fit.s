@@ -32,10 +32,12 @@
 #    6-06-02 :added back weights, normwt like SAS PROC LOGIST
 #    1-17-03 :made all versions use weights, double precision for x,y
 #    5-13-10 :change B to use middle intercept; added g-index
+#    8-17-14 :added scale
 
 lrm.fit <- function(x, y, offset=0, initial, est,
                     maxit=12, eps=.025, tol=1E-7, trace=FALSE,
-                    penalty.matrix=NULL, weights=NULL, normwt=FALSE)
+                    penalty.matrix=NULL, weights=NULL, normwt=FALSE,
+                    scale=FALSE)
 {	
   cal <- match.call()
   opts <- double(12)
@@ -45,47 +47,50 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   n <- length(y)
   
   wtpres <- TRUE
-  if(!length(weights))
-    {
-      wtpres <- FALSE
-      normwt <- FALSE
-      weights <- rep(1, n)
-    }
+  if(!length(weights)) {
+    wtpres <- FALSE
+    normwt <- FALSE
+    weights <- rep(1, n)
+  }
   if(length(weights) != n) stop('length of wt must equal length of y')
-  if(normwt) weights <- weights*n/sum(weights)
+  if(normwt) weights <- weights * n / sum(weights)
   storage.mode(weights) <- 'double'
   opts[12] <- normwt
 
   initial.there <- !missing(initial)
-  if(missing(x) || length(x)==0)
-    {
-      nx <- 0
-      xname <- NULL
-      if(!missing(est))stop("est was given without x")
-      est <- NULL
-      x <- 0
+  if(missing(x) || length(x) == 0) {
+    nx <- 0
+    xname <- NULL
+    if(!missing(est))stop("est was given without x")
+    est <- NULL
+    x <- 0
+  } else {
+    if(! is.matrix(x)) x <- as.matrix(x)
+    dx <- dim(x)
+    nx <- dx[2]
+    if(dx[1] != n)stop("x and y must have same length")
+    if(scale) {
+      x <- scale(x)
+      scinfo <- attributes(x)[c('scaled:center', 'scaled:scale')]
+      xbar <- scinfo[[1]]
+      xsd  <- scinfo[[2]]
     }
-  else
-    {
-      if(!is.matrix(x)) x <- as.matrix(x)
-      storage.mode(x) <- "double"
-      dx <- dim(x)
-      nx <- dx[2]
-      if(dx[1] != n)stop("x and y must have same length")
-      if(missing(est)) est <- 1:nx
-      else
-        if(length(est))
-          {
-            estr <- range(est)
-            if(estr[1] < 1 | estr[2] > nx)
-              stop("est has illegal column number for x")
-            if(any(duplicated(est)))stop("est has duplicates")
-            storage.mode(est) <- "integer"
-          }
-      xname <- dimnames(x)[[2]]
-      if(length(xname)==0) xname <- paste("x[",1:nx,"]",sep="")
-    }
+    
+    storage.mode(x) <- "double"
 
+    if(missing(est)) est <- 1:nx
+    else
+      if(length(est)) {
+        estr <- range(est)
+        if(estr[1] < 1 | estr[2] > nx)
+          stop("est has illegal column number for x")
+        if(any(duplicated(est)))stop("est has duplicates")
+        storage.mode(est) <- "integer"
+      }
+    xname <- dimnames(x)[[2]]
+    if(length(xname)==0) xname <- paste("x[",1:nx,"]",sep="")
+  }
+  
   nxin <- length(est)
   
   if(!is.factor(y)) y <- as.factor(y)
@@ -111,13 +116,12 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   if(!wtpres && any(numy != sumwty)) stop('program logic error 1')
   sumw <- if(normwt) numy else as.integer(round(sumwty))
   
-  if(missing(initial))
-    {
-      ncum <- rev(cumsum(rev(sumwty)))[2 : (kint + 1)]
-      pp   <- ncum/sumwt
-      initial <- log(pp / (1 - pp))
-      if(ofpres) initial <- initial - mean(offset)
-    }
+  if(missing(initial)) {
+    ncum <- rev(cumsum(rev(sumwty)))[2 : (kint + 1)]
+    pp   <- ncum/sumwt
+    initial <- log(pp / (1 - pp))
+    if(ofpres) initial <- initial - mean(offset)
+  }
   if(length(initial) < nvi)
     initial <- c(initial, rep(0, nvi - length(initial)))
   storage.mode(initial) <- "double"
@@ -125,47 +129,44 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   loglik <- -2 * sum(sumwty*logb(sumwty/sum(sumwty)))
   ## loglik <-  -2 * sum(numy * logb(numy/n))
   
-  if(nxin > 0)
-    {
-      if(len.penmat==0) penalty.matrix <- matrix(0,nrow=nx,ncol=nx)
-      if(nrow(penalty.matrix)!=nx || ncol(penalty.matrix)!=nx) 
-        stop(paste("penalty.matrix does not have",nx,"rows and columns"))
-      penmat <- rbind(
-                      matrix(0,ncol=kint+nx,nrow=kint),
-                      cbind(matrix(0,ncol=kint,nrow=nx),penalty.matrix))
-    }
+  if(nxin > 0) {
+    if(len.penmat == 0) penalty.matrix <- matrix(0, nrow=nx, ncol=nx)
+    if(nrow(penalty.matrix) != nx || ncol(penalty.matrix) != nx) 
+      stop(paste("penalty.matrix does not have", nx, "rows and columns"))
+    penmat <- rbind(
+      matrix(0, ncol=kint+nx, nrow=kint),
+      cbind(matrix(0, ncol=kint, nrow=nx), penalty.matrix))
+  }
   else
     penmat <- matrix(0, ncol=kint, nrow=kint)
   storage.mode(penmat) <- 'double'
   
-  if(nxin==0 & !ofpres)
-    {
-      loglik <- rep(loglik,2)
-      z <- list(coef=initial, u=rep(0,kint),
-                opts=as.double(c(rep(0,7), .5, 0, 0, 0, 0)))
-    }
-
-  if(ofpres)
-    {
-      ##Fit model with only intercept(s) and offset
-      z <- 
-        .Fortran("lrmfit", coef=initial, as.integer(0), 0, x, y, offset,
-                 u=double(kint),
-                 double(kint*(kint+1)/2),loglik=double(1), n, as.integer(0),
-                 sumw, kint,
-                 v=double(kint*kint), double(kint), double(kint),
-                 double(kint), pivot=integer(kint), opts=opts, ftable,
-                 penmat, weights, PACKAGE="rms")
-      
-      loglik <- c(loglik,z$loglik)
-      if(z$opts[6] | z$opts[7] < kint)
-        return(structure(list(fail=TRUE), class="lrm"))
-      initial <- z$coef
-    }
-
+  if(nxin == 0 & ! ofpres) {
+    loglik <- rep(loglik,2)
+    z <- list(coef=initial, u=rep(0,kint),
+              opts=as.double(c(rep(0,7), .5, 0, 0, 0, 0)))
+  }
+  
+  if(ofpres) {
+    ##Fit model with only intercept(s) and offset
+    z <- 
+      .Fortran("lrmfit", coef=initial, as.integer(0), 0, x, y, offset,
+               u=double(kint),
+               double(kint*(kint+1)/2),loglik=double(1), n, as.integer(0),
+               sumw, kint,
+               v=double(kint*kint), double(kint), double(kint),
+               double(kint), pivot=integer(kint), opts=opts, ftable,
+               penmat, weights, PACKAGE="rms")
+    
+    loglik <- c(loglik,z$loglik)
+    if(z$opts[6] | z$opts[7] < kint)
+      return(structure(list(fail=TRUE), class="lrm"))
+    initial <- z$coef
+  }
+  
   if(nxin > 0) {
     ##Fit model with intercept(s), offset, and any fitted covariables
-	z <- 
+    z <- 
       .Fortran("lrmfit", coef=initial, nxin, est, x, y, offset,
                u=double(nvi),
                double(nvi*(nvi+1)/2), loglik=double(1), n, nx, sumw, nvi,
@@ -203,10 +204,10 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   }
   
   ##Invert v with respect to fitted variables
-  if(nxin==0) elements <- 1:kint
+  if(nxin == 0) elements <- 1 : kint
   else
-    elements <- c(1:kint, kint + est)
-  if(nx==0 && !ofpres) {
+    elements <- c(1 : kint, kint + est)
+  if(nx == 0 && !ofpres) {
     v <- NULL; info.matrix <- NULL
     irank <- kint
   }
@@ -229,14 +230,22 @@ lrm.fit <- function(x, y, offset=0, initial, est,
     }
   }
   
-  if(kint==1) name <- "Intercept"
+  if(kint == 1) name <- "Intercept"
   else 
-    name <- paste("y>=", ylevels[2:(kint+1)], sep="")
+    name <- paste("y>=", ylevels[2 : (kint + 1)], sep="")
   name <- c(name, xname)
   kof <- z$coef
   names(kof) <- name
   names(z$u) <- name
   if(length(v)) dimnames(v) <- list(name, name)
+
+  if(scale && nx > 0) {
+    trans <-
+      rbind(cbind(diag(kint), matrix(0, nrow=kint, ncol=nx)),
+            cbind(-matrix(rep(xbar/xsd, kint), ncol=kint), diag(1 / xsd)))
+    v   <- t(trans) %*% v %*% trans
+    kof <- (kof %*% trans)[,, drop=TRUE]
+  }
   
   llnull <- loglik[length(loglik)-1]
   model.lr <- llnull - loglik[length(loglik)]
@@ -244,8 +253,8 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   model.p <- if(initial.there) NA else
   if(model.df > 0) 1 - pchisq(model.lr, model.df) else 1
   
-  r2     <- 1 - exp(-model.lr / sumwt)
-  r2.max <- 1 - exp(-llnull / sumwt)
+  r2     <- 1 - exp(- model.lr / sumwt)
+  r2.max <- 1 - exp(- llnull   / sumwt)
   r2     <- r2 / r2.max
   kmid <- floor((kint + 1) / 2)
   lp <- if(nxin > 0) matxv(x, kof, kint=1) else rep(kof[1], n)
