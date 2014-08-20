@@ -2,7 +2,7 @@ orm.fit <- function(x=NULL, y,
                     family='logistic',
                     offset=0., initial, 
                     maxit=12L, eps=.005, tol=1e-7, trace=FALSE,
-                    penalty.matrix=NULL)
+                    penalty.matrix=NULL, scale=FALSE)
 {	
   cal <- match.call()
   len.penmat <- length(penalty.matrix)
@@ -62,18 +62,24 @@ orm.fit <- function(x=NULL, y,
   n <- length(y)
   
   initial.there <- !missing(initial)
-  if(!length(x)) {
+  if(! length(x)) {
       nx <- 0
       xname <- NULL
       x <- 0
     }
   else  {
-      if(!is.matrix(x)) x <- as.matrix(x)
+      if(! is.matrix(x)) x <- as.matrix(x)
       dx <- dim(x)
       nx <- dx[2L]
       if(dx[1] != n) stop("x and y must have same length")
       xname <- dimnames(x)[[2]]
       if(!length(xname)) xname <- paste("x[", 1 : nx, "]", sep="")
+      if(scale) {
+        x <- scale(x)
+        scinfo <- attributes(x)[c('scaled:center', 'scaled:scale')]
+        xbar <- scinfo[[1]]
+        xsd  <- scinfo[[2]]
+      }
     }
 
 
@@ -109,7 +115,7 @@ orm.fit <- function(x=NULL, y,
   p           <- as.integer(nx + kint)
   
   if(missing(initial)) {
-      cp   <- (n - cumsum(numy)[-length(numy)]) / n
+      cp   <- (n - cumsum(numy)[- length(numy)]) / n
       names(cp) <- NULL
       initial <- fam$inverse(cp)
       if(ofpres) initial <- initial - mean(offset)
@@ -151,6 +157,14 @@ orm.fit <- function(x=NULL, y,
                   maxit=maxit, tol=tol, eps=eps, trace=trace, fam)
       if(z$fail) return(structure(list(fail=TRUE), class="orm"))
       loglik <- c(loglik, z$loglik)
+      kof  <- z$coef
+      info <- z$v
+      if(scale) {
+        attr(info, 'scale') <- list(mean=xbar, sd=xsd)
+        betas <- kof[- (1 : kint)]
+        kof[1 : kint] <- kof[1 : kint] - sum(betas * xbar / xsd)
+        kof[-(1 : kint)] <- betas / xsd
+      }
   }
 
   ## Keep variance matrix for middle intercept and all predictors
@@ -158,17 +172,20 @@ orm.fit <- function(x=NULL, y,
   ## closest to the median y
 
   i <- if(nx > 0) c(kmid, (kint + 1):p) else kmid
-  v <- tryCatch(as.matrix(solve(z$v, tol=tol)[i, i]))
+  v <- tryCatch(as.matrix(solve(info, tol=tol)[i, i]))
   if(inherits(v, 'try-error')) {
     cat('Singular information matrix\n')
     return(structure(list(fail=TRUE), class="orm"))
   }
+  if(scale) {
+    trans <- rbind(cbind(1, matrix(0, nrow=1, ncol=nx)),
+                   cbind(-matrix(rep(xbar/xsd, 1), ncol=1), diag(1 / xsd)))
+    v <- t(trans) %*% v %*% trans
+  }
   name <- if(kint == 1) "Intercept" else
     paste("y>=", ylevels[-1L], sep="")
   name       <- c(name, xname)
-  kof        <- z$coef
   names(kof) <- name
-  ## names(z$u) <- name
 
   dimnames(v) <- list(name[i], name[i])
   if(kint > 1L) attr(v, 'intercepts') <- kmid
@@ -221,7 +238,7 @@ orm.fit <- function(x=NULL, y,
                   linear.predictors=lp,
                   penalty.matrix=if(nx > 0 && any(penalty.matrix != 0))
                   penalty.matrix else NULL,
-                  info.matrix=z$v)
+                  info.matrix=info)
   
   class(retlist) <- 'orm'
   retlist

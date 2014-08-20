@@ -235,9 +235,6 @@ lrm.fit <- function(x, y, offset=0, initial, est,
     name <- paste("y>=", ylevels[2 : (kint + 1)], sep="")
   name <- c(name, xname)
   kof <- z$coef
-  names(kof) <- name
-  names(z$u) <- name
-  if(length(v)) dimnames(v) <- list(name, name)
 
   if(scale && nx > 0) {
     trans <-
@@ -246,7 +243,11 @@ lrm.fit <- function(x, y, offset=0, initial, est,
     v   <- t(trans) %*% v %*% trans
     kof <- (kof %*% trans)[,, drop=TRUE]
   }
-  
+
+  names(kof) <- name
+  names(z$u) <- name
+  if(length(v)) dimnames(v) <- list(name, name)
+ 
   llnull <- loglik[length(loglik)-1]
   model.lr <- llnull - loglik[length(loglik)]
   model.df <- irank - kint

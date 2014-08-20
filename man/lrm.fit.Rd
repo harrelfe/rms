@@ -63,7 +63,8 @@ derivative, and vector of first derivatives at each iteration.
 \item{scale}{set to \code{TRUE} to subtract column means and divide by
 	column standard deviations of \code{x}
   before fitting, and to back-solve for the un-normalized covariance
-  matrix.  This can sometimes make the model converge for very large
+  matrix and regresion coefficients.  This can sometimes make the model
+	converge for very large 
   sample sizes where for example spline or polynomial component
   variables create scaling problems leading to loss of precision when
   accumulating sums of squares and crossproducts.}

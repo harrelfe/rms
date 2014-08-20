@@ -14,7 +14,7 @@
 \usage{
 orm.fit(x=NULL, y, family='logistic',
         offset=0., initial,  maxit=12L, eps=.005, tol=1e-7, trace=FALSE,
-        penalty.matrix=NULL)
+        penalty.matrix=NULL, scale=FALSE)
 }
 \arguments{
 \item{x}{
@@ -61,6 +61,14 @@ derivative at each iteration.
 \item{penalty.matrix}{
 	a self-contained ready-to-use penalty matrix - see\code{lrm} 
 }
+\item{scale}{set to \code{TRUE} to subtract column means and divide by
+	column standard deviations of \code{x}
+  before fitting, and to back-solve for the un-normalized covariance
+  matrix and regression coefficients.  This can sometimes make the model
+	converge for very large 
+  sample sizes where for example spline or polynomial component
+  variables create scaling problems leading to loss of precision when
+  accumulating sums of squares and crossproducts.}
 }
 
 \value{

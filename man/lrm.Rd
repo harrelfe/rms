@@ -133,7 +133,8 @@ variances estimates that are too low.
 \item{scale}{set to \code{TRUE} to subtract means and divide by standard
     deviations of columns of the design matrix
     before fitting, and to back-solve for the un-normalized covariance
-    matrix.  This can sometimes make the model converge for very large
+    matrix and regression coefficients.  This can sometimes make the
+    model converge for very large 
     sample sizes where for example spline or polynomial component
     variables create scaling problems leading to loss of precision when
     accumulating sums of squares and crossproducts.}
