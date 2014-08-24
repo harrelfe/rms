@@ -149,8 +149,10 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         flabel <- c(flabel,z$label)
         asm <- c(asm,za)
         colnam[[i1]] <- z$colnames
-        if(za != 8 && length(colnam)) name <- c(name, 
+        if(za == 1 && length(colnam)) name <- c(name, 
                                                 paste(colnam[[i1]], collapse="_"))
+        else if(za != 8 && length(colnam)) name <- c(name, 
+                                                     colnam[[i1]])
         if(za != 9) {
           funits <- c(funits, if(length(z$units))z$units else '')
           if(length(z$parms)) parm[[zname]] <- z$parms
