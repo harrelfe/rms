@@ -140,7 +140,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
       }
 
       za <- z$assume.code
-      zname <- z$name
+      zname <- paste(z$name, collapse="_")
 
       fname.incl.dup <- c(fname.incl.dup, zname)
       if(!length(fname) || !any(fname==zname)) { # unique factor
@@ -149,7 +149,8 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         flabel <- c(flabel,z$label)
         asm <- c(asm,za)
         colnam[[i1]] <- z$colnames
-        if(za != 8 && length(colnam)) name <- c(name, colnam[[i1]])
+        if(za != 8 && length(colnam)) name <- c(name, 
+                                                paste(colnam[[i1]], collapse="_"))
         if(za != 9) {
           funits <- c(funits, if(length(z$units))z$units else '')
           if(length(z$parms)) parm[[zname]] <- z$parms
