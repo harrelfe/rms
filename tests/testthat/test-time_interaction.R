@@ -14,11 +14,11 @@ test_df <- data.frame(age = age,
                       sex = sex,
                       dt = dt,
                       e = e)
-label(test_dt$age) <- "Age"
-label(test_dt$dt) <- 'Follow-up Time'
-units(test_dt$dt) <- "Year"
+label(test_df$age) <- "Age"
+label(test_df$dt) <- 'Follow-up Time'
+units(test_df$dt) <- "Year"
 
-dd <<- datadist(test_dt)
+dd <<- datadist(test_df)
 options(datadist='dd')
 
 f <- cph(Surv(dt,e) ~ rcs(age,4) + sex, x=TRUE, y=TRUE)
