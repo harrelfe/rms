@@ -12,11 +12,11 @@ dt <- pmin(dt, cens)
 
 test_df <- data.frame(age = age,
                       sex = sex,
+                      Start = 0,
                       dt = dt,
                       e = e)
 label(test_df$age) <- "Age"
 label(test_df$dt) <- 'Follow-up Time'
-units(test_df$dt) <- "Year"
 
 dd <<- datadist(test_df)
 options(datadist='dd')
@@ -27,7 +27,6 @@ cox.zph(f, "rank")             # tests of PH
 
 # Now to the actual time-interaction
 library(Epi)
-test_df$Start <- 0
 lxs_obj <- Lexis(entry = list(Timeband = Start),
                  exit = list(Timeband = dt, Age = age + dt),
                  exit.status = e,
@@ -120,7 +119,8 @@ cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex + sex:Timeb
 # 
 # Model Did Not Converge.  No summary provided. 
 
-cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex + asis((sex == "Male")*Timeband),
+cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ 
+      rcs(Age, 4) + sex + asis((sex == "Male")*Timeband),
     data = spl_obj)
 # Gives:
 # Error in limits[[zname]] <- if (any(Limnames == zname)) { : 
