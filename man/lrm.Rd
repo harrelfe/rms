@@ -14,7 +14,7 @@ lrm(formula, data, subset, na.action=na.delete, method="lrm.fit",
     model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE, 
     penalty=0, penalty.matrix, tol=1e-7, 
     strata.penalty=0, var.penalty=c('simple','sandwich'),
-    weights, normwt, offset, \dots)
+    weights, normwt, scale=FALSE, offset, \dots)
 
 \method{print}{lrm}(x, digits=4, strata.coefs=FALSE,
     coefs=TRUE, latex=FALSE, title='Logistic Regression Model', \dots)
@@ -130,6 +130,14 @@ variances estimates that are too low.
  \code{y}; useful for sample surveys as opposed to the default of
  frequency weighting 
  }
+\item{scale}{set to \code{TRUE} to subtract means and divide by standard
+    deviations of columns of the design matrix
+    before fitting, and to back-solve for the un-normalized covariance
+    matrix and regression coefficients.  This can sometimes make the
+    model converge for very large 
+    sample sizes where for example spline or polynomial component
+    variables create scaling problems leading to loss of precision when
+    accumulating sums of squares and crossproducts.}
 \item{offset}{this can be used to specify an a \emph{priori} known component
  to be included in the linear predictor during fitting.  One or more \code{\link[stats  ]{offset}} terms can be included in the formula instead or as well, and if more than one is specified their sum is used. 
 }

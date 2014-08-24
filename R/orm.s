@@ -2,7 +2,7 @@ orm <- function(formula, data, subset, na.action=na.delete,
 				method="orm.fit", model=FALSE, x=FALSE, y=FALSE, 
 				linear.predictors=TRUE, se.fit=FALSE, 
 				penalty=0, penalty.matrix, tol=1e-7, eps=0.005,
-                var.penalty=c('simple','sandwich'), ...)
+                var.penalty=c('simple','sandwich'), scale=FALSE, ...)
 {
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
@@ -88,7 +88,8 @@ orm <- function(formula, data, subset, na.action=na.delete,
   if(existsFunction(method)) {
       fitter <- getFunction(method)
       f <- fitter(X, Y, offset=offs,
-                  penalty.matrix=penalty.matrix, tol=tol, eps=eps, ...)
+                  penalty.matrix=penalty.matrix, tol=tol, eps=eps,
+                  scale=scale, ...)
     }
     else stop(paste("unimplemented method:", method))
   

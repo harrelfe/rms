@@ -1,9 +1,9 @@
 lrm <- function(formula, data,subset, na.action=na.delete,
-				method="lrm.fit", model=FALSE, x=FALSE, y=FALSE, 
-				linear.predictors=TRUE, se.fit=FALSE, 
-				penalty=0, penalty.matrix, tol=1e-7, strata.penalty=0,
-				var.penalty=c('simple','sandwich'),
-				weights, normwt=FALSE, offset, ...)
+                method="lrm.fit", model=FALSE, x=FALSE, y=FALSE, 
+                linear.predictors=TRUE, se.fit=FALSE, 
+                penalty=0, penalty.matrix, tol=1e-7, strata.penalty=0,
+                var.penalty=c('simple','sandwich'),
+                weights, normwt=FALSE, scale=FALSE, offset, ...)
 {
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
@@ -101,18 +101,20 @@ lrm <- function(formula, data,subset, na.action=na.delete,
   
   if(method=="model.matrix") return(X)
 
-  if(nstrata > 1)
-      f <- lrm.fit.strat(X,Y,Strata,offset=offset,
+  if(nstrata > 1) {
+    if(scale) stop('scale=TRUE not implemented for stratified model')
+    f <- lrm.fit.strat(X,Y,Strata,offset=offset,
                          penalty.matrix=penalty.matrix,
                          strata.penalty=strata.penalty,
                          tol=tol,
                          weights=weights,normwt=normwt, ...)
+  }
   else {
     if(existsFunction(method)) {
       fitter <- getFunction(method)
       f <- fitter(X, Y, offset=offset,
                   penalty.matrix=penalty.matrix, tol=tol,
-                  weights=weights, normwt=normwt, ...)
+                  weights=weights, normwt=normwt, scale=scale, ...)
     }
     else stop(paste("unimplemented method:", method))
   }
@@ -134,7 +136,8 @@ lrm <- function(formula, data,subset, na.action=na.delete,
       v <- f$var
       if(var.penalty=='sandwich') f$var.from.info.matrix <- v
       f.nopenalty <- 
-        fitter(X, Y, offset=offset, initial=f$coef, maxit=1, tol=tol)
+        fitter(X, Y, offset=offset, initial=f$coef, maxit=1, tol=tol,
+               scale=scale)
       ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
       info.matrix.unpenalized <- f.nopenalty$info.matrix
       dag <- diag(info.matrix.unpenalized %*% v)

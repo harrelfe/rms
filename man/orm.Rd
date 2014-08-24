@@ -38,7 +38,7 @@
 orm(formula, data, subset, na.action=na.delete, method="orm.fit",
     model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE, 
     penalty=0, penalty.matrix, tol=1e-7, eps=0.005, 
-    var.penalty=c('simple','sandwich'), \dots)
+    var.penalty=c('simple','sandwich'), scale=FALSE, \dots)
 
 \method{print}{orm}(x, digits=4, coefs=TRUE,
     intercepts=x$non.slopes < 10, latex=FALSE, title, \dots)
@@ -97,6 +97,14 @@ intercept is used.
 \item{tol}{singularity criterion (see \code{orm.fit})}
 \item{eps}{difference in \eqn{-2 log} likelihood for declaring convergence}
 \item{var.penalty}{see \code{\link{lrm}}}
+\item{scale}{set to \code{TRUE} to subtract column means and divide by
+	column standard deviations of the design matrix
+  before fitting, and to back-solve for the un-normalized covariance
+  matrix and regression coefficients.  This can sometimes make the model
+	converge for very large 
+  sample sizes where for example spline or polynomial component
+  variables create scaling problems leading to loss of precision when
+  accumulating sums of squares and crossproducts.}
 \item{\dots}{arguments that are passed to \code{orm.fit}, or from
     \code{print}, to \code{\link{prModFit}}.  Ignored for
 		\code{Quantile}.  One of the most important arguments is \code{family}.}

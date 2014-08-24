@@ -7,8 +7,9 @@ vector with no missing values in either.  Ordinary or penalized maximum
 likelihood estimation is used.
 }
 \usage{
-lrm.fit(x, y, offset, initial, est, maxit=12, eps=.025,
-        tol=1e-7, trace=FALSE, penalty.matrix, weights, normwt)
+lrm.fit(x, y, offset=0, initial, est, maxit=12, eps=.025,
+        tol=1e-7, trace=FALSE, penalty.matrix=NULL, weights=NULL,
+        normwt=FALSE, scale=FALSE)
 }
 \arguments{
 \item{x}{
@@ -59,6 +60,14 @@ derivative, and vector of first derivatives at each iteration.
  \code{y}; useful for sample surveys as opposed to the default of
  frequency weighting 
  }
+\item{scale}{set to \code{TRUE} to subtract column means and divide by
+	column standard deviations of \code{x}
+  before fitting, and to back-solve for the un-normalized covariance
+  matrix and regresion coefficients.  This can sometimes make the model
+	converge for very large 
+  sample sizes where for example spline or polynomial component
+  variables create scaling problems leading to loss of precision when
+  accumulating sums of squares and crossproducts.}
 }
 
 \value{
