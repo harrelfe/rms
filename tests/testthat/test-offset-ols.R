@@ -7,7 +7,7 @@ test_df <- data.frame(Y  = c(15,  7, 36,  4, 16, 12, 41, 15),
                       x1 = c(-0.1, 0, 0.2, 0, 1, 1.1, 1.1, 1),
                       x2 = c(2.2, 1.5, 4.5, 7.2, 4.5, 3.2, 9.1, 5.2))
 test_df$fact_var <- factor(rep(c("A", "B", "C"), times=c(4,2, nrow(test_df)-6)))
-ddist <- datadist(test_df)
+ddist <<- datadist(test_df)
 options(datadist="ddist")
 
 test_that("Compare basic ols with lm",{
