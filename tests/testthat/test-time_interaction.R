@@ -10,15 +10,13 @@ dt <- -log(runif(n))/h
 e <- ifelse(dt <= cens,1,0)
 dt <- pmin(dt, cens)
 
-test_df <- data.frame(age = age,
+test <- data.frame(age = age,
                       sex = sex,
                       Start = 0,
                       dt = dt,
                       e = e)
-label(test_df$age) <- "Age"
-label(test_df$dt) <- 'Follow-up Time'
 
-dd <<- datadist(test_df)
+dd <<- datadist(test)
 options(datadist='dd')
 
 f <- cph(Surv(dt,e) ~ rcs(age,4) + sex, x=TRUE, y=TRUE)
@@ -27,35 +25,35 @@ cox.zph(f, "rank")             # tests of PH
 
 # Now to the actual time-interaction
 library(Epi)
-lxs_obj <- Lexis(entry = list(Timeband = Start),
+lxs <- Lexis(entry = list(Timeband = Start),
                  exit = list(Timeband = dt, Age = age + dt),
                  exit.status = e,
-                 data = test_df)
-subset(lxs_obj, lex.id %in% 1:3)
+                 data = test)
+subset(lxs, lex.id %in% 1:3)
 
-spl_obj <- 
-  splitLexis(lxs_obj, 
+spl <- 
+  splitLexis(lxs, 
              time.scale = "Timeband",
              breaks = seq(from = 0, 
-                          to = ceiling(max(lxs_obj$lex.dur)),
+                          to = ceiling(max(lxs$lex.dur)),
                           by = .5))
 
-subset(spl_obj, lex.id %in% 1:3)
+subset(spl, lex.id %in% 1:3)
 
-spl_obj$Stop <- spl_obj$Timeband + spl_obj$lex.dur
+spl$Stop <- spl$Timeband + spl$lex.dur
 
-dd <<- datadist(spl_obj)
+dd <<- datadist(spl)
 options(datadist='dd')
 
 #######################
 # Regular interaction #
 #######################
 coxph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex*Timeband,
-      data = spl_obj)
+      data = spl)
 # Gives:
 # Call:
 # coxph(formula = Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ 
-#         Age + sex * Timeband, data = spl_obj)
+#         Age + sex * Timeband, data = spl)
 # 
 # 
 # coef exp(coef) se(coef)     z       p
@@ -70,7 +68,7 @@ coxph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex*Timeband,
 #              X matrix deemed to be singular; variable 3  
 
 cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex*Timeband,
-    data = spl_obj)
+    data = spl)
 # Gives:
 # X matrix deemed to be singular; variable Timeband 
 # 
@@ -81,11 +79,11 @@ cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex*Timeband,
 ###############################
 coxph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ 
         Age + sex + sex:Timeband,
-      data = spl_obj)
+      data = spl)
 # Gives:
 # Call:
 # coxph(formula = Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ 
-#         Age + sex + sex:Timeband, data = spl_obj)
+#         Age + sex + sex:Timeband, data = spl)
 # 
 # 
 # coef exp(coef) se(coef)     z       p
@@ -100,11 +98,11 @@ coxph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~
 #              X matrix deemed to be singular; variable 4
 
 coxph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex + I((sex == "Male")*Timeband),
-    data = spl_obj)
+    data = spl)
 # Gives:
 # Call:
 # coxph(formula = Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ 
-#           Age + sex + I((sex == "Male") * Timeband), data = spl_obj)
+#           Age + sex + I((sex == "Male") * Timeband), data = spl)
 # 
 # 
 # coef exp(coef) se(coef)     z       p
@@ -113,7 +111,7 @@ coxph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex + I((sex 
 # I((sex == "Male") * Timeband)  0.0868     1.091  0.05360  1.62 1.1e-01
 
 cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex + sex:Timeband,
-    data = spl_obj)
+    data = spl)
 # Gives:
 # X matrix deemed to be singular; variable sex=Male * NA 
 # 
@@ -121,7 +119,7 @@ cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex + sex:Timeb
 
 cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ 
       rcs(Age, 4) + sex + asis((sex == "Male")*Timeband),
-    data = spl_obj)
+    data = spl)
 # Gives:
 # Error in limits[[zname]] <- if (any(Limnames == zname)) { : 
 #   more elements supplied than there are to replace
@@ -130,10 +128,10 @@ cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~
 # After fix #
 #############
 fit_coxph <- coxph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex + I((sex == "Male")*Timeband),
-                        data = spl_obj)
+                        data = spl)
 
 fit_cph <- cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex + asis((sex == "Male")*Timeband),
-    data = spl_obj)
+    data = spl)
 
 # Basically the same
 cbind(coxph=coef(fit_coxph), 
