@@ -10,11 +10,12 @@ dt <- -log(runif(n))/h
 e <- ifelse(dt <= cens,1,0)
 dt <- pmin(dt, cens)
 
-test <- data.frame(age = age,
-                      sex = sex,
-                      Start = 0,
-                      dt = dt,
-                      e = e)
+test <- 
+  data.frame(age = age,
+             sex = sex,
+             Start = 0,
+             dt = dt,
+             e = e)
 
 dd <<- datadist(test)
 options(datadist='dd')
@@ -26,9 +27,9 @@ cox.zph(f, "rank")             # tests of PH
 # Now to the actual time-interaction
 library(Epi)
 lxs <- Lexis(entry = list(Timeband = Start),
-                 exit = list(Timeband = dt, Age = age + dt),
-                 exit.status = e,
-                 data = test)
+             exit = list(Timeband = dt, Age = age + dt),
+             exit.status = e,
+             data = test)
 subset(lxs, lex.id %in% 1:3)
 
 spl <- 
@@ -41,6 +42,7 @@ spl <-
 subset(spl, lex.id %in% 1:3)
 
 spl$Stop <- spl$Timeband + spl$lex.dur
+
 
 dd <<- datadist(spl)
 options(datadist='dd')
@@ -160,3 +162,27 @@ contrast(fit_cph,
                 Timeband = seq(0, 10, by=.1)))
 # Error in gendata(list(coefficients = c(0.0420352254526414, -0.945650117874665,  : 
 #   factor(s) not in design: Timeband 
+
+
+#################
+# Alt. solution #
+#################
+
+spl_alt <- 
+  within(spl, {
+    Male_time_int = (sex == "Male")*Timeband
+  })
+
+spl_alt$lex.Cst <- NULL
+spl_alt$Start <- NULL
+dd <- datadist(spl_alt)
+options(datadist = "dd")
+
+model <-
+  cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ 
+        Age + sex + Male_time_int,
+      data = spl_alt)
+
+contrast(model, 
+         a = list(sex = "Male", Male_time_int = 0:5),
+         b = list(sex = "Female", Male_time_int = 0))
