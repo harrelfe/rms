@@ -236,6 +236,9 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   name <- c(name, xname)
   kof <- z$coef
 
+  ## Compute linear predictor before unscaling beta, as x is scaled
+  lp <- if(nxin > 0) matxv(x, kof, kint=1) else rep(kof[1], n)
+  
   if(scale && nx > 0) {
     trans <-
       rbind(cbind(diag(kint), matrix(0, nrow=kint, ncol=nx)),
@@ -258,7 +261,6 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   r2.max <- 1 - exp(- llnull   / sumwt)
   r2     <- r2 / r2.max
   kmid <- floor((kint + 1) / 2)
-  lp <- if(nxin > 0) matxv(x, kof, kint=1) else rep(kof[1], n)
   lpmid <- lp - kof[1] + kof[kmid] 
   prob <- plogis(lpmid)
   event <- y > (kmid - 1)

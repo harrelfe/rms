@@ -1,11 +1,11 @@
 npsurv <- function(formula, data, subset, na.action, ...)
 {
-  m <- match.call(expand.dots = FALSE)
-  m$... <- NULL
+  m <- match.call() #expand.dots = FALSE)
   m[[1]] <- as.name('survfit')
   m$formula <- formula
   f <- eval(m, sys.parent())
   m[[1]] <- as.name('model.frame')
+  m[names(m) %nin% c('', 'formula', 'data', 'subset', 'na.action')] <- NULL
   g <- eval(m, sys.parent())
   
   f$maxtime <- max(f$time)

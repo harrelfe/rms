@@ -150,7 +150,7 @@ orm.fit <- function(x=NULL, y,
       loglik <- c(loglik, z$loglik)
       initial <- z$coef
   }
-
+ 
   if(nx > 0) {
       ##Fit model with intercept(s), offset, covariables
       z <- ormfit(x, y, kint, nx, initial=initial, offset=offset, penmat=penmat,
@@ -158,6 +158,9 @@ orm.fit <- function(x=NULL, y,
       if(z$fail) return(structure(list(fail=TRUE), class="orm"))
       loglik <- c(loglik, z$loglik)
       kof  <- z$coef
+      ## Compute linear predictor before unscaling beta, as x is scaled
+      lp <- matxv(x, kof, kint=kmid)
+      
       info <- z$v
       if(scale) {
         attr(info, 'scale') <- list(mean=xbar, sd=xsd)
@@ -165,7 +168,8 @@ orm.fit <- function(x=NULL, y,
         kof[1 : kint] <- kof[1 : kint] - sum(betas * xbar / xsd)
         kof[-(1 : kint)] <- betas / xsd
       }
-  }
+  } else lp <- rep(kof[kmid], n)
+
 
   ## Keep variance matrix for middle intercept and all predictors
   ## Middle intercept take to be intercept corresponding to y that is
@@ -208,7 +212,6 @@ orm.fit <- function(x=NULL, y,
   r2     <- 1. - exp(-model.lr / n)
   r2.max <- 1. - exp(-llnull / n)
   r2     <- r2 / r2.max
-  lp <- if(nx > 0) matxv(x, kof, kint=kmid) else rep(kof[kmid], n)
   if(kint > 1L) attr(lp, 'intercepts') <- kmid
   g  <- GiniMd(lp)
   ## compute average |difference| between 0.5 and the condition
