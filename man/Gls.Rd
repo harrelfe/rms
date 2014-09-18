@@ -116,7 +116,8 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
   \code{\link[nlme]{gls}}
   \code{\link[nlme]{glsControl}}, \code{\link[nlme]{glsObject}},
   \code{\link{varFunc}}, \code{\link[nlme]{corClasses}},
-  \code{\link[nlme]{varClasses}}, \code{\link{GiniMd}}, \code{\link{prModFit}}
+  \code{\link[nlme]{varClasses}}, \code{\link{GiniMd}},
+	\code{\link{prModFit}}, \code{\link{logLik.Gls}}
 }
 \examples{
 \dontrun{
@@ -141,6 +142,7 @@ dd <- datadist(d); options(datadist='dd')
 f <- Gls(y ~ pol(tim,2) + trt, correlation=corCAR1(form= ~tim | id),
          data=d, B=B)
 f
+AIC(f)
 f$var      # bootstrap variances
 f$varBeta  # original variances
 summary(f)

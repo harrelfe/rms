@@ -4,7 +4,7 @@ validate.rpart <- function(fit, method, B, bw, rule, type, sls, aics,
 {
   if(missing(FUN))
     {
-      require(rpart)
+      ## require(rpart)
       FUN <- function(..., k) prune(..., cp=k)
     }
   act <- (fit$call)$na.action
