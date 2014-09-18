@@ -1,6 +1,6 @@
 npsurv <- function(formula, data, subset, na.action, ...)
 {
-  m <- match.call() #expand.dots = FALSE)
+  m <- match.call()
   m[[1]] <- as.name('survfit')
   m$formula <- formula
   f <- eval(m, sys.parent())
@@ -15,6 +15,6 @@ npsurv <- function(formula, data, subset, na.action, ...)
   f$time.label  <- label(Y, type='time')
   f$event.label <- label(Y, type='event')
   f$call <- match.call()
-  class(f) <- c('npsurv', 'survfit')
+  class(f) <- c('npsurv', class(f))
   f
 }

@@ -23,6 +23,7 @@
 \alias{param.order}
 \alias{Penalty.matrix}
 \alias{Penalty.setup}
+\alias{logLik.Gls}
 \alias{logLik.ols}
 \alias{logLik.rms}
 \alias{AIC.rms}
@@ -96,6 +97,7 @@ optional argument for computing AIC on a "chi-square" scale (model
 likelihood ratio chi-square minus twice the regression degrees of
 freedom.  \code{logLik.ols} handles the case for \code{ols}, just by
 invoking \code{logLik.lm} in the \code{stats} package.
+\code{logLik.Gls} is also defined.
 
 \code{nobs.rms} returns the number of observations used in the fit.
 
@@ -173,6 +175,7 @@ param.order(at, term.order)
 Penalty.matrix(at, X)
 Penalty.setup(at, penalty)
 
+\method{logLik}{Gls}(object, \dots)
 \method{logLik}{ols}(object, \dots)
 \method{logLik}{rms}(object, \dots)
 \method{AIC}{rms}(object, \dots, k=2, type=c('loglik', 'chisq'))

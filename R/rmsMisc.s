@@ -986,6 +986,8 @@ logLik.rms <- function(object, ...)
     structure(-0.5*w[length(w)], nobs=nobs, df=dof, class='logLik')
   }
 
+logLik.Gls <- function(object, ...) nlme::logLik.gls(object, ...)
+    
 AIC.rms <- function(object, ..., k=2, type=c('loglik','chisq'))
   {
     type <- match.arg(type)
