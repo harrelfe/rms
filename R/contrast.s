@@ -10,7 +10,7 @@ contrast.rms <-
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
   boot.type <- match.arg(boot.type)
-  if(conf.type == 'simultaneous') require(multcomp)
+##  if(conf.type == 'simultaneous') require(multcomp)
   
   zcrit <- if(length(idf <- fit$df.residual)) qt((1 + conf.int) / 2, idf) else
               qnorm((1 + conf.int) / 2)

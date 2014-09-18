@@ -34,7 +34,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                    percentile = 'bootstrap nonparametric percentile',
                    bca = 'bootstrap BCa',
                    basic = 'basic bootstrap')
-  if(conf.type == 'simultaneous') require(multcomp)
+  ## if(conf.type == 'simultaneous') require(multcomp)
   
   assume <- at$assume.code
   if(is.null(assume)) stop("fit does not have design information")

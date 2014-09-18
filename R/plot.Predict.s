@@ -8,7 +8,6 @@ plot.Predict <-
            scat1d.opts=list(frac=0.025, lwd=0.3), type=NULL,
            yscale=NULL, scaletrans=function(z) z, ...)
 {
-  require(lattice)
   if(varypred) {
     x$.predictor. <- x$.set.
     x$.set. <- NULL

@@ -31,7 +31,7 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
   if (length(tau) > 1)
     stop('does not allow more than one quantile to be estimated simultaneously')
   ## The following keeps quantreg from overriding latex generic in Hmisc
-  library(quantreg, pos=length(search()) + 1)
+  ## library(quantreg, pos=length(search()) + 1)
   fit <- if (length(weights)) 
     rq.wfit(X, Y, tau = tau, weights, method, ...)
   else rq.fit(X, Y, tau = tau, method, ...)

@@ -986,7 +986,7 @@ logLik.rms <- function(object, ...)
     structure(-0.5*w[length(w)], nobs=nobs, df=dof, class='logLik')
   }
 
-logLik.Gls <- function(object, ...) nlme::logLik.gls(object, ...)
+logLik.Gls <- function(object, ...) getS3method('logLik', 'gls')(object, ...)
     
 AIC.rms <- function(object, ..., k=2, type=c('loglik','chisq'))
   {
@@ -1021,10 +1021,10 @@ setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
   }
   if(pbo == 'none') return(function(i, ...){invisible()})
   if(pbo == 'tk' && usetk && require(tcltk)) {
-    pb <- tkProgressBar(type, 'Iteration: ', 0, n)
+    pb <- tcltk::tkProgressBar(type, 'Iteration: ', 0, n)
     upb <- function(i, n, every, pb) {
       if(i %% every == 0)
-        setTkProgressBar(pb, i, label=sprintf('Iteration: %d', i))
+        tcltk::setTkProgressBar(pb, i, label=sprintf('Iteration: %d', i))
       if(i == n) close(pb)
     }
     formals(upb) <- list(i=0, n=n, every=every, pb=pb)

@@ -3,9 +3,17 @@ export(asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineR
 useDynLib(rms)
 
 import(Hmisc)
-importFrom(survival, coxph.fit, coxph.control, survfit, survreg.fit)
+importFrom(survival, Surv, is.Surv, survConcordance.fit, coxph.fit, coxph.control, survfit, survfitcoxph.fit, survreg.fit, survreg.control, survpenal.fit, survfitKM, survreg.distributions, agreg.fit, agexact.fit, attrassign, untangle.specials)
 importFrom(stats, nobs)
 importFrom(SparseM, solve, t, as.matrix)
+
+import(lattice)
+importFrom(quantreg, rq.wfit, rq.fit, summary.rq)
+import(nlme)
+importFrom(rpart, rpart, rpart.control, prune)
+importFrom(polspline, hare, phare)
+import(multcomp)
+# importFrom(multcomp, confint.glht, glht)
 
 S3method(AIC, rms)
 S3method(anova, rms)
@@ -40,6 +48,7 @@ S3method(latex, validate)
 
 S3method(lines, residuals.psm.censored.normalized)
 
+S3method(logLik, Gls)
 S3method(logLik, ols)
 S3method(logLik, rms)
 

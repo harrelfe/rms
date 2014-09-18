@@ -16,7 +16,7 @@ predictrms <-
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
   if(conf.type == 'simultaneous') {
-    require(multcomp)
+    ## require(multcomp)
     if(missing(newdata) || !length(newdata))
       stop('newdata must be given if conf.type="simultaneous"')
   }

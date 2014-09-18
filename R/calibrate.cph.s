@@ -20,14 +20,14 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
 {
   call    <- match.call()
   cmethod <- match.arg(cmethod)
-  if(cmethod=='hare')
-    {
-      require('polspline') ||
-      {
-        cat('polspline package not installed.  Reverting to cmethod="KM"\n')
-        cmethod <- 'KM'
-      }
-    }
+  ## if(cmethod=='hare')
+  ##  {
+  ##    require('polspline') ||
+  ##    {
+  ##      cat('polspline package not installed.  Reverting to cmethod="KM"\n')
+  ##      cmethod <- 'KM'
+  ##    }
+  ##  }
   
   oldopt <- options(digits=3)
   on.exit(options(oldopt))

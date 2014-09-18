@@ -9,7 +9,7 @@ Gls <-
             pr=FALSE, x=FALSE)
             
 {
-    require(nlme)
+    ## require(nlme)
     if(!existsFunction('glsEstimate'))
 		stop('nlme package must be version 3.1-113 or later')
     

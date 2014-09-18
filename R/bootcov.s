@@ -525,7 +525,7 @@ bootBCa <- function(estimate, estimates, type=c('percentile','bca','basic'),
               statistic = function(...) 1e10,
               call = match.call())
 
-    cl <- try(boot.ci(w, type=type, conf=conf.int), silent=TRUE)
+    cl <- try(boot::boot.ci(w, type=type, conf=conf.int), silent=TRUE)
     if(inherits(cl, 'try-error')) {
       cl <- c(NA,NA)
     warning('could not obtain bootstrap confidence interval')

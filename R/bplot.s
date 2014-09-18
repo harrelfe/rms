@@ -5,7 +5,6 @@ bplot <-
            zlim=range(yhat, na.rm=TRUE),
            scales=list(arrows=FALSE), xlabrot, ylabrot, zlabrot=90, ...)
 {
-  require(lattice)
   lfunname <- deparse(substitute(lfun))
   if(missing(xlabrot))
     xlabrot <- switch(lfunname,

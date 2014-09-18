@@ -3,7 +3,7 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
 {
   usehare <- !missing(u)
   if(usehare) {
-    require(polspline) || stop('must have polspline installed')
+    ## require(polspline) || stop('must have polspline installed')
     if(missing(fun)) {
       if(missing(fit))
         stop('must specify fit if u is specified and fun is not')
@@ -44,7 +44,8 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
     est.surv   <- est.surv[i]
     S <- S[i,]
     curtail <- function(x) pmin(.9999, pmax(x, .0001))
-    f <- hare(S[,1], S[,2], fun(curtail(est.surv)), maxdim=maxdim, ...)
+    f <- hare(S[,1], S[,2], fun(curtail(est.surv)),
+              maxdim=maxdim, ...)
     if(missing(pred)) {
       if(missing(lim))
         lim <-
