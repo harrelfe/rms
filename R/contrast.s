@@ -1,7 +1,7 @@
 contrast <- function(fit, ...) UseMethod("contrast")
 
 contrast.rms <-
-  function(fit, a, b, cnames=NULL,
+  function(fit, a, b, a2, b2, cnames=NULL,
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'), usebootcoef=TRUE,
            boot.type=c('percentile','bca','basic'),
@@ -35,56 +35,84 @@ contrast.rms <-
     xb <- predict(fit, db, type='x')
   }
   mb <- nrow(xb)
+
+  if(! missing(a2)) {
+    if(missing(b) || missing(b2)) stop('b and b2 must be given if a2 is given')
+    da2 <- do.call('gendata', list(fit, factors=a2, expand=expand))
+    xa2 <- predict(fit, da2, type='x')
+    ma2 <- nrow(xa2)
+    db2 <- do.call('gendata', list(fit, factors=b2, expand=expand))
+    xb2 <- predict(fit, db2, type='x')
+    mb2 <- nrow(xb2)
+  }
+
+  allsame <- function(x) diff(range(x)) == 0
   
   vary <- NULL
-  if(type!='average' && !length(cnames)) {
-    ## If two lists have same length, label contrasts by any variable
-    ## that has the same length and values in both lists
-    if(ma == mb) {
-      if(ncol(da) != ncol(db)) stop('program logic error')
-      if(any(sort(names(da)) != sort(names(db))))
-        stop('program logic error')
-      k <- integer(0)
-      nam <- names(da)
-      for(j in 1:length(da))
-        if(all(as.character(da[[nam[j]]]) == as.character(db[[nam[j]]])))
-          k <- c(k, j)
-      if(length(k)) vary <- da[k]
-    } else if(max(ma, mb) > 1) {
-      ## Label contrasts by values of longest variable in list if
-      ## it has the same length as the expanded design matrix
-      d <- if(ma > 1) a else b
-      l <- sapply(d, length)
-      vary <- if(sum(l == max(ma, mb)) == 1) d[l == max(ma, mb)]
+  mall <- c(ma, mb)
+  ncols <- c(ncol(da), ncol(db))
+  if(! missing(a2)) {
+    mall <- c(mall, ma2, mb2)
+    ncols <- c(ncols, ncol(da2), ncol(db2))
+  }
+  
+  if(allsame(mall) && ! allsame(ncols)) stop('program logic error')
+  if(any(sort(names(da)) != sort(names(db))))
+    stop('program logic error')
+  if(! missing(a2) && (any(sort(names(da)) != sort(names(da2))) ||
+                       any(sort(names(da)) != sort(names(db2)))))
+    stop('program logic error')
+    
+  if(type != 'average' && ! length(cnames)) {
+    ## If all lists have same length, label contrasts by any variable
+    ## that has the same length and values in all lists
+    k <- integer(0)
+    nam <- names(da)
+    for(j in 1 : length(da)) {
+      w <- nam[j]
+      eq <- all(as.character(da[[w]]) == as.character(db[[w]]))
+      if(! missing(a2))
+        eq <- eq & all(as.character(da[[w]]) == as.character(da2[[w]])) &
+          all(as.character(da[[2]]) == as.character(db2[[w]]))
+      if(eq) k <- c(k, j)
+    }
+    if(length(k)) vary <- da[k]
+  } else if(max(mall) > 1) {
+    ## Label contrasts by values of longest variable in list if
+    ## it has the same length as the expanded design matrix
+    d <- if(ma > 1) a else b  # TODO add logic for a2 b2
+    l <- sapply(d, length)
+    vary <- if(sum(l == max(ma, mb)) == 1) d[l == max(ma, mb)]
+  }
+
+  if(sum(mall > 1) > 1 && ! allsame(mall[mall > 1]))
+    stop('lists of settings with more than one row must all have the same # rows')
+  mm <- max(mall)
+  if(mm > 1 && any(mall == 1)) {
+    if(ma == 1) xa <- matrix(xa, nrow=mm, ncol=ncol(xa), byrow=TRUE)
+    if(mb == 1) xb <- matrix(xb, nrow=mm, ncol=ncol(xb), byrow=TRUE)
+    if(! missing(a2)) {
+      if(ma2 == 1) xa2 <- matrix(xa2, nrow=mm, ncol=ncol(xa2), byrow=TRUE)
+      if(mb2 == 1) xb2 <- matrix(xb2, nrow=mm, ncol=ncol(xb2), byrow=TRUE)
     }
   }
   
-  if(max(ma, mb) > 1 && min(ma, mb) == 1) {
-    if(ma==1) xa <- matrix(xa, nrow=mb, ncol=ncol(xb), byrow=TRUE)
-    else
-      xb <- matrix(xb, nrow=ma, ncol=ncol(xa), byrow=TRUE)
-  }
-  else if(mb != ma)
-    stop('number of rows must be the same for observations generated\nby a and b unless one has one observation')
-
   X <- xa - xb
+  if(! missing(a2)) X <- X - (xa2 - xb2)
   m <- nrow(X)
   if(nrp > 0) X <- cbind(matrix(0., nrow=m, ncol=nrp), X)
   
   if(is.character(weights)) {
     if(weights != 'equal') stop('weights must be "equal" or a numeric vector')
     weights <- rep(1,  m)
-  }
-  else
-    if(length(weights) > 1 && type != 'average')
+  } else if(length(weights) > 1 && type != 'average')
       stop('can specify more than one weight only for type="average"')
-    else
-      if(length(weights) != m) stop(paste('there must be', m, 'weights'))
+    else if(length(weights) != m) stop(paste('there must be', m, 'weights'))
   weights <- as.vector(weights)
   if(m > 1 && type=='average')
     X <- matrix(apply(weights*X, 2, sum) / sum(weights), nrow=1,
                 dimnames=list(NULL, dimnames(X)[[2]]))
-
+  
   est <- matxv(X, coef(fit))
   v <- X %*% vcov(fit, regcoef.only=FALSE) %*% t(X)
   ndf <- if(is.matrix(v))nrow(v) else 1
@@ -154,13 +182,12 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
   no[no=='Pvalue'] <- pn
   
   cnames <- x$cnames
-  if(!length(cnames)) cnames <- if(x$nvary)rep('',length(x[[1]])) else
+  if(! length(cnames)) cnames <- if(x$nvary) rep('', length(x[[1]])) else
     as.character(1:length(x[[1]]))
   if(any(x$redundant)) cnames <- paste(ifelse(x$redundant, '*', ' '), cnames)
-  attr(w,'row.names') <- cnames
-  attr(w,'class') <- 'data.frame'
+  w <- data.frame(w, row.names=paste(format(1:length(cnames)), cnames, sep=''))
   w$Contrast <- fun(w$Contrast)
-  if(!all(1:10 == fun(1:10))) w$SE <- rep(NA, length(w$SE))
+  if(! all(1:10 == fun(1:10))) w$SE <- rep(NA, length(w$SE))
   w$Lower    <- fun(w$Lower)
   w$Upper    <- fun(w$Upper)
 
@@ -169,7 +196,8 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
 
   # Print w
   if(!jointonly) {
-    print(as.matrix(w), quote=FALSE)
+    ## print(as.matrix(w), quote=FALSE)
+    print(w)
     if(any(x$redundant)) cat('\nRedundant contrasts are denoted by *\n')
   }
   
