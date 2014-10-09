@@ -1,5 +1,6 @@
 Changes in version 4.2-2 (2014-10-??)
    * contrast.rms: added 3rd and 4th list of predictor settings to allow for double-difference (interaction) contrasts
+   * predictrms: don't call vcov if no covariates present
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly

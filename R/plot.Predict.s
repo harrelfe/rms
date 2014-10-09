@@ -24,16 +24,16 @@ plot.Predict <-
     do.call('scat1d', c(list(x=x, y=y), so, grid=TRUE))
   }
   
-  info   <- attr(x, 'info')
-  at     <- info$Design
-  label  <- at$label
-  units  <- at$units
-  values <- info$values
-  adjust <- info$adjust
-  yunits <- info$yunits
-  varying<- info$varying
+  info     <- attr(x, 'info')
+  at       <- info$Design
+  label    <- at$label
+  units    <- at$units
+  values   <- info$values
+  adjust   <- info$adjust
+  yunits   <- info$yunits
+  varying  <- info$varying
   conf.int <- info$conf.int
-  dotlist <- list(...)
+  dotlist  <- list(...)
 
   gname <- groups
   if(length(gname)) {

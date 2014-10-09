@@ -217,7 +217,7 @@ predictrms <-
         class(X) <- "data.frame"
         newdata <- X
         ## Note: data.frame() converts matrix variables to individual variables
-        if(type=="data.frame") return(newdata)
+        if(type == "data.frame") return(newdata)
       }  # end !is.data.frame(newdata)
       else {
         ## Need to convert any factors to have all levels in original fit
@@ -249,7 +249,7 @@ predictrms <-
       }  # is.data.frame(newdata)
       X <- model.frame(Terms.nooff, newdata, na.action=na.action, ...)
       if(type == "model.frame") return(X)
-      naa <- attr(X, "na.action")
+      naa  <- attr(X, "na.action")
       rnam <- row.names(X)
           
       strata <- list()
@@ -282,10 +282,12 @@ predictrms <-
     }   # end !length(X)
     else strata <- attr(X, "strata")
   }   # if(end adj.to adj.to.data.frame)
-  cov <- vcov(fit, regcoef.only=TRUE, intercepts=kint)
-  covnoint <- if(nrp == 0) cov
-  else 
-    vcov(fit, regcoef.only=TRUE, intercepts='none')
+  if(somex) {
+    cov <- vcov(fit, regcoef.only=TRUE, intercepts=kint)
+    covnoint <- if(nrp == 0) cov
+                 else 
+                  vcov(fit, regcoef.only=TRUE, intercepts='none')
+  }
 
   if(type %in% c('adjto.data.frame', 'adjto')) return(Adjto(type))
   
