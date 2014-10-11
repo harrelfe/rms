@@ -275,8 +275,8 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
 print.summary.rms <- function(x, ...)
 {
   cstats <- dimnames(x)[[1]]
-  for(i in 1:3) cstats <- cbind(cstats, format(signif(x[,i], 5)))
-  for(i in 4:7) cstats <- cbind(cstats, format(round(x[,i], 2)))
+  for(i in 1 : 7) cstats <- cbind(cstats, format(signif(x[, i], 5)))
+#  for(i in 4 : 7) cstats <- cbind(cstats, format(round (x[, i], 2)))
   dimnames(cstats) <- list(rep("", nrow(cstats)), 
                            c("Factor", dimnames(x)[[2]][1 : 7]))
   cat(attr(x,"heading"), "\n\n")
@@ -312,8 +312,8 @@ latex.summary.rms <-
   rowl <- sedit(rowl, "-", "---")
   cstats <- matrix("", nrow=nrow(object), ncol=ncol(object), 
                    dimnames=dimnames(object))
-  for(i in 1:3) cstats[,i] <- format(signif(object[,i], 5))
-  for(i in 4:7) cstats[,i] <- format(round(object[,i],2))
+  for(i in 1 : 7) cstats[,i] <- format(signif(object[, i], 5))
+  ## for(i in 4 : 7) cstats[,i] <- format(round(object[, i],  2))
   cstats[is.na(object)] <- ""
   caption <- sedit(caption, "    Response","~~~~~~Response")
   cstats <- as.data.frame(cstats)
