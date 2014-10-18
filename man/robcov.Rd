@@ -55,7 +55,9 @@ estimator of the covariance matrix.
 a new fit object with the same class as the original fit,
 and with the element \code{orig.var} added. \code{orig.var} is
 the covariance matrix of the original fit.  Also, the original \code{var}
-component is replaced with the new Huberized estimates.
+component is replaced with the new Huberized estimates.  A component
+\code{clusterInfo} is added to contain elements \code{name} and \code{n}
+holding the name of the \code{cluster} variable and the number of clusters.
 }
 \author{
 Frank Harrell\cr

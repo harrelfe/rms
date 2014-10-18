@@ -236,9 +236,12 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
 
   maxd <- signif(stats['Max Deriv'], 1)
   if(latex) maxd <- paste('$', latexSN(maxd), '$', sep='')
+  ci <- x$clusterInfo
   misc <- reVector(Obs   =stats['Obs'],
                    'Sum of weights'=stats['Sum of Weights'],
                    Strata=if(nstrata > 1) nstrata,
+                   'Cluster on' = ci$name,
+                   'Clusters'   = ci$n,
                    'max |deriv|' = maxd)
   if(length(x$freq) < 4) {
     names(x$freq) <- paste(if(latex)'~~' else ' ',

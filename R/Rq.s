@@ -137,7 +137,10 @@ print.Rq <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
     n <- s['n']; p <- s['p']; errordf <- n - p; g <- s['g']
     mad <- s['mad']
 
+    ci <- x$clusterInfo
     misc <- reVector(Obs=n, p=p, 'Residual d.f.'=errordf,
+                     'Cluster on'=ci$name,
+                     Clusters    =ci$n,
                      'mean |Y-Yhat|'=mad)
     disc <- reVector(g=g)
     headings <- list('', c('Discrimination', 'Index'))

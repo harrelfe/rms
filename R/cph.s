@@ -579,8 +579,11 @@ print.cph <- function(x, digits=4, table=TRUE, conf.int=FALSE,
   
   if(length(x$coef)) {
     stats <- x$stats
+    ci <- x$clusterInfo
     misc <- reVector(Obs   =stats['Obs'],
                      Events=stats['Events'],
+                     'Cluster on' = ci$name,
+                     Clusters = ci$n,
                      Center=x$center)
     lr   <- reVector('LR chi2'     = stats['Model L.R.'],
                      'd.f.'        = stats['d.f.'],

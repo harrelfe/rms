@@ -214,8 +214,11 @@ print.orm <- function(x, digits=4, coefs=TRUE,
 
   maxd <- signif(stats['Max Deriv'], 1)
   if(latex) maxd <- paste('$', latexSN(maxd), '$', sep='')
+  ci <- x$clusterInfo
   misc <- reVector(Obs           = stats['Obs'],
                    'Unique Y'    = stats['Unique Y'],
+                   'Cluster on'  = ci$name,
+                   Clusters      = ci$n,
                    'Median Y'    = stats['Median Y'],
                    'max |deriv|' = maxd)
   if(length(x$freq) < 4) {

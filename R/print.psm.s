@@ -10,9 +10,11 @@ print.psm <- function(x, correlation = FALSE, digits=4,
     title <- paste("Parametric Survival Model:", name, "Distribution")
 
   stats <- x$stats
-
+  ci <- x$clusterInfo
   counts <- reVector(Obs   = stats['Obs'],
                      Events= stats['Events'],
+                     'Cluster on' = ci$name,
+                     Clusters = ci$n,
                      'Sum of Weights'=stats['Sum of Weights'],
                      sigma = if(length(x$scale)==1) x$scale)
   lr <- reVector('LR chi2'     = stats['Model L.R.'],

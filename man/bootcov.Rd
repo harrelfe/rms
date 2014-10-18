@@ -236,7 +236,9 @@ applicable).  \code{boot.Coef} is added if \code{coef.reps=TRUE}.
 \code{boot.loglik} is added if \code{loglik=TRUE}.  If \code{stat} is
 specified an additional vector \code{boot.stats} will be contained in
 the returned object.  \code{B} contains the number of successfully fitted
-bootstrap resamples.
+bootstrap resamples.    A component
+\code{clusterInfo} is added to contain elements \code{name} and \code{n}
+holding the name of the \code{cluster} variable and the number of clusters.
 
 
 \code{bootplot} returns a (possible matrix) of quantities of interest and

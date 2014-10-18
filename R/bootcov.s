@@ -207,6 +207,8 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   if(!exists('.Random.seed')) runif(1)
   seed <- .Random.seed
   if(missing(cluster)) {
+    clusterName <- NULL
+    nc <- n
     b <- 0
     pb <- setPb(B, type='Boot', onlytk=!pr, every=20)
     for(i in 1:B) {
@@ -253,6 +255,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     }
   }
   else {
+    clusterName <- deparse(substitute(cluster))
     if(length(cluster) > n) {
       ## Missing obs were deleted during fit
       if(length(nac)) {
@@ -261,7 +264,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       }
     }
     
-    if(length(cluster)!=n)
+    if(length(cluster) != n)
       stop("length of cluster does not match # rows used in fit")
     
     if(any(is.na(cluster))) stop("cluster contains NAs")
@@ -353,6 +356,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     newp <- 2. * (1. - pt(abs(newt), fit$stats['n'] - fit$stats['p']))
     fit$summary[, 2L : 4L] <- cbind(newse, newt, newp)
   }
+  fit$clusterInfo <- list(name=clusterName, n=nc)
   fit
 }
   

@@ -98,8 +98,11 @@ print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE,
   dof <- x$rank - (names(cof)[1]=='Intercept')
   pval <- 1 - pchisq(lr, dof)
 
+  ci <- x$clusterInfo
   misc <- reVector(Obs=length(x$residuals),
                    'Residual d.f.'=x$df.residual,
+                   'Cluster on'=ci$name,
+                   Clusters=ci$n,
                    g = x$g)
   lr   <- reVector('LR chi2'     = lr,
                    'd.f.'        = dof,
