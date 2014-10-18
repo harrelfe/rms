@@ -249,7 +249,7 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
     headings <- list('',
                      c('Model Likelihood', 'Ratio Test'),
                      c('Discrimination', 'Indexes'))
-    data <- list(c(misc, c(NA,digits,NA)), c(lr, c(2,NA,4)), c(disc,3))
+    data <- list(c(misc, c(NA,digits,NA,NA,NA)), c(lr, c(2,NA,4)), c(disc,3))
     k <- k + 1
     z[[k]] <- list(type='stats', list(headings=headings, data=data))
   }

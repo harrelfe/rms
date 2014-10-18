@@ -16,18 +16,21 @@ print.psm <- function(x, correlation = FALSE, digits=4,
                      'Cluster on' = ci$name,
                      Clusters = ci$n,
                      'Sum of Weights'=stats['Sum of Weights'],
-                     sigma = if(length(x$scale)==1) x$scale)
+                     sigma = if(length(x$scale) == 1) x$scale)
   lr <- reVector('LR chi2'     = stats['Model L.R.'],
                  'd.f.'        = stats['d.f.'],
                  'Pr(> chi2)'  = stats['P'])
-  disc <- reVector('R2'=stats['R2'], 'Dxy'=stats['Dxy'],
-                   g=stats['g'], gr=stats['gr'])
+  disc <- reVector(R2=stats['R2'], Dxy=stats['Dxy'],
+                   g=stats['g'],   gr=stats['gr'])
 
   headings <- list('',
                    c('Model Likelihood','Ratio Test'),
                    c('Discrimination','Indexes'))
-  digcounts <- c(NA, NA, NA, 4)
-  if(length(counts) == 3) digcounts <- c(NA, NA, 4)
+  digcounts <- c(NA, NA, NA,
+                 if(length(ci$name)) NA,
+                 if(length(ci$n))    NA,
+                 if(length(x$scale) == 1) 4)
+
   data <- list(c(counts, digcounts), c(lr, c(2,NA,-4)), c(disc, 3))
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))

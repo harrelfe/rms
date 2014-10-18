@@ -584,7 +584,7 @@ print.cph <- function(x, digits=4, table=TRUE, conf.int=FALSE,
                      Events=stats['Events'],
                      'Cluster on' = ci$name,
                      Clusters = ci$n,
-                     Center=x$center)
+                     Center   = round(x$center, digits))
     lr   <- reVector('LR chi2'     = stats['Model L.R.'],
                      'd.f.'        = stats['d.f.'],
                      'Pr(> chi2)'  = stats['P'],
@@ -596,7 +596,7 @@ print.cph <- function(x, digits=4, table=TRUE, conf.int=FALSE,
                      gr = stats['gr'])
     k <- k + 1
     headings <- list('', 'Model Tests', c('Discrimination', 'Indexes'))
-    data     <- list(c(misc, c(NA,NA,digits)),
+    data     <- list(misc,
                      c(lr,   c(2,NA,4,2,4)),
                      c(disc, 3))
     z[[k]] <- list(type='stats', list(headings=headings, data=data))

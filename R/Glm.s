@@ -109,7 +109,7 @@ print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE,
                    'Pr(> chi2)' = pval)
   headings <- list('',
                    c('Model Likelihood', 'Ratio Test'))
-  data <-  list(c(misc, c(NA,NA,3)),
+  data <-  list(c(misc, c(NA,NA,NA,NA,3)),
                 c(lr,   c(2, NA,-4)))
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))

@@ -329,7 +329,8 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
   
   stats <- x$stats
   ci    <- x$clusterInfo
-  misc   <- reVector(Obs=stats['Obs'], Events=stats['Events'],
+  misc   <- reVector(Obs          = stats['Obs'],
+                     Events       = stats['Events'],
                      'Cluster on' = ci$name,
                      'Clusters'   = ci$n)
   dfstat <- reVector('Regression d.f.' = stats['d.f.'],
