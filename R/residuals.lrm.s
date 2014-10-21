@@ -180,7 +180,7 @@ residuals.lrm <-
                            as.vector(X %*% cof[- (1:k)]), "+"))
     low.x = rbind(0, px)[cbind(Y + 1L, 1:N)]
     hi.x  = 1 - rbind(px, 1)[cbind(Y + 1L, 1:N)]
-    return(hi.x - low.x)
+    return(low.x - hi.x)
   }
   
   if(type=="pearson") return(naresid(naa, (Y - P) / sqrt(P * (1 - P))))

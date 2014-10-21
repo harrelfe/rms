@@ -14,12 +14,12 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
 
   n <- nrow(X)
   if(missing(cluster)) {
-    clusterName <- NULL
-    cluster <- 1:n
+    clusterInfo <- NULL
+    cluster     <- 1:n
   }
   else {
     if(any(is.na(cluster))) stop("cluster contains NAs")
-    clusterName <- deparse(substitute(cluster))
+    clusterInfo <- list(name=deparse(substitute(cluster)))
   }
   if(length(cluster) != n)
     stop("length of cluster does not match number of observations used in fit")
@@ -36,10 +36,10 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
   j <- order(cluster)
   X <- X[j,,drop=FALSE]
   clus.size  <- table(cluster)
-  clusterCount <- length(clus.size)
-  clus.start <- c(1,1+cumsum(clus.size))
+  if(length(clusterInfo)) clusterInfo$n <- length(clus.size)
+  clus.start <- c(1, 1 + cumsum(clus.size))
   nc <- length(levels(cluster))
-  clus.start <- clus.start[-(nc+1)]
+  clus.start <- clus.start[- (nc + 1)]
   storage.mode(clus.start) <- "integer"
   
   W <- matrix(.Fortran("robcovf", n, p, nc, clus.start, clus.size, X, 
@@ -79,7 +79,7 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
 
   fit$orig.var <- var
   fit$var <- adjvar
-  fit$clusterInfo <- list(name=clusterName, n=clusterCount)
+  fit$clusterInfo <- clusterInfo
   ##fit$design.effects <- deff
   ##fit$effective.n <- eff.n
   

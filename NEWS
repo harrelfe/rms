@@ -4,6 +4,7 @@ Changes in version 4.2-2 (2014-10-??)
    * print.summary.rms, latex.summary.rms: print more significant digits for effect-related columns
    * robcov, bootcov: added new object clusterInfo in the fit object
    * all fitting functions: print method prints clusterInfo
+   * residuals.lrm: negated Li-Shepherd residuals to make them correct
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly
