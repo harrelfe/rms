@@ -5,6 +5,7 @@ Changes in version 4.2-2 (2014-10-??)
    * robcov, bootcov: added new object clusterInfo in the fit object
    * all fitting functions: print method prints clusterInfo
    * residuals.lrm: negated Li-Shepherd residuals to make them correct
+   * residuals.orm: put in namespace and added examples from Qi Liu
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly

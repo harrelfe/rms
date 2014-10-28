@@ -310,6 +310,26 @@ for(j in 1:2) {     # 1: prop.odds   2: non-prop. odds
 }
 par(mfrow=c(1,1))
 
+# Shepherd-Li residuals from orm.  Thanks: Qi Liu
+
+set.seed(3)
+n  <- 100
+x1 <- rnorm(n)
+y  <- x1 + rnorm(n)
+g <- orm(y ~ x1, family=probit, x=TRUE, y=TRUE)
+g.resid <- resid(g)
+plot(x1, g.resid, cex=0.4); lines(lowess(x1, g.resid)); abline(h=0, col=2,lty=2)
+
+set.seed(3)
+n <- 100
+x1 <- rnorm(n)
+y <- x1 + x1^2 +rnorm(n)
+# model misspecification, the square term is left out in the model
+g <- orm(y ~ x1, family=probit, x=TRUE, y=TRUE)
+g.resid <- resid(g)
+plot(x1, g.resid, cex=0.4); lines(lowess(x1, g.resid)); abline(h=0, col=2,lty=2)
+
+
 \dontrun{
 # Get data used in Hosmer et al. paper and reproduce their calculations
 v <- Cs(id, low, age, lwt, race, smoke, ptl, ht, ui, ftv, bwt)

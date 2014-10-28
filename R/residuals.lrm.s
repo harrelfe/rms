@@ -324,12 +324,13 @@ residuals.orm <-
            type=c("li.shepherd", "ordinary","score","score.binary","pearson",
              "deviance","pseudo.dep","partial",
              "dfbeta","dfbetas","dffit","dffits","hat","gof","lp1"),
-           pl=FALSE, xlim, ylim, kint=1, label.curves=TRUE, 
+           pl=FALSE, xlim, ylim, kint, label.curves=TRUE, 
            which, ...)
 {
   type <- match.arg(type)
-  args <- list(object=object, type=type, pl=pl, kint=kint,
+  args <- list(object=object, type=type, pl=pl,
                label.curves=label.curves, ...)
+  if(!missing(kint))  args$kint  <- kint
   if(!missing(xlim))  args$xlim  <- xlim
   if(!missing(ylim))  args$ylim  <- ylim
   if(!missing(which)) args$which <- which
