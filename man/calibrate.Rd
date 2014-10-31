@@ -63,7 +63,7 @@ calibrate(fit, \dots)
 
 \method{plot}{calibrate}(x, xlab, ylab, subtitles=TRUE, conf.int=TRUE,
  cex.subtitles=.75, riskdist=TRUE, add=FALSE,
- scat1d.opts=list(nhistSpike=200), \dots)
+ scat1d.opts=list(nhistSpike=200), par.corrected=NULL, \dots)
 
 \method{plot}{calibrate.default}(x, xlab, ylab, xlim, ylim,
   legend=TRUE, subtitles=TRUE, scat1d.opts=NULL, \dots)
@@ -175,6 +175,10 @@ Kaplan-Meier estimates
   plot}
 \item{scat1d.opts}{a list specifying options to send to \code{scat1d} if
   \code{riskdist=TRUE}.  See \code{\link[Hmisc]{scat1d}}.}
+\item{par.corrected}{a list specifying graphics parameters \code{col},
+  \code{lty}, \code{lwd}, \code{pch} to be used in drawing
+  overfitting-corrected estimates.  Default is \code{col="blue"},
+  \code{lty=1}, \code{lwd=1}, \code{pch=4}.}
 \item{legend}{
 set to \code{FALSE} to suppress legends (for \code{lrm}, \code{ols}
 only) on the calibration plot, or specify a list with elements \code{x}

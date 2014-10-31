@@ -6,6 +6,7 @@ Changes in version 4.2-2 (2014-10-??)
    * all fitting functions: print method prints clusterInfo
    * residuals.lrm: negated Li-Shepherd residuals to make them correct
    * residuals.orm: put in namespace and added examples from Qi Liu
+   * plot.calibrate: added par.corrected so user can specify graphics parameters for plotting overfitting-corrected estimates
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly
