@@ -6,7 +6,7 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
   vname <- dimnames(var)[[1]]
   
   if(inherits(fit, "ols"))
-    var <- fit$df.residual * var / sum(fit$residuals^2)  #back to X'X
+    var <- fit$df.residual * var / sum(fit$residuals ^ 2)  #back to X'X
   else
     if(method=='efron') stop('method="efron" only works for ols fits')
 
@@ -15,7 +15,7 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
   n <- nrow(X)
   if(missing(cluster)) {
     clusterInfo <- NULL
-    cluster     <- 1:n
+    cluster     <- 1 : n
   }
   else {
     if(any(is.na(cluster))) stop("cluster contains NAs")
@@ -28,13 +28,13 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
   p <- ncol(var)
   j <- is.na(X %*% rep(1, ncol(X)))
   if(any(j)) {
-    X       <- X[!j,, drop=FALSE]
-    cluster <- cluster[!j]
+    X       <- X[! j,, drop=FALSE]
+    cluster <- cluster[! j, drop=TRUE]
     n       <- length(cluster)
   }
 
   j <- order(cluster)
-  X <- X[j,,drop=FALSE]
+  X <- X[j, , drop=FALSE]
   clus.size  <- table(cluster)
   if(length(clusterInfo)) clusterInfo$n <- length(clus.size)
   clus.start <- c(1, 1 + cumsum(clus.size))
@@ -43,7 +43,7 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
   storage.mode(clus.start) <- "integer"
   
   W <- matrix(.Fortran("robcovf", n, p, nc, clus.start, clus.size, X, 
-                       double(p), double(p*p), w=double(p*p),
+                       double(p), double(p * p), w=double(p * p),
                        PACKAGE="rms")$w, nrow=p)
 
 ##The following has a small bug but comes close to reproducing what robcovf does
