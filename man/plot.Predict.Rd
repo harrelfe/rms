@@ -198,6 +198,8 @@ default is 4 significant digits.
   in the most empty part of the plot.  The \code{col}, \code{lty}, and
   \code{lwd} parameters are passed automatically to \code{labcurve}
   although they may be overridden here.
+  It is also useful to use \dots to pass \code{lattice} graphics parameters, e.g.
+  \code{par.settings=list(axis.text=list(cex=1.2), par.ylab.text=list(col='blue',cex=.9),par.xlab.text=list(cex=1))}.
 }
 \item{object}{an object having a \code{print} method}
 \item{y}{y-coordinate for placing text in a \code{lattice} panel
