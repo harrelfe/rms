@@ -132,6 +132,8 @@ Predict(x, ..., fun,
 	Set to \code{TRUE} to subtract a constant from \eqn{X\beta}{X beta}
 	before plotting so that the reference value of the \code{x}-variable
 	yields \code{y=0}.  This is done before applying function \code{fun}.
+	This is especially useful for Cox models to make the hazard ratio be
+	1.0 at reference values, and the confidence interval have width zero.
   }
   \item{kint}{
 	This is only useful in a multiple intercept model such as the ordinal

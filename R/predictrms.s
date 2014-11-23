@@ -17,7 +17,7 @@ predictrms <-
   conf.type <- match.arg(conf.type)
   if(conf.type == 'simultaneous') {
     ## require(multcomp)
-    if(missing(newdata) || !length(newdata))
+    if(missing(newdata) || ! length(newdata))
       stop('newdata must be given if conf.type="simultaneous"')
   }
 
@@ -33,7 +33,7 @@ predictrms <-
   rnam      <- NULL
   cox <- inherits(fit, "cph")
   naa <- fit$na.action
-  if(!expand.na)
+  if(! expand.na)
     naresid <- function(a,b) b #don't really call naresid if drop NAs
 
   parms   <- at$parms
@@ -41,7 +41,7 @@ predictrms <-
   coeff   <- fit$coefficients
   nrp     <- num.intercepts(fit)
   nrpcoef <- num.intercepts(fit, 'coef')
-  if(!length(kint)) kint <- fit$interceptRef  # orm or lrm otherwise NULL
+  if(! length(kint)) kint <- fit$interceptRef  # orm or lrm otherwise NULL
 
   int.pres <- nrp > 0L
 
@@ -95,6 +95,7 @@ predictrms <-
   }
 
   ## Form design matrix for adjust-to values
+  ## Result of Adjto() is a model matrix with no intercept(s)
   Adjto <- function(type) {
     adjto <- list()
     ii <- 0L
@@ -115,9 +116,7 @@ predictrms <-
     class(adjto) <- "data.frame"
     if(type == "adjto.data.frame") return(adjto)
     adjto <- model.frame(Terms.nooff, adjto)
-    adjto <- if(int.pres) model.matrix(Terms.ns.nooff, adjto)[, -1, drop=FALSE]
-    else
-      model.matrix(Terms.ns.nooff, adjto)
+    adjto <- model.matrix(Terms.ns.nooff, adjto)[, -1, drop=FALSE]
     if(type == 'adjto') {
       k <- (nrpcoef + 1L) : length(coeff)
       nck <- names(coeff)[k]
@@ -132,13 +131,13 @@ predictrms <-
   
   if(type %nin% c('adjto', 'adjto.data.frame')) {
     X <- NULL
-    if(missing(newdata) || !length(newdata)) {
+    if(missing(newdata) || ! length(newdata)) {
       flp <- fit$linear.predictors
       if(type == "lp" && length(flp)) {
         LP  <- naresid(naa, flp)
         if(int.pres) {
           lpkint <- attr(flp, 'intercepts')
-          if(!length(lpkint)) lpkint <- 1L
+          if(! length(lpkint)) lpkint <- 1L
           if(length(kint) && kint != lpkint)
             {
               LP <- LP - coeff[lpkint] + coeff[kint]
@@ -146,7 +145,7 @@ predictrms <-
         }
         if(length(stra <- fit$Strata))
           attr(LP, "strata") <- naresid(naa, stra)
-        if(!se.fit && !conf.int) return(LP)
+        if(! se.fit && ! conf.int) return(LP)
         else
           if(length(fit$se.fit)) {
             if(nrp > 1L)
@@ -167,20 +166,20 @@ predictrms <-
              naresid(naa, stra) else NULL))
       X <- fit[['x']]
       rnam <- dimnames(X)[[1]]
-      if(!length(X))
+      if(! length(X))
         stop("newdata not given and fit did not store x")
     }   # end no newdata
-    if(!length(X)) {
-      if(!is.data.frame(newdata)) {
+    if(! length(X)) {
+      if(! is.data.frame(newdata)) {
         if(is.list(newdata)) {
-          loc <- if(!length(names(newdata))) 1L : f else name[assume != 9L]
+          loc <- if(! length(names(newdata))) 1L : f else name[assume != 9L]
           new <- matrix(double(1L),
                         nrow=length(newdata[[1L]]),
                         ncol=length(newdata))
           for(j in 1L : ncol(new)) new[,j] <- newdata[[loc[j]]]
           newdata <- new
         }
-        if(!is.matrix(newdata)) newdata <- matrix(newdata, ncol=f)
+        if(! is.matrix(newdata)) newdata <- matrix(newdata, ncol=f)
         if(ncol(newdata) != f)
           stop("# columns in newdata not= # factors in design")
         X  <- list()
@@ -226,7 +225,7 @@ predictrms <-
         nm <- names(newdata)
         for(i in 1L : ncol(newdata)) {
           j <- match(nm[i], name)
-          if(!is.na(j)) {
+          if(! is.na(j)) {
             asj <- assume[j]
             w   <- newdata[,i]
             V   <- NULL
@@ -237,7 +236,7 @@ predictrms <-
               newdata[,i] <- factor(w, V)
               ## Handles user specifying numeric values without quotes, that
               ## are levels
-              ww <- is.na(newdata[,i]) & !is.na(unclass(w))
+              ww <- is.na(newdata[,i]) & ! is.na(unclass(w))
               if(any(ww)) 	{
                 cat("Error in predictrms: Values in",names(newdata)[i],
                     "not in",V,":\n")
@@ -260,7 +259,7 @@ predictrms <-
         xi <- X[[i]]
         asi <- attr(xi, "assume.code")
         as <- assume[ii]
-        if(!length(asi) && as == 7L) {
+        if(! length(asi) && as == 7L) {
           attr(X[,i], "contrasts") <- 
             attr(scored(xi, name=name[ii]), "contrasts")
           if(length(xi) == 1L) warning("a bug in model.matrix can produce incorrect results\nwhen only one observation is being predicted for an ordered variable")
@@ -272,7 +271,7 @@ predictrms <-
           strata[[nst]] <- factor(ste[X[,i]], ste)
         }
       }
-      X <- if(!somex) NULL
+      X <- if(! somex) NULL
       else model.matrix(Terms.ns.nooff, X)[, -1L, drop=FALSE]
       
       if(nstrata > 0L) {
@@ -315,24 +314,24 @@ predictrms <-
     xb <- naresid(naa, xb)
     if(nstrata > 0) attr(xb, "strata") <- naresid(naa, strata)
     ycenter <- if(ref.zero && somex) {
-      if(!length(adjto)) adjto <- Adjto(type)
+      if(! length(adjto)) adjto <- Adjto(type)
       matxv(adjto, coeff, kint=kint) - Center
       } else 0.
     
     if(ref.zero || ((se.fit || conf.int) && somex)) {
       dx <- dim(X)
       n <- dx[1L]; p <- dx[2L]
-      if(cox)      X <- X - rep(fit$means, rep.int(n, p)) else
+      if(cox && ! ref.zero) X <- X - rep(fit$means, rep.int(n, p))
       if(ref.zero) {
-        if(!length(adjto)) adjto <- Adjto(type)
+        if(! length(adjto)) adjto <- Adjto(type)
         X <- X - rep(adjto, rep.int(n, p))
       }
       se <- drop(if(ref.zero || nrp == 0L)
                  sqrt(((X %*% covnoint) * X) %*% rep(1L, ncol(X)))
-      else {
-        Xx <- cbind(Intercept=1., X)
-        sqrt(((Xx %*% cov) * Xx) %*% rep(1L, ncol(Xx)))
-      })
+                 else {
+                  Xx <- cbind(Intercept=1., X)
+                  sqrt(((Xx %*% cov) * Xx) %*% rep(1L, ncol(Xx)))
+                 })
       names(se) <- rnam
       
       sef <- naresid(naa, se)
@@ -365,7 +364,7 @@ predictrms <-
   }   ## end if type='lp'
 
   if(type %in% c("terms", "cterms", "ccterms")) {
-    if(!somex)
+    if(! somex)
       stop('type="terms" may not be given unless covariables present')
     
     usevar <- if(type=="terms") non.strat else rep(TRUE, length(assume))
@@ -373,7 +372,7 @@ predictrms <-
                     list(rnam, name[usevar]))
     if(se.fit) se <- fitted
     if(center.terms) {
-      if(!length(adjto)) adjto <- Adjto(type)
+      if(! length(adjto)) adjto <- Adjto(type)
       if(ncol(adjto) != ncol(X)) {
         if(dimnames(adjto)[[2L]][1L] %in% c('Intercept','(Intercept)') &&
            dimnames(X)[[2L]][1L]    %nin% c('Intercept','(Intercept)'))
