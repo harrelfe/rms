@@ -5,7 +5,7 @@ validate.cph <- function(fit, method="boot",
 {
   atr <- fit$Design
 
-  need.surv <- dxy & any(atr$assume.code==8)
+  need.surv <- dxy & any(atr$assume.code == 8)
   
   if(need.surv & missing(u))
     stop("Presence of strata -> survival estimates needed for dxy; u omitted")
@@ -16,7 +16,7 @@ validate.cph <- function(fit, method="boot",
                       need.surv=FALSE, u, modtype, pr=FALSE, ...)
     {
       n <- nrow(y)
-      if(!length(x) || length(unique(x))==1) {
+      if(! length(x) || length(unique(x)) == 1) {
         Dxy <- 0
         slope <- 1
         D <- 0
@@ -80,14 +80,14 @@ validate.cph <- function(fit, method="boot",
   
   cox.fit <- function(x, y, strata, u, need.surv=FALSE, modtype, tol=1e-9,
                       ...) {
-    if(!length(x))
+    if(! length(x))
       return(list(fail=FALSE,coefficients=numeric(0)))
     
-    if(!need.surv)
+    if(! need.surv)
       u <- 0
     
     ##	coxph(x,y,e,pr=F,surv=need.surv)
-    if(!need.surv) {
+    if(! need.surv) {
       type <- attr(y, 'type')
       storage.mode(x) <- "double"
       x <- as.matrix(x)
@@ -124,19 +124,19 @@ validate.cph <- function(fit, method="boot",
 
 dxy.cens <- function(x, y, type=c('time','hazard')) {
   type <- match.arg(type)
-  negate <- FALSE
-  if(!is.Surv(y)) y <- Surv(y)
+  negate <- type == 'hazard'
+  if(! is.Surv(y)) y <- Surv(y)
    else {
-     type <- attr(y, 'type')
-     if(length(type) == 1 && type == 'left') {
+     stype <- attr(y, 'type')
+     if(length(stype) == 1 && stype == 'left') {
        y <- Surv(y[,1], y[,2])   # right censored
-       negate <- TRUE
+       negate <- ! negate
      }
    }
   i <- is.na(x) | is.na(y)
   if(any(i)) {
-    x <- x[!i]
-    y <- y[!i,]
+    x <- x[! i]
+    y <- y[! i,]
   }
   k <- survConcordance.fit(y, x)
   cindex <- (k[1] + k[3]/2)/sum(k[1:3])
@@ -145,6 +145,5 @@ dxy.cens <- function(x, y, type=c('time','hazard')) {
   dxy    <- 2 * (cindex - .5)
   se     <- 2 * se
   if(negate) dxy <- -dxy
-  if(type == 'hazard') dxy <- -dxy
   structure(c(dxy=dxy, se=se), names=c('Dxy','se'))
 }

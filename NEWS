@@ -1,4 +1,4 @@
-Changes in version 4.2-2 (2014-11-23)
+Changes in version 4.2-2 (2014-11-25)
    * contrast.rms: added 3rd and 4th list of predictor settings to allow for double-difference (interaction) contrasts
    * predictrms: don't call vcov if no covariates present (e.g. cph strata only)
    * print.summary.rms, latex.summary.rms: print more significant digits for effect-related columns
@@ -11,6 +11,7 @@ Changes in version 4.2-2 (2014-11-23)
    * plot.Predict: added example in help file for how to set lattice graphics parameters
    * datadist: quit rounding quantiles to integers if raw data were integer
    * predictrms, Predict: fixed bug with ref.zero=TRUE and with handling Cox models; added new test code in tests/cph3.r
+   * cph, dxy.cens: fixed bug - Dxy was negative of what it should have been for cph.  Thanks: Irantzu Barrio
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly
