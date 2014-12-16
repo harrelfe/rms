@@ -15,6 +15,8 @@ fastbw                  Fast Backward Variable Selection
 Function.rms            Compose an S Function to Compute X beta from a
                         Fit
 gendata                 Generate Data Frame with Predictor Combinations
+ggplot.Predict          Plot Effects of Variables Estimated by a
+                        Regression Model Fit Using ggplot2
 gIndex                  Calculate Total and Partial g-indexes for an
                         rms Fit
 Glm                     rms Version of glm

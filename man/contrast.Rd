@@ -294,14 +294,17 @@ d     <- datadist(age, treat, sex); options(datadist='d')
 
 # show separate estimates by treatment and sex
 
-plot(Predict(f, age, treat, sex='female'))
-plot(Predict(f, age, treat, sex='male'))
+ggplot(Predict(f, age, treat, sex='female'))
+ggplot(Predict(f, age, treat, sex='male'))
 ages  <- seq(35,65,by=5); sexes <- c('female','male')
 w     <- contrast(f, list(treat='drug',    age=ages, sex=sexes),
                      list(treat='placebo', age=ages, sex=sexes))
 # add conf.type="simultaneous" to adjust for having done 14 contrasts
 xYplot(Cbind(Contrast, Lower, Upper) ~ age | sex, data=w,
        ylab='Drug - Placebo')
+w <- as.data.frame(w[c('age','sex','Contrast','Lower','Upper')])
+ggplot(w, aes(x=age, y=Contrast)) + geom_point() + facet_grid(sex ~ .) +
+   geom_errorbar(aes(ymin=Lower, ymax=Upper), width=0)
 xYplot(Cbind(Contrast, Lower, Upper) ~ age, groups=sex, data=w,
        ylab='Drug - Placebo', method='alt bars')
 options(datadist=NULL)

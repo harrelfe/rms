@@ -397,7 +397,9 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
   Wikipedia: Nomogram, \url{http://en.wikipedia.org/wiki/Nomogram}.
 }
 \seealso{
-  \code{\link{rms}}, \code{\link{plot.Predict}}, \code{\link{plot.summary.rms}}, \code{\link{axis}}, \code{\link{pretty}}, \code{\link{approx}},
+  \code{\link{rms}}, \code{\link{plot.Predict}},
+	\code{\link{ggplot.Predict}},	\code{\link{plot.summary.rms}},
+	\code{\link{axis}}, \code{\link{pretty}}, \code{\link{approx}}, 
   \code{\link{latexrms}}, \code{\link{rmsMisc}}
 }
 \examples{

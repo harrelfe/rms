@@ -175,13 +175,14 @@ Department of Biostatistics, Vanderbilt University\cr
 f.harrell@vanderbilt.edu
 }
 \seealso{
-\code{\link{plot.Predict}}, \code{\link{summary.rms}},
-\code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{predict.lrm}},
-\code{\link{predict.orm}},
-\code{\link{residuals.cph}}, \code{\link{datadist}},
-\code{\link{gendata}}, \code{\link{gIndex}},
-\code{\link{Function.rms}}, \code{\link[Hmisc]{reShape}}, 
-\code{\link[Hmisc]{xYplot}}, \code{\link{contrast.rms}}
+	\code{\link{plot.Predict}}, \code{\link{ggplot.Predict}},
+	\code{\link{summary.rms}},
+	\code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{predict.lrm}},
+	\code{\link{predict.orm}},
+	\code{\link{residuals.cph}}, \code{\link{datadist}},
+	\code{\link{gendata}}, \code{\link{gIndex}},
+	\code{\link{Function.rms}}, \code{\link[Hmisc]{reShape}}, 
+	\code{\link[Hmisc]{xYplot}}, \code{\link{contrast.rms}}
 }
 \examples{
 n <- 1000    # define sample size

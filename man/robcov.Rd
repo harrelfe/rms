@@ -143,7 +143,7 @@ diag(g$var)/diag(f$var)
 anova(g)            # cluster-adjusted Wald statistics
 # fastbw(g)         # cluster-adjusted backward elimination
 plot(Predict(g, age=30:70, sex='female'))  # cluster-adjusted confidence bands
-
+# or use ggplot(...)
 
 # Get design effects based on inflation of the variances when compared
 # with bootstrap estimates which ignore clustering

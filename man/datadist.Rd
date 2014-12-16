@@ -8,7 +8,8 @@ Distribution Summaries for Predictor Variables
 For a given set of variables or a data frame, determines summaries
 of variables for effect and plotting ranges, values to adjust to,
 and overall ranges
-for \code{Predict}, \code{plot.Predict}, \code{summary.rms}, \code{survplot}, and \code{nomogram.rms}.
+for \code{Predict}, \code{plot.Predict}, \code{ggplot.Predict},
+\code{summary.rms}, \code{survplot}, and \code{nomogram.rms}.
 If \code{datadist} is called before
 a model fit and the resulting object pointed to with \code{options(datadist="name")},
 the data characteristics will be stored with the fit by \code{Design()}, so
@@ -147,7 +148,7 @@ options(datadist="d")
 
 f <- lrm(y ~ x1*x2)           #datadist not used - specify all values for
 summary(f, x1=c(200,500,800), x2=c(1,3,5))         # obtaining predictions
-plot(Predict(f, x1=200:800, x2=3))
+plot(Predict(f, x1=200:800, x2=3))  # or ggplot()
 
 
 # Change reference value to get a relative odds plot for a logistic model
@@ -155,7 +156,7 @@ d$limits$age[2] <- 30    # make 30 the reference value for age
 # Could also do: d$limits["Adjust to","age"] <- 30
 fit <- update(fit)   # make new reference value take effect
 plot(Predict(fit, age, ref.zero=TRUE, fun=exp),
-     ylab='Age=x:Age=30 Odds Ratio')
+     ylab='Age=x:Age=30 Odds Ratio')   # or ggplot()
 }
 }
 \keyword{models}

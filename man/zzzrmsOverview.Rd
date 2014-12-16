@@ -133,7 +133,8 @@
       \item if predictor is represented as a function in the model, plots
       should be with respect to the original variable:\cr
       \code{f <- lrm(y ~ log(cholesterol)+age)} \cr
-      \code{plot(Predict(f, cholesterol))   # cholesterol on x-axis, default range}
+      \code{plot(Predict(f, cholesterol))   # cholesterol on x-axis, default range} \cr
+			\code{ggplot(Predict(f, cholesterol)) # same using ggplot2}
     }
 
     \item need to store summary of distribution of predictors with the fit
@@ -277,6 +278,7 @@
     \bold{\code{plot.anova}}  \tab Depict results of anova graphically      \tab \code{dotchart}     \cr
     \bold{\code{Predict}}     \tab Partial predictor effects \tab  \code{predict} \cr
 	\bold{\code{plot.Predict}}\tab Plot predictor effects using lattice graphics \tab \code{predict} \cr
+  \bold{\code{ggplot}}      \tab Similar to above but using ggplot2 \cr
 	\bold{\code{bplot}}       \tab 3-D plot of effects of varying two \tab \cr
                               \tab continuous predictors \tab \code{image, persp, contour} \cr
     \bold{\code{gendata}}     \tab Generate data frame with predictor       \tab \code{expand.grid} \cr
@@ -303,7 +305,8 @@
     \bold{\code{Quantile}}    \tab S function analytic representation of \tab \cr
     \tab fitted function for quantiles of \tab \cr
     \tab survival time (for \code{psm, cph}) \tab \cr
-    \bold{\code{nomogram}}    \tab Draws a nomogram for the fitted model       \tab \code{latex, plot} \cr
+    \bold{\code{nomogram}}    \tab Draws a nomogram for the fitted model
+  \tab \code{latex, plot, ggplot} \cr
     \bold{\code{survest}}     \tab Estimate survival probabilities             \tab \code{survfit} \cr
     \tab  (for \code{psm, cph}) \tab \cr
     \bold{\code{survplot}}    \tab Plot survival curves (psm, cph, npsurv)             \tab plot.survfit \cr
@@ -344,7 +347,7 @@
   functions.  You may save time and defer running
   \code{datadist}.  In that case, the distribution summary
   is not stored with the fit object, but it can be
-  gathered before running \code{summary} or \code{plot}.
+  gathered before running \code{summary}, \code{plot}, or \code{ggplot}.
 
   \code{d <- datadist(my.data.frame) # or datadist(x1,x2)}\cr
   \code{options(datadist="d")        # omit this or use options(datadist=NULL)}\cr

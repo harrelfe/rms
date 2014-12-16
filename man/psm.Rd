@@ -216,7 +216,8 @@ lwd=3, \dots)
   \code{\link[survival]{Surv}}, 
   \code{\link[Hmisc]{na.delete}},
   \code{\link[Hmisc]{na.detail.response}}, \code{\link{datadist}},
-  \code{\link{latex.psm}}, \code{\link{GiniMd}}, \code{\link{prModFit}}
+  \code{\link{latex.psm}}, \code{\link{GiniMd}}, \code{\link{prModFit}},
+	\code{\link{ggplot.Predict}}, \code{\link{plot.Predict}}
 }
 \examples{
 n <- 400
@@ -243,6 +244,7 @@ fastbw(f)  # if deletes sex while keeping age*sex ignore the result
 f <- update(f, x=TRUE,y=TRUE)       # so can validate, compute certain resids
 validate(f, B=10)      # ordinarily use B=300 or more
 plot(Predict(f, age, sex))   # needs datadist since no explicit age, hosp.
+# Could have used ggplot(Predict(...))
 survplot(f, age=c(20,60))     # needs datadist since hospital not set here
 # latex(f)
 

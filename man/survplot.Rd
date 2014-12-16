@@ -304,7 +304,7 @@ component of \code{mgp} using \code{mgp.axis.labels(c(xvalue,yvalue))}.
 \seealso{
 \code{\link{datadist}}, \code{\link{rms}}, \code{\link{cph}},
 \code{\link{psm}}, \code{\link{survest}}, \code{\link{predictrms}},
-\code{\link{plot.Predict}}, 
+\code{\link{plot.Predict}}, \code{\link{ggplot.Predict}},
 \code{\link[Hmisc]{units}}, \code{\link[Hmisc]{errbar}},  
 \code{\link{survfit}}, \code{\link[survival]{survreg.distributions}},
 \code{\link[Hmisc]{labcurve}},

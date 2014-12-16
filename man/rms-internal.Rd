@@ -1,8 +1,10 @@
 \name{rms-internal}
 \title{Internal rms functions}
+\alias{annotateAnova}
 \alias{coxphFit}
 \alias{lm.pfit}
 \alias{ols.influence}
+\alias{plotmathAnova}
 \alias{survreg.auxinfo}
 \alias{val.probg}
 \description{Internal rms functions}

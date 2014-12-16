@@ -308,8 +308,8 @@ fit <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
 #      d or specifying all variable values to summary, Predict, nomogram
 anova(fit)
 p <- Predict(fit, age, sex)
-plot(p)
-plot(Predict(fit, age=20:70, sex="male"))   # need if datadist not used
+ggplot(p)   # or plot()
+ggplot(Predict(fit, age=20:70, sex="male"))   # need if datadist not used
 print(cbind(resid(fit,"dfbetas"), resid(fit,"dffits"))[1:20,])
 which.influence(fit, .3)
 # latex(fit)                       #print nice statement of fitted model

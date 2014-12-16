@@ -8,7 +8,7 @@
   \code{strat}, \code{matrx}), fitting functions (e.g.,
   \code{lrm},\code{cph}, \code{psm}, or \code{ols}), and generic
   analysis functions (\code{anova.rms}, \code{summary.rms},
-  \code{Predict},  \code{plot.Predict}, \code{survplot},
+  \code{Predict},  \code{plot.Predict}, \code{ggplot.Predict}, \code{survplot},
   \code{fastbw}, \code{validate}, \code{calibrate}, \code{specs.rms},
   \code{which.influence}, \code{latexrms}, \code{nomogram},
   \code{datadist}, \code{gendata})
@@ -57,7 +57,7 @@ Design(mf, allow.offset=TRUE, intercept=1)
 # This leaves unspecified variables set to reference values from datadist
 # pred.combos <- gendata(f, nobs=10)   # Use X-windows to edit predictor settings
 # predict(f, newdata=pred.combos)
-# plot(Predict(f, x1))
+# plot(Predict(f, x1))  # or ggplot(...)
 # latex(f)
 # nomogram(f)
 }
@@ -86,7 +86,7 @@ f.harrell@vanderbilt.edu
 \examples{
 \dontrun{
 require(rms)
-dist <- datadist(data=2)     # can omit if not using summary, plot, survplot,
+dist <- datadist(data=2)     # can omit if not using summary, (gg)plot, survplot,
                              # or if specify all variable values to them. Can
                              # also  defer.  data=2: get distribution summaries
                              # for all variables in search position 2
@@ -101,7 +101,7 @@ fastbw(f)
 summary(f, sex="female")     # Adjust sex to "female" when testing
                              # interacting factor bp
 bplot(Predict(f, age, height))   # 3-D plot
-plot(Predict(f, age=10:70, height=60))
+ggplot(Predict(f, age=10:70, height=60))
 latex(f)                     # LaTeX representation of fit
 
 

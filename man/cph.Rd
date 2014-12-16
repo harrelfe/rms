@@ -299,8 +299,8 @@ cph(formula = formula(data), data=parent.frame(),
   \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{anova.rms}},
   \code{\link{summary.rms}}, \code{\link{Predict}}, 
   \code{\link{fastbw}}, \code{\link{validate}}, \code{\link{calibrate}},
-  \code{\link{plot.Predict}}, \code{\link{specs.rms}},
-  \code{\link{lrm}}, \code{\link{which.influence}},
+  \code{\link{plot.Predict}}, \code{\link{ggplot.Predict}},
+	\code{\link{specs.rms}}, \code{\link{lrm}}, \code{\link{which.influence}},
   \code{\link[Hmisc]{na.delete}},
   \code{\link[Hmisc]{na.detail.response}},  \code{\link{print.cph}},
   \code{\link{latex.cph}}, \code{\link{vif}}, \code{\link{ie.setup}},
@@ -331,7 +331,7 @@ S <- Surv(dt,e)
 f <- cph(S ~ rcs(age,4) + sex, x=TRUE, y=TRUE)
 cox.zph(f, "rank")             # tests of PH
 anova(f)
-plot(Predict(f, age, sex)) # plot age effect, 2 curves for 2 sexes
+ggplot(Predict(f, age, sex)) # plot age effect, 2 curves for 2 sexes
 survplot(f, sex)             # time on x-axis, curves for x2
 res <- resid(f, "scaledsch")
 time <- as.numeric(dimnames(res)[[1]])
@@ -346,7 +346,7 @@ f <- cph(S ~ age + strat(sex), surv=TRUE)
 g <- Survival(f)   # g is a function
 g(seq(.1,1,by=.1), stratum="sex=Male", type="poly") #could use stratum=2
 med <- Quantile(f)
-plot(Predict(f, age, fun=function(x) med(lp=x)))  #plot median survival
+ggplot(Predict(f, age, fun=function(x) med(lp=x)))  #plot median survival
 
 # Fit a model that is quadratic in age, interacting with sex as strata
 # Compare standard errors of linear predictor values with those from

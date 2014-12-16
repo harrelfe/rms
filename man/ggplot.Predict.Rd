@@ -1,75 +1,70 @@
-\name{plot.Predict}
-\alias{plot.Predict}
-\alias{pantext}
-\title{Plot Effects of Variables Estimated by a Regression Model Fit}
+\name{ggplot.Predict}
+\alias{ggplot.Predict}
+\title{Plot Effects of Variables Estimated by a Regression Model Fit
+	Using ggplot2}
 
 \description{
-  Uses \code{lattice} graphics to plot the effect of one or two predictors
+  Uses \code{ggplot2} graphics to plot the effect of one or two predictors
   on the linear predictor or X beta scale, or on some transformation of
   that scale.  The first argument specifies the result of the
   \code{Predict} function.  The predictor is always plotted in its
-  original coding.  \code{plot.Predict} uses the
-  \code{xYplot} function unless \code{formula} is omitted and the x-axis
-  variable is a factor, in which case it reverses the x- and y-axes and
-  uses the \code{Dotplot} function.
+  original coding.
 
-  If \code{data} is given, a rug plot is drawn showing
+  If \code{rdata} is given, a spike histogram is drawn showing
   the location/density of data values for the \eqn{x}-axis variable.  If
   there is a \code{groups} (superposition) variable that generated separate
   curves, the data density specific to each class of points is shown.
-  This assumes that the second variable was a factor variable.  The rug plots
-  are drawn by \code{scat1d}.  When the same predictor is used on all
-  \eqn{x}-axes, and multiple panels are drawn, you can use
-  \code{subdata} to specify an expression to subset according to other
-  criteria in addition.
+  This assumes that the second variable was a factor variable.  The histograms
+  are drawn by \code{histSpikeg}.
 
   To plot effects instead of estimates (e.g., treatment differences as a
   function of interacting factors) see \code{contrast.rms} and
   \code{summary.rms}.
-
-  \code{pantext} creates a \code{lattice} panel function for including
-  text such as that produced by \code{print.anova.rms} inside a panel or
-  in a base graphic.
 }
 \usage{
-\method{plot}{Predict}(x, formula, groups=NULL,
-     cond=NULL, varypred=FALSE, subset,
+\method{ggplot}{Predict}(data, formula, groups=NULL,
+     aestype=c('color', 'linetype'),
+     varypred=FALSE, subset,
      xlim, ylim, xlab, ylab, 
-     data=NULL, subdata, anova=NULL, pval=FALSE, cex.anova=.85,
-     col.fill=gray(seq(.825, .55, length=5)),
-     adj.subtitle, cex.adj, cex.axis, perim=NULL, digits=4, nlevels=3,
-     nlines=FALSE, addpanel, scat1d.opts=list(frac=0.025, lwd=0.3),
-     type=NULL, yscale=NULL, scaletrans=function(z) z, ...)
-
-pantext(object, x, y, cex=.5, adj=0, fontfamily="Courier", lattice=TRUE)
-
+     rdata=NULL, anova=NULL, pval=FALSE, size.anova=4,
+     adj.subtitle, size.adj=2.5, perim=NULL, nlevels=3,
+     flipxdiscrete=TRUE,
+     legend.position='right', layout=NULL, addlayer=NULL,
+     histSpike.opts=list(frac=0.02, side=1, nint=100),
+     type=NULL, ...)
 }
 \arguments{
-  \item{x}{a data frame created by \code{Predict}, or for \code{pantext}
-  the x-coordinate for text}
+  \item{data}{a data frame created by \code{Predict}}
 \item{formula}{
-  the right hand side of a \code{lattice} formula reference variables in
-  data frame \code{x}.  You may not specify \code{formula} if you varied
-  multiple predictors separately when calling \code{Predict}.
-  Otherwise, when \code{formula} is not given, \code{plot.Predict}
-  constructs one from information in \code{x}.
+	a \code{ggplot} faceting formula of the form \code{vertical variables
+		~ horizontal variables}, with variables separated by \code{*} if
+	there is more than one variable on a side.  If omitted, the formula
+	will be built using assumptions on the list of variables that varied
+	in the \code{Predict} call.
 }
-\item{groups}{an optional name of one of the variables in \code{x} that
-  is to be used as a grouping (superpositioning) variable.  Note that
-  \code{groups} does not contain the groups data as is customary in
-  \code{lattice}; it is only a single character string specifying the
-  name of the grouping variable.}
-\item{cond}{when plotting effects of different predictors, \code{cond}
+\item{groups}{an optional character string containing the
+	name of one of the variables in \code{data} that
+  is to be used as a grouping (superpositioning) variable.
+  Set \code{groups=FALSE} to suppress superpositioning.  By default, the
+  second varying variable is used for superpositioning groups.  You can
+  also specify a length 2 string vector of variable names specifying two
+  dimensions of superpositioning, identified by different aesthetics
+  corresponding to the \code{aestype} argument. When plotting effects
+  of more than one predictor, \code{groups}
   is a character string that specifies a single variable name in
-  \code{x} that can be used to form panels.  Only applies if using
-  \code{rbind} to combine several \code{Predict} results.}
-\item{varypred}{set to \code{TRUE} if \code{x} is the result of
+  \code{data} that can be used to form panels.  Only applies if using
+  \code{rbind} to combine several \code{Predict} results. }
+\item{aestype}{a string vector of aesthetic names corresponding to
+  variables in the \code{groups} vector.  Default is to use, in order,
+  \code{color}, and \code{linetype}.  Other permissible values are
+	\code{size}, \code{shape}.}
+\item{varypred}{set to \code{TRUE} if \code{data} is the result of
   passing multiple \code{Predict} results, that represent different
   predictors, to \code{rbind.Predict}.  This will cause the \code{.set.}
   variable created by \code{rbind} to be copied to the
   \code{.predictor.} variable.}
 \item{subset}{a subsetting expression for restricting the rows of
-  \code{x} that are used in plotting.  For example, predictions may have
+  \code{data} that are used in plotting.  For example, predictions may have
   been requested for males and females but one wants to plot only females.}
 \item{xlim}{
 This parameter is seldom used, as limits are usually controlled with
@@ -93,23 +88,12 @@ default is \code{"log Odds"} for
 \code{lrm}, \code{"log Relative Hazard"} for \code{cph}, name of the response
 variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm}, or \code{"X * Beta"} otherwise.
 }
-\item{data}{a data frame containing the original raw data on which the
+\item{rdata}{a data frame containing the original raw data on which the
   regression model were based, or at least containing the \eqn{x}-axis
-  and grouping variable.  If \code{data} is present and contains the
+  and grouping variable.  If \code{rdata} is present and contains the
   needed variables, the original data are added to the graph in the form
-  of a rug plot using \code{scat1d}.
+  of a spike histogram using \code{histSpikeg} in the Hmisc package.
 }
-\item{subdata}{if \code{data} is specified, an expression to be
-  evaluated in the \code{data} environment that evaluates to a logical
-  vector specifying which observations in \code{data} to keep.  This
-  will be intersected with the criterion for the \code{groups}
-  variable.  Example: if conditioning on two paneling variables using
-  \code{|a*b} you can specify
-  \code{subdata=b==levels(b)[which.packet()[2]]}, where the \code{2}
-  comes from the fact that \code{b} was listed second after the
-  vertical bar (this assumes \code{b} is a \code{factor} in
-  \code{data}.  Another example:
-  \code{subdata=sex==c('male','female')[current.row()]}.}
 \item{anova}{an object returned by \code{\link{anova.rms}}.  If
 	\code{anova} is specified, the overall test of association for
 	predictor plotted is added as text to each panel, located at the spot
@@ -117,22 +101,13 @@ variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm}, or \cod
 	space at the top or bottom of the panel; these areas are given preference.}
 \item{pval}{specify \code{pval=TRUE} for \code{anova} to include not
 	only the test statistic but also the P-value}
-\item{cex.anova}{character size for the test statistic printed on the panel}
-\item{col.fill}{
-  a vector of colors used to fill confidence bands for successive
-  superposed groups.  Default is inceasingly dark gray scale.
-  }
+\item{size.anova}{character size for the test statistic printed on the
+	panel, mm}
 \item{adj.subtitle}{
 Set to \code{FALSE} to suppress subtitling the graph with the list of
 settings of non-graphed adjustment values.
 }
-\item{cex.adj}{
-\code{cex} parameter for size of adjustment settings in subtitles.  Default is
-0.75 times \code{par("cex")}.
-}
-\item{cex.axis}{
-  \code{cex} parameter for x-axis tick labels
-  }
+\item{size.adj}{Size of adjustment settings in subtitles in mm.  Default is 2.5.}
 \item{perim}{
 \code{perim} specifies a function having two
 arguments.  The first is the vector of values of the first variable that
@@ -142,13 +117,7 @@ curve being plotted.  The function's returned value must be a logical
 vector whose length is the same as that of the first argument, with
 values \code{TRUE} if the corresponding point should be plotted for the
 current curve, \code{FALSE} otherwise.  See one of the latter examples.
-If a predictor is not specified to \code{plot}, \code{NULL} is passed as
-the second argument to \code{perim}, although it makes little sense to
-use \code{perim} when the same \code{perim} is used for multiple predictors.
-}
-\item{digits}{
-Controls how numeric variables used for panel labels are formatted. The
-default is 4 significant digits.
+\code{perim} only applies if predictors were specified to \code{Predict}.
 }
 \item{nlevels}{
   when \code{groups} and \code{formula} are not specified, if any panel
@@ -156,71 +125,35 @@ default is 4 significant digits.
   converted to a \code{groups} (superpositioning) variable.  Set
   \code{nlevels=0} to prevent this behavior.  For other situations, a
   numeric x-axis variable with \code{nlevels} or fewer unique values
-  will cause a dot plot to be drawn instead of an x-y plot.
+  will cause a horizontal dot plot to be drawn instead of an x-y plot
+  unless \code{flipxdiscrete=FALSE}.
 }
-\item{nlines}{If \code{formula} is given, you can set \code{nlines} to
-  \code{TRUE} to convert the x-axis variable to a factor and then to an
-  integer.  Points are plotted at integer values on the x-axis but
-  labeled with category levels.  Points are connected by lines.}
-\item{addpanel}{an additional panel function to call along with panel
-  functions used for \code{xYplot} and \code{Dotplot} displays}
-\item{scat1d.opts}{a list containing named elements that specifies
-  parameters to \code{\link{scat1d}} when \code{data} is given.  The
+\item{flipxdiscrete}{see \code{nlevels}}
+\item{legend.position}{\code{"right"} (the default for single-panel
+  plots), \code{"left"}, \code{"bottom"}, \code{"top"}, a two-element
+  numeric vector, or \code{"none"} to suppress.  For multi-panel plots
+  the default is \code{"top"}, and a legend only appears for the first
+  (top left) panel.}
+\item{layout}{for multi-panel plots a 2-vector specifying the number of
+  rows and number of columns.  If omitted will be computed from the
+  number of panels to make as square as possible.}
+\item{addlayer}{a \code{ggplot2} layer or \code{list()} of layers to add to the
+  current plot.  If more than one layer is used, do not specify them as
+  a single expression with plus signs as some layers cannot be added out
+  of context of the \code{ggplot} object being built.}
+\item{histSpike.opts}{a list containing named elements that specifies
+  parameters to \code{\link{histSpikeg}} when \code{rdata} is given.  The
   \code{col} parameter is usually derived from other plotting
   information and not specified by the user.}
 \item{type}{a value (\code{"l","p","b"}) to override default choices
   related to showing or connecting points.  Especially  useful for
   discrete x coordinate variables.}
-\item{yscale}{a \code{lattice} scale \code{list} for the \code{y}-axis
-	to be added to what is automatically generated for the \code{x}-axis.
-	Example:
-	\code{yscale=list(at=c(.005,.01,.05),labels=format(c(.005,.01,.05)))}.
-  See \link[lattice]{xyplot}}
-\item{scaletrans}{a function that operates on the \code{scale} object
-	created by \code{plot.Predict} to produce a modified \code{scale}
-	object that is passed to the lattice graphics function.  This is
-	useful for adding other \code{scales} options or for changing the
-	\code{x}-axis limits for one predictor.}
-\item{\dots}{
-  extra arguments to pass to \code{xYplot} or \code{Dotplot}.  Some
-  useful ones are \code{label.curves} and \code{abline}.
-  Set \code{label.curves} to \code{FALSE} to suppress labeling of
-  separate curves. Default is \code{TRUE}, which
-  causes \code{labcurve} to be invoked to place labels at positions where the
-  curves are most separated, labeling each curve with the full curve label.
-  Set \code{label.curves} to a \code{list} to specify options to
-  \code{labcurve}, e.g., \code{label.curves=} \code{list(method="arrow",
-	cex=.8)}. 
-  These option names may be abbreviated in the usual way arguments
-  are abbreviated.  Use for example \code{label.curves=list(keys=letters[1:5])}
-  to draw single lower case letters on 5 curves where they are most
-  separated, and automatically position a legend
-  in the most empty part of the plot.  The \code{col}, \code{lty}, and
-  \code{lwd} parameters are passed automatically to \code{labcurve}
-  although they may be overridden here.
-  It is also useful to use \dots to pass \code{lattice} graphics parameters, e.g.
-  \code{par.settings=list(axis.text=list(cex=1.2), par.ylab.text=list(col='blue',cex=.9),par.xlab.text=list(cex=1))}.
-}
-\item{object}{an object having a \code{print} method}
-\item{y}{y-coordinate for placing text in a \code{lattice} panel
-or on a base graphics plot}
-\item{cex}{character expansion size for \code{pantext}}
-\item{adj}{text justification.  Default is left justified.}
-\item{fontfamily}{
-font family for \code{pantext}.  Default is \code{"Courier"} which
-will line up columns of a table.
-}
-\item{lattice}{set to \code{FALSE} to use \code{text} instead of
-  \code{ltext} in the function generated by \code{pantext}, to use base
-  graphics}
+\item{\dots}{ignored}
 }
 \value{
-  a \code{lattice} object ready to \code{print} for rendering.
-}
-\details{
-When a \code{groups} (superpositioning) variable was used, you can issue
-the command \code{Key(\dots)} after printing the result of
-\code{plot.Predict}, to draw a key for the groups.
+	If there is no subtitle and predictors were specified to
+  \code{Predict}, returns an object of class \code{"ggplot2"} ready for
+  printing, otherwise prints.
 }
 \author{
 Frank Harrell\cr
@@ -238,16 +171,15 @@ f.harrell@vanderbilt.edu
   names specified in the desired order.
   }
 \seealso{
-  \code{\link{Predict}}, \code{\link{ggplot.Predict}},
-	\code{\link{rbind.Predict}},
+  \code{\link{Predict}}, \code{\link{rbind.Predict}},
   \code{\link{datadist}}, \code{\link{predictrms}}, \code{\link{anova.rms}},
   \code{\link{contrast.rms}}, \code{\link{summary.rms}},
-  \code{\link{rms}}, \code{\link{rmsMisc}}, 
-  \code{\link[Hmisc]{labcurve}}, \code{\link[Hmisc]{scat1d}},
-  \code{\link[Hmisc]{xYplot}}, \code{\link[Hmisc]{Overview}}
+  \code{\link{rms}}, \code{\link{rmsMisc}}, \code{\link{plot.Predict}},
+  \code{\link[Hmisc]{labcurve}}, \code{\link[Hmisc]{histSpikeg}},
+  \code{\link[ggplot2]{ggplot}}, \code{\link[Hmisc]{Overview}}
 }
 \examples{
-n <- 1000    # define sample size
+n <- 500     # define sample size
 set.seed(17) # so can reproduce the results
 age            <- rnorm(n, 50, 10)
 blood.pressure <- rnorm(n, 120, 15)
@@ -273,52 +205,56 @@ fit <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
                x=TRUE, y=TRUE)
 an <- anova(fit)
 # Plot effects of all 4 predictors with test statistics from anova, and P
-plot(Predict(fit), anova=an, pval=TRUE)
-plot(Predict(fit), data=llist(blood.pressure,age))
-                         # rug plot for two of the predictors
+ggplot(Predict(fit), anova=an, pval=TRUE)
+# ggplot(Predict(fit), rdata=llist(blood.pressure, age))
+# spike histogram plot for two of the predictors
 
-p <- Predict(fit, name=c('age','cholesterol'))   # Make 2 plots
-plot(p)
+# p <- Predict(fit, name=c('age','cholesterol'))   # Make 2 plots
+# ggplot(p)
 
-p <- Predict(fit, age=seq(20,80,length=100), sex, conf.int=FALSE)
-                         # Plot relationship between age and log
+# p <- Predict(fit, age=seq(20,80,length=100), sex, conf.int=FALSE)
+#                        # Plot relationship between age and log
                          # odds, separate curve for each sex,
-plot(p, subset=sex=='female' | age > 30)
+# ggplot(p, subset=sex=='female' | age > 30)
 # No confidence interval, suppress estimates for males <= 30
 
-p <- Predict(fit, age, sex)
-plot(p, label.curves=FALSE, data=llist(age,sex))
-                         # use label.curves=list(keys=c('a','b'))'
-                         # to use 1-letter abbreviations
-                         # data= allows rug plots (1-dimensional scatterplots)
+# p <- Predict(fit, age, sex)
+# ggplot(p, rdata=llist(age,sex))
+                         # rdata= allows rug plots (1-dimensional scatterplots)
                          # on each sex's curve, with sex-
                          # specific density of age
                          # If data were in data frame could have used that
-p <- Predict(fit, age=seq(20,80,length=100), sex='male', fun=plogis)
+# p <- Predict(fit, age=seq(20,80,length=100), sex='male', fun=plogis)
                          # works if datadist not used
-plot(p, ylab=expression(hat(P)))
+# ggplot(p, ylab=expression(hat(P)))
                          # plot predicted probability in place of log odds
+# per <- function(x, y) x >= 30
+# ggplot(p, perim=per)       # suppress output for age < 30 but leave scale alone
 
-per <- function(x, y) x >= 30
-plot(p, perim=per)       # suppress output for age < 30 but leave scale alone
-
-# Take charge of the plot setup by specifying a lattice formula
-p <- Predict(fit, age, blood.pressure=c(120,140,160),
-             cholesterol=c(180,200,215), sex)
-plot(p, ~ age | blood.pressure*cholesterol, subset=sex=='male')
-# plot(p, ~ age | cholesterol*blood.pressure, subset=sex=='female')
-# plot(p, ~ blood.pressure|cholesterol*round(age,-1), subset=sex=='male')
-plot(p)
+# Do ggplot2 faceting a few different ways
+p <- Predict(fit, age, sex, blood.pressure=c(120,140,160),
+             cholesterol=c(180,200,215))
+# ggplot(p)
+ggplot(p, cholesterol ~ blood.pressure)
+# ggplot(p, ~ cholesterol + blood.pressure)
+# color for sex, line type for blood.pressure:
+ggplot(p, groups=c('sex', 'blood.pressure'))
+# Add legend.position='top' to allow wider plot
+# Map blood.pressure to line thickness instead of line type:
+# ggplot(p, groups=c('sex', 'blood.pressure'), aestype=c('color', 'size'))
 
 # Plot the age effect as an odds ratio
 # comparing the age shown on the x-axis to age=30 years
 
-ddist$limits$age[2] <- 30    # make 30 the reference value for age
+# ddist$limits$age[2] <- 30    # make 30 the reference value for age
 # Could also do: ddist$limits["Adjust to","age"] <- 30
-fit <- update(fit)   # make new reference value take effect
-p <- Predict(fit, age, ref.zero=TRUE, fun=exp)
-plot(p, ylab='Age=x:Age=30 Odds Ratio',
-     abline=list(list(h=1, lty=2, col=2), list(v=30, lty=2, col=2)))
+# fit <- update(fit)   # make new reference value take effect
+# p <- Predict(fit, age, ref.zero=TRUE, fun=exp)
+# ggplot(p, ylab='Age=x:Age=30 Odds Ratio',
+#        addlayer=list(geom_hline(yintercept=1, col=gray(.8)),
+#                      geom_vline(xintercept=30, col=gray(.8)),
+#                      scale_y_continuous(trans='log',
+#                       breaks=c(.5, 1, 2, 4, 8))))
 
 # Compute predictions for three predictors, with superpositioning or
 # conditioning on sex, combined into one graph
@@ -327,8 +263,7 @@ p1 <- Predict(fit, age, sex)
 p2 <- Predict(fit, cholesterol, sex)
 p3 <- Predict(fit, blood.pressure, sex)
 p <- rbind(age=p1, cholesterol=p2, blood.pressure=p3)
-plot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE)
-plot(p, cond='sex', varypred=TRUE, adj.subtitle=FALSE)
+ggplot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE)
 
 \dontrun{
 # For males at the median blood pressure and cholesterol, plot 3 types
@@ -345,9 +280,10 @@ g <- bootcov(f, B=500, coef.reps=TRUE)
 p4 <- Predict(g, age=ages, sex='male', fun=plogis)    # bootstrap percentile
 p <- rbind(Pointwise=p1, 'Simultaneous 100 ages'=p2,
            'Simultaneous     3 ages'=p3, 'Bootstrap nonparametric'=p4)
-xYplot(Cbind(yhat, lower, upper) ~ age, groups=.set.,
-       data=p, type='l', method='bands', label.curve=list(keys='lines'))
-}
+# as.data.frame so will call built-in ggplot
+ggplot(as.data.frame(p), aes(x=age, y=yhat)) + geom_line() +
+ geom_ribbon(data=p, aes(ymin=lower, ymax=upper), alpha=0.2, linetype=0)+
+ facet_wrap(~ .set., ncol=2)
 
 # Plots for a parametric survival model
 n <- 1000
@@ -366,13 +302,12 @@ units(t) <- "Year"
 ddist <- datadist(age, sex)
 Srv <- Surv(t,e)
 
-
 # Fit log-normal survival model and plot median survival time vs. age
 f <- psm(Srv ~ rcs(age), dist='lognormal')
 med <- Quantile(f)       # Creates function to compute quantiles
                          # (median by default)
 p <- Predict(f, age, fun=function(x) med(lp=x))
-plot(p, ylab="Median Survival Time")
+ggplot(p, ylab="Median Survival Time")
 # Note: confidence intervals from this method are approximate since
 # they don't take into account estimation of scale parameter
 
@@ -392,7 +327,8 @@ r <- resid(f)
 smean <- function(yhat)smearingEst(yhat, exp, res, statistic='mean')
 formals(smean) <- list(yhat=numeric(0), res=r[!is.na(r)])
 #smean$res <- r[!is.na(r)]   # define default res argument to function
-plot(Predict(f, x1, fun=smean), ylab='Predicted Mean on y-scale')
+ggplot(Predict(f, x1, fun=smean), ylab='Predicted Mean on y-scale')
+}
 
 # Make an 'interaction plot', forcing the x-axis variable to be
 # plotted at integer values but labeled with category levels
@@ -405,11 +341,10 @@ anxiety <- runif(2*n) + .2*(gender=='female') + .4*(gender=='female' & m=='b')
 tapply(anxiety, llist(gender,m), mean)
 f <- ols(anxiety ~ gender*m)
 p <- Predict(f, gender, m)
-plot(p)     # horizontal dot chart; usually preferred for categorical predictors
-Key(.5, .5)
-plot(p, ~gender, groups='m', nlines=TRUE)
-plot(p, ~m, groups='gender', nlines=TRUE)
-plot(p, ~gender|m, nlines=TRUE)
+# ggplot(p)     # horizontal dot chart; usually preferred for categorical predictors
+ggplot(p, flipxdiscrete=FALSE)  # back to vertical
+ggplot(p, groups='gender')
+ggplot(p, ~ m, groups=FALSE, flipxdiscrete=FALSE)
 
 options(datadist=NULL)
 
@@ -422,7 +357,7 @@ options(datadist=NULL)
 incomes <- seq(22900, 32800, length=4)  
 # equally spaced to outer quintiles
 p <- Predict(f, college, income=incomes, conf.int=FALSE)
-plot(p, xlim=c(0,35), ylim=c(30,55))
+ggplot(p, xlim=c(0,35), ylim=c(30,55))
 
 # Erase end portions of each curve where there are fewer than 10 counties having
 # percent of college graduates to the left of the x-coordinate being plotted,
@@ -438,7 +373,7 @@ show.pts <- function(college.pts, income.pt) {
   college.pts >= low & college.pts <= high
 }
 
-plot(p, xlim=c(0,35), ylim=c(30,55), perim=show.pts)
+ggplot(p, xlim=c(0,35), ylim=c(30,55), perim=show.pts)
 
 # Rename variables for better plotting of a long list of predictors
 f <- ...
@@ -449,7 +384,7 @@ for(n in names(re)) {
   names(p)[names(p)==n] <- re[n]
   p$.predictor.[p$.predictor.==n] <- re[n]
   }
-plot(p)
+ggplot(p)
 }
 }
 \keyword{models}
