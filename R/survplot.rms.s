@@ -297,7 +297,8 @@ survplot.rms <-
         nri[tt > xlim[2]] <- NA
         text(tt[1], yy, nri[1], cex=cex.n.risk,
              adj=adj.n.risk, srt=srt.n.risk)
-        text(tt[-1], yy, nri[-1], cex=cex.n.risk, adj=1)
+        if (length(nri) > 1)
+          text(tt[-1], yy, nri[-1], cex=cex.n.risk, adj=1)
         text(xlim[2]+xd*.025, yy, adj=0, curve.labels[i], cex=cex.n.risk)
       }
     }
