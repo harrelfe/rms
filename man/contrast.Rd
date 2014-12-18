@@ -62,7 +62,7 @@ contrast(fit, \dots)
          boot.type=c("percentile","bca","basic"),
          weights="equal", conf.int=0.95, tol=1e-7, expand=TRUE, \dots)
 
-\method{print}{contrast.rms}(x, X=FALSE, fun=function(u)u, jointonly=FALSE, ...)
+\method{print}{contrast.rms}(x, X=FALSE, fun=function(u)u, jointonly=FALSE, \dots)
 }
 \arguments{
 \item{fit}{
@@ -133,7 +133,8 @@ confidence level for confidence intervals for the contrasts
 \item{expand}{set to \code{FALSE} to have \code{gendata} not generate
   all possible combinations of predictor settings.  This is useful when
   getting contrasts over irregular predictor settings.}
-\item{\dots}{unused}
+\item{\dots}{passed to \code{print} for main output.  A useful thing to
+	pass is \code{digits=4}.}
 \item{x}{result of \code{contrast}}
 \item{X}{
 set \code{X=TRUE} to  print design matrix used in computing the contrasts (or

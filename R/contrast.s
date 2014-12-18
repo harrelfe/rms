@@ -197,7 +197,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
   # Print w
   if(!jointonly) {
     ## print(as.matrix(w), quote=FALSE)
-    print(w)
+    print(w, ...)
     if(any(x$redundant)) cat('\nRedundant contrasts are denoted by *\n')
   }
   
