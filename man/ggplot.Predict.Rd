@@ -24,12 +24,18 @@
 \usage{
 \method{ggplot}{Predict}(data, formula, groups=NULL,
      aestype=c('color', 'linetype'),
+     conf=c('fill', 'lines'),
      varypred=FALSE, subset,
      xlim, ylim, xlab, ylab, 
+     colorscale=function(...) scale_color_manual(...,
+       values=c("#000000", "#E69F00", "#56B4E9",
+                "#009E73","#F0E442", "#0072B2", "#D55E00", "#CC79A7")),
      rdata=NULL, anova=NULL, pval=FALSE, size.anova=4,
      adj.subtitle, size.adj=2.5, perim=NULL, nlevels=3,
      flipxdiscrete=TRUE,
-     legend.position='right', layout=NULL, addlayer=NULL,
+     legend.position='right', legend.label=NULL,
+     vnames=c('labels','names'), abbrev=FALSE, minlength=6,
+     layout=NULL, addlayer=NULL,
      histSpike.opts=list(frac=0.02, side=1, nint=100),
      type=NULL, ...)
 }
@@ -40,7 +46,9 @@
 		~ horizontal variables}, with variables separated by \code{*} if
 	there is more than one variable on a side.  If omitted, the formula
 	will be built using assumptions on the list of variables that varied
-	in the \code{Predict} call.
+	in the \code{Predict} call.  When plotting multiple panels (for
+  separate predictors), \code{formula} may be specified but by default
+  no formula is constructed.
 }
 \item{groups}{an optional character string containing the
 	name of one of the variables in \code{data} that
@@ -58,6 +66,8 @@
   variables in the \code{groups} vector.  Default is to use, in order,
   \code{color}, and \code{linetype}.  Other permissible values are
 	\code{size}, \code{shape}.}
+\item{conf}{specify \code{conf="line"} to show confidence bands with
+  lines instead of filled ribbons, the default}
 \item{varypred}{set to \code{TRUE} if \code{data} is the result of
   passing multiple \code{Predict} results, that represent different
   predictors, to \code{rbind.Predict}.  This will cause the \code{.set.}
@@ -86,7 +96,14 @@ which may have been the \code{"label"} attribute of the variable.
 Label for \code{y}-axis.  If \code{fun} is not given,
 default is \code{"log Odds"} for
 \code{lrm}, \code{"log Relative Hazard"} for \code{cph}, name of the response
-variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm}, or \code{"X * Beta"} otherwise.
+variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm},
+  or \code{"X * Beta"} otherwise.  Specify \code{ylab=NULL} to omit
+  \code{y}-axis labels.
+}
+\item{colorscale}{a \code{ggplot2} discrete scale function,
+  e.g. \code{function(...) scale_color_brewer(..., palette='Set1',
+  type='qual')}.  The default is the colorblind-friendly palette
+  including black in \url{http://www.cookbook-r.com/Graphs/Colors_(ggplot2)}.
 }
 \item{rdata}{a data frame containing the original raw data on which the
   regression model were based, or at least containing the \eqn{x}-axis
@@ -124,7 +141,7 @@ current curve, \code{FALSE} otherwise.  See one of the latter examples.
   variable has \code{nlevels} or fewer values, that variable is
   converted to a \code{groups} (superpositioning) variable.  Set
   \code{nlevels=0} to prevent this behavior.  For other situations, a
-  numeric x-axis variable with \code{nlevels} or fewer unique values
+  non-numeric x-axis variable with \code{nlevels} or fewer unique values
   will cause a horizontal dot plot to be drawn instead of an x-y plot
   unless \code{flipxdiscrete=FALSE}.
 }
@@ -134,6 +151,16 @@ current curve, \code{FALSE} otherwise.  See one of the latter examples.
   numeric vector, or \code{"none"} to suppress.  For multi-panel plots
   the default is \code{"top"}, and a legend only appears for the first
   (top left) panel.}
+\item{legend.label}{if omitted, group variable labels will be used for
+  label the legend.  Specify \code{legend.label=FALSE} to suppress using
+  a legend name, or a character string or expression to specify the
+  label.  Can be a vector is there is more than one grouping variable.}
+\item{vnames}{applies to the case where multiple plots are produced
+  separately by predictor.  Set to \code{'names'} to use variable names
+  instead of labels for these small plots.}
+\item{abbrev}{set to true to abbreviate levels of predictors that are
+  categorical to a minimum length of \code{minlength}}
+\item{minlength}{see \code{abbrev}}
 \item{layout}{for multi-panel plots a 2-vector specifying the number of
   rows and number of columns.  If omitted will be computed from the
   number of panels to make as square as possible.}

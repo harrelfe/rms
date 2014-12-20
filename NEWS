@@ -13,6 +13,8 @@ Changes in version 4.3-0 (2014-12-25)
    * predictrms, Predict: fixed bug with ref.zero=TRUE and with handling Cox models; added new test code in tests/cph3.r
    * cph, dxy.cens: fixed bug - Dxy was negative of what it should have been for cph.  Thanks: Irantzu Barrio
    * ggplot.Predict: new function for ggplot2 graphics for Predict objects
+   * contrast.rms: added ... for print method (e.g., to allow digits=4)
+   * survplot: raredd fixed bug with 1 observation per group - see http://stackoverflow.com/questions/24459078/error-message-when-ploting-subjects-at-risk-with-survplot
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly
