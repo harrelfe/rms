@@ -28,7 +28,6 @@ ggplot.Predict <-
   
   dohist <- function(...) {
     so <- histSpike.opts
-    ##    if(!length(so$col)) so$col <- col
     do.call('histSpikeg', c(list(...), so))
   }
 
@@ -83,26 +82,21 @@ ggplot.Predict <-
   
   if(length(anova)) {
     stat   <- plotmathAnova(anova, pval)
-    tanova <- function(name, x, y)
-      annotateAnova(name, stat, x, y, ggplot=TRUE, xlim=xlim, ylim=ylim,
-                         size=size.anova)
+    tanova <- function(name, x, y, flip=FALSE)
+      if(flip)
+        annotateAnova(name, stat, y, x, ggplot=TRUE, xlim=ylim, ylim=xlim,
+                      size=size.anova) else
+        annotateAnova(name, stat, x, y, ggplot=TRUE, xlim=xlim, ylim=ylim,
+                      size=size.anova)
   } else tanova <- function(...) {}
 
   ## See http://bigdata-analyst.com/best-way-to-add-a-footnote-to-a-plot-created-with-ggplot2.html
-  ## Changed to expect size in mm
-  footnote <- function(text, size=2.5, color=grey(.5)) {
-    grid::pushViewport(viewport())
-    grid::grid.text(label= text,
-                    x   = unit(1,"npc") - unit(2, "mm"),
-                    y   = unit(2, "mm"),
-                    just= c("right", "bottom"),
-                    gp  = gpar(fontsize=size/0.3527778, col=color))
-   grid::popViewport()
-}
+  ## size is in mm
+  footnote <- function(object, text, size=2.5, color=grey(.5))
+    arrangeGrob(object, sub = textGrob(text, x = 1, hjust = 1.01,
+       vjust=0.1, gp = gpar(fontsize =size/0.3527778 )))
+  
   if(predpres) {
-#    if(! missing(formula))
-#      stop('formula may not be given when multiple predictors were varied separately')
-    grid.newpage()
     p  <- as.factor(data$.predictor.)
     xp <- rep(NA, length(p))
     levs <- at <- labels <- limits <- list()
@@ -116,13 +110,14 @@ ggplot.Predict <-
       else if(np <=12) c(3,4)
       else if(np <=16) c(4,4)
       else             c(4,5)
-    pushViewport(viewport(layout = grid.layout(layout[1], layout[2])))
+#    pushViewport(viewport(layout = grid.layout(layout[1], layout[2])))
 
     .co <- if(length(groups))  as.factor(data[[groups]])
-    nr <- 1; nc <- 0
+    # nr <- 1; nc <- 0
+    Plt <- list()
     for(w in lp) {
-      nc <- nc + 1
-      if(nc > layout[2]) {nr <- nr + 1; nc <- 1}
+      # nc <- nc + 1
+      # if(nc > layout[2]) {nr <- nr + 1; nc <- 1}
       i  <- p == w
       z    <- data[i, w]
       l  <- levels(z)
@@ -170,9 +165,11 @@ ggplot.Predict <-
       if(flipped) g <- g + ylim(ylim) else
                   g <- g + coord_cartesian(ylim=ylim)
       g <- g + labs(x=xl, y=ylab) +
-        theme(plot.margin = grid::unit(rep(.1, 4), 'cm'))
+        theme(plot.margin = grid::unit(rep(0, 4), 'cm'))
+      ## use rep(.1, 4) if using print(..., viewport=...) for multiple plots
       if(length(groups)) {
-        if(nr == 1 && nc == 1) {
+        # if(nr == 1 && nc == 1) {
+        if(w == lp[1]) {
           f <- if(aestype[1] == 'color') colorscale else
            get(paste('scale', aestype[1], 'discrete', sep='_'))
           labl <- glabel(groups[1])
@@ -181,9 +178,9 @@ ggplot.Predict <-
           g <- g + theme(legend.position=legend.position)
         } else g <- g + theme(legend.position='none')
       }
-      g <- g + if(conf.int) with(zz, tanova(w, c(.z, .z, .z),
-                                   c(.yhat, lower, upper)))
-       else with(zz, tanova(w, .z, .yhat))
+      xa <- if(conf.int) c(zz$.z, zz$.z, zz$.z) else zz$.z
+      ya <- if(conf.int) c(zz$.yhat, zz$lower, zz$upper) else zz$.yhat
+      g <- g + tanova(w, xa, ya, flip=flipped)
       
       if(length(addlayer)) {
         ## Can't specify addlayer = geom_x() + geom_x():
@@ -219,10 +216,12 @@ ggplot.Predict <-
         } else form <- .yhat ~ .z
         g <- g + dohist(form, predictions=zz, data=rdata, ylim=ylim)
       }
-      print(g, vp = viewport(layout.pos.row=nr, layout.pos.col=nc))
+      # print(g, vp = viewport(layout.pos.row=nr, layout.pos.col=nc))
+      Plt[[w]] <- g
     }
-    if(length(sub)) footnote(sub, size=size.adj)
-    return(invisible())
+    Plt <- do.call(arrangeGrob, c(Plt, list(ncol=layout[2])))
+    if(length(sub)) Plt <- footnote(Plt, size=size.adj)
+    return(Plt)
 
   } else  { # .predictor. not included; user specified predictors to show
 
@@ -282,10 +281,9 @@ ggplot.Predict <-
     }
     if(flipped) g <- g + ylim(ylim) else
                 g <- g +  coord_cartesian(ylim=ylim)
-
-    g <- g + if(conf.int) tanova(xn, c(xv, xv, xv),
-                                 c(data$yhat, data$lower, data$upper)) else
-     tanova(xn, xv, data$yhat)
+    xa <- if(conf.int) c(xv, xv, xv) else xv
+    ya <- if(conf.int) c(data$yhat, data$lower, data$upper) else data$yhat
+    g <- g + tanova(xn, xa, ya, flip=flipped)
                     
     if(! is.factor(xv) && length(rdata) && xn %in% names(rdata)) {
       form <- paste('yhat', xn, sep='~')
@@ -315,10 +313,8 @@ ggplot.Predict <-
         for(j in 1 : length(addlayer)) g <- g + addlayer[[j]]
       else g <- g + addlayer
     }
-    if(! length(sub)) return(g)
-    print(g)  # needed for footnote to work
-    footnote(sub, size=size.adj)
-    invisible()
+    if(length(sub)) g <- footnote(g, sub)
+    g
   }
 }
 

@@ -221,7 +221,8 @@ units(blood.pressure) <- 'mmHg'
 
 # Specify population model for log odds that Y=1
 L <- .4*(sex=='male') + .045*(age-50) +
-  (log(cholesterol - 10)-5.2)*(-2*(sex=='female') + 2*(sex=='male'))
+  (log(cholesterol - 10)-5.2)*(-2*(sex=='female') + 2*(sex=='male')) +
+  .01 * (blood.pressure - 120)
 # Simulate binary y to have Prob(y=1) = 1/[1+exp(-L)]
 y <- ifelse(runif(n) < plogis(L), 1, 0)
 
