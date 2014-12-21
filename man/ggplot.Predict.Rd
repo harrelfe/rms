@@ -177,11 +177,7 @@ current curve, \code{FALSE} otherwise.  See one of the latter examples.
   discrete x coordinate variables.}
 \item{\dots}{ignored}
 }
-\value{
-	If there is no subtitle and predictors were specified to
-  \code{Predict}, returns an object of class \code{"ggplot2"} ready for
-  printing, otherwise prints.
-}
+\value{an object of class \code{"ggplot2"} ready for printing}
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr

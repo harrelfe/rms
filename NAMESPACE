@@ -5,10 +5,13 @@ useDynLib(rms)
 import(Hmisc)
 importFrom(survival, Surv, is.Surv, survConcordance.fit, coxph.fit, coxph.control, survfit, survfitcoxph.fit, survreg.fit, survreg.control, survpenal.fit, survfitKM, survreg.distributions, agreg.fit, agexact.fit, attrassign, untangle.specials)
 importFrom(stats, nobs)
-importFrom(SparseM, solve, t, as.matrix)
+# importFrom(SparseM, solve, t, as.matrix)
+import(SparseM)
 
 import(ggplot2)
 import(lattice)
+import(gridExtra)    # DOES NOT WORK UNLESS IN Depends IN DESCRIPTION
+# importFrom(gridExtra, arrangeGrob)   DOES NOT WORK
 importFrom(quantreg, rq.wfit, rq.fit, summary.rq)
 import(nlme)
 importFrom(rpart, rpart, rpart.control, prune)

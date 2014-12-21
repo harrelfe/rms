@@ -94,7 +94,7 @@ ggplot.Predict <-
   ## size is in mm
   footnote <- function(object, text, size=2.5, color=grey(.5))
     arrangeGrob(object, sub = textGrob(text, x = 1, hjust = 1.01,
-       vjust=0.1, gp = gpar(fontsize =size/0.3527778 )))
+       vjust=0.1, gp = grid::gpar(fontsize =size/0.3527778 )))
   
   if(predpres) {
     p  <- as.factor(data$.predictor.)
