@@ -30,15 +30,14 @@ latexrms <-
   for(i in (1:p)[ac!=9]) TLi[i] <- eval(parse(text=TLi[i]))
   TLi <- ifelse(TLi==name | ac==1 | ac==9, "", TLi)
   anytr <- any(TLi!="")
-  if(!missing(varnames))
-    {
-      if(length(varnames)!=sum(ac!=9)) stop("varnames is wrong length")
-      vn <- name
-      vn[ac!=9] <- varnames
-      varnames <- vn
-      tl <- sedit(tl, name, varnames, wild.literal=TRUE)
-      if(anytr) TLi <- sedit(TLi, name, varnames, wild.literal=TRUE)
-    }
+  if(!missing(varnames)) {
+    if(length(varnames)!=sum(ac!=9)) stop("varnames is wrong length")
+    vn <- name
+    vn[ac!=9] <- varnames
+    varnames <- vn
+    tl <- sedit(tl, name, varnames, wild.literal=TRUE)
+    if(anytr) TLi <- sedit(TLi, name, varnames, wild.literal=TRUE)
+  }
   else
     varnames <- name
   lnam <- nchar(varnames)
@@ -285,7 +284,7 @@ latexrms <-
       cols <- nchar(cof)
     }
   
-  anybrace <- anyplus <- FALSE
+  anyivar <- anyplus <- FALSE   # anyivar = any indicator variable
   Nam <- lNam <- nam.coef <- list()
   
   for(i in (1:p)[which])
@@ -305,8 +304,8 @@ latexrms <-
           prm <- ifelse(z,paste(nam,"\\in ",prm),prm)
           prm <- ifelse(u,paste(nam,"=",prm),prm)
           lprm <- lprm + (z | u)*(lnam[i]+1)
-          prm <- paste("\\{", prm, "\\}", sep="")
-          anybrace <- TRUE
+          prm <- paste("[", prm, "]", sep="")
+          anyivar <- TRUE
         }
       if(ass != 8)
         {
@@ -579,12 +578,12 @@ latexrms <-
   tex <- c(tex,"\\end{eqnarray*}")
   tex <- ifelse(substring(tex,1,1)=="\\",tex,paste(before,tex,"\\\\"))
   
-  if(anybrace | anyplus)
+  if(anyivar | anyplus)
     {
       s <- if(length(which)==p) "and $" else "where $"
-      if(anybrace)
-        s <- paste(s,"\\{c\\}=1 {\\rm\\ if\\ subject\\ is\\ in\\ group\\ } c, \\ 0 {\\rm\\ otherwise}")
-      if(anybrace & anyplus) s <- paste(s, ";\\ ")
+      if(anyivar)
+        s <- paste(s,"[c]=1 {\\rm\\ if\\ subject\\ is\\ in\\ group\\ } c, \\ 0 {\\rm\\ otherwise}")
+      if(anyivar & anyplus) s <- paste(s, ";\\ ")
       if(anyplus)
         s <- paste(s, "(x)_{+}=x {\\rm\\ if\\ } x>0, \\ 0 {\\rm\\ otherwise}")
       s <- paste(s, "$.")
