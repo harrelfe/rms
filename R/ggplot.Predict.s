@@ -115,6 +115,7 @@ ggplot.Predict <-
     .co <- if(length(groups))  as.factor(data[[groups]])
     # nr <- 1; nc <- 0
     Plt <- list()
+    jplot <- 0
     for(w in lp) {
       # nc <- nc + 1
       # if(nc > layout[2]) {nr <- nr + 1; nc <- 1}
@@ -217,7 +218,8 @@ ggplot.Predict <-
         g <- g + dohist(form, predictions=zz, data=rdata, ylim=ylim)
       }
       # print(g, vp = viewport(layout.pos.row=nr, layout.pos.col=nc))
-      Plt[[w]] <- g
+      jplot <- jplot + 1
+      Plt[[jplot]] <- g
     }
     Plt <- do.call(arrangeGrob, c(Plt, list(ncol=layout[2])))
     if(length(sub)) Plt <- footnote(Plt, size=size.adj)
