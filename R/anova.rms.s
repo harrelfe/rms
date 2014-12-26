@@ -516,7 +516,8 @@ latex.anova.rms <-
 
     dig <- digits[sn]
     sn[sn=='Chi-Square'] <- '\\chi^2'
-    names(dstats) <- paste('$',sn,'$',sep='')
+    names(dstats) <- ifelse(sn %nin% c('d.f.','MS','Partial SS'),
+                            paste('$', sn, '$', sep=''), sn)
 
     resp <- latexTranslate(as.character(attr(object,"formula")[2]))
     ## Make LaTeX preserve spaces in heading
