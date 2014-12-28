@@ -25,8 +25,8 @@
 \method{ggplot}{Predict}(data, formula, groups=NULL,
      aestype=c('color', 'linetype'),
      conf=c('fill', 'lines'),
-     varypred=FALSE, subset,
-     xlim, ylim, xlab, ylab, 
+     varypred=FALSE, sepdiscrete=c('no', 'list', 'vertical', 'horizontal'),
+     subset, xlim, ylim, xlab, ylab, 
      colorscale=function(...) scale_color_manual(...,
        values=c("#000000", "#E69F00", "#56B4E9",
                 "#009E73","#F0E442", "#0072B2", "#D55E00", "#CC79A7")),
@@ -73,6 +73,18 @@
   predictors, to \code{rbind.Predict}.  This will cause the \code{.set.}
   variable created by \code{rbind} to be copied to the
   \code{.predictor.} variable.}
+\item{sepdiscrete}{set to something other than \code{"no"} to create
+  separate graphics for continuous and discrete predictors.  For
+  discrete predictors, horizontal dot charts are produced.  This allows
+  use of the \code{ggplot2} \code{facet_wrap} function to make better
+  use of space.  If \code{sepdiscrete="list"}, a list of two \code{grid}
+  graphics objects is returned if both types of predictors are present
+  (otherwise one object for the type that existed in the model).  Set
+  \code{sepdiscrete="vertical"} to put the two types of plots into one
+  graphical object with continuous predictors on top and given a
+  fraction of space relative to the number of continuous vs. number of
+  discrete variables.  Set \code{sepdiscrete="horizontal"} to get a
+  horizontal arrangements with continuous variables on the left.}
 \item{subset}{a subsetting expression for restricting the rows of
   \code{data} that are used in plotting.  For example, predictions may have
   been requested for males and females but one wants to plot only females.}
@@ -177,7 +189,10 @@ current curve, \code{FALSE} otherwise.  See one of the latter examples.
   discrete x coordinate variables.}
 \item{\dots}{ignored}
 }
-\value{an object of class \code{"ggplot2"} ready for printing}
+\value{an object of class \code{"ggplot2"} ready for printing.  For the
+  case where predictors were not specified to \code{Predict}, 
+  \code{sepdiscrete=TRUE}, and there were both continuous and discrete
+  predictors in the model, a list of two graphics objects is returned.}
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
@@ -228,6 +243,8 @@ options(datadist='ddist')
 fit <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
                x=TRUE, y=TRUE)
 an <- anova(fit)
+# Plot effects in two vertical sub-panels with continuous predictors on top
+# ggplot(Predict(fit), sepdiscrete='vertical')
 # Plot effects of all 4 predictors with test statistics from anova, and P
 ggplot(Predict(fit), anova=an, pval=TRUE)
 # ggplot(Predict(fit), rdata=llist(blood.pressure, age))
@@ -288,6 +305,7 @@ p2 <- Predict(fit, cholesterol, sex)
 p3 <- Predict(fit, blood.pressure, sex)
 p <- rbind(age=p1, cholesterol=p2, blood.pressure=p3)
 ggplot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE)
+# ggplot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE, sepdiscrete='vert')
 
 \dontrun{
 # For males at the median blood pressure and cholesterol, plot 3 types

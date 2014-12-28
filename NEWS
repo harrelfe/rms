@@ -1,4 +1,4 @@
-Changes in version 4.3-0 (2014-12-25)
+Changes in version 4.3-0 (2015-01-01)
    * contrast.rms: added 3rd and 4th list of predictor settings to allow for double-difference (interaction) contrasts
    * predictrms: don't call vcov if no covariates present (e.g. cph strata only)
    * print.summary.rms, latex.summary.rms: print more significant digits for effect-related columns
@@ -15,6 +15,8 @@ Changes in version 4.3-0 (2014-12-25)
    * ggplot.Predict: new function for ggplot2 graphics for Predict objects
    * contrast.rms: added ... for print method (e.g., to allow digits=4)
    * survplot: raredd fixed bug with 1 observation per group - see http://stackoverflow.com/questions/24459078/error-message-when-ploting-subjects-at-risk-with-survplot
+   * latex.rms: changed notation for indicator variables from {} to [] a la Knuth
+   * latex.anova.rms: stopped putting d.f. and Partial SS in math mode
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly
