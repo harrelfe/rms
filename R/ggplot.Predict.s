@@ -39,7 +39,7 @@ ggplot.Predict <-
   ## The following exists to nullify invisible() used in arrangeGrob's
   ## returned value
   agrob <- function(...) {
-    z <- arrangeGrob(...)
+    z <- gridExtra::arrangeGrob(...)
     z
   }
   
@@ -102,7 +102,7 @@ ggplot.Predict <-
   ## See http://bigdata-analyst.com/best-way-to-add-a-footnote-to-a-plot-created-with-ggplot2.html
   ## size is in mm
   footnote <- function(object, text, size=2.5, color=grey(.5))
-    agrob(object, sub = textGrob(text, x = 1, hjust = 1.01,
+    agrob(object, sub = grid::textGrob(text, x = 1, hjust = 1.01,
        vjust=0.1, gp = grid::gpar(fontsize =size/0.3527778 )))
   
   if(predpres) {   ## User did not specify which predictors to plot; all plotted
@@ -116,10 +116,10 @@ ggplot.Predict <-
         gg <- g$grobs      
         strips <- grep("strip_t", names(gg))
         for(ii in seq_along(labels))  {
-          modgrob <- getGrob(gg[[strips[ii]]], "strip.text", 
+          modgrob <- grid::getGrob(gg[[strips[ii]]], "strip.text", 
                              grep=TRUE, global=TRUE)
           gg[[strips[ii]]]$children[[modgrob$name]] <-
-            editGrob(modgrob,label=labels[ii])
+            grid::editGrob(modgrob,label=labels[ii])
         }
         g$grobs <- gg
         class(g) = c("arrange", "ggplot", class(g)) 
