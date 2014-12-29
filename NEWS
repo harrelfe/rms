@@ -17,6 +17,7 @@ Changes in version 4.3-0 (2015-01-01)
    * survplot: raredd fixed bug with 1 observation per group - see http://stackoverflow.com/questions/24459078/error-message-when-ploting-subjects-at-risk-with-survplot
    * latex.rms: changed notation for indicator variables from {} to [] a la Knuth
    * latex.anova.rms: stopped putting d.f. and Partial SS in math mode
+   * npsurv: neatened help file
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly

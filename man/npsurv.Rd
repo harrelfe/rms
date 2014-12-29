@@ -44,16 +44,10 @@ objects are \code{print}, \code{summary}, \code{plot},\code{lines}, and
 
 \examples{
 require(survival)
-#fit a Kaplan-Meier and plot it
+# fit a Kaplan-Meier and plot it
 fit <- npsurv(Surv(time, status) ~ x, data = aml)
 plot(fit, lty = 2:3)
 legend(100, .8, c("Maintained", "Nonmaintained"), lty = 2:3)
-
-#fit a Cox proportional hazards model and plot the
-#predicted survival for a 60 year old
-fit <- coxph(Surv(futime, fustat) ~ age, data = ovarian)
-plot(survfit(fit, newdata=data.frame(age=60)),
-     xscale=365.25, xlab = "Years", ylab="Survival")
 
 # Here is the data set from Turnbull
 #  There are no interval censored subjects, only left-censored (status=3),

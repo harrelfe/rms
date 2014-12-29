@@ -171,18 +171,49 @@ ggplot.Predict <-
                 geom_line(aes(x=.xx., y=lower)) +
                 geom_line(aes(x=.xx., y=upper))
           }
+
+          if(length(rdata)) {
+            rv <- intersect(v, names(rdata))
+            rdata <- rdata[c(rv, groups)]
+            ## For each variable in rdata that is in dat, set values
+            ## outside the range in dat to NA.  Otherwise x-axes will
+            ## be rescaled to include all raw data values, not just
+            ## points at which predictions are made
+            for(vv in rv) {
+              a <- dat[[vv]]
+              if(is.numeric(a)) {
+                r <- range(a, na.rm=TRUE)
+                b <- rdata[[vv]]
+                i <- b < r[1] | b > r[2]
+                if(any(i)) {
+                  b[i] <- NA
+                  rdata[[vv]] <- b
+                }
+              }
+            }
+            
+            ## Reshape rdata to be tall and thin
+            rdata <- reshape(as.data.frame(rdata),
+                             direction='long', v.names='.xx.',
+                             timevar='.predictor.',
+                             varying=rv, times=rv)
+            form <- 'yhat ~ .xx. + .predictor.'
+            if(length(groups))
+              form <- paste(form, '+', paste(groups, collapse='+'))
+            form <- as.formula(form)
+            g <- g + dohist(form, predictions=dat, data=rdata, ylim=ylim)
+          }
         } else {   # discrete x
           if(length(groups)) g <- eval(parse(text=
-             sprintf('ggplot(dat, aes(x=yhat, y=.xx., %s=%s))',
-             aestype[1], groups[1]))) + labs(x=ylab, y=NULL)
-        else
-          g <- ggplot(dat, aes(x=yhat, y=.xx.)) + labs(x=ylab, y=NULL)
+                     sprintf('ggplot(dat, aes(x=yhat, y=.xx., %s=%s))',
+                     aestype[1], groups[1]))) + labs(x=ylab, y=NULL)
+          else
+            g <- ggplot(dat, aes(x=yhat, y=.xx.)) + labs(x=ylab, y=NULL)
           g <- g + lim(ylim, 'x') +
                facet_wrap(~ .predictor., scales='free_y') + geom_point()
           if(conf.int) g <- g +
             geom_errorbarh(aes(y=.xx., xmin=lower, xmax=upper), height=0)
         }
-
         if(length(addlayer)) {
           ## Can't specify addlayer = geom_x() + geom_x():
           ## non-numeric argument to binary operator

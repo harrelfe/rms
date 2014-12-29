@@ -27,12 +27,14 @@ options(datadist='ddist')
 fit <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
                x=TRUE, y=TRUE)
 an <- anova(fit)
+p <- Predict(fit)
 # Plot effects in two vertical sub-panels with continuous predictors on top
-ggplot(Predict(fit), sepdiscrete='vertical')
+ggplot(p, sepdiscrete='vertical')
 # Plot effects of all 4 predictors with test statistics from anova, and P
-ggplot(Predict(fit), anova=an, pval=TRUE)
-ggplot(Predict(fit), rdata=llist(blood.pressure, age))
+ggplot(p, anova=an, pval=TRUE)
+ggplot(p, rdata=llist(blood.pressure, age))
 # spike histogram plot for two of the predictors
+ggplot(p, rdata=llist(blood.pressure, age), sepdiscrete='vertical')
 
 p <- Predict(fit, name=c('age','cholesterol'))   # Make 2 plots
 ggplot(p)
@@ -91,7 +93,8 @@ p2 <- Predict(fit, cholesterol, sex)
 p3 <- Predict(fit, blood.pressure, sex)
 p <- rbind(age=p1, cholesterol=p2, blood.pressure=p3)
 ggplot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE)
-ggplot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE, sepdiscrete='vert')
+ggplot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE,
+       sepdiscrete='vert', rdata=data.frame(age, cholesterol, sex))
 
 # For males at the median blood pressure and cholesterol, plot 3 types
 # of confidence intervals for the probability on one plot, for varying age
