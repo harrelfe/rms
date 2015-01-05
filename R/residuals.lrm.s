@@ -9,6 +9,7 @@ residuals.lrm <-
   gotsupsmu <- FALSE
   type <- match.arg(type)
   dopl <- (is.logical(pl) && pl) || is.character(pl)
+  ylabpr <- NULL   # y-axis label for partial residuals
 
   k <- object$non.slopes
   L <- object$linear.predictors
@@ -229,7 +230,7 @@ residuals.lrm <-
           
           plot(xi, ri, xlim=if(missing(xlim)) range(xi) else xlim,
                ylim=if(missing(ylim)) range(ri) else ylim,
-               xlab=xname[i], ylab='Partial Residual')
+               xlab=xname[i], ylab=ylabpr)
           lines(lowess(xi,ri))
         }
         else if(k==1) {
@@ -255,7 +256,7 @@ residuals.lrm <-
             ymax <- max(ymax,w$y)
             smoothed[[j]] <- w
           }
-          plot(0, 0, xlab=xname[i], ylab='Partial Residual',
+          plot(0, 0, xlab=xname[i], ylab=ylabpr,
                xlim=if(missing(xlim))range(xi) else xlim,
                ylim=if(missing(ylim))range(pretty(c(ymin,ymax)))
                else ylim, type='n')
@@ -362,7 +363,7 @@ plot.lrm.partial <- function(..., labels, center=FALSE, ylim)
       ymax <- max(ymax, curves[[j]]$y)
     }
     for(j in 1:nfit) {
-      if(j==1) plot(curves[[1]], xlab=vname[i], ylab='Partial Residual',
+      if(j==1) plot(curves[[1]], xlab=vname[i], ylab=NULL,
            ylim=if(missing(ylim)) c(ymin, ymax) else ylim, type='l')
       else lines(curves[[j]], lty=j)
     }
