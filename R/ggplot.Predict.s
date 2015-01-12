@@ -14,7 +14,9 @@ ggplot.Predict <-
            legend.position='right', legend.label=NULL,
            vnames=c('labels', 'names'), abbrev=FALSE, minlength=6,
            layout=NULL, addlayer=NULL,
-           histSpike.opts=list(frac=0.02, side=1, nint=100),
+           histSpike.opts=list(frac=function(f) 0.01 + 
+                                 0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1),
+             side=1, nint=100),
            type=NULL, ...)
 {
   sepdiscrete <- match.arg(sepdiscrete)
