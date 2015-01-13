@@ -1,4 +1,4 @@
-Changes in version 4.3-0 (2015-01-01)
+Changes in version 4.3-0 (2015-01-13)
    * contrast.rms: added 3rd and 4th list of predictor settings to allow for double-difference (interaction) contrasts
    * predictrms: don't call vcov if no covariates present (e.g. cph strata only)
    * print.summary.rms, latex.summary.rms: print more significant digits for effect-related columns

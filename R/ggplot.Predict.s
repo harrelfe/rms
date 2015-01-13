@@ -93,12 +93,10 @@ ggplot.Predict <-
   
   if(length(anova)) {
     stat   <- plotmathAnova(anova, pval)
-    tanova <- function(name, x, y, flip=FALSE)
-      if(flip)
-        annotateAnova(name, stat, y, x, ggplot=TRUE, xlim=ylim, ylim=xlim,
-                      size=size.anova) else
-        annotateAnova(name, stat, x, y, ggplot=TRUE, xlim=xlim, ylim=ylim,
-                      size=size.anova)
+    tanova <- function(name, x, y, xlim, ylim, flip=FALSE,
+                       empty=FALSE, dataOnly=FALSE)
+      annotateAnova(name, stat, x, y, ggplot=TRUE, xlim=xlim, ylim=ylim,
+                    size=size.anova, flip=flip, empty=empty, dataOnly=dataOnly)
   } else tanova <- function(...) {}
 
   ## See http://bigdata-analyst.com/best-way-to-add-a-footnote-to-a-plot-created-with-ggplot2.html
@@ -216,6 +214,40 @@ ggplot.Predict <-
           if(conf.int) g <- g +
             geom_errorbarh(aes(y=.xx., xmin=lower, xmax=upper), height=0)
         }
+        ## anova annotations need to be created for all variables being
+        ## plotted with faceting, and annotation information must be
+        ## based on a dataset with the information and the .predictor.
+        ## variable, and geom_text() must be used instead of annotate()
+        ## See http://stackoverflow.com/questions/2417623/manual-annotate-a-ggplot-with-different-labels-in-different-facets
+        if(length(anova)) {
+          .xx. <- yhat <- .label. <- hjust <- vjust <- NULL
+          for(iv in v) {
+            j <- which(data$.predictor. == iv)
+            dat <- data[j,, drop=FALSE]
+            xv <- dat[, iv]
+            xx <- switch(type, continuous = xv,
+                               discrete   = as.numeric(xv))
+            yy <- dat[, 'yhat']
+            if(conf.int) {
+              xx <- c(xx, xx, xx)
+              yy <- c(yy, dat[, 'lower'], dat[, 'upper'])
+            }
+            xlim <- if(is.factor(xv)) c(1, length(levels(xv)))
+            else range(pretty(xv))
+            tan <- tanova(iv, xx, yy, xlim, ylim, dataOnly=TRUE,
+                          flip=type=='discrete', empty=type == 'discrete')
+            .xx. <- c(.xx., tan$x)
+            yhat <- c(yhat, tan$y)
+            .label. <- c(.label., tan$label)
+            hjust <- c(hjust, tan$hjust)
+            vjust <- c(vjust, tan$vjust)
+          }
+          .anova. <- data.frame(.predictor.=v, .xx., yhat, .label.,
+                                hjust, vjust)
+          g <- g + geom_text(aes(label=.label., hjust=hjust, vjust=vjust),
+                             size=size.anova,
+                             data=.anova., parse=TRUE, show_guide=FALSE)
+        }
         if(length(addlayer)) {
           ## Can't specify addlayer = geom_x() + geom_x():
           ## non-numeric argument to binary operator
@@ -255,13 +287,10 @@ ggplot.Predict <-
       else             c(4,5)
 #    pushViewport(viewport(layout = grid.layout(layout[1], layout[2])))
 
-    # nr <- 1; nc <- 0
     Plt <- list()
     jplot <- 0
     for(w in lp) {
       jplot <- jplot + 1
-      # nc <- nc + 1
-      # if(nc > layout[2]) {nr <- nr + 1; nc <- 1}
       i  <- p == w
       z    <- data[i, w]
       l  <- levels(z)
@@ -324,7 +353,7 @@ ggplot.Predict <-
       }
       xa <- if(conf.int) c(zz$.xx., zz$.xx., zz$.xx.) else zz$.xx.
       ya <- if(conf.int) c(zz$.yhat, zz$lower, zz$upper) else zz$.yhat
-      g <- g + tanova(w, xa, ya, flip=flipped)
+      g  <- g + tanova(w, xa, ya, xlim, ylim, flip=FALSE)   ## was flip=flipped
       
       if(length(addlayer)) {
         ## Can't specify addlayer = geom_x() + geom_x():
@@ -424,9 +453,15 @@ ggplot.Predict <-
     }
     if(flipped) g <- g + ylim(ylim) else
                 g <- g +  coord_cartesian(ylim=ylim)
+
     xa <- if(conf.int) c(xv, xv, xv) else xv
     ya <- if(conf.int) c(data$yhat, data$lower, data$upper) else data$yhat
-    g <- g + tanova(xn, xa, ya, flip=flipped)
+    if(missing(xlim))
+      xlim <- if(is.factor(xv)) c(1 , length(levels(xv)))
+    else
+      range(pretty(xv))
+
+    g <- g + tanova(xn, xa, ya, xlim, ylim, flip=FALSE)  # was flip=flipped
                     
     if(! is.factor(xv) && length(rdata) && xn %in% names(rdata)) {
       form <- paste('yhat', xn, sep='~')
