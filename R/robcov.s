@@ -41,7 +41,7 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
   nc <- length(levels(cluster))
   clus.start <- clus.start[- (nc + 1)]
   storage.mode(clus.start) <- "integer"
-  
+
   W <- matrix(.Fortran("robcovf", n, p, nc, clus.start, clus.size, X, 
                        double(p), double(p * p), w=double(p * p),
                        PACKAGE="rms")$w, nrow=p)

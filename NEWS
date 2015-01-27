@@ -19,6 +19,8 @@ Changes in version 4.3-0 (2015-01-28)
    * latex.anova.rms: stopped putting d.f. and Partial SS in math mode
    * npsurv: neatened help file
    * residuals.orm: fixed bug for score residuals.  This fixed robcov.
+   * orm-residuals.r: new test code
+   * vcov.orm: handled case where fit was run through robcov
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly

@@ -29,6 +29,10 @@ DesignAssign <- function(atr, non.slopes, Terms) {
 #in parametric survival models
 
 vcov.lrm <- function(object, regcoef.only=TRUE, intercepts='all', ...) {
+  if(length(intercepts) == 1 && is.character(intercepts) &&
+     intercepts %nin% c('all', 'none'))
+    stop('if character, intercepts must be "all" or "none"')
+  
   if(!length(intercepts) ||
      (length(intercepts) == 1) && intercepts == 'all')
     return(vcov.rms(object, regcoef.only=regcoef.only, ...))
@@ -53,7 +57,10 @@ vcov.psm <- function(object, regcoef.only=TRUE, ...)
 vcov.orm <- function(object, regcoef.only=TRUE,
                      intercepts='mid', ...) {
   if(!length(intercepts)) return(object$var)
-  iat <- attr(object$var, 'intercepts')  # handle fit.mult.impute
+  iat <- attr(object$var, 'intercepts')  # handle fit.mult.impute (?), robcov
+  # robcov re-writes var object and uses all intercepts
+  if(! length(iat)) return(vcov.lrm(object, regcoef.only=regcoef.only,
+                                    intercepts=intercepts, ...))
   iref <- object$interceptRef
   info <- object$info.matrix
   ns <- num.intercepts(object)
