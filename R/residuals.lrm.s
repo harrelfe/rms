@@ -27,6 +27,8 @@ residuals.lrm <-
   if(ordone && !missing(kint)) 
     stop('may not specify kint for li.shepherd, partial, score, score.binary, or gof')
 
+  if(isorm) L <- L - cof[attr(L, 'intercepts')] + cof[1]
+
   if(k > 1 && kint !=1 && !ordone) L <- L - cof[1] + cof[kint]
   P <- cumprob(L)
   if(length(Y <- object$y) == 0) stop("you did not specify y=TRUE in the fit")
@@ -199,10 +201,10 @@ residuals.lrm <-
   if(type=="partial") {
     if(!length(X <- unclass(object$x)))
       stop("you did not specify x=TRUE in the fit")
-    cof.int <- cof[1:k]
-    cof     <- cof[-(1:k)]
+    cof.int <- cof[1 : k]
+    cof     <- cof[- (1 : k)]
     if(!missing(which)) {
-      X <- X[,which,drop=FALSE]
+      X <- X[, which, drop=FALSE]
       cof <- cof[which]
     }
     atx <- attributes(X)
@@ -215,7 +217,7 @@ residuals.lrm <-
       for(j in 1:k) {
         y <- Y >= j
         p <- cumprob(L - cof.int[1] + cof.int[j])
-        R[,,j] <- r + (y-p)/p/(1-p)
+        R[,,j] <- r + (y - p) / p / (1 - p)
       }
     }
     if(dopl) {
@@ -307,8 +309,10 @@ residuals.lrm <-
     dimnames(dfb) <- list(rnam, c(cnam[kint], cnam[-(1:k)]))
     if(type=="dfbeta") return(naresid(naa, dfb))
     if(type=="dfbetas") {
-      i <- c(kint, (k+1):length(cof))
-      return(naresid(naa, sweep(dfb, 2, diag(object$var[i,i])^.5,"/")))
+      ## i <- c(kint, (k+1):length(cof))
+      vv <- vcov(object, intercepts=1)
+      return(naresid(naa, sweep(dfb, 2, diag(vv)^.5,"/")))
+      ## was diag(object$var[i, i])
     }
     if(type=="hat") return(naresid(naa, infl$hat))
     if(type=="dffit") return(naresid(naa,

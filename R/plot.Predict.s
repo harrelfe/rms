@@ -389,7 +389,19 @@ plotmathAnova <- function(anova, pval) {
 ## stat is result of plotmathAnova
 ## xlim and ylim must be specified if ggplot=TRUE
 annotateAnova <- function(name, stat, x, y, ggplot=FALSE,
-                          xlim, ylim, cex, size=4) {
+                          xlim=NULL, ylim=NULL, cex, size=4, flip=FALSE,
+                          empty=FALSE, dataOnly=FALSE) {
+  x <- as.numeric(x)
+  y <- as.numeric(y)
+  if(flip) {
+    yorig <- y
+    y     <- x
+    x     <- yorig
+    ylimorig <- ylim
+    ylim     <- xlim
+    xlim     <- ylimorig
+  }
+    
   ## size is for ggplot2 only; is in mm
   ## See if an area is available near the top or bottom of the
   ## current panel
@@ -398,25 +410,34 @@ annotateAnova <- function(name, stat, x, y, ggplot=FALSE,
     xlim <- cpl$xlim
     ylim <- cpl$ylim
   }
-  else if(missing(xlim) || missing(ylim))
+  else if(! length(xlim) || ! length(ylim))
     stop('xlim and ylim must be given if ggplot=TRUE')
   dy   <- diff(ylim)
-  if(!any(y > ylim[2] - dy / 7)) {
+  if(!empty && !any(y > ylim[2] - dy / 7)) {
     z <- list(x = mean(xlim), y = ylim[2] - .025 * dy)
     adj <- c(.5, 1)
   }
-  else if(!any(y < ylim[1] + dy / 7)) {
+  else if(! empty && !any(y < ylim[1] + dy / 7)) {
     z <- list(x = mean(xlim), y = ylim[1] + .025 * dy)
     adj <- c(.5, 0)
   }
   else {
-    z <- if(missing(xlim) || missing(ylim)) 
+    z <- if(! length(xlim) || ! length(ylim)) 
       largest.empty(x, y, grid=TRUE, method='exhaustive')
     else
       largest.empty(x, y, grid=TRUE, method='exhaustive', xlim=xlim, ylim=ylim)
-    adj <- if(z$y > mean(ylim)) c(.5, 1) else c(.5, 0)
+    adj <- c(if(z$x > mean(xlim)) 1 else .5,
+             if(z$y > mean(ylim)) 1 else 0)
+  }
+  if(flip) {
+    zyorig <- z$y
+    z$y <- z$x
+    z$x <- zyorig
+    adj <- rev(adj)
   }
   ## parse=TRUE: treat stat[name] as an expression
+  if(dataOnly) return(list(x=z$x, y=z$y, label=stat[name],
+                           hjust=adj[1], vjust=adj[2]))
   if(ggplot) annotate('text', x=z$x, y=z$y, label=stat[name], parse=TRUE,
                        size=size, hjust=adj[1], vjust=adj[2])
   else ltext(z$x, z$y, parse(text=stat[name]), cex=cex, adj=adj)

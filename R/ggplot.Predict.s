@@ -35,7 +35,7 @@ ggplot.Predict <-
   
   dohist <- function(...) {
     so <- histSpike.opts
-    do.call('histSpikeg', c(list(...), so))
+    do.call(c('hs','histSpikeg')[1], c(list(...), so))  # ??
   }
 
   ## The following exists to nullify invisible() used in arrangeGrob's
@@ -392,7 +392,9 @@ ggplot.Predict <-
       # print(g, vp = viewport(layout.pos.row=nr, layout.pos.col=nc))
       Plt[[jplot]] <- g
     }
-    Plt <- do.call(agrob, c(Plt, list(ncol=layout[2])))
+    Plt <- if(jplot == 1) Plt[[1]]
+    else
+      do.call(agrob, c(Plt, list(ncol=layout[2])))
     if(length(sub)) Plt <- footnote(Plt, sub, size=size.adj)
     return(Plt)
 
