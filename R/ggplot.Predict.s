@@ -35,7 +35,7 @@ ggplot.Predict <-
   
   dohist <- function(...) {
     so <- histSpike.opts
-    do.call(c('hs','histSpikeg')[1], c(list(...), so))  # ??
+    do.call('histSpikeg', c(list(...), so))
   }
 
   ## The following exists to nullify invisible() used in arrangeGrob's

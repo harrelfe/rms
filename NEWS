@@ -1,4 +1,4 @@
-Changes in version 4.3-0 (2015-01-28)
+Changes in version 4.3-0 (2015-01-30)
    * contrast.rms: added 3rd and 4th list of predictor settings to allow for double-difference (interaction) contrasts
    * predictrms: don't call vcov if no covariates present (e.g. cph strata only)
    * print.summary.rms, latex.summary.rms: print more significant digits for effect-related columns
@@ -21,6 +21,7 @@ Changes in version 4.3-0 (2015-01-28)
    * residuals.orm: fixed bug for score residuals.  This fixed robcov.
    * orm-residuals.r: new test code
    * vcov.orm: handled case where fit was run through robcov
+   * print: for LaTeX fixed prStats to translate clustering variable to LaTeX
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly
