@@ -870,7 +870,9 @@ prStats <- function(labels, w, latex=FALSE)
       fu <- character(lu)
       for(j in 1:length(u)) {
         dg <- dig[j]
-        fu[j] <- if(names(u)[j] == 'Cluster on') latexTranslate(u[j]) else
+        fu[j] <- if(names(u)[j] == 'Cluster on')
+                   paste('\\texttt{\\small ', latexTranslate(u[j]),
+                         '}', sep='') else
          if(is.na(dg)) format(u[j]) else
          if(dg < 0) formatNP(u[j], -dg, pvalue=TRUE, latex=latex) else
         formatNP(u[j], dg, latex=latex)
