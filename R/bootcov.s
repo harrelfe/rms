@@ -347,6 +347,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   bar <- as.matrix(bar)
   cov <- (cov - b * bar %*% t(bar)) / (b - 1L)
   fit$orig.var <- fit$var
+  if(nfit == 'orm') attr(cov, 'intercepts') <- iref
   fit$var <- cov
   fit$boot.loglik <- Loglik
   if(length(stat)) fit$boot.stats <- stats

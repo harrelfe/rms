@@ -63,6 +63,7 @@ vcov.orm <- function(object, regcoef.only=TRUE,
                                     intercepts=intercepts, ...))
   iref <- object$interceptRef
   info <- object$info.matrix
+  isbootcov <- length(object$boot.coef)
   ns <- num.intercepts(object)
   p  <- ncol(info)
   ns <- num.intercepts(object)
@@ -78,6 +79,8 @@ vcov.orm <- function(object, regcoef.only=TRUE,
   }
                        
   if(is.character(intercepts)) {
+    if(intercepts != 'mid' && isbootcov)
+      stop('intercepts must be "mid" if object produced by bootcov')
       switch(intercepts,
              mid = return(object$var),
              all = {
@@ -93,6 +96,9 @@ vcov.orm <- function(object, regcoef.only=TRUE,
              },
              none= return(object$var[-1, -1, drop=FALSE]) )
   }
+  if(isbootcov)
+    stop('intercepts must be "mid" if object produced by bootcov')
+  
   i <- if(nx == 0) intercepts else c(intercepts, (ns+1):p)
   v <- if(length(scale))
     (t(trans) %*% as.matrix(solve(info)) %*% trans)[i,i]
