@@ -15,7 +15,9 @@ contrast.rms <-
   zcrit <- if(length(idf <- fit$df.residual)) qt((1 + conf.int) / 2, idf) else
               qnorm((1 + conf.int) / 2)
   bcoef <- if(usebootcoef) fit$boot.Coef
-  nrp <- num.intercepts(fit, 'coef')
+  nrp <- if(inherits(fit, 'orm')) 1 else
+   num.intercepts(fit, 'var')   # was 'coef'
+  ## Note: is 1 for orm because vcov defaults to intercepts='mid'
 
   if(length(bcoef) && conf.type != 'simultaneous')
     conf.type <- switch(boot.type,

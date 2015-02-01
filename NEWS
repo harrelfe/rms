@@ -24,6 +24,8 @@ Changes in version 4.3-0 (2015-02-01)
    * print: for LaTeX fixed prStats to translate clustering variable to LaTeX
    * vcov.orm: handled case where fit was run through bootcov
    * bootcov: for orm stored intercepts attribute in var
+   * tests: new test for orm bootcov
+   * contrast, vcov.orm: made to work if fit run through robcov, bootcov
 
 Changes in version 4.2-1 (2014-09-18)
    * plot.summary.rms: allowed a vector for lwd, and passed lwd to confbar.  Thanks: Michael Friendly
