@@ -50,7 +50,7 @@ validate(f, B=100, dxy=TRUE, u=60)
 
 f <- cph(S ~ tumor + ecog + strat(rx), x=TRUE, y=TRUE, surv=TRUE, time.inc=60, data=d)
 set.seed(1)
-validate(f, B=100)  ## no predictive ability
+validate(f, B=100, u=60)  ## no predictive ability
 set.seed(1)
 validate(f, B=100, dxy=TRUE, u=60)
 ## Only Dxy indicates some predictive information; large in abs. value
