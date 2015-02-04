@@ -201,7 +201,8 @@ Lee WC (2011): Bounding the bias of unmeasured factors with confounding
 and effect-modifying potentials.  Stat in Med 30:1007-1017.
 }
 \seealso{
-\code{\link{lrm}}, \code{\link{cph}}, \code{\link{sample}}
+	\code{\link{lrm}}, \code{\link{cph}}, \code{\link{sample}},
+	\code{\link[treatSens]{treatSens}}
 }
 \examples{
 set.seed(17)
