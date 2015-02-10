@@ -415,7 +415,6 @@ print.anova.rms <- function(x, which=c('none','subscripts',
     k <- length(W)
     w <- character(k)
     coef.names <- attr(stats,'coef.names')
-    nrp <- attr(stats,'non.slopes')
     for(i in 1:k) {
       z <- W[[i]]
 
@@ -423,11 +422,11 @@ print.anova.rms <- function(x, which=c('none','subscripts',
       else {
         z <- sort(z)
         w[i] <- switch(which,
-                       subscripts=paste(simplifyr(z - nrp), collapse=','),
+                       subscripts=paste(simplifyr(z), collapse=','),
                        names=paste(coef.names[z],collapse=','),
                        dots={
-                         dots <- rep(' ',length(coef.names)-nrp)
-                         dots[z - nrp] <- '.'
+                         dots <- rep(' ',length(coef.names))
+                         dots[z] <- '.'
                          paste(dots,collapse='')
                        })
       }
@@ -463,9 +462,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
   
   if(do.which && which!='names') {
     cat('\nSubscripts correspond to:\n')
-    print(if(nrp > 0)coef.names[-(1:nrp)]
-    else coef.names,
-          quote=FALSE)
+    print(coef.names, quote=FALSE)
   }
   
   if(!any(sn=='MS') && length(dfe <- attr(stats,'df.residual'))) 
