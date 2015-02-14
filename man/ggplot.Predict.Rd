@@ -42,15 +42,15 @@
 }
 \arguments{
   \item{data}{a data frame created by \code{Predict}}
-\item{formula}{
-	a \code{ggplot} faceting formula of the form \code{vertical variables
+	\item{formula}{
+		a \code{ggplot} faceting formula of the form \code{vertical variables
 		~ horizontal variables}, with variables separated by \code{*} if
 	there is more than one variable on a side.  If omitted, the formula
 	will be built using assumptions on the list of variables that varied
 	in the \code{Predict} call.  When plotting multiple panels (for
   separate predictors), \code{formula} may be specified but by default
   no formula is constructed.
-}
+  }
 \item{groups}{an optional character string containing the
 	name of one of the variables in \code{data} that
   is to be used as a grouping (superpositioning) variable.
