@@ -26,7 +26,7 @@ print.pphsm <- function(x, digits = max(options()$digits - 4, 3),
   stats[3] <- round(stats[3],2)
   stats[5] <- round(stats[5],4)
   stats[6] <- round(stats[6],2)
-  print(format.sep(stats),quote=FALSE)
+  print(formatSep(stats),quote=FALSE)
   cat("\n")
 
   print(c(x$coef, x$icoef[2]), digits=digits)

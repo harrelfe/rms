@@ -81,6 +81,7 @@ S3method(plot, validate.rpart)
 S3method(plot, val.prob)
 S3method(plot, val.surv)
 S3method(plot, val.survh)
+S3method(plot, xmean.ordinaly)
 
 S3method(ggplot, Predict)
 

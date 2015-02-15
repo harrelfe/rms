@@ -312,7 +312,7 @@ latexrms <-
           k <- f$assign[[TL[i]]]
           coef <- Coef[k]
           nam.coef[[i]] <- names(coef)
-          cof <- format.sep(coef, digits=digits)
+          cof <- formatSep(coef, digits=digits)
           lcof <- nchar(cof)
           cof <- latexSN(cof)
           cof <- ifelse(coef<=0, cof, paste("+", cof, sep=""))

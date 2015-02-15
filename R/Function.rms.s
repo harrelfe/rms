@@ -15,7 +15,7 @@ Function.rms <- function(object, intercept=NULL,
 
 
   chr <- function(y, digits) if(is.factor(y) || is.character(y)) 
-    paste('"',as.character(y),'"',sep='') else format.sep(y, digits)
+    paste('"',as.character(y),'"',sep='') else formatSep(y, digits)
 
   adj.to <- unlist(lapply(adj.to,chr,digits=digits))
   z <- paste('function(',paste(name.main,'=',adj.to,collapse=','), ') {', sep='')
@@ -147,8 +147,8 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
   Coef <- object$coef
   if(nrp==1 | length(intercept))
     {
-      cof <- if(!length(intercept))format.sep(Coef[1],digits) else 
-      format.sep(intercept,digits)
+      cof <- if(!length(intercept))formatSep(Coef[1],digits) else 
+      formatSep(intercept,digits)
       z <- paste(z, cof, sep='')
     }
   
@@ -164,7 +164,7 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
     k <- assig[[TL[i]]]
     coef <- Coef[k]
     nam.coef[[i]] <- names(coef)
-    cof <- format.sep(coef,digits)
+    cof <- formatSep(coef,digits)
     cof <- ifelse(coef<=0, cof, paste("+", cof, sep=""))
     
     switch(ass,
@@ -183,7 +183,7 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
            {  
              q <- paste(cof[1], "*", nam, sep="")
              nams <- nam
-             kn <- format.sep(-prm,digits)
+             kn <- formatSep(-prm,digits)
              for(j in 1:length(prm)) {
                zz <- paste("pmax(", nam, if(prm[j]<0) "+" else NULL, 
                            if(prm[j]!=0) kn[j] else NULL, 

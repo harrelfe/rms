@@ -504,7 +504,8 @@ confplot <- function(obj, X, against,
 bootBCa <- function(estimate, estimates, type=c('percentile','bca','basic'),
                     n, seed, conf.int=0.95) {
   type <- match.arg(type)
-  if(type != 'percentile' && !require(boot)) stop('boot package not installed')
+  if(type != 'percentile' && ! requireNamespace('boot', quietly = TRUE))
+    stop('boot package not installed')
   estimate <- as.vector(estimate)
   ne <- length(estimate)
   if(!is.matrix(estimates)) estimates <- as.matrix(estimates)
