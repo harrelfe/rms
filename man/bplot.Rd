@@ -16,7 +16,7 @@ to plot when a 3-d plot is made.  It finds the area where there are
 sufficient data to generate believable interaction fits.
 }
 \usage{
-bplot(x, formula, lfun=levelplot, xlab, ylab, zlab,
+bplot(x, formula, lfun=lattice::levelplot, xlab, ylab, zlab,
       adj.subtitle=!info$ref.zero, cex.adj=.75, cex.lab=1,
       perim, showperim=FALSE,
       zlim=range(yhat, na.rm=TRUE), scales=list(arrows=FALSE),

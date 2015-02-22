@@ -10,14 +10,14 @@ import(SparseM)
 
 import(ggplot2)
 import(lattice)
-import(gridExtra)    # DOES NOT WORK UNLESS IN Depends IN DESCRIPTION
-# importFrom(gridExtra, arrangeGrob)   DOES NOT WORK
+# import(gridExtra)  # DOES NOT WORK UNLESS IN Depends IN DESCRIPTION
+importFrom(gridExtra, arrangeGrob)
 importFrom(quantreg, rq.wfit, rq.fit, summary.rq)
 import(nlme)
 importFrom(rpart, rpart, rpart.control, prune)
 importFrom(polspline, hare, phare)
 import(multcomp)
-# importFrom(multcomp, confint.glht, glht)
+# importFrom(multcomp, confint.glht, glht)  FAILS confint.glht not exported by namespace:multcomp
 
 S3method(AIC, rms)
 S3method(anova, rms)

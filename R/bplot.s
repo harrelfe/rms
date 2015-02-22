@@ -1,5 +1,5 @@
 bplot <-
-  function(x, formula, lfun=levelplot, xlab, ylab, zlab,
+  function(x, formula, lfun=lattice::levelplot, xlab, ylab, zlab,
            adj.subtitle=!info$ref.zero, cex.adj=.75, cex.lab=1,
            perim, showperim=FALSE,
            zlim=range(yhat, na.rm=TRUE),
@@ -72,8 +72,8 @@ bplot <-
       do.call(paste('panel', lfunname, sep='.'), list(...))
       if(showperim)
         {
-          llines(perim[,'x'], perim[,'ymin'], col=gray(.85))
-          llines(perim[,'x'], perim[,'ymax'], col=gray(.85))
+          lattice::llines(perim[,'x'], perim[,'ymin'], col=gray(.85))
+          lattice::llines(perim[,'x'], perim[,'ymax'], col=gray(.85))
         }
     }
   lfun(formula, panel=pan, scales=scales, zlim=zlim, ..., data=data,

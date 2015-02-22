@@ -138,7 +138,7 @@ contrast.rms <-
       upper <- est + zcrit*se
     }
   } else {
-    u <- confint(glht(fit, X,
+    u <- confint(multcomp::glht(fit, X,
                       df=if(length(idf)) idf else 0),
                  level=conf.int)$confint
     lower <- u[,'lwr']

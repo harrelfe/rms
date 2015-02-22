@@ -44,7 +44,7 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
     est.surv   <- est.surv[i]
     S <- S[i,]
     curtail <- function(x) pmin(.9999, pmax(x, .0001))
-    f <- hare(S[,1], S[,2], fun(curtail(est.surv)),
+    f <- polspline::hare(S[,1], S[,2], fun(curtail(est.surv)),
               maxdim=maxdim, ...)
     if(missing(pred)) {
       if(missing(lim))
@@ -54,8 +54,8 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
     }
     else pseq <- pred
     
-    actual    <- 1 - phare(u, fun(curtail(est.surv)), f)
-    actualseq <- 1 - phare(u, fun(curtail(pseq)),     f)
+    actual    <- 1 - polspline::phare(u, fun(curtail(est.surv)), f)
+    actualseq <- 1 - polspline::phare(u, fun(curtail(pseq)),     f)
     w <- structure(list(harefit=f, p=est.surv, actual=actual,
                         pseq=pseq, actualseq=actualseq,
                         u=u, fun=fun, n=nrow(S), d=sum(S[,2]),

@@ -5,7 +5,7 @@ validate.rpart <- function(fit, method, B, bw, rule, type, sls, aics,
   if(missing(FUN))
     {
       ## require(rpart)
-      FUN <- function(..., k) prune(..., cp=k)
+      FUN <- function(..., k) rpart::prune(..., cp=k)
     }
   act <- (fit$call)$na.action
   if(!length(act))
@@ -39,7 +39,7 @@ validate.rpart <- function(fit, method, B, bw, rule, type, sls, aics,
         {
           j <- j + 1
           s <- rand != i
-          tlearn <- rpart(model=m[s,])
+          tlearn <- rpart::rpart(model=m[s,])
           papp <- if(kk == 0) tlearn else FUN(tlearn, k = kk, ...)
           if(nrow(papp$frame) == 1)
             {

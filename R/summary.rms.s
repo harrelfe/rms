@@ -146,7 +146,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
         cat('Confidence intervals are simultaneous for these estimates:\n')
         print(as.vector(xb))
       }
-      u <- confint(glht(object,
+      u <- confint(multcomp::glht(object,
                         cbind(matrix(0, nrow=nrow(xd), ncol=nrp), xd),
                         df=if(length(idf)) idf else 0),
                    level=conf.int)$confint
@@ -207,7 +207,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
             cat('Confidence intervals are simultaneous for these estimates:\n')
             print(as.vector(xb))
           }
-          u <- confint(glht(object,
+          u <- confint(multcomp::glht(object,
                             cbind(matrix(0, nrow=nrow(xd), ncol=nrp), xd),
                             df=if(length(idf)) idf else 0),
                        level=conf.int)$confint

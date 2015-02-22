@@ -11,7 +11,7 @@ library(rms)
 ### Simulate data
 set.seed(1)
 y = rnorm(1000,50,5)
-age = sample(5:15,size=1000,replace="TRUE")
+age = sample(5:15,size=1000,replace=TRUE)
 gender = as.factor(sample(c("male","female"),size=1000,replace=TRUE))
 mydat = data.frame(y,age,gender)
 

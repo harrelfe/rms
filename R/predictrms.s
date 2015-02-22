@@ -346,7 +346,7 @@ predictrms <-
       if(conf.int) {
         if(conf.type == 'simultaneous') {
           num.intercepts.not.in.X <- length(coeff) - ncol(X)
-          u <- confint(glht(fit,
+          u <- confint(multcomp::glht(fit,
                             if(num.intercepts.not.in.X == 0L) X else Xx,
                             df=if(length(idf)) idf else 0L),
                        level=conf.int)$confint

@@ -122,9 +122,9 @@ plot.Predict <-
     }
     
     pan <- function(x, y, ...) {
-      pn <- panel.number()
+      pn <- lattice::panel.number()
       lev    <- levs[[pn]]
-      col <- trellis.par.get('superpose.line')$col
+      col <- lattice::trellis.par.get('superpose.line')$col
       if(!length(lev) && length(unique(x[!is.na(x)])) > nlevels)
         { # continuous x
           yy <- y
@@ -143,11 +143,11 @@ plot.Predict <-
         }
       else
         { # discrete x
-          panel.points(x, y, pch=19)
+          lattice::panel.points(x, y, pch=19)
           yoth <- attr(y, 'other')
           yo   <- length(yoth)
           if(yo) for(u in unique(x))
-            llines(c(u, u), yoth[x==u, ])
+            lattice::llines(c(u, u), yoth[x==u, ])
           tanova(names(levs)[pn],
                  if(yo) c(x,         x,         x) else x,
                  if(yo) c(y, yoth[, 1], yoth[, 2]) else y)
@@ -280,7 +280,7 @@ plot.Predict <-
         }
         panel.xYplot(x, yy, groups=ogroups, subscripts=subscripts, ...)
         tanova(xvar, x, yy)
-        col <- trellis.par.get('superpose.line')$col
+        col <- lattice::trellis.par.get('superpose.line')$col
         
         xd <- data[[xvar]]
         use <- TRUE
@@ -342,7 +342,7 @@ pantext <- function(object, x, y, cex=.5, adj=0,
   if(lattice) {
     z <- 
       function(x, y, ..., xx, yy, text, cex, adj, family)
-        ltext(xx, yy, text, cex=cex, adj=adj, fontfamily=family)
+        lattice::ltext(xx, yy, text, cex=cex, adj=adj, fontfamily=family)
     formals(z) <-
       eval(substitute(alist(x=, y=, ...=, xx=xx, yy=yy, text=k,
                             cex=cex, adj=adj, family=fam),
@@ -406,7 +406,7 @@ annotateAnova <- function(name, stat, x, y, ggplot=FALSE,
   ## See if an area is available near the top or bottom of the
   ## current panel
   if(! ggplot) {
-    cpl <- current.panel.limits()
+    cpl <- lattice::current.panel.limits()
     xlim <- cpl$xlim
     ylim <- cpl$ylim
   }
@@ -440,5 +440,5 @@ annotateAnova <- function(name, stat, x, y, ggplot=FALSE,
                            hjust=adj[1], vjust=adj[2]))
   if(ggplot) annotate('text', x=z$x, y=z$y, label=stat[name], parse=TRUE,
                        size=size, hjust=adj[1], vjust=adj[2])
-  else ltext(z$x, z$y, parse(text=stat[name]), cex=cex, adj=adj)
+  else lattice::ltext(z$x, z$y, parse(text=stat[name]), cex=cex, adj=adj)
 }

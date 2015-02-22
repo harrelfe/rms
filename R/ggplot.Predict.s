@@ -41,6 +41,8 @@ ggplot.Predict <-
   ## The following exists to nullify invisible() used in arrangeGrob's
   ## returned value
   agrob <- function(...) {
+    if(! requireNamespace('gridExtra', quietly=TRUE))
+      stop('gridExtra package not installed')
     z <- gridExtra::arrangeGrob(...)
     z
   }
@@ -134,6 +136,11 @@ ggplot.Predict <-
 
       dogroup <- function(type) {
         lim <- ggplot2:::limits
+        # The following doesn't work (argument xlim is missing with no deflt)
+        # lim <- function(lims, var = c("x", "y")) {
+        #   var <- match.arg(var)
+        #   switch(var, x = xlim(lims), y = ylim(lims))
+        # }
         v <- if(type == 'continuous') names(isdis)[! isdis] else
              names(isdis)[isdis]
         # dat <- subset(data, .predictor. %in% v)  ## would not work
@@ -255,7 +262,6 @@ ggplot.Predict <-
             for(j in 1 : length(addlayer)) g <- g + addlayer[[j]]
           else g <- g + addlayer
         }
-        
         if(vnames == 'labels') g <- facet_wrap_labeller(g, pmlabel[v])
         g
     }

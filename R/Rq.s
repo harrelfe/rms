@@ -33,8 +33,8 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
   ## The following keeps quantreg from overriding latex generic in Hmisc
   ## library(quantreg, pos=length(search()) + 1)
   fit <- if (length(weights)) 
-    rq.wfit(X, Y, tau = tau, weights, method, ...)
-  else rq.fit(X, Y, tau = tau, method, ...)
+    quantreg::rq.wfit(X, Y, tau = tau, weights, method, ...)
+  else quantreg::rq.fit(X, Y, tau = tau, method, ...)
   rownames(fit$residuals) <- rownames(dimnames(X)[[1]])
   rho <- sum(Rho(fit$residuals, tau))
   
@@ -62,7 +62,7 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
                 stats     = stats))
   attr(fit, "na.message") <- attr(m, "na.message")
   
-  s <- summary.rq(fit, covariance=TRUE, se=se, hs=hs)
+  s <- quantreg::summary.rq(fit, covariance=TRUE, se=se, hs=hs)
   k <- s$coefficients
   nam <- names(fit$coefficients)
   rownames(k) <- nam
@@ -93,10 +93,10 @@ RqFit <- function(fit, wallow=TRUE, passdots=FALSE)
       {
         if(!wallow) stop('weights not implemented')
         g <- if(passdots) function(x, y, weights, tau, method, ...)
-          rq.wfit(cbind(Intercept=1., x), y, tau = tau, weights=weights,
+          quantreg::rq.wfit(cbind(Intercept=1., x), y, tau = tau, weights=weights,
                   method=method, ...)
         else function(x, y, weights, tau, method, ...)
-          rq.wfit(cbind(Intercept=1., x), y, tau = tau, weights=weights,
+          quantreg::rq.wfit(cbind(Intercept=1., x), y, tau = tau, weights=weights,
                   method=method)
         formals(g) <- eval(substitute(
                        alist(x=,y=, weights=,tau=deftau,method=defmethod,...=),
@@ -105,10 +105,10 @@ RqFit <- function(fit, wallow=TRUE, passdots=FALSE)
     else
       {
         g <- if(passdots) function(x, y, tau, method, ...)
-          rq.fit(cbind(Intercept=1., x), y, tau = tau, method=method, ...)
+          quantreg::rq.fit(cbind(Intercept=1., x), y, tau = tau, method=method, ...)
         else
           function(x, y, tau, method, ...)
-            rq.fit(cbind(Intercept=1., x), y, tau = tau, method=method)
+            quantreg::rq.fit(cbind(Intercept=1., x), y, tau = tau, method=method)
         formals(g) <-
           eval(substitute(alist(x=,y=, tau=deftau, method=defmethod,...=),
                           list(deftau=fit$tau, defmethod=fit$method)))
