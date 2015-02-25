@@ -151,12 +151,6 @@ ggplot.Predict <-
       isdis <- sapply(data[lp], isdiscrete)
       
       dogroup <- function(type) {
-###??        lim <- ggplot2:::limits
-        # The following doesn't work (argument xlim is missing with no deflt)
-        # lim <- function(lims, var = c("x", "y")) {
-        #   var <- match.arg(var)
-        #   switch(var, x = xlim(lims), y = ylim(lims))
-        # }
         v <- if(type == 'continuous') names(isdis)[! isdis] else
               names(isdis)[isdis]
         # dat <- subset(data, .predictor. %in% v)  ## would not work
@@ -189,11 +183,11 @@ ggplot.Predict <-
         if(type == 'continuous') {
           if(length(groups)) g <- 
             sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s)) +
-                     labs(x=NULL, y=%s) + %s', #limits(%s, "y")',   ###
+                     labs(x=NULL, y=%s) + %s',
                     aestype[1], groups[1], deparse(ylab), ylimc)
           else
             g <- sprintf("ggplot(dat, aes(x=.xx., y=yhat)) +
-                         labs(x=NULL, y=%s) + %s", #limits(%s, 'y')", ###
+                         labs(x=NULL, y=%s) + %s",
                          deparse(ylab), ylimc)
           
           g <- c(g, if(length(layout))
@@ -252,7 +246,6 @@ ggplot.Predict <-
             g <- c("ggplot(dat, aes(x=yhat, y=.xx.))",
                    sprintf("labs(x=%s, y=NULL)", deparse(ylab)))
           if(! maddlayer) g <- c(g, addlayer)
-###          g <- c(g, sprintf(if(TRUE) 'xlim(%s)' else "limits(%s, 'x')", deparse(ylim)),  ###
           g <- c(g, limc(ylim., 'x'),
                  "facet_wrap(~ .predictor., scales='free_y')",
                  "geom_point()")
@@ -378,7 +371,6 @@ ggplot.Predict <-
 
       ## Need the following or geom_ribbon will improperly clip regions
       if(flipped) g <- c(g, limc(ylim., 'y')) else
-                         ###sprintf('ylim(%s)', deparse(ylim))) else
       g <- c(g, sprintf('coord_cartesian(ylim=%s)', deparse(ylim.)))
       g <- c(g, sprintf('labs(x=%s, y=%s)',
                         expch(xl), expch(ylab)),
