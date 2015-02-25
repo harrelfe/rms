@@ -30,15 +30,16 @@
      colorscale=function(...) scale_color_manual(...,
        values=c("#000000", "#E69F00", "#56B4E9",
                 "#009E73","#F0E442", "#0072B2", "#D55E00", "#CC79A7")),
+     colfill='black',
      rdata=NULL, anova=NULL, pval=FALSE, size.anova=4,
      adj.subtitle, size.adj=2.5, perim=NULL, nlevels=3,
      flipxdiscrete=TRUE,
      legend.position='right', legend.label=NULL,
      vnames=c('labels','names'), abbrev=FALSE, minlength=6,
-     layout=NULL, addlayer=NULL,
+     layout=NULL, addlayer,
      histSpike.opts=list(frac=function(f) 0.01 + 
          0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1), side=1, nint=100),
-     type=NULL, ...)
+     type=NULL, ggexpr=FALSE, ...)
 }
 \arguments{
   \item{data}{a data frame created by \code{Predict}}
@@ -118,6 +119,9 @@ variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm},
   type='qual')}.  The default is the colorblind-friendly palette
   including black in \url{http://www.cookbook-r.com/Graphs/Colors_(ggplot2)}.
 }
+\item{colfill}{a single character string or number specifying the fill color
+  to use for \code{geom_ribbon} for shaded confidence bands.  Alpha
+  transparency of 0.2 is applied to any color specified.}
 \item{rdata}{a data frame containing the original raw data on which the
   regression model were based, or at least containing the \eqn{x}-axis
   and grouping variable.  If \code{rdata} is present and contains the
@@ -177,10 +181,8 @@ current curve, \code{FALSE} otherwise.  See one of the latter examples.
 \item{layout}{for multi-panel plots a 2-vector specifying the number of
   rows and number of columns.  If omitted will be computed from the
   number of panels to make as square as possible.}
-\item{addlayer}{a \code{ggplot2} layer or \code{list()} of layers to add to the
-  current plot.  If more than one layer is used, do not specify them as
-  a single expression with plus signs as some layers cannot be added out
-  of context of the \code{ggplot} object being built.}
+\item{addlayer}{a \code{ggplot2} expression consisting of one or more
+  layers to add to the current plot}
 \item{histSpike.opts}{a list containing named elements that specifies
   parameters to \code{\link{histSpikeg}} when \code{rdata} is given.  The
   \code{col} parameter is usually derived from other plotting
@@ -188,6 +190,9 @@ current curve, \code{FALSE} otherwise.  See one of the latter examples.
 \item{type}{a value (\code{"l","p","b"}) to override default choices
   related to showing or connecting points.  Especially  useful for
   discrete x coordinate variables.}
+\item{ggexpr}{set to \code{TRUE} to have the function return the
+  character string(s) constructed to invoke \code{ggplot} without
+  executing the commands}
 \item{\dots}{ignored}
 }
 \value{an object of class \code{"ggplot2"} ready for printing.  For the
@@ -293,9 +298,9 @@ ggplot(p, groups=c('sex', 'blood.pressure'))
 # fit <- update(fit)   # make new reference value take effect
 # p <- Predict(fit, age, ref.zero=TRUE, fun=exp)
 # ggplot(p, ylab='Age=x:Age=30 Odds Ratio',
-#        addlayer=list(geom_hline(yintercept=1, col=gray(.8)),
-#                      geom_vline(xintercept=30, col=gray(.8)),
-#                      scale_y_continuous(trans='log',
+#        addlayer=geom_hline(yintercept=1, col=gray(.8)) +
+#                 geom_vline(xintercept=30, col=gray(.8)) +
+#                 scale_y_continuous(trans='log',
 #                       breaks=c(.5, 1, 2, 4, 8))))
 
 # Compute predictions for three predictors, with superpositioning or

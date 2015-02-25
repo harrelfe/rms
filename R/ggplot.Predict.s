@@ -8,21 +8,22 @@ ggplot.Predict <-
            colorscale=function(...)
              scale_color_manual(..., values=c("#000000", "#E69F00", "#56B4E9",
                "#009E73","#F0E442", "#0072B2", "#D55E00", "#CC79A7")),
+           colfill='black',
            rdata=NULL, anova=NULL, pval=FALSE, size.anova=4,
            adj.subtitle, size.adj=2.5, perim=NULL, nlevels=3,
            flipxdiscrete=TRUE,
            legend.position='right', legend.label=NULL,
            vnames=c('labels', 'names'), abbrev=FALSE, minlength=6,
-           layout=NULL, addlayer=NULL,
+           layout=NULL, addlayer,
            histSpike.opts=list(frac=function(f) 0.01 + 
                                  0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1),
              side=1, nint=100),
-           type=NULL, ...)
+           type=NULL, ggexpr=FALSE, ...)
 {
   sepdiscrete <- match.arg(sepdiscrete)
   class(data) <- setdiff(class(data), 'Predict')
   ## so won't involve ggplot.Predict
-
+  
   if(varypred) {
     data$.predictor. <- data$.set.
     data$.set. <- NULL
@@ -32,6 +33,12 @@ ggplot.Predict <-
   if(predpres && missing(legend.position)) legend.position <- 'top'
   conf   <- match.arg(conf)
   vnames <- match.arg(vnames)
+
+  maddlayer <- missing(addlayer)
+  if(! maddlayer) addlayer <- deparse(substitute(addlayer))
+
+  ribbonargs <- sprintf("alpha=0.2, linetype=0, fill=I(%s), show_guide=FALSE",
+                        deparse(colfill))
   
   dohist <- function(...) {
     so <- histSpike.opts
@@ -65,6 +72,10 @@ ggplot.Predict <-
     else if(is.logical(legend.label)) ''
     else legend.label[j]
   }
+
+  ## Function to create expression( ) or "" depending on argument
+  expch <- function(x) if(is.expression(x))
+    sprintf('expression(%s)', as.character(x)) else deparse(x)
   
   if(! missing(subset)) {
     subset <- eval(substitute(subset), data)
@@ -91,7 +102,7 @@ ggplot.Predict <-
 
   if(missing(adj.subtitle)) adj.subtitle <- length(adjust) > 0
   sub <- if(adj.subtitle && length(adjust)==1)
-    paste('Adjusted to:', adjust, sep='') else NULL
+           paste('Adjusted to:', adjust, sep='') else NULL
   
   if(length(anova)) {
     stat   <- plotmathAnova(anova, pval)
@@ -105,7 +116,7 @@ ggplot.Predict <-
   ## size is in mm
   footnote <- function(object, text, size=2.5, color=grey(.5))
     agrob(object, sub = grid::textGrob(text, x = 1, hjust = 1.01,
-       vjust=0.1, gp = grid::gpar(fontsize =size/0.3527778 )))
+          vjust=0.1, gp = grid::gpar(fontsize =size/0.3527778 )))
   
   if(predpres) {   ## User did not specify which predictors to plot; all plotted
     data$.predictor.  <- factor(data$.predictor.)
@@ -119,7 +130,7 @@ ggplot.Predict <-
         strips <- grep("strip_t", names(gg))
         for(ii in seq_along(labels))  {
           modgrob <- grid::getGrob(gg[[strips[ii]]], "strip.text", 
-                             grep=TRUE, global=TRUE)
+                                   grep=TRUE, global=TRUE)
           gg[[strips[ii]]]$children[[modgrob$name]] <-
             grid::editGrob(modgrob,label=labels[ii])
         }
@@ -127,13 +138,13 @@ ggplot.Predict <-
         class(g) = c("arrange", "ggplot", class(g)) 
         g
       }
-
+      
       ## Determine which predictors are discrete
       isdiscrete <- function(z) is.factor(z) || is.character(z) ||
         length(unique(z[!is.na(z)])) <= nlevels
       lp   <- setdiff(levels(data$.predictor.), groups)
       isdis <- sapply(data[lp], isdiscrete)
-
+      
       dogroup <- function(type) {
         lim <- ggplot2:::limits
         # The following doesn't work (argument xlim is missing with no deflt)
@@ -142,7 +153,7 @@ ggplot.Predict <-
         #   switch(var, x = xlim(lims), y = ylim(lims))
         # }
         v <- if(type == 'continuous') names(isdis)[! isdis] else
-             names(isdis)[isdis]
+              names(isdis)[isdis]
         # dat <- subset(data, .predictor. %in% v)  ## would not work
         dat <- data[data$.predictor. %in% v,, drop=TRUE]
         p <- dat$.predictor.
@@ -151,32 +162,34 @@ ggplot.Predict <-
         for(iv in v) {
           j <- which(p == iv)
           xx[j] <- switch(type, continuous= dat[j, iv],
-                                discrete  = as.character(dat[j, iv]))
+                          discrete  = as.character(dat[j, iv]))
         }
         dat$.xx. <- xx
         if(length(groups)) dat$.co. <- as.factor(dat[[groups]])
 
         if(type == 'continuous') {
-          if(length(groups)) g <- eval(parse(text=
-             sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s))',
-             aestype[1], groups[1]))) + labs(x=NULL, y=ylab) + lim(ylim, 'y')
-        else
-          g <- ggplot(dat, aes(x=.xx., y=yhat)) + labs(x=NULL, y=ylab) +
-            lim(ylim, 'y')
-
-          g <- g + (if(length(layout))
-                     facet_wrap(~ .predictor., scales='free_x',
-                                ncol=layout[2]) else
-                    facet_wrap(~ .predictor., scales='free_x')) + geom_line()
+          if(length(groups)) g <- 
+            sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s) +
+                     labs(x=NULL, y=%s) + lim(%s, "y")',
+                    aestype[1], groups[1], deparse(ylab), deparse(ylim))
+          else
+            g <- sprintf("ggplot(dat, aes(x=.xx., y=yhat)) +
+                         labs(x=NULL, y=%s) + lim(%s, 'y')",
+                         deparse(ylab), deparse(ylim))
+          
+          g <- c(g, if(length(layout))
+                      sprintf("facet_wrap(~ .predictor., scales='free_x',
+                                ncol=%s)", layout[2]) else
+                 "facet_wrap(~ .predictor., scales='free_x')",
+                 "geom_line()")
           if(conf.int) {
-            if(conf == 'fill')
-              g <- g +
-                geom_ribbon(aes(x=.xx., ymin=lower, ymax=upper),
-                            alpha=0.2, linetype=0, show_guide=FALSE)
-            else
-              g <- g +
-                geom_line(aes(x=.xx., y=lower)) +
-                geom_line(aes(x=.xx., y=upper))
+            h <- 
+              if(conf == 'fill')
+                sprintf("geom_ribbon(aes(x=.xx., ymin=lower, ymax=upper),%s)",
+                        ribbonargs)
+              else c("geom_line(aes(x=.xx., y=lower))",
+                     "geom_line(aes(x=.xx., y=upper))")
+            g <- c(g, h)
           }
 
           if(length(rdata)) {
@@ -207,19 +220,24 @@ ggplot.Predict <-
             form <- 'yhat ~ .xx. + .predictor.'
             if(length(groups))
               form <- paste(form, '+', paste(groups, collapse='+'))
-            form <- as.formula(form)
-            g <- g + dohist(form, predictions=dat, data=rdata, ylim=ylim)
+            g <- c(g,
+                   sprintf("dohist(%s, predictions=dat, data=rdata, ylim=%s)",
+                           form, deparse(ylim)))
           }
         } else {   # discrete x
-          if(length(groups)) g <- eval(parse(text=
-                     sprintf('ggplot(dat, aes(x=yhat, y=.xx., %s=%s))',
-                     aestype[1], groups[1]))) + labs(x=ylab, y=NULL)
+          if(length(groups)) g <- 
+            c(sprintf('ggplot(dat, aes(x=yhat, y=.xx., %s=%s))',
+                      aestype[1], groups[1]),
+              sprintf("labs(x=%s, y=NULL)", deparse(ylab)))
           else
-            g <- ggplot(dat, aes(x=yhat, y=.xx.)) + labs(x=ylab, y=NULL)
-          g <- g + lim(ylim, 'x') +
-               facet_wrap(~ .predictor., scales='free_y') + geom_point()
-          if(conf.int) g <- g +
-            geom_errorbarh(aes(y=.xx., xmin=lower, xmax=upper), height=0)
+            g <- c("ggplot(dat, aes(x=yhat, y=.xx.))",
+                   sprintf("labs(x=%s, y=NULL)", deparse(ylab)))
+          if(! maddlayer) g <- c(g, addlayer)
+          g <- c(g, sprintf("lim(%s, 'x')", deparse(ylim)),
+                 "facet_wrap(~ .predictor., scales='free_y')",
+                 "geom_point()")
+          if(conf.int) g <- c(g,
+              "geom_errorbarh(aes(y=.xx., xmin=lower, xmax=upper), height=0)")
         }
         ## anova annotations need to be created for all variables being
         ## plotted with faceting, and annotation information must be
@@ -240,7 +258,7 @@ ggplot.Predict <-
               yy <- c(yy, dat[, 'lower'], dat[, 'upper'])
             }
             xlim <- if(is.factor(xv)) c(1, length(levels(xv)))
-            else range(pretty(xv))
+             else range(pretty(xv))
             tan <- tanova(iv, xx, yy, xlim, ylim, dataOnly=TRUE,
                           flip=type=='discrete', empty=type == 'discrete')
             .xx. <- c(.xx., tan$x)
@@ -251,30 +269,27 @@ ggplot.Predict <-
           }
           .anova. <- data.frame(.predictor.=v, .xx., yhat, .label.,
                                 hjust, vjust)
-          g <- g + geom_text(aes(label=.label., hjust=hjust, vjust=vjust),
+          g <- c(g, "geom_text(aes(label=.label., hjust=hjust, vjust=vjust),
                              size=size.anova,
-                             data=.anova., parse=TRUE, show_guide=FALSE)
+                             data=.anova., parse=TRUE, show_guide=FALSE)")
         }
-        if(length(addlayer)) {
-          ## Can't specify addlayer = geom_x() + geom_x():
-          ## non-numeric argument to binary operator
-          if(! length(class(addlayer)) && is.list(addlayer))
-            for(j in 1 : length(addlayer)) g <- g + addlayer[[j]]
-          else g <- g + addlayer
-        }
-        if(vnames == 'labels') g <- facet_wrap_labeller(g, pmlabel[v])
+        g <- paste(g, collapse=' + ')
+        if(ggexpr) return(g)
+        g <- eval(parse(text = g))
+        if(vnames == 'labels') g <- g + facet_wrap_labeller(g, pmlabel[v])
         g
-    }
+      }
       
       gcont <- if(any(! isdis)) dogroup('continuous')
       gdis  <- if(any(  isdis)) dogroup('discrete')
+      if(ggexpr) return(list(continuous=gcont, discrete=gdis))
       r <- mean(! isdis)
       return(if(length(gcont) && length(gdis))
-        switch(sepdiscrete,
-               list = list(continuous=gcont, discrete=gdis),
-               vertical = agrob(gcont, gdis,         heights=c(r, 1-r)),
-               horizontal=agrob(gcont, gdis, nrow=1, widths =c(r, 1-r)))
-      else if(length(gcont)) gcont else gdis)
+               switch(sepdiscrete,
+                      list = list(continuous=gcont, discrete=gdis),
+                      vertical = agrob(gcont, gdis,         heights=c(r, 1-r)),
+                      horizontal=agrob(gcont, gdis, nrow=1, widths =c(r, 1-r)))
+             else if(length(gcont)) gcont else gdis)
     }  # end if(sepdiscrete)
     ## Form separate plots and combine at end
     p <- data$.predictor.
@@ -282,15 +297,15 @@ ggplot.Predict <-
     lp   <- setdiff(levels(p), groups)
     np   <- length(lp)
     .co  <- if(length(groups))  as.factor(data[[groups]])
-
+    
     if(! length(layout)) 
       layout <-
-           if(np <= 4) c(2,2)
-      else if(np <= 6) c(2,3)
-      else if(np <= 9) c(3,3)
-      else if(np <=12) c(3,4)
-      else if(np <=16) c(4,4)
-      else             c(4,5)
+        if(np <= 4) c(2,2)
+        else if(np <= 6) c(2,3)
+        else if(np <= 9) c(3,3)
+        else if(np <=12) c(3,4)
+        else if(np <=16) c(4,4)
+        else             c(4,5)
 #    pushViewport(viewport(layout = grid.layout(layout[1], layout[2])))
 
     Plt <- list()
@@ -317,103 +332,109 @@ ggplot.Predict <-
       }
       if(length(.co)) {
         zz$.cond <- .co[i]
-        g <- eval(parse(text=sprintf(
-           'ggplot(zz, aes(x=.xx., y=.yhat, %s=.cond))', aestype[1])))
+        g <- sprintf(
+          'ggplot(zz, aes(x=.xx., y=.yhat, %s=.cond))', aestype[1])
       }
-      else g <- ggplot(zz, aes(x=.xx., y=.yhat))
-
+      else g <- 'ggplot(zz, aes(x=.xx., y=.yhat))'
+      
       xdiscrete <- is.factor(z) || is.character(z) ||
-                   length(unique(z[!is.na(z)])) <= nlevels
+        length(unique(z[!is.na(z)])) <= nlevels
       flipped <- FALSE
       if(xdiscrete) {
         if(flipxdiscrete && ! is.numeric(z)) {
-          g <- g + coord_flip()
+          g <- c(g, 'coord_flip()')
           flipped <- TRUE
         }
-        g <- g + geom_point() +
-          if(length(type) && type %in% c('l', 'b')) geom_line()
-        if(is.numeric(z)) g <- g + scale_x_discrete(breaks=unique(z))
+        g <- c(g, 'geom_point()',
+               if(length(type) && type %in% c('l', 'b')) 'geom_line()')
+        if(is.numeric(z))
+          g <- c(g, sprintf('scale_x_discrete(breaks=%s)', deparse(unique(z))))
       } else {
         if(length(type))
-          g <- g + switch(type, p=geom_point(), l=geom_line(),
-                          b=geom_point() + geom_line())
-        else g <- g + geom_line()
+          g <- c(g, switch(type, p='geom_point()', l='geom_line()',
+                                 b='geom_point() + geom_line()'))
+        else g <- c(g, 'geom_line()')
       }
 
-      ## Need to following or geom_ribbon will improperly clip regions
-      if(flipped) g <- g + ylim(ylim) else
-                  g <- g + coord_cartesian(ylim=ylim)
-      g <- g + labs(x=xl, y=ylab) +
-        theme(plot.margin = grid::unit(rep(0, 4), 'cm'))
+      ## Need the following or geom_ribbon will improperly clip regions
+      if(flipped) g <- c(g, sprintf('ylim(%s)', deparse(ylim))) else
+      g <- c(g, sprintf('coord_cartesian(ylim=%s)', deparse(ylim)))
+      g <- c(g, sprintf('labs(x=%s, y=%s)',
+                        expch(xl), expch(ylab)),
+             "theme(plot.margin = grid::unit(rep(0, 4), 'cm'))")
       ## use rep(.1, 4) if using print(..., viewport=...) for multiple plots
       if(length(groups)) {
         # if(nr == 1 && nc == 1) {
         if(jplot == 1) {
-          f <- if(aestype[1] == 'color') colorscale else
+          colFun <- if(aestype[1] == 'color') colorscale else
            get(paste('scale', aestype[1], 'discrete', sep='_'))
-          labl <- glabel(groups[1])
-          g <- g + if(aestype[1] == 'size') f(name=labl, range=c(.2, 1.5)) else
-                   f(name=labl)
-          g <- g + theme(legend.position=legend.position)
-        } else g <- g + theme(legend.position='none')
+          groupLabel <- glabel(groups[1])
+          g <- c(g, if(aestype[1] == 'size')
+                      sprintf("colFun(name=%s, range=c(.2, 1.5))",
+                              expch(groupLabel)) else
+                 sprintf("colFun(name=%s)", expch(groupLabel)))
+          g <- c(g, sprintf("theme(legend.position=%s)",
+                            deparse(legend.position)))
+          
+        } else g <- c(g, "theme(legend.position='none')")
       }
       xa <- if(conf.int) c(zz$.xx., zz$.xx., zz$.xx.) else zz$.xx.
       ya <- if(conf.int) c(zz$.yhat, zz$lower, zz$upper) else zz$.yhat
-      g  <- g + tanova(w, xa, ya, xlim, ylim, flip=FALSE)   ## was flip=flipped
+      g  <- c(g,
+              sprintf("tanova(w, xa, ya, %s, %s, flip=FALSE)",
+                      deparse(xlim), deparse(ylim)))   ## was flip=flipped
       
-      if(length(addlayer)) {
-        ## Can't specify addlayer = geom_x() + geom_x():
-        ## non-numeric argument to binary operator
-        if(! length(class(addlayer)) && is.list(addlayer))
-          for(j in 1 : length(addlayer)) g <- g + addlayer[[j]]
-        else g <- g + addlayer
-      }
+      if(! maddlayer) g <- c(g, addlayer)
       if(conf.int) {
-        if(ll || xdiscrete) g <- g +
-          geom_errorbar(aes(ymin=lower, ymax=upper), width=0)
-        else {
-          if(conf == 'fill')
-            g <- g + geom_ribbon(aes(ymin=lower, ymax=upper),
-                                 alpha=0.2, linetype=0,
-                                 show_guide=FALSE)
+        h <- 
+          if(ll || xdiscrete)
+            "geom_errorbar(aes(ymin=lower, ymax=upper), width=0)"
           else {
+            if(conf == 'fill')
+              sprintf("geom_ribbon(aes(ymin=lower, ymax=upper), %s)",
+                      ribbonargs)
+            else c("geom_line(aes(x=.xx., y=lower))",
+                   "geom_line(aes(x=.xx., y=upper))")
             ## geom_ribbon with fill=NA draws vertical lines at
             ## ends of confidence regions
-            g <- g + geom_line(aes(x=.xx., y=lower))
-            g <- g + geom_line(aes(x=.xx., y=upper))
           }
-        }
+        g <- c(g, h)
       }
-
-      if(! missing(formula)) g <- g + facet_grid(formula)
+      
+      if(! missing(formula))
+        g <- c(g, sprintf("facet_grid(%s)", deparse(formula)))
       
       if(! is.factor(z) && length(rdata) && w %in% names(rdata)) {
         rdata$.xx. <- rdata[[w]]
         if(length(.co)) {
           rdata$.cond <- rdata[[groups]]
-          form <- .yhat ~ .xx. + .cond
-        } else form <- .yhat ~ .xx.
-        g <- g + dohist(form, predictions=zz, data=rdata, ylim=ylim)
+          form <- '.yhat ~ .xx. + .cond'
+        } else form <- '.yhat ~ .xx.'
+        g <- c(g, sprintf("dohist(%s, predictions=zz, data=rdata, ylim=%s)",
+                          form, deparse(ylim)))
       }
       # print(g, vp = viewport(layout.pos.row=nr, layout.pos.col=nc))
+      g <- paste(g, collapse = ' + ')
+      if(ggexpr) return(g)
+      g <- eval(parse(text=g))
       Plt[[jplot]] <- g
     }
     Plt <- if(jplot == 1) Plt[[1]]
-    else
-      do.call(agrob, c(Plt, list(ncol=layout[2])))
+     else
+       do.call(agrob, c(Plt, list(ncol=layout[2])))
     if(length(sub)) Plt <- footnote(Plt, sub, size=size.adj)
     return(Plt)
 
   } else  { # .predictor. not included; user specified predictors to show
-
     v  <- varying
     xn <- v[1]    ## name of x-axis variable (first variable given to Predict)
     if(missing(xlab)) xlab <- pmlabel[xn]
     xv <- data[[xn]]
     xdiscrete <- is.factor(xv) || is.character(xv) ||
-                 length(unique(xv[!is.na(xv)])) <= nlevels
+      length(unique(xv[!is.na(xv)])) <= nlevels
     if(length(perim)) {
-      j <- if(! length(groups)) perim(xv, NULL) else perim(xv, data[[groups[1]]])
+      j <- if(! length(groups)) perim(xv, NULL) else
+                                perim(xv, data[[groups[1]]])
       data$yhat[! j] <- NA
       if(conf.int) data$lower[! j] <- data$upper[! j] <- NA
     }
@@ -421,84 +442,89 @@ ggplot.Predict <-
     if(length(groups)) for(j in 1 : length(groups))
       ae <- paste(ae, ', ', aestype[j], '=', groups[j], sep='')
     ae <- eval(parse(text=paste(ae, ')', sep='')))
-    g <- ggplot(data, ae) + labs(x=xlab, y=ylab)
+    g <- c("ggplot(data, ae)", sprintf("labs(x=%s, y=%s)",
+                                       deparse(xlab), deparse(ylab)))
+
     flipped <- FALSE
     if(xdiscrete) {
       if(flipxdiscrete && ! is.numeric(xv)) {
-        g <- g + coord_flip()
+        g <- c(g, "coord_flip()")
         flipped <- TRUE
       }
-      g <- g + geom_point() +
-        if(length(type) && type %in% c('l', 'b')) geom_line()
-      if(conf.int) g <- g + geom_errorbar(aes(ymin=lower, ymax=upper), width=0)
+      g <- c(g, "geom_point()", 
+             if(length(type) && type %in% c('l', 'b')) "geom_line()" )
+
+      if(conf.int) g <- c(g,
+                          "geom_errorbar(aes(ymin=lower, ymax=upper), width=0)")
     } else {
       if(length(type))
-        g <- g + switch(type, p=geom_point(), l=geom_line(),
-                        b=geom_point() + geom_line())
-      else g <- g + geom_line()
+        g <- c(g, switch(type, p="geom_point()", l="geom_line()",
+                               b="geom_point() + geom_line()"))
+      else g <- c(g, "geom_line()")
+
       if(length(groups)) {
         for(j in 1 : length(groups)) {
-          f <- if(aestype[j] == 'color') colorscale else
-               get(paste('scale', aestype[j], 'discrete', sep='_'))
-          labl <- glabel(groups[j], j)
-          g <- g + if(aestype[j] == 'size') f(name=labl, range=c(.2, 1.5)) else
-                   f(name=labl)
+          colFun <- if(aestype[j] == 'color') colorscale else
+           get(paste('scale', aestype[j], 'discrete', sep='_'))
+          groupLabel <- glabel(groups[j], j)
+          g <- c(g, if(aestype[j] == 'size')
+                 sprintf("colFun(name=%s, range=c(.2, 1.5))",
+                         expch(grouopLabel)) else
+                 sprintf("colFun(name=%s)", expch(groupLabel)))
         }
-        g <- g + theme(legend.position=legend.position)
+        g <- c(g, sprintf("theme(legend.position=%s)",
+                          deparse(legend.position)))
       }
       if(conf.int) {
-        if(conf == 'fill')
-          g <- g + geom_ribbon(data=data, aes(ymin=lower, ymax=upper),
-                 alpha=0.2, linetype=0,
-                 show_guide=FALSE)
-        else {
-          g <- g + eval(parse(text=
-               sprintf('geom_line(data=data, aes(x=%s, y=lower))', xn)))
-          g <- g + eval(parse(text=
-               sprintf('geom_line(data=data, aes(x=%s, y=upper))', xn)))
-        }
-      }
+        h <- 
+          if(conf == 'fill')
+            sprintf("geom_ribbon(data=data, aes(ymin=lower, ymax=upper),%s)",
+                    ribbonargs)
+          else c(sprintf('geom_line(data=data, aes(x=%s, y=lower))', xn),
+                 sprintf('geom_line(data=data, aes(x=%s, y=upper))', xn))
+        g <- c(g, h)
+      }  # end if(conf.int)
     }
-    if(flipped) g <- g + ylim(ylim) else
-                g <- g +  coord_cartesian(ylim=ylim)
+    if(! maddlayer) g <- c(g, addlayer)
+
+    g <- c(g, if(flipped) sprintf("ylim(%s)", deparse(ylim)) else
+           sprintf("coord_cartesian(ylim=%s)", deparse(ylim)))
 
     xa <- if(conf.int) c(xv, xv, xv) else xv
     ya <- if(conf.int) c(data$yhat, data$lower, data$upper) else data$yhat
     if(missing(xlim))
       xlim <- if(is.factor(xv)) c(1 , length(levels(xv)))
-    else
-      range(pretty(xv))
+       else
+         range(pretty(xv))
 
-    g <- g + tanova(xn, xa, ya, xlim, ylim, flip=FALSE)  # was flip=flipped
+    g <- c(g, sprintf("tanova(xn, xa, ya, %s, %s, flip=FALSE)",
+                      deparse(xlim), deparse(ylim)))  # was flip=flipped
                     
     if(! is.factor(xv) && length(rdata) && xn %in% names(rdata)) {
       form <- paste('yhat', xn, sep='~')
       if(length(groups)) form <- paste(form, groups[1], sep='+')
-      form <- eval(parse(text=form))
-      g <- g + dohist(form, predictions=data, data=rdata, ylim=ylim)
+      g <- c(g, sprintf("dohist(%s, predictions=data, data=rdata, ylim=%s)",
+                        form, deparse(ylim)))
     }
     ## Get list of varying variables that are not a groups variable
     ## These will be for faceting
     ## If the faceting formula is specified, just use it
-
+    
     f <- if(length(v) > 1) setdiff(v[-1], groups)
     if(length(f)) {
       if(missing(formula)) {
         k <- length(f)
         formula <- if(k == 1) paste('~', f[1])
-        else if(k == 2) paste(f[1], f[2], sep='~')
-        else if(k == 3) paste(f[1], '~', f[2], '*', f[3])
-        else if(k == 4) paste(f[1], '*', f[2], '~', f[3], '*', f[4])
-        else stop('too many varying variables to use faceting')
-        formula <- as.formula(formula)
-      }
-      g <- g + facet_grid(formula)
+                   else if(k == 2) paste(f[1], f[2], sep='~')
+                   else if(k == 3) paste(f[1], '~', f[2], '*', f[3])
+                   else if(k == 4) paste(f[1], '*', f[2], '~', f[3], '*', f[4])
+                   else stop('too many varying variables to use faceting')
+      } else formula <- deparse(formula)
+      g <- c(g, sprintf("facet_grid(%s)", formula))
     }
-    if(length(addlayer)) {
-      if(! length(class(addlayer)) && is.list(addlayer))
-        for(j in 1 : length(addlayer)) g <- g + addlayer[[j]]
-      else g <- g + addlayer
-    }
+    g <- paste(g, collapse=' + ')
+    if(ggexpr) return(g)
+    g <- eval(parse(text=g))
     if(length(sub)) g <- footnote(g, sub)
     g
   }
