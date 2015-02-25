@@ -4,7 +4,7 @@ ggplot.Predict <-
            conf=c('fill', 'lines'),
            varypred=FALSE,
            sepdiscrete=c('no', 'list', 'vertical', 'horizontal'),
-           subset, xlim, ylim, xlab, ylab,
+           subset, xlim., ylim., xlab, ylab,
            colorscale=function(...)
              scale_color_manual(..., values=c("#000000", "#E69F00", "#56B4E9",
                "#009E73","#F0E442", "#0072B2", "#D55E00", "#CC79A7")),
@@ -20,6 +20,7 @@ ggplot.Predict <-
              side=1, nint=100),
            type=NULL, ggexpr=FALSE, ...)
 {
+  # .xlim, .ylim instead of xlim, ylim to distinguish from ggplot functions
   sepdiscrete <- match.arg(sepdiscrete)
   class(data) <- setdiff(class(data), 'Predict')
   ## so won't involve ggplot.Predict
@@ -35,7 +36,7 @@ ggplot.Predict <-
   vnames <- match.arg(vnames)
 
   maddlayer <- missing(addlayer)
-  if(! maddlayer) addlayer <- deparse(substitute(addlayer))
+  if(! maddlayer) addlayer <- paste(deparse(substitute(addlayer)), collapse=' ')
 
   ribbonargs <- sprintf("alpha=0.2, linetype=0, fill=I(%s), show_guide=FALSE",
                         deparse(colfill))
@@ -76,6 +77,10 @@ ggplot.Predict <-
   ## Function to create expression( ) or "" depending on argument
   expch <- function(x) if(is.expression(x))
     sprintf('expression(%s)', as.character(x)) else deparse(x)
+
+  ## Function to construct xlim() or ylim() call
+  limc <- function(limits, which)
+    sprintf("%slim(%s, %s)", which, limits[1], limits[2])
   
   if(! missing(subset)) {
     subset <- eval(substitute(subset), data)
@@ -95,10 +100,10 @@ ggplot.Predict <-
   if(missing(ylab))     ylab     <- info$ylabPlotmath
   if(! length(data$lower)) conf.int <- FALSE
   
-  if(missing(ylim))
-    ylim <- range(pretty(
-             if(conf.int) c(data$yhat, data$lower, data$upper)
-              else data$yhat), na.rm=TRUE)
+  if(missing(ylim.))
+    ylim. <- range(pretty(
+      if(conf.int) c(data$yhat, data$lower, data$upper)
+      else data$yhat), na.rm=TRUE)
 
   if(missing(adj.subtitle)) adj.subtitle <- length(adjust) > 0
   sub <- if(adj.subtitle && length(adjust)==1)
@@ -135,7 +140,7 @@ ggplot.Predict <-
             grid::editGrob(modgrob,label=labels[ii])
         }
         g$grobs <- gg
-        class(g) = c("arrange", "ggplot", class(g)) 
+        class(g) = c("arrange", "ggplot", class(g))
         g
       }
       
@@ -146,7 +151,7 @@ ggplot.Predict <-
       isdis <- sapply(data[lp], isdiscrete)
       
       dogroup <- function(type) {
-        lim <- ggplot2:::limits
+###??        lim <- ggplot2:::limits
         # The following doesn't work (argument xlim is missing with no deflt)
         # lim <- function(lims, var = c("x", "y")) {
         #   var <- match.arg(var)
@@ -159,23 +164,37 @@ ggplot.Predict <-
         p <- dat$.predictor.
         xx <- switch(type, continuous= numeric(nrow(dat)),
                            discrete  = character(nrow(dat)))
+        ## Prepare to create a "super factor" variable by concatenating
+        ## all levels of all categorical variables keeping original orders
+        Lev <- character()
         for(iv in v) {
           j <- which(p == iv)
-          xx[j] <- switch(type, continuous= dat[j, iv],
-                          discrete  = as.character(dat[j, iv]))
+          datj <- dat[j, iv]
+          if(type == 'continuous') xx[j] <- datj
+          else {
+            levj <- levels(datj)
+            if(! length(levj)) levj <- unique(datj)
+            Lev <- c(Lev, levj)
+            xx[j] <- as.character(datj)
+          }
+        }
+        if(type == 'discrete') {
+          Lev <- unique(Lev)
+          xx  <- factor(xx, Lev)
         }
         dat$.xx. <- xx
         if(length(groups)) dat$.co. <- as.factor(dat[[groups]])
 
+        ylimc <- limc(ylim., 'y')
         if(type == 'continuous') {
           if(length(groups)) g <- 
-            sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s) +
-                     labs(x=NULL, y=%s) + lim(%s, "y")',
-                    aestype[1], groups[1], deparse(ylab), deparse(ylim))
+            sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s)) +
+                     labs(x=NULL, y=%s) + %s', #limits(%s, "y")',   ###
+                    aestype[1], groups[1], deparse(ylab), ylimc)
           else
             g <- sprintf("ggplot(dat, aes(x=.xx., y=yhat)) +
-                         labs(x=NULL, y=%s) + lim(%s, 'y')",
-                         deparse(ylab), deparse(ylim))
+                         labs(x=NULL, y=%s) + %s", #limits(%s, 'y')", ###
+                         deparse(ylab), ylimc)
           
           g <- c(g, if(length(layout))
                       sprintf("facet_wrap(~ .predictor., scales='free_x',
@@ -222,7 +241,7 @@ ggplot.Predict <-
               form <- paste(form, '+', paste(groups, collapse='+'))
             g <- c(g,
                    sprintf("dohist(%s, predictions=dat, data=rdata, ylim=%s)",
-                           form, deparse(ylim)))
+                           form, deparse(ylim.)))
           }
         } else {   # discrete x
           if(length(groups)) g <- 
@@ -233,7 +252,8 @@ ggplot.Predict <-
             g <- c("ggplot(dat, aes(x=yhat, y=.xx.))",
                    sprintf("labs(x=%s, y=NULL)", deparse(ylab)))
           if(! maddlayer) g <- c(g, addlayer)
-          g <- c(g, sprintf("lim(%s, 'x')", deparse(ylim)),
+###          g <- c(g, sprintf(if(TRUE) 'xlim(%s)' else "limits(%s, 'x')", deparse(ylim)),  ###
+          g <- c(g, limc(ylim., 'x'),
                  "facet_wrap(~ .predictor., scales='free_y')",
                  "geom_point()")
           if(conf.int) g <- c(g,
@@ -257,9 +277,9 @@ ggplot.Predict <-
               xx <- c(xx, xx, xx)
               yy <- c(yy, dat[, 'lower'], dat[, 'upper'])
             }
-            xlim <- if(is.factor(xv)) c(1, length(levels(xv)))
+            xlim. <- if(is.factor(xv)) c(1, length(levels(xv)))
              else range(pretty(xv))
-            tan <- tanova(iv, xx, yy, xlim, ylim, dataOnly=TRUE,
+            tan <- tanova(iv, xx, yy, xlim., ylim., dataOnly=TRUE,
                           flip=type=='discrete', empty=type == 'discrete')
             .xx. <- c(.xx., tan$x)
             yhat <- c(yhat, tan$y)
@@ -276,7 +296,7 @@ ggplot.Predict <-
         g <- paste(g, collapse=' + ')
         if(ggexpr) return(g)
         g <- eval(parse(text = g))
-        if(vnames == 'labels') g <- g + facet_wrap_labeller(g, pmlabel[v])
+        if(vnames == 'labels') g <- facet_wrap_labeller(g, pmlabel[v])
         g
       }
       
@@ -320,7 +340,7 @@ ggplot.Predict <-
         levels(z) <- l
       }
       ll <- length(l)
-      xlim <- if(ll) c(1, ll) else range(pretty(z))
+      xlim. <- if(ll) c(1, ll) else range(pretty(z))
       yhat <- data[i, 'yhat']
       xl <- if(vnames == 'labels') pmlabel[w] else w
       zz <- data.frame(.xx.=z, .yhat=yhat)
@@ -357,8 +377,9 @@ ggplot.Predict <-
       }
 
       ## Need the following or geom_ribbon will improperly clip regions
-      if(flipped) g <- c(g, sprintf('ylim(%s)', deparse(ylim))) else
-      g <- c(g, sprintf('coord_cartesian(ylim=%s)', deparse(ylim)))
+      if(flipped) g <- c(g, limc(ylim., 'y')) else
+                         ###sprintf('ylim(%s)', deparse(ylim))) else
+      g <- c(g, sprintf('coord_cartesian(ylim=%s)', deparse(ylim.)))
       g <- c(g, sprintf('labs(x=%s, y=%s)',
                         expch(xl), expch(ylab)),
              "theme(plot.margin = grid::unit(rep(0, 4), 'cm'))")
@@ -382,7 +403,7 @@ ggplot.Predict <-
       ya <- if(conf.int) c(zz$.yhat, zz$lower, zz$upper) else zz$.yhat
       g  <- c(g,
               sprintf("tanova(w, xa, ya, %s, %s, flip=FALSE)",
-                      deparse(xlim), deparse(ylim)))   ## was flip=flipped
+                      deparse(xlim.), deparse(ylim.)))   ## was flip=flipped
       
       if(! maddlayer) g <- c(g, addlayer)
       if(conf.int) {
@@ -411,7 +432,7 @@ ggplot.Predict <-
           form <- '.yhat ~ .xx. + .cond'
         } else form <- '.yhat ~ .xx.'
         g <- c(g, sprintf("dohist(%s, predictions=zz, data=rdata, ylim=%s)",
-                          form, deparse(ylim)))
+                          form, deparse(ylim.)))
       }
       # print(g, vp = viewport(layout.pos.row=nr, layout.pos.col=nc))
       g <- paste(g, collapse = ' + ')
@@ -487,24 +508,24 @@ ggplot.Predict <-
     }
     if(! maddlayer) g <- c(g, addlayer)
 
-    g <- c(g, if(flipped) sprintf("ylim(%s)", deparse(ylim)) else
-           sprintf("coord_cartesian(ylim=%s)", deparse(ylim)))
+    g <- c(g, if(flipped) sprintf("ylim(%s)", deparse(ylim.)) else
+           sprintf("coord_cartesian(ylim=%s)", deparse(ylim.)))
 
     xa <- if(conf.int) c(xv, xv, xv) else xv
     ya <- if(conf.int) c(data$yhat, data$lower, data$upper) else data$yhat
-    if(missing(xlim))
-      xlim <- if(is.factor(xv)) c(1 , length(levels(xv)))
+    if(missing(xlim.))
+      xlim. <- if(is.factor(xv)) c(1 , length(levels(xv)))
        else
          range(pretty(xv))
 
     g <- c(g, sprintf("tanova(xn, xa, ya, %s, %s, flip=FALSE)",
-                      deparse(xlim), deparse(ylim)))  # was flip=flipped
+                      deparse(xlim.), deparse(ylim.)))  # was flip=flipped
                     
     if(! is.factor(xv) && length(rdata) && xn %in% names(rdata)) {
       form <- paste('yhat', xn, sep='~')
       if(length(groups)) form <- paste(form, groups[1], sep='+')
       g <- c(g, sprintf("dohist(%s, predictions=data, data=rdata, ylim=%s)",
-                        form, deparse(ylim)))
+                        form, deparse(ylim.)))
     }
     ## Get list of varying variables that are not a groups variable
     ## These will be for faceting

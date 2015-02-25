@@ -80,10 +80,10 @@ p <- Predict(fit, age, ref.zero=TRUE, fun=exp)
 # The following fails because of the 3rd element of addlayer
 # if ylim is not given, as y=0 is included and can't take log
 ggplot(p, ylab='Age=x:Age=30 Odds Ratio', ylim=c(.5, 10),
-       addlayer=list(geom_hline(yintercept=1, col=gray(.7)),
-                     geom_vline(xintercept=30, col=gray(.7)),
-                     scale_y_continuous(trans='log',
-                      breaks=c(.5, 1, 2, 4, 8))))
+       addlayer=geom_hline(yintercept=1, col=gray(.7)) +
+                geom_vline(xintercept=30, col=gray(.7)) +
+                scale_y_continuous(trans='log',
+                      breaks=c(.5, 1, 2, 4, 8)))
 
 # Compute predictions for three predictors, with superpositioning or
 # conditioning on sex, combined into one graph
@@ -92,7 +92,7 @@ p1 <- Predict(fit, age, sex)
 p2 <- Predict(fit, cholesterol, sex)
 p3 <- Predict(fit, blood.pressure, sex)
 p <- rbind(age=p1, cholesterol=p2, blood.pressure=p3)
-ggplot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE)
+ggplot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE, colfill='blue')
 ggplot(p, groups='sex', varypred=TRUE, adj.subtitle=FALSE,
        sepdiscrete='vert', rdata=data.frame(age, cholesterol, sex))
 
@@ -175,4 +175,28 @@ ggplot(p)     # horizontal dot chart; usually preferred for categorical predicto
 ggplot(p, flipxdiscrete=FALSE)  # back to vertical
 ggplot(p, groups='gender')
 ggplot(p, ~ m, groups=FALSE, flipxdiscrete=FALSE)
+
+
+# Example from Yonghao Pua <puayonghao@gmail.com>
+n <- 500  
+set.seed(17)  
+age <- rnorm(n, 50, 10)
+# create an ordinal variable  
+duration <- factor(sample(c('None', '10', '20', '30' ,'>30'), n,TRUE))
+duration <- factor(duration, levels(duration)[c(5, 1:4)])
+# arrange factor levels in ascending order
+levels(duration) # shows the correct order "None" "10"   "20"   "30"   ">30"  
+label(age) <- 'Age'
+label(duration) <- 'Duration'
+
+L <-.045*(age-50) +.01*(duration=='10') +.2*(duration=='20')+
+  .3*(duration=='30')+ .9*(duration=='>30')
+
+y <- ifelse(runif(n) < plogis(L), 1, 0)
+ddist <- datadist(age, duration)
+options(datadist='ddist')
+fit <- lrm(y ~ age + duration)
+p <- Predict(fit, fun=plogis)
+ggplot(p)
+ggplot(p, sepdiscrete='vertical')
 
