@@ -26,7 +26,7 @@
      aestype=c('color', 'linetype'),
      conf=c('fill', 'lines'),
      varypred=FALSE, sepdiscrete=c('no', 'list', 'vertical', 'horizontal'),
-     subset, xlim, ylim, xlab, ylab, 
+     subset, xlim., ylim., xlab, ylab, 
      colorscale=function(...) scale_color_manual(...,
        values=c("#000000", "#E69F00", "#56B4E9",
                 "#009E73","#F0E442", "#0072B2", "#D55E00", "#CC79A7")),
@@ -90,17 +90,19 @@
 \item{subset}{a subsetting expression for restricting the rows of
   \code{data} that are used in plotting.  For example, predictions may have
   been requested for males and females but one wants to plot only females.}
-\item{xlim}{
+\item{xlim.}{
 This parameter is seldom used, as limits are usually controlled with
-\code{Predict}.  One reason to use \code{xlim} is to plot a
-\code{factor} variable on the x-axis that was created with the \code{cut2} function
-with the \code{levels.mean} option, with \code{val.lev=TRUE} specified to \code{plot.Predict}. 
-In this case you may want the axis to
-have the range of the original variable values given to \code{cut2} rather
-than the range of the means within quantile groups.
+\code{Predict}.  Usually given as its legal abbreviation \code{xlim}.
+  One reason to use \code{xlim} is to plot a \code{factor} variable on
+  the x-axis that was created with the \code{cut2} function with the
+  \code{levels.mean} option, with \code{val.lev=TRUE} specified to
+  \code{plot.Predict}.  In this case you may want the axis to have the
+  range of the original variable values given to \code{cut2} rather than
+  the range of the means within quantile groups. 
 }
-\item{ylim}{
+\item{ylim.}{
 Range for plotting on response variable axis. Computed by default.
+  Usually specified using its legal definition \code{ylim}.
 }
 \item{xlab}{
 Label for \code{x}-axis. Default is one given to \code{asis, rcs}, etc.,

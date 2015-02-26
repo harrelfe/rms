@@ -482,7 +482,7 @@ ggplot.Predict <-
           groupLabel <- glabel(groups[j], j)
           g <- c(g, if(aestype[j] == 'size')
                  sprintf("colFun(name=%s, range=c(.2, 1.5))",
-                         expch(grouopLabel)) else
+                         expch(groupLabel)) else
                  sprintf("colFun(name=%s)", expch(groupLabel)))
         }
         g <- c(g, sprintf("theme(legend.position=%s)",
@@ -543,4 +543,4 @@ ggplot.Predict <-
   }
 }
 
-utils::globalVariables(c('.xx.', '.yhat', 'lower', 'upper'))
+utils::globalVariables(c('.xx.', '.yhat', 'lower', 'upper', 'groupLabel'))
