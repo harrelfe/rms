@@ -198,5 +198,5 @@ options(datadist='ddist')
 fit <- lrm(y ~ age + duration)
 p <- Predict(fit, fun=plogis)
 ggplot(p)
-ggplot(p, sepdiscrete='vertical')
+ggplot(p, sepdiscrete='vertical', colfill='green', anova=anova(fit))
 

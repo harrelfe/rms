@@ -261,14 +261,14 @@ ggplot.Predict <-
           .xx. <- yhat <- .label. <- hjust <- vjust <- NULL
           for(iv in v) {
             j <- which(data$.predictor. == iv)
-            dat <- data[j,, drop=FALSE]
-            xv <- dat[, iv]
+            datj <- data[j,, drop=FALSE]
+            xv <- datj[, iv]
             xx <- switch(type, continuous = xv,
                                discrete   = as.numeric(xv))
-            yy <- dat[, 'yhat']
+            yy <- datj[, 'yhat']
             if(conf.int) {
               xx <- c(xx, xx, xx)
-              yy <- c(yy, dat[, 'lower'], dat[, 'upper'])
+              yy <- c(yy, datj[, 'lower'], datj[, 'upper'])
             }
             xlim. <- if(is.factor(xv)) c(1, length(levels(xv)))
              else range(pretty(xv))
