@@ -1,4 +1,4 @@
-ggplot.Predict <-
+dggplot.Predict <-
   function(data, formula, groups=NULL,
            aestype=c('color', 'linetype'),
            conf=c('fill', 'lines'),
@@ -38,8 +38,8 @@ ggplot.Predict <-
   maddlayer <- missing(addlayer)
   if(! maddlayer) addlayer <- paste(deparse(substitute(addlayer)), collapse=' ')
 
-  ribbonargs <- sprintf("alpha=0.2, linetype=0, fill=I(%s), show_guide=FALSE",
-                        deparse(colfill))
+  ribbonargs <- sprintf("alpha=0.2, linetype=0, fill=I('%s'), show_guide=FALSE",
+                        colfill)
   
   dohist <- function(...) {
     so <- histSpike.opts
@@ -184,11 +184,11 @@ ggplot.Predict <-
           if(length(groups)) g <- 
             sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s)) +
                      labs(x=NULL, y=%s) + %s',
-                    aestype[1], groups[1], deparse(ylab), ylimc)
+                    aestype[1], groups[1], expch(ylab), ylimc)
           else
             g <- sprintf("ggplot(dat, aes(x=.xx., y=yhat)) +
                          labs(x=NULL, y=%s) + %s",
-                         deparse(ylab), ylimc)
+                         expch(ylab), ylimc)
           
           g <- c(g, if(length(layout))
                       sprintf("facet_wrap(~ .predictor., scales='free_x',
@@ -241,10 +241,10 @@ ggplot.Predict <-
           if(length(groups)) g <- 
             c(sprintf('ggplot(dat, aes(x=yhat, y=.xx., %s=%s))',
                       aestype[1], groups[1]),
-              sprintf("labs(x=%s, y=NULL)", deparse(ylab)))
+              sprintf("labs(x=%s, y=NULL)", expch(ylab)))
           else
             g <- c("ggplot(dat, aes(x=yhat, y=.xx.))",
-                   sprintf("labs(x=%s, y=NULL)", deparse(ylab)))
+                   sprintf("labs(x=%s, y=NULL)", expch(ylab)))
           if(! maddlayer) g <- c(g, addlayer)
           g <- c(g, limc(ylim., 'x'),
                  "facet_wrap(~ .predictor., scales='free_y')",
@@ -386,8 +386,8 @@ ggplot.Predict <-
                       sprintf("colFun(name=%s, range=c(.2, 1.5))",
                               expch(groupLabel)) else
                  sprintf("colFun(name=%s)", expch(groupLabel)))
-          g <- c(g, sprintf("theme(legend.position=%s)",
-                            deparse(legend.position)))
+          g <- c(g, sprintf("theme(legend.position='%s')",
+                            legend.position))
           
         } else g <- c(g, "theme(legend.position='none')")
       }
@@ -456,7 +456,7 @@ ggplot.Predict <-
       ae <- paste(ae, ', ', aestype[j], '=', groups[j], sep='')
     ae <- eval(parse(text=paste(ae, ')', sep='')))
     g <- c("ggplot(data, ae)", sprintf("labs(x=%s, y=%s)",
-                                       deparse(xlab), deparse(ylab)))
+                                       expch(xlab), expch(ylab)))
 
     flipped <- FALSE
     if(xdiscrete) {
@@ -485,8 +485,8 @@ ggplot.Predict <-
                          expch(groupLabel)) else
                  sprintf("colFun(name=%s)", expch(groupLabel)))
         }
-        g <- c(g, sprintf("theme(legend.position=%s)",
-                          deparse(legend.position)))
+        g <- c(g, sprintf("theme(legend.position='%s')",
+                          legend.position))
       }
       if(conf.int) {
         h <- 
