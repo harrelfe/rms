@@ -1,4 +1,4 @@
-dggplot.Predict <-
+ggplot.Predict <-
   function(data, formula, groups=NULL,
            aestype=c('color', 'linetype'),
            conf=c('fill', 'lines'),
@@ -63,10 +63,10 @@ dggplot.Predict <-
   varying  <- info$varying
   conf.int <- info$conf.int
 
-  pmlabel <- vector('expression', length(label))
+  pmlabel <- character(length(label))  ###vector('expression', length(label))
   names(pmlabel) <- names(label)
   for(i in 1 : length(label))
-    pmlabel[i] <- labelPlotmath(label[i], units[i])
+    pmlabel[i] <- labelPlotmath(label[i], units[i], chexpr=TRUE)
 
   glabel <- function(gname, j=1) {
     if(! length(legend.label)) pmlabel[gname]
@@ -75,8 +75,8 @@ dggplot.Predict <-
   }
 
   ## Function to create expression( ) or "" depending on argument
-  expch <- function(x) if(is.expression(x))
-    sprintf('expression(%s)', as.character(x)) else deparse(x)
+  expch <- function(x) if(grepl('expression\\(', x)) x else deparse(x)
+###    sprintf('expression(%s)', as.character(x)) else deparse(x)
 
   ## Function to construct xlim() or ylim() call
   limc <- function(limits, which)
@@ -289,7 +289,8 @@ dggplot.Predict <-
         g <- paste(g, collapse=' + ')
         if(ggexpr) return(g)
         g <- eval(parse(text = g))
-        if(vnames == 'labels') g <- facet_wrap_labeller(g, pmlabel[v])
+        if(vnames == 'labels')
+          g <- facet_wrap_labeller(g, eval(parse(text=pmlabel[v])))
         g
       }
       

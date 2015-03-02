@@ -69,7 +69,10 @@ bplot <-
 
   pan <- function(...)
     {
-      do.call(paste('panel', lfunname, sep='.'), list(...))
+      fname <- paste('lattice::panel', gsub('lattice::', '', lfunname),
+                     sep='.')
+      f <- eval(parse(text = fname))
+      do.call(f, list(...))
       if(showperim)
         {
           lattice::llines(perim[,'x'], perim[,'ymin'], col=gray(.85))

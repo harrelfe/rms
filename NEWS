@@ -1,6 +1,7 @@
 Changes in version 4.3-1 (2015-03-??)
    * NAMESPACE: removed reference to gridExtra, in DESCRIPTION moved gridExtra from Depends to Suggests
    * ggplot.Predict: re-worked generation of ggplot function call construction to use character strings with evaluation at the very end; added colfill argument
+   * bplot: fixed so will find panel function with lattice::
 
 Changes in version 4.3-0 (2015-02-15)
    * contrast.rms: added 3rd and 4th list of predictor settings to allow for double-difference (interaction) contrasts
