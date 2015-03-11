@@ -286,7 +286,12 @@ ormfit <- function(x, y, kint, nx, initial, offset, penmat=NULL,
     P  <- fa - fb
     
     ## Compute -2 log likelihood
-    L <- -2. * sum(log(P))
+    ## Occasionally, Newton-Raphson updating puts intercepts out of order
+    ## See w=2 in fit in line 181 of projects/Cardiology/ahf/cpbr/a.Rnw
+    if(min(P) < 1e-10)
+      warning(sprintf('cell probability < 1e-10 in iteration %s, set to 1e-10',
+                      iter))
+    L <- -2. * sum(log(pmax(1e-10, P)))
     ## Compute components of 1st and 2nd derivatives
     fpa  <- fp(xby,   fa)
     fpb  <- fp(xby1,  fb)
