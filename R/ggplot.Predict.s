@@ -63,7 +63,7 @@ ggplot.Predict <-
   varying  <- info$varying
   conf.int <- info$conf.int
 
-  pmlabel <- character(length(label))  ###vector('expression', length(label))
+  pmlabel <- character(length(label))
   names(pmlabel) <- names(label)
   for(i in 1 : length(label))
     pmlabel[i] <- labelPlotmath(label[i], units[i], chexpr=TRUE)
@@ -75,8 +75,8 @@ ggplot.Predict <-
   }
 
   ## Function to create expression( ) or "" depending on argument
-  expch <- function(x) if(grepl('expression\\(', x)) x else deparse(x)
-###    sprintf('expression(%s)', as.character(x)) else deparse(x)
+  expch <- function(x) if(! length(x)) 'NULL' else
+           if(grepl('expression\\(', x)) x else deparse(x)
 
   ## Function to construct xlim() or ylim() call
   limc <- function(limits, which)
