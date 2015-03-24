@@ -4,6 +4,7 @@ Changes in version 4.3-1 (2015-03-??)
    * bplot: fixed so will find panel function with lattice::
    * orm.fit: trapped negative cell prob due to updated intercepts out of order
    * ggplot.Predict: fixed bug in expch when x=NULL
+   * lrm.fit: fixed but with wrong dimension array given to Fortran if offset used
 
 Changes in version 4.3-0 (2015-02-15)
    * contrast.rms: added 3rd and 4th list of predictor settings to allow for double-difference (interaction) contrasts

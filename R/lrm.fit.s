@@ -150,11 +150,12 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   if(ofpres) {
     ##Fit model with only intercept(s) and offset
     z <- 
-      .Fortran("lrmfit", coef=initial, as.integer(0), 0, x, y, offset,
+      .Fortran("lrmfit", coef=initial, as.integer(0), as.integer(0),
+               x, y, offset,
                u=double(kint),
                double(kint*(kint+1)/2),loglik=double(1), n, as.integer(0),
                sumw, kint,
-               v=double(kint*kint), double(kint), double(kint),
+               v=double(kint*kint), double(kint), double(2*kint),
                double(kint), pivot=integer(kint), opts=opts, ftable,
                penmat, weights, PACKAGE="rms")
     
@@ -194,11 +195,11 @@ lrm.fit <- function(x, y, offset=0, initial, est,
     if(length(est)) initial[est] <- z$coef[(kint + 1) : nvi]
     initial <- c(z$coef[1 : kint], initial)
     nvi <- as.integer(kint + nx)
-    opts[3] <- 1	#Max no. iterations 
+    opts[3] <- 1	#Max no. iterations
     z <-
       .Fortran("lrmfit", coef=initial, nx, 1:nx, x, y, offset,
                u=double(nvi), double(nvi*(nvi+1)), double(1), n, nx,
-               sumw, nvi, v=double(nvi*nvi), double(nvi), double(nvi),
+               sumw, nvi, v=double(nvi*nvi), double(nvi), double(2*nvi),
                double(nvi), integer(nvi), opts=opts, ftable, penmat, weights,
                PACKAGE="rms")
   }
