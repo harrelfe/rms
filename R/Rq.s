@@ -192,5 +192,5 @@ latex.Rq <-
              varnames=varnames, columns=columns, caption, ...)
   }
 
-predict.Rq <- function(object, ..., se.fit=FALSE)
-  predictrms(object, ..., se.fit=se.fit)
+predict.Rq <- function(object, ..., kint=1, se.fit=FALSE)
+  predictrms(object, ..., kint=kint, se.fit=se.fit)
