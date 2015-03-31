@@ -249,16 +249,18 @@ survplot.npsurv <-
             lty=lty[i], lwd=lwd[i], col=col[i], type='s')
 
   if(aehaz) {
+    un <- if(units == ' ' | units == '') '' else
+      paste('/', tolower(units), sep='')
     haz <- round(nevents / totaltime, 4)
     if(! labelc) text(xlim[2], ylim[2],
-                      paste(nevents, ' events, hazard=', haz, sep=''),
+                      paste(nevents, ' events, hazard=', haz, un, sep=''),
                       adj=1)
     else {
       maxlen <- max(nchar(sleva))
       sleva <- substring(paste(sleva, '                               '),
                          1, maxlen)
-      sleva <- paste(sleva, ' (', nevents, ' events, hazard=',
-                     haz, ')', sep='')
+      for(j in 1 : ns)
+        sleva[j] <- eval(parse(text=sprintf("expression(paste('%s   ',scriptstyle('(%s events, hazard=%s%s)')))", sleva[j], nevents[j], haz[j], un)))
     }
   }
   if(labelc) labcurve(curves, sleva, type='s', lty=lty, lwd=lwd,
