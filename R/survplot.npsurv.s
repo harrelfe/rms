@@ -6,7 +6,7 @@ survplot.npsurv <-
            abbrev.label=FALSE, levels.only=FALSE,
            lty, lwd=par('lwd'),
            col=1, col.fill=gray(seq(.95, .75, length=5)),
-           loglog=FALSE, fun, n.risk=FALSE, logt=FALSE,
+           loglog=FALSE, fun, n.risk=FALSE, aehaz=FALSE, logt=FALSE,
            dots=FALSE, dotsize=.003, grid=NULL,
            srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,
            y.n.risk, cex.n.risk=.6, pr=FALSE, ...) {
@@ -108,16 +108,22 @@ survplot.npsurv <-
   lty <- if(missing(lty)) seq(ns+1)[-2] else rep(lty, length=ns)
   lwd <- rep(lwd, length=ns)
   col <- rep(col, length=ns)
-  
-  if(labelc || conf=='bands') curves <- vector('list',ns)
+
+  if(conf == 'diffbands' && ns < 2) conf <- 'bands'
+  if(labelc || conf %in% c('bands', 'diffbands')) curves <- vector('list', ns)
   Tim <- Srv <- list()
   
   par(xpd=NA)
 
+  nevents <- totaltime <- numeric(ns)
   for(i in 1:ns) {
     st <- stemp == i
     time <- fit$time[st]
     surv <- fit$surv[st]
+    nevents[i]   <- sum(fit$n.event[st])
+    nrsk         <- fit$n.risk[st]
+    neachtime    <- c(-diff(nrsk), min(nrsk))
+    totaltime[i] <- sum(neachtime * time)
     if(logt) time <- logb(time)
     s <- !is.na(time) & (time >= xlim[1])
     if(i==1 & !add) {
@@ -242,6 +248,19 @@ survplot.npsurv <-
       lines(curves[[i]][[1]], curves[[i]][[2]],
             lty=lty[i], lwd=lwd[i], col=col[i], type='s')
 
+  if(aehaz) {
+    haz <- round(nevents / totaltime, 4)
+    if(! labelc) text(xlim[2], ylim[2],
+                      paste(nevents, ' events, hazard=', haz, sep=''),
+                      adj=1)
+    else {
+      maxlen <- max(nchar(sleva))
+      sleva <- substring(paste(sleva, '                               '),
+                         1, maxlen)
+      sleva <- paste(sleva, ' (', nevents, ' events, hazard=',
+                     haz, ')', sep='')
+    }
+  }
   if(labelc) labcurve(curves, sleva, type='s', lty=lty, lwd=lwd,
                       opts=label.curves, col.=col)
   

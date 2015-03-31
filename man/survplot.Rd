@@ -52,7 +52,7 @@ survplot(fit, \dots)
          label.curves=TRUE, abbrev.label=FALSE,
          levels.only=FALSE, lty,lwd=par('lwd'),
          col=1, col.fill=gray(seq(.95, .75, length=5)),
-         loglog=FALSE, fun, n.risk=FALSE, logt=FALSE,
+         loglog=FALSE, fun, n.risk=FALSE, aehaz=FALSE, logt=FALSE,
          dots=FALSE, dotsize=.003, grid=NULL,
          srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,
          y.n.risk, cex.n.risk=.6, pr=FALSE, \dots)
@@ -270,6 +270,8 @@ character size for number of subjects at risk (when \code{n.risk} is \code{TRUE}
 \item{pr}{
 set to \code{TRUE} to print survival curve coordinates used in the plots
 }
+\item{aehaz}{set to \code{TRUE} to add number of events and exponential
+	distribution hazard rate estimates in curve labels}
 \item{order}{
   an integer vector of length two specifying the order of groups when
   computing survival differences.  The default of \code{1:2} indicates
