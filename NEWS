@@ -6,7 +6,7 @@ Changes in version 4.3-1 (2015-04-??)
    * ggplot.Predict: fixed bug in expch when x=NULL
    * lrm.fit: fixed but with wrong dimension array given to Fortran if offset used
    * predict.Rq: fixed bug causing intercept to be ignored
-   * survplot.npsurv: override conf='diffbands' to 'bands' when one stratum; added aehaz argument
+   * survplot.npsurv: override conf='diffbands' to 'bands' when one stratum; added aehaz and times arguments
 
 Changes in version 4.3-0 (2015-02-15)
    * contrast.rms: added 3rd and 4th list of predictor settings to allow for double-difference (interaction) contrasts
