@@ -46,15 +46,6 @@ ggplot.Predict <-
     do.call('histSpikeg', c(list(...), so))
   }
 
-  ## The following exists to nullify invisible() used in arrangeGrob's
-  ## returned value
-  agrob <- function(...) {
-    if(! requireNamespace('gridExtra', quietly=TRUE))
-      stop('gridExtra package not installed')
-    z <- gridExtra::arrangeGrob(...)
-    z
-  }
-  
   info     <- attr(data, 'info')
   at       <- info$Design
   label    <- at$label
@@ -120,7 +111,7 @@ ggplot.Predict <-
   ## See http://bigdata-analyst.com/best-way-to-add-a-footnote-to-a-plot-created-with-ggplot2.html
   ## size is in mm
   footnote <- function(object, text, size=2.5, color=grey(.5))
-    agrob(object, sub = grid::textGrob(text, x = 1, hjust = 1.01,
+    arrGrob(object, sub = grid::textGrob(text, x = 1, hjust = 1.01,
           vjust=0.1, gp = grid::gpar(fontsize =size/0.3527778 )))
   
   if(predpres) {   ## User did not specify which predictors to plot; all plotted
@@ -301,8 +292,8 @@ ggplot.Predict <-
       return(if(length(gcont) && length(gdis))
                switch(sepdiscrete,
                       list = list(continuous=gcont, discrete=gdis),
-                      vertical = agrob(gcont, gdis,         heights=c(r, 1-r)),
-                      horizontal=agrob(gcont, gdis, nrow=1, widths =c(r, 1-r)))
+                      vertical = arrGrob(gcont, gdis,         heights=c(r, 1-r)),
+                      horizontal=arrGrob(gcont, gdis, nrow=1, widths =c(r, 1-r)))
              else if(length(gcont)) gcont else gdis)
     }  # end if(sepdiscrete)
     ## Form separate plots and combine at end
@@ -435,7 +426,7 @@ ggplot.Predict <-
     }
     Plt <- if(jplot == 1) Plt[[1]]
      else
-       do.call(agrob, c(Plt, list(ncol=layout[2])))
+       do.call(arrGrob, c(Plt, list(ncol=layout[2])))
     if(length(sub)) Plt <- footnote(Plt, sub, size=size.adj)
     return(Plt)
 

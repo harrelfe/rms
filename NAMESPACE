@@ -10,7 +10,7 @@ import(SparseM)
 
 import(ggplot2)
 import(lattice)
-import(gridExtra)  # DOES NOT WORK UNLESS IN Depends IN DESCRIPTION
+#import(gridExtra)  # DOES NOT WORK UNLESS IN Depends IN DESCRIPTION
 #importFrom(gridExtra, arrangeGrob)
 importFrom(quantreg, rq.wfit, rq.fit, summary.rq)
 import(nlme)

@@ -26,7 +26,7 @@ Rq(formula, tau = 0.5, data, subset, weights, na.action=na.delete,
            which, varnames, columns=65, inline=FALSE, caption=NULL,
            ...)
 
-\method{predict}{Rq}(object, \dots, se.fit=FALSE)
+\method{predict}{Rq}(object, \dots, kint=1, se.fit=FALSE)
 
 RqFit(fit, wallow=TRUE, passdots=FALSE)
 }
@@ -60,7 +60,8 @@ RqFit(fit, wallow=TRUE, passdots=FALSE)
   \item{title}{a character string title to be passed to \code{prModFit}}
   \item{object}{an object created by \code{Rq}}
   \item{file,append,which,varnames,columns,inline,caption}{see
-	\code{\link{latexrms}}}
+		\code{\link{latexrms}}}
+	\item{kint}{ignored}
   \item{se.fit}{set to \code{TRUE} to obtain standard errors of
 	predicted quantiles}
   \item{fit}{an object created by \code{Rq}}
