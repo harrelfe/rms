@@ -84,7 +84,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
         estr <- range(est)
         if(estr[1] < 1 | estr[2] > nx)
           stop("est has illegal column number for x")
-        if(any(duplicated(est)))stop("est has duplicates")
+        if(anyDuplicated(est)) stop("est has duplicates")
         storage.mode(est) <- "integer"
       }
     xname <- dimnames(x)[[2]]
