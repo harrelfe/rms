@@ -9,13 +9,13 @@ Imports: quantreg, nlme, rpart, polspline, multcomp
 Suggests: boot, tcltk
 Description: Regression modeling, testing, estimation, validation,
 	graphics, prediction, and typesetting by storing enhanced model design
-	attributes in the fit.  rms is a collection of functions that
+	attributes in the fit.  'rms' is a collection of functions that
 	assist with and streamline modeling.  It also contains functions for
 	binary and ordinal logistic regression models, ordinal models for
   continuous Y with a variety of distribution families, and the Buckley-James
 	multiple regression model for right-censored responses, and implements
 	penalized maximum likelihood estimation for logistic and ordinary
-	linear models.  rms works with almost any regression model, but it
+	linear models.  'rms' works with almost any regression model, but it
 	was especially written to work with binary or ordinal regression
 	models, Cox regression, accelerated failure time models,
 	ordinary linear models,	the Buckley-James model, generalized least
