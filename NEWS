@@ -1,3 +1,6 @@
+Changes in version 4.3-2 (2015-??-??)
+   * contrast.rms: made SE a vector not a matrix, added 4 list logic for nvary, added new test from JoAnn Alvarez
+
 Changes in version 4.3-1 (2015-04-20)
    * NAMESPACE: removed reference to gridExtra, in DESCRIPTION moved gridExtra from Depends to Suggests
    * ggplot.Predict: re-worked generation of ggplot function call construction to use character strings with evaluation at the very end; added colfill argument

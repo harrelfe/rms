@@ -10,7 +10,6 @@ contrast.rms <-
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
   boot.type <- match.arg(boot.type)
-##  if(conf.type == 'simultaneous') require(multcomp)
   
   zcrit <- if(length(idf <- fit$df.residual)) qt((1 + conf.int) / 2, idf) else
               qnorm((1 + conf.int) / 2)
@@ -82,9 +81,11 @@ contrast.rms <-
   } else if(max(mall) > 1) {
     ## Label contrasts by values of longest variable in list if
     ## it has the same length as the expanded design matrix
-    d <- if(ma > 1) a else b  # TODO add logic for a2 b2
+    d <- if(ma > 1) a else b
+    if(! missing(a2) && (max(ma2, mb2) > max(ma, mb)))
+      d <- if(ma2 > 1) a2 else b2
     l <- sapply(d, length)
-    vary <- if(sum(l == max(ma, mb)) == 1) d[l == max(ma, mb)]
+    vary <- if(sum(l == max(mall)) == 1) d[l == max(mall)]
   }
 
   if(sum(mall > 1) > 1 && ! allsame(mall[mall > 1]))
@@ -117,8 +118,8 @@ contrast.rms <-
   
   est <- matxv(X, coef(fit))
   v <- X %*% vcov(fit, regcoef.only=FALSE) %*% t(X)
-  ndf <- if(is.matrix(v))nrow(v) else 1
-  se <- if(ndf==1) sqrt(v) else sqrt(diag(v))
+  ndf <- if(is.matrix(v)) nrow(v) else 1
+  se <- as.vector(if(ndf == 1) sqrt(v) else sqrt(diag(v)))
   Z <- est / se
   P <- if(length(idf)) 2 * (1 - pt(abs(Z), idf)) else 2 * (1 - pnorm(abs(Z)))
   if(conf.type != 'simultaneous') {
@@ -184,8 +185,9 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
   no[no=='Pvalue'] <- pn
   
   cnames <- x$cnames
-  if(! length(cnames)) cnames <- if(x$nvary) rep('', length(x[[1]])) else
-    as.character(1:length(x[[1]]))
+  if(! length(cnames))
+    cnames <- if(x$nvary) rep('', length(x[[1]])) else
+                          as.character(1 : length(x[[1]]))
   if(any(x$redundant)) cnames <- paste(ifelse(x$redundant, '*', ' '), cnames)
   w <- data.frame(w, row.names=paste(format(1:length(cnames)), cnames, sep=''))
   w$Contrast <- fun(w$Contrast)
