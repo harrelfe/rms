@@ -438,7 +438,7 @@ plot.summary.rms <-
     for(i in is : ie) {
       confbar(nbar - (i - is + 1) + 1, effect[i], se[i], q=q,
               col=col, col.points=col.points,
-              fun=fun, clip=clip, lwd=lwd)
+              fun=fun, clip=clip, lwd=lwd, pch=pch)
       mtext(lb[i], 2, 0, at=nbar - (i - is + 1) + 1, cex=cex,
             adj=1, las=1)
     }
