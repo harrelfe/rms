@@ -1,6 +1,7 @@
-Changes in version 4.3-2 (2015-??-??)
+Changes in version 4.3-2 (2015-07-??)
    * contrast.rms: made SE a vector not a matrix, added 4 list logic for nvary, added new test from JoAnn Alvarez
 	 * plot.summary.rms: correct bug where pch was ignored.  Thanks: Tamas Ferenci
+	 * prModFit: fix print(fit, latex=FALSE) when fit is result of robcov, bootcov
 
 Changes in version 4.3-1 (2015-04-20)
    * NAMESPACE: removed reference to gridExtra, in DESCRIPTION moved gridExtra from Depends to Suggests

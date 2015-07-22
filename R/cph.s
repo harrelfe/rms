@@ -1,26 +1,26 @@
 ## This is a modification of the R survival package's coxph function
 ## written by Terry Therneau and ported to R by Thomas Lumley
-cph <- function(formula=formula(data),
-                data=parent.frame(),
+cph <- function(formula     = formula(data),
+                data        = parent.frame(),
                 weights,
                 subset,
-                na.action=na.delete, 
-                method=c("efron","breslow","exact",
-                  "model.frame", "model.matrix"),
-                singular.ok=FALSE,
-                robust=FALSE,
-                model=FALSE,
-                x=FALSE,
-                y=FALSE,
-                se.fit=FALSE,
-                eps=1e-4,
+                na.action   = na.delete, 
+                method      =c("efron", "breslow", "exact",
+                               "model.frame", "model.matrix"),
+                singular.ok = FALSE,
+                robust      = FALSE,
+                model       = FALSE,
+                x           = FALSE,
+                y           = FALSE,
+                se.fit      = FALSE,
+                eps         = 1e-4,
                 init,
-                iter.max=10,
-                tol=1e-9,
-                surv=FALSE,
+                iter.max    = 10,
+                tol         = 1e-9,
+                surv        = FALSE,
                 time.inc,
-                type=NULL,
-                vartype=NULL,
+                type        = NULL,
+                vartype     = NULL,
                 ...)
 {
   method <- match.arg(method)
@@ -39,9 +39,8 @@ cph <- function(formula=formula(data),
     ## I allow a formula with no right hand side
     ## The dummy function stops an annoying warning message "Looking for
     ##  'formula' of mode function, ignored one of mode ..."
-    if (inherits(formula,"Surv")) {
+    if (inherits(formula, "Surv")) {
       xx <- function(x) formula(x)
-      
       formula <- xx(paste(deparse(substitute(formula)), 1, sep="~"))
     }
     else stop("Invalid formula")
@@ -62,16 +61,16 @@ cph <- function(formula=formula(data),
       options(drop.unused.levels=FALSE)
     }
     
-    X <- Design(eval.parent(m))
+    X    <- Design(eval.parent(m))
     atrx <- attributes(X)
     atr  <- atrx$Design
     nact <- atrx$na.action
-    if(method=="model.frame") return(X)
+    if(method == "model.frame") return(X)
     
     Terms <- if(missing(data))
-      terms(formula, specials=c("strat","cluster","strata"))
+      terms(formula, specials=c("strat", "cluster", "strata"))
     else
-      terms(formula, specials=c("strat","cluster","strata"), data=data)
+      terms(formula, specials=c("strat", "cluster", "strata"), data=data)
     
     asm   <- atr$assume.code
     name  <- atr$name
@@ -81,10 +80,22 @@ cph <- function(formula=formula(data),
       stop('cph supports strat(), not strata()')
     cluster <- specials$cluster
     stra    <- specials$strat
+
+    subTerms <- function (termobj, i) {
+      ## [.terms from R 2.15.3 to make Terms.ns work properly (without
+      ## having columns of X to drop for main effects of strat
+      resp <- if (attr(termobj, "response")) termobj[[2L]] else NULL
+      newformula <- attr(termobj, "term.labels")[i]
+      if (length(newformula) == 0L) newformula <- "1"
+      newformula <- reformulate(newformula, resp, attr(termobj, "intercept"))
+      environment(newformula)<-environment(termobj)
+      terms(newformula, specials = names(attr(termobj, "specials")))
+    }
     
     if(length(cluster)) {
       if(missing(robust)) robust <- TRUE
-      Terms <- Terms[-(cluster - 1)]
+      ## Terms <- Terms[-(cluster - 1)]
+      Terms <- subTerms(Terms, - (cluster - 1))
       cluster <- attr(X, 'cluster')
       attr(X, 'cluster') <- NULL
     }
@@ -92,7 +103,9 @@ cph <- function(formula=formula(data),
     Terms.ns     <- Terms
     if(length(stra)) {
       temp <- untangle.specials(Terms.ns, "strat", 1)
-      Terms.ns <- Terms.ns[-temp$terms]	#uses [.terms function
+      ## Terms.ns <- Terms.ns[- temp$terms]	#uses [.terms function
+      Terms.ns <- subTerms(Terms.ns, - temp$terms)
+      prn(Terms.ns)
       ##  Set all factors=2
       ## (-> interaction effect not appearing in main effect
       ##  that was deleted strata effect)
@@ -101,9 +114,9 @@ cph <- function(formula=formula(data),
       strataname <- attr(Terms, 'term.labels')[stra - 1]
       
       j <- 0
-      for(i in (1:length(asm))[asm==8]) {
+      for(i in (1 : length(asm))[asm == 8]) {
         nstrata <- nstrata + 1
-        xi <- X[[i+1]]
+        xi <- X[[i + 1]]
         levels(xi) <- paste(name[i], "=", levels(xi), sep="")
         Strata[[nstrata]] <- xi
       }
@@ -121,18 +134,19 @@ cph <- function(formula=formula(data),
 ##  Cox ph fitter routines expect null if no offset
     
     ##No mf if only strata factors
-    if(!xpres) {
+    if(! xpres) {
       X <- matrix(nrow=0, ncol=0)
       assign <- NULL
     }
-      else {
-        X <- model.matrix(Terms.ns, X)[,-1,drop=FALSE]
-        assign <- attr(X, "assign")
-        assign[[1]] <- NULL  # remove intercept position, renumber
-      }
+    else {
+      X <- model.matrix(Terms.ns, X)[, -1, drop=FALSE]
+      prn(colnames(X))
+      assign <- attr(X, "assign")
+      assign[[1]] <- NULL  # remove intercept position, renumber
+    }
     
     nullmod <- FALSE
-    }
+  }
   else {	## model with no right-hand side
     X <- NULL
     Terms <- terms(formula)
@@ -149,9 +163,10 @@ cph <- function(formula=formula(data),
   }
 
   ny <- ncol(Y)
-  maxtime <- max(Y[,ny-1])
+  maxtime <- max(Y[, ny - 1])
 
   rnam <- dimnames(Y)[[1]]
+  prn(colnames(X)); prn(atr$colnames)
   if(xpres) dimnames(X) <- list(rnam, atr$colnames)
 
   if(method=="model.matrix") return(X)
@@ -195,7 +210,7 @@ cph <- function(formula=formula(data),
                   toler.inf=1, iter.max=iter.max))
   }
   if (is.character(f)) {
-    cat("Failure in cph:\n",f,"\n")
+    cat("Failure in cph:\n", f, "\n")
     return(structure(list(fail=TRUE), class="cph"))
   }
   else {
@@ -229,17 +244,17 @@ cph <- function(formula=formula(data),
   
   nvar <- length(f$coefficients)
 
-  ev <- factor(Y[,ny], levels=0:1, labels=c("No Event","Event"))
+  ev <- factor(Y[,ny], levels=0 : 1, labels=c("No Event", "Event"))
   n.table <- {
     if(!length(Strata)) table(ev, dnn='Status')
-    else table(Strata, ev, dnn=c('Stratum','Status'))
+    else table(Strata, ev, dnn=c('Stratum', 'Status'))
   }
   f$n <- n.table
-  nevent <- sum(Y[,ny])
+  nevent <- sum(Y[, ny])
   if(xpres) {
     logtest <- -2 * (f$loglik[1] - f$loglik[2])
-    R2.max  <-  1 - exp(2*f$loglik[1]/n)
-    R2 <- (1 - exp(-logtest/n))/R2.max
+    R2.max  <-  1 - exp(2 * f$loglik[1] / n)
+    R2 <- (1 - exp(- logtest / n)) / R2.max
     P  <- 1 - pchisq(logtest,nvar)
     gindex <- GiniMd(f$linear.predictors)
     dxy <- dxy.cens(f$linear.predictors, Y, type='hazard')['Dxy']
