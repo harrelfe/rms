@@ -19,6 +19,28 @@ importFrom(polspline, hare, phare)
 import(multcomp)
 # importFrom(multcomp, confint.glht, glht)  FAILS confint.glht not exported by namespace:multcomp
 
+importFrom(grDevices, gray, grey, rgb)
+importFrom(graphics, abline, axis, boxplot, hist, legend,
+           lines, locator, mtext, par, plot, plot.new,
+           points, segments, strwidth, symbols, text,
+           title)
+importFrom(methods, existsFunction, getFunction, new)
+importFrom(stats, .getXlevels, AIC, approx, as.formula,
+           asOneSidedFormula, coef, confint, contrasts, cor,
+           dcauchy, delete.response, density, deviance,
+           dnorm, family, fitted, formula, gaussian,
+           glm.control, glm.fit, is.empty.model, lm, lm.fit,
+           lm.influence, lm.wfit, logLik, lowess, lsfit,
+           make.link, median, model.extract, model.frame,
+           model.offset, model.weights, na.omit, naresid,
+           nlminb, optim, pcauchy, pchisq, pf, plogis,
+           pnorm, predict, pt, qcauchy, qchisq, qlogis,
+           qnorm, qqline, qqnorm, qt, quantile,
+           reformulate, reshape, resid, residuals, runif,
+           supsmu, terms, uniroot, update, var, vcov)
+importFrom(utils, capture.output, de, getS3method)
+
+
 S3method(AIC, rms)
 S3method(anova, rms)
 
