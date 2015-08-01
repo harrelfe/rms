@@ -228,7 +228,9 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
   cof <- x$coef
   if(strata.coefs) {
     cof <- c(cof, x$strata.coef)
-    vv  <- c(vv,  Varcov(x, which='strata.var.diag'))
+    vv <- c(vv, vcov(x))
+    ## TODO: implement in vcov:
+    ## vv  <- c(vv,  vcov(x, which='strata.var.diag'))
     if(length(pm)) penalty.scale <- c(penalty.scale, rep(NA, x$nstrata - 1))
   }
   score.there <- nstrata==1 && (length(x$est) < length(x$coef) - ns)
