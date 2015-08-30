@@ -379,7 +379,6 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
     }
   
   prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex, ...)
-  invisible()
 }
 
 vcov.Gls <- function(object, intercepts='all', ...)

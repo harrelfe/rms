@@ -640,5 +640,4 @@ print.cph <- function(x, digits=4, table=TRUE, conf.int=FALSE,
   
   prModFit(x, title=title,
            z, digits=digits, coefs=coefs, latex=latex, ...)
-  invisible()
 }

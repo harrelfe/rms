@@ -286,7 +286,6 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
   }
   prModFit(x, title=title, z, digits=digits,
            coefs=coefs, latex=latex, ...)
-  invisible()
 }
 
 

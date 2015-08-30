@@ -191,8 +191,8 @@ Newlevels(fit, \dots)
 \method{Newlabels}{rms}(fit, labels, \dots)
 \method{Newlevels}{rms}(fit, levels, \dots)
 
-prModFit(x, title, w, digits=4, coefs=TRUE, latex=FALSE, lines.page=40,
-long=TRUE, needspace, \dots)
+prModFit(x, title, w, digits=4, coefs=TRUE, latex=FALSE, rmarkdown=FALSE,
+         lines.page=40, long=TRUE, needspace, \dots)
 
 prStats(labels, w, latex=FALSE)
 
@@ -316,6 +316,9 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   model.}
 \item{latex}{a logical value indicating whether information should be
   formatted as plain text or as LaTeX markup}
+\item{rmarkdown}{set to \code{TRUE} to force \code{latex=TRUE} and to
+	convert LaTeX code to html using Hmisc \code{html.latex} for use with
+	RMarkdown, knitr, and RStudio}
 \item{lines.page}{see \code{\link[Hmisc]{latex}}}
 \item{long}{set to \code{FALSE} to suppress printing of formula and
   certain other model output}

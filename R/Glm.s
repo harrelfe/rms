@@ -119,7 +119,6 @@ print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE,
   z[[k]] <- list(type='coefmatrix',
                  list(coef=cof, se=se))
   prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex, ...)
-  invisible()
 }
 
 summary.Glm <- function(...) summary.rms(...)

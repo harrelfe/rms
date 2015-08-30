@@ -260,7 +260,6 @@ print.orm <- function(x, digits=4, coefs=TRUE,
   
   prModFit(x, title=title, z, digits=digits,
            coefs=coefs, latex=latex, ...)
-  invisible()
 }
 
 Mean.orm <- function(object, codes=FALSE, ...)

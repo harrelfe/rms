@@ -1,7 +1,7 @@
 ## Modification of the rq function in the quantreg package written by
 ## Roger Koenker, Stephen Portnoy, Pin Tian Ng, Achim Zeileis,
 ## Philip Grosjean, Brian Ripley
-q
+
 Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete, 
                 method = "br", model = FALSE, contrasts = NULL,
                 se='nid', hs=TRUE, x=FALSE, y=FALSE, ...) 
