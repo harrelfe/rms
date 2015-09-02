@@ -66,13 +66,12 @@ survdiffplot(fit, order=1:2, fun=function(y) y,
 }
 \arguments{
 \item{fit}{
-result of fit (\code{cph}, \code{psm}, \code{npsurv}, \code{survfit},
+result of fit (\code{cph}, \code{psm}, \code{npsurv},
 \code{survest.psm}).  For \code{survdiffplot}, \code{fit} must be the
 result of \code{npsurv}.
 }
 \item{\dots}{
-list of factors with names used in model. For fits from \code{npsurv} or
-\code{survfit},
+list of factors with names used in model. For fits from \code{npsurv}
 these arguments do not appear - all strata are plotted. Otherwise the
 first factor listed is the factor used to determine different survival
 curves.  Any other factors are used to specify single constants to be
@@ -89,8 +88,7 @@ effect}, \code{Adjust to}, and \code{High effect} values will be used
 from \code{datadist} if the variable is continuous.  For variables not
 defined to \code{datadist}, you must specify non-missing constant
 settings (or a vector of settings for the one displayed variable).  Note
-that since \code{survfit} and \code{npsurv} objects do not use the
-variable list in 
+that since \code{npsurv} objects do not use the variable list in 
 \code{\dots}, you can specify any extra arguments to \code{labcurve} by
 adding them at the end of the list of arguments.
 }
@@ -126,12 +124,12 @@ of \code{time.inc} stored with the model fit will be used.
 specifies type of estimates, \code{"tsiatis"} (the default) or \code{"kaplan-meier"}.
 \code{"tsiatis"} here corresponds to the Breslow
 estimator. This is ignored if survival estimates stored with \code{surv=TRUE} are
-being used. For fits from \code{npsurv} or \code{survfit}, this argument
+being used. For fits from \code{npsurv}, this argument
 is also ignored, since it is specified as an argument to \code{npsurv}.
 }
 \item{conf.type}{
 specifies the basis for confidence limits. This argument is
-ignored for fits from \code{npsurv} or \code{survfit}.
+ignored for fits from \code{npsurv}.
 }
 \item{conf.int}{
 Default is \code{FALSE}.  Specify e.g. \code{.95} to plot 0.95 confidence bands.
@@ -144,21 +142,19 @@ If \code{x=TRUE} and \code{y=TRUE} were not specified to \code{cph} but
 survival curve(s) will be used. These agree with the former if
 predictions are requested at the mean value of X beta or if there are
 only stratification factors in the model. This argument is ignored for
-fits from \code{npsurv} or \code{survfit}, which must have previously specified
+fits from \code{npsurv}, which must have previously specified
 confidence interval specifications.  For \code{survdiffplot} if
 \code{conf.int} is not specified, the level used in the call to
-\code{npsurv} or \code{survfit} will be used.
+\code{npsurv} will be used.
 }
 \item{conf}{
 \code{"bars"} for confidence bars at each \code{time.inc} time point. If the fit
 was from \code{cph(\dots, surv=TRUE)}, the \code{time.inc} used will be
 that stored with the fit. Use \code{conf="bands"} (the default) for
-bands using standard errors at each failure time. For \code{survfit} or
-\code{npsurv} objects only, \code{conf} may also be \code{"none"},
-indicating that 
-confidence interval information stored with the \code{survfit} or
-\code{npsurv} result
-should be ignored.  For \code{npsurv}, \code{survfit}, and \code{survdiffplot},
+bands using standard errors at each failure time. For \code{npsurv}
+objects only, \code{conf} may also be \code{"none"}, indicating that 
+confidence interval information stored with the \code{npsurv} result
+should be ignored.  For \code{npsurv} and \code{survdiffplot},
 \code{conf} may be \code{"diffbands"} whereby a shaded region is drawn
 for comparing two curves.  The polygon is centered at the midpoint of
 the two survival estimates and the height of the polygon is 1/2 the
@@ -214,7 +210,7 @@ colors to different curves.
 \item{adj.subtitle}{
 set to \code{FALSE} to suppress plotting subtitle with levels of adjustment factors
 not plotted. Defaults to \code{TRUE}.
-This argument is ignored for \code{survfit} or \code{npsurv}.
+This argument is ignored for \code{npsurv}.
 }
 \item{loglog}{
 set to \code{TRUE} to plot \code{log(-log Survival)} instead of \code{Survival}
@@ -230,7 +226,7 @@ set to \code{TRUE} to plot \code{log(t)} instead of \code{t} on the x-axis
 set to \code{TRUE} to add number of subjects at risk for each curve, using the
 \code{surv.summary} created by \code{cph} or using the failure times used in
 fitting the model if \code{y=TRUE} was specified to the fit or if the fit
-was from \code{survfit} or \code{npsurv}.
+was from \code{npsurv}.
 The numbers are placed at the bottom
 of the graph unless \code{y.n.risk} is given. 
 If the fit is from \code{survest.psm}, \code{n.risk} does not apply.
