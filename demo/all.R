@@ -1,8 +1,6 @@
 ######################
 # Detailed Example 1 #
 ######################
-# May want to first invoke the Hmisc store function
-# so that new variables will go into a temporary directory
 set.seed(17)  # So can repeat random number sequence
 n <- 500
 
@@ -46,27 +44,27 @@ fpred(age=30, sex=levels(sex))
 anova(f)
 
 p <- Predict(f, age, sex, conf.int=FALSE)
-plot(p, ylim=c(-3,3), data=data.frame(age,sex))
-# Specifying data to plot.Predict results in sex-specific
-# rug plots for age using the Hmisc scat1d function
+ggplot(p, rdata=data.frame(age, sex)) +
+  geom_line(aes(x=age, y=L, color=sex), linetype='dotted',
+            data=data.frame(age, L, sex))
 
-plsmo(age, L, group=sex, method='raw', add=TRUE, prefix='True', trim=0)
-title('Spline Fits with True Regression Functions')
+# Specifying rdata to plot.Predict results in sex-specific
+# rug plots for age using the Hmisc histSpikeg function, which uses
+# ggplot geom_segment.  True regression functions are drawn as
+# as dotted lines
 
 f.bp <- lrm(dz.bp ~ rcs(age,5)*sex + rcs(sys.bp,5))
 
 p <- Predict(f.bp, age, sys.bp, np=75)
-for(method in c('contour','persp','image')) {
-  bplot(p, method=method)
-  #if(method=='image') iLegend(p, c(34,40),c(115, 120))
-}
-
+bplot(p)  # same as lfun=levelplot
+bplot(p, lfun=contourplot)
+bplot(p, lfun=wireframe)
 
 cat('Doing 25 bootstrap repetitions to validate model\n')
-validate(f, B=25)   # in practice try to use 300
+validate(f, B=25)   # in practice use 300+
 
 cat('Doing 25 bootstrap reps to check model calibration\n')
-cal <- calibrate(f, B=25)   # use 300 in practice
+cal <- calibrate(f, B=25)   # use 300+
 plot(cal)
 title('Calibration of Unpenalized Model')
 
@@ -78,10 +76,11 @@ specs(f,long=TRUE)
 edf <- effective.df(f)
 
 p <- Predict(f, age, sex, conf.int=FALSE)
-plot(p, ylim=c(-3,3), data=llist(age, sex))
+# Plot penalized spline fit + true regression functions
+ggplot(p, rdata=llist(age, sex)) +
+  geom_line(aes(x=age, y=L, color=sex), linetype='dotted',
+            data=data.frame(age, L, sex))
 
-plsmo(age, L, group=sex, method='raw', add=TRUE, prefix='True', trim=0)
-title('Penalized Spline Fits with True Regression Functions')
 
 options(digits=3)
 s <- summary(f)
@@ -185,22 +184,21 @@ contrast(fit, list(treat='b',cholesterol=c(150,200,250)),
 # Remove type='average' to get 3 separate contrasts for b-a
 
 
-# Plot effects.  plot(fit) plots effects of all predictors,
-# showing values used for interacting factors as subtitles
+# Plot effects.  ggplot(fit) plots effects of all predictors
 # The ref.zero parameter is helpful for showing effects of
 # predictors on a common scale for comparison of strength
-plot(Predict(fit, ref.zero=TRUE), ylim=c(-2,2))
+ggplot(Predict(fit, ref.zero=TRUE))
 
 
-plot(Predict(fit, age=seq(20,80,length=100), treat, conf.int=FALSE))
+ggplot(Predict(fit, age=seq(20,80,length=100), treat, conf.int=FALSE))
 # Plots relationship between age and log
 # odds, separate curve for each treat, no C.I.
 bplot(Predict(fit, age, cholesterol, np=70))
-# 3-dimensional perspective plot for age, cholesterol, and
+# image plot for age, cholesterol, and
 # log odds using default ranges for both variables
 p <- Predict(fit, num.diseases, fun=function(x) 1/(1+exp(-x)),
              conf.int=.9)  #or fun=plogis
-plot(p, ylab="Prob", conf.int=.9, nlevels=5)
+ggplot(p, ylab="Prob", conf.int=.9, nlevels=5)
 # Treat as categorical variable even though numeric
 
 # Plot estimated probabilities instead of log odds
@@ -210,12 +208,16 @@ logit <- predict(fit, expand.grid(treat="b",num.diseases=1:3,
                  age=c(20,40,60),
                  cholesterol=seq(100,300,length=10)))
 # Also see Predict
-#logit <- predict(fit, gendata(fit, nobs=12))
-# Interactively specify 12 predictor combinations using UNIX
-# For UNIX or Windows, generate 9 combinations with other variables
+# logit <- predict(fit, gendata(fit, nobs=12))
+# Allows you to interactively specify 12 predictor combinations
+
+# Generate 9 combinations with other variables
 # set to defaults, get predicted values
-logit <- predict(fit, gendata(fit, age=c(20,40,60),
-                 treat=c('a','b','c')))
+gdat <- gendata(fit, age   = c(20,40,60),
+                treat = c('a','b','c'))
+gdat
+median(cholesterol); median(num.diseases)
+logit <- predict(fit, gdat)
 
 
 # Since age doesn't interact with anything, we can quickly and
@@ -224,7 +226,8 @@ logit <- predict(fit, gendata(fit, age=c(20,40,60),
 # seeking a linearizing transformation.  Here age is linear in the
 # population so this is not very productive.  Also, if we simplify the
 # model the total degrees of freedom will be too small and
-# confidence limits too narrow
+# confidence limits too narrow, so this process is at odds with
+# correct statistical inference.
 
 
 ag <- 10:80
@@ -294,17 +297,20 @@ xYplot(pred ~ age, groups=interaction(cholesterol,weight),
        data=combos, type='l')
 
 
-# Can also do this with plot.Predict but a single
+# Can also do this with plot.Predict or ggplot.Predict but a single
 # plot may be busy:
 
 ch <- c(170, 200, 230)
 p <- Predict(fit, age, cholesterol=ch, weight=150,
      conf.int=FALSE)
 plot(p, ~age | cholesterol)
+ggplot(p)
 
-#Here we use plot.Predict to make 9 separate plots, with CLs
+# Here we use plot.Predict to make 9 separate plots, with CLs
 p <- Predict(fit, age, cholesterol=c(170,200,230), weight=c(150,200,250))
 plot(p, ~age | cholesterol*weight)
+# Now do the same with ggplot
+ggplot(p, groups=FALSE)
 
 options(datadist=NULL)
 
@@ -363,7 +369,7 @@ validate(f, B=10, dxy=TRUE, u=5)  # use t=5 for Dxy (only)
 # Get Kaplan-Meier estimates by divided subjects into groups
 # of size 200 (for other values of u must put time.inc=u in
 # call to cph)
-cal <- calibrate(f, B=10, u=1, m=200)  # B=300 in practice
+cal <- calibrate(f, B=10, u=1, m=200)  # B=300+ in practice
 plot(cal)
 # Check proportional hazards assumption for age terms
 z <- cox.zph(f, 'identity')
@@ -382,7 +388,9 @@ f
 anova(f)
 ages <- seq(20, 80, by=4)   # Evaluate at fewer points. Default is 100
                             # For exact C.L. formula n=100 -> much memory
-plot(Predict(f, age=ages, sex, time=3, loglog=TRUE), ylim=c(-5,-1))
+p <- Predict(f, age=ages, sex, time=3, loglog=TRUE)
+plot(p, ylim=c(-5,-1))
+ggplot(p, ylim=c(-5, -1))
 
 
 # Fit a model assuming proportional hazards for age but
@@ -397,6 +405,7 @@ ages <- seq(20, 80, by=6)
 # vs. age and sex, obtaining accurate confidence limits
 plot(Predict(f, age=ages, sex, time=3, loglog=TRUE), ylim=c(-5,-1))
 plot(Predict(f, age=ages, sex, time=3))
+ggplot(Predict(f, age=ages, sex, time=3))
 # Having x=TRUE, y=TRUE in fit also allows computation of influence stats
 r <- resid(f, "dfbetas")
 which.influence(f)
@@ -493,7 +502,7 @@ cal <- calibrate(f, B=10)
 plot(cal)
 
 S <- Surv(c(1,4,2,3,5,8,6,7,20,18,19,9,12,10,11,13,16,14,15,17))
-survplot(survfit(S ~ x3))
+survplot(npsurv(S ~ x3))
 f <- psm(S ~ rcs(x1,3)+x2+x3, x=TRUE,y=TRUE)
 f
 # NOTE: LR chi-sq of 39.67 disagrees with that from old survreg
