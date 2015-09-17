@@ -65,7 +65,7 @@ predictrms <-
   off <- attr(Terms, 'offset')
   offset <- if(! length(off)) 0
   else
-    model.offset(model.frame(Terms, newdata, na.action=na.action, ...))
+    model.offset(model.frame(fit, newdata, na.action=na.action, ...))
 
   ## Terms.nooff <- if(length(off)) drop.terms(Terms, off) else Terms
   ## Only works correctly if offset is at the end of the formula

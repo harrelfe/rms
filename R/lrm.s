@@ -3,12 +3,12 @@ lrm <- function(formula, data,subset, na.action=na.delete,
                 linear.predictors=TRUE, se.fit=FALSE, 
                 penalty=0, penalty.matrix, tol=1e-7, strata.penalty=0,
                 var.penalty=c('simple','sandwich'),
-                weights, normwt=FALSE, scale=FALSE, ...)
+                weights, normwt=FALSE, scale=FALSE, offset, ...)
 {
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
   m <- match.call(expand.dots=FALSE)
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
+  mc <- match(c("formula", "data", "subset", "weights", "na.action", "offset"), 
              names(m), 0)
   m <- m[c(1, mc)]
   m$na.action <- na.action
@@ -39,8 +39,9 @@ lrm <- function(formula, data,subset, na.action=na.delete,
     atr <- atrx$Design
 
     Y <- model.extract(X, 'response')
-    offs <- model.offset(X)
-    if(!length(offs)) offs <- 0
+    if (missing(offset)) offset <- model.offset(X)
+    else offset <- X[,"(offset)"]
+    if(!length(offset)) offset <- 0
     weights <- wt <- model.extract(X, 'weights')
     if(length(weights))
       warning('currently weights are ignored in model validation and bootstrapping lrm fits')
@@ -88,8 +89,8 @@ lrm <- function(formula, data,subset, na.action=na.delete,
   else
     {
       X <- eval.parent(m)
-      offs <- model.offset(X)
-      if(!length(offs)) offs <- 0
+      if (missing(offset)) offset <- model.offset(X)
+      if(!length(offset)) offset <- 0
       Y <- model.extract(X, 'response')
       Y <- Y[!is.na(Y)]
       Terms <- X <- NULL
@@ -102,16 +103,16 @@ lrm <- function(formula, data,subset, na.action=na.delete,
 
   if(nstrata > 1) {
     if(scale) stop('scale=TRUE not implemented for stratified model')
-    f <- lrm.fit.strat(X,Y,Strata,offset=offs,
-                       penalty.matrix=penalty.matrix,
-                       strata.penalty=strata.penalty,
-                       tol=tol,
-                       weights=weights,normwt=normwt, ...)
+    f <- lrm.fit.strat(X,Y,Strata,offset=offset,
+                         penalty.matrix=penalty.matrix,
+                         strata.penalty=strata.penalty,
+                         tol=tol,
+                         weights=weights,normwt=normwt, ...)
   }
   else {
     if(existsFunction(method)) {
       fitter <- getFunction(method)
-      f <- fitter(X, Y, offset=offs,
+      f <- fitter(X, Y, offset=offset,
                   penalty.matrix=penalty.matrix, tol=tol,
                   weights=weights, normwt=normwt, scale=scale, ...)
     }
@@ -135,7 +136,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
       v <- f$var
       if(var.penalty=='sandwich') f$var.from.info.matrix <- v
       f.nopenalty <- 
-        fitter(X, Y, offset=offs, initial=f$coef, maxit=1, tol=tol,
+        fitter(X, Y, offset=offset, initial=f$coef, maxit=1, tol=tol,
                scale=scale)
       ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
       info.matrix.unpenalized <- f.nopenalty$info.matrix

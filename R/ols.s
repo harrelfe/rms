@@ -2,12 +2,13 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
                 method = "qr", model = FALSE, x = FALSE, y = FALSE,
                 se.fit=FALSE, linear.predictors=TRUE,
                 penalty=0, penalty.matrix, tol=1e-7, sigma=NULL,
-                var.penalty=c('simple','sandwich'), ...)
+                var.penalty=c('simple','sandwich'), offset, 
+                ...)
 {
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
   m <- match.call(expand.dots = FALSE)
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
+  mc <- match(c("formula", "data", "subset", "weights", "na.action", "offset"), 
               names(m), 0)
   m <- m[c(1, mc)]
   m$na.action <- na.action
@@ -24,7 +25,8 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     }
 
     X      <- eval.parent(m)
-    offset <- model.offset(X)
+    if (missing(offset)) offset <- model.offset(X)
+    else offset <- X[,"(offset)"]
     X      <- Design(X)
     options(drop.unused.levels=dul)
     atrx  <- attributes(X)

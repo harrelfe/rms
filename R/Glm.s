@@ -11,23 +11,26 @@ Glm <-
     print(family)
     stop("`family' not recognized")
   }
+
   mt <- terms(formula, data = data)
   if (missing(data)) data <- environment(formula)
-  mf <- match.call(expand.dots = FALSE)
-  mf$family <- mf$start <- mf$control <- mf$maxit <- NULL
-  mf$model <- mf$method <- mf$x <- mf$y <- mf$contrasts <- NULL
-  mf$... <- NULL
-  mf$drop.unused.levels <- TRUE
-  mf$na.action <- na.action
-  mf[[1]] <- as.name("model.frame")
-
+  
   dul <- .Options$drop.unused.levels
   if(!length(dul) || dul) {
     on.exit(options(drop.unused.levels=dul))
     options(drop.unused.levels=FALSE)
   }
   
-  mf <- Design(eval(mf, parent.frame()))
+  # Generate the data.frame
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data", "subset", "weights", "na.action", 
+               "etastart", "mustart", "offset"), names(mf), 0L)
+  mf <- mf[c(1L, m)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1L]] <- quote(stats::model.frame)
+  mf <- eval(mf, parent.frame())
+
+  mf <- Design(mf)
   desatr <- attr(mf,'Design')
   attr(mf, 'Design') <- NULL
   nact <- attr(mf, 'na.action')

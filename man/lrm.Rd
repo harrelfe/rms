@@ -14,7 +14,7 @@ lrm(formula, data, subset, na.action=na.delete, method="lrm.fit",
     model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE, 
     penalty=0, penalty.matrix, tol=1e-7, 
     strata.penalty=0, var.penalty=c('simple','sandwich'),
-    weights, normwt, scale=FALSE, \dots)
+    weights, normwt, scale=FALSE, offset, \dots)
 
 \method{print}{lrm}(x, digits=4, strata.coefs=FALSE,
     coefs=TRUE, latex=FALSE, title='Logistic Regression Model', \dots)
@@ -138,6 +138,9 @@ variances estimates that are too low.
     sample sizes where for example spline or polynomial component
     variables create scaling problems leading to loss of precision when
     accumulating sums of squares and crossproducts.}
+\item{offset}{this can be used to specify an a \emph{priori} known component
+ to be included in the linear predictor during fitting.  One or more \code{\link[stats  ]{offset}} terms can be included in the formula instead or as well, and if more than one is specified their sum is used. 
+}
 \item{\dots}{arguments that are passed to \code{lrm.fit}, or from
     \code{print}, to \code{\link{prModFit}}}
 \item{digits}{number of significant digits to use}

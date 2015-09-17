@@ -16,7 +16,7 @@ ols(formula, data, weights, subset, na.action=na.delete,
     method="qr", model=FALSE,
     x=FALSE, y=FALSE, se.fit=FALSE, linear.predictors=TRUE,
     penalty=0, penalty.matrix, tol=1e-7, sigma,
-    var.penalty=c('simple','sandwich'), \dots)
+    var.penalty=c('simple','sandwich'), offset, \dots)
 }
 \arguments{
 \item{formula}{
@@ -93,6 +93,10 @@ inverse of the penalized information matrix.  Specify
 \code{var.penalty="sandwich"} to use the sandwich estimator (see below
 under \code{var}), which limited simulation studies have shown yields
 variances estimates that are too low.
+}
+\item{offset}{this can be used to specify an a \emph{priori} known component
+ to be included in the linear predictor during fitting, see \code{\link[stats]{lm}}
+ for more details.
 }
 \item{\dots}{arguments to pass to \code{\link{lm.wfit}} or
   \code{\link{lm.fit}}}
