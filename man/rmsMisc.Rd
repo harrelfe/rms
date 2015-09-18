@@ -43,6 +43,7 @@
 \alias{reVector}
 \alias{formatNP}
 \alias{latex.naprint.delete}
+\alias{removeFormulaTerms}
 \title{Miscellaneous Design Attributes and Utility Functions}
 \description{
 These functions are used internally to \code{anova.rms},
@@ -145,6 +146,12 @@ formatted values with "< 0.0001" (if \code{digits=4}).
 
 \code{latex.naprint.delete} will, if appropriate, use LaTeX to draw a
 dot chart of frequency of variable \code{NA}s related to model fits.
+
+\code{removeFormulaTerms} removes one or more terms from a model
+formula, using strictly character manipulation.  This handles problems
+such as \code{[.terms} removing \code{offset()} if you subset on
+anything.  The function can also be used to remove the dependent
+variable(s) from the formula.
 }
 \usage{
 \method{vcov}{rms}(object, regcoef.only=TRUE, intercepts='all', \dots)
@@ -201,6 +208,8 @@ reVector(\dots, na.rm=TRUE)
 formatNP(x, digits=NULL, pvalue=FALSE, latex=FALSE)
 
 \method{latex}{naprint.delete}(object, \dots)
+
+removeFormulaTerms(form, which=NULL, delete.response=FALSE)
 }
 \arguments{
 \item{fit}{result of a fitting function}
@@ -331,6 +340,12 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   created by \code{reVector}}
 \item{pvalue}{set to \code{TRUE} if you want values below 10 to the
   minus \code{digits} to be formatted to be less than that value}
+\item{form}{a formula object}
+\item{which}{a vector of one or more character strings specifying the
+	names of functions that are called from a formula, e.g.,
+	\code{"cluster"}.  By default no right-hand-side terms are removed.}
+\item{delete.response}{set to \code{TRUE} to remove the dependent
+	variable(s) from the formula}
 \item{\dots}{other arguments.  For \code{reVector} this contains the
   elements being extracted.  For \code{prModFit} this information is
   passed to the \code{Hmisc latexTabular} function when a block of
@@ -359,6 +374,8 @@ cell in which the parameter is by definition zero.
 
 \code{reVector} returns a vector of named (by its arguments) elements.
 \code{formatNP} returns a character vector.
+
+\code{removeFormulaTerms} returns a formula object.
 }
 \seealso{
 \code{\link{rms}}, \code{\link{fastbw}}, \code{\link{anova.rms}},

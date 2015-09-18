@@ -59,19 +59,20 @@ predictrms <-
   on.exit({options(contrasts=oldopts$contrasts)
            options(Design.attr=NULL)})
 
-  Terms <- delete.response(terms(formula(fit), specials='strat'))
-  
-  ## Get Terms ignoring offset(s)
-  off <- attr(Terms, 'offset')
-  offset <- if(! length(off)) 0
-  else
-    model.offset(model.frame(Terms, newdata, na.action=na.action, ...))
+  offset <- model.offset(model.frame(removeFormulaTerms(fit$sformula,
+                         delete.response=TRUE), newdata,
+                                     na.action=na.action, ...))
+  ## formula after removing offset terms and dependent var.
+  formulano <- removeFormulaTerms(fit$sformula, which='offset',
+                                  delete.response=TRUE)
+  #Terms  <- delete.response(terms(formula(fit), specials='strat'))
+  Terms  <- terms(formulano, specials='strat')
 
   ## Terms.nooff <- if(length(off)) drop.terms(Terms, off) else Terms
   ## Only works correctly if offset is at the end of the formula
   ## bug in drop.terms
-  Terms.nooff <- if(length(off)) Terms[1 : length(attr(Terms, 'term.labels'))]
-  else Terms
+  ## Terms.nooff <- if(length(off)) Terms[1 : length(attr(Terms, 'term.labels') else Terms
+  Terms.nooff <- Terms   ## later change all Terms.nooff to Terms
   
   attr(Terms, "response")  <- 0L
   attr(Terms, "intercept") <- 1L
@@ -81,7 +82,8 @@ predictrms <-
   stra.noff <- attr(Terms.nooff, 'specials')$strat
 
   Terms.ns       <- if(length(stra))      Terms[-stra] else Terms
-  Terms.ns.nooff <- if(length(stra.noff)) Terms.nooff[-stra.noff] else Terms.nooff
+  Terms.ns.nooff <- if(length(stra.noff)) Terms.nooff[-stra.noff] else
+                    Terms.nooff
 
   if(conf.int) {
     vconstant <- 0.

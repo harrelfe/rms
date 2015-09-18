@@ -1090,3 +1090,19 @@ setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
   formals(upb) <- list(i=0, n=n, every=every)
   upb
 }
+
+## Function to remove one or more terms from a model formula, using
+## strictly character manipulation.  This handles problems such as
+## [.terms removing offset() if you subset on anything
+## For each character string in which, terms like string(...) are removed.
+
+removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
+  form <- deparse(form)
+  if(delete.response) form <- gsub('.*~', '~', form)
+  for(w in which) {
+    pattern <- sprintf('\\+ *?%s\\(.*?\\)', w)  ## assume additive form
+    form <- gsub(pattern, '', form)
+  }
+  as.formula(form)
+}
+

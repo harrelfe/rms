@@ -444,7 +444,8 @@ strat <- function(...) {
   name <- nam
   attributes(x) <- list(levels=parms,class=c("factor","rms"),
                         name=nam, label=z$label, assume="strata", assume.code=8,
-                        parms=parms, nonlinear=FALSE)
+                        parms=parms, nonlinear=FALSE,
+                        colnames=paste(nam,"=", parms[-1], sep=""))
   x
 }
 

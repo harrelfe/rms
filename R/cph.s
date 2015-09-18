@@ -53,24 +53,27 @@ cph <- function(formula     = formula(data),
 
 
   if(!missing(data) ||
-     (length(z <- attr(terms(formula, allowDotAsName=TRUE),"term.labels"))>0 &&
-                        any(z!="."))) { #X's present
+     (length(z <- attr(terms(formula, allowDotAsName=TRUE), "term.labels")) > 0
+      && any(z!="."))) { #X's present
     dul <- .Options$drop.unused.levels
     if(!length(dul) || dul) {
       on.exit(options(drop.unused.levels=dul))
       options(drop.unused.levels=FALSE)
     }
-    
+
     X    <- Design(eval.parent(m))
     atrx <- attributes(X)
     atr  <- atrx$Design
     nact <- atrx$na.action
     if(method == "model.frame") return(X)
-    
+
     Terms <- if(missing(data))
       terms(formula, specials=c("strat", "cluster", "strata"))
     else
       terms(formula, specials=c("strat", "cluster", "strata"), data=data)
+
+    sformula   <- atrx$sformula
+    mmcolnames <- atr$mmcolnames
     
     asm   <- atr$assume.code
     name  <- atr$name
@@ -88,7 +91,7 @@ cph <- function(formula     = formula(data),
       newformula <- attr(termobj, "term.labels")[i]
       if (length(newformula) == 0L) newformula <- "1"
       newformula <- reformulate(newformula, resp, attr(termobj, "intercept"))
-      environment(newformula)<-environment(termobj)
+      environment(newformula) <- environment(termobj)
       terms(newformula, specials = names(attr(termobj, "specials")))
     }
     
@@ -105,7 +108,6 @@ cph <- function(formula     = formula(data),
       temp <- untangle.specials(Terms.ns, "strat", 1)
       ## Terms.ns <- Terms.ns[- temp$terms]	#uses [.terms function
       Terms.ns <- subTerms(Terms.ns, - temp$terms)
-      prn(Terms.ns)
       ##  Set all factors=2
       ## (-> interaction effect not appearing in main effect
       ##  that was deleted strata effect)
@@ -130,8 +132,8 @@ cph <- function(formula     = formula(data),
     n <- nrow(Y)
 
     weights <- model.extract(X, 'weights')
-    offset <- model.offset(X)
-##  Cox ph fitter routines expect null if no offset
+    offset  <- attr(X, 'offset')
+    ##  Cox ph fitter routines expect null if no offset
     
     ##No mf if only strata factors
     if(! xpres) {
@@ -139,8 +141,7 @@ cph <- function(formula     = formula(data),
       assign <- NULL
     }
     else {
-      X <- model.matrix(Terms.ns, X)[, -1, drop=FALSE]
-      prn(colnames(X))
+      X <- model.matrix(sformula, X)[, mmcolnames, drop=FALSE]
       assign <- attr(X, "assign")
       assign[[1]] <- NULL  # remove intercept position, renumber
     }
@@ -166,7 +167,6 @@ cph <- function(formula     = formula(data),
   maxtime <- max(Y[, ny - 1])
 
   rnam <- dimnames(Y)[[1]]
-  prn(colnames(X)); prn(atr$colnames)
   if(xpres) dimnames(X) <- list(rnam, atr$colnames)
 
   if(method=="model.matrix") return(X)
@@ -226,6 +226,8 @@ cph <- function(formula     = formula(data),
     }
   }
   f$terms <- Terms
+  f$sformula <- sformula
+  f$mmcolnames <- mmcolnames
   
   if(robust) {
     f$naive.var <- f$var
