@@ -28,12 +28,16 @@ Glm <-
   }
   
   mf <- Design(eval(mf, parent.frame()))
-  desatr <- attr(mf,'Design')
+  at <- attributes(mf)
+  desatr <- at$Design
   attr(mf, 'Design') <- NULL
   nact <- attr(mf, 'na.action')
+
+  sformula <- at$sformula
     
   switch(method, model.frame = return(mf), glm.fit = 1, 
          stop(paste("invalid `method':", method)))
+  
   xvars <- as.character(attr(mt, "variables"))[-1]
   if ((yvar <- attr(mt, "response")) > 0)
     xvars <- xvars[-yvar]
@@ -48,7 +52,7 @@ Glm <-
 
   Y <- model.response(mf, "numeric")
   weights <- model.weights(mf)
-  offset <- model.offset(mf)
+  offset <- attr(mf, 'offset')
   if(!length(offset)) offset <- 0
   if (length(weights) && any(weights < 0))
     stop("Negative wts not allowed")
@@ -70,9 +74,9 @@ Glm <-
   if (model) fit$model <- mf
   if (x)  fit$x <- X[, -1, drop=FALSE]
   if (!y) fit$y <- NULL
-  fit <- c(fit, list(call = call, formula = formula, terms = mt,
-                     data = data, offset = offset, control = control,
-                     method = method,
+  fit <- c(fit, list(call = call, formula = formula, sformula=sformula,
+                     terms = mt, data = data, offset = offset,
+                     control = control, method = method,
                      contrasts = attr(X, "contrasts"), xlevels = xlev,
                      Design=desatr, na.action=nact,
                      assign=DesignAssign(desatr,1,mt),
@@ -154,8 +158,7 @@ predict.Glm <-
   {
     type <- match.arg(type)
     predictrms(object, newdata, type, se.fit, conf.int, conf.type,
-               kint,
-               na.action, expand.na, center.terms, ...)
+               kint, na.action, expand.na, center.terms, ...)
   }
 
 latex.Glm <- function(...) latexrms(...)

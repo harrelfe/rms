@@ -1,8 +1,6 @@
-# require(rms)
-# require(survival)
-strat <- function(x) x
+require(rms)
 d <- expand.grid(a=c('a1','a2'), b=c('b1','b2'))
-d$y <- c(1,3,2,4)
+d$y <- Surv(c(1,3,2,4))
 f <- y ~ a * strat(b)
 m <- model.frame(f, data=d)
 Terms <- terms(f, specials='strat', data=d)
@@ -14,10 +12,6 @@ Terms <- Terms[- temp$terms]
 # atr$colnames
 
 model.matrix(Terms, m)
-
-
-
-
 colnames(model.matrix(Terms, m)[, -1, drop=FALSE])
 
 cph(f, data=d)

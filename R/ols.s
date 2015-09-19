@@ -24,10 +24,11 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     }
 
     X      <- eval.parent(m)
-    offset <- model.offset(X)
     X      <- Design(X)
+    offset <- attr(X, 'offset')
     options(drop.unused.levels=dul)
     atrx  <- attributes(X)
+    sformula <- atrx$sformula
     atr   <- atrx$Design
     nact  <- atrx$na.action
     Terms <- atrx$terms
@@ -75,7 +76,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
                   dimnames=list("Intercept","Intercept"))
     fit <- list(coefficients=coef, var=cov,
                 non.slopes=1, fail=FALSE, residuals=Y-yest,
-                df.residual=n - 1, intercept=TRUE)
+                df.residual=n - 1, intercept=TRUE, sformula=sformula)
     if(linear.predictors) {
       fit$linear.predictors <- rep(yest,n); 
       names(fit$linear.predictors) <- names(Y)
@@ -151,6 +152,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
                      non.slopes=1, na.action=nact,
                      scale.pred=scale, fail=FALSE))
   fit$assign <- assig
+  fit$sformula <- sformula
   class(fit) <- c("ols", "rms", "lm")
   fit
 }

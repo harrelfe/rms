@@ -1097,10 +1097,16 @@ setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
 ## For each character string in which, terms like string(...) are removed.
 
 removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
+  if('offset' %in% which) {
+    form <- formula(terms(form)[TRUE])
+    which <- setdiff(which, 'offset')
+  }
+  ## [.terms ignores offset variables.  Above logic handles nested () unlike
+  ## what is below
   form <- deparse(form)
   if(delete.response) form <- gsub('.*~', '~', form)
   for(w in which) {
-    pattern <- sprintf('\\+ *?%s\\(.*?\\)', w)  ## assume additive form
+    pattern <- sprintf('\\+?[ ]*?%s\\(.*?\\)[ ]*?\\+{0,1}', w)  ## assume additive form
     form <- gsub(pattern, '', form)
   }
   as.formula(form)

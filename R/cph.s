@@ -62,55 +62,46 @@ cph <- function(formula     = formula(data),
     }
 
     X    <- Design(eval.parent(m))
-    atrx <- attributes(X)
-    atr  <- atrx$Design
-    nact <- atrx$na.action
+    atrx       <- attributes(X)
+    atr        <- atrx$Design
+    nact       <- atrx$na.action
+    sformula   <- atrx$sformula
+    mmcolnames <- atr$mmcolnames
     if(method == "model.frame") return(X)
 
     Terms <- if(missing(data))
-      terms(formula, specials=c("strat", "cluster", "strata"))
+      terms(sformula, specials=c("strat", "strata"))
     else
-      terms(formula, specials=c("strat", "cluster", "strata"), data=data)
+      terms(sformula, specials=c("strat", "strata"), data=data)
 
-    sformula   <- atrx$sformula
-    mmcolnames <- atr$mmcolnames
-    
     asm   <- atr$assume.code
     name  <- atr$name
 
     specials <- attr(Terms, 'specials')
-    if(length(specials$strata))
-      stop('cph supports strat(), not strata()')
-    cluster <- specials$cluster
+    if(length(specials$strata)) stop('cph supports strat(), not strata()')
     stra    <- specials$strat
 
-    subTerms <- function (termobj, i) {
-      ## [.terms from R 2.15.3 to make Terms.ns work properly (without
-      ## having columns of X to drop for main effects of strat
-      resp <- if (attr(termobj, "response")) termobj[[2L]] else NULL
-      newformula <- attr(termobj, "term.labels")[i]
-      if (length(newformula) == 0L) newformula <- "1"
-      newformula <- reformulate(newformula, resp, attr(termobj, "intercept"))
-      environment(newformula) <- environment(termobj)
-      terms(newformula, specials = names(attr(termobj, "specials")))
-    }
-    
+#    subTerms <- function (termobj, i) {
+#      ## [.terms from R 2.15.3 to make Terms.ns work properly (without
+#      ## having columns of X to drop for main effects of strat
+#      resp <- if (attr(termobj, "response")) termobj[[2L]] else NULL
+#      newformula <- attr(termobj, "term.labels")[i]
+#      if (length(newformula) == 0L) newformula <- "1"
+#      newformula <- reformulate(newformula, resp, attr(termobj, "intercept"))
+#      environment(newformula) <- environment(termobj)
+#      terms(newformula, specials = names(attr(termobj, "specials")))
+#    }
+
+    cluster <- attr(X, 'cluster')
     if(length(cluster)) {
       if(missing(robust)) robust <- TRUE
-      ## Terms <- Terms[-(cluster - 1)]
-      Terms <- subTerms(Terms, - (cluster - 1))
-      cluster <- attr(X, 'cluster')
       attr(X, 'cluster') <- NULL
     }
     
     Terms.ns     <- Terms
     if(length(stra)) {
       temp <- untangle.specials(Terms.ns, "strat", 1)
-      ## Terms.ns <- Terms.ns[- temp$terms]	#uses [.terms function
-      Terms.ns <- subTerms(Terms.ns, - temp$terms)
-      ##  Set all factors=2
-      ## (-> interaction effect not appearing in main effect
-      ##  that was deleted strata effect)
+      Terms.ns <- Terms.ns[- temp$terms]	#uses [.terms function
       
       Strata <- list()
       strataname <- attr(Terms, 'term.labels')[stra - 1]
@@ -225,8 +216,8 @@ cph <- function(formula     = formula(data),
       }
     }
   }
-  f$terms <- Terms
-  f$sformula <- sformula
+  f$terms      <- Terms
+  f$sformula   <- sformula
   f$mmcolnames <- mmcolnames
   
   if(robust) {
