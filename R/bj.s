@@ -24,6 +24,7 @@ bj <- function(formula=formula(data), data,
   nact  <- atrx$na.action
   Terms <- atrx$terms
   atr   <- atrx$Design
+  sformula <- atrx$sformula
   
   lnames <- c("logit","probit","cloglog","identity","log","sqrt",
               "1/mu^2","inverse")
@@ -45,7 +46,7 @@ bj <- function(formula=formula(data), data,
   if (type != 'right') stop ("Surv type must by 'right' censored")
   Y <- cbind(linkfun(Y[,1]), Y[,2])
   
-  X <- model.matrix(Terms, X)
+  X <- model.matrix(sformula, X)
   assgn <- DesignAssign(atr, 1, Terms)
   
   if(method=='model.matrix') return(X)
@@ -76,6 +77,7 @@ bj <- function(formula=formula(data), data,
   fit <- c(fit, list(maxtime=maxtime, units=time.units,
                      time.inc=time.inc, non.slopes=1, assign=assgn))
   class(fit) <-  c("bj", "rms")
+  fit$sformula <- sformula
   fit$terms   <- Terms
   fit$formula <- as.vector(attr(Terms, "formula"))
   fit$call    <- call

@@ -32,6 +32,7 @@ orm <- function(formula, data, subset, na.action=na.delete,
 
     X <- Design(eval.parent(m))
     atrx <- attributes(X)
+    sformula <- atrx$sformula
     nact <- atrx$na.action
     if(method=="model.frame") return(X)
     Terms <- atrx$terms
@@ -39,10 +40,10 @@ orm <- function(formula, data, subset, na.action=na.delete,
     atr <- atrx$Design
 
     Y <- model.extract(X, 'response')
-    offs <- model.offset(X)
+    offs <- atrx$offset
     if(!length(offs)) offs <- 0
     if(model) m <- X
-    X <- model.matrix(Terms, X)
+    X <- model.matrix(sformula, X)
     X <- X[,-1,drop=FALSE]
     dimnames(X)[[2]] <- atr$colnames
     xpres <- length(X) > 0
@@ -99,6 +100,7 @@ orm <- function(formula, data, subset, na.action=na.delete,
   }
   
   f$call <- NULL
+  f$sformula <- sformula
   if(model) f$model <- m
   if(x) f$x <- X
   if(y) f$y <- Y

@@ -201,13 +201,13 @@ Newlevels(fit, \dots)
 prModFit(x, title, w, digits=4, coefs=TRUE, latex=FALSE, rmarkdown=FALSE,
          lines.page=40, long=TRUE, needspace, \dots)
 
-prStats(labels, w, latex=FALSE)
+prStats(labels, w, latex=FALSE, file="", append=TRUE)
 
 reVector(\dots, na.rm=TRUE)
 
 formatNP(x, digits=NULL, pvalue=FALSE, latex=FALSE)
 
-\method{latex}{naprint.delete}(object, \dots)
+\method{latex}{naprint.delete}(object, file="", append=TRUE, \dots)
 
 removeFormulaTerms(form, which=NULL, delete.response=FALSE)
 }
@@ -325,6 +325,10 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   model.}
 \item{latex}{a logical value indicating whether information should be
   formatted as plain text or as LaTeX markup}
+\item{file}{name of file to which to write model output from
+	\code{print()} using \code{prStats}.  Default is the console.}
+\item{append}{specify \code{append=FALSE} when using \code{file} and you
+	want to start over instead of adding to an existing file.}
 \item{rmarkdown}{set to \code{TRUE} to force \code{latex=TRUE} and to
 	convert LaTeX code to html using Hmisc \code{html.latex} for use with
 	RMarkdown, knitr, and RStudio}

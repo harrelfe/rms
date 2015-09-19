@@ -30,6 +30,7 @@ psm <- function(formula=formula(data),
 
   m <- Design(eval.parent(m))
   atrx <- attributes(m)
+  sformula <- atrx$sformula
   nact <- atrx$na.action
   Terms <- atrx$terms
   atr   <- atrx$Design
@@ -92,7 +93,7 @@ psm <- function(formula=formula(data),
   n <- nrow(X)
   nvar <- ncol(X)
   
-  offset <- model.offset(m)
+  offset <- atrx$offset
   if(!length(offset)) offset <- rep(0, n)
   
   if (is.character(dist)) {
@@ -220,6 +221,7 @@ psm <- function(formula=formula(data),
   fit$formula <- as.vector(attr(Terms, "formula"))
   fit$means <- apply(X,2, mean)
   fit$call <- call
+  fit$sformula <- sformula
   fit$dist <- dist
   fit$df.resid <- n-sum(fit$df) ##used for anova.survreg
   if (model) fit$model <- m

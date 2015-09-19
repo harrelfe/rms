@@ -32,6 +32,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
 
     X <- Design(eval.parent(m))
     atrx <- attributes(X)
+    sformula <- atrx$sformula
     nact <- atrx$na.action
     if(method=="model.frame") return(X)
     Terms <- atrx$terms
@@ -39,7 +40,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
     atr <- atrx$Design
 
     Y <- model.extract(X, 'response')
-    offs <- model.offset(X)
+    offs <- atrx$offset
     if(!length(offs)) offs <- 0
     weights <- wt <- model.extract(X, 'weights')
     if(length(weights))
@@ -170,7 +171,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
                  scale.pred=c("log odds","Odds Ratio"),
                  terms=Terms, assign=ass, na.action=nact, fail=FALSE,
                  interceptRef=1,
-                 nstrata=nstrata))
+                 nstrata=nstrata, sformula=sformula))
   
   class(f) <- c("lrm","rms","glm")
   f
