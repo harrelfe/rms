@@ -37,11 +37,14 @@ cbind(coef(a), coef(b))
 
 nd <- data.frame(x1=1, x2=1.5, N=c(1, 1000))
 cbind(predict(a, nd), predict(b, nd))
+Predict(a, x1=1, x2=1.5, offset=list(N=1000))
+
 
 ## Try with lm and ols
 a <- ols(form)
 b <- lm(form)
 cbind(coef(a), coef(b))
 cbind(predict(a, nd), predict(b, nd))
+Predict(a, x1=1, x2=1.5, offset=list(N=1000))
 cbind(fitted(a), fitted(b))
 cbind(resid(a), resid(b))

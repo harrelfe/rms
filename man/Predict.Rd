@@ -51,7 +51,8 @@ Predict(x, ..., fun,
         conf.type = c("mean", "individual","simultaneous"),
         usebootcoef=TRUE, boot.type=c("percentile","bca","basic"),
         adj.zero = FALSE, ref.zero = FALSE,
-        kint=NULL, time = NULL, loglog = FALSE, digits=4, name, factors=NULL)
+        kint=NULL, time = NULL, loglog = FALSE, digits=4, name,
+        factors=NULL, offset=NULL)
 
 \method{print}{Predict}(x, \dots)
 
@@ -168,8 +169,11 @@ Predict(x, ..., fun,
 	an alternate way of specifying \dots, mainly for use by
 	\code{survplot} or \code{gendata}.  This must be a list with one or
 	more values for each variable listed, with \code{NA} values for
-	default ranges.
-	}
+	default ranges.}
+  \item{offset}{a list containing one value for one variable, which is
+		mandatory if the model included an offset term.  The variable name
+		must match the innermost variable name in the offset term.  The
+		single offset is added to all predicted values.}
   \item{rename}{
 	If you are concatenating predictor sets using \code{rbind} and one
 	or more of the variables were renamed for one or more of the sets,
@@ -319,6 +323,10 @@ smean <- function(yhat)smearingEst(yhat, exp, res, statistic='mean')
 formals(smean) <- list(yhat=numeric(0), res=r[!is.na(r)])
 #smean$res <- r[!is.na(r)]   # define default res argument to function
 Predict(f, x1, fun=smean)
+
+## Example using offset
+g <- Glm(Y ~ offset(log(N)) + x1 + x2, family=poisson)
+Predict(g, offset=list(N=100))
 }
 options(datadist=NULL)
 }

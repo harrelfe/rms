@@ -8,8 +8,10 @@ validate.Rq <-
   rqfit <-
     if(bw) function(x, y, ...) {  # need covariance matrix
       if(length(colnames(x)) && colnames(x)[1]=='Intercept')
-        x <- x[,-1]
-      w <- Rq(y ~ x, tau=fit$tau, method=fit$method, se=fit$se, hs=fit$hs)
+        x <- x[, -1, drop=FALSE]
+      
+      w <- Rq(if(length(x)) y ~ x else y ~ 1,
+              tau=fit$tau, method=fit$method, se=fit$se, hs=fit$hs)
       w$fail <- FALSE
       w
     }
@@ -40,7 +42,8 @@ validate.Rq <-
           slope     <- cof[2]
         }
       }
-      z <- c(mad, cor(x, y, method='spearman'),
+
+      z <- c(mad, if(diff(range(x)) > 0) cor(x, y, method='spearman') else 0,
              GiniMd(slope*x), intercept, slope)
       nam <- c("MAD", "rho", "g", "Intercept", "Slope")
       if(length(u)) {

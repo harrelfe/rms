@@ -92,8 +92,6 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   ## e.g. rcs(x,knots) -> want x only
   ## Note: these exclude interaction terms and %ia% terms
   
-  
-
   factors <- attr(Terms, "factors")
   if(length(factors) && response.pres) factors <- factors[-1, , drop=FALSE]
 
@@ -127,11 +125,9 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   options(Design.attr=NULL, TEMPORARY=FALSE)
   ##Used internally by asis, rcs, ...
 
-#  anyfactors <- ncol(mf) > 1 * response.pres
   anyfactors <- length(coluse) > 0
   i1.noia <- 0
-  if(anyfactors) for(i in setdiff(coluse, 1 * response.pres)) {
-                     #(response.pres + 1) : ncol(mf)) {
+  if(anyfactors) for(i in coluse) {
     if(i  != wts) {
       i1 <- i - response.pres
       xi <- mf[[i]]

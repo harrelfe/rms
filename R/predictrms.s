@@ -59,9 +59,14 @@ predictrms <-
   on.exit({options(contrasts=oldopts$contrasts)
            options(Design.attr=NULL)})
 
-  offset <- model.offset(model.frame(removeFormulaTerms(fit$sformula,
-                         delete.response=TRUE), newdata,
-                                     na.action=na.action, ...))
+  offset <- 0
+  if(! missing(newdata) && length(newdata)) {
+    offset <- model.offset(model.frame(removeFormulaTerms(fit$sformula,
+                   delete.response=TRUE), newdata,
+                   na.action=na.action, ...))
+    offpres <- length(offset) > 0
+    if(! offpres) offset <- 0
+  }
   ## formula after removing offset terms and dependent var.
   formulano <- removeFormulaTerms(fit$sformula, which='offset',
                                   delete.response=TRUE)
@@ -296,7 +301,7 @@ predictrms <-
       names(xb) <- rnam
     }
     else {
-      xb <- if(length(off)) offset else numeric(0)
+      xb <- if(offpres) offset else numeric(0)
       if(nstrata > 0) attr(xb, 'strata') <- naresid(naa, strata)
       return(structure(if(se.fit)
                        list(linear.predictors=xb,

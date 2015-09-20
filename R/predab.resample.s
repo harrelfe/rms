@@ -304,7 +304,7 @@ predab.resample <-
         assign[[z]] <- assign[[z]] - (non.slopes - ni)
       f$assign <- assign
       attr(f, "class") <- clf
-      if(!bw) {
+      if(! bw) {
         coef <- f$coef
         col.kept <- seq(along=coef)
       }
@@ -316,8 +316,8 @@ predab.resample <-
         
         varin[j + 1, f$factors.kept] <- TRUE
         col.kept <- f$parms.kept
-              
-        if(!length(col.kept))
+
+        if(! length(col.kept))
           f <- tryCatch(fit(NULL, y[train,, drop=FALSE], stra=stra[xtrain],
                             iter=i, tol=tol,...), error=efit)
         else {

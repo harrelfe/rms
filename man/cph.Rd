@@ -346,7 +346,7 @@ f <- cph(S ~ age + strat(sex), surv=TRUE)
 g <- Survival(f)   # g is a function
 g(seq(.1,1,by=.1), stratum="sex=Male", type="poly") #could use stratum=2
 med <- Quantile(f)
-ggplot(Predict(f, age, fun=function(x) med(lp=x)))  #plot median survival
+plot(Predict(f, age, fun=function(x) med(lp=x)))  #plot median survival
 
 # Fit a model that is quadratic in age, interacting with sex as strata
 # Compare standard errors of linear predictor values with those from

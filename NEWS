@@ -1,4 +1,4 @@
-Changes in version 4.4-0 (2015-09-30)
+Changes in version 4.4-0 (2015-09-20)
    * contrast.rms: made SE a vector not a matrix, added 4 list logic for nvary, added new test from JoAnn Alvarez
 	 * plot.summary.rms: correct bug where pch was ignored.  Thanks: Tamas Ferenci
 	 * prModFit: fix print(fit, latex=FALSE) when fit is result of robcov, bootcov
@@ -9,6 +9,7 @@ Changes in version 4.4-0 (2015-09-30)
 	 * cph, predictrms, rms, rms.trans, rmsMisc: changed Design function to return new objects sformula (formula without cluster()) and mmcolnames which provides a new way to get rid of strat() main effects and interactions involving non-reference cells; handle offsets in cph and predict() (not yet in Predict); new internal function removeFormulaTerms that does character manipulation to remove terms like cluster() or offset() or the dependent variable(s).  This gets around the problem with [.terms messing up offset terms when you subset on non-offset terms
 	 * Glm, ols: fixed offset
 	 * bj, Gls, lrm, orm, psm, Rq: change to new offset method and sformula
+	 * Predict: added offset=list(offsetvariable=value)
 
 Changes in version 4.3-1 (2015-04-20)
    * NAMESPACE: removed reference to gridExtra, in DESCRIPTION moved gridExtra from Depends to Suggests

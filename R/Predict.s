@@ -6,7 +6,8 @@ Predict <-
            conf.type=c('mean', 'individual', 'simultaneous'),
            usebootcoef=TRUE, boot.type=c('percentile', 'bca', 'basic'),
            adj.zero=FALSE, ref.zero=FALSE,
-           kint=NULL, time=NULL, loglog=FALSE, digits=4, name, factors=NULL)
+           kint=NULL, time=NULL, loglog=FALSE, digits=4, name, factors=NULL,
+           offset=NULL)
 {
 
   fit       <- x
@@ -22,7 +23,20 @@ Predict <-
   at      <- fit$Design
   assume  <- at$assume.code
   name    <- at$name	##interactions are placed at end by design
-  
+
+  ioff <- attr(fit$terms, 'offset')
+  if(length(ioff)) {
+    offsetExpression <- rownames(attr(fit$terms, 'factors'))[ioff]
+    offsetVariableName <- all.vars(as.formula(paste('~', offsetExpression)))
+    if(! length(offset))
+      stop('model has offset term but offset=list(...) not given to Predict')
+    if(length(offset) > 1) stop('offset may only contain one variable')
+    if(length(offset[[1]]) != 1) stop('offset variable must contain 1 value')
+    if(names(offset) != offsetVariableName)
+      stop(paste('offset does not have correct variable name (',
+                 offsetVariableName, ')', sep=''))
+  }
+    
   if('time' %in% name) {
     dotlist$time <- time
     time <- NULL
@@ -134,6 +148,7 @@ Predict <-
   if(prod(sapply(settings,length)) > 1e5)
     stop('it is not sensible to predict more than 100,000 combinations')
   settings <- expand.grid(settings)
+  if(length(ioff)) settings[[offsetVariableName]] <- offset[[1]]
   adjust <- NULL
   for(n in name[assume != 9L & name %nin% fnam])
     adjust <- paste(adjust, n, "=", 
