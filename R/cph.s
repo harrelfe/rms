@@ -35,7 +35,7 @@ cph <- function(formula     = formula(data),
   
   m[[1]] <- as.name("model.frame")
 
-  if (!inherits(formula,"formula")) {
+  if (! inherits(formula,"formula")) {
     ## I allow a formula with no right hand side
     ## The dummy function stops an annoying warning message "Looking for
     ##  'formula' of mode function, ignored one of mode ..."
@@ -52,11 +52,11 @@ cph <- function(formula     = formula(data),
   Strata <- NULL
 
 
-  if(!missing(data) ||
+  if(! missing(data) ||
      (length(z <- attr(terms(formula, allowDotAsName=TRUE), "term.labels")) > 0
-      && any(z!="."))) { #X's present
+      && any(z !="."))) { #X's present
     dul <- .Options$drop.unused.levels
-    if(!length(dul) || dul) {
+    if(! length(dul) || dul) {
       on.exit(options(drop.unused.levels=dul))
       options(drop.unused.levels=FALSE)
     }
@@ -147,7 +147,7 @@ cph <- function(formula     = formula(data),
     if(! inherits(Y,"Surv"))
       stop("response variable should be a Surv object")
     
-    Y <- Y[!is.na(Y)]
+    Y <- Y[! is.na(Y)]
     assign  <- NULL
     xpres   <- FALSE
     nullmod <- TRUE
@@ -225,7 +225,7 @@ cph <- function(formula     = formula(data),
     ## Terry gets a little tricky here, calling resid before adding
     ## na.action method to avoid re-inserting NAs.  Also makes sure
     ## X and Y are there
-    if(!length(cluster)) cluster <- FALSE
+    if(! length(cluster)) cluster <- FALSE
     
     fit2 <- c(f, list(x=X, y=Y, weights=weights, method=method))
     if(length(stra)) fit2$strata <- Strata
@@ -239,7 +239,7 @@ cph <- function(formula     = formula(data),
 
   ev <- factor(Y[,ny], levels=0 : 1, labels=c("No Event", "Event"))
   n.table <- {
-    if(!length(Strata)) table(ev, dnn='Status')
+    if(! length(Strata)) table(ev, dnn='Status')
     else table(Strata, ev, dnn=c('Stratum', 'Status'))
   }
   f$n <- n.table
@@ -301,7 +301,7 @@ cph <- function(formula     = formula(data),
     timepts <- seq(0, maxtime, by=time.inc)
     s.sum <- array(double(1),
                    c(length(timepts), nstr, 3),
-                   list(format(timepts), paste("Stratum", 1:nstr),
+                   list(format(timepts), paste("Stratum", 1 : nstr),
                         c("Survival", "n.risk", "std.err")))
     g <- list(n=sum(f$n),
               coefficients=f$coefficients,
@@ -347,7 +347,7 @@ cph <- function(formula     = formula(data),
         s.sum[kk, k, 1:3] <- c(Su, n.risk, Se)
       }
       
-      if(!is.character(surv)) {
+      if(! is.character(surv)) {
         if(nstr==1) {
           tim  <- tt
           srv  <- su
@@ -405,7 +405,7 @@ coxphFit <- function(..., method, strata=NULL, rownames=NULL, offset=NULL,
 }
 
 Survival.cph <- function(object, ...) {
-  if(!length(object$time) || !length(object$surv))
+  if(! length(object$time) || ! length(object$surv))
     stop("did not specify surv=T with cph")
   f <- function(times, lp=0, stratum=1, type=c("step","polygon"),
                 time, surv) {
@@ -439,7 +439,7 @@ Survival.cph <- function(object, ...) {
 }
 
 Quantile.cph <- function(object, ...) {
-  if(!length(object$time) || !length(object$surv))
+  if(! length(object$time) || ! length(object$surv))
     stop("did not specify surv=T with cph")
   f <- function(q=.5, lp=0, stratum=1, type=c("step","polygon"), time, surv) {
     type <- match.arg(type)
@@ -467,7 +467,7 @@ Mean.cph <- function(object, method=c("exact","approximate"),
   method <- match.arg(method)
   type   <- match.arg(type)
   
-  if(!length(object$time) || !length(object$surv))
+  if(! length(object$time) || ! length(object$surv))
     stop("did not specify surv=TRUE with cph")
   
   if(method == "exact") {
@@ -477,7 +477,7 @@ Mean.cph <- function(object, method=c("exact","approximate"),
       if(length(stratum) > 1) stop("does not handle vector stratum")
       if(is.list(time)) {time <- time[[stratum]]; surv <- surv[[stratum]]}
       Q <- lp
-      if(!length(tmax)) {
+      if(! length(tmax)) {
         if(min(surv) > 1e-3)
           warning(paste("Computing mean when survival curve only defined down to",
                         format(min(surv)), "\n Mean is only a lower limit"))
@@ -514,7 +514,7 @@ Mean.cph <- function(object, method=c("exact","approximate"),
     for(is in 1:nstrat) {
       tim <- if(nstrat==1) time else time[[is]]
       srv <- if(nstrat==1) surv else surv[[is]]
-      if(!length(tmax)) {
+      if(! length(tmax)) {
         if(min(srv) > 1e-3)
           warning(paste("Computing mean when survival curve only defined down to",
                         format(min(srv)),
@@ -537,7 +537,7 @@ Mean.cph <- function(object, method=c("exact","approximate"),
     }
     if(nstrat > 1) names(areas) <- names(time)
 
-    f <- function(lp=0, stratum=1, lp.seq, areas) {
+    ff <- function(lp=0, stratum=1, lp.seq, areas) {
       
       if(length(stratum) > 1) stop("does not handle vector stratum")
       area <- areas[[stratum]]
@@ -549,9 +549,9 @@ Mean.cph <- function(object, method=c("exact","approximate"),
       names(ymean) <- names(lp)
       ymean
     }
-    formals(f) <- list(lp=0, stratum=1, lp.seq=lp.seq, areas=areas)
+    formals(ff) <- list(lp=0, stratum=1, lp.seq=lp.seq, areas=areas)
   }
-  f
+  ff
 }
 
 predict.cph <- function(object, newdata=NULL,

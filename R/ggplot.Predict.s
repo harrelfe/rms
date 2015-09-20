@@ -100,13 +100,13 @@ ggplot.Predict <-
   sub <- if(adj.subtitle && length(adjust)==1)
            paste('Adjusted to:', adjust, sep='') else NULL
   
-  if(length(anova)) {
-    stat   <- plotmathAnova(anova, pval)
-    tanova <- function(name, x, y, xlim, ylim, flip=FALSE,
-                       empty=FALSE, dataOnly=FALSE)
-      annotateAnova(name, stat, x, y, ggplot=TRUE, xlim=xlim, ylim=ylim,
+  tanova <- if(length(anova))
+    function(name, x, y, xlim, ylim, flip=FALSE,
+             empty=FALSE, dataOnly=FALSE)
+      annotateAnova(name, plotmathAnova(anova, pval),
+                    x, y, ggplot=TRUE, xlim=xlim, ylim=ylim,
                     size=size.anova, flip=flip, empty=empty, dataOnly=dataOnly)
-  } else tanova <- function(...) {}
+    else function(...) {}
 
   ## See http://bigdata-analyst.com/best-way-to-add-a-footnote-to-a-plot-created-with-ggplot2.html
   ## size is in mm

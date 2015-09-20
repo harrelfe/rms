@@ -68,12 +68,10 @@ plot.Predict <-
   oldopt <- options(digits=digits)
   on.exit(options(oldopt))
 
-  if(length(anova)) {
-    stat   <- plotmathAnova(anova, pval)
-    tanova <- function(name, x, y)
-      annotateAnova(name, stat, x, y, cex=cex.anova)
-  }
-  else tanova <- function(...) {}
+  tanova <- if(length(anova))
+    function(name, x, y)
+      annotateAnova(name, plotmathAnova(anova, pval), x, y, cex=cex.anova)
+  else function(...) {}
     
   if(predpres) {
     if(! missing(formula))
@@ -121,7 +119,7 @@ plot.Predict <-
       Cbind(x$yhat, x$lower, x$upper) ~ xp | p
     }
     
-    pan <- function(x, y, ...) {
+    panpred <- function(x, y, ...) {
       pn <- lattice::panel.number()
       lev    <- levs[[pn]]
       col <- lattice::trellis.par.get('superpose.line')$col
@@ -164,7 +162,7 @@ plot.Predict <-
               'filled bands' else 'bars',
               col.fill=col.fill,
               xlab='', ylab=ylab, ylim=ylim,
-              panel=pan, scales=scaletrans(scales),
+              panel=panpred, scales=scaletrans(scales),
               between=list(x=.5))
     if(length(dotlist)) r <- c(r, dotlist)
     if(length(sub   )) r$sub    <- sub
@@ -258,7 +256,7 @@ plot.Predict <-
       }
 
       ## Continuing: no predpres case
-      pan <- function(x, y, groups=NULL, subscripts, ...) {
+      pannopred <- function(x, y, groups=NULL, subscripts, ...) {
         ogroups <- groups
         if(length(groups)) groups <- groups[subscripts]
         yy <- y
@@ -318,7 +316,7 @@ plot.Predict <-
                 method=if(conf.int & (!length(type) || type!='p'))
                        'filled bands' else 'bars',
                 col.fill=col.fill,
-                xlab=xlab, ylab=ylab, ylim=ylim, panel=pan,
+                xlab=xlab, ylab=ylab, ylim=ylim, panel=pannopred,
                 between=list(x=.5))
       scales <- NULL
       if(length(xscale)) scales <- xscale
@@ -340,26 +338,27 @@ pantext <- function(object, x, y, cex=.5, adj=0,
   k <- paste(capture.output(object), collapse='\n')
   fam <- fontfamily
   if(lattice) {
-    z <- 
+    za <- 
       function(x, y, ..., xx, yy, text, cex, adj, family)
         lattice::ltext(xx, yy, text, cex=cex, adj=adj, fontfamily=family)
-    formals(z) <-
+    formals(za) <-
       eval(substitute(alist(x=, y=, ...=, xx=xx, yy=yy, text=k,
                             cex=cex, adj=adj, family=fam),
                       list(xx=x, yy=y, k=k, cex=cex, adj=adj,
                            fam=fam)))
+    za
   }
   else {
-    z <-
+    zb <-
       function(x, y, text, cex, adj, family, ...)
         text(x, y, text, adj=adj, cex=cex, family=family, ...)
-    formals(z) <-
+    formals(zb) <-
       eval(substitute(alist(x=x, y=y, text=k,
                             cex=cex, adj=adj, family=fam, ...=),
                       list(x=x, y=y, k=k, cex=cex, adj=adj,
                            fam=fam)))
+    zb
   }
-  z
 }
 
 plotmathAnova <- function(anova, pval) {

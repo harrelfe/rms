@@ -1073,22 +1073,22 @@ setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
   if(pbo == 'none') return(function(i, ...){invisible()})
   if(pbo == 'tk' && usetk && requireNamespace('tcltk', quietly=TRUE)) {
     pb <- tcltk::tkProgressBar(type, 'Iteration: ', 0, n)
-    upb <- function(i, n, every, pb) {
+    upb1 <- function(i, n, every, pb) {
       if(i %% every == 0)
         tcltk::setTkProgressBar(pb, i, label=sprintf('Iteration: %d', i))
       if(i == n) close(pb)
     }
-    formals(upb) <- list(i=0, n=n, every=every, pb=pb)
-    return(upb)
+    formals(upb1) <- list(i=0, n=n, every=every, pb=pb)
+    return(upb1)
   }
   if(onlytk) return(function(...) {invisible()})
-  upb <- function(i, n, every) {
+  upb2 <- function(i, n, every) {
     if(i %% every == 0)
       cat('Iteration: ', i, ' of ', n, '\r', sep='')
     if(i == n) cat('\n')
   }
-  formals(upb) <- list(i=0, n=n, every=every)
-  upb
+  formals(upb2) <- list(i=0, n=n, every=every)
+  upb2
 }
 
 ## Function to remove one or more terms from a model formula, using
