@@ -1,4 +1,4 @@
-Changes in version 4.4-0 (2015-09-27)
+gChanges in version 4.4-0 (2015-09-27)
    * contrast.rms: made SE a vector not a matrix, added 4 list logic for nvary, added new test from JoAnn Alvarez
 	 * plot.summary.rms: correct bug where pch was ignored.  Thanks: Tamas Ferenci
 	 * prModFit: fix print(fit, latex=FALSE) when fit is result of robcov, bootcov
