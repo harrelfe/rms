@@ -225,7 +225,7 @@ f.harrell@vanderbilt.edu
   \code{\link[ggplot2]{ggplot}}, \code{\link[Hmisc]{Overview}}
 }
 \examples{
-n <- 500     # define sample size
+n <- 350     # define sample size
 set.seed(17) # so can reproduce the results
 age            <- rnorm(n, 50, 10)
 blood.pressure <- rnorm(n, 120, 15)
@@ -392,7 +392,7 @@ tapply(anxiety, llist(gender,m), mean)
 f <- ols(anxiety ~ gender*m)
 p <- Predict(f, gender, m)
 # ggplot(p)     # horizontal dot chart; usually preferred for categorical predictors
-ggplot(p, flipxdiscrete=FALSE)  # back to vertical
+# ggplot(p, flipxdiscrete=FALSE)  # back to vertical
 ggplot(p, groups='gender')
 ggplot(p, ~ m, groups=FALSE, flipxdiscrete=FALSE)
 
