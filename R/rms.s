@@ -38,17 +38,17 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   ## rid of interaction terms involving non-reference values
 
   mmnames <- function(assume.code, rmstrans.names, term.label) {
-    ## Alternate names to try - handles case where model is fitted on a
-    ## previous fit$x matrix
-    alt <- if(assume.code == 10) paste(term.label, rmstrans.names, sep='')
-    ## mmat=TRUE is for a special case where the model is fitted on a fit$x
-    ## matrix object from a previous fit
+    ## prn(assume.code); prn(rmstrans.names); prn(term.label)
     w <- if(assume.code == 1) term.label
     else if(assume.code == 5) gsub('=', '', rmstrans.names)
     else if(assume.code == 8)
       paste(term.label, gsub('.*=', '', rmstrans.names), sep='')
     else if(assume.code == 10) gsub('\\[', '', gsub('\\]', '', rmstrans.names))
     else paste(term.label, rmstrans.names, sep='')
+    alt <- if(assume.code == 10) paste(term.label, rmstrans.names, sep='')
+    else w
+    ## Alternate names to try - handles case where model is fitted on a
+    ## previous fit$x matrix
     attr(w, 'alt') <- alt
     w
   }
@@ -116,7 +116,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   parm <- nonlinear <- limits <- values <- list()
 
   scol      <- 1
-  colnam    <- mmcolnam <- list()
+  colnam    <- mmcolnam <- mmcolnamalt <- list()
   Altcolnam <- NULL
 
   XDATADIST <- .Options$datadist
@@ -176,8 +176,10 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         asm <- c(asm, za)
         colnam[[i1]] <- z$colnames
         mmn <- mmnames(za, colnam[[i1]], Term.labels[i1])
-        if(length(alt <- attr(mmn, 'alt'))) Altcolnam <- alt
         mmcolnam[[i1]] <- mmn
+        alt <- attr(mmn, 'alt')
+        mmcolnamalt[[i1]] <- alt
+        Altcolnam <- c(Altcolnam, alt)
         if(za != 8 && length(colnam)) {
           name   <- c(name, colnam[[i1]])
           mmname <- c(mmname, mmcolnam[[i1]])
@@ -248,25 +250,26 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         flabel <- c(flabel, ialab)
         if(sum(asm[jf] == 8) > 1)
           stop("cannot have interaction between two strata factors")
-        nn <- mmnn <- list()
+        nn <- mmnn <- mmnnalt <- list()
         for(k in 1 : nia) {
           if(asm[jf[k]] == 5 | asm[jf[k]] == 8)
             nn[[k]] <- paste(fn[k], "=", parm[[fname[jf[k]]]][-1], sep="")
-	      else if(asm[jf[k]] == 7) {
+          else if(asm[jf[k]] == 7) {
             nn[[k]] <- c(fn[k],
                          paste(fn[k], "=",
                                parm[[fname[jf[k]]]][c(-1, -2)], sep=""))
           }
-	      else nn[[k]] <- colnam[[jf[k]]]
-          mmnn[[k]]  <- mmcolnam[[jf[k]]]
-      }
-      if(nia == 2) {nn[[3]] <- mmnn[[3]] <- ""}
-      parms <- jf
-      if(length(jf) == 2) parms <- c(parms, 0)
-      nonlin <- NULL
-      nl1 <- nonlinear[[fname[jf[1]]]]
+          else nn[[k]] <- colnam[[jf[k]]]
+          mmnn[[k]]    <- mmcolnam[[jf[k]]]
+          mmnnalt[[k]] <- mmcolnamalt[[jf[k]]]
+        }
+        if(nia == 2) {nn[[3]] <- mmnn[[3]] <- mmnnalt[[3]] <- ""}
+        parms <- jf
+        if(length(jf) == 2) parms <- c(parms, 0)
+        nonlin <- NULL
+        nl1 <- nonlinear[[fname[jf[1]]]]
         nl2 <- nonlinear[[fname[jf[2]]]]
-        ##Strata factors don't have nonlinear duplicated for # levels - 1
+        ## Strata factors don't have nonlinear duplicated for # levels - 1
         if(asm[jf[1]] == 8)
           nl1 <- rep(FALSE, length(parm[[fname[jf[1]]]]) - 1)
         if(asm[jf[2]] == 8)
@@ -275,15 +278,18 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         else if(asm[jf[3]] == 8)
           nl3 <- rep(FALSE, length(parm[[fname[jf[3]]]]) - 1)
         else nl3 <- nonlinear[[fname[jf[3]]]]
-      n1 <- nn[[1]]
+        n1 <- nn[[1]]
         n2 <- nn[[2]]
-      n3 <- nn[[3]]
-      mmn1 <- mmnn[[1]]
-      mmn2 <- mmnn[[2]]
-      mmn3 <- mmnn[[3]]
-      
-      ## model.matrix makes auto-products move first variable fastest, etc.
-      for(j3 in 1 : length(n3)) {
+        n3 <- nn[[3]]
+        mmn1 <- mmnn[[1]]
+        mmn2 <- mmnn[[2]]
+        mmn3 <- mmnn[[3]]
+        mmnalt1 <- mmnnalt[[1]]
+        mmnalt2 <- mmnnalt[[2]]
+        mmnalt3 <- mmnnalt[[3]]
+        
+        ## model.matrix makes auto-products move first variable fastest, etc.
+        for(j3 in 1 : length(n3)) {
           for(j2 in 1 : length(n2)) {
             for(j1 in 1 : length(n1)) {
               parms <- cbind(parms, c(nl1[j1], nl2[j2], nl3[j3]))
@@ -295,6 +301,11 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
                           if(nia == 2) paste(mmn1[j1], ':', mmn2[j2], sep='')
                           else paste(mmn1[j1], ':', mmn2[j2], ':', mmn3[j3],
                                      sep=''))
+              Altcolnam <- c(Altcolnam,
+                             if(nia == 2) paste(mmnalt1[j1], ':', mmnalt2[j2],
+                                  sep='')
+                             else paste(mmnalt1[j1], ':', mmnalt2[j2], ':',
+                                        mmnalt3[j3], sep=''))
             }
           }
         }
@@ -334,7 +345,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     if(length(funits) != sum(asm != 9)) warning('program logic warning 1')
     else names(funits) <- fname[asm != 9]
 
-    attr(mmname, 'alt') <- Altcolnam
+    attr(mmname, 'alt') <- if(! all(Altcolnam == mmname)) Altcolnam
     atr <- list(name=fname, label=flabel, units=funits,
                 colnames=name, mmcolnames=mmname,
                 assume=c("asis", "polynomial", "lspline", "rcspline",

@@ -134,8 +134,9 @@ cph <- function(formula     = formula(data),
     else {
       X <- model.matrix(sformula, X)
       ## Handle special case where model was fitted using previous fit$x
-      if(! all(mmcolnames %in% colnames(X)))
-        mmcolnames <- attr(mmcolnames, 'alt')
+      alt <- attr(mmcolnames, 'alt')
+      if(! all(mmcolnames %in% colnames(X)) && length(alt))
+        mmcolnames <- alt
       X <- X[, mmcolnames, drop=FALSE]
       assign <- attr(X, "assign")
       assign[[1]] <- NULL  # remove intercept position, renumber
