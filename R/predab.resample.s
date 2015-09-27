@@ -283,7 +283,6 @@ predab.resample <-
     ni <- num.intercepts(f)
     
     fail <- f$fail
-    if(fail){browser();stop()}
     if(! fail) {
       ## Following if..stop was before f$assign above
       if(! allow.varying.intercepts && ni != non.slopes) {
