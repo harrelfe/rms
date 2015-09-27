@@ -24,7 +24,7 @@ ggplot.Predict <-
   sepdiscrete <- match.arg(sepdiscrete)
   class(data) <- setdiff(class(data), 'Predict')
   ## so won't involve ggplot.Predict
-  
+
   if(varypred) {
     data$.predictor. <- data$.set.
     data$.set. <- NULL
@@ -119,6 +119,8 @@ ggplot.Predict <-
 
     if(sepdiscrete != 'no') {
       ## From http://stackoverflow.com/questions/11979017/changing-facet-label-to-math-formula-in-ggplot2
+      ## Changed to assume that each element of labels is a character string
+      ## of the form "expression(....)"
       facet_wrap_labeller <- function(gg.plot, labels=NULL) {
         ## Uses functions from gridExtra
         g <- ggplotGrob(gg.plot)
@@ -128,10 +130,10 @@ ggplot.Predict <-
           modgrob <- grid::getGrob(gg[[strips[ii]]], "strip.text", 
                                    grep=TRUE, global=TRUE)
           gg[[strips[ii]]]$children[[modgrob$name]] <-
-            grid::editGrob(modgrob,label=labels[ii])
+            grid::editGrob(modgrob,label=eval(parse(text=labels[ii])))
         }
         g$grobs <- gg
-        class(g) = c("arrange", "ggplot", class(g))
+#        class(g) = c("arrange", "ggplot", class(g))
         g
       }
       
@@ -183,9 +185,9 @@ ggplot.Predict <-
           
           g <- c(g, if(length(layout))
                       sprintf("facet_wrap(~ .predictor., scales='free_x',
-                                ncol=%s)", layout[2]) else
-                 "facet_wrap(~ .predictor., scales='free_x')",
-                 "geom_line()")
+                                ncol=%s)",
+                              layout[2]) else
+                 "facet_wrap(~ .predictor., scales='free_x')", "geom_line()")
           if(conf.int) {
             h <- 
               if(conf == 'fill')
@@ -280,8 +282,7 @@ ggplot.Predict <-
         g <- paste(g, collapse=' + ')
         if(ggexpr) return(g)
         g <- eval(parse(text = g))
-        if(vnames == 'labels')
-          g <- facet_wrap_labeller(g, eval(parse(text=pmlabel[v])))
+        if(vnames == 'labels') g <- facet_wrap_labeller(g, pmlabel[v])
         g
       }
       
