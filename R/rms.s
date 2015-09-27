@@ -179,10 +179,10 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         mmcolnam[[i1]] <- mmn
         alt <- attr(mmn, 'alt')
         mmcolnamalt[[i1]] <- alt
-        Altcolnam <- c(Altcolnam, alt)
         if(za != 8 && length(colnam)) {
           name   <- c(name, colnam[[i1]])
           mmname <- c(mmname, mmcolnam[[i1]])
+          Altcolnam <- c(Altcolnam, alt)
         }
         if(za != 9) {
           funits <- c(funits, if(length(z$units))z$units else '')
