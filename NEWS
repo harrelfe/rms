@@ -13,6 +13,8 @@ gChanges in version 4.4-0 (2015-09-27)
 	 * several: made temporary function names unique to avoid warnings with R CMD CHECK
 	 * ggplot.Predict: changed facet_wrap_labeller to not mess with class of returned object from ggplotGrob
 	 * Design: fixed column names for matrix predictors
+	 * Design, cph: handled special case where model is fit on a fit$x matrix
+	 * dxy.cens: exported
 
 Changes in version 4.3-1 (2015-04-20)
    * NAMESPACE: removed reference to gridExtra, in DESCRIPTION moved gridExtra from Depends to Suggests

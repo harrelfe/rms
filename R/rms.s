@@ -38,12 +38,19 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   ## rid of interaction terms involving non-reference values
 
   mmnames <- function(assume.code, rmstrans.names, term.label) {
-    if(assume.code == 1) term.label
+    ## Alternate names to try - handles case where model is fitted on a
+    ## previous fit$x matrix
+    alt <- if(assume.code == 10) paste(term.label, rmstrans.names, sep='')
+    ## mmat=TRUE is for a special case where the model is fitted on a fit$x
+    ## matrix object from a previous fit
+    w <- if(assume.code == 1) term.label
     else if(assume.code == 5) gsub('=', '', rmstrans.names)
     else if(assume.code == 8)
       paste(term.label, gsub('.*=', '', rmstrans.names), sep='')
     else if(assume.code == 10) gsub('\\[', '', gsub('\\]', '', rmstrans.names))
     else paste(term.label, rmstrans.names, sep='')
+    attr(w, 'alt') <- alt
+    w
   }
 
   offs <- model.offset(mf)
@@ -108,8 +115,9 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     fname.incl.dup <- ia <- funits <- NULL
   parm <- nonlinear <- limits <- values <- list()
 
-  scol<-1
-  colnam <- mmcolnam <- list()
+  scol      <- 1
+  colnam    <- mmcolnam <- list()
+  Altcolnam <- NULL
 
   XDATADIST <- .Options$datadist
   if(length(XDATADIST)) {
@@ -167,7 +175,9 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         flabel <- c(flabel, z$label)
         asm <- c(asm, za)
         colnam[[i1]] <- z$colnames
-        mmcolnam[[i1]] <- mmnames(za, colnam[[i1]], Term.labels[i1])
+        mmn <- mmnames(za, colnam[[i1]], Term.labels[i1])
+        if(length(alt <- attr(mmn, 'alt'))) Altcolnam <- alt
+        mmcolnam[[i1]] <- mmn
         if(za != 8 && length(colnam)) {
           name   <- c(name, colnam[[i1]])
           mmname <- c(mmname, mmcolnam[[i1]])
@@ -248,9 +258,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
                                parm[[fname[jf[k]]]][c(-1, -2)], sep=""))
           }
 	      else nn[[k]] <- colnam[[jf[k]]]
-#        mmnn[[k]] <- mmnames(asm[jf[k]], mmcolnam[[jf[k]]],
-#                             Term.labels[jf[k] + response.pres])
-          mmnn[[k]] <- mmcolnam[[jf[k]]]
+          mmnn[[k]]  <- mmcolnam[[jf[k]]]
       }
       if(nia == 2) {nn[[3]] <- mmnn[[3]] <- ""}
       parms <- jf
@@ -326,6 +334,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     if(length(funits) != sum(asm != 9)) warning('program logic warning 1')
     else names(funits) <- fname[asm != 9]
 
+    attr(mmname, 'alt') <- Altcolnam
     atr <- list(name=fname, label=flabel, units=funits,
                 colnames=name, mmcolnames=mmname,
                 assume=c("asis", "polynomial", "lspline", "rcspline",

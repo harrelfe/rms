@@ -220,31 +220,31 @@ f.harrell@vanderbilt.edu
 }
 \examples{
 set.seed(1)
-d.time <- rexp(200)
-x1 <- runif(200)
-x2 <- factor(sample(c('a','b','c'),200,TRUE))
-f <- cph(Surv(d.time) ~ pol(x1,2)*x2, x=TRUE, y=TRUE, surv=TRUE, time.inc=2)
+n <- 200
+d.time <- rexp(n)
+x1 <- runif(n)
+x2 <- factor(sample(c('a', 'b', 'c'), n, TRUE))
+f <- cph(Surv(d.time) ~ pol(x1,2) * x2, x=TRUE, y=TRUE, surv=TRUE, time.inc=1.5)
 #or f <- psm(S ~ \dots)
 pa <- 'polspline' \%in\% row.names(installed.packages())
 if(pa) {
- cal <- calibrate(f, u=2, B=20)  # cmethod='hare'
+ cal <- calibrate(f, u=1.5, B=20)  # cmethod='hare'
  plot(cal)
 }
-cal <- calibrate(f, u=2, cmethod='KM', m=50, B=20)  # usually B=200 or 300
+cal <- calibrate(f, u=1.5, cmethod='KM', m=50, B=20)  # usually B=200 or 300
 plot(cal, add=pa)
 
-
-y <- sample(0:2, 200, TRUE)
-x1 <- runif(200)
-x2 <- runif(200)
-x3 <- runif(200)
-x4 <- runif(200)
-f <- lrm(y ~ x1+x2+x3*x4, x=TRUE, y=TRUE)
-cal <- calibrate(f, kint=2, predy=seq(.2,.8,length=60), 
+set.seed(1)
+y <- sample(0:2, n, TRUE)
+x1 <- runif(n)
+x2 <- runif(n)
+x3 <- runif(n)
+x4 <- runif(n)
+f <- lrm(y ~ x1 + x2 + x3 * x4, x=TRUE, y=TRUE)
+cal <- calibrate(f, kint=2, predy=seq(.2, .8, length=60), 
                  group=y)
 # group= does k-sample validation: make resamples have same 
 # numbers of subjects in each level of y as original sample
-
 
 plot(cal)
 #See the example for the validate function for a method of validating

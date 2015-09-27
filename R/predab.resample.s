@@ -44,16 +44,16 @@ predab.resample <-
 #      else NULL
 #    }
   x.index <- function(i, ns)
-    if(ns == 0) i else setdiff(i, 1:ns) - ns
+    if(ns == 0) i else setdiff(i, 1 : ns) - ns
   
   Xb <- function(x, b, non.slopes, n, kint=1) {
     if(length(x)) matxv(x, b, kint=kint)
-    else if(non.slopes == 0 || !length(kint)) rep(0, n)
+    else if(non.slopes == 0 || ! length(kint)) rep(0, n)
     else rep(b[kint], n)
   }
 #    if(length(x)) {
 #      if(non.slopes == 0 || non.slopes.in.x) x %*% b
-#      else b[kint] + x %*% b[-(1:non.slopes)]
+#      else b[kint] + x %*% b[-(1 : non.slopes)]
 #    }
 #    else {
 #      if(non.slopes==0) rep(0, n)
@@ -74,10 +74,10 @@ predab.resample <-
   
   if(is.factor(y)) y <- unclass(y)
 
-  if(!is.Surv(y)) y <- as.matrix(y)
+  if(! is.Surv(y))  y <- as.matrix(y)
 
   ## some subjects have multiple records now
-  multi <- !missing(cluster)
+  multi <- ! missing(cluster)
 
   if(length(group)) {
     if(multi || method != 'boot')
@@ -86,14 +86,14 @@ predab.resample <-
     if(length(group) > n) {
       ## Missing observations were deleted during fit
       if(length(nac)) 
-        j <- !is.na(naresid(nac, y) %*% rep(1, ncol(y)))
+        j <- ! is.na(naresid(nac, y) %*% rep(1, ncol(y)))
       group <- group[j]
     }
     
     if(length(group) != n)
       stop('length of group does not match # rows used in fit')
     
-    group.inds <- split(1:n, group)  # see bootstrap()
+    group.inds <- split(1 : n, group)  # see bootstrap()
     ngroup <- length(group.inds)
   }
   else ngroup <- 0
@@ -105,7 +105,7 @@ predab.resample <-
     if(length(cluster) > n) {
       ## Missing observations were deleted during fit
       if(length(nac)) {
-        j <- !is.na(naresid(nac, y) %*% rep(1, ncol(y)))
+        j <- ! is.na(naresid(nac, y) %*% rep(1, ncol(y)))
         cluster <- cluster[j]
       }
     }
@@ -117,13 +117,13 @@ predab.resample <-
       stop('cluster has NAs')
     
     n.orig <- length(unique(cluster))
-    cl.samp <- split(1:n, cluster)
+    cl.samp <- split(1 : n, cluster)
   }
   else n.orig <- n
 
-  if(!missing(subset)) {
+  if(! missing(subset)) {
     if(length(subset) > n && length(nac)) {
-      j <- !is.na(naresid(nac, y) %*% rep(1, ncol(y)))
+      j <- ! is.na(naresid(nac, y) %*% rep(1, ncol(y)))
       subset <- subset[j]
     }
     
@@ -132,7 +132,7 @@ predab.resample <-
     
     if(any(is.na(subset))) stop('subset has NAs')
     
-    if(!is.logical(subset)) {
+    if(! is.logical(subset)) {
       subset2         <- rep(FALSE, n)
       subset2[subset] <- TRUE
       subset          <- subset2
@@ -152,7 +152,7 @@ predab.resample <-
     if(prmodsel) print(fbw, estimates=estimates)
 
     orig.col.kept <- fbw$parms.kept
-    if(!length(orig.col.kept))
+    if(! length(orig.col.kept))
       stop("no variables kept in original model")
     ## Check that x.index works if allow.varying.intercepts
     
@@ -199,12 +199,12 @@ predab.resample <-
   
   ntest <- 0 #Used in getting weighted average for .632 estimator
 
-  if(method==".632") {
+  if(method == ".632") {
     ## Must do assignments ahead of time so can weight estimates
     ## according to representation in bootstrap samples
     S <- matrix(integer(1), nrow=n, ncol=B)
     W <- matrix(TRUE, nrow=n, ncol=B)
-    for(i in 1:B) {
+    for(i in 1 : B) {
       S[, i] <- s <- sample(n, replace=TRUE)
       W[s, i] <- FALSE  #now these obs are NOT omitted
     }
@@ -221,26 +221,26 @@ predab.resample <-
       print(summary(W))
     }
   }
-  pb <- setPb(B, type=if(method=='crossvalidation') 'Cross' else 'Boot',
-              onlytk=!pr,
+  pb <- setPb(B, type=if(method == 'crossvalidation') 'Cross' else 'Boot',
+              onlytk=! pr,
               every=1*(B < 20) + 5*(B >= 20 & B < 50) +
                 10*(B >= 50 & B < 100) + 20*(B >= 100 & B < 1000) +
                 50*(B >= 1000))
-  for(i in 1:B) {
+  for(i in 1 : B) {
     pb(i)
     
     switch(method,
            crossvalidation = {
              is <- 1 + round((i - 1) * per.group)
              ie <- min(n, round(is + per.group - 1))
-             test <- sb[is:ie]
+             test <- sb[is : ie]
              train <- -test
            }, #cross-val
            boot = {
              if(ngroup) {
                train <- integer(n.orig)
 
-               for(si in 1:ngroup) {
+               for(si in 1 : ngroup) {
                  gi <- group.inds[[si]]
                  lgi <- length(gi)
                  train[gi] <- if(lgi == 1) gi
@@ -255,7 +255,7 @@ predab.resample <-
                train <- sample(n.orig, replace=TRUE)
                if(multi) train <- unlist(cl.samp[train])
              }
-             test <- 1:n
+             test <- 1 : n
            },    #boot
            ".632" = {
              train <- S[, i]
@@ -264,11 +264,11 @@ predab.resample <-
            randomization =
            {
              train <- sample(n, replace=FALSE)
-             test <- 1:n
+             test <- 1 : n
            }
            )   #randomization
 
-    xtrain <- if(method=="randomization") 1:n
+    xtrain <- if(method == "randomization") 1 : n
     else train
 
     if(debug) {
@@ -277,15 +277,16 @@ predab.resample <-
       cat('\nSubscripts of test sample:\n')
       print(test)
     }
-    f <- tryCatch(fit(x[xtrain,,drop=FALSE], y[train,,drop=FALSE],
+    f <- tryCatch(fit(x[xtrain, , drop=FALSE], y[train, , drop=FALSE],
                       strata=stra[train], iter=i, tol=tol, ...), error=efit)
     f$assign <- NULL  #Some programs put a NULL assign (e.g. ols.val fit)
     ni <- num.intercepts(f)
     
     fail <- f$fail
-    if(!fail) {
+    if(fail){browser();stop()}
+    if(! fail) {
       ## Following if..stop was before f$assign above
-      if(!allow.varying.intercepts && ni != non.slopes) {
+      if(! allow.varying.intercepts && ni != non.slopes) {
         stop('A training sample has a different number of intercepts (', ni ,')\n',
              'than the original model fit (', non.slopes, ').\n',
              'You probably fit an ordinal model with sparse cells and a re-sample\n',
@@ -300,7 +301,7 @@ predab.resample <-
       assign <- oassign
       ## Slopes are shifted to the left when fewer unique values of Y
       ## occur (especially for orm models) resulting in fewer intercepts
-      if(non.slopes != ni) for(z in 1:length(assign))
+      if(non.slopes != ni) for(z in 1 : length(assign))
         assign[[z]] <- assign[[z]] - (non.slopes - ni)
       f$assign <- assign
       attr(f, "class") <- clf
@@ -332,7 +333,7 @@ predab.resample <-
       }
     }
     
-    if(!fail) {
+    if(! fail) {
       j <- j + 1
       xcol <- x.index(col.kept, ni)
       xb <- Xb(x[,xcol,drop=FALSE], coef, ni, n, kint=kint)
@@ -352,7 +353,7 @@ predab.resample <-
       else {
         ii <- xtrain
         
-        if(any(ii < 0)) ii <- (1:n)[ii]
+        if(any(ii < 0)) ii <- (1 : n)[ii]
         
         ii <- ii[subset[ii]]
         train.statj <- measure(xb[ii], y[ii,,drop=FALSE],
@@ -362,7 +363,7 @@ predab.resample <-
                                kint=kint, ...)
         
         ii <- test
-        if(any(ii < 0)) ii <- (1:n)[ii]
+        if(any(ii < 0)) ii <- (1 : n)[ii]
         
         ii <- ii[subset[ii]]
         test.statj <- measure(xb[ii], y[ii,,drop=FALSE], fit=f,
@@ -372,7 +373,7 @@ predab.resample <-
       }
       
       na <- is.na(train.statj + test.statj)
-      num <- num + !na
+      num <- num + ! na
       if(pr) 
         print(cbind(training=train.statj, test=test.statj))
       
@@ -386,7 +387,7 @@ predab.resample <-
       else wt <- 1
       
       train.stat <- train.stat + train.statj
-      test.stat <- test.stat + test.statj * wt
+      test.stat  <- test.stat  + test.statj * wt
       ntest <- ntest + 1
     } 
   }
@@ -408,7 +409,7 @@ predab.resample <-
                optimism=optimism, index.corrected=index.orig-optimism, n=num)
   
   if(bw) {
-    varin <- varin[1:j, ,drop=FALSE]
+    varin <- varin[1 : j, , drop=FALSE]
     dimnames(varin) <- list(rep("", j), name)
   }
   structure(res, class='validate', kept=if(bw) varin, keepinfo=keepinfo)
