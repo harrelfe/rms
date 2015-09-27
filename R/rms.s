@@ -42,6 +42,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     else if(assume.code == 5) gsub('=', '', rmstrans.names)
     else if(assume.code == 8)
       paste(term.label, gsub('.*=', '', rmstrans.names), sep='')
+    else if(assume.code == 10) gsub('\\[', '', gsub('\\]', '', rmstrans.names))
     else paste(term.label, rmstrans.names, sep='')
   }
 

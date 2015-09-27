@@ -1,4 +1,4 @@
-Changes in version 4.4-0 (2015-09-26)
+Changes in version 4.4-0 (2015-09-27)
    * contrast.rms: made SE a vector not a matrix, added 4 list logic for nvary, added new test from JoAnn Alvarez
 	 * plot.summary.rms: correct bug where pch was ignored.  Thanks: Tamas Ferenci
 	 * prModFit: fix print(fit, latex=FALSE) when fit is result of robcov, bootcov
@@ -12,6 +12,7 @@ Changes in version 4.4-0 (2015-09-26)
 	 * Predict: added offset=list(offsetvariable=value)
 	 * several: made temporary function names unique to avoid warnings with R CMD CHECK
 	 * ggplot.Predict: changed facet_wrap_labeller to not mess with class of returned object from ggplotGrob
+	 * Design: fixed column names for matrix predictors
 
 Changes in version 4.3-1 (2015-04-20)
    * NAMESPACE: removed reference to gridExtra, in DESCRIPTION moved gridExtra from Depends to Suggests
