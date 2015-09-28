@@ -21,6 +21,7 @@ cph <- function(formula     = formula(data),
                 time.inc,
                 type        = NULL,
                 vartype     = NULL,
+                debug       = FALSE,
                 ...)
 {
   method <- match.arg(method)
@@ -51,6 +52,8 @@ cph <- function(formula     = formula(data),
   nstrata <- 0
   Strata <- NULL
 
+  odb <- .Options$debug
+  if(length(odb) && is.logical(odb) && odb) debug <- TRUE
 
   if(! missing(data) ||
      (length(z <- attr(terms(formula, allowDotAsName=TRUE), "term.labels")) > 0
@@ -135,6 +138,7 @@ cph <- function(formula     = formula(data),
       X <- model.matrix(sformula, X)
       ## Handle special case where model was fitted using previous fit$x
       alt <- attr(mmcolnames, 'alt')
+      if(debug) {prn(sformula); prn(colnames(X)); prn(mmcolnames); prn(alt)}
       if(! all(mmcolnames %in% colnames(X)) && length(alt))
         mmcolnames <- alt
       X <- X[, mmcolnames, drop=FALSE]

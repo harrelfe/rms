@@ -85,7 +85,7 @@
 #
 des.args <- function(x,parms.allowed,call.args) {
   nam <- names(x)
-  if(!length(nam)) nam <- rep("",5)
+  if(! length(nam)) nam <- rep("",5)
   name <- nam[1]
   if(name=="") {
     form <- formula(call("~",as.name("...y..."),call.args[[2]]))
@@ -93,12 +93,12 @@ des.args <- function(x,parms.allowed,call.args) {
   }
   pa <- parms.allowed
   argu <- function(x,karg, arg.name, parms.all, nm)	{
-	if(!parms.all) karg <- karg-1
+	if(! parms.all) karg <- karg-1
 	k <- charmatch(arg.name,nm,0)	#k>0 : named arg found
     ## Added karg <= length(x) 9Apr02 for R; R doesn't return NULL
     ## like S+
 	if(k>0) x[[k]] else 
-	if(length(nm) < karg || nm[karg]!="") NULL else
+	if(length(nm) < karg || nm[karg] != "") NULL else
      if(karg <= length(x)) x[[karg]] else NULL
   }
   if(parms.allowed) parms <- argu(x,2,"parms",pa,nam) else {
@@ -108,11 +108,11 @@ des.args <- function(x,parms.allowed,call.args) {
   }
  
   nm <- argu(x,5,"name",pa,nam)
-  if(!is.null(nm)) name <- nm
-  if(!is.null(.Options$Design.attr)) {
+  if(length(nm)) name <- nm
+  if(length(.Options$Design.attr)) {
 	atr <- .Options$Design.attr
 	i <- charmatch(name, atr$name, 0)
-	if(is.null(i))stop("program logic error for options(factor.number)")
+	if(! length(i))stop("program logic error for options(factor.number)")
 	parmi <- atr$parms[[name]]
 	return(list(name=atr$name[i],parms=parmi,label=atr$label[i],
                 units=atr$units[i]))		# added units 9Jun99
@@ -120,8 +120,8 @@ des.args <- function(x,parms.allowed,call.args) {
 
   label <- argu(x,3,"label",pa,nam)
   atx <- attributes(x[[1]])  # 9Jun99
-  if(is.null(label)) label <- atx$label   # 9Jun99 attr(x[[1]],"label")
-  if(is.null(label)) label <- name
+  if(! length(label)) label <- atx$label   # 9Jun99 attr(x[[1]],"label")
+  if(! length(label)) label <- name
 
   list(name=name,parms=parms,label=label,units=atx$units)  #9Jun99
   
@@ -150,7 +150,7 @@ asis <- function(...) {
   if(is.factor(xd)) {
     attr(xd,"class") <- NULL
   }
-  if(!(is.numeric(xd) | is.logical(xd))) {
+  if(! (is.numeric(xd) | is.logical(xd))) {
     stop(paste(z$name,"is not numeric"))
   }
   
@@ -164,13 +164,11 @@ matrx <- function(...) {
 
   cal <- sys.call()
   xx <- list(...)
-#  prn(xx);prn(cal)
   z <- des.args(xx, FALSE, cal)
-#  prn(z)
 
   xd <- xx[[1]]
   nc <- ncol(xd)
-  if(!is.matrix(xd)) {
+  if(! is.matrix(xd)) {
     stop(paste(z$name, "is not a matrix"))
   }
   colname <- dimnames(xd)[[2]]
@@ -195,15 +193,15 @@ pol <- function(...) {
   xx <- list(...)
   z <- des.args(xx,TRUE,cal)
   x <- xx[[1]]
-  if(!is.numeric(x)) {
+  if(! is.numeric(x)) {
     stop(paste(z$name,"is not numeric"))
   }
   poly.degree <- .Options$poly.degree
-  if(is.null(poly.degree)) {
+  if(! length(poly.degree)) {
     poly.degree <- 2
   }
 
-  if(!is.null(z$parms)) {
+  if(length(z$parms)) {
     poly.degree <- z$parms
   }
 
@@ -235,11 +233,11 @@ lsp <- function(...) {
   xx <- list(...)
   z <- des.args(xx,TRUE,cal)
   x <- xx[[1]]
-  if(!is.numeric(x)) {
+  if(! is.numeric(x)) {
     stop(paste(z$name,"is not numeric"))
   }
   parms <- z$parms
-  if(is.null(parms) || any(is.na(parms)))  {
+  if(! length(parms) || any(is.na(parms)))  {
     stop("must specify knots for linear spline")
   }
 
@@ -265,16 +263,16 @@ lsp <- function(...) {
 rcs <- function(...) {
   
   cal <- sys.call()
-  xx <- list(...)
-  z <- des.args(xx, TRUE, cal)
-  x <- xx[[1]]
-  if(!is.numeric(x)) stop(paste(z$name, "is not numeric"))
+  xx  <- list(...)
+  z   <- des.args(xx, TRUE, cal)
+  x   <- xx[[1]]
+  if(! is.numeric(x)) stop(paste(z$name, "is not numeric"))
 
   nknots <- .Options$nknots
-  if(!length(nknots)) nknots <- 5
+  if(! length(nknots)) nknots <- 5
 
   parms <- z$parms
-  if(!length(parms)) parms <- nknots
+  if(! length(parms)) parms <- nknots
 
   if(length(parms)==1) {
     nknots <- parms
@@ -291,9 +289,9 @@ rcs <- function(...) {
   
   pc <- length(.Options$rcspc) && .Options$rcspc
   fractied <- .Options$fractied
-  if(!length(fractied)) fractied <- 0.05
+  if(! length(fractied)) fractied <- 0.05
   
-  if(!length(knots)) {
+  if(! length(knots)) {
     xd <- rcspline.eval(x, nk=nknots, inclx=TRUE, pc=pc, fractied=fractied)
     knots <- attr(xd,"knots")
   }
@@ -323,24 +321,24 @@ catg <- function(...) {
   y <- xx[[1]]
   parms <- z$parms
 
-  if(is.null(parms) & is.factor(y)) parms <- levels(y)
+  if(! length(parms) & is.factor(y)) parms <- levels(y)
 
-  if(is.null(parms)) {
+  if(! length(parms)) {
     if(is.character(y)) {
       parms <- sort(unique(y[y != "" & y != " "]))
     } else {
-      parms <- as.character(sort(unique(y[!is.na(y)])))
+      parms <- as.character(sort(unique(y[! is.na(y)])))
     }
   }
   
-  if(!is.factor(y)) {
+  if(! is.factor(y)) {
     x <- factor(y, levels=parms)
   } else {
     x <- y
   }
 
-  if((is.character(y) && any(y!="" & y!=" " & is.na(x))) ||
-     (is.numeric(y) & any(!is.na(y) & is.na(x)))) {
+  if((is.character(y) && any(y != "" & y != " " & is.na(x))) ||
+     (is.numeric(y) & any(! is.na(y) & is.na(x)))) {
     stop(paste(nam,"has non-allowable values"))
   }
 
@@ -362,15 +360,15 @@ catg <- function(...) {
 scored <- function(...) {
 
   cal <- sys.call()
-  xx <- list(...)
-  z <- des.args(xx,TRUE,cal)
+  xx  <- list(...)
+  z   <- des.args(xx,TRUE,cal)
   parms <- z$parms
-  nam <- z$name
+  nam   <- z$name
   x <- xx[[1]]
   if(is.factor(x)) {
     levx <- as.numeric(levels(x))
-    if(any(is.na(levx))) stop(paste("levels for",nam,"not numeric"))
-    if(is.null(parms)) parms <- levx
+    if(any(is.na(levx))) stop(paste("levels for", nam, "not numeric"))
+    if(! length(parms)) parms <- levx
 
     ## .Options$warn <- -1   #suppress warning about NAs
     oldopt <- options(warn=-1)
@@ -378,17 +376,17 @@ scored <- function(...) {
     x <- levx[x]
   }
 
-  if(!is.numeric(x)) stop(paste(nam,"is not a numeric variable"))
+  if(! is.numeric(x)) stop(paste(nam,"is not a numeric variable"))
 
-  y <- sort(unique(x[!is.na(x)]))
-  if(is.null(parms)) parms <- y
+  y <- sort(unique(x[! is.na(x)]))
+  if(! length(parms)) parms <- y
 
   parms <- sort(parms)
   n.unique <- length(parms)
   if(n.unique < 3) {
-    stop("scored specified with <3 levels")
+    stop("scored specified with < 3 levels")
   }
-  lp <- length(parms)-1
+  lp <- length(parms) - 1
 
   ## Form contrast matrix of the form linear | dummy | dummy ...
 
@@ -424,20 +422,20 @@ strat <- function(...) {
   y <- xx[[1]]
   z <- des.args(xx,TRUE,cal)
   parms <- z$parms
-  if(is.null(parms)) parms <- levels(y)
-  if(is.null(parms)) {
+  if(! length(parms)) parms <- levels(y)
+  if(! length(parms)) {
     if(is.character(y)) {
-      parms <- sort(unique(y[y!="" & y!=" "]))
-    } else parms <- as.character(sort(unique(y[!is.na(y)])))
+      parms <- sort(unique(y[y != "" & y != " "]))
+    } else parms <- as.character(sort(unique(y[! is.na(y)])))
   }
 
   nam <- z$name
-  if(!is.factor(y)) {
+  if(! is.factor(y)) {
     x <- factor(y,levels=parms)
   } else x <- y
 
-  if((is.character(y) & any(y!="" & y!=" " & is.na(x))) ||
-     (is.numeric(y) & any(!is.na(y) & is.na(x)))) {
+  if((is.character(y) & any(y != "" & y != " " & is.na(x))) ||
+     (is.numeric(y) & any(! is.na(y) & is.na(x)))) {
     stop(paste(nam," has a non-allowable value"))
   }
 
@@ -487,9 +485,9 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
   parms  <- f$parms[[name]]
   isna   <- length(x)==1 && is.na(x)
   values <- limval$values[[name]]
-  charval <- !is.null(values) && is.character(values)
-  if(isna & as!=7) {
-    if(is.null(limval) || match(name, dimnames(limval$limits)[[2]], 0)==0 ||
+  charval <- length(values) && is.character(values)
+  if(isna & as != 7) {
+    if(! length(limval) || match(name, dimnames(limval$limits)[[2]], 0)==0 ||
        is.na(limval$limits["Adjust to",name]))
       stop(paste("variable",name,"does not have limits defined by datadist"))
     
@@ -499,7 +497,7 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
 
   if(as<5 | as==6) {
       if(isna) {
-        if(is.null(values)) {
+        if(! length(values)) {
           if(n==0) x <- limits[1:3]
           else {
             if(n>0) x <- seq(unclass(lim[1]), #handles chron
@@ -509,7 +507,7 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
           }
         } else x <- values
       } else {
-        if(is.character(x) && !charval)
+        if(is.character(x) && ! charval)
           stop(paste("character value not allowed for variable",
                      name))   #Allow any numeric value
         if(charval) {
@@ -562,8 +560,8 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
   nam <- as.character(sys.call())[-1]
 
   redo <- function(x,nam) {
-      if(is.null(attr(x,"assume.code"))) {
-        if(!is.null(class(x)) && class(x)[1]=="ordered")
+      if(! length(attr(x,"assume.code"))) {
+        if(length(class(x)) && class(x)[1]=="ordered")
           x <- scored(x, name=nam)
         else if(is.character(x) | is.factor(x))
           x <- catg(x, name=nam)
@@ -585,7 +583,7 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
         colnames <- c(nam,paste(nam,"=",prm[-(1:2)],sep=""))
         len <- length(prm)-1
       } else {
-        if(is.null(ncol(x))) {
+        if(! length(ncol(x))) {
           len <- 1
           colnames <- nam
         } else {
@@ -624,8 +622,8 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
   nonlinear <- logical(nc)
 
   k <- 0
-  if(!is.factor(x1)) x1 <- as.matrix(x1)
-  if(!is.factor(x2)) x2 <- as.matrix(x2)
+  if(! is.factor(x1)) x1 <- as.matrix(x1)
+  if(! is.factor(x2)) x2 <- as.matrix(x2)
 
   for(i in 1:l1) {
     if(as1==5 | as1==8) x1i <- unclass(x1)==(i+1)
