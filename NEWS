@@ -18,6 +18,7 @@ Changes in version 4.4-0 (2015-09-28)
 	 * cph: added debug argument
 	 * tests/cph4.r: new tests for various predictor types
 	 * rms: changed warning to error if an ordered factor appears in the model and options(contrasts) is not set properly
+	 * rms transformation functions: made more robust by checking ! length instead of is.null
 
 Changes in version 4.3-1 (2015-04-20)
    * NAMESPACE: removed reference to gridExtra, in DESCRIPTION moved gridExtra from Depends to Suggests
