@@ -121,7 +121,7 @@ contrast.rms <-
   ndf <- if(is.matrix(v)) nrow(v) else 1
   se <- as.vector(if(ndf == 1) sqrt(v) else sqrt(diag(v)))
   Z <- est / se
-  P <- if(length(idf)) 2 * (1 - pt(abs(Z), idf)) else 2 * (1 - pnorm(abs(Z)))
+  P <- if(length(idf)) 2 * pt(- abs(Z), idf) else 2 * pnorm(- abs(Z))
   if(conf.type != 'simultaneous') {
     if(length(bcoef)) {
       best <- t(matxv(X, bcoef, bmat=TRUE))

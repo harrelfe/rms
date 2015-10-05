@@ -53,7 +53,7 @@ validate.ols <- function(fit, method="boot",
         else ifelse(y <= u, 1, 0)
         z <- c(z, somers2(x,yy)["Dxy"])
         nam <- c(nam, paste("Dxy Y", rel, format(u), sep=""))
-        if(rel==">"|rel==">=") P <- 1 - pnorm((u - x) / sqrt(mse))
+        if(rel==">"|rel==">=") P <- pnorm(- (u - x) / sqrt(mse))
         else P <- pnorm((u - x) / sqrt(mse))
         P0 <- sum(yy) / n
         L <- -2*sum(yy * logb(P)  + (1 - yy) * logb(1 - P ))

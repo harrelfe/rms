@@ -65,7 +65,7 @@ residuals.lrm <-
       sd <- sqrt(sum(res^2))
       ev <- sum(wt)
       z <- (sse-ev)/sd
-      P <- 2 * (1 - pnorm(abs(z)))
+      P <- 2 * pnorm(- abs(z))
       stats[j,] <- c(sse, ev, sd, z, P)
     }
     return(drop(stats))

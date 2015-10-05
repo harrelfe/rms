@@ -141,11 +141,11 @@ loglogistic = list(
 		}),
     
 gaussian = list(
-    survival = function(times, lp, parms) 1-pnorm((times-lp)/exp(parms)),
+    survival = function(times, lp, parms) pnorm(- (times-lp)/exp(parms)),
     hazard = function(times, lp, parms) {
 		scale <- exp(parms)
 		z <- (times-lp)/scale
-		dnorm(z)/scale/(1-pnorm(z))
+		dnorm(z) / scale / pnorm(- z)
 		},
     Quantile = function(q=.5, lp, parms) {
 		names(parms) <- NULL
@@ -167,7 +167,7 @@ lognormal = list(
     survival = function(times, lp, parms) { 
 		t.trans <- logb(times)
 		names(t.trans) <- format(times)
-		1-pnorm((t.trans-lp)/exp(parms))
+		pnorm(- (t.trans-lp)/exp(parms))
 		},
     hazard = function(times, lp, parms) {
 		t.trans <- logb(times)
@@ -175,7 +175,7 @@ lognormal = list(
 		scale <- exp(parms)
 		names(t.trans) <- format(times)
 		z <- (t.trans-lp)/scale
-		t.deriv*dnorm(z)/scale/(1-pnorm(z))
+		t.deriv * dnorm(z) / scale / pnorm(- z)
 		},
     quantile = qnorm,
     Quantile = function(q=.5, lp, parms) {
@@ -201,13 +201,13 @@ t = list(
     survival = function(times, lp, parms) {
 		scale <- exp(parms[1])
 		df <- parms[2]
-		1-pt((times-lp)/scale,df)
+		pt(- (times-lp)/scale,df)
 		},
     hazard = function(times, lp, parms) {
 		scale <- exp(parms[1])
 		df <- parms[2]
 		z <- (times-lp)/scale
-		dt(z,df)/scale/(1-pt(z,df))
+		dt(z,df) / scale / pt(- z,df)
 		},
     Quantile = function(q=.5, lp, parms) {
 		names(parms) <- NULL

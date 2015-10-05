@@ -38,7 +38,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   Spi <- function(p, y) {
     z <- sum((y - p)*(1 - 2*p)) /
       sqrt(sum((1 - 2 * p) * (1 - 2 * p) * p * (1-p)))
-    P <- 2 * (1 - pnorm(abs(z)))
+    P <- 2 * pnorm(- abs(z))
     c(Z=z, P=P)
   }
   
