@@ -146,7 +146,8 @@ cph(formula = formula(data), data=parent.frame(),
     \code{maxtime} (maximum observed survival or censoring time),
     and \code{surv.summary} in the returned object.  Set \code{surv="summary"}
     to only compute and store \code{surv.summary}, not survival estimates
-    at each unique uncensored failure time. If you specify \code{x=Y} and \code{y=TRUE},
+    at each unique uncensored failure time. If you specify \code{x=TRUE}
+    and \code{y=TRUE}, 
     you can obtain predicted survival later, with accurate confidence
     intervals for any set of predictor values. The standard error information
     stored as a result of \code{surv=TRUE} are only accurate at the mean of all
