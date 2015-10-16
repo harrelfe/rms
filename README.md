@@ -19,4 +19,5 @@ Web Sites
 
 To Do
 =====
-Fix survplot so that explicitly named adjust-to values are still in subtitles.  See tests/cph2.s.
+* Fix survplot so that explicitly named adjust-to values are still in subtitles.  See tests/cph2.s.
+* Fix fit.mult.impute to average sigma^2 and then take square root, instead of averaging sigma
