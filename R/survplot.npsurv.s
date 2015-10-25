@@ -59,8 +59,7 @@ survplot.npsurv <-
     if(missing(xlim)) 
       xlim <- if(logt) logb(c(maxtime / 100, maxtime)) else c(mintime, maxtime)
 
-    convert <- function(f, ...) f
-    if(mstate) {
+    convert <- if(mstate) {
       ## Multi-state model for competing risks
       if(missing(state)) stop('state must be given when response is a multi-state/competing risk object from Surv()')
       if(length(state) != 1) stop('at present state can only be a single state')
@@ -68,16 +67,17 @@ survplot.npsurv <-
       if(state %nin% states) stop(paste('state is not in',
                                         paste(states, collapse=', ')))
       istate    <- match(state, states)
-      convert <- function(f, istate) {
-        f$surv    <- 1 - f$prev [, istate]
-        f$lower   <- 1 - f$lower[, istate]
-        f$upper   <- 1 - f$upper[, istate]
-        f$std.err <- f$std.err[, istate]
+      conv <- function(f, istate) {
+        f$surv    <- 1 - f$prev   [, istate]
+        f$lower   <- 1 - f$lower  [, istate]
+        f$upper   <- 1 - f$upper  [, istate]
+        f$std.err <-     f$std.err[, istate]
         f
       }
-      formals(convert) <- list(f=NULL, istate=istate)
-      fit <- convert(fit)
-    }
+      formals(conv) <- list(f=NULL, istate=istate)
+      conv } else function(f) f
+
+  fit <- convert(fit)
   
   origsurv <- fit$surv
   if(trans) {
@@ -358,9 +358,7 @@ survdiffplot <-
 
     ## Note: summary.survfit computes standard errors on S(t) scale
 
-    f <- summary(fit, times=times)
-    f$std.err <- f$std.err[, 2]
-    f <- convert(summary(fit, times=times))
+  f <- convert(summary(fit, times=times))
   
   slev <- levels(f$strata)
   ns <- length(slev)

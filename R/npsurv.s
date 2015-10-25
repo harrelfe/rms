@@ -1,4 +1,4 @@
-npsurv <- function(formula, data, subset, na.action, conf.int=0.95, ...)
+npsurv <- function(formula, data, subset, na.action, ...)
 {
   M <- match.call()
   m <- M
