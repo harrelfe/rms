@@ -27,6 +27,15 @@ at risk over the two strata.  When \code{conf='diffbands'},
 polygon to an existing plot, showing the midpoint of two survival
 estimates plus or minus 1/2 the width of the confidence interval for the
 difference of two Kaplan-Meier estimates.
+
+When \code{code} was from running \code{npsurv} on a
+multi-state/competing risk \code{Surv} object, \code{survplot} plots
+cumulative incidence curves properly accounting for competing risks.
+You must specify exactly one state/event cause to plot using the
+\code{state} argument.  \code{survplot} will not plot multiple states on
+one graph.  This can be accomplished using multiple calls with different
+values of \code{state} and specifying \code{add=TRUE} for all but the
+first call.
 }
 \usage{
 survplot(fit, \dots)
@@ -47,7 +56,7 @@ survplot(fit, \dots)
          grid=NULL, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1, 
          y.n.risk, cex.n.risk=.6, pr=FALSE)
 \method{survplot}{npsurv}(fit, xlim, 
-         ylim, xlab, ylab, time.inc,
+         ylim, xlab, ylab, time.inc, state,
          conf=c("bands","bars","diffbands","none"), add=FALSE, 
          label.curves=TRUE, abbrev.label=FALSE,
          levels.only=FALSE, lty,lwd=par('lwd'),
@@ -62,7 +71,7 @@ survdiffplot(fit, order=1:2, fun=function(y) y,
            add=FALSE, lty=1, lwd=par('lwd'), col=1,
            n.risk=FALSE, grid=NULL,
            srt.n.risk=0, adj.n.risk=1,
-           y.n.risk, cex.n.risk=.6)
+           y.n.risk, cex.n.risk=.6, convert=function(f) f)
 }
 \arguments{
 \item{fit}{
@@ -113,13 +122,17 @@ variable given to \code{Surv}.
 \item{ylab}{
 y-axis label.  Default is \code{"Survival Probability"} or 
 \code{"log(-log Survival Probability)"}. If \code{fun} is given, the default
-is \code{""}.  For \code{what="hazard"}, the default is \code{"Hazard Function"}.
+is \code{""}.  For \code{what="hazard"}, the default is
+\code{"Hazard Function"}.  For a multi-state/competing risk application
+the default is \code{"Cumulative Incidence"}.
 }
 \item{time.inc}{
 time increment for labeling the x-axis and printing numbers at risk. 
 If not specified, the value
 of \code{time.inc} stored with the model fit will be used.
 }
+\item{state}{the state/event cause to use in plotting if the fit was for
+	a multi-state/competing risk \code{Surv} object}
 \item{type}{
 specifies type of estimates, \code{"tsiatis"} (the default) or \code{"kaplan-meier"}.
 \code{"tsiatis"} here corresponds to the Breslow
@@ -217,7 +230,8 @@ set to \code{TRUE} to plot \code{log(-log Survival)} instead of \code{Survival}
 }
 \item{fun}{
 specifies any function to translate estimates and confidence limits
-before plotting.
+before plotting.  If the fit is a multi-state object the default for
+\code{fun} is \code{function(y) 1 - y} to draw cumulative incidence curves.
 }
 \item{logt}{
 set to \code{TRUE} to plot \code{log(t)} instead of \code{t} on the x-axis
@@ -277,15 +291,17 @@ set to \code{TRUE} to print survival curve coordinates used in the plots
   \code{order=2:1} to instead subtract the first from the second.  A
   subtitle indicates what was done.
 }
+\item{convert}{a function to convert the output of
+	\code{summary.survfitms} to pick off the data needed for a single state}
 }
 \value{
 list with components adjust (text string specifying adjustment levels)
-and \code{curve.labels} (vector of text strings corresponding to levels of factor
-used to distinguish curves). For \code{npsurv}, the returned value is the
-vector of strata labels, or NULL if there are no strata.
+and \code{curve.labels} (vector of text strings corresponding to levels
+of factor used to distinguish curves). For \code{npsurv}, the returned
+value is the vector of strata labels, or NULL if there are no strata.
 }
 \section{Side Effects}{
-plots. If \code{par()$mar[4]<4}, issues \code{par(mar=)} to increment \code{mar[4]} by 2
+plots. If \code{par()$mar[4] < 4}, issues \code{par(mar=)} to increment \code{mar[4]} by 2
 if \code{n.risk=TRUE} and \code{add=FALSE}. The user may want to reset \code{par(mar)} in
 this case to not leave such a wide right margin for plots. You usually
 would issue \code{par(mar=c(5,4,4,2)+.1)}.
@@ -386,6 +402,23 @@ survdiffplot(f)
 survplot(f, conf='diffbands')
 
 options(datadist=NULL)
+\dontrun{
+#
+# Time to progression/death for patients with monoclonal gammopathy
+# Competing risk curves (cumulative incidence)
+# status variable must be a factor with first level denoting right censoring
+m <- upData(mgus1, stop = stop / 365.25, units=c(stop='years'),
+            labels=c(stop='Follow-up Time'), subset=start == 0)
+f <- npsurv(Surv(stop, event) ~ 1, data=m)
+
+# Use survplot for enhanced displays of cumulative incidence curves for
+# competing risks
+
+survplot(f, state='pcm', n.risk=TRUE, xlim=c(0, 20), ylim=c(0, .5), col=2)
+survplot(f, state='death', add=TRUE, col=3)
+f <- npsurv(Surv(stop, event) ~ sex, data=m)
+survplot(f, state='death', n.risk=TRUE, conf='diffbands')
+}
 }
 \keyword{survival}
 \keyword{hplot}
