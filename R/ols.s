@@ -75,7 +75,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     cov <- matrix(sigma * sigma / n, nrow=1, ncol=1,
                   dimnames=list("Intercept","Intercept"))
     fit <- list(coefficients=coef, var=cov,
-                non.slopes=1, fail=FALSE, residuals=Y-yest,
+                non.slopes=1, fail=FALSE, residuals=Y - yest,
                 df.residual=n - 1, intercept=TRUE, sformula=sformula)
     if(linear.predictors) {
       fit$linear.predictors <- rep(yest,n); 
@@ -102,7 +102,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       m <- sum(weights * yhat / sum(weights))
       ssr <- sum(weights * (yhat - m)^2)
       r2 <- ssr / (ssr + sse)
-      if(!length(sigma)) sigma <- sqrt(sse/fit$df.residual)
+      if(!length(sigma)) sigma <- sqrt(sse / fit$df.residual)
     }
     else {
       sse <- sum(fit$residuals ^ 2)
@@ -188,7 +188,7 @@ lm.pfit <- function(X, Y, offset=NULL, penalty.matrix, tol=1e-7,
   stats <- c(n=n, 'Model L.R.'=lr, 'd.f.'=df, R2=1 - sse / sst,
              g=GiniMd(yhat), Sigma=sqrt(s2))
   
-  list(coefficients=drop(coef), var=var, residuals=res, df.residual=n - 1,
+  list(coefficients=drop(coef), var=var, residuals=res, df.residual=n - df - 1,
        penalty.matrix=penalty.matrix, 
        stats=stats, effective.df.diagonal=dag)
 }

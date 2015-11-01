@@ -1,7 +1,8 @@
-Changes in version 4.4-1 (2015-10-25)
+Changes in version 4.4-1 (2015-11-01)
    * contrast, residuals.lrm, survreg.distributions, val.prob, validate.ols: changed 1 - pnorm(z) to pnorm(-z) and 1 - pt(z) to pt(-z) to increase precision; thanks: Alexander Ploner
 	 * tests/anova-ols-mult-impute.r: helps to understand sigma and sums of squares when ols is used with fit.mult.impute
 	 * survplot.npsurv: added support for competing risk cumulative incidence plots - see the new state argument
+	 * ols: fixed bug in which df.residual was n-1 when the fit was penalized.  Thanks: Mark Seeto
 
 Changes in version 4.4-0 (2015-09-28)
    * contrast.rms: made SE a vector not a matrix, added 4 list logic for nvary, added new test from JoAnn Alvarez
