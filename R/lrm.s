@@ -30,14 +30,15 @@ lrm <- function(formula, data,subset, na.action=na.delete,
       options(drop.unused.levels=FALSE)
     }
 
-    X <- Design(eval.parent(m))
-    atrx <- attributes(X)
+    X        <- Design(eval.parent(m))
+    atrx     <- attributes(X)
     sformula <- atrx$sformula
-    nact <- atrx$na.action
+    nact     <- atrx$na.action
     if(method=="model.frame") return(X)
-    Terms <- atrx$terms
+    Terms    <- atrx$terms
     attr(Terms, "formula") <- formula
-    atr <- atrx$Design
+    atr      <- atrx$Design
+    mmcolnames <- atr$mmcolnames
 
     Y <- model.extract(X, 'response')
     offs <- atrx$offset
@@ -49,19 +50,21 @@ lrm <- function(formula, data,subset, na.action=na.delete,
     stra <- attr(tform,'specials')$strat
     Strata <- NULL
     Terms.ns <- Terms
-    if(length(stra))
-      {
-        temp <- untangle.specials(Terms.ns, 'strat', 1)
-        Terms.ns <- Terms.ns[-temp$terms]
-        attr(Terms,   "factors") <- pmin(attr(Terms,"factors"),1)
-        attr(Terms.ns,"factors") <- pmin(attr(Terms.ns,"factors"),1)
-        Strata <- X[[stra]]
-        nstrata <- length(levels(Strata))
-      }
+    if(length(stra)) {
+      temp <- untangle.specials(Terms.ns, 'strat', 1)
+      Terms.ns <- Terms.ns[-temp$terms]
+      attr(Terms,   "factors") <- pmin(attr(Terms,"factors"),1)
+      attr(Terms.ns,"factors") <- pmin(attr(Terms.ns,"factors"),1)
+      Strata <- X[[stra]]
+      nstrata <- length(levels(Strata))
+    }
     X <- model.matrix(Terms.ns, X)
-    X <- X[,-1,drop=FALSE]
-    dimnames(X)[[2]] <- atr$colnames
-    xpres <- length(X)>0
+    alt <- attr(mmcolnames, 'alt')
+    if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
+    X <- X[, mmcolnames, drop=FALSE]
+
+    colnames(X) <- atr$colnames
+    xpres <- length(X) > 0
 
     p <- length(atr$colnames)
     n <- length(Y)
@@ -74,32 +77,30 @@ lrm <- function(formula, data,subset, na.action=na.delete,
       if(missing(penalty.matrix)) penalty.matrix <- Penalty.matrix(atr, X) else
       if(nrow(penalty.matrix)!=p || ncol(penalty.matrix)!=p) stop(
              paste("penalty.matrix does not have",p,"rows and columns"))
-      psetup <- Penalty.setup(atr, penalty)
-      penalty <- psetup$penalty
+      psetup     <- Penalty.setup(atr, penalty)
+      penalty    <- psetup$penalty
       multiplier <- psetup$multiplier
       if(length(multiplier)==1)
-        penalty.matrix <- multiplier*penalty.matrix
-      else
-        {
-          a <- diag(sqrt(multiplier))
-          penalty.matrix <- a %*% penalty.matrix %*% a
-        }
-    }
+        penalty.matrix <- multiplier * penalty.matrix
+      else {
+        a <- diag(sqrt(multiplier))
+        penalty.matrix <- a %*% penalty.matrix %*% a
+      }
+      }
   }
-  else
-    {
-      X <- eval.parent(m)
-      offs <- model.offset(X)
-      if(!length(offs)) offs <- 0
-      Y <- model.extract(X, 'response')
-      Y <- Y[!is.na(Y)]
-      Terms <- X <- NULL
-      xpres <- FALSE
-      penpres <- FALSE
-      penalty.matrix <- NULL
+  else {
+    X <- eval.parent(m)
+    offs <- model.offset(X)
+    if(! length(offs)) offs <- 0
+    Y <- model.extract(X, 'response')
+    Y <- Y[!is.na(Y)]
+    Terms <- X <- NULL
+    xpres <- FALSE
+    penpres <- FALSE
+    penalty.matrix <- NULL
     }  ##Model: y~. without data= -> no predictors
   
-  if(method=="model.matrix") return(X)
+  if(method == "model.matrix") return(X)
 
   if(nstrata > 1) {
     if(scale) stop('scale=TRUE not implemented for stratified model')
@@ -131,7 +132,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
   nrp <- f$non.slopes
   if(penpres) {
     f$penalty <- penalty
-    if(nstrata==1) {
+    if(nstrata == 1) {
       ## Get improved covariance matrix
       v <- f$var
       if(var.penalty=='sandwich') f$var.from.info.matrix <- v

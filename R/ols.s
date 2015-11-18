@@ -33,6 +33,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     nact  <- atrx$na.action
     Terms <- atrx$terms
     assig <- DesignAssign(atr, 1, Terms)
+    mmcolnames <- atr$mmcolnames
     
     penpres <- FALSE
     if(! missing(penalty)        && any(unlist(penalty) != 0)) penpres <- TRUE
@@ -52,10 +53,15 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     n <- length(Y)
     if(model) m <- X
     X <- model.matrix(Terms, X)
-    if(length(atr$colnames)) 
-      dimnames(X)[[2]] <- c("Intercept", atr$colnames)
-    else dimnames(X)[[2]] <- c("Intercept", dimnames(X)[[2]][-1])
-    if(method=="model.matrix") return(X)				   }
+    alt <- attr(mmcolnames, 'alt')
+    if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
+    X <- X[, c('(Intercept)', mmcolnames), drop=FALSE]
+    colnames(X) <- c('Intercept', atr$colnames)
+    #if(length(atr$colnames)) 
+    #  dimnames(X)[[2]] <- c("Intercept", atr$colnames)
+    #else dimnames(X)[[2]] <- c("Intercept", dimnames(X)[[2]][-1])
+    if(method == "model.matrix") return(X)
+  }
   
   ##Model with no covariables:
   

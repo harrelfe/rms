@@ -3,16 +3,13 @@
 
 DesignAssign <- function(atr, non.slopes, Terms) {
   ## Given Design attributes and number of intercepts creates R
-  ## format assign list.  If formula is given, names assign using
-  ## terms(formul) term.labels, otherwise uses Design predictor names
-  ## 23feb03: No, term.labels not useful if "." in formula
-  ## formula argument no longer used
+  ## format assign list.
 
   ll <- if(missing(Terms)) atr$name else attr(Terms,'term.labels')
-  if(!length(ll)) return(list())
-  nv <- length(ll)
+  if(! length(ll)) return(list())
+  nv     <- length(ll)
   params <- sapply(atr$nonlinear, length)  ## d.f. per predictor
-  asc <- atr$assume.code
+  asc    <- atr$assume.code
   assign <- list()
   j <- non.slopes + 1
   if(length(params)) for(i in 1 : length(ll)) {

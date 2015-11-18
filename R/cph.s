@@ -138,7 +138,14 @@ cph <- function(formula     = formula(data),
       X <- model.matrix(sformula, X)
       ## Handle special case where model was fitted using previous fit$x
       alt <- attr(mmcolnames, 'alt')
-      if(debug) {prn(sformula); prn(colnames(X)); prn(mmcolnames); prn(alt)}
+      if(debug) {
+        prn(sformula)
+        print(cbind('colnames(X)'=colnames(X)[-1],
+                    mmcolnames=mmcolnames,
+                    'Design colnames'=atr$colnames,
+                    alt=alt))
+      }
+#        prn(colnames(X)); prn(mmcolnames); prn(alt)}
       if(! all(mmcolnames %in% colnames(X)) && length(alt))
         mmcolnames <- alt
       X <- X[, mmcolnames, drop=FALSE]

@@ -38,14 +38,18 @@ orm <- function(formula, data, subset, na.action=na.delete,
     Terms <- atrx$terms
     attr(Terms, "formula") <- formula
     atr <- atrx$Design
+    mmcolnames <- atr$mmcolnames
 
     Y <- model.extract(X, 'response')
     offs <- atrx$offset
     if(!length(offs)) offs <- 0
     if(model) m <- X
     X <- model.matrix(sformula, X)
-    X <- X[,-1,drop=FALSE]
-    dimnames(X)[[2]] <- atr$colnames
+    alt <- attr(mmcolnames, 'alt')
+    if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
+    X <- X[, mmcolnames, drop=FALSE]
+    colnames(X) <- atr$colnames
+
     xpres <- length(X) > 0
 
     p <- length(atr$colnames)

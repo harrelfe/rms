@@ -33,7 +33,8 @@ Glm <-
   attr(mf, 'Design') <- NULL
   nact <- attr(mf, 'na.action')
 
-  sformula <- at$sformula
+  sformula   <- at$sformula
+  mmcolnames <- desatr$mmcolnames
     
   switch(method, model.frame = return(mf), glm.fit = 1, 
          stop(paste("invalid `method':", method)))
@@ -41,14 +42,21 @@ Glm <-
   xvars <- as.character(attr(mt, "variables"))[-1]
   if ((yvar <- attr(mt, "response")) > 0)
     xvars <- xvars[-yvar]
-  xlev <- if (length(xvars) > 0) {
-    xlev <- lapply(mf[xvars], levels)
-    xlev[!sapply(xlev, is.null)]
-  }
-  X <- if (!is.empty.model(mt)) model.matrix(mt, mf, contrasts)
-  colnames(X) <- if(attr(mt, 'intercept') > 0)
-    c('Intercept', desatr$colnames)
-    else desatr$colnames
+    xlev <- if (length(xvars) > 0) {
+      xlev <- lapply(mf[xvars], levels)
+      xlev[!sapply(xlev, is.null)]
+    }
+  X <- if(! is.empty.model(mt)) model.matrix(mt, mf, contrasts)
+    intcpt <- if(attr(mt, 'intercept') > 0) '(Intercept)'
+  alt <- attr(mmcolnames, 'alt')
+  if(! all(mmcolnames %in% colnames(X)) && length(alt))
+    mmcolnames <- alt
+    X <- X[, c(intcpt, mmcolnames), drop=FALSE]
+  colnames(X) <- c(if(length(intcpt)) 'Intercept', desatr$colnames)
+  
+#    colnames(X) <- if(attr(mt, 'intercept') > 0)
+#    c('Intercept', desatr$colnames)
+#    else desatr$colnames
 
   Y <- model.response(mf, "numeric")
   weights <- model.weights(mf)
@@ -62,15 +70,15 @@ Glm <-
   fit <- glm.fit(x = X, y = Y, weights = weights, start = start,
                  offset = offset, family = family, control = control,
                  intercept = attr(mt, "intercept") > 0)
-  if (length(offset) && attr(mt, "intercept") > 0)
-    {
-      fit$null.deviance <- if (is.empty.model(mt))
+  if (length(offset) && attr(mt, "intercept") > 0) {
+    fit$null.deviance <-
+      if(is.empty.model(mt))
         fit$deviance
       else glm.fit(x = X[, "Intercept", drop = FALSE], y = Y,
                    weights = weights, start = start, offset = offset,
                    family = family, control = control,
                    intercept = TRUE)$deviance
-    }
+  }
   if (model) fit$model <- mf
   if (x)  fit$x <- X[, -1, drop=FALSE]
   if (!y) fit$y <- NULL

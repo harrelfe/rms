@@ -20,11 +20,12 @@ bj <- function(formula=formula(data), data,
   
   X <- Design(eval.parent(m))
   if(method=='model.frame') return(X)
-  atrx  <- attributes(X)
-  nact  <- atrx$na.action
-  Terms <- atrx$terms
-  atr   <- atrx$Design
-  sformula <- atrx$sformula
+  atrx       <- attributes(X)
+  nact       <- atrx$na.action
+  Terms      <- atrx$terms
+  atr        <- atrx$Design
+  sformula   <- atrx$sformula
+  mmcolnames <- atr$mmcolnames
   
   lnames <- c("logit","probit","cloglog","identity","log","sqrt",
               "1/mu^2","inverse")
@@ -32,12 +33,12 @@ bj <- function(formula=formula(data), data,
   link <- pmatch(link, lnames, 0)
   if(link==0) stop("invalid link function")
   link <- lnames[link]
-  Y <- model.extract(X, "response")
-  atY <- attributes(Y)
-  ncy <- ncol(Y)
+  Y    <- model.extract(X, "response")
+  atY  <- attributes(Y)
+  ncy  <- ncol(Y)
   maxtime <- max(Y[,-ncy])
-  nnn <- c(nrow(Y),sum(Y[,ncy]))
-  if (!inherits(Y, "Surv")) stop("Response must be a survival object")
+  nnn  <- c(nrow(Y),sum(Y[,ncy]))
+  if (! inherits(Y, "Surv")) stop("Response must be a survival object")
   
   type <- attr(Y, "type")
   
@@ -47,19 +48,23 @@ bj <- function(formula=formula(data), data,
   Y <- cbind(linkfun(Y[,1]), Y[,2])
   
   X <- model.matrix(sformula, X)
+  alt <- attr(mmcolnames, 'alt')
+  if(! all(mmcolnames %in% colnames(X)) && length(alt))
+        mmcolnames <- alt
+  X <- X[, mmcolnames, drop=FALSE]
   assgn <- DesignAssign(atr, 1, Terms)
   
-  if(method=='model.matrix') return(X)
+  if(method == 'model.matrix') return(X)
   
   time.units <- units(Y)
   if(is.null(time.units) || time.units=='') time.units <- "Day"
   if(missing(time.inc))  {
-    time.inc <- switch(time.units,Day=30,Month=1,Year=1,maxtime/10)
-    if(time.inc >= maxtime | maxtime/time.inc > 25) 
-      time.inc <- max(pretty(c(0, maxtime)))/10
+    time.inc <- switch(time.units, Day=30, Month=1, Year=1, maxtime / 10)
+    if(time.inc >= maxtime | maxtime / time.inc > 25) 
+      time.inc <- max(pretty(c(0, maxtime))) / 10
   }
   rnam <- dimnames(Y)[[1]]
-  dimnames(X) <- list(rnam, c("(Intercept)",atr$colnames))
+  dimnames(X) <- list(rnam, atr$colnames)
   
   n <- nrow(X)
   nvar <- ncol(X)
@@ -82,13 +87,12 @@ bj <- function(formula=formula(data), data,
   fit$formula <- as.vector(attr(Terms, "formula"))
   fit$call    <- call
   fit$Design  <- atr
-  if (x) fit$x <- X[, -1, drop=FALSE]
-  if (y)
-    {
-      class(Y) <- 'Surv'
-      attr(Y,'type') <- atY$type
-      fit$y <- Y
-    }
+  if (x) fit$x <- X
+  if (y) {
+    class(Y) <- 'Surv'
+    attr(Y,'type') <- atY$type
+    fit$y <- Y
+  }
   scale.pred <- if(link=="log") c("log(T)","Survival Time Ratio") else "T"
   fit$scale.pred <- scale.pred
   fit$link       <- link
@@ -98,12 +102,12 @@ bj <- function(formula=formula(data), data,
 bj.fit <- function(x, y, control = NULL) {
   if(ncol(y) != 2)
 	stop("y is not a right-censored Surv object")
-  status <- y[, 2]
-  yy <- y[, 1]
+  status   <- y[, 2]
+  yy       <- y[, 1]
   iter.max <- control$iter.max
-  eps <- control$eps
-  trace <- control$trace
-  tol <- control$tol
+  eps      <- control$eps
+  trace    <- control$trace
+  tol      <- control$tol
   max.cycle <- control$max.cycle
   if(length(iter.max) == 0) iter.max <- 20
   if(length(eps) == 0)   eps <- 0.001
@@ -116,11 +120,10 @@ bj.fit <- function(x, y, control = NULL) {
   nvar <- d[2]
   if(length(nvar) == 0)	nvar <- 0
   N <- length(yy)
-  if(nvar > 0)
-    {
-      xbar <- apply(x, 2, mean)
-      xm <- x - rep(xbar, rep(N, nvar))
-    }
+  if(nvar > 0) {
+    xbar <- apply(x, 2, mean)
+    xm <- x - rep(xbar, rep(N, nvar))
+  }
   else xm <- 0
   timeorig <- yy
   order.orig <- 1:N
@@ -136,11 +139,10 @@ bj.fit <- function(x, y, control = NULL) {
       oldbeta <- betahat
       oldsse <- sse
       if(nvar == 0) ypred <- 0
-	  else
-        {
-          betahat <- solvet(t(xm) %*% xm, t(xm) %*% yy, tol = tol)
-          ypred <- x %*% betahat
-        }
+      else {
+        betahat <- solvet(t(xm) %*% xm, t(xm) %*% yy, tol = tol)
+        ypred <- x %*% betahat
+      }
       alphahat <- mean(yy - ypred)
       sse <- sum((yy - ypred)^2)
       razlika <- oldsse/sse
@@ -151,36 +153,32 @@ bj.fit <- function(x, y, control = NULL) {
         cat("  alpha = ", format(alphahat),
             "   beta = ", format(betahat), "\n\n")
       ehat <- timeorig - ypred
-      if(!nonconv)
-        {
-          if(abs(razlika - 1) <= eps)
-            break
-          else if(n > iter.max)
-            {
-              cyclesse <- NULL
-              cycleperiod <- 0
-              nonconv <- TRUE
-              firstsse <- sse
-            }
+      if(! nonconv) {
+        if(abs(razlika - 1) <= eps)
+          break
+        else if(n > iter.max) {
+          cyclesse <- NULL
+          cycleperiod <- 0
+          nonconv <- TRUE
+          firstsse <- sse
         }
-	  else
-        {
-          betamatrix <- cbind(betamatrix, c(alphahat, betahat))
-          cyclesse <- c(cyclesse, sse)
-          cycleperiod <- cycleperiod + 1
-          if(any(abs(firstsse - cyclesse) < 1e-007))
-            {
-              cat("\nCycle period = ", cycleperiod, "\n")
-              meanbeta <- apply(betamatrix, 1, mean)
-              alphahat <- meanbeta[1]
-              betahat <- meanbeta[2:length(meanbeta)]
-              ypred <- x %*% betahat
-              ehat <- timeorig - ypred
-              break
-            }
-		  else if(cycleperiod >= max.cycle)
-			break
+      }
+      else {
+        betamatrix <- cbind(betamatrix, c(alphahat, betahat))
+        cyclesse <- c(cyclesse, sse)
+        cycleperiod <- cycleperiod + 1
+        if(any(abs(firstsse - cyclesse) < 1e-007)) {
+          cat("\nCycle period = ", cycleperiod, "\n")
+          meanbeta <- apply(betamatrix, 1, mean)
+          alphahat <- meanbeta[1]
+          betahat <- meanbeta[2:length(meanbeta)]
+          ypred <- x %*% betahat
+          ehat <- timeorig - ypred
+          break
         }
+        else if(cycleperiod >= max.cycle)
+          break
+      }
       state <- status
       state[ehat == max(ehat)] <- 1
       S <- structure(cbind(ehat, state), class = "Surv", type = "right")
@@ -196,21 +194,19 @@ bj.fit <- function(x, y, control = NULL) {
       bla <- (bla[length(bla)] - bla)/(surv + state[m])
       ## Put bla back into original order
       bl <- bla
-      bl[(1:N)[m]] <- bla
+      bl[(1 : N)[m]] <- bla
       yhat <- if(nvar == 0) bl else x %*% betahat + bl
       yy[state == 0] <- yhat[state == 0]
     }
   n <- n - 1
-  if(nonconv)
-    {
-      if(cycleperiod < max.cycle)
-        cat("\nNo convergence in", n, "steps, but cycle found - average beta returned\n")
-	  else
-        {
-          cat("\nNo convergence in", n, "steps\n")
-          return(list(fail = TRUE))
-        }
+  if(nonconv) {
+    if(cycleperiod < max.cycle)
+      cat("\nNo convergence in", n, "steps, but cycle found - average beta returned\n")
+	  else {
+      cat("\nNo convergence in", n, "steps\n")
+      return(list(fail = TRUE))
     }
+  }
   f <- list(fail = FALSE, iter = n)
   cof <- if(nvar == 0) alphahat else c(alphahat, betahat)
   dx <- dimnames(x)[[2]]
@@ -220,11 +216,10 @@ bj.fit <- function(x, y, control = NULL) {
   ehat.u <- ehat[status == 1]
   edf <- sum(status) - nvar - 1
   sigma <- sqrt(sum((ehat.u - mean(ehat.u))^2)/edf)
-  if(nvar > 0)
-    {
-      x <- cbind(Intercept = 1, x)[status == 1,  , drop = FALSE]
-      f$var <- solvet(t(x) %*% x, tol = tol) * sigma * sigma
-    }
+  if(nvar > 0) {
+    x <- cbind(Intercept = 1, x)[status == 1,  , drop = FALSE]
+    f$var <- solvet(t(x) %*% x, tol = tol) * sigma * sigma
+  }
   else f$var <- (sigma * sigma)/N
   f$linear.predictors <- alphahat + as.vector(ypred)
   g <- GiniMd(f$linear.predictors)
@@ -288,31 +283,29 @@ bjplot <- function(fit, which=1:dim(X)[[2]])
   points(predictor[cens == 0], residnew[cens == 0], pch = 1)
   points(predictor[cens == 1], residnew[cens == 1], pch = 16)
   
-  for(i in which)
-    {
-      xi <- X[,i]
-      ry <- range(yy,Y)
-
-      plot(xi, Y[,1], xlab=xnam[i], ylab=paste('Observed',trans,'Time'),
+  for(i in which) {
+    xi <- X[,i]
+    ry <- range(yy,Y)
+    
+    plot(xi, Y[,1], xlab=xnam[i], ylab=paste('Observed',trans,'Time'),
+         type='n', ylim=ry)
+    points(xi[!imp], Y[!imp,1], pch=16)
+    if(any(imp)) {
+      points(xi[imp],  Y[imp,1],  pch=1)
+      
+      plot(xi, yy, xlab = xnam[i], ylab=paste('Imputed',trans,'Time'), 
+           type = "n", ylim=ry)
+      points(xi[imp],   yy[imp],  pch = 1)
+      segments(xi[imp], Y[imp,1], xi[imp], yy[imp])
+      points(xi[!imp],  yy[!imp], pch = 16)
+      
+      plot(xi, yy, xlab=xnam[i],
+           ylab=paste('Observed or Imputed',trans,'Time'),
            type='n', ylim=ry)
-      points(xi[!imp], Y[!imp,1], pch=16)
-      if(any(imp))
-        {
-          points(xi[imp],  Y[imp,1],  pch=1)
-
-          plot(xi, yy, xlab = xnam[i], ylab=paste('Imputed',trans,'Time'), 
-               type = "n", ylim=ry)
-          points(xi[imp],   yy[imp],  pch = 1)
-          segments(xi[imp], Y[imp,1], xi[imp], yy[imp])
-          points(xi[!imp],  yy[!imp], pch = 16)
-
-          plot(xi, yy, xlab=xnam[i],
-               ylab=paste('Observed or Imputed',trans,'Time'),
-               type='n', ylim=ry)
-          points(xi[!imp], yy[!imp], pch=16)
-          points(xi[imp],  yy[imp],  pch=1)
-        }
+      points(xi[!imp], yy[!imp], pch=16)
+      points(xi[imp],  yy[imp],  pch=1)
     }
+  }
   invisible(retlist)
 }
 
@@ -321,13 +314,11 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
 {
   k <- 0
   z <- list()
-  
 
-  if(length(zz <- x$na.action))
-    {
-      k <- k + 1
-      z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
-    }
+  if(length(zz <- x$na.action)) {
+    k <- k + 1
+    z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
+  }
   
   stats <- x$stats
   ci    <- x$clusterInfo
@@ -351,20 +342,19 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
                  list(coef = cof, se = se))
 
   p <- length(cof)
-  if(long &&  p > 1)
-    {
+  if(long &&  p > 1) {
 	  ss <- diag(1/se)
 	  correl <- ss %*% x$var %*% ss
 	  dimnames(correl) <- list(names(cof), names(cof))
 	  ll <- lower.tri(correl)
 	  correl[ll] <- format(round(correl[ll], digits=max(digits-2,2)))
 	  correl[!ll] <- ""
-      k <- k + 1
-      z[[k]] <- list(type='print',
-                     list(correl[-1, - p, drop = FALSE], quote = FALSE),
-                     title='Correlation Matrix for Parameter Estimates')
+    k <- k + 1
+    z[[k]] <- list(type='print',
+                   list(correl[-1, - p, drop = FALSE], quote = FALSE),
+                   title='Correlation Matrix for Parameter Estimates')
 	}
-
+  
   prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex, ...)
 }
 
@@ -438,10 +428,10 @@ validate.bj <-
 }
 
 
-bj.fit2 <- function(x,y,iter=0,maxiter=15, 
+bj.fit2 <- function(x, y, iter=0, maxiter=15, 
                     init=NULL, rel.tolerance=1e-3, tol=1e-7, ...)
 {
-  e <- y[,2]
+  e <- y[, 2]
   if(sum(e) < 1)return(list(fail=TRUE))
   x <- x	#Get around lazy evaluation creating complex expression
   f <- bj.fit(as.matrix(x), y,

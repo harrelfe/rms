@@ -55,24 +55,30 @@ Gls <-
       }
     else grps <- NULL
     X <- model.frame(model, dataMod)
-    dul <- .Options$drop.unused.levels
-    if(!length(dul) || dul)
-      {
-        on.exit(options(drop.unused.levels=dul))
-        options(drop.unused.levels=FALSE)
-      }
-    X <- Design(X)
-    atrx <- attributes(X)
-    sformula <- atrx$sformula
-    desatr <- atrx$Design
-    mt <- atrx$terms
-    attr(X,'Design') <- NULL
+  dul <- .Options$drop.unused.levels
+  if(!length(dul) || dul) {
+    on.exit(options(drop.unused.levels=dul))
+    options(drop.unused.levels=FALSE)
+  }
+  X <- Design(X)
+  atrx <- attributes(X)
+  sformula <- atrx$sformula
+  desatr <- atrx$Design
+  mt <- atrx$terms
+  mmcolnames <- desatr$mmcolnames
+  
+  attr(X,'Design') <- NULL
     
-    contr <- lapply(X, function(el) if (inherits(el, "factor")) 
-                    contrasts(el))
-    contr <- contr[!unlist(lapply(contr, is.null))]
-    X <- model.matrix(model, X)
-    dimnames(X)[[2]] <- cn <- c('Intercept',desatr$colnames)
+  contr <- lapply(X, function(el) if (inherits(el, "factor")) 
+                                    contrasts(el))
+  contr <- contr[!unlist(lapply(contr, is.null))]
+  X <- model.matrix(model, X)
+  alt <- attr(mmcolnames, 'alt')
+  if(! all(mmcolnames %in% colnames(X)) && length(alt))
+    mmcolnames <- alt
+    X <- X[, c('(Intercept)', mmcolnames), drop=FALSE]
+  colnames(X) <- cn <- c('Intercept', desatr$colnames)
+
     y <- eval(model[[2]], dataMod)
     N <- nrow(X)
     p <- ncol(X)
