@@ -48,8 +48,8 @@ survplot.npsurv <-
        else if(trans) ""
        else "Survival Probability"
 
-    if(loglog) fun <- function(w) logb(-logb(ifelse(w==0 | w==1, NA, w)))
-  else if(!trans) fun <- function(w) w
+    if(loglog) fun <- function(y) logb(-logb(ifelse(y == 0 | y == 1, NA, y)))
+  else if(!trans) fun <- function(y) y
     
     if(missing(xlab))
       xlab <- if(logt) paste("log Survival Time in ", units, "s", sep="")
