@@ -614,13 +614,17 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
 
   lev1 <- length(levels(x1))
   lev2 <- length(levels(x2))
-  ## Mark special if %ia% involved a variable that was categorical with
+
+  ## Mark special if %ia% does not generate expanded term labels.  This
+  ## occurs if both variables are as-is or if %ia% involved a variable
+  ## that was categorical with
   ## 2 levels and did not involve a variable that was an expanded spline
   ## or polynomial.  Handles inconsistency in model.matrix whereby
   ## categorical %ia% plain variable generates a column name of the form
   ## categorical %ia% plain without "categorical=2nd level"
-  iaspecial <- (lev1 == 2 || lev2 == 2) &&
-               (as1 %nin% 2 : 4 && as2 %nin% 2 : 4)
+  iaspecial <- (as1 == 1 && as2 ==1) ||
+                ((lev1 == 2 || lev2 == 2) &&
+                (as1 %nin% 2 : 4 && as2 %nin% 2 : 4))
 
   l1 <- a1$len
   l2 <- a2$len

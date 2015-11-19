@@ -73,20 +73,18 @@ Gls <-
                                     contrasts(el))
   contr <- contr[!unlist(lapply(contr, is.null))]
   X <- model.matrix(model, X)
+  parAssign <- attr(X, "assign")
   alt <- attr(mmcolnames, 'alt')
-  if(! all(mmcolnames %in% colnames(X)) && length(alt))
-    mmcolnames <- alt
-    X <- X[, c('(Intercept)', mmcolnames), drop=FALSE]
+  if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
+  X <- X[, c('(Intercept)', mmcolnames), drop=FALSE]
   colnames(X) <- cn <- c('Intercept', desatr$colnames)
 
-    y <- eval(model[[2]], dataMod)
-    N <- nrow(X)
-    p <- ncol(X)
-    parAssign <- attr(X, "assign")
-    fTerms <- terms(as.formula(model))
-    namTerms <- attr(fTerms, "term.labels")
-    if (attr(fTerms, "intercept") > 0)
-      namTerms <- c("Intercept", namTerms)
+  y <- eval(model[[2]], dataMod)
+  N <- nrow(X)
+  p <- ncol(X)
+  fTerms <- terms(as.formula(model))
+  namTerms <- attr(fTerms, "term.labels")
+  if (attr(fTerms, "intercept") > 0) namTerms <- c("Intercept", namTerms)
     namTerms <- factor(parAssign, labels = namTerms)
     parAssign <- split(order(parAssign), namTerms)
     ## Start FEH 4apr03

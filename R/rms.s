@@ -38,7 +38,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   ## rid of interaction terms involving non-reference values
 
   mmnames <- function(assume.code, rmstrans.names, term.label, iaspecial) {
-    ## prn(assume.code); prn(rmstrans.names); prn(term.label)
+    ## prn(assume.code); prn(rmstrans.names); prn(term.label); prn(iaspecial)
     ## Don't let >=i be translated to >i:
     rmst <- gsub('>=', '>>', rmstrans.names)
     w <- if(assume.code == 1 ||
