@@ -3,9 +3,7 @@
 \alias{survplot.rms}
 \alias{survplot.npsurv}
 \alias{survdiffplot}
-\title{
-Plot Survival Curves and Hazard Functions
-}
+\title{Plot Survival Curves and Hazard Functions}
 \description{
 Plot estimated survival curves, and for parametric survival models, plot
 hazard functions.  There is an option to print the number of subjects
@@ -56,7 +54,7 @@ survplot(fit, \dots)
          grid=NULL, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1, 
          y.n.risk, cex.n.risk=.6, pr=FALSE)
 \method{survplot}{npsurv}(fit, xlim, 
-         ylim, xlab, ylab, time.inc, state,
+         ylim, xlab, ylab, time.inc, state=NULL,
          conf=c("bands","bars","diffbands","none"), add=FALSE, 
          label.curves=TRUE, abbrev.label=FALSE,
          levels.only=FALSE, lty,lwd=par('lwd'),
@@ -281,7 +279,10 @@ character size for number of subjects at risk (when \code{n.risk} is \code{TRUE}
 set to \code{TRUE} to print survival curve coordinates used in the plots
 }
 \item{aehaz}{set to \code{TRUE} to add number of events and exponential
-	distribution hazard rate estimates in curve labels}
+	distribution hazard rate estimates in curve labels.  For
+	competing risk data the number of events is for the cause of interest,
+  and the hazard rate is the number of events divided by the sum of all
+  failure and censoring times.}
 \item{times}{a numeric vector of times at which to compute cumulative
 	incidence probability estimates to add to curve labels}
 \item{order}{
@@ -387,9 +388,9 @@ f <- npsurv(S ~ 1, subset=sex=="male")
 survplot(f)
 
 
-#Plot survival for both sexes
+#Plot survival for both sexes and show exponential hazard estimates
 f <- npsurv(S ~ sex)
-survplot(f)
+survplot(f, aehaz=TRUE)
 #Check for log-normal and log-logistic fits
 survplot(f, fun=qnorm, ylab="Inverse Normal Transform")
 survplot(f, fun=function(y)log(y/(1-y)), ylab="Logit S(t)")
@@ -415,9 +416,11 @@ f <- npsurv(Surv(stop, event) ~ 1, data=m)
 # competing risks
 
 survplot(f, state='pcm', n.risk=TRUE, xlim=c(0, 20), ylim=c(0, .5), col=2)
-survplot(f, state='death', add=TRUE, col=3)
+survplot(f, state='death', aehaz=TRUE, col=3,
+         label.curves=list(keys='lines'))
 f <- npsurv(Surv(stop, event) ~ sex, data=m)
-survplot(f, state='death', n.risk=TRUE, conf='diffbands')
+survplot(f, state='death', aehaz=TRUE, n.risk=TRUE, conf='diffbands',
+         label.curves=list(keys='lines'))
 }
 }
 \keyword{survival}
