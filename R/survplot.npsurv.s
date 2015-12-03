@@ -60,8 +60,9 @@ survplot.npsurv <-
      else if(! trans) fun <- function(y) y
     
     if(missing(xlab))
-      xlab <- if(logt) paste("log Survival Time in ", units, "s", sep="")
-      else labelPlotmath(fit$time.label, fit$units)
+      xlab <- if(logt) paste("log Follow-up Time in ", units, "s", sep="")
+      else labelPlotmath('Follow-up Time', paste(fit$units, 's', sep=''))
+      ## else labelPlotmath(fit$time.label, fit$units)
   
     if(missing(xlim)) 
       xlim <- if(logt) logb(c(maxtime / 100, maxtime)) else c(mintime, maxtime)
