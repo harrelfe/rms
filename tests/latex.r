@@ -1,0 +1,6 @@
+require(rms)
+set.seed(1)
+x <- runif(100)
+y <- abs(x - 0.5) + runif(100)
+f <- ols(y ~ rcs(x, 5))
+latex(f, file='')
