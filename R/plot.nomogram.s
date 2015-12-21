@@ -315,7 +315,7 @@ plot.nomogram <-
 
 legend.nomabbrev <- function(object, which, x, y=NULL, ncol=3, ...)
 {
-  abb <- attr(object, 'info')$abbrev[[which]]
+  abb <- attr(object, 'info')$Abbrev[[which]]
   if(length(abb)==0) stop(paste('no abbreviation information for',which))
   if(max(nchar(abb$abbrev))==1)
     if(length(y)) legend(x, y, abb$full, ncol=ncol,

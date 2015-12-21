@@ -37,12 +37,15 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   ## matrix to get rid of terms involving strat main effects and to get
   ## rid of interaction terms involving non-reference values
 
-  mmnames <- function(assume.code, rmstrans.names, term.label, iaspecial) {
-    ## prn(assume.code); prn(rmstrans.names); prn(term.label); prn(iaspecial)
+  mmnames <- function(assume.code, rmstrans.names, term.label, iaspecial,
+                      class) {
+    ## prn(assume.code); prn(rmstrans.names); prn(term.label); prn(iaspecial); prn(class)
     ## Don't let >=i be translated to >i:
     rmst <- gsub('>=', '>>', rmstrans.names)
-    w <- if(assume.code == 1 ||
-            (length(iaspecial) && iaspecial)) term.label
+    w <- if(assume.code == 1)
+           ifelse(class == 'logical', paste(term.label, 'TRUE', sep=''),
+                  term.label)
+    else if(length(iaspecial) && iaspecial) term.label
     else if(assume.code == 5) gsub('=', '', rmst)
     else if(assume.code == 8)
       paste(term.label, gsub('.*=', '', rmst), sep='')
@@ -144,6 +147,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     if(i  != wts) {
       i1 <- i - response.pres
       xi <- mf[[i]]
+      cls <- rev(class(xi))[1]
       z <- attributes(xi)
       assu <- z$assume.code
       if(! length(assu) || assu != 9) i1.noia <- i1.noia + 1
@@ -179,7 +183,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         flabel <- c(flabel, z$label)
         asm <- c(asm, za)
         colnam[[i1]] <- z$colnames
-        mmn <- mmnames(za, colnam[[i1]], Term.labels[i1], z$iaspecial)
+        mmn <- mmnames(za, colnam[[i1]], Term.labels[i1], z$iaspecial, cls)
         mmcolnam[[i1]] <- mmn
         alt <- attr(mmn, 'alt')
         mmcolnamalt[[i1]] <- alt

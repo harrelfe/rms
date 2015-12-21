@@ -9,6 +9,7 @@ x2 <- runif(N)
 # Makes last colname x1 %ia% x2 which is really inconsistent:
 model.matrix(~ x1 + rcs(x2) + x1 %ia% x2)
 x3 <- c(rep('A', 33), rep('B', 33), rep('C', 34))
+x4 <- runif(N) > 0.5
 # Makes last 2 colnames x3 %ia% x2x3=B * x2,  x3 %ia% x2x3=C * x2
 model.matrix(~ x3 + rcs(x2) + x3 %ia% x2)
 cph(S ~ x3 + rcs(x2) + x3 %ia% x2)
@@ -20,3 +21,10 @@ cph(S ~ x1 + rcs(x2) + x1 %ia% rcs(x2))
 cph(S ~ x1 + rcs(x2) + x1 %ia% x2)
 
 cph(S ~ x1 * rcs(x2))
+
+ols(time ~ x1 + x4)
+cph(S ~ x1 + x4)
+colnames(model.matrix(~ x1 + x4 + x1 %ia% x4))
+cph(S ~ x1 + x4 + x1 %ia% x4)
+
+

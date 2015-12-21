@@ -1,5 +1,5 @@
 ggplot.Predict <-
-  function(data, formula, groups=NULL,
+  function(data, mapping, formula=NULL, groups=NULL,
            aestype=c('color', 'linetype'),
            conf=c('fill', 'lines'),
            varypred=FALSE,
@@ -18,12 +18,13 @@ ggplot.Predict <-
            histSpike.opts=list(frac=function(f) 0.01 + 
                                  0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1),
              side=1, nint=100),
-           type=NULL, ggexpr=FALSE, ...)
-{
-  # .xlim, .ylim instead of xlim, ylim to distinguish from ggplot functions
-  sepdiscrete <- match.arg(sepdiscrete)
-  class(data) <- setdiff(class(data), 'Predict')
-  ## so won't involve ggplot.Predict
+           type=NULL, ggexpr=FALSE, ..., environment) {
+
+    if(! length(formula) && ! missing(mapping)) formula <- mapping
+      ## .xlim, .ylim instead of xlim, ylim to distinguish from ggplot functions
+      sepdiscrete <- match.arg(sepdiscrete)
+      class(data) <- setdiff(class(data), 'Predict')
+      ## so won't involve ggplot.Predict
 
   if(varypred) {
     data$.predictor. <- data$.set.
@@ -330,7 +331,7 @@ ggplot.Predict <-
       yhat <- data[i, 'yhat']
       xl <- if(vnames == 'labels') pmlabel[w] else w
       zz <- data.frame(.xx.=z, .yhat=yhat)
-      if(! missing(formula))
+      if(length(formula))
         zz <- cbind(zz, data[i, all.vars(formula), drop=FALSE])
       if(conf.int) {
         zz$lower <- data[i, 'lower']
@@ -407,7 +408,7 @@ ggplot.Predict <-
         g <- c(g, h)
       }
       
-      if(! missing(formula))
+      if(length(formula))
         g <- c(g, sprintf("facet_grid(%s)", deparse(formula)))
       
       if(! is.factor(z) && length(rdata) && w %in% names(rdata)) {
@@ -518,7 +519,7 @@ ggplot.Predict <-
     
     f <- if(length(v) > 1) setdiff(v[-1], groups)
     if(length(f)) {
-      if(missing(formula)) {
+      if(! length(formula)) {
         k <- length(f)
         formula <- if(k == 1) paste('~', f[1])
                    else if(k == 2) paste(f[1], f[2], sep='~')

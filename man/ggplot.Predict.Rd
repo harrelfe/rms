@@ -22,7 +22,7 @@
   \code{summary.rms}.
 }
 \usage{
-\method{ggplot}{Predict}(data, formula, groups=NULL,
+\method{ggplot}{Predict}(data, mapping, formula=NULL, groups=NULL,
      aestype=c('color', 'linetype'),
      conf=c('fill', 'lines'),
      varypred=FALSE, sepdiscrete=c('no', 'list', 'vertical', 'horizontal'),
@@ -39,10 +39,12 @@
      layout=NULL, addlayer,
      histSpike.opts=list(frac=function(f) 0.01 + 
          0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1), side=1, nint=100),
-     type=NULL, ggexpr=FALSE, ...)
+     type=NULL, ggexpr=FALSE, ..., environment)
 }
 \arguments{
   \item{data}{a data frame created by \code{Predict}}
+	\item{mapping}{kept because of \code{ggplot} generic setup.  If
+  specified it will be assumed to be \code{formula}.}
 	\item{formula}{
 		a \code{ggplot} faceting formula of the form \code{vertical variables
 		~ horizontal variables}, with variables separated by \code{*} if
@@ -196,6 +198,7 @@ current curve, \code{FALSE} otherwise.  See one of the latter examples.
   character string(s) constructed to invoke \code{ggplot} without
   executing the commands}
 \item{\dots}{ignored}
+\item{environment}{ignored; used to satisfy rules because of the generic ggplot}
 }
 \value{an object of class \code{"ggplot2"} ready for printing.  For the
   case where predictors were not specified to \code{Predict}, 
