@@ -24,3 +24,5 @@ attr(w$x2, 'contrasts') <- NULL
 attr(w$x3, 'contrasts') <- NULL
 ols(y ~ x1 + x2 + x3 + x4, data=w)   # works
 
+fit.mult.impute(y ~ x1 + x2 + x3 + x4, ols, m, data=d)
+
