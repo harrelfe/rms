@@ -4,7 +4,7 @@ Date: 2016-01-08
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Maintainer: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
-Depends: Hmisc (>= 3.15-1), survival (>= 2.37-6), lattice, ggplot2, SparseM
+Depends: Hmisc (>= 3.17-1), survival (>= 2.37-6), lattice, ggplot2, SparseM
 Imports: methods, quantreg, nlme, rpart, polspline, multcomp
 Suggests: boot, tcltk
 Description: Regression modeling, testing, estimation, validation,
