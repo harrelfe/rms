@@ -95,11 +95,11 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     return(fit)
   }
   
-  if(!penpres) {
+  if(! penpres) {
     fit <- if(length(weights))
-      lm.wfit(X, Y, weights, method=method, offset=offset, ...)
+      lm.wfit(X, Y, weights, method=method, offset=offset, tol=tol, ...)
     else 
-      lm.fit (X, Y,          method=method, offset=offset, ...)
+      lm.fit (X, Y,          method=method, offset=offset, tol=tol, ...)
     cov.unscaled <- chol2inv(fit$qr$qr)
     r    <- fit$residuals
     yhat <- Y - r

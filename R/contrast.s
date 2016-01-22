@@ -14,10 +14,16 @@ contrast.rms <-
   zcrit <- if(length(idf <- fit$df.residual)) qt((1 + conf.int) / 2, idf) else
               qnorm((1 + conf.int) / 2)
   bcoef <- if(usebootcoef) fit$boot.Coef
-  nrp <- if(inherits(fit, 'orm')) 1 else
-   num.intercepts(fit, 'var')   # was 'coef'
-  ## Note: is 1 for orm because vcov defaults to intercepts='mid'
 
+  betas <- coef(fit)
+  if(inherits(fit, 'orm')) {
+    nrp <- 1
+    ## Note: is 1 for orm because vcov defaults to intercepts='mid'
+    w <- c(fit$interceptRef, (num.intercepts(fit) + 1) : length(betas))
+    betas <- betas[w]
+    if(usebootcoef) bcoef <- bcoef[, w, drop=FALSE]
+  } else nrp <- num.intercepts(fit, 'var')
+    
   if(length(bcoef) && conf.type != 'simultaneous')
     conf.type <- switch(boot.type,
                         percentile = 'bootstrap nonparametric percentile',
@@ -115,8 +121,8 @@ contrast.rms <-
   if(m > 1 && type=='average')
     X <- matrix(apply(weights*X, 2, sum) / sum(weights), nrow=1,
                 dimnames=list(NULL, dimnames(X)[[2]]))
-  
-  est <- matxv(X, coef(fit))
+
+  est <- matxv(X, betas)
   v <- X %*% vcov(fit, regcoef.only=FALSE) %*% t(X)
   ndf <- if(is.matrix(v)) nrow(v) else 1
   se <- as.vector(if(ndf == 1) sqrt(v) else sqrt(diag(v)))

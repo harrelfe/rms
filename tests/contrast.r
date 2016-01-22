@@ -31,3 +31,17 @@ print(jane, fun = exp)
 
 
 
+# From http://stats.stackexchange.com/questions/191063/lrm-and-orm-contrast-rms-package
+
+require(rms)
+set.seed(1)
+x <- factor(rbinom(100,2,0.6), labels = c("a","b","c"), ordered = TRUE)
+y <- factor(rbinom(100,1,0.5), labels=c("no","yes"))
+f <- lrm(x ~ y)
+g <- orm(x ~ y)
+coef(f); coef(g)
+
+print(contrast(f, list(y='no'), list(y='yes')), X=TRUE)
+print(contrast(g, list(y='no'), list(y='yes')), X=TRUE)
+
+
