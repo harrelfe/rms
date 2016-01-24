@@ -50,6 +50,8 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       stop('may not specify penalty with weights')
     
     Y <- model.extract(X, 'response')
+    ## For some reason integer class being attached to Y if labelled
+    class(Y) <- setdiff(class(Y), 'integer')
     n <- length(Y)
     if(model) m <- X
     X <- model.matrix(Terms, X)
@@ -84,7 +86,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
                 non.slopes=1, fail=FALSE, residuals=Y - yest,
                 df.residual=n - 1, intercept=TRUE, sformula=sformula)
     if(linear.predictors) {
-      fit$linear.predictors <- rep(yest,n); 
+      fit$linear.predictors <- rep(yest, n); 
       names(fit$linear.predictors) <- names(Y)
     }
     if(model) fit$model <- m
@@ -101,6 +103,10 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     else 
       lm.fit (X, Y,          method=method, offset=offset, tol=tol, ...)
     cov.unscaled <- chol2inv(fit$qr$qr)
+    ## For some reason when Y was labelled, fit functions are making
+    ## residuals and fitted.values class integer
+    fit$fitted.values <- unclass(fit$fitted.values)
+    fit$residuals     <- unclass(fit$residuals)
     r    <- fit$residuals
     yhat <- Y - r
     if(length(weights)) { ## see summary.lm
@@ -111,7 +117,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
       if(!length(sigma)) sigma <- sqrt(sse / fit$df.residual)
     }
     else {
-      sse <- sum(fit$residuals ^ 2)
+      sse <- sum(r ^ 2)
       if(!length(sigma)) sigma <- sqrt(sse / fit$df.residual)
       r2 <- 1 - sse/sum((Y - mean(Y)) ^ 2)
     }
@@ -138,7 +144,9 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     fit <- lm.pfit(X[, -1, drop=FALSE], Y, offset=offset,
                    penalty.matrix=penalty.matrix, tol=tol,
                    var.penalty=var.penalty)
-    fit$penalty <- penalty
+    fit$fitted.values <- unclass(fit$fitted.values)
+    fit$residuals     <- unclass(fit$residuals)
+    fit$penalty       <- penalty
   }
   
   if(model) fit$model <- m
