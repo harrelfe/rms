@@ -39,7 +39,7 @@ ggplot.Predict <-
   maddlayer <- missing(addlayer)
   if(! maddlayer) addlayer <- paste(deparse(substitute(addlayer)), collapse=' ')
 
-  ribbonargs <- sprintf("alpha=0.2, linetype=0, fill=I('%s'), show_guide=FALSE",
+  ribbonargs <- sprintf("alpha=0.2, linetype=0, fill=I('%s'),show.legend=FALSE",
                         colfill)
   
   dohist <- function(...) {
