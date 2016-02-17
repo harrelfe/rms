@@ -10,6 +10,7 @@
 	model).  Penalized estimation will be implemented in the future.
 	Weights are not implemented.
   The optimization method is Newton-Raphson with step-halving.
+	Execution time is linear in the number of intercepts.
 }
 \usage{
 orm.fit(x=NULL, y, family='logistic',
