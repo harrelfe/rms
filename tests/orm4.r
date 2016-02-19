@@ -53,6 +53,17 @@ dd <- datadist(d); options(datadist='dd')
 f <- orm(y ~ cohort * sex, data=d)
 f
 anova(f)
+
+# Show intercepts as a function of y to estimate the underlying
+# conditional distribution.  Result: more uniform than Gaussian
+alphas <- coef(f)[1 : num.intercepts(f)]
+yunique <- f$yunique[-1]
+par(mfrow=c(1,2))
+plot(yunique, alphas)
+
+# Compare to distribution of residuals
+plot(ecdf(resid(ols(y ~ cohort * sex, data=d))), main='')
+
 M <- Mean(f)
 # Confidence intervals for means are approximate
 # Confidence intervals for odds ratios or exceedance probabilities
