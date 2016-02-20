@@ -20,6 +20,10 @@ g <- coxph(Srv ~ rcs(age,4)+offset(1*(sex=="Male")))
 f; g
 summary(f)
 
+# Make sure surv summary works
+f <- cph(Srv ~ age, surv='summary')
+f$surv.summary
+
 # Check relationship between R2 measure and censoring
 n <- 2000
 set.seed(3)
