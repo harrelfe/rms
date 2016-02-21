@@ -21,7 +21,8 @@ cph(formula = formula(data), data=parent.frame(),
     weights, subset, na.action=na.delete, 
     method=c("efron","breslow","exact","model.frame","model.matrix"), 
     singular.ok=FALSE, robust=FALSE,
-    model=FALSE, x=FALSE, y=FALSE, se.fit=FALSE, 
+    model=FALSE, x=FALSE, y=FALSE, se.fit=FALSE,
+    linear.predictors=TRUE, residuals=TRUE, nonames=FALSE,
     eps=1e-4, init, iter.max=10, tol=1e-9, surv=FALSE, time.inc,
     type=NULL, vartype=NULL, debug=FALSE, \dots)
 
@@ -124,6 +125,13 @@ cph(formula = formula(data), data=parent.frame(),
     of the fit.  The predictors are first centered to their means
     before computing the standard errors.
   }
+	\item{linear.predictors}{set to \code{FALSE} to omit
+    \code{linear.predictors} vector from fit}
+	\item{residuals}{set to \code{FALSE} to omit \code{residuals} vector
+    from fit}
+	\item{nonames}{set to \code{TRUE} to not set \code{names} attribute
+    for \code{linear.predictors}, \code{residuals}, \code{se.fit}, and
+    rows of design matrix}
   \item{eps}{
     convergence criterion - change in log likelihood.
   }

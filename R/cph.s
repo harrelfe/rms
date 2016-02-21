@@ -13,6 +13,9 @@ cph <- function(formula     = formula(data),
                 x           = FALSE,
                 y           = FALSE,
                 se.fit      = FALSE,
+                linear.predictors = TRUE,
+                residuals         = TRUE,
+                nonames           = FALSE,
                 eps         = 1e-4,
                 init,
                 iter.max    = 10,
@@ -146,8 +149,7 @@ cph <- function(formula     = formula(data),
                     alt=alt))
       }
 #        prn(colnames(X)); prn(mmcolnames); prn(alt)}
-      if(! all(mmcolnames %in% colnames(X)) && length(alt))
-        mmcolnames <- alt
+      if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
       X <- X[, mmcolnames, drop=FALSE]
       assign <- attr(X, "assign")
       assign[[1]] <- NULL  # remove intercept position, renumber
@@ -173,7 +175,7 @@ cph <- function(formula     = formula(data),
   ny <- ncol(Y)
   maxtime <- max(Y[, ny - 1])
 
-  rnam <- dimnames(Y)[[1]]
+  rnam <- if(! nonames) dimnames(Y)[[1]]
   if(xpres) dimnames(X) <- list(rnam, atr$colnames)
 
   if(method=="model.matrix") return(X)
@@ -274,7 +276,7 @@ cph <- function(formula     = formula(data),
   }
   else {
     stats <- c(n, nevent)
-    names(stats) <- c("Obs","Events")
+    names(stats) <- c("Obs", "Events")
   }
   
   f$method <- NULL
@@ -330,7 +332,7 @@ cph <- function(formula     = formula(data),
 
     strt <- if(nstr > 1) rep(names(g$strata), g$strata)
 
-    for(k in 1:nstr) {
+    for(k in 1 : nstr) {
       j    <- if(nstr == 1) TRUE else strt == slev[k]
       yy   <- Y[if(nstr==1) TRUE else iStrata==slev[k], ny - 1]
       maxt <- max(yy)
@@ -349,7 +351,7 @@ cph <- function(formula     = formula(data),
       kk <- 0
       for(tp in timepts) {
         kk <- kk + 1
-        t.choice <- max((1:length(tt))[tt <= tp+1e-6])
+        t.choice <- max((1 : length(tt))[tt <= tp+1e-6])
         if(tp > max(tt) + 1e-6 & su[length(su)] > 0) {
           Su <- NA
           Se <- NA
@@ -360,7 +362,7 @@ cph <- function(formula     = formula(data),
         }
         
         n.risk <- sum(yy >= tp)
-        s.sum[kk, k, 1:3] <- c(Su, n.risk, Se)
+        s.sum[kk, k, 1 : 3] <- c(Su, n.risk, Se)
       }
       
       if(! is.character(surv)) {
@@ -393,7 +395,9 @@ cph <- function(formula     = formula(data),
   if(y) f$y <- Y
   f$weights <- weights
   f$offset  <- offset
-    
+
+  if(! linear.predictors) f$linear.predictors <- NULL
+  if(! residuals        ) f$residuals <- NULL
   class(f) <- c("cph", "rms", "coxph")
   f
 }
@@ -440,8 +444,8 @@ Survival.cph <- function(object, ...) {
         su <- approx(time, surv, times, ties=mean)$y
         return(su ^ exp(lp))
       }
-    for(i in 1:length(times)) {
-      tm <- max((1:length(time))[time <= times[i] + 1e-6])
+    for(i in 1 : length(times)) {
+      tm <- max((1 : length(time))[time <= times[i] + 1e-6])
       su <- surv[tm]
       if(times[i] > max(time) + 1e-6) su <- NA
       s[,i] <- su ^ exp(lp)
@@ -463,10 +467,10 @@ Quantile.cph <- function(object, ...) {
     if(is.list(time)) {time <- time[[stratum]]; surv <- surv[[stratum]]}
     Q <- matrix(NA, nrow=length(lp), ncol=length(q),
                 dimnames=list(names(lp), format(q)))
-    for(j in 1:length(lp)) {
+    for(j in 1 : length(lp)) {
       s <- surv^exp(lp[j])
       if(type=="polygon") Q[j,] <- approx(s, time, q, ties=mean)$y
-      else for(i in 1:length(q))
+      else for(i in 1 : length(q))
         if(any(s <= q[i])) Q[j,i] <- min(time[s <= q[i]])  #is NA if none
     }
     drop(Q)
@@ -503,9 +507,9 @@ Mean.cph <- function(object, method=c("exact","approximate"),
         if(tmax > max(time)) stop(paste("tmax=", format(tmax),
                                       "> max follow-up time=",
                                       format(max(time))))
-        k <- (1:length(time))[time <= tmax]
+        k <- (1 : length(time))[time <= tmax]
       }
-      for(j in 1:length(lp)) {
+      for(j in 1 : length(lp)) {
         s <- surv ^ exp(lp[j])
         Q[j] <- if(type=="step") sum(c(diff(time[k]), 0) * s[k]) else 
           trap.rule(time[k], s[k])
@@ -527,7 +531,7 @@ Mean.cph <- function(object, method=c("exact","approximate"),
     nstrat <- if(is.list(time)) length(time) else 1
     areas  <- list()
     
-    for(is in 1:nstrat) {
+    for(is in 1 : nstrat) {
       tim <- if(nstrat==1) time else time[[is]]
       srv <- if(nstrat==1) surv else surv[[is]]
       if(! length(tmax)) {
@@ -541,10 +545,10 @@ Mean.cph <- function(object, method=c("exact","approximate"),
             if(tmax > max(tim)) stop(paste("tmax=",format(tmax),
                                            "> max follow-up time=",
                                            format(max(tim))))
-            k <- (1:length(tim))[tim <= tmax]
+            k <- (1 : length(tim))[tim <= tmax]
           }
       ymean <- lp.seq
-      for(j in 1:length(lp.seq)) {
+      for(j in 1 : length(lp.seq)) {
         s <- srv ^ exp(lp.seq[j])
         ymean[j] <- if(type=="step") sum(c(diff(tim[k]),0) * s[k]) else 
         trap.rule(tim[k], s[k])
