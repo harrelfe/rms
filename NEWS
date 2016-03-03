@@ -1,3 +1,6 @@
+Changes in version 4.4-3 (2016-03-02)
+   * val.prob: fixed longstanding error: U was always -2/n because used wrong deviance.  Thanks: Kai Chen
+
 Changes in version 4.4-2 (2016-02-20)
    * tests: added test mice.r exposing problem with complete function in mice
 	 * ols: passed tol argument to lm.fit, lm.wfit

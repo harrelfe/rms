@@ -144,7 +144,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   p.lr <- stats["P"]
   D <- (lr - 1) / n
   L01 <- -2 * sum(y * logit - logb(1 + exp(logit)), na.rm=TRUE)
-  U.chisq <- L01 - f.fixed$deviance[2]
+  U.chisq <- L01 - f.recal$deviance[2]
   p.U <- 1 - pchisq(U.chisq, 2)
   U <- (U.chisq - 2)/n
   Q <- D - U
