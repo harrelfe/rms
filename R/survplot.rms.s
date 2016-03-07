@@ -3,12 +3,12 @@ survplot <- function(fit, ...) UseMethod("survplot")
 survplot.rms <-
   function(fit, ..., xlim, 
            ylim=if(loglog) c(-5,1.5) else 
-            if(what=="survival" & missing(fun)) c(0,1),
+            if(what == "survival" & missing(fun)) c(0,1),
            xlab, ylab, time.inc,
            what=c("survival","hazard"),
            type=c("tsiatis","kaplan-meier"),
            conf.type=c("log","log-log","plain","none"),
-           conf.int=FALSE, conf=c("bands","bars"),
+           conf.int=FALSE, conf=c("bands","bars"), mylim=NULL,
            add=FALSE, label.curves=TRUE,
            abbrev.label=FALSE, levels.only=FALSE,
            lty, lwd=par('lwd'),
@@ -28,17 +28,21 @@ survplot.rms <-
 
   opar <- par(c('mar', 'xpd'))
   on.exit(par(opar))
-  
+
+  cylim <- function(ylim)
+    if(length(mylim)) c(min(ylim[1], mylim[1]), max(ylim[2], mylim[2]))
+    else ylim
+
   psmfit <- inherits(fit,'psm')
-  if(what=="hazard" && !psmfit)
+  if(what == "hazard" && !psmfit)
     stop('what="hazard" may only be used for fits from psm')
-  if(what=="hazard" & conf.int > 0) {
+  if(what == "hazard" & conf.int > 0) {
     warning('conf.int may only be used with what="survival"')
     conf.int <- FALSE
   }
   
   if(loglog) {
-    fun <- function(x) logb(-logb(ifelse(x==0|x==1,NA,x)))
+    fun <- function(x) logb(-logb(ifelse(x == 0 | x == 1, NA, x)))
     use.fun <- TRUE
   }
   else if(!missing(fun)) {
@@ -50,10 +54,10 @@ survplot.rms <-
     use.fun <- FALSE
   }
   
-  if(what=="hazard" & loglog)
+  if(what == "hazard" & loglog)
     stop('may not specify loglog=T with what="hazard"')
 
-  if(use.fun | logt | what=="hazard") { dots <- FALSE; grid <- NULL }
+  if(use.fun | logt | what == "hazard") { dots <- FALSE; grid <- NULL }
   
   cox <- inherits(fit,"cph")
   if(cox) {
@@ -72,8 +76,8 @@ survplot.rms <-
   
   ## Compute confidence limits for survival based on -log survival,
   ## constraining to be in [0,1]; d = std.error of cum hazard * z value
-  ciupper <- function(surv, d) ifelse(surv==0, 0, pmin(1, surv*exp(d)))
-  cilower <- function(surv, d) ifelse(surv==0, 0, surv*exp(-d))
+  ciupper <- function(surv, d) ifelse(surv == 0, 0, pmin(1, surv*exp(d)))
+  cilower <- function(surv, d) ifelse(surv == 0, 0, surv*exp(-d))
   
   labelc <- is.list(label.curves) || label.curves
   
@@ -81,7 +85,7 @@ survplot.rms <-
   if(missing(ylab)) {
     if(loglog) ylab <- "log(-log Survival Probability)"
     else if(use.fun) ylab <- ""
-    else if(what=="hazard") ylab <- "Hazard Function"
+    else if(what == "hazard") ylab <- "Hazard Function"
     else ylab <- "Survival Probability"
   }
   if(missing(xlab)) {
@@ -143,7 +147,7 @@ survplot.rms <-
   abbrevy <- if(abbrev.label) abbreviate(y) else y
   abbrevy <- if(is.factor(abbrevy)) as.character(abbrevy) else format(abbrevy)
   
-  if(labelc || conf=='bands') curves <- vector('list',nc)
+  if(labelc || conf == 'bands') curves <- vector('list',nc)
 
   for(i in 1:nc) {
     ci <- conf.int
@@ -160,7 +164,7 @@ survplot.rms <-
     if(logt) time <- logb(time)
     s <- !is.na(time) & (time>=xlim[1])
     surv <- w$surv
-    if(is.null(ylim)) ylim <- range(surv, na.rm=TRUE)
+    if(is.null(ylim)) ylim <- cylim(range(surv, na.rm=TRUE))
     stratum <- w$strata
     if(is.null(stratum)) stratum <- 1
     if(!is.na(stratum)) {
@@ -168,7 +172,7 @@ survplot.rms <-
       cl <- if(is.factor(ay)) as.character(ay)
       else format(ay)
       curve.labels <- c(curve.labels, abbrevy[i])
-      if(i==1 & !add) {				
+      if(i == 1 & !add) {				
         plot(time, surv, xlab=xlab, xlim=xlim,
              ylab=ylab, ylim=ylim, type="n", axes=FALSE)	
         mgp.axis(1, at=if(logt)pretty(xlim) else
@@ -199,14 +203,14 @@ survplot.rms <-
         bupper <- w$upper[s]
       }
       if(max(tim) > xlim[2]) {
-        if(ltype=="s") {
+        if(ltype == "s") {
           ##Get estimate at last permissible point to plot
           ## s.last <- min(srv[tim<=xlim[2]+1e-6])  #not work with function
           s.last <- srv[tim <= xlim[2] + 1e-6]
           s.last <- s.last[length(s.last)]
           k <- tim < xlim[2]
           tim <- c(tim[k], xlim[2]); srv <- c(srv[k], s.last)
-          if(conf.int > 0 && conf=='bands') {
+          if(conf.int > 0 && conf == 'bands') {
             low.last <- blower[time <= xlim[2] + 1e-6]
             low.last <- low.last[length(low.last)]
             up.last  <- bupper[time <= xlim[2] + 1e-6]
@@ -224,7 +228,7 @@ survplot.rms <-
       if(conf != 'bands')
         lines(tim, srv, type=ltype, lty=lty[i], col=col[i], lwd=lwd[i])
       
-      if(labelc || conf=='bands') curves[[i]] <- list(tim, srv)
+      if(labelc || conf == 'bands') curves[[i]] <- list(tim, srv)
       
       if(pr) {
         zest <- rbind(tim,srv)
@@ -233,7 +237,7 @@ survplot.rms <-
         print(zest, digits=3)
       }
       if(conf.int > 0) {
-        if(conf=="bands") {
+        if(conf == "bands") {
           polyg(x = c(tim,    rev(tim)),
                 y = c(blower, rev(bupper)),
                 col =  col.fill[i], type=ltype)
@@ -248,8 +252,8 @@ survplot.rms <-
             ss    <- v$surv
             lower <- v$lower
             upper <- v$upper
-            if(!length(ylim)) ylim <- range(ss, na.rm=TRUE)
-            if(logt) tt <- logb(ifelse(tt==0, NA, tt))
+            if(!length(ylim)) ylim <- cylim(range(ss, na.rm=TRUE))
+            if(logt) tt <- logb(ifelse(tt == 0, NA, tt))
           }
           else {
             tt <- as.numeric(dimnames(surv.sum)[[1]])
@@ -291,6 +295,7 @@ survplot.rms <-
         tt[1] <- xlim[1]  #was xd*.015, .030, .035
         yd <- ylim[2] - ylim[1]
         if(missing(y.n.risk)) y.n.risk <- ylim[1]
+        if(y.n.risk == 'auto') y.n.risk <- - diff(ylim) / 3
         yy <- y.n.risk + yd*(nc-i)*sep.n.risk #was .029, .038, .049
         
         nri <- nrisk
@@ -305,7 +310,7 @@ survplot.rms <-
   }
   
   ## to keep bands from covering up lines plot lines last
-  if(conf=='bands') for(i in 1:length(y))
+  if(conf == 'bands') for(i in 1:length(y))
     lines(curves[[i]][[1]], curves[[i]][[2]], type=ltype, lty=lty[i],
           col=col[i], lwd=lwd[i])
 

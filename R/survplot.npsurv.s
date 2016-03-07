@@ -1,9 +1,8 @@
 survplot.npsurv <-
   function(fit, xlim, 
            ylim, xlab, ylab, time.inc, state=NULL,
-           conf=c("bands","bars","diffbands","none"), add=FALSE, 
-           label.curves=TRUE,
-           abbrev.label=FALSE, levels.only=FALSE,
+           conf=c("bands", "bars", "diffbands", "none"), mylim=NULL,
+           add=FALSE, label.curves=TRUE, abbrev.label=FALSE, levels.only=FALSE,
            lty, lwd=par('lwd'),
            col=1, col.fill=gray(seq(.95, .75, length=5)),
            loglog=FALSE, fun, n.risk=FALSE, aehaz=FALSE, times=NULL,
@@ -17,6 +16,10 @@ survplot.npsurv <-
     if(!length(conf.int) | conf == "none") conf.int <- 0
     opar <- par(c('mar', 'xpd'))
     on.exit(par(opar))
+
+    cylim <- function(ylim)
+      if(length(mylim)) c(min(ylim[1], mylim[1]), max(ylim[2], mylim[2]))
+    else ylim
     
     fit.orig <- fit
     units <- fit$units
@@ -91,9 +94,10 @@ survplot.npsurv <-
       fit$upper <- fun(fit$upper)
       fit$lower[is.infinite(fit$lower)] <- NA
       fit$upper[is.infinite(fit$upper)] <- NA
-      if(missing(ylim)) ylim <- range(c(fit$lower, fit$upper), na.rm=TRUE)
+      if(missing(ylim))
+        ylim <- cylim(range(c(fit$lower, fit$upper), na.rm=TRUE))
     }
-    else if(missing(ylim)) ylim <- range(fit$surv, na.rm=TRUE)
+    else if(missing(ylim)) ylim <- cylim(range(fit$surv, na.rm=TRUE))
   }
   else if(missing(ylim)) ylim <- c(0, 1)
 
@@ -279,6 +283,7 @@ survplot.npsurv <-
       nrisk <- v$n.risk[j]
       tt[1] <- xlim[1]  #was xd*.015, .030, .035
       if(missing(y.n.risk)) y.n.risk <- ylim[1]
+      if(y.n.risk == 'auto') y.n.risk <- - diff(ylim) / 3
       yy <- y.n.risk + yd * (ns - i) * sep.n.risk
       nri <- nrisk
       nri[tt > xlim[2]] <- NA
@@ -445,7 +450,7 @@ survdiffplot <-
     xd         <- xlim[2] - xlim[1]
     yd         <- ylim[2] - ylim[1]
     
-    if(!add) {
+    if(! add) {
       mar <- opar$mar
       if(mar[4] < 4) {mar[4] <- mar[4] + 2; par(mar=mar)}
     }
@@ -454,6 +459,7 @@ survdiffplot <-
     tt <- nrisktimes
     tt[1] <- xlim[1]
     if(missing(y.n.risk)) y.n.risk <- ylim[1]
+    if(y.n.risk == 'auto') y.n.risk <- - diff(ylim) / 3
     yy  <- y.n.risk
     nri <- nrisk
     nri[tt > xlim[2]] <- NA

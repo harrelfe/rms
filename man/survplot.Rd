@@ -44,7 +44,7 @@ survplot(fit, \dots)
          what=c("survival","hazard"),
          type=c("tsiatis","kaplan-meier"),
          conf.type=c("log","log-log","plain","none"),
-         conf.int=FALSE, conf=c("bands","bars"),
+         conf.int=FALSE, conf=c("bands","bars"), mylim=NULL,
          add=FALSE, label.curves=TRUE,
          abbrev.label=FALSE, levels.only=FALSE,
          lty, lwd=par("lwd"),
@@ -55,8 +55,8 @@ survplot(fit, \dots)
          y.n.risk, cex.n.risk=.6, pr=FALSE)
 \method{survplot}{npsurv}(fit, xlim, 
          ylim, xlab, ylab, time.inc, state=NULL,
-         conf=c("bands","bars","diffbands","none"), add=FALSE, 
-         label.curves=TRUE, abbrev.label=FALSE,
+         conf=c("bands","bars","diffbands","none"), mylim=NULL,
+         add=FALSE, label.curves=TRUE, abbrev.label=FALSE,
          levels.only=FALSE, lty,lwd=par('lwd'),
          col=1, col.fill=gray(seq(.95, .75, length=5)),
          loglog=FALSE, fun, n.risk=FALSE, aehaz=FALSE, times=NULL,
@@ -173,6 +173,9 @@ width of the approximate \code{conf.int} pointwise confidence region.
 Survival curves not overlapping the shaded area are approximately
 significantly different at the \code{1 - conf.int} level.
 }
+\item{mylim}{used to curtail computed \code{ylim}.  When \code{ylim} is
+	not given by the user, the computed limits are expanded to force
+	inclusion of the values specified in \code{mylim}.}
 \item{what}{
 defaults to \code{"survival"} to plot survival estimates.  Set to
 \code{"hazard"} or an abbreviation to plot the hazard function (for
@@ -257,9 +260,11 @@ multiple of upper y limit - lower y limit for separating lines of text
 containing number of subjects at risk.  Default is \code{.056*(ylim[2]-ylim[1])}.
 }
 \item{y.n.risk}{
-When \code{n.risk=TRUE}, the default is to place numbers of patients at risk above
-the x-axis.  You can specify a y-coordinate for the bottom line of the
-numbers using \code{y.n.risk}.
+When \code{n.risk=TRUE}, the default is to place numbers of patients at
+risk above the x-axis.  You can specify a y-coordinate for the bottom
+line of the numbers using \code{y.n.risk}.  Specify
+\code{y.n.risk='auto'} to place the numbers below the x-axis at a
+distance of 1/3 of the range of \code{ylim}.
 }
 \item{cex.n.risk}{
 character size for number of subjects at risk (when \code{n.risk} is \code{TRUE})
