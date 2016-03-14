@@ -84,10 +84,10 @@ bootcov(fit, cluster, B=200, fitter,
         pr=FALSE, maxit=15, eps=0.0001, group=NULL, stat=NULL)
 
 
-bootplot(obj, which, X,
+bootplot(obj, which=1 : ncol(Coef), X,
          conf.int=c(.9,.95,.99),
-         what=c('density','qqnorm'),
-         fun=function(x)x, labels., \dots)
+         what=c('density', 'qqnorm', 'box'),
+         fun=function(x) x, labels., \dots)
 
 
 confplot(obj, X, against, 
@@ -175,7 +175,9 @@ a vector (for \code{bootplot}, default is \code{c(.9,.95,.99)}) or scalar
 (for \code{confplot}, default is \code{.95}) confidence level.
 }
 \item{what}{
-for \code{bootplot}, specifies whether a density or a q-q plot is made
+for \code{bootplot}, specifies whether a density or a q-q plot is made,
+a \code{ggplot2} is used to produce a box plot of all coefficients over
+the bootstrap reps
 }
 \item{fun}{
 for \code{bootplot} or \code{confplot} specifies a function used to translate
@@ -378,6 +380,9 @@ bootplot(b, which=1:6, what='qq')
 w <- bootplot(b, which=1:6)
 # Print bootstrap quantiles
 w$quantiles
+
+# Show box plots for bootstrap reps for all coefficients
+bootplot(b, what='box')
 
 
 # Estimate regression function for females

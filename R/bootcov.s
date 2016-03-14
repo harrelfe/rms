@@ -6,7 +6,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
 
   nfit <- class(fit)[1]
   
-  if(length(fit$weights) && (coxcph || nfit[1]=='Rq'))
+  if(length(fit$weights) && (coxcph || nfit[1] == 'Rq'))
     stop('does not handle weights')
 
   if(!length(X <- fit$x) | !length(Y <- fit$y))
@@ -16,7 +16,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   sc.pres <- match('scale',names(fit),0) > 0
   ns <- fit$non.slopes
 
-  if(nfit=='psm') {
+  if(nfit == 'psm') {
     fixed <- fit$fixed   #psm only
     fixed <- if(length(fixed) == 1 && is.logical(fixed) && !fixed) list()
     else list(scale=TRUE)
@@ -351,7 +351,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   fit$var <- cov
   fit$boot.loglik <- Loglik
   if(length(stat)) fit$boot.stats <- stats
-  if(nfit=='Rq') {
+  if(nfit == 'Rq') {
     newse <- sqrt(diag(cov))
     newt <- fit$summary[, 1L]/newse
     newp <- 2. * (1. - pt(abs(newt), fit$stats['n'] - fit$stats['p']))
@@ -362,56 +362,64 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   fit
 }
   
-bootplot <- function(obj, which, X,
+bootplot <- function(obj, which=1 : ncol(Coef), X,
                      conf.int=c(.9,.95,.99),
-                     what=c('density','qqnorm'),
-                     fun=function(x)x,
+                     what=c('density', 'qqnorm', 'box'),
+                     fun=function(x) x,
                      labels., ...) {
 
   what <- match.arg(what)
   Coef <- obj$boot.Coef
-  if(length(Coef)==0) stop('did not specify "coef.reps=TRUE" to bootcov')
-  
-  if(missing(which)) {
-    if(!is.matrix(X)) X <- matrix(X, nrow=1)
-    
+  if(length(Coef) == 0) stop('did not specify "coef.reps=TRUE" to bootcov')
+
+  Coef <- Coef[, which, drop=FALSE]
+
+  if(! missing(X)) {
+    if(! is.matrix(X)) X <- matrix(X, nrow=1)
     qoi <- matxv(X, Coef, bmat=TRUE)  # X %*% t(Coef)   ##nxp pxB = nxB
     if(missing(labels.)) {
       labels. <- dimnames(X)[[1]]
-      if(length(labels.)==0) {
+      if(length(labels.) == 0) {
         labels. <- as.character(1:nrow(X))
       }
     }
-  }
-  else {
-    qoi <- t(Coef[, which, drop=FALSE])
+  } else {
+    qoi <- t(Coef)
     nns <- num.intercepts(obj)
     if(missing(labels.)) {
       labels. <- paste(ifelse(which > nns, 'Coefficient of ', ''), 
-                       dimnames(Coef)[[2]][which], sep='')
+                       dimnames(Coef)[[2]], sep='')
     }
   }
   
-  nq <- nrow(qoi)
-  qoi <- fun(qoi)
+  nq   <- nrow(qoi)
+  qoi  <- fun(qoi)
   quan <- NULL
-  
-  if(what=='density') {
-    probs <- (1+conf.int)/2
-    probs <- c(1-probs, probs)
-    quan <- matrix(NA, nrow=nq, ncol=2*length(conf.int),
+
+  if(what == 'box') {
+    Co <- as.vector(Coef)
+    predictor <- rep(colnames(Coef), each=nrow(Coef))
+    p <- ggplot(data.frame(predictor, Co), aes(x=predictor, y=Co)) +
+      xlab('Predictor') + ylab('Coefficient') +
+      geom_boxplot() + facet_wrap(~ predictor, scales='free')
+    return(p)
+  }
+  else if(what == 'density') {
+    probs <- (1 + conf.int) / 2
+    probs <- c(1 - probs, probs)
+    quan <- matrix(NA, nrow=nq, ncol=2 * length(conf.int),
                    dimnames=list(labels., format(probs)))
 
-      for(j in 1:nq) {
+      for(j in 1 : nq) {
         histdensity(qoi[j,], xlab=labels.[j], ...)
         quan[j,] <- quantile(qoi[j,], probs, na.rm=TRUE)
         abline(v=quan[j,], lty=2)
-        title(sub=paste('Fraction of effects>',fun(0),' = ',
-                format(mean(qoi[j,]>fun(0))),sep=''),adj=0)
+        title(sub=paste('Fraction of effects >', fun(0), ' = ',
+                format(mean(qoi[j,] > fun(0))),sep=''), adj=0)
       }
   }
   else {
-    for(j in 1:nq) {
+    for(j in 1 : nq) {
       qqnorm(qoi[j,], ylab=labels.[j])
       qqline(qoi[j,])
     }
@@ -429,7 +437,7 @@ histdensity <- function(y, xlab, nclass, width, mult.width=1, ...) {
   y <- y[is.finite(y)]
   if(missing(xlab)) {
     xlab <- label(y)
-    if(xlab=='') xlab <- as.character(sys.call())[-1]
+    if(xlab == '') xlab <- as.character(sys.call())[-1]
   }
 
   if(missing(nclass)) nclass <- (logb(length(y),base=2)+1)*2
@@ -455,13 +463,13 @@ confplot <- function(obj, X, against,
   if(length(conf.int)>1) stop('may not specify more than one conf.int value')
 
   boot.Coef <- obj$boot.Coef
-  if(length(boot.Coef)==0) stop('did not specify "coef.reps=TRUE" to bootcov')
+  if(length(boot.Coef) == 0) stop('did not specify "coef.reps=TRUE" to bootcov')
   
   if(!is.matrix(X)) X <- matrix(X, nrow=1)
   
   fitted <- fun(matxv(X, obj$coefficients))
   
-  if(method=='pointwise') {
+  if(method == 'pointwise') {
     pred <- matxv(X, boot.Coef, bmat=TRUE)   ## n x B
     p <- fun(apply(pred, 1, quantile,
                    probs=c((1 - conf.int)/2, 1 - (1 - conf.int)/2),
@@ -472,7 +480,7 @@ confplot <- function(obj, X, against,
   else {
     boot.Coef <- rbind(boot.Coef, obj$coefficients)
     loglik    <- obj$boot.loglik
-    if(length(loglik)==0) stop('did not specify "loglik=TRUE" to bootcov')
+    if(length(loglik) == 0) stop('did not specify "loglik=TRUE" to bootcov')
     
     crit  <- quantile(loglik, conf.int, na.rm=TRUE)
     qual  <- loglik <= crit
@@ -485,7 +493,7 @@ confplot <- function(obj, X, against,
   
   if(!missing(against)) {
     lab <- label(against)
-    if(lab=='') lab <- (as.character(sys.call())[-1])[3]
+    if(lab == '') lab <- (as.character(sys.call())[-1])[3]
     
     if(add) lines(against, fitted, ...)
     else plot(against, fitted, xlab=lab, type='l', ...)
@@ -543,5 +551,5 @@ bootBCa <- function(estimate, estimates, type=c('percentile','bca','basic'),
     }
     lim[,i] <- cl
   }
-  if(ne==1) as.vector(lim) else lim
+  if(ne == 1) as.vector(lim) else lim
 }
