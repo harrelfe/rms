@@ -370,17 +370,21 @@ ggplot(p, ylab="Median Survival Time")
 # normality of residuals; use the smearing estimator
 # See help file for rbind.Predict for a method of showing two
 # types of confidence intervals simultaneously.
+# Add raw data scatterplot to graph
 set.seed(1)
 x1 <- runif(300)
 x2 <- runif(300)
-ddist <- datadist(x1,x2)
-y  <- exp(x1+x2-1+rnorm(300))
-f <- ols(log(y) ~ pol(x1,2)+x2)
+ddist <- datadist(x1, x2); options(datadist='ddist')
+y  <- exp(x1 + x2 - 1 + rnorm(300))
+f <- ols(log(y) ~ pol(x1,2) + x2)
 r <- resid(f)
 smean <- function(yhat)smearingEst(yhat, exp, res, statistic='mean')
-formals(smean) <- list(yhat=numeric(0), res=r[!is.na(r)])
-#smean$res <- r[!is.na(r)]   # define default res argument to function
-ggplot(Predict(f, x1, fun=smean), ylab='Predicted Mean on y-scale')
+formals(smean) <- list(yhat=numeric(0), res=r[! is.na(r)])
+#smean$res <- r[! is.na(r)]   # define default res argument to function
+ggplot(Predict(f, x1, fun=smean), ylab='Predicted Mean on y-scale', 
+   addlayer=geom_point(aes(x=x1, y=y), data.frame(x1, y)))
+# Had ggplot not added a subtitle (i.e., if x2 were not present), you
+# could have done ggplot(Predict(), ylab=...) + geom_point(...) 
 }
 
 # Make an 'interaction plot', forcing the x-axis variable to be
