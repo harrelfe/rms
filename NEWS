@@ -1,8 +1,9 @@
-Changes in version 4.4-3 (2016-03-14)
+Changes in version 4.4-3 (2016-03-23)
    * val.prob: fixed longstanding error: U was always -2/n because used wrong deviance.  Thanks: Kai Chen
 	 * survplot*: implemented y.n.risk='auto' to place numbers at risk below the x-axis by 1/3 the range of ylim
 	 * survplot*: added mylim argument to force inclusion of ranges in computed limits
 	 * bootplot: added what='box' for box plots to check for wild bootstrap coefficients
+	 * ggplot.Predict: old workaround for expression labels for facet_grid quit work; changed to new labeller capabilities just added to ggplot2
 
 Changes in version 4.4-2 (2016-02-20)
    * tests: added test mice.r exposing problem with complete function in mice

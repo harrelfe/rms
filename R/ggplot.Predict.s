@@ -18,24 +18,25 @@ ggplot.Predict <-
            histSpike.opts=list(frac=function(f) 0.01 + 
                                  0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1),
              side=1, nint=100),
-           type=NULL, ggexpr=FALSE, ..., environment) {
+           type=NULL, ggexpr=FALSE, ..., environment)
+{
 
-    if(! length(formula) && ! missing(mapping)) formula <- mapping
-      ## .xlim, .ylim instead of xlim, ylim to distinguish from ggplot functions
-      sepdiscrete <- match.arg(sepdiscrete)
-      class(data) <- setdiff(class(data), 'Predict')
-      ## so won't involve ggplot.Predict
+  if(! length(formula) && ! missing(mapping)) formula <- mapping
+  ## .xlim, .ylim instead of xlim, ylim to distinguish from ggplot functions
+  sepdiscrete <- match.arg(sepdiscrete)
+  class(data) <- setdiff(class(data), 'Predict')
+  ## so won't involve ggplot.Predict
 
   if(varypred) {
     data$.predictor. <- data$.set.
     data$.set. <- NULL
   }
   predpres <- length(data$.predictor.) > 0
-
+  
   if(predpres && missing(legend.position)) legend.position <- 'top'
   conf   <- match.arg(conf)
   vnames <- match.arg(vnames)
-
+  
   maddlayer <- missing(addlayer)
   if(! maddlayer) addlayer <- paste(deparse(substitute(addlayer)), collapse=' ')
 
@@ -58,17 +59,26 @@ ggplot.Predict <-
   pmlabel <- character(length(label))
   names(pmlabel) <- names(label)
   for(i in 1 : length(label))
-    pmlabel[i] <- labelPlotmath(label[i], units[i], chexpr=TRUE)
+    pmlabel[i] <- as.character(labelPlotmath(label[i], units[i]))
 
-  glabel <- function(gname, j=1) {
-    if(! length(legend.label)) pmlabel[gname]
-    else if(is.logical(legend.label)) ''
-    else legend.label[j]
+  if(predpres)
+    data$.Predictor. <- if(vnames != 'labels') data$.predictor.
+                        else pmlabel[as.character(data$.predictor.)]
+    
+  glabel <- function(gname, j=1, chr=FALSE) {
+    r <-  
+      if(! length(legend.label)) parse(text=pmlabel[gname])
+      else if(is.logical(legend.label)) ''
+      else legend.label[j]
+    if(is.expression(r) && chr) r <- sprintf('expression(%s)', as.character(r))
+    r
   }
 
   ## Function to create expression( ) or "" depending on argument
-  expch <- function(x) if(! length(x)) 'NULL' else
-           if(grepl('expression\\(', x)) x else deparse(x)
+    expch <- function(x, chr=FALSE) if(! length(x)) 'NULL' else
+      if(is.expression(x)) {
+        if(chr) sprintf('expression(%s)', as.character(x)) else x
+      } else if(grepl('expression\\(', x)) x else deparse(x)
 
   ## Function to construct xlim() or ylim() call
   limc <- function(limits, which)
@@ -122,7 +132,7 @@ ggplot.Predict <-
       ## From http://stackoverflow.com/questions/11979017/changing-facet-label-to-math-formula-in-ggplot2
       ## Changed to assume that each element of labels is a character string
       ## of the form "expression(....)"
-      facet_wrap_labeller <- function(gg.plot, labels=NULL) {
+      if(FALSE) facet_wrap_labeller <- function(gg.plot, labels=NULL) {
         ## Uses functions from gridExtra
         g <- ggplotGrob(gg.plot)
         gg <- g$grobs      
@@ -151,7 +161,10 @@ ggplot.Predict <-
         dat <- data[data$.predictor. %in% v,, drop=TRUE]
         p <- dat$.predictor.
         xx <- switch(type, continuous= numeric(nrow(dat)),
-                           discrete  = character(nrow(dat)))
+                     discrete  = character(nrow(dat)))
+
+        lbr <- if(vnames != 'labels') '' else ', labeller=label_parsed'
+        
         ## Prepare to create a "super factor" variable by concatenating
         ## all levels of all categorical variables keeping original orders
         Lev <- character()
@@ -178,17 +191,18 @@ ggplot.Predict <-
           if(length(groups)) g <- 
             sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s)) +
                      labs(x=NULL, y=%s) + %s',
-                    aestype[1], groups[1], expch(ylab), ylimc)
+                    aestype[1], groups[1], expch(ylab, chr=TRUE), ylimc)
           else
             g <- sprintf("ggplot(dat, aes(x=.xx., y=yhat)) +
                          labs(x=NULL, y=%s) + %s",
-                         expch(ylab), ylimc)
+                         expch(ylab, chr=TRUE), ylimc)
           
           g <- c(g, if(length(layout))
-                      sprintf("facet_wrap(~ .predictor., scales='free_x',
-                                ncol=%s)",
-                              layout[2]) else
-                 "facet_wrap(~ .predictor., scales='free_x')", "geom_line()")
+                      sprintf("facet_wrap(~ .Predictor., scales='free_x',
+                                ncol=%s%s)",
+                              layout[2], lbr) else
+               sprintf("facet_wrap(~ .Predictor., scales='free_x'%s)", lbr),
+                 "geom_line()")
           if(conf.int) {
             h <- 
               if(conf == 'fill')
@@ -222,9 +236,9 @@ ggplot.Predict <-
             ## Reshape rdata to be tall and thin
             rdata <- reshape(as.data.frame(rdata),
                              direction='long', v.names='.xx.',
-                             timevar='.predictor.',
+                             timevar='.Predictor.',
                              varying=rv, times=rv)
-            form <- 'yhat ~ .xx. + .predictor.'
+            form <- 'yhat ~ .xx. + .Predictor.'
             if(length(groups))
               form <- paste(form, '+', paste(groups, collapse='+'))
             g <- c(g,
@@ -235,13 +249,13 @@ ggplot.Predict <-
           if(length(groups)) g <- 
             c(sprintf('ggplot(dat, aes(x=yhat, y=.xx., %s=%s))',
                       aestype[1], groups[1]),
-              sprintf("labs(x=%s, y=NULL)", expch(ylab)))
+              sprintf("labs(x=%s, y=NULL)", expch(ylab, chr=TRUE)))
           else
             g <- c("ggplot(dat, aes(x=yhat, y=.xx.))",
-                   sprintf("labs(x=%s, y=NULL)", expch(ylab)))
+                   sprintf("labs(x=%s, y=NULL)", expch(ylab, chr=TRUE)))
           if(! maddlayer) g <- c(g, addlayer)
           g <- c(g, limc(ylim., 'x'),
-                 "facet_wrap(~ .predictor., scales='free_y')",
+                 sprintf("facet_wrap(~ .Predictor., scales='free_y'%s)", lbr),
                  "geom_point()")
           if(conf.int) g <- c(g,
               "geom_errorbarh(aes(y=.xx., xmin=lower, xmax=upper), height=0)")
@@ -283,7 +297,7 @@ ggplot.Predict <-
         g <- paste(g, collapse=' + ')
         if(ggexpr) return(g)
         g <- eval(parse(text = g))
-        if(vnames == 'labels') g <- facet_wrap_labeller(g, pmlabel[v])
+##        if(vnames == 'labels') g <- facet_wrap_labeller(g, pmlabel[v])
         g
       }
       
@@ -329,7 +343,7 @@ ggplot.Predict <-
       ll <- length(l)
       xlim. <- if(ll) c(1, ll) else range(pretty(z))
       yhat <- data[i, 'yhat']
-      xl <- if(vnames == 'labels') pmlabel[w] else w
+      xl <- if(vnames == 'labels') parse(text=pmlabel[w]) else w
       zz <- data.frame(.xx.=z, .yhat=yhat)
       if(length(formula))
         zz <- cbind(zz, data[i, all.vars(formula), drop=FALSE])
@@ -367,7 +381,7 @@ ggplot.Predict <-
       if(flipped) g <- c(g, limc(ylim., 'y')) else
       g <- c(g, sprintf('coord_cartesian(ylim=%s)', deparse(ylim.)))
       g <- c(g, sprintf('labs(x=%s, y=%s)',
-                        expch(xl), expch(ylab)),
+                        expch(xl, chr=TRUE), expch(ylab, chr=TRUE)),
              "theme(plot.margin = grid::unit(rep(0, 4), 'cm'))")
       ## use rep(.1, 4) if using print(..., viewport=...) for multiple plots
       if(length(groups)) {
@@ -375,11 +389,11 @@ ggplot.Predict <-
         if(jplot == 1) {
           colFun <- if(aestype[1] == 'color') colorscale else
            get(paste('scale', aestype[1], 'discrete', sep='_'))
-          groupLabel <- glabel(groups[1])
+          groupLabel <- glabel(groups[1], chr=TRUE)
           g <- c(g, if(aestype[1] == 'size')
                       sprintf("colFun(name=%s, range=c(.2, 1.5))",
-                              expch(groupLabel)) else
-                 sprintf("colFun(name=%s)", expch(groupLabel)))
+                              groupLabel) else
+                 sprintf("colFun(name=%s)", groupLabel))
           g <- c(g, sprintf("theme(legend.position='%s')",
                             legend.position))
           
@@ -435,7 +449,7 @@ ggplot.Predict <-
   } else  { # .predictor. not included; user specified predictors to show
     v  <- varying
     xn <- v[1]    ## name of x-axis variable (first variable given to Predict)
-    if(missing(xlab)) xlab <- pmlabel[xn]
+    if(missing(xlab)) xlab <- parse(text = pmlabel[xn])
     xv <- data[[xn]]
     xdiscrete <- is.factor(xv) || is.character(xv) ||
       length(unique(xv[!is.na(xv)])) <= nlevels
@@ -450,7 +464,7 @@ ggplot.Predict <-
       ae <- paste(ae, ', ', aestype[j], '=', groups[j], sep='')
     ae <- eval(parse(text=paste(ae, ')', sep='')))
     g <- c("ggplot(data, ae)", sprintf("labs(x=%s, y=%s)",
-                                       expch(xlab), expch(ylab)))
+              expch(xlab, chr=TRUE), expch(ylab, chr=TRUE)))
 
     flipped <- FALSE
     if(xdiscrete) {
@@ -473,11 +487,11 @@ ggplot.Predict <-
         for(j in 1 : length(groups)) {
           colFun <- if(aestype[j] == 'color') colorscale else
            get(paste('scale', aestype[j], 'discrete', sep='_'))
-          groupLabel <- glabel(groups[j], j)
+          groupLabel <- glabel(groups[j], j, chr=TRUE)
           g <- c(g, if(aestype[j] == 'size')
                  sprintf("colFun(name=%s, range=c(.2, 1.5))",
-                         expch(groupLabel)) else
-                 sprintf("colFun(name=%s)", expch(groupLabel)))
+                         groupLabel) else
+                 sprintf("colFun(name=%s)", groupLabel))
         }
         g <- c(g, sprintf("theme(legend.position='%s')",
                           legend.position))
