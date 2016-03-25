@@ -16,7 +16,8 @@ survplot.rms <-
            adj.subtitle=TRUE, loglog=FALSE, fun, n.risk=FALSE, logt=FALSE,
            dots=FALSE, dotsize=.003, grid=NULL,
            srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,
-           y.n.risk, cex.n.risk=.6, pr=FALSE)
+           y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'),
+           cex.ylab=cex.xlab, pr=FALSE)
 {
 
   what <- match.arg(what)
@@ -173,12 +174,13 @@ survplot.rms <-
       else format(ay)
       curve.labels <- c(curve.labels, abbrevy[i])
       if(i == 1 & !add) {				
-        plot(time, surv, xlab=xlab, xlim=xlim,
-             ylab=ylab, ylim=ylim, type="n", axes=FALSE)	
+        plot(time, surv, xlab='', xlim=xlim,
+             ylab='', ylim=ylim, type="n", axes=FALSE)	
         mgp.axis(1, at=if(logt)pretty(xlim) else
-                 seq(xlim[1], max(pretty(xlim)), time.inc), labels=TRUE)
+                 seq(xlim[1], max(pretty(xlim)), time.inc), labels=TRUE,
+                 axistitle=xlab, cex.lab=cex.xlab)
+        mgp.axis(2, at=pretty(ylim), axistitle=ylab, cex.lab=cex.ylab)
         
-        mgp.axis(2, at=pretty(ylim))
         if(!logt & (dots || length(grid))) {
           xlm <- pretty(xlim)
           xlm <-  c(xlm[1], xlm[length(xlm)])

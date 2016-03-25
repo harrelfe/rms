@@ -52,7 +52,8 @@ survplot(fit, \dots)
          adj.subtitle=TRUE, loglog=FALSE, fun,
          n.risk=FALSE, logt=FALSE, dots=FALSE, dotsize=.003,
          grid=NULL, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1, 
-         y.n.risk, cex.n.risk=.6, pr=FALSE)
+         y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'),
+         cex.ylab=par('cex.lab'), pr=FALSE)
 \method{survplot}{npsurv}(fit, xlim, 
          ylim, xlab, ylab, time.inc, state=NULL,
          conf=c("bands","bars","diffbands","none"), mylim=NULL,
@@ -62,14 +63,16 @@ survplot(fit, \dots)
          loglog=FALSE, fun, n.risk=FALSE, aehaz=FALSE, times=NULL,
          logt=FALSE, dots=FALSE, dotsize=.003, grid=NULL,
          srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,
-         y.n.risk, cex.n.risk=.6, pr=FALSE, \dots)
+         y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'), cex.ylab=cex.xlab,
+         pr=FALSE, \dots)
 survdiffplot(fit, order=1:2, fun=function(y) y,
            xlim, ylim, xlab, ylab="Difference in Survival Probability",
            time.inc, conf.int, conf=c("shaded", "bands","diffbands","none"),
            add=FALSE, lty=1, lwd=par('lwd'), col=1,
            n.risk=FALSE, grid=NULL,
            srt.n.risk=0, adj.n.risk=1,
-           y.n.risk, cex.n.risk=.6, convert=function(f) f)
+           y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'),
+           cex.ylab=cex.xlab, convert=function(f) f)
 }
 \arguments{
 \item{fit}{
@@ -266,9 +269,12 @@ line of the numbers using \code{y.n.risk}.  Specify
 \code{y.n.risk='auto'} to place the numbers below the x-axis at a
 distance of 1/3 of the range of \code{ylim}.
 }
-\item{cex.n.risk}{
-character size for number of subjects at risk (when \code{n.risk} is \code{TRUE})
+\item{cex.n.risk}{ 
+character size for number of subjects at risk (when \code{n.risk} is
+\code{TRUE}) 
 }
+\item{cex.xlab}{\code{cex} for x-axis label}
+\item{cex.ylab}{\code{cex} for y-axis label}
 \item{dots}{
  set to \code{TRUE} to plot a grid of dots.  Will be plotted at every
  \code{time.inc} (see \code{cph}) and at survival increments of .1 (if
