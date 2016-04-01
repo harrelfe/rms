@@ -1,4 +1,13 @@
 require(rms)
+set.seed(1)
+n <- 20
+x <- as.matrix(1:n)
+#x <- cbind(1:n, (1:n)^2)
+#colnames(x) <- 'age'
+y <- sample(0:1, n, TRUE)
+f <- lrm(y ~ x)
+
+
 N <- 100
 set.seed(1)
 time <- rexp(N)
@@ -6,6 +15,7 @@ status <- sample(0:1, N, replace = TRUE)
 S <- Surv(time, status)
 x1 <- gl(2, 50)
 x2 <- runif(N)
+
 # Makes last colname x1 %ia% x2 which is really inconsistent:
 model.matrix(~ x1 + rcs(x2) + x1 %ia% x2)
 x3 <- c(rep('A', 33), rep('B', 33), rep('C', 34))

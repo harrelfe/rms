@@ -61,6 +61,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
     X <- model.matrix(Terms.ns, X)
     alt <- attr(mmcolnames, 'alt')
     if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
+    ## prn(colnames(X)); prn(mmcolnames)
     X <- X[, mmcolnames, drop=FALSE]
 
     colnames(X) <- atr$colnames

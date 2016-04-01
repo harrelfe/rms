@@ -49,10 +49,14 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     else if(assume.code == 5) gsub('=', '', rmst)
     else if(assume.code == 8)
       paste(term.label, gsub('.*=', '', rmst), sep='')
-    else if(assume.code == 10) gsub('\\[', '', gsub('\\]', '', rmst))
+    else if(assume.code == 10)
+      if(length(rmst) > 1) gsub('\\[', '', gsub('\\]', '', rmst)) else
+             term.label
     else paste(term.label, rmst, sep='')
     w <- gsub('>>', '>=', w)
-    alt <- if(assume.code == 10) paste(term.label, rmstrans.names, sep='')
+    alt <- if(assume.code == 10)
+             if(length(rmst) > 1)
+               paste(term.label, rmstrans.names, sep='') else term.label
     else w
     ## Alternate names to try - handles case where model is fitted on a
     ## previous fit$x matrix
