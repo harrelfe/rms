@@ -77,3 +77,4 @@ y <- log(h) + rnorm(n)
 f <- ols(y ~ age + sex, x=TRUE)
 S <- var(cbind(1, f$x))
 ko(f, S)
+

@@ -53,7 +53,7 @@ survplot(fit, \dots)
          n.risk=FALSE, logt=FALSE, dots=FALSE, dotsize=.003,
          grid=NULL, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1, 
          y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'),
-         cex.ylab=par('cex.lab'), pr=FALSE)
+         cex.ylab=cex.xlab, pr=FALSE)
 \method{survplot}{npsurv}(fit, xlim, 
          ylim, xlab, ylab, time.inc, state=NULL,
          conf=c("bands","bars","diffbands","none"), mylim=NULL,

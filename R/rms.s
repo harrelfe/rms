@@ -67,7 +67,8 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   offs <- model.offset(mf)
 
   iscluster <- if(length(Term.labels))
-    substring(Term.labels, 1, 8) == 'cluster('  else FALSE
+                 substring(Term.labels, 1, 8) == 'cluster('  else FALSE
+
   ## Handle cluster() for cph
   ## Save right hand side of formula less cluster() terms
   sformula <- formula(Terms)
@@ -147,6 +148,8 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
 
   anyfactors <- length(coluse) > 0
   i1.noia <- 0
+  if(length(Term.labels) < length(coluse)) stop('program logic error tl')
+  it <- 0
   if(anyfactors) for(i in coluse) {
     if(i  != wts) {
       i1 <- i - response.pres
@@ -187,12 +190,13 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         flabel <- c(flabel, z$label)
         asm <- c(asm, za)
         colnam[[i1]] <- z$colnames
-        mmn <- mmnames(za, colnam[[i1]], Term.labels[i1], z$iaspecial, cls)
+        it <- it + 1
+        mmn <- mmnames(za, colnam[[i1]], Term.labels[it], z$iaspecial, cls)
         mmcolnam[[i1]] <- mmn
         alt <- attr(mmn, 'alt')
         mmcolnamalt[[i1]] <- alt
         if(za != 8 && length(colnam)) {
-          name   <- c(name, colnam[[i1]])
+          name   <- c(name,   colnam  [[i1]])
           mmname <- c(mmname, mmcolnam[[i1]])
           Altcolnam <- c(Altcolnam, alt)
         }
@@ -209,7 +213,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
             if(j > 0) {
               values[[zname]] <- datadist$values[[j]]
               l1 <- levels(xi); l2 <- datadist$values[[j]]
-              if(length(l1) && ((length(l1) != length(l2)) ||
+              if(length(l1) && ((length(l1)  != length(l2)) ||
                                 any(sort(l1) != sort(l2))))
                 warning(paste('Variable', zname, 'has levels', paste(l1, collapse=' '),
                               'which do not match levels given to datadist (',

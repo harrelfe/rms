@@ -59,17 +59,20 @@ predictrms <-
   on.exit({options(contrasts=oldopts$contrasts)
            options(Design.attr=NULL)})
 
-  offset <- 0
-  if(! missing(newdata) && length(newdata)) {
-    offset <- model.offset(model.frame(removeFormulaTerms(fit$sformula,
-                   delete.response=TRUE), newdata,
-                   na.action=na.action, ...))
-    offpres <- length(offset) > 0
-    if(! offpres) offset <- 0
-  }
-  ## formula after removing offset terms and dependent var.
+  ## Formula without resposne variable any offsets:
   formulano <- removeFormulaTerms(fit$sformula, which='offset',
                                   delete.response=TRUE)
+
+  offset <- 0; offpres <- FALSE
+  ## offset is ignored for prediction (offset set to zero)
+  ## if(! missing(newdata) && length(newdata)) {
+    ##    offset <- model.offset(model.frame(removeFormulaTerms(fit$sformula,
+    ##                   delete.response=TRUE), newdata,
+    ##                   na.action=na.action, ...))
+    ## offpres <- length(offset) > 0
+    ## if(! offpres) offset <- 0
+  ## }
+
   #Terms  <- delete.response(terms(formula(fit), specials='strat'))
   Terms  <- terms(formulano, specials='strat')
 
