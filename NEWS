@@ -1,4 +1,4 @@
-Changes in version 4.4-3 (2016-04-02)
+Changes in version 4.5-0 (2016-04-02)
    * val.prob: fixed longstanding error: U was always -2/n because used wrong deviance.  Thanks: Kai Chen
 	 * survplot*: implemented y.n.risk='auto' to place numbers at risk below the x-axis by 1/3 the range of ylim
 	 * survplot*: added mylim argument to force inclusion of ranges in computed limits
@@ -7,6 +7,7 @@ Changes in version 4.4-3 (2016-04-02)
 	 * survplot.*, survdiffplot: added cex.xlab, cex.ylab arguments
 	 * Design: fixed bug where one-column matrices as predictors did not compute column names correctly
 	 * predictrms: fixed bug in trying to retrieve offsets; now offsets set to zero (so are ignored)
+	 * tests: several updated, all run, several bugs fixed as result
 
 Changes in version 4.4-2 (2016-02-20)
    * tests: added test mice.r exposing problem with complete function in mice

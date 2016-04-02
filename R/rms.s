@@ -95,12 +95,9 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     if(! any(ioffset)) stop('program logic error 1')
   }
 
-  coluse <- setdiff(1 : ncol(mf), c(ioffset, 1 * response.pres))
-
   ## For some reason, model frame sometimes has a blank name if using %ia%
 
   namx <- names(mf)
-
   if(any(namx == "")) {
     namx <- names(mf) <- c(namx[1], Term.labels)
     dimnames(mf)[[2]] <- namx
@@ -108,7 +105,9 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   }
 
   wts <- if(any(namx == '(weights)'))(1 : length(namx))[namx == '(weights)']
-  else 0
+         else 0
+
+  coluse <- setdiff(1 : ncol(mf), c(ioffset, 1 * response.pres, wts))
 
   inner.name <- if(length(Terms) > 0) unique(var.inner(Terms))
   ## Handles case where a function has two arguments that are names,

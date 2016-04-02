@@ -174,7 +174,7 @@ intercepts <- coef(f)[1 : num.intercepts(f)]
 # Compute Prob(Y <= y) from Prob(Y >= y) by shifting one level
 # Prob(Y > y) = Prob(Y >= y + epsilon)
 cumprob <- f$trans$cumprob
-xless(cumprob(intercepts + xb))
+# xless(cumprob(intercepts + xb))
 names(intercepts) <- Lag(names(intercepts))
 names(intercepts) <- gsub('>=', '>', names(intercepts))
 intercepts
