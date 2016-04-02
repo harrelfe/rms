@@ -4,6 +4,7 @@
 ## se.fit comparisons before predictrms changed to use original covariate
 ## means instead of "adjust to" values for cph
 
+require(rms)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)

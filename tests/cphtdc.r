@@ -121,7 +121,7 @@ cph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~
       rcs(Age, 4) + sex + asis((sex == "Male")*Timeband),
     data = spl)
 # Gives:
-# Error in limits[[zname]] <- if (any(Limnames == zname)) { : 
+# Err. in limits[[zname]] <- if (any(Limnames == zname)) { : 
 #   more elements supplied than there are to replace
 
 #############
@@ -145,20 +145,20 @@ expect_true(sum(abs(coef(fit_cph) - coef(fit_coxph))) <
 #############
 
 Predict(fit_cph)
-#  Error in asis((sex == "Male") * Timeband) : object 'Timeband' not found 
+#  Err. in asis((sex == "Male") * Timeband) : object 'Timeband' not found 
 
 # Not really working as expected
 contrast(fit_cph, 
          a=list(sex = "Male"),
          b=list(sex = "Female"))
-#  Error in Getlimi(name[i], Limval, need.all = TRUE) : 
+#  Err. in Getlimi(name[i], Limval, need.all = TRUE) : 
 #    no limits defined by datadist for variable sex_Timeband 
 contrast(fit_cph, 
          a=list(sex = "Male",
                 Timeband = 0),
          b=list(sex = "Female",
                 Timeband = seq(0, 10, by=.1)))
-# Error in gendata(list(coefficients = c(0.0420352254526414, -0.945650117874665,  : 
+# Err. in gendata(list(coefficients = c(0.0420352254526414, -0.945650117874665,  : 
 #   factor(s) not in design: Timeband 
 
 Ok, thank you. I can get around the problem by manually generating an interaction variable - seems to work satisfactory:

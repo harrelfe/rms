@@ -1,4 +1,5 @@
 require(rms)
+require(multcomp)
 set.seed(13)
 n <- 200
 x1 <- runif(n)
@@ -9,13 +10,13 @@ g <- bootcov(f, B=1000, coef.reps=TRUE)
 anova(f)
 specs(f)
 # Get simultaneous confidence intervals for estimates at 3 x's
-pd <- function(xs) predict(f, data.frame(x1=xs), type='x')
+pd <- function(xs) cbind(1, predict(f, data.frame(x1=xs), type='x'))
 X <- pd(c(0.05, 0.50, 0.7))
 confint(glht(f, X))
 # Add a redundant point that does not involve new parameters
 X <- pd(c(0.05, 0.50, 0.51, 0.7))
 confint(glht(f, X))  # some differences, but slight
-# Add a point in a new X space (beyond outer know)
+# Add a point in a new X space (beyond outer knot)
 X <- pd(c(.05, 0.5, 0.51, 0.7, 1))
 confint(glht(f, X))
 

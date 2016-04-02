@@ -1,6 +1,5 @@
 require(rms); require(MASS)
 
-
 set.seed(1)
 n <- 100
 y <- sample(1:8, n, TRUE)
@@ -29,7 +28,8 @@ max(abs(w))
 
 
 m <- Mean(g)
-formals(m) <- list(lp=NULL, intercepts=runif(30000), values=runif(30001))
+formals(m) <- list(lp=NULL, intercepts=runif(30000), values=runif(30001),
+                   interceptRef=3, cumprob=function(x) 1 / (1 + exp(-x)))
 system.time(m(1))
 system.time(m(1:100))
 system.time(m(1:1000))
@@ -165,10 +165,11 @@ plot(Predict(g, age=ages), ylim=c(-1.5,1.5), addpanel=function(...) {
 })
 
 # For age of 70 "manually" find predicted median
-p <- predict(f, newdata=data.frame(age=70), type='fitted.ind')
+# was predict(f, ...)  why?
+p <- predict(g, newdata=data.frame(age=70), type='fitted.ind')
 cumsum(p)
-median(rep(f$yunique, 1000000*p))  # 5.6
-xb <- Function(f)(age=70)
+median(rep(g$yunique, round(1000000*p)))  # 5.6
+xb <- Function(g)(age=70)
 intercepts <- coef(f)[1 : num.intercepts(f)]
 # Compute Prob(Y <= y) from Prob(Y >= y) by shifting one level
 # Prob(Y > y) = Prob(Y >= y + epsilon)

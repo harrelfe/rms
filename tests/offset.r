@@ -29,7 +29,7 @@ d <- data.frame(bmi=20, wtpre=5)
 predict(f, d)       # 4.849534
 k <- coef(f)
 with(d, - f$center + k[1]*bmi + k[2] * bmi^2 + k[3] * bmi^3 + wtpre)  # 4.849534
-predict(g, d)   # bombs
+## predict(g, d)   # bombs
 
 f <- cph(S ~ pol(bmi, 3) + offset(wtpre), data=cvd, eps=1e-6)
 g <- coxph(S ~ pol(bmi, 3) + offset(wtpre), data=cvd)

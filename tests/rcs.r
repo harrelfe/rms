@@ -15,6 +15,6 @@ Function(f)   ## if have latex installed can also use latex(f)
 
 ## Function re-expresses the restricted cubic spline in simplest form
 
-The first derivative is:
+## The first derivative is:
 
-function(x) 0.174 - 3 * 0.00279 * pmax(x - 3, 0) ^ 2 + 3 * 0.0015 * pmax(x - 5, 0) ^ 2 + ...
+## function(x) 0.174 - 3 * 0.00279 * pmax(x - 3, 0) ^ 2 + 3 * 0.0015 * pmax(x - 5, 0) ^ 2 + ...

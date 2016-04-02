@@ -1,4 +1,4 @@
-## Compare standard errors of log survival probability from survest and survfit
+## Compare SE of log survival probability from survest and survfit
 
 require(rms)
 set.seed(123)
@@ -23,7 +23,7 @@ prn(with(s, cbind(time, surv, std.err, lower, upper)[k,]), 'survfit')
 
 fit <- cph(S ~ age + x, x=TRUE, y=TRUE, surv=TRUE, time.inc=56)
 k <- which(fit$time == 56)
-prn(with(fit, cbind(time, surv, std.err, lower, upper)[k,]), 'cph surv=T')
+prn(fit$surv.summary, 'cph surv=T')
 s <- survest(fit, d, times=56)
 prn(with(s, cbind(time, surv, std.err, lower, upper)),
     'survest from cph surv=T')
@@ -35,7 +35,7 @@ prn(with(s, cbind(time, surv, std.err, lower, upper)[k,]),
 
 survest(fit, data.frame(age=40, x=25), times=56)
  
-pp <- survfit.cph(fit, data.frame(age=40, x=25),se.fit=TRUE)
+pp <- rms:::survfit.cph(fit, data.frame(age=40, x=25),se.fit=TRUE)
 cbind(pp$std.err, pp$lower,pp$upper)[pp$time==56]
  
 
@@ -94,26 +94,16 @@ s  <- survfit(f, new, censor=FALSE)
 plot(s, main='coxph combined newdata plot.survfit')
 gr()
 
-st <- rep(names(s$strata), s$strata)
-i <- 0
-for(sx in levels(sex))
-  {
-    i <- i + 1
-    cat(sx, '\t', 'survfit.coxph\n')
-    j <- st==paste('sex=', sx, sep='')
-    z <- with(s, data.frame(time=time[j], surv=surv[j,i],
-                            std.err=std.err[j,i],
-                            lower=lower[j,i],
-                            upper=upper[j,i]))
-    print(z)
-  }
+z <- with(s, data.frame(time, surv, std.err, lower, upper, se=std.err,
+                        strata=c(rep('Female', s$strata[1]),
+                                 rep('Male',   s$strata[2]))) )
+z
 
 options(digits=3)
-z <- with(s, data.frame(strata=st, time=time, surv=surv, se=std.err,
-                        lower=lower, upper=upper))
-if(plots)
+
+if(FALSE && plots)
   {
-    with(subset(z, strata=='sex=Female'),
+    with(subset(z, strata=='Female'),
          {
            plot(c(time,dtmax['Female']), c(surv.1, min(surv.1)),
                 type='s', col='red', xlim=c(0,15), ylim=c(0,1),
@@ -122,7 +112,7 @@ if(plots)
            lines(time, lower.1, type='s', col='red')
            lines(time, upper.1, type='s', col='red')
          })
-    with(subset(z, strata=='sex=Male'),
+    with(subset(z, strata=='Male'),
          {
            lines(c(time,dtmax['Male']), c(surv.2, min(surv.2)),
                  type='s', col='green')

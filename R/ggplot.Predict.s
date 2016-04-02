@@ -129,7 +129,7 @@ ggplot.Predict <-
     data$.predictor.  <- factor(data$.predictor.)
 
     if(sepdiscrete != 'no') {
-      ## From http://stackoverflow.com/questions/11979017/changing-facet-label-to-math-formula-in-ggplot2
+      ## From http://stackoverflow.com/questions/11979017
       ## Changed to assume that each element of labels is a character string
       ## of the form "expression(....)"
       if(FALSE) facet_wrap_labeller <- function(gg.plot, labels=NULL) {
@@ -160,8 +160,9 @@ ggplot.Predict <-
         # dat <- subset(data, .predictor. %in% v)  ## would not work
         dat <- data[data$.predictor. %in% v,, drop=TRUE]
         p <- dat$.predictor.
-        xx <- switch(type, continuous= numeric(nrow(dat)),
-                     discrete  = character(nrow(dat)))
+        xx <- switch(type,
+                     continuous = numeric(  nrow(dat)),
+                     discrete   = character(nrow(dat)) )
 
         lbr <- if(vnames != 'labels') '' else ', labeller=label_parsed'
         
@@ -238,6 +239,7 @@ ggplot.Predict <-
                              direction='long', v.names='.xx.',
                              timevar='.Predictor.',
                              varying=rv, times=rv)
+            rdata$.Predictor. <- pmlabel[rdata$.Predictor.]
             form <- 'yhat ~ .xx. + .Predictor.'
             if(length(groups))
               form <- paste(form, '+', paste(groups, collapse='+'))
@@ -264,7 +266,7 @@ ggplot.Predict <-
         ## plotted with faceting, and annotation information must be
         ## based on a dataset with the information and the .predictor.
         ## variable, and geom_text() must be used instead of annotate()
-        ## See http://stackoverflow.com/questions/2417623/manual-annotate-a-ggplot-with-different-labels-in-different-facets
+        ## See http://stackoverflow.com/questions/2417623
         if(length(anova)) {
           .xx. <- yhat <- .label. <- hjust <- vjust <- NULL
           for(iv in v) {
@@ -292,7 +294,7 @@ ggplot.Predict <-
                                 hjust, vjust)
           g <- c(g, "geom_text(aes(label=.label., hjust=hjust, vjust=vjust),
                              size=size.anova,
-                             data=.anova., parse=TRUE, show_guide=FALSE)")
+                             data=.anova., parse=TRUE, show.legend=FALSE)")
         }
         g <- paste(g, collapse=' + ')
         if(ggexpr) return(g)

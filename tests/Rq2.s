@@ -16,7 +16,7 @@ sm <- function(n, eps=1e-6) {
 for(i in 1:10) sm(100)
 for(i in 1:10) sm(1000)
 
-## Compare standard error of mean | x=0 with standard error from quantile
+## Compare standard err. of mean | x=0 with standard err. from quantile
 ## regression using 4 methods
 
 cse <- function(n) {
@@ -38,7 +38,7 @@ for(i in 1:10) cse(100)
 for(i in 1:10) cse(5000)
 # nid does appear to work best
 
-## Compare mean squared error of quantile estimator of median y | x=E
+## Compare mean squared err. of quantile estimator of median y | x=E
 ## in 5-sample problem with orm logistic family estimator.  Also include sample quantile
 cmse <- function(n) {   # n = # obs per each of 5 samples
   x <- factor(rep(c('a','b','c','d','e'), n))

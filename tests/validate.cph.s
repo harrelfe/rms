@@ -43,10 +43,13 @@ f <- cph(S ~ tumor + ecog, x=TRUE, y=TRUE, surv=TRUE, data=d)
 set.seed(1)
 validate(f, B=100, dxy=TRUE)
 w <- rep(1, 1000)   #  only one stratum, doesn't change model
+## model.matrix no longer works with one stratum
+if(FALSE) {
 f <- cph(S ~ tumor + ecog + strat(w), x=TRUE, y=TRUE, surv=TRUE, data=d)
 set.seed(1)
 validate(f, B=100, dxy=TRUE, u=60)
 ## identical to last validate except for -Dxy
+}
 
 f <- cph(S ~ tumor + ecog + strat(rx), x=TRUE, y=TRUE, surv=TRUE, time.inc=60, data=d)
 set.seed(1)

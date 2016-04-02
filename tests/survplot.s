@@ -16,11 +16,11 @@ dd <- datadist(age, sex, sex2)
 options(datadist='dd')
 S <- Surv(dt,e)
 
-f <- survfit(S ~ sex)
-survplot(f, n.risk=T)
+f <- npsurv(S ~ sex)
+survplot(f, n.risk=TRUE)
 
-f2 <- survfit(S ~ sex2)
-survplot(f2, n.risk=T)
+f2 <- npsurv(S ~ sex2)
+survplot(f2, n.risk=TRUE)
 
 f <- cph(S ~ strat(sex2), surv=TRUE)
 survplot(f, n.risk=TRUE, conf.int=.95)

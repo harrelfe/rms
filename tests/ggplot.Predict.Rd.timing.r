@@ -1,3 +1,4 @@
+require(rms)
 tt <- function() {
   dp <- function(...) {
     pdf('/tmp/z.pdf')

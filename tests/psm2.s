@@ -6,6 +6,6 @@ Surv(left, right, type='interval2')
 survreg(Surv(left, right, type='interval2') ~ 1) 
 
 require(rms)
-Surv(left, right, type='interval2') # error 
+Surv(left, right, type='interval2') # err
 args(Surv)
 psm(Surv(left, right, type='interval2') ~ 1)

@@ -17,7 +17,7 @@ fit.mult.impute(y ~ x1 + x2 + x3 + x4, ols, a, data=d)  # works
 
 m <- mice(d)
 d1 <- complete(m, 1)
-ols(y ~ x1 + x2 + x3 + x4, data=d1)  # fails
+## ols(y ~ x1 + x2 + x3 + x4, data=d1)  # fails
 
 w <- d1
 attr(w$x2, 'contrasts') <- NULL

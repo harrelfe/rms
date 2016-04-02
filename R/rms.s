@@ -42,6 +42,8 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     ## prn(assume.code); prn(rmstrans.names); prn(term.label); prn(iaspecial); prn(class)
     ## Don't let >=i be translated to >i:
     rmst <- gsub('>=', '>>', rmstrans.names)
+    ## Don't let == be translated to blank
+    rmst <- gsub('==', '@EQ@', rmst)
     w <- if(assume.code == 1)
            ifelse(class == 'logical', paste(term.label, 'TRUE', sep=''),
                   term.label)
@@ -53,7 +55,8 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
       if(length(rmst) > 1) gsub('\\[', '', gsub('\\]', '', rmst)) else
              term.label
     else paste(term.label, rmst, sep='')
-    w <- gsub('>>', '>=', w)
+    w <- gsub('>>',   '>=', w)
+    w <- gsub('@EQ@', '==', w)
     alt <- if(assume.code == 10)
              if(length(rmst) > 1)
                paste(term.label, rmstrans.names, sep='') else term.label

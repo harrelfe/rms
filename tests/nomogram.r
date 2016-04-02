@@ -1,4 +1,5 @@
 # From Andy Bush <andy@kb4lsn.net>
+require(rms)
 set.seed(20)
 x1<-10*runif(20,0,1)
 y1<-c(rep(0,10),rep(1,10))

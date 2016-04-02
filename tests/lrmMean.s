@@ -1,6 +1,4 @@
 require(rms)
-source('~/R/rms/R/bootcov.s')
-source('~/R/rms/R/Predict.s')
 set.seed(3)
 n <- 15
 y <- sample(1:10, n, TRUE)
