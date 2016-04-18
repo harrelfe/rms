@@ -412,12 +412,12 @@ annotateAnova <- function(name, stat, x, y, ggplot=FALSE,
   else if(! length(xlim) || ! length(ylim))
     stop('xlim and ylim must be given if ggplot=TRUE')
   dy   <- diff(ylim)
-  if(!empty && !any(y > ylim[2] - dy / 7)) {
-    z <- list(x = mean(xlim), y = ylim[2] - .025 * dy)
+  if(! empty && !any(y > ylim[2] - dy / 7)) {
+    z <- list(x = mean(xlim), y = ylim[2] - .075 * dy)  # was -.025
     adj <- c(.5, 1)
   }
   else if(! empty && !any(y < ylim[1] + dy / 7)) {
-    z <- list(x = mean(xlim), y = ylim[1] + .025 * dy)
+    z <- list(x = mean(xlim), y = ylim[1] + .075 * dy)   # was .025
     adj <- c(.5, 0)
   }
   else {

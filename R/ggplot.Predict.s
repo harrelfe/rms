@@ -86,7 +86,7 @@ ggplot.Predict <-
   
   if(! missing(subset)) {
     subset <- eval(substitute(subset), data)
-    data <- data[subset,, drop=FALSE]
+    data   <- data[subset,, drop=FALSE]
   }
 
   if(length(groups) && is.logical(groups) && ! groups) groups <- NULL
@@ -168,16 +168,26 @@ ggplot.Predict <-
         
         ## Prepare to create a "super factor" variable by concatenating
         ## all levels of all categorical variables keeping original orders
+        ## firstLev is first level for each discrete predictor
+        ## Thought was needed with anova but geom_text will take a numeric
+        ## x or y coordinate where factor levels seem to be spaced at 1.0
         Lev <- character()
+        ## firstLev <- character(length(v))
+        ## names(firstLev) <- v
+
         for(iv in v) {
           j <- which(p == iv)
           datj <- dat[j, iv]
-          if(type == 'continuous') xx[j] <- datj
+          if(type == 'continuous') {
+			  xx[j] <- datj
+			  ## firstLev[iv] <- ''
+		  }
           else {
             levj <- levels(datj)
             if(! length(levj)) levj <- unique(datj)
             Lev <- c(Lev, levj)
             xx[j] <- as.character(datj)
+            ## firstLev[iv] <- levj[1]
           }
         }
         if(type == 'discrete') {
@@ -264,7 +274,7 @@ ggplot.Predict <-
         }
         ## anova annotations need to be created for all variables being
         ## plotted with faceting, and annotation information must be
-        ## based on a dataset with the information and the .predictor.
+        ## based on a dataset with the information and the .Predictor.
         ## variable, and geom_text() must be used instead of annotate()
         ## See http://stackoverflow.com/questions/2417623
         if(length(anova)) {
@@ -284,26 +294,28 @@ ggplot.Predict <-
              else range(pretty(xv))
             tan <- tanova(iv, xx, yy, xlim., ylim., dataOnly=TRUE,
                           flip=type=='discrete', empty=type == 'discrete')
+            ## .xx. <- c(.xx., if(type == 'discrete') firstLev[iv] else tan$x)
             .xx. <- c(.xx., tan$x)
             yhat <- c(yhat, tan$y)
             .label. <- c(.label., tan$label)
             hjust <- c(hjust, tan$hjust)
             vjust <- c(vjust, tan$vjust)
           }
-          .anova. <- data.frame(.predictor.=v, .xx., yhat, .label.,
+          .anova. <- data.frame(.Predictor.=pmlabel[v], .xx., yhat, .label.,
                                 hjust, vjust)
-          g <- c(g, "geom_text(aes(label=.label., hjust=hjust, vjust=vjust),
-                             size=size.anova,
-                             data=.anova., parse=TRUE, show.legend=FALSE)")
+           g <- c(g, sprintf("geom_text(aes(label=.label., hjust=hjust, vjust=vjust),
+                             size=size.anova, nudge_y=%s,
+                             data=.anova., parse=TRUE, show.legend=FALSE)",
+                             if(type == 'discrete') -0.25 else 0))
         }
         g <- paste(g, collapse=' + ')
         if(ggexpr) return(g)
         g <- eval(parse(text = g))
 ##        if(vnames == 'labels') g <- facet_wrap_labeller(g, pmlabel[v])
         g
-      }
+      }    # end dogroup function
       
-      gcont <- if(any(! isdis)) dogroup('continuous')
+	  gcont <- if(any(! isdis)) dogroup('continuous')
       gdis  <- if(any(  isdis)) dogroup('discrete')
       if(ggexpr) return(list(continuous=gcont, discrete=gdis))
       r <- mean(! isdis)
