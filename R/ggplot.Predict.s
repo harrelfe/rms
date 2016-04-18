@@ -301,8 +301,10 @@ ggplot.Predict <-
             hjust <- c(hjust, tan$hjust)
             vjust <- c(vjust, tan$vjust)
           }
-          .anova. <- data.frame(.Predictor.=pmlabel[v], .xx., yhat, .label.,
-                                hjust, vjust)
+          .anova. <-
+            data.frame(.Predictor. = if(vnames != 'labels') v else pmlabel[v],
+                       .xx., yhat, .label.,
+                       hjust, vjust)
            g <- c(g, sprintf("geom_text(aes(label=.label., hjust=hjust, vjust=vjust),
                              size=size.anova, nudge_y=%s,
                              data=.anova., parse=TRUE, show.legend=FALSE)",
@@ -315,7 +317,7 @@ ggplot.Predict <-
         g
       }    # end dogroup function
       
-	  gcont <- if(any(! isdis)) dogroup('continuous')
+      gcont <- if(any(! isdis)) dogroup('continuous')
       gdis  <- if(any(  isdis)) dogroup('discrete')
       if(ggexpr) return(list(continuous=gcont, discrete=gdis))
       r <- mean(! isdis)
