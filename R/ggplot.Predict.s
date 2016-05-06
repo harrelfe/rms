@@ -70,7 +70,9 @@ ggplot.Predict <-
       if(! length(legend.label)) parse(text=pmlabel[gname])
       else if(is.logical(legend.label)) ''
       else legend.label[j]
-    if(is.expression(r) && chr) r <- sprintf('expression(%s)', as.character(r))
+    if(is.expression(r)) {
+      if(chr) r <- sprintf('expression(%s)', as.character(r))
+    } else r <- paste('"', r, '"', sep='')
     r
   }
 
@@ -412,7 +414,6 @@ ggplot.Predict <-
                  sprintf("colFun(name=%s)", groupLabel))
           g <- c(g, sprintf("theme(legend.position='%s')",
                             legend.position))
-          
         } else g <- c(g, "theme(legend.position='none')")
       }
       xa <- if(conf.int) c(zz$.xx., zz$.xx., zz$.xx.) else zz$.xx.
@@ -508,6 +509,7 @@ ggplot.Predict <-
                  sprintf("colFun(name=%s, range=c(.2, 1.5))",
                          groupLabel) else
                  sprintf("colFun(name=%s)", groupLabel))
+
         }
         g <- c(g, sprintf("theme(legend.position='%s')",
                           legend.position))

@@ -1,7 +1,9 @@
-Changes in version 4.5-1 (2016-05-04)
+Changes in version 4.5-1 (2016-05-06)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations
    * tests/ggplot3: new tests related to above
    * tests/survplot2.r: new test
+	 * ggplot.Predict: fixed bug when legend.label=FALSE and didn't enclose empty string in quotes for later parsing
+	 * validate.rpart: extended to handle survival models (exponential distribution)
 
 Changes in version 4.5-0 (2016-04-02)
    * val.prob: fixed longstanding error: U was always -2/n because used wrong deviance.  Thanks: Kai Chen

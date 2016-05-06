@@ -9,7 +9,8 @@ Dxy and Mean Squared Error by Cross-validating a Tree Sequence
 Uses \code{xval}-fold cross-validation of a sequence of trees to derive
 estimates of the mean squared error and Somers' \code{Dxy} rank correlation
 between predicted and observed responses.  In the case of a binary response
-variable, the mean squared error is the Brier accuracy score.
+variable, the mean squared error is the Brier accuracy score.  For
+survival trees, \code{Dxy} is negated so that larger is better.
 There are \code{print} and \code{plot} methods for
 objects created by \code{validate.rpart}.
 }
