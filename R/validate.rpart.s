@@ -132,8 +132,8 @@ plot.validate.rpart <- function(x, what = c("mse", "dxy"),
       legend(legendloc(1), c("Apparent", "Cross-validated"),
              lty = c(3, 1), bty = "n")
     else {
-      par(usr=c(0,1,0,1))
-      legend(legendloc[1],legendloc[2],
+      legend(grconvertX(legendloc[1], from='npc'),
+             grconvertY(legendloc[2], from='npc'),
              c("Apparent", "Cross-validated"),
              lty = c(3, 1), bty = "n")
     }

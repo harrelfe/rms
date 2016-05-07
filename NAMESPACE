@@ -142,6 +142,7 @@ S3method(print, summary.rms)
 S3method(print, summary.survreg2)
 S3method(print, survest.psm)
 S3method(print, validate)
+S3method(print, validate.rpart)
 S3method(print, val.prob)
 S3method(print, val.survh)
 

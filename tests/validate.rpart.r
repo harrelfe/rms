@@ -22,14 +22,9 @@ dat$t = rexp(100, rate=dat$X1)
 dat$t = dat$t / max(dat$t)
 dat$e = rbinom(n = 100, size = 1, prob = 1-dat$t )
 
-# Survival Fit:
-sfit = survfit(Surv(t, event = e) ~ 1, data=dat)
-plot(sfit)
-
-# Tree Fit:
-f = rpart(formula = Surv(t, event = e) ~ X1 , data = dat, model=TRUE,
+f = rpart(Surv(t, event = e) ~ X1 , data = dat, model=TRUE,
           control=rpart.control(minsplit=30, cp=0.01))
 plot(f); text(f)
 v <- validate(f)
 v
-plot(v)
+plot(v, legendloc=c(.6,.2))
