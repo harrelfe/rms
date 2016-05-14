@@ -26,7 +26,8 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
 					 xlab="Predicted Probability", ylab="Actual Probability",
 					 lim=c(0,1), m, g, cuts, emax.lim=c(0,1),
 					 legendloc=lim[1] + c(.55 * diff(lim), .27 * diff(lim)),
-					 statloc=c(0,.99), riskdist="calibrated", cex=.7, mkh=.02,
+					 statloc=c(0,.99), riskdist=c("predicted", "calibrated"),
+           cex=.7, mkh=.02,
 					 connect.group=FALSE, connect.smooth=TRUE, 
 					 g.group=4, evaluate=100, nmin=0)
 {
@@ -35,6 +36,8 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   if(length(p) != length(y)) stop("lengths of p or logit and y do not agree")
   names(p) <- names(y) <- names(logit) <- NULL
 
+  riskdist <- match.arg(riskdist)
+
   Spi <- function(p, y) {
     z <- sum((y - p)*(1 - 2*p)) /
       sqrt(sum((1 - 2 * p) * (1 - 2 * p) * p * (1-p)))
@@ -42,18 +45,18 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
     c(Z=z, P=P)
   }
   
-  if(!missing(group)) {
+  if(! missing(group)) {
     if(length(group)==1 && is.logical(group) && group)
       group <- rep('', length(y))
-    if(!is.factor(group)) group <- 
+    if(! is.factor(group)) group <- 
       if(is.logical(group) || is.character(group)) 
         as.factor(group) else cut2(group, g=g.group)
     names(group) <- NULL
-    nma <- !(is.na(p + y + weights) | is.na(group))
+    nma <- ! (is.na(p + y + weights) | is.na(group))
     ng  <- length(levels(group))
   }
   else {
-    nma <- !is.na(p + y + weights)
+    nma <- ! is.na(p + y + weights)
     ng <- 0
   }
   
@@ -72,24 +75,24 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
     n     <- length(y)
     D     <- -1 / n
     L01   <- -2 * sum(y * logit - logb(1 + exp(logit)), na.rm=TRUE)
-    L.cal <- -2 * sum(y * Intc - logb(1 + exp(Intc)), na.rm=TRUE)
+    L.cal <- -2 * sum(y * Intc  - logb(1 + exp(Intc)),  na.rm=TRUE)
     U.chisq <- L01 - L.cal
     U.p <- 1 - pchisq(U.chisq, 1)
     U <- (U.chisq - 1) / n
     Q <- D - U
     spi <- unname(Spi(p, y))
     stats <- c(0, .5, 0, D, 0, 1, U, U.chisq, U.p, Q,
-               mean((y - p[1]) ^ 2), Intc, 0,
+               mean((y - p[1]) ^ 2), Intc, 0, 0, 0,
                rep(abs(p[1] - P), 2), spi)
     names(stats) <- c("Dxy","C (ROC)", 
                       "R2","D","D:Chi-sq","D:p","U","U:Chi-sq","U:p","Q",
-                      "Brier","Intercept","Slope","Emax","Eavg",
+                      "Brier","Intercept","Slope","Emax","E90","Eavg",
                       "S:z", "S:p")
     return(stats)
   }
   
   i <- ! is.infinite(logit)
-  nm <- sum(!i)
+  nm <- sum(! i)
   if(nm > 0) warning(paste(nm,
     "observations deleted from logistic calibration due to probs. of 0 or 1"))
   f.fixed <- lrm.fit(logit[i], y[i], initial=c(0., 1.), maxit=1L)
@@ -97,13 +100,13 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   stats <- f.fixed$stats
   n <- stats["Obs"]
   predprob <- seq(emax.lim[1], emax.lim[2], by=.0005)
-  lt <- f.recal$coef[1] + f.recal$coef[2] * qlogis(predprob)
-  calp <- plogis(lt)
-  emax <- max(abs(predprob - calp))
-  
+
   Sm <- lowess(p, y, iter=0)
   cal.smooth <- approx(Sm, xout=p, ties=mean)$y
-  eavg <- mean(abs(p - cal.smooth))
+  er   <- abs(p - cal.smooth)
+  eavg <- mean(er)
+  emax <- max(er)
+  e90  <- unname(quantile(er, 0.9))
   
   if(pl) {
     plot(.5, .5, xlim=lim, ylim=lim, type="n", xlab=xlab, ylab=ylab)
@@ -126,10 +129,10 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
       }
       leg <- c(leg, "Nonparametric")
     }
-    if(!missing(m) | !missing(g) | !missing(cuts)) {
-           if(!missing(m))    q <- cut2(p, m=m, levels.mean=TRUE, digits=7)
-      else if(!missing(g))    q <- cut2(p, g=g, levels.mean=TRUE, digits=7)
-      else if(!missing(cuts)) q <- cut2(p, cuts=cuts, levels.mean=TRUE,
+    if(! missing(m) | ! missing(g) | ! missing(cuts)) {
+           if(! missing(m))    q <- cut2(p, m=m, levels.mean=TRUE, digits=7)
+      else if(! missing(g))    q <- cut2(p, g=g, levels.mean=TRUE, digits=7)
+      else if(! missing(cuts)) q <- cut2(p, cuts=cuts, levels.mean=TRUE,
                                         digits=7)
       means <- as.numeric(levels(q))
       prop <- tapply(y, q, function(x) mean(x, na.rm=TRUE))
@@ -154,27 +157,30 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   B   <- mean((p - y) ^ 2)
   spi <- unname(Spi(p, y))
   stats <- c(Dxy, C, R2, D, lr, p.lr, U, U.chisq, p.U, Q, B, f.recal$coef,
-             emax, spi)
+             emax, e90, eavg, spi)
   names(stats) <- c("Dxy","C (ROC)", 
                     "R2","D","D:Chi-sq","D:p","U","U:Chi-sq","U:p","Q",
-                    "Brier","Intercept","Slope","Emax","S:z","S:p")
-  stats <- c(stats, c(Eavg=eavg))
+                    "Brier","Intercept","Slope","Emax","E90","Eavg","S:z","S:p")
+
   if(pl) {
     logit <- seq(-7, 7, length=200)
-    prob <- plogis(logit)
+    prob  <- plogis(logit)
     pred.prob <- f.recal$coef[1] + f.recal$coef[2] * logit
     pred.prob <- plogis(pred.prob)
     if(logistic.cal) lines(prob, pred.prob, lty=1)
     lp <- legendloc
-    if(!is.logical(lp)) {
-      if(!is.list(lp)) lp <- list(x=lp[1],y=lp[2])
+    if(! is.logical(lp)) {
+      if(! is.list(lp)) lp <- list(x=lp[1],y=lp[2])
       legend(lp, leg, lty=lt, pch=marks, cex=cex, bty="n")
     }
-    if(!is.logical(statloc)) {
-      dostats <- c(1,2,3,4,7,10,11,12,13,14,15,16)
+    if(! is.logical(statloc)) {
+      dostats <- c("Dxy", "C (ROC)", "R2", "D", "U", "Q", "Brier",
+                   "Intercept", "Slope", "Emax", "E90", "Eavg", 
+                   "S:z", "S:p")      
+  
       leg <- format(names(stats)[dostats]) #constant length
       leg <- paste(leg, ":", format(stats[dostats]),sep="")
-      if(!is.list(statloc)) statloc <- list(x=statloc[1], y=statloc[2])
+      if(! is.list(statloc)) statloc <- list(x=statloc[1], y=statloc[2])
       text(statloc,paste(format(names(stats[dostats])), collapse="\n"),
            adj=c(0, 1), cex=cex)
       text(statloc$x + .225 * diff(lim), statloc$y,
@@ -234,7 +240,7 @@ val.probg <- function(p, y, group, evaluate=100, weights, normwt, nmin)
         approx(sm, xout=seq(min(P), max(P), length=evaluate), ties=mean) else
       {
         o <- order(sm$x)
-        nd <- !duplicated(sm$x[o])
+        nd <- ! duplicated(sm$x[o])
         list(x=sm$x[o][nd], y=sm$y[o][nd])
       }
       if(nmin > 0)
@@ -255,7 +261,7 @@ val.probg <- function(p, y, group, evaluate=100, weights, normwt, nmin)
       pred  <- sum(wt * P)/n
       obs   <- sum(wt * Y)/n
       L <- ifelse(P==0 | P==1, NA, qlogis(P))
-      w <- !is.na(L)
+      w <- ! is.na(L)
       del <- matrix(c(sum((wt*(Y-P))[w]),sum((wt*L*(Y-P))[w])),ncol=2)
       v <- rbind(c(sum((wt*P*(1-P))[w]), sum((wt*L*P*(1-P))[w])),
                  c(NA, sum((wt*L*L*P*(1-P))[w])))
@@ -298,7 +304,7 @@ plot.val.prob <- function(x,
   labcurve(curves, pl=TRUE, xlim=lim, ylim=lim, 
 		   xlab=xlab, ylab=ylab, cex=cex, lwd=lwd, ...)
   abline(a=0,b=1,lty=2)
-  if(is.logical(statloc) && !statloc) return(invisible())
+  if(is.logical(statloc) && ! statloc) return(invisible())
 
   if(length(quantiles))
     {

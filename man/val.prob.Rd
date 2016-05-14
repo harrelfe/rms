@@ -22,13 +22,16 @@ with 2 d.f.  for testing unreliability (H0: intercept=0, slope=1), its
 \eqn{P}-value, the quality index \eqn{Q}, \code{Brier} score (average
 squared difference in \code{p} and \code{y}), \code{Intercept}, and
 \code{Slope}, \eqn{E_{max}}=maximum absolute difference in predicted
-and calibrated probabilities, the Spiegelhalter \eqn{Z}-test for
+and loess-calibrated probabilities, \code{Eavg}, the average in same,
+\code{E90}, the 0.9 quantile of same, the Spiegelhalter \eqn{Z}-test for 
 calibration accuracy, and its two-tailed \eqn{P}-value.  If
 \code{pl=TRUE}, plots fitted logistic 
 calibration curve and optionally a smooth nonparametric fit using
 \code{lowess(p,y,iter=0)} and grouped proportions vs.  mean predicted
 probability in group.  If the predicted probabilities or logits are
 constant, the statistics are returned and no plot is made.
+\code{Eavg, Emax, E90} were from linear logistic calibration before
+rms 4.5-1.
 
 When \code{group} is present, different statistics are computed,
 different graphs are made, and the object returned by \code{val.prob} is
@@ -82,7 +85,8 @@ val.prob(p, y, logit, group, weights=rep(1,length(y)), normwt=FALSE,
          xlab="Predicted Probability", ylab="Actual Probability",
          lim=c(0, 1), m, g, cuts, emax.lim=c(0,1),
          legendloc=lim[1] + c(0.55 * diff(lim), 0.27 * diff(lim)), 
-         statloc=c(0,0.99), riskdist="calibrated", cex=.7, mkh=.02,
+         statloc=c(0,0.99), riskdist=c("predicted", "calibrated"),
+         cex=.7, mkh=.02,
          connect.group=FALSE, connect.smooth=TRUE, g.group=4, 
          evaluate=100, nmin=0)
 
@@ -165,7 +169,7 @@ This is plotted after the curve legends.
 Defaults to \code{"calibrated"} to plot the relative frequency distribution of
 calibrated probabilities after dividing into 101 bins from \code{lim[1]} to
 \code{lim[2]}.
-Set to \code{"predicted"} to use raw assigned risk, \code{FALSE} to omit risk distribution.
+Set to \code{"predicted"} (the default as of rms 4.5-1) to use raw assigned risk, \code{FALSE} to omit risk distribution.
 Values are scaled so that highest bar is \code{0.15*(lim[2]-lim[1])}.
 }
 \item{cex}{
