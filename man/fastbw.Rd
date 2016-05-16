@@ -46,7 +46,7 @@ Significance level for staying in a model if \code{rule="p"}.  Default is .05.
 }
 \item{aics}{
 For \code{rule="aic"},
-variables are deleted until the chi-square - \code{k.aic} times d.f. falls below \code{aics}.
+variables are deleted until the chi-square - \code{k.aic} times d.f. would rise above \code{aics}.
 Default \code{aics} is zero to use the ordinary AIC.  Set \code{aics} to say 10000
 to see all variables deleted in order of descending importance.
 }

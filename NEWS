@@ -1,11 +1,13 @@
-Changes in version 4.5-1 (2016-05-14)
+Changes in version 4.5-1 (2016-05-16)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations
    * tests/ggplot3: new tests related to above
    * tests/survplot2.r: new test
-	 * ggplot.Predict: fixed bug when legend.label=FALSE and didn't enclose empty string in quotes for later parsing
-	 * validate.rpart: extended to handle survival models (exponential distribution)
-	 * print.validate.rpart: finally added method in NAMESPACE
- 	 * val.prob: make riskdist="predicted" the default; added E90 and Eavg to plotted output; for E measures changed to loess calibration instead of linear logistic calibration
+   * ggplot.Predict: fixed bug when legend.label=FALSE and didn't enclose empty string in quotes for later parsing
+   * validate.rpart: extended to handle survival models (exponential distribution)
+   * print.validate.rpart: finally added method in NAMESPACE
+   * val.prob: make riskdist="predicted" the default; added E90 and Eavg to plotted output; for E measures changed to loess calibration instead of linear logistic calibration
+   * fastbw: corrected error in help file regarding aics argument
+   * NAMESPACE: added graphics::grconvertX grconvertY
 
 
 Changes in version 4.5-0 (2016-04-02)

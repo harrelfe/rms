@@ -23,7 +23,7 @@ importFrom(grDevices, gray, grey, rgb)
 importFrom(graphics, abline, axis, boxplot, hist, legend,
            lines, locator, mtext, par, plot, plot.new,
            points, segments, strwidth, symbols, text,
-           title)
+           title, grconvertX, grconvertY)
 importFrom(methods, existsFunction, getFunction, new)
 importFrom(stats, .getXlevels, AIC, approx, as.formula,
            asOneSidedFormula, coef, confint, contrasts, cor,
