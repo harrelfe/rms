@@ -848,8 +848,11 @@ latex.naprint.delete <- function(object, file='', append=TRUE, ...) {
       print(g)
       cat('\\end{verbatim}\n')
     } else {
+      maxlen <- max(nchar(names(g)))
+      est <- function(X, Y, x) approx(X, Y, xout=x, rule=2)$y
       z <- latexDotchart(g, names(g), auxdata=g, auxtitle='N',
-                         w=3, h=min(max(2.5*lg/20, 1), 8))
+                         w = 1 + est(c(2, 60), c(.5, 6), maxlen),
+                         h = min(max(2.5*lg/20, 1), 8))
       cat(z, sep='\n')
     }
     cat("\n")

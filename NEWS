@@ -1,4 +1,4 @@
-Changes in version 4.5-1 (2016-05-16)
+Changes in version 4.5-1 (2016-06-01)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations
    * tests/ggplot3: new tests related to above
    * tests/survplot2.r: new test
@@ -8,6 +8,7 @@ Changes in version 4.5-1 (2016-05-16)
    * val.prob: make riskdist="predicted" the default; added E90 and Eavg to plotted output; for E measures changed to loess calibration instead of linear logistic calibration
    * fastbw: corrected error in help file regarding aics argument
    * NAMESPACE: added graphics::grconvertX grconvertY
+	 * latex.naprint.delete: fixed width algorithm for dot chart
 
 
 Changes in version 4.5-0 (2016-04-02)
