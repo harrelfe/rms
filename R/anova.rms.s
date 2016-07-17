@@ -537,21 +537,37 @@ plot.anova.rms <-
            sort=c("descending","ascending","none"),
            margin=NULL,
            pl=TRUE, trans=NULL, ntrans=40, ...) {
+    
     what <- match.arg(what)
     sort <- match.arg(sort)
+    isbase <- Hmisc::grType() == 'base'
 
-    if(!length(xlab)) xlab <-
-      switch(what,
-             chisq=expression(chi^2),
-             "proportion chisq"=expression(paste("Proportion of Overall", ~chi^2)),
-             chisqminusdf=expression(chi^2~-~df),
-             aic="Akaike Information Criterion",
-             P="P-value",
-             "partial R2"=expression(paste("Partial",~R^2)),
-             "remaining R2"=expression(paste("Remaining~",R^2,
-                 "~After Removing Variable")),
-             "proportion R2"=expression(paste("Proportion of Overall",
-                 ~R^2)))
+    if(! length(xlab)) {
+
+      xlab <-
+        if(isbase) 
+          switch(what,
+                 chisq=expression(chi^2),
+                 "proportion chisq"=expression(paste("Proportion of Overall", ~chi^2)),
+                 chisqminusdf=expression(chi^2~-~df),
+                 aic="Akaike Information Criterion",
+                 P="P-value",
+                 "partial R2"=expression(paste("Partial",~R^2)),
+                 "remaining R2"=expression(paste("Remaining~",R^2,
+                                                 "~After Removing Variable")),
+                 "proportion R2"=expression(paste("Proportion of Overall",
+                                                  ~R^2)))
+        else
+          switch(what,
+                 chisq='&chi;<sup>2</sup>',
+                 "proportion chisq"='Proportion of Overall &chi;<sup>2</sup>',
+                 chisqminusdf='&chi;<sup>2</sup>&nbsp;-&nbsp;df',
+                 aic="Akaike Information Criterion",
+                 P="P-value",
+                 "partial R2"='Partial R<sup>2</sup>',
+                 "remaining R2"='Remaining R<sup>2</sup> After Removing Variable',
+                 "proportion R2"='Proportion of Overall R<sup>2</sup>')
+      }
 
     rm <- c(if(rm.totals) c("TOTAL NONLINEAR","TOTAL NONLINEAR + INTERACTION",
                             "TOTAL INTERACTION","TOTAL"), 
@@ -566,7 +582,7 @@ plot.anova.rms <-
     an <- x[k,, drop=FALSE]
     
     
-    if(what %in% c("partial R2","remaining R2","proportion R2")) {
+    if(what %in% c("partial R2", "remaining R2", "proportion R2")) {
       if("Partial SS" %nin% colnames(x))
         stop('to plot R2 you must have an ols model and must not have specified ss=FALSE to anova')
       
@@ -629,35 +645,60 @@ plot.anova.rms <-
         pss <- an[, 'Partial SS']
       }
 
-      if(length(margin)) for(marg in margin) {
-        aux <-
-          switch(marg, 
-                 chisq = list('chi^2', fn(chisq, 1)),
-                 'proportion chisq' =
-                 list('Proportion~chi^2', fn(chisq / totchisq, 2)),
-                 'd.f.' = list('d.f.', fn(dof, 0)),
-                 P = list('P', fn(P, 4)),
-                 'partial R2' = list('Partial~R^2',       fn(pss / sst, 2)),
-                 'proportion R2' = list('Proportion~R^2', fn(pss / ssr, 2)))
-        
-        if(length(auxtitle)) auxtitle <- paste(auxtitle, aux[[1]], sep='~~')
-         else auxtitle <- aux[[1]]
-        if(length(auxdata))  auxdata  <- paste(auxdata,  aux[[2]], sep='  ')
-         else auxdata  <- aux[[2]]
+      if(length(margin))
+        for(marg in margin) {
+          aux <-
+            if(isbase)
+              switch(marg, 
+                     chisq = list('chi^2', fn(chisq, 1)),
+                     'proportion chisq' =
+                       list('Proportion~chi^2', fn(chisq / totchisq, 2)),
+                     'd.f.' = list('d.f.', fn(dof, 0)),
+                     P = list('P', fn(P, 4)),
+                     'partial R2' = list('Partial~R^2',       fn(pss / sst, 2)),
+                     'proportion R2' = list('Proportion~R^2', fn(pss / ssr, 2)))
+            else
+              switch(marg, 
+                     chisq = paste('&chi;<sup>2</sup><sub>', dof,
+                                   '</sub>', fn(chisq, 1)),
+                     'proportion chisq' =
+                       paste('Proportion &chi;<sup>2</sup>',
+                             fn(chisq / totchisq, 2)),
+                     'd.f.' = paste('d.f.', fn(dof, 0)),
+                     P = paste('P', fn(P, 4)),
+                     'partial R2' = paste('Partial R<sup>2</sup>',
+                                          fn(pss / sst, 2)),
+                     'proportion R2' = paste('Proportion R<sup>2</sup>',
+                                             fn(pss / ssr, 2)))
+
+          if(isbase) {
+            if(length(auxtitle))
+              auxtitle <- paste(auxtitle, aux[[1]], sep='~~')
+            else auxtitle <- aux[[1]]
+            if(length(auxdata))
+              auxdata  <- paste(auxdata,  aux[[2]], sep='  ')
+            else auxdata  <- aux[[2]]
+          } else 
+            auxdata <- if(length(auxdata))
+                         paste(auxdata, aux, sep='&nbsp;&nbsp;')
+                       else
+                         aux
       }
-      ## convert to expression
-      if(length(auxtitle)) auxtitle <- parse(text = auxtitle)
+      ## convert to expression if not using plotly
+      if(length(auxtitle) && isbase) auxtitle <- parse(text = auxtitle)
+
+      dc <- if(isbase) dotchart3 else dotchartp
       
       if(length(trans)) {
         nan <- names(w)
         w <- pmax(0, w)
         pan <- pretty(w, n=ntrans)
         tan <- trans(w); names(tan) <- nan
-        dotchart3(tan, xlab=xlab, pch=pch,
-                  axisat=trans(pan), axislabels=pan,
-                  auxtitle=auxtitle, auxdata=auxdata, ...)
-      } else dotchart3(w, xlab=xlab, pch=pch,
-                       auxtitle=auxtitle, auxdata=auxdata, ...)
+        p <- dc(tan, xlab=xlab, pch=pch,
+                axisat=trans(pan), axislabels=pan,
+                auxtitle=auxtitle, auxdata=auxdata, auxwhere='hover', ...)
+      } else p <- dc(w, xlab=xlab, pch=pch,
+                     auxtitle=auxtitle, auxdata=auxdata, auxwhere='hover', ...)
     }
-    invisible(w)
+    if(isbase) invisible(w) else p
   }

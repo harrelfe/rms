@@ -136,7 +136,9 @@ a list of substitute predictor names to use, after omitting any.
 	character strings can be any combination of \code{"chisq"},
 	\code{"d.f."}, \code{"P"}, \code{"partial R2"},
 	\code{"proportion R2"}, and \code{"proportion chisq"}.
-	Default is to not draw any statistics in the margin.} 
+	Default is to not draw any statistics in the margin.  When
+	\code{plotly} is in effect, margin values are instead displayed as
+	hover text.} 
 \item{pl}{
 set to \code{FALSE} to suppress plotting.  This is useful when you only wish to
 analyze the vector of statistics returned.
@@ -250,7 +252,7 @@ b
 # Add a new line to the plot with combined effects
 s <- rbind(a, 'treat+cholesterol'=b['TOTAL',])
 class(s) <- 'anova.rms'
-plot(s)
+plot(s, margin=c('chisq', 'proportion chisq'))
 
 g <- lrm(y ~ treat*rcs(age))
 dd <- datadist(treat, num.diseases, age, cholesterol)

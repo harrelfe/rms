@@ -1,3 +1,7 @@
+Changes in version 4.6-0 (2016-07-17)
+   * plot.summary.rms: implemented plotly interactive plots if options(grType='plotly') in effect
+	 * plot.anova.rms: implemented plotly interactive plots if options(grType='pltly') in effect
+	 
 Changes in version 4.5-1 (2016-06-01)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations
    * tests/ggplot3: new tests related to above

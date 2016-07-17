@@ -28,6 +28,16 @@ If \code{usebootcoef=TRUE} and the fit was run through \code{bootcov},
 the confidence intervals are bootstrap nonparametric percentile
 confidence intervals, basic bootstrap, or BCa intervals, obtained on contrasts
 evaluated on all bootstrap samples.
+
+If \code{options(grType='plotly')} is in effect and the \code{plotly}
+package is installed, \code{plot} is used instead of base graphics to
+draw the point estimates and confidence limits when the \code{plot}
+method for \code{summary} is called.  Colors and other graphical
+arguments to \code{plot.summary} are ignored in this case.  Various
+special effects are implemented such as only drawing 0.95 confidence
+limits by default but including a legend that allows the other CLs to be
+activated.  Hovering over point estimates shows adjustment values if
+there are any.  \code{nbar} is not implemented for \code{plotly}.
 }
 \usage{
 \method{summary}{rms}(object, \dots, est.all=TRUE, antilog,
@@ -44,7 +54,7 @@ usebootcoef=TRUE, boot.type=c("percentile","bca","basic"), verbose=FALSE)
     cex.main=1, clip=c(-1e30,1e30), main,
     col=rgb(red=.1,green=.1,blue=.8,alpha=c(.1,.4,.7)),
     col.points=rgb(red=.1,green=.1,blue=.8,alpha=1), pch=17,
-    lwd=if(length(q) == 1) 3 else 2 : (length(q) + 1), \dots)
+    lwd=if(length(q) == 1) 3 else 2 : (length(q) + 1), digits=4, \dots)
 }
 \arguments{
 \item{object}{
@@ -157,7 +167,10 @@ e.g., \code{"log Odds Ratio"}.
 \item{col}{vector of colors, one per value of \code{q}}
 \item{col.points}{color for points estimates}
 \item{pch}{symbol for point estimates.  Default is solid triangle.}
-\item{lwd}{line width for confidence intervals, corresponding to \code{q}}
+\item{lwd}{line width for confidence intervals, corresponding to
+	\code{q}}
+\item{digits}{number of significant digits to format numeric hover text
+	and labels for \code{plotly}}
 }
 \value{
 For \code{summary.rms}, a matrix of class \code{summary.rms} 

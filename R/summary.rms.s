@@ -332,8 +332,54 @@ plot.summary.rms <-
            cex.main=1, clip=c(-1e30, 1e30), main,
            col=rgb(red=.1, green=.1, blue=.8, alpha=c(.1,.4,.7)),
            col.points=rgb(red=.1, green=.1, blue=.8, alpha=1),
-           pch=17, lwd=if(length(q) == 1) 3 else 2 : (length(q) + 1), ...)
+           pch=17, lwd=if(length(q) == 1) 3 else 2 : (length(q) + 1),
+           digits=4, ...)
 {
+  isbase <- Hmisc::grType() == 'base'
+  scale  <- attr(x, "scale")
+  adjust <- attr(x, "adjust")
+  if(adjust != '') adjust <- paste("Adjusted to:", adjust, sep="")
+
+  Type   <- x[, "Type"]
+  x      <- x[Type==1,, drop=FALSE]
+  lab    <- dimnames(x)[[1]]
+  effect <- x[, "Effect"]
+  se     <- x[, "S.E."]
+  cond <- if(isbase) ! log && any(Type == 2) else any(Type == 2)
+  if(cond) {
+    fun  <- exp
+    tlab <- scale[2]
+  }
+  else {
+    fun <- function(x) x
+    if(log) {
+      if(length(scale) == 2) tlab <- scale[2]
+      else tlab <- paste("exp(", scale[1], ")", sep="")
+    }
+    else tlab <- scale[1]
+  }
+
+  if(!length(scale)) tlab <- ''  ## mainly for Glm fits
+  if(!missing(main)) tlab <- main
+  
+  fmt <- function(k) {
+    m <- length(k)
+    f <- character(m)
+    for(i in 1 : m) f[i] <- format(k[i])
+    f
+  }
+  sep <- if(isbase) ' - ' else '<br>'
+  dif <- x[, 'Diff.']
+  ## Reformat for factor predictors
+  if(any(is.na(dif))) lab[is.na(dif)] <- sub(' - ', sep, lab[is.na(dif)])
+  lb <- ifelse(is.na(x[, 'Diff.']), lab,
+               paste(lab, sep,
+                     fmt(x[, 'High']), ':', fmt(x[, 'Low']), sep=''))
+  
+
+  
+  if(isbase)
+  {
   confbar <-
     function(y, est, se, q, col, col.points,
              pch=17, lwd=rep(3, length(q)), clip=c(-1e30, 1e30),
@@ -357,28 +403,6 @@ plot.summary.rms <-
       invisible(a)
     }
 
-  scale  <- attr(x, "scale")
-  adjust <- attr(x, "adjust")
-
-  Type   <- x[, "Type"]
-  x  <- x[Type==1,, drop=FALSE]
-  lab    <- dimnames(x)[[1]]
-  effect <- x[, "Effect"]
-  se     <- x[, "S.E."]
-  if(!log && any(Type==2)) {
-    fun <- exp
-    tlab <- scale[2]
-  }
-  else {
-    fun <- function(x) x
-    if(log) {
-      if(length(scale) == 2) tlab <- scale[2]
-      else tlab <- paste("exp(", scale[1], ")", sep="")
-    }
-    else tlab <- scale[1]
-  }
-  if(!length(scale)) tlab <- ''  ## mainly for Glm fits
-  if(!missing(main)) tlab <- main
   augment <- if(log | any(Type==2)) c(.1, .5, .75, 1) else 0
   n     <- length(effect)
   out   <- qnorm((max(q) + 1) / 2)
@@ -392,22 +416,13 @@ plot.summary.rms <-
   else
     augment <- c(augment, if(log) exp(xlim) else xlim)
   
-  fmt <- function(k) {
-    m <- length(k)
-    f <- character(m)
-    for(i in 1 : m) f[i] <- format(k[i])
-    f
-  }
-  lb <- ifelse(is.na(x[, 'Diff.']), lab,
-               paste(lab, ' - ',
-                     fmt(x[, 'High']), ':', fmt(x[, 'Low']), sep=''))
   plot.new(); par(new=TRUE)
   mxlb <- .1 + max(strwidth(lb, units='inches', cex=cex))
   tmai <- par('mai')
   on.exit(par(mai=tmai))
   par(mai=c(tmai[1], mxlb, 1.5*tmai[3], tmai[4]))
   
-  outer.widths <- fun(effect + out * se)-fun(effect - out * se)
+  outer.widths <- fun(effect + out * se) - fun(effect - out * se)
   if(missing(nbar)) nbar <- n
   npage <- ceiling(n/nbar)
   is <- 1
@@ -443,12 +458,65 @@ plot.summary.rms <-
             adj=1, las=1)
     }
     if(adjust != "") {
-      adjto <- paste("Adjusted to:", adjust, sep="")
       xx <- par('usr')[2]
-      if(nbar > ie) text(xx, nbar - (ie - is + 1), adjto, adj=1, cex=cex)
-      else title(sub=adjto, adj=1, cex=cex)
+      if(nbar > ie) text(xx, nbar - (ie - is + 1), adjust, adj=1, cex=cex)
+      else title(sub=adjust, adj=1, cex=cex)
     }
     is <- ie + 1
   }
-  invisible()
+  return(invisible())
+  }
+
+  ## Use plotly instead
+
+  qfun <- function(x) ifelse(x==.5, qnorm(x),
+                      ifelse(x < .5, qnorm(x / 2),
+                             qnorm((1 + x) / 2)))
+
+  ## ??? don't we need a different qfun for ols using t dist?
+  
+  n       <- length(q)
+  feffect <- fun(effect)
+  hte     <- format(feffect, digits=digits)
+  if(adjust != '') hte <- paste(hte, adjust, sep='<br>')
+  
+  p <- plotly::plot_ly(x=feffect, y=lb,
+                       text=hte, mode='markers', hoverinfo='text',
+                       name='Estimate')
+  
+  for(i in 1 : n) {
+    lower <- fun(effect + se * qfun(1. - q[i]))
+    upper <- fun(effect + se * qfun(q[i]))
+    ## Interrupt line segments with NA
+    m <- 3 * length(effect)
+    x <- rep(NA, m)
+    x[seq(1, m, by=3)] <- lower
+    x[seq(2, m, by=3)] <- upper
+    ycl <- rep(lb, each=3)
+    ht <-ifelse(is.na(x), '', format(x, digits=digits))
+    cl95 <- which(abs(q - 0.95) < 0.000001)
+    vis  <- ! length(cl95) || i %in% cl95
+    p <- plotly::add_trace(x=x, y=ycl, text=ht,
+                           marker=list(symbol='line-ns-open'),
+                           hoverinfo='text',
+                           name=paste(format(q)[i], 'CI'),
+                           visible=if(vis) TRUE else 'legendonly',
+                           evaluate=TRUE)
+  }
+
+  leftmargin <- min(160, max(nchar(lb)) * 6)
+
+  p <-
+    plotly::layout(p,
+                   xaxis = list(type = if(log) 'log' else 'linear',
+                                zeroline=FALSE, title=tlab),
+                   yaxis = list(title='', autorange='reversed'),
+                   margin = list(l=leftmargin),
+                   shapes = list(
+                     list(type = "line",
+                          line = list(color = "lightgray"), 
+                          x0 =fun(0), x1 = fun(0), xref = "x",
+                          y0 = 0, y1=length(lb), yref='y'))
+                   )
+  p
 }
