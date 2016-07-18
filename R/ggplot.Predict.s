@@ -20,7 +20,20 @@ ggplot.Predict <-
              side=1, nint=100),
            type=NULL, ggexpr=FALSE, ..., environment)
 {
+  isbase <- Hmisc::grType() == 'base'   ## vs. 'plotly'
+  if(! isbase && length(anova))
+    stop('anova not yet implemented for grType plotly')
 
+  comb <- function(plist, nrow=1, ncol=1, ...) {
+    ## Note: subplot does not take an ncols argument
+    if(isbase) do.call(arrGrob,
+                       c(plist, list(nrow=nrow, ncol=ncol), list(...)))
+    else
+      do.call(plotly::subplot,
+              c(plist, list(nrows=nrow,
+                            titleX=TRUE, titleY=TRUE, margin=0.065), list(...)))
+  }
+  
   if(! length(formula) && ! missing(mapping)) formula <- mapping
   ## .xlim, .ylim instead of xlim, ylim to distinguish from ggplot functions
   sepdiscrete <- match.arg(sepdiscrete)
@@ -59,28 +72,34 @@ ggplot.Predict <-
   pmlabel <- character(length(label))
   names(pmlabel) <- names(label)
   for(i in 1 : length(label))
-    pmlabel[i] <- as.character(labelPlotmath(label[i], units[i]))
-
+    pmlabel[i] <- as.character(labelPlotmath(label[i], units[i], html=! isbase))
+  
   if(predpres)
     data$.Predictor. <- if(vnames != 'labels') data$.predictor.
                         else pmlabel[as.character(data$.predictor.)]
     
   glabel <- function(gname, j=1, chr=FALSE) {
     r <-  
-      if(! length(legend.label)) parse(text=pmlabel[gname])
+      if(! length(legend.label))
+        if(isbase) parse(text=pmlabel[gname]) else pmlabel[gname]
       else if(is.logical(legend.label)) ''
       else legend.label[j]
     if(is.expression(r)) {
       if(chr) r <- sprintf('expression(%s)', as.character(r))
-    } else r <- paste('"', r, '"', sep='')
+    } else {
+      qc <- if(length(grep("'", r))) '"' else "'"
+      r <- paste(qc, r, qc, sep='')
+      }
     r
   }
 
   ## Function to create expression( ) or "" depending on argument
-    expch <- function(x, chr=FALSE) if(! length(x)) 'NULL' else
+  expch <- function(x, chr=FALSE) {
+    if(! length(x)) 'NULL' else
       if(is.expression(x)) {
         if(chr) sprintf('expression(%s)', as.character(x)) else x
       } else if(grepl('expression\\(', x)) x else deparse(x)
+    }
 
   ## Function to construct xlim() or ylim() call
   limc <- function(limits, which)
@@ -101,7 +120,8 @@ ggplot.Predict <-
   ## Make all grouping variables discrete for proper aesthetic mapping
   if(length(groups)) for(v in groups) data[[v]] <- as.factor(data[[v]])
   
-  if(missing(ylab))     ylab     <- info$ylabPlotmath
+  if(missing(ylab))
+    ylab <- if(isbase) info$ylabPlotmath else info$ylabhtml
   if(! length(data$lower)) conf.int <- FALSE
   
   if(missing(ylim.))
@@ -166,7 +186,9 @@ ggplot.Predict <-
                      continuous = numeric(  nrow(dat)),
                      discrete   = character(nrow(dat)) )
 
-        lbr <- if(vnames != 'labels') '' else ', labeller=label_parsed'
+        lbr <- if(! isbase || vnames != 'labels') ''
+               else
+                 ', labeller=label_parsed'
         
         ## Prepare to create a "super factor" variable by concatenating
         ## all levels of all categorical variables keeping original orders
@@ -314,20 +336,22 @@ ggplot.Predict <-
         }
         g <- paste(g, collapse=' + ')
         if(ggexpr) return(g)
-        g <- eval(parse(text = g))
-##        if(vnames == 'labels') g <- facet_wrap_labeller(g, pmlabel[v])
-        g
+        if(! isbase) g <- paste('plotly::ggplotly(', g, ')')
+        eval(parse(text = g))
       }    # end dogroup function
       
       gcont <- if(any(! isdis)) dogroup('continuous')
       gdis  <- if(any(  isdis)) dogroup('discrete')
       if(ggexpr) return(list(continuous=gcont, discrete=gdis))
       r <- mean(! isdis)
+        
       return(if(length(gcont) && length(gdis))
                switch(sepdiscrete,
                       list = list(continuous=gcont, discrete=gdis),
-                      vertical = arrGrob(gcont, gdis,         heights=c(r, 1-r)),
-                      horizontal=arrGrob(gcont, gdis, nrow=1, widths =c(r, 1-r)))
+                      vertical  = comb(list(gcont, gdis), nrow=2,
+                                       heights=c(r, 1-r)),
+                      horizontal= comb(list(gcont, gdis), ncol=2,
+                                       widths =c(r, 1-r)))
              else if(length(gcont)) gcont else gdis)
     }  # end if(sepdiscrete)
     ## Form separate plots and combine at end
@@ -344,7 +368,8 @@ ggplot.Predict <-
         else if(np <= 9) c(3,3)
         else if(np <=12) c(3,4)
         else if(np <=16) c(4,4)
-        else             c(4,5)
+        else if(np <=20) c(4,5)
+        else ceil(rep(sqrt(np), 2))        
 #    pushViewport(viewport(layout = grid.layout(layout[1], layout[2])))
 
     Plt <- list()
@@ -361,7 +386,11 @@ ggplot.Predict <-
       ll <- length(l)
       xlim. <- if(ll) c(1, ll) else range(pretty(z))
       yhat <- data[i, 'yhat']
-      xl <- if(vnames == 'labels') parse(text=pmlabel[w]) else w
+      xl <- if(vnames == 'labels') {
+              if(isbase) parse(text=pmlabel[w])
+              else pmlabel[w]
+            }
+            else w
       zz <- data.frame(.xx.=z, .yhat=yhat)
       if(length(formula))
         zz <- cbind(zz, data[i, all.vars(formula), drop=FALSE])
@@ -454,19 +483,20 @@ ggplot.Predict <-
       # print(g, vp = viewport(layout.pos.row=nr, layout.pos.col=nc))
       g <- paste(g, collapse = ' + ')
       if(ggexpr) return(g)
+      if(! isbase) g <- paste('plotly::ggplotly(', g, ')')
       g <- eval(parse(text=g))
       Plt[[jplot]] <- g
     }
-    Plt <- if(jplot == 1) Plt[[1]]
-     else
-       do.call(arrGrob, c(Plt, list(ncol=layout[2])))
-    if(length(sub)) Plt <- footnote(Plt, sub, size=size.adj)
-    return(Plt)
+    p <- comb(Plt, nrow=layout[1], ncol=layout[2])
+    if(isbase && length(sub)) Plt <- footnote(Plt, sub, size=size.adj)
+    return(p)
+    ### return(Plt)
 
   } else  { # .predictor. not included; user specified predictors to show
     v  <- varying
     xn <- v[1]    ## name of x-axis variable (first variable given to Predict)
-    if(missing(xlab)) xlab <- parse(text = pmlabel[xn])
+    if(missing(xlab))
+      xlab <- if(isbase) parse(text = pmlabel[xn]) else pmlabel[xn]
     xv <- data[[xn]]
     xdiscrete <- is.factor(xv) || is.character(xv) ||
       length(unique(xv[!is.na(xv)])) <= nlevels
@@ -563,8 +593,9 @@ ggplot.Predict <-
     }
     g <- paste(g, collapse=' + ')
     if(ggexpr) return(g)
+    if(! isbase) g <- paste('plotly::ggplotly(', g, ')')
     g <- eval(parse(text=g))
-    if(length(sub)) g <- footnote(g, sub)
+    if(isbase && length(sub)) g <- footnote(g, sub)
     g
   }
 }

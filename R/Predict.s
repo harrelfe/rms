@@ -84,14 +84,16 @@ Predict <-
   if(missing(fun)) {
     ylab <- scale[1]
     if(length(time))
-      ylab <- ylabPlotmath <-
+      ylab <- ylabPlotmath <- ylabhtml <-
         if(loglog) paste("log[-log S(", format(time), ")]", sep="")
         else paste(format(time), yunits, "Survival Probability")
-    else if(scale[1] == 'X * Beta')
+    else if(scale[1] == 'X * Beta') {
       ylabPlotmath <- expression(X*hat(beta))
-    else ylabPlotmath <- ylab
+      ylabhtml     <- 'X&\beta;'
+      }
+    else ylabPlotmath <- ylabhtml <- ylab
   }
-  else ylab <- ylabPlotmath <- ''
+  else ylab <- ylabPlotmath <- ylabhtml <- ''
   
   if(ref.zero & length(time))
     stop("ref.zero=TRUE does not make sense with time given")
@@ -163,7 +165,8 @@ Predict <-
   at <- list(label=label, units=units, assume.code=assume)
   
   info <- list(varying=varying, adjust=adjust, Design=at,
-               ylabPlotmath=ylabPlotmath, ylab=ylab, yunits=yunits,
+               ylabPlotmath=ylabPlotmath, ylabhtml=ylabhtml,
+               ylab=ylab, yunits=yunits,
                ref.zero=ref.zero, adj.zero=adj.zero, time=time,
                conf.int=conf.int)
   if(type == 'model.frame') {
