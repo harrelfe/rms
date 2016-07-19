@@ -132,7 +132,13 @@ ggplot.Predict <-
   if(missing(adj.subtitle)) adj.subtitle <- length(adjust) > 0
   sub <- if(adj.subtitle && length(adjust)==1)
            paste('Adjusted to:', adjust, sep='') else NULL
-  
+  if(length(sub) & ! isbase)
+    sub <- paste('<span style="font-size:0.6em">', sub, '</span>',
+                 sep='')
+  cap <- expch(sub, chr=TRUE)
+  ## ggplot2 is supposed to implement labs(subtitle= caption=) but
+  ## neither of these work as of 2016-07-18.  labs(title=) used for now.
+
   tanova <- if(length(anova))
     function(name, x, y, xlim, ylim, flip=FALSE,
              empty=FALSE, dataOnly=FALSE)
@@ -143,9 +149,9 @@ ggplot.Predict <-
 
   ## See http://bigdata-analyst.com/best-way-to-add-a-footnote-to-a-plot-created-with-ggplot2.html
   ## size is in mm
-  footnote <- function(object, text, size=2.5, color=grey(.5))
-    arrGrob(object, sub = grid::textGrob(text, x = 1, hjust = 1.01,
-          vjust=0.1, gp = grid::gpar(fontsize =size/0.3527778 )))
+#  footnote <- function(object, text, size=2.5, color=grey(.5))
+#    arrGrob(object, sub = grid::textGrob(text, x = 1, hjust = 1.01,
+#          vjust=0.1, gp = grid::gpar(fontsize =size/0.3527778 )))
   
   if(predpres) {   ## User did not specify which predictors to plot; all plotted
     data$.predictor.  <- factor(data$.predictor.)
@@ -225,12 +231,12 @@ ggplot.Predict <-
         if(type == 'continuous') {
           if(length(groups)) g <- 
             sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s)) +
-                     labs(x=NULL, y=%s) + %s',
-                    aestype[1], groups[1], expch(ylab, chr=TRUE), ylimc)
+                     labs(x=NULL, y=%s, title=%s) + %s',
+                    aestype[1], groups[1], expch(ylab, chr=TRUE), cap, ylimc)
           else
             g <- sprintf("ggplot(dat, aes(x=.xx., y=yhat)) +
-                         labs(x=NULL, y=%s) + %s",
-                         expch(ylab, chr=TRUE), ylimc)
+                         labs(x=NULL, y=%s, title=%s) + %s",
+                         expch(ylab, chr=TRUE), cap, ylimc)
           
           g <- c(g, if(length(layout))
                       sprintf("facet_wrap(~ .Predictor., scales='free_x',
@@ -285,10 +291,12 @@ ggplot.Predict <-
           if(length(groups)) g <- 
             c(sprintf('ggplot(dat, aes(x=yhat, y=.xx., %s=%s))',
                       aestype[1], groups[1]),
-              sprintf("labs(x=%s, y=NULL)", expch(ylab, chr=TRUE)))
+              sprintf("labs(x=%s, y=NULL, title=%s)",
+                      expch(ylab, chr=TRUE), cap))
           else
             g <- c("ggplot(dat, aes(x=yhat, y=.xx.))",
-                   sprintf("labs(x=%s, y=NULL)", expch(ylab, chr=TRUE)))
+                   sprintf("labs(x=%s, y=NULL, title=%s)",
+                           expch(ylab, chr=TRUE), cap))
           if(! maddlayer) g <- c(g, addlayer)
           g <- c(g, limc(ylim., 'x'),
                  sprintf("facet_wrap(~ .Predictor., scales='free_y'%s)", lbr),
@@ -427,8 +435,8 @@ ggplot.Predict <-
       ## Need the following or geom_ribbon will improperly clip regions
       if(flipped) g <- c(g, limc(ylim., 'y')) else
       g <- c(g, sprintf('coord_cartesian(ylim=%s)', deparse(ylim.)))
-      g <- c(g, sprintf('labs(x=%s, y=%s)',
-                        expch(xl, chr=TRUE), expch(ylab, chr=TRUE)),
+      g <- c(g, sprintf('labs(x=%s, y=%s, title=%s)',
+                        expch(xl, chr=TRUE), expch(ylab, chr=TRUE), cap),
              "theme(plot.margin = grid::unit(rep(0, 4), 'cm'))")
       ## use rep(.1, 4) if using print(..., viewport=...) for multiple plots
       if(length(groups)) {
@@ -487,10 +495,15 @@ ggplot.Predict <-
       g <- eval(parse(text=g))
       Plt[[jplot]] <- g
     }
-    p <- comb(Plt, nrow=layout[1], ncol=layout[2])
-    if(isbase && length(sub)) Plt <- footnote(Plt, sub, size=size.adj)
-    return(p)
-    ### return(Plt)
+    Plt <- if(jplot == 1) Plt[[1]]
+           else
+             comb(Plt, nrow=layout[1], ncol=layout[2])
+#    if(length(sub)) {
+#      Plt <- if(isbase) footnote(Plt, sub, size=size.adj)
+#             else
+#               plotly::layout(p, title=sub, margin=0.03)
+#      }
+    return(Plt)
 
   } else  { # .predictor. not included; user specified predictors to show
     v  <- varying
@@ -510,8 +523,8 @@ ggplot.Predict <-
     if(length(groups)) for(j in 1 : length(groups))
       ae <- paste(ae, ', ', aestype[j], '=', groups[j], sep='')
     ae <- eval(parse(text=paste(ae, ')', sep='')))
-    g <- c("ggplot(data, ae)", sprintf("labs(x=%s, y=%s)",
-              expch(xlab, chr=TRUE), expch(ylab, chr=TRUE)))
+    g <- c("ggplot(data, ae)", sprintf("labs(x=%s, y=%s, title=%s)",
+              expch(xlab, chr=TRUE), expch(ylab, chr=TRUE), cap))
 
     flipped <- FALSE
     if(xdiscrete) {
@@ -595,8 +608,11 @@ ggplot.Predict <-
     if(ggexpr) return(g)
     if(! isbase) g <- paste('plotly::ggplotly(', g, ')')
     g <- eval(parse(text=g))
-    if(isbase && length(sub)) g <- footnote(g, sub)
-    g
+#    if(length(sub)) g <- if(isbase) footnote(g, sub)
+#                         else
+#                           plotly::layout(g, title=sub, margin=0.03)
+    ## Could not get layout(g, annotations=...) to work
+    return(g)
   }
 }
 
