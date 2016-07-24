@@ -152,7 +152,7 @@ orm <- function(formula, data, subset, na.action=na.delete,
 
 print.orm <- function(x, digits=4, coefs=TRUE,
                       intercepts=x$non.slopes < 10,
-                      latex=FALSE,
+                      latex=FALSE, md=FALSE,
                       title, ...) {
 
   if(missing(title)) {
@@ -265,7 +265,7 @@ print.orm <- function(x, digits=4, coefs=TRUE,
   }
   
   prModFit(x, title=title, z, digits=digits,
-           coefs=coefs, latex=latex, ...)
+           coefs=coefs, latex=latex, md=md, ...)
 }
 
 Mean.orm <- function(object, codes=FALSE, ...)
