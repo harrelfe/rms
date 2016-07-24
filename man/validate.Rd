@@ -2,9 +2,8 @@
 \alias{validate}
 \alias{print.validate}
 \alias{latex.validate}
-\title{
-  Resampling Validation of a Fitted Model's Indexes of Fit
-}
+\alias{html.validate}
+\title{Resampling Validation of a Fitted Model's Indexes of Fit}
 \description{
   The \code{validate} function when used on an object created by one of the
   \code{rms} series does resampling validation of a 
@@ -20,22 +19,25 @@ validate(fit, method="boot", B=40,
                          title=first.word(deparse(substitute(x))),
                          caption=NULL, table.env=FALSE,
                          size='normalsize', extracolsize=size, \dots)
+\method{html}{validate}(object, digits=4, B=Inf, caption=NULL, \dots)
 }
 \arguments{
   \item{fit}{
-    a fit derived by e.g. \code{lrm}, \code{cph}, \code{psm}, \code{ols}. The options \code{x=TRUE} and \code{y=TRUE}
+    a fit derived by e.g. \code{lrm}, \code{cph}, \code{psm},
+		\code{ols}. The options \code{x=TRUE} and \code{y=TRUE} 
     must have been specified.
   }
   \item{method}{
-    may be \code{"crossvalidation"}, \code{"boot"} (the default), \code{".632"}, or
-    \code{"randomization"}.
+    may be \code{"crossvalidation"}, \code{"boot"} (the default),
+		\code{".632"}, or \code{"randomization"}.
     See \code{predab.resample} for details.  Can abbreviate, e.g.
     \code{"cross", "b", ".6"}.
   }
   \item{B}{
     number of repetitions.  For \code{method="crossvalidation"}, is the
-    number of groups of omitted observations.  For \code{print.validate}
-	and \code{latex.validate}, \code{B} is an upper limit on the number
+    number of groups of omitted observations.  For \code{print.validate},
+	\code{latex.validate}, and \code{html.validate}, \code{B} is an upper
+	limit on the number 
 	of resamples for which information is printed about which variables
 	were selected in each model re-fit.  Specify zero to suppress
 	printing.  Default is to print all re-samples.
@@ -70,7 +72,8 @@ validate(fit, method="boot", B=40,
     parameters for each specific validate function, and parameters to
     pass to \code{predab.resample} (note especially the \code{group},
     \code{cluster}, amd \code{subset} parameters).  For \code{latex},
-	optional arguments to \code{\link[Hmisc]{latex.default}}.
+	optional arguments to \code{\link[Hmisc]{latex.default}}.  Ignored for
+	\code{html.validate}.
     
     For \code{psm}, you can pass the \code{maxiter} parameter here (passed to 
     \code{survreg.control}, default is 15 iterations) as well as a \code{tol} parameter 

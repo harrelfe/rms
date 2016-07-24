@@ -270,7 +270,8 @@ Gls <-
   }
 
 
-print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
+print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
+                      title, ...)
 {
   ## Following taken from print.gls with changes marked FEH
 
@@ -367,7 +368,8 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, title, ...)
                      title = 'Bootstrap Nonparametric 0.95 Confidence Limits for Correlation Parameters')
     }
   
-  prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex, ...)
+  prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex,
+           md=md, ...)
 }
 
 vcov.Gls <- function(object, intercepts='all', ...)

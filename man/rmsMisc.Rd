@@ -43,6 +43,7 @@
 \alias{reVector}
 \alias{formatNP}
 \alias{latex.naprint.delete}
+\alias{html.naprint.delete}
 \alias{removeFormulaTerms}
 \title{Miscellaneous Design Attributes and Utility Functions}
 \description{
@@ -146,6 +147,9 @@ formatted values with "< 0.0001" (if \code{digits=4}).
 
 \code{latex.naprint.delete} will, if appropriate, use LaTeX to draw a
 dot chart of frequency of variable \code{NA}s related to model fits.
+\code{html.naprint.delete} does the same thing in the RStudio R markdown
+context, using \code{Hmisc::dotchartp} (which uses \code{plotly}) for
+drawing any needed dot chart.
 
 \code{removeFormulaTerms} removes one or more terms from a model
 formula, using strictly character manipulation.  This handles problems
@@ -198,16 +202,18 @@ Newlevels(fit, \dots)
 \method{Newlabels}{rms}(fit, labels, \dots)
 \method{Newlevels}{rms}(fit, levels, \dots)
 
-prModFit(x, title, w, digits=4, coefs=TRUE, latex=FALSE, rmarkdown=FALSE,
+prModFit(x, title, w, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
          lines.page=40, long=TRUE, needspace, \dots)
 
-prStats(labels, w, latex=FALSE, file="", append=TRUE)
+prStats(labels, w, latex=FALSE, md=FALSE, file="", append=TRUE)
 
 reVector(\dots, na.rm=TRUE)
 
 formatNP(x, digits=NULL, pvalue=FALSE, latex=FALSE)
 
 \method{latex}{naprint.delete}(object, file="", append=TRUE, \dots)
+
+\method{html}{naprint.delete}(object, \dots)
 
 removeFormulaTerms(form, which=NULL, delete.response=FALSE)
 }
@@ -325,13 +331,12 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   model.}
 \item{latex}{a logical value indicating whether information should be
   formatted as plain text or as LaTeX markup}
+\item{md}{a logical value indicating that the information should be
+	formatted using html and latex with MathJax in RMarkdown}
 \item{file}{name of file to which to write model output from
 	\code{print()} using \code{prStats}.  Default is the console.}
 \item{append}{specify \code{append=FALSE} when using \code{file} and you
 	want to start over instead of adding to an existing file.}
-\item{rmarkdown}{set to \code{TRUE} to force \code{latex=TRUE} and to
-	convert LaTeX code to html using Hmisc \code{html.latex} for use with
-	RMarkdown, knitr, and RStudio}
 \item{lines.page}{see \code{\link[Hmisc]{latex}}}
 \item{long}{set to \code{FALSE} to suppress printing of formula and
   certain other model output}

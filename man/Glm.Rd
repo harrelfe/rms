@@ -14,7 +14,7 @@ NULL, na.action = na.delete, start = NULL, offset = NULL, control =
 glm.control(...), model = TRUE, method = "glm.fit", x = FALSE, y = TRUE,
 contrasts = NULL, \dots)
 
-\method{print}{Glm}(x, digits=4, coefs=TRUE, latex=FALSE,
+\method{print}{Glm}(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
 title='General Linear Model', \dots)
 }
 \arguments{
@@ -27,7 +27,8 @@ title='General Linear Model', \dots)
 	to print only the first \code{n} regression coefficients in the
 	model.}
   \item{latex}{a logical value indicating whether information should be
-	formatted as plain text or as LaTeX markup}
+		formatted as plain text or as LaTeX markup}
+	\item{md}{a logical directing that LaTeX and html be generated for R Markdown}
   \item{title}{a character string title to be passed to \code{prModFit}}
 }
 \value{a fit object like that produced by \code{\link{glm}} but with

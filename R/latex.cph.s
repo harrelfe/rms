@@ -5,8 +5,10 @@ latex.cph <-
            columns=65, inline=FALSE, 
            before=if(inline)"" else "& &", after="",
            dec=3, pretrans=TRUE,
-           caption=NULL, digits=.Options$digits, size='', ...)
+           caption=NULL, digits=.Options$digits, size='', md=FALSE, ...)
 {
+  if(md) file <- ''
+  
   f <- object
   whichThere <- length(which)
   
@@ -15,8 +17,12 @@ latex.cph <-
   lev <- names(f$freq)
   Intercept <- -f$center
   strata <- f$strata
-  w <- if(length(caption))
-    paste('\\begin{center} \\bf',caption,'\\end{center}')
+  w <- if(length(caption)) {
+         if(md) paste('<div align=center><strong>', caption,
+                      '</strong></div>')
+         else
+           paste('\\begin{center} \\bf',caption,'\\end{center}')
+         }
   if(!length(which) & !inline)
     {
       if(length(strata)==0)
@@ -43,7 +49,7 @@ latex.cph <-
                 before=before, after=after,
                 prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
                 intercept=Intercept, inline=inline,
-                pretrans=pretrans, digits=digits, size=size) 
+                pretrans=pretrans, digits=digits, size=size, md=md) 
 
   if(inline) return(z)
   
@@ -57,7 +63,7 @@ latex.cph <-
       if(max(times)>=maxtime) maxt <- FALSE
       if(nstrat==0)
         {
-          s <- matrix(ss[,,1],ncol=1)
+          s <- matrix(ss[, , 1], ncol=1)
         
           if(maxt)
             {
@@ -65,41 +71,47 @@ latex.cph <-
               times <- c(times, f$time[L]) 
             }
           dimnames(s) <- list(format(times), "$S_{0}(t)$")
-          latex.default(s, file=file, append=TRUE, rowlabel="$t$",
-                        rowlabel.just="r",
-                        dec=dec, table.env=FALSE)
+          if(md) {
+            z <- htmlTable::txtRound(z, digits=dec)
+            cat(htmlTable::htmlTable(z, rowlabel='$t$',
+                                     css.cell='min-width: 9em;'),
+                sep='\n')
+          }
+          else
+            latex.default(s, file=file, append=TRUE, rowlabel="$t$",
+                          rowlabel.just="r",
+                          dec=dec, table.env=FALSE)
         }
       
       else
         {
-#    com <- paste(paste("-e 's/",sname,"=\\(.*\\),/",
-#	"\\1, /' ",sep=""),collapse="")
-#   # Adding \\: spacer in subscript caused LaTeX to barf  (19May95)
-#    n <- sys(paste('sed -e "s/[.]/, /g"',com, # "-e 's/ /\\\\\\\\:/g'"
-#		), 
-#		paste(fs,",",sep=""))
           
           ## Change . to ,blank
           n <- sedit(paste(fs,',',sep=''), '.', ', ')
           ## Change sname=*, to *,
           n <- sedit(n, paste(sname,'=*,',sep=''), rep('*, ', length(sname)))
-          n <- substring(n, 1, nchar(n)-sum(atr$assume.code==8)-1)
-          s <- ss[,,1]
+          n <- substring(n, 1, nchar(n) - sum(atr$assume.code == 8) - 1)
+          s <- ss[, , 1]
           if(maxt)
             {
-              smax <- rep(NA,nstrat)
-              for(i in 1:nstrat)
-                smax[i] <- f$surv[[i]][abs(f$time[[i]]-maxtime)<.001]
+              smax <- rep(NA, nstrat)
+              for(i in 1 : nstrat)
+                smax[i] <- f$surv[[i]][abs(f$time[[i]]-maxtime) < 0.001]
               s <- rbind(s, smax)
               times <- c(times, maxtime)
             }    
     
           dimnames(s) <- list(format(times),
                               paste("$S_{", n, "}(t)$", sep=""))
-          latex.default(s, file=file, append=TRUE,
-                        rowlabel="$t$", rowlabel.just="r",
-                        dec=dec, table.env=FALSE)
+          if(md) {
+            z <- htmlTable::txtRound(s, digits=dec)
+            cat(htmlTable::htmlTable(z, rowlabel='$t$',
+                                     css.cell='min-width: 9em;'), sep='\n')
+          }
+          else
+            latex.default(s, file=file, append=TRUE,
+                          rowlabel="$t$", rowlabel.just="r",
+                          dec=dec, table.env=FALSE)
         }
     }
-  z
 }

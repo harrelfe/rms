@@ -180,7 +180,8 @@ lrm <- function(formula, data,subset, na.action=na.delete,
 }
 
 print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
-                      latex=FALSE, title='Logistic Regression Model', ...) {
+                      latex=FALSE, md=FALSE,
+                      title='Logistic Regression Model', ...) {
   z <- list()
   k <- 0
   
@@ -288,7 +289,7 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
     z[[k]] <- list(type='print', list(stats))
   }
   prModFit(x, title=title, z, digits=digits,
-           coefs=coefs, latex=latex, ...)
+           coefs=coefs, latex=latex, md=md, ...)
 }
 
 

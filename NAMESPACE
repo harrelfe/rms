@@ -18,6 +18,7 @@ importFrom(rpart, rpart, rpart.control, prune)
 importFrom(polspline, hare, phare)
 import(multcomp)
 # importFrom(multcomp, confint.glht, glht)  FAILS confint.glht not exported by namespace:multcomp
+importFrom(htmlTable, htmlTable, txtRound)
 
 importFrom(grDevices, gray, grey, rgb)
 importFrom(graphics, abline, axis, boxplot, hist, legend,
@@ -56,6 +57,11 @@ S3method(Function, cph)
 S3method(Function, rms)
 
 S3method(Hazard, psm)
+
+S3method(html, anova.rms)
+S3method(html, naprint.delete)
+S3method(html, summary.rms)
+S3method(html, validate)
 
 S3method(latex, anova.rms)
 S3method(latex, bj)

@@ -474,40 +474,36 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 latex.anova.rms <-
   function(object,
            title=paste('anova',attr(object,'obj.name'),sep='.'),
-           psmall=TRUE,
            dec.chisq=2, dec.F=2, dec.ss=NA,
-           dec.ms=NA, dec.P=4, table.env=TRUE, caption=NULL, ...) {
+           dec.ms=NA, dec.P=4, table.env=TRUE, caption=NULL, html=FALSE, ...) {
     sn   <- colnames(object)
     rowl <- rownames(object)
     if(any(sn=='MS'))
       rowl[rowl=='TOTAL'] <- 'REGRESSION'
     
-    rowl <- latexTranslate(rowl)
+    if(! html) rowl <- latexTranslate(rowl)
     
     ## Translate interaction symbol (*) to times symbol
-    rowl <- sedit(rowl, "*", "$\\times$", wild.literal=TRUE)
+    rowl <- gsub('\\*', if(html) '&times;' else '$\\times$', rowl)
   
     ## Put TOTAL rows in boldface
-    rowl <- ifelse(substring(rowl,1,5) %in% c("REGRE","ERROR"),
-                   paste("{\\bf",rowl,"}"),rowl)
-    
-  rowl <- ifelse(substring(rowl,1,1)==" ",
-                 paste("~~{\\it ",substring(rowl,2),"}",sep=""),
+    if(html) {a <- '<strong>'; b <- '</strong>'}
+        else {a <- '\\textbf{'; b <- '}'}
+    rowl <- ifelse(substring(rowl, 1, 5) %in% c("REGRE", "ERROR"),
+                   paste(a, rowl, b, sep=''), rowl)
+
+    if(html) {a <- '&nbsp;&nbsp;<i>'; b <- '</i>'}
+    else {a <- '~~\\emph{'; b <- '}'}
+      
+    rowl <- ifelse(substring(rowl, 1, 1) == " ",
+                 paste(a, substring(rowl,2), b, sep=""),
                  rowl) # preserve leading blank
 
-  P <- object[,3]
+    P <- object[,3]
   
-  dstats <- as.data.frame(object)
-  attr(dstats, 'row.names') <- rowl
+    dstats <- as.data.frame(object)
+    attr(dstats, 'row.names') <- rowl
   
-  if(psmall) {
-    psml <- !is.na(dstats$P) & dstats$P < 0.00005
-    if(any(psml))
-      dstats$P <- ifelse(is.na(dstats$P),'',
-                         ifelse(psml, "$<0.0001$",
-                                paste("~",format(round(dstats$P,dec.P)),sep="")))
-  }
-
     digits <- c('Chi-Square'=dec.chisq, F=dec.F, 'd.f.'=0,
                 'Partial SS'=dec.ss, MS=dec.ms, P=dec.P)
 
@@ -516,16 +512,37 @@ latex.anova.rms <-
     names(dstats) <- ifelse(sn %nin% c('d.f.','MS','Partial SS'),
                             paste('$', sn, '$', sep=''), sn)
 
-    resp <- latexTranslate(as.character(attr(object,"formula")[2]))
+    resp <- as.character(attr(object, 'formula')[2])
+    if(! html) resp <- latexTranslate(resp)
     ## Make LaTeX preserve spaces in heading
-    if(!length(caption))
-      caption <- paste(if(any(sn=='F'))"Analysis of Variance"
-      else "Wald Statistics", "for {\\tt", resp, "}")
+    if(html) {a <- '<code>'; b <- '</code>'} else {a <- '\\texttt{'; b <- '}'}
+    if(! length(caption))
+      caption <- paste(if(any(sn == 'F')) "Analysis of Variance"
+      else "Wald Statistics", " for ", a, resp, b, sep='')
 
-    latex(dstats, cdec=dig, title=title,
-          caption = if(table.env) caption else NULL,
-          rowlabel="", col.just=rep('r',length(sn)), table.env=table.env, ...)
+    i <- 0
+    for(nn in names(dstats)) {
+      i <- i + 1
+      dstats[[nn]] <- formatNP(dstats[[nn]], digits=dig[i], latex=TRUE,
+                               pvalue=nn == 'P')
+    }
+    if(html) {
+      cat(htmlTable::htmlTable(dstats, caption=caption,
+                               css.cell='min-width: 9em;',
+                               align=rep('r', length(sn)),
+                               rowlabel=''), sep='\n')
+      }
+    else
+      latex(dstats, title=title,
+            caption = if(table.env) caption else NULL,
+            rowlabel="", col.just=rep('r',length(sn)), table.env=table.env, ...)
   }
+
+html.anova.rms <-
+  function(object,
+           title=paste('anova',attr(object,'obj.name'),sep='.'), ...)
+    latex(object, title, html=TRUE, ...)
+
 
 plot.anova.rms <-
   function(x, what=c("chisqminusdf","chisq","aic",
@@ -535,8 +552,8 @@ plot.anova.rms <-
            pch=16, rm.totals=TRUE, rm.ia=FALSE,
            rm.other=NULL, newnames,
            sort=c("descending","ascending","none"),
-           margin=NULL,
-           pl=TRUE, trans=NULL, ntrans=40, ...) {
+           margin=c('chisq', 'P'),
+           pl=TRUE, trans=NULL, ntrans=40, height=NULL, width=NULL, ...) {
     
     what <- match.arg(what)
     sort <- match.arg(sort)
@@ -660,15 +677,15 @@ plot.anova.rms <-
             else
               switch(marg, 
                      chisq = paste('&chi;<sup>2</sup><sub>', dof,
-                                   '</sub>', fn(chisq, 1)),
+                                   '</sub>=', fn(chisq, 1)),
                      'proportion chisq' =
-                       paste('Proportion &chi;<sup>2</sup>',
+                       paste('Proportion &chi;<sup>2</sup>=',
                              fn(chisq / totchisq, 2)),
-                     'd.f.' = paste('d.f.', fn(dof, 0)),
-                     P = paste('P', fn(P, 4)),
-                     'partial R2' = paste('Partial R<sup>2</sup>',
+                     'd.f.' = paste('d.f.=', fn(dof, 0)),
+                     P = paste('P=', fn(P, 4)),
+                     'partial R2' = paste('Partial R<sup>2</sup>=',
                                           fn(pss / sst, 2)),
-                     'proportion R2' = paste('Proportion R<sup>2</sup>',
+                     'proportion R2' = paste('Proportion R<sup>2</sup>=',
                                              fn(pss / ssr, 2)))
 
           if(isbase) {
@@ -688,7 +705,9 @@ plot.anova.rms <-
       if(length(auxtitle) && isbase) auxtitle <- parse(text = auxtitle)
 
       dc <- if(isbase) dotchart3 else dotchartp
-      
+
+      if(! isbase && ! length(height))
+        height <- min(400, 100 + 25 * length(w))
       if(length(trans)) {
         nan <- names(w)
         w <- pmax(0, w)
@@ -696,9 +715,11 @@ plot.anova.rms <-
         tan <- trans(w); names(tan) <- nan
         p <- dc(tan, xlab=xlab, pch=pch,
                 axisat=trans(pan), axislabels=pan,
-                auxtitle=auxtitle, auxdata=auxdata, auxwhere='hover', ...)
+                auxtitle=auxtitle, auxdata=auxdata, auxwhere='hover',
+                height=height, width=width, ...)
       } else p <- dc(w, xlab=xlab, pch=pch,
-                     auxtitle=auxtitle, auxdata=auxdata, auxwhere='hover', ...)
+                     auxtitle=auxtitle, auxdata=auxdata, auxwhere='hover',
+                     height=height, width=width, ...)
     }
     if(isbase) invisible(w) else p
   }

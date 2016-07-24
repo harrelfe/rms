@@ -49,7 +49,7 @@ bj(formula=formula(data), data, subset, na.action=na.delete,
    link="log", control, method='fit', x=FALSE, y=FALSE, 
    time.inc)
 
-\method{print}{bj}(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
+\method{print}{bj}(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE, md=FALSE,
 title="Buckley-James Censored Data Regression", \dots)
 
 \method{residuals}{bj}(object, type=c("censored","censored.normalized"),\dots)
@@ -124,7 +124,8 @@ bj.fit(x, y, control)
 	to print only the first \code{n} regression coefficients in the
 	model.}
   \item{latex}{a logical value indicating whether information should be
-	formatted as plain text or as LaTeX markup}
+		formatted as plain text or as LaTeX markup}
+	\item{md}{a logital; set to \code{TRUE} to use LaTeX and html with R markdown}
   \item{title}{a character string title to be passed to \code{prModFit}}
   \item{object}{the result of \code{bj}}
   \item{type}{

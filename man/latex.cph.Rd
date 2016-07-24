@@ -7,43 +7,43 @@
 \alias{latex.psm}
 \title{LaTeX Representation of a Fitted Cox Model}
 
-\description{
-  Creates a file containing a LaTeX representation of the fitted model. 
-}
+\description{Creates a file containing a LaTeX representation of the fitted model.}
 
 \usage{
 \method{latex}{cph}(object, title,
       file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
       append=FALSE, surv=TRUE, maxt=FALSE, which=NULL, varnames, columns=65, 
       inline=FALSE, before=if(inline)"" else "& &", after="", dec=3,
-      pretrans=TRUE, caption, digits=.Options$digits, size="", \dots) # for cph fit
+      pretrans=TRUE, caption, digits=.Options$digits, size="", md=FALSE,
+      \dots) # for cph fit
 
 \method{latex}{lrm}(object, title, file, append, which, varnames,
 columns, inline, before, after, pretrans, caption,
-digits=.Options$digits, size="", \dots) # for lrm fit
+digits=.Options$digits, size="", md=FALSE, \dots) # for lrm fit
 
 \method{latex}{ols}(object, title, file, append, which, varnames,
 columns, inline, before, after, pretrans, caption,
-digits=.Options$digits, size="", \dots) # ols fit
+digits=.Options$digits, size="", md=FALSE, \dots) # ols fit
 
 \method{latex}{orm}(object, title, file, append, which, varnames,
 columns, inline, before, after, pretrans, caption,
-digits=.Options$digits, size="", intercepts=nrp < 10, \dots) # for lrm fit
+digits=.Options$digits, size="", intercepts=nrp < 10, md=FALSE, \dots) # for orm fit
 
 \method{latex}{pphsm}(object, title, file, append, which=NULL, varnames,
 columns, inline, before, after, pretrans, caption,
-digits=.Options$digits, size="", \dots) # pphsm fit
+digits=.Options$digits, size="", md=FALSE, \dots) # pphsm fit
 
 \method{latex}{psm}(object, title, file, append, which=NULL, varnames,
 columns, inline, before, after, pretrans, caption,
-digits=.Options$digits, size="", \dots) # psm fit
+digits=.Options$digits, size="", md=FALSE, \dots) # psm fit
 }
 \arguments{
 \item{object}{
 a fit object created by a \code{rms} fitting function.
 }
 \item{title}{ignored}
-\item{file,append}{see \code{\link[Hmisc]{latex.default}}}
+\item{file,append}{see \code{\link[Hmisc]{latex.default}}.  When
+	\code{md=TRUE}, \code{file} is set to \code{""}.}
 \item{surv}{
 if \code{surv=TRUE} was specified to \code{cph}, the underlying survival
 probabilities from \code{object$surv.summary} will be placed in a table
@@ -64,6 +64,8 @@ last entry in \code{object$surv.summary}, underlying survival estimates at
 \item{digits}{see \link{latexrms}}
 \item{size}{a LaTeX size to use, without the slash.  Default is the
   prevailing size}
+\item{md}{set to \code{TRUE} to make latex code that works with
+	MathJax under R Markdown.  In this case \code{file} is set to \code{""}.}
 \item{intercepts}{for \code{orm} fits.  Default is to print intercepts
 	if they are fewer than 10 in number.  Set to \code{TRUE} or
 	\code{FALSE} to force.}
@@ -90,6 +92,7 @@ w <- latex(f)  #Interprets fitted model and makes table of S0(t)
                #for t=0,60,120,180,\dots   Creates file f.tex
 w              #displays image, if viewer installed
 latex(f,file="")   # send LaTeX code to the screen
+latex(f, md=TRUE)  # for use with knitr and R Markdown
 }
 }
 \keyword{regression}

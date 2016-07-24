@@ -41,7 +41,7 @@ orm(formula, data, subset, na.action=na.delete, method="orm.fit",
     var.penalty=c('simple','sandwich'), scale=FALSE, \dots)
 
 \method{print}{orm}(x, digits=4, coefs=TRUE,
-    intercepts=x$non.slopes < 10, latex=FALSE, title, \dots)
+    intercepts=x$non.slopes < 10, latex=FALSE, md=FALSE, title, \dots)
 
 \method{Quantile}{orm}(object, codes=FALSE, \dots)
 }
@@ -118,6 +118,8 @@ intercept is used.
     \code{intercepts=FALSE} or \code{TRUE}.}
 \item{latex}{a logical value indicating whether information should be
   formatted as plain text or as LaTeX markup}
+\item{md}{a logical directing that LaTeX and html be composed for use
+	with R Markdown}
 \item{title}{a character string title to be passed to \code{prModFit}.
   Default is constructed from the name of the distribution family.}
 \item{object}{an object created by \code{orm}}

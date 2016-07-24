@@ -4,13 +4,20 @@ latex.psm <-
            append=FALSE, which=NULL, varnames, 
            columns=65, inline=FALSE, 
            before=if(inline)"" else "& &", after="",
-           pretrans=TRUE, caption=NULL, digits=.Options$digits, size='', ...)
+           pretrans=TRUE, caption=NULL, digits=.Options$digits, size='',
+           md=FALSE, ...)
 {
-
+  if(md) file <- ''
+  
   f <- object
   whichNot <- length(which)==0
   
-  w <- if(length(caption)) paste('\\begin{center} \\bf',caption,'\\end{center}')
+  w <- if(length(caption)) {
+         if(md) paste('<div align=center><strong>', caption,
+                      '</strong></div>', sep='')
+         else
+           paste('\\begin{center} \\bf',caption,'\\end{center}')
+         }
 
   if(whichNot & !inline)
     {
@@ -29,7 +36,7 @@ latex.psm <-
            varnames=varnames, columns=columns, 
            before=before, after=after,
            prefix=if(whichNot)"X\\hat{\\beta}" else NULL, 
-           inline=inline,pretrans=pretrans, digits=digits, size=size)
+           inline=inline,pretrans=pretrans, digits=digits, size=size, md=md)
 }
 
 

@@ -9,7 +9,7 @@ of missing values, etc.
 }
 \usage{
 \method{print}{cph}(x, digits=4, table=TRUE, conf.int=FALSE, 
-coefs=TRUE, latex=FALSE, title='Cox Proportional Hazards Model', \dots)
+coefs=TRUE, latex=FALSE, md=FALSE, title='Cox Proportional Hazards Model', \dots)
 }
 \arguments{
 \item{x}{
@@ -32,6 +32,8 @@ set to \code{FALSE} to suppress event frequency statistics
   model.}
 \item{latex}{a logical value indicating whether information should be
   formatted as plain text or as LaTeX markup}
+\item{md}{a logical directing that LaTeX and html be composed for use
+	with R Markdown}
 \item{title}{a character string title to be passed to \code{prModFit}}
 \item{\dots}{arguments passed to \code{prModFit}}
 }

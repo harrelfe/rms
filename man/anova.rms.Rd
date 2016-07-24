@@ -3,6 +3,7 @@
 \alias{print.anova.rms}
 \alias{plot.anova.rms}
 \alias{latex.anova.rms}
+\alias{html.anova.rms}
 \title{Analysis of Variance (Wald and F Statistics)}
 \description{
   The \code{anova} function automatically tests most meaningful hypotheses
@@ -30,6 +31,11 @@ predictor.  \code{latex.anova.rms} is the \code{latex} method.  It
 substitutes Greek/math symbols in column headings, uses boldface for
 \code{TOTAL} lines, and constructs a caption.  Then it passes the result
 to \code{latex.default} for conversion to LaTeX.
+
+\code{html.anova.rms} just calls \code{latex.anova.rms} with
+\code{html=TRUE}.  The \code{html} method uses latex markup so can only
+run in environments in which MathJax is available, e.g., RStudio html
+notebooks.
 }
 \usage{
 \method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9, 
@@ -43,12 +49,14 @@ to \code{latex.default} for conversion to LaTeX.
             "proportion R2", "proportion chisq"), 
      xlab=NULL, pch=16, 
      rm.totals=TRUE, rm.ia=FALSE, rm.other=NULL, newnames,
-     sort=c("descending","ascending","none"), margin=NULL, pl=TRUE,
-     trans=NULL, ntrans=40, \dots)
+     sort=c("descending","ascending","none"), margin=c('chisq','P'),
+     pl=TRUE, trans=NULL, ntrans=40, height=NULL, width=NULL, \dots)
 
-\method{latex}{anova.rms}(object, title, psmall=TRUE, dec.chisq=2,
+\method{latex}{anova.rms}(object, title, dec.chisq=2,
       dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, table.env=TRUE,
-      caption=NULL, \dots)
+      caption=NULL, html=FALSE, \dots)
+
+\method{html}{anova.rms}(object, title, \dots)
 }
 \arguments{
 \item{object}{
@@ -67,6 +75,8 @@ importance of age, cholesterol, and any factor interacting with them.
 Can be optional graphical parameters to send to 
 \code{dotchart2}, or other parameters to send to \code{latex.default}.
 Ignored for \code{print}.
+
+For \code{html.anova.rms} the arguments are passed to \code{latex.anova.rms}.
 }
 \item{main.effect}{
 Set to \code{TRUE} to print the (usually meaningless) main effect tests even when
@@ -154,15 +164,14 @@ analyze the vector of statistics returned.
 	number of tick marks on the left (stretched) part of the chi-square
 	scale.
 }
+\item{height,width}{height and width of \code{plotly} plots drawn using
+	\code{dotchartp}, in pixels.  Ignored for ordinary plots.  Defaults to
+minimum of 400 and 100 + 25 times the number of test statistics displayed.}
 \item{title}{
 title to pass to \code{latex}, default is name of fit object passed to
 \code{anova} prefixed with \code{"anova."}.  For Windows, the default is
 \code{"ano"} followed by the first 5 letters of the name of the fit
 object. 
-}
-\item{psmall}{
-The default is \code{psmall=TRUE}, which causes \code{P<0.00005} to print as \code{<0.0001}.
-Set to \code{FALSE} to print as \code{0.0000}.
 }
 \item{dec.chisq}{
 number of places to the right of the decimal place for typesetting
@@ -183,6 +192,7 @@ digits to the right for mean squares (default is \code{NA})
 \item{table.env}{see \code{\link[Hmisc]{latex}}}
 \item{caption}{caption for table if \code{table.env} is \code{TRUE}.
   Default is constructed from the response variable.}
+\item{html}{set by \code{html.anova.rms} to use html table instead of latex}
 }
 \value{
 \code{anova.rms} returns a matrix of class \code{anova.rms} containing factors 

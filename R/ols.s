@@ -224,7 +224,7 @@ predict.ols <-
   }
 
 print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
-                      title="Linear Regression Model", ...)
+                      md=FALSE, title="Linear Regression Model", ...)
 {
   k <- 0
   z <- list()
@@ -320,5 +320,5 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
     }
   }
   prModFit(x, title=title, z, digits=digits,
-           coefs=coefs, latex=latex, ...)
+           coefs=coefs, latex=latex, md=md, ...)
 }

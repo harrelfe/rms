@@ -324,6 +324,35 @@ latex.summary.rms <-
         col.just=rep("r", 7), table.env=table.env, ...)
 }
 
+html.summary.rms <- function(object, ...) { 
+
+  caption <- attr(object, "heading")
+  ## scale   <- attr(object, "scale")
+  object <- object[, -8, drop=FALSE]
+  rowl <- dimnames(object)[[1]]
+  rowl <- ifelse(substring(rowl, 1, 1) == " ",
+                 paste("&emsp;<em>",
+                       substring(rowl, 2), "</em>", sep=""),
+                 rowl) # preserve leading blank
+  rowl <- sedit(rowl, "-", "---")
+  cstats <- matrix("", nrow=nrow(object), ncol=ncol(object), 
+                   dimnames=dimnames(object))
+  for(i in 1 : 7) cstats[,i] <- format(signif(object[, i], 5))
+  cstats[is.na(object)] <- ""
+  caption <- sub('^ *', '', caption)
+  ## htmlTable creates invalid html if start caption with blank
+  caption <- sub('    Response : ', '&emsp;&emsp;Response: <code>', caption)
+  caption <- paste0(caption, '</code>')
+  cstats <- as.data.frame(cstats)
+  attr(cstats,"row.names") <- rowl
+  names(cstats)[3] <- "$\\Delta$"
+  
+  cat(htmlTable::htmlTable(cstats, caption=caption,
+                           css.cell = 'min-width: 9em;',
+                           rowlabel='', align='r'), sep='\n')
+}
+
+
 
 # was q=c(.7, .8, .9, .95, .99)
 plot.summary.rms <-
@@ -510,8 +539,10 @@ plot.summary.rms <-
     plotly::layout(p,
                    xaxis = list(type = if(log) 'log' else 'linear',
                                 zeroline=FALSE, title=tlab),
-                   yaxis = list(title='', autorange='reversed'),
+                   yaxis  = list(title='', autorange='reversed'),
                    margin = list(l=leftmargin),
+                   autosize = FALSE,
+                   height = min(400, 100 + 25 * length(lb)),
                    shapes = list(
                      list(type = "line",
                           line = list(color = "lightgray"), 

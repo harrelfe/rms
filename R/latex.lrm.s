@@ -3,9 +3,11 @@ latex.lrm <-
            file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
            append=FALSE, which, varnames, columns=65, inline=FALSE, 
            before=if(inline)"" else "& &", after="",
-           pretrans=TRUE, caption=NULL, digits=.Options$digits, size='', ...)
+           pretrans=TRUE, caption=NULL, digits=.Options$digits, size='',
+           md=FALSE, ...)
 {
   f <- object
+  if(md) file <- ''
   
   if(missing(which) & !inline)
     {
@@ -26,8 +28,13 @@ latex.lrm <-
 
       w <- paste(w, ", {\\rm \\ \\ where} \\\\ \\]", sep="")
 
-      if(length(caption)) w <- c(paste('\\begin{center} \\bf',caption,
-                                       '\\end{center}'), w)
+      if(length(caption)) {
+        if(md) w <- c(paste('<div align=center><strong>', caption,
+                             '</strong></div>'), w)
+        else
+          w <- c(paste('\\begin{center} \\bf',caption,
+                       '\\end{center}'), w)
+        }
       
       if(nrp>1)
         {
@@ -48,7 +55,7 @@ latex.lrm <-
   latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
            before=before, after=after, prefix="X\\hat{\\beta}",
-           inline=inline, pretrans=pretrans, digits=digits, size=size)
+           inline=inline, pretrans=pretrans, digits=digits, size=size, md=md)
 }
 
 
@@ -58,8 +65,9 @@ latex.orm <-
            append=FALSE, which, varnames, columns=65, inline=FALSE, 
            before=if(inline)"" else "& &", after="",
            pretrans=TRUE, caption=NULL, digits=.Options$digits, size='',
-           intercepts=nrp < 10, ...)
+           intercepts=nrp < 10, md=FALSE, ...)
 {
+  if(md) file <- ''
   f <- object
   
   if(missing(which) & !inline)
@@ -86,8 +94,13 @@ latex.orm <-
 
       w <- paste(w, ", {\\rm \\ \\ where} \\\\ \\]", sep="")
 
-      if(length(caption)) w <- c(paste('\\begin{center} \\bf',caption,
-                                       '\\end{center}'), w)
+      if(length(caption)) {
+        if(md) w <- c(paste('<div align=center><strong>', caption,
+                             '</strong></div>'), w)
+        else
+          w <- c(paste('\\begin{center} \\bf',caption,
+                       '\\end{center}'), w)
+        }
       
       if(intercepts) {
         nl <- as.numeric(lev)
@@ -109,5 +122,5 @@ latex.orm <-
   latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
            before=before, after=after, prefix="X\\hat{\\beta}",
-           inline=inline, pretrans=pretrans, digits=digits, size=size)
+           inline=inline, pretrans=pretrans, digits=digits, size=size, md=md)
 }

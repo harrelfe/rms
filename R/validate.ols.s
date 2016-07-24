@@ -200,3 +200,50 @@ latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
       if(!table.env) cat('\\end{center}\n', file=file, append=TRUE)
     }
   }
+
+html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...) {
+  chg <- function(x, old, new) {
+    names(new) <- old
+    tx <- new[x]
+    ifelse(is.na(tx), x, tx)
+  }
+  x <- object
+  kept <- attr(x, 'kept'); attr(x, 'kept') <- NULL
+  cn <- colnames(x)
+  cn <- chg(cn, c('index.orig', 'training', 'test', 'optimism',
+                  'index.corrected', 'n'),
+            c('Original<br>Sample', 'Training<br>Sample',
+              'Test<br>Sample', 'Optimism', 'Corrected<br>Index',
+              '$n$'))
+  rn <- rownames(x)
+  rn <- chg(rn, c('Dxy','R2','Emax','D','U','Q','B','g','gp','gr',
+                  'rho','pdm'),
+              c('$D_{xy}$','$R^{2}$','$E_{\\max}$','$D$','$U$',
+                '$Q$','$B$','$g$','$g_{p}$','$g_{r}$','$\\rho$',
+                '$|\\overline{\\mathrm{Pr}(Y\\geq Y_{0.5})-\\frac{1}{2}}|$'))
+  
+  dimnames(x) <- list(rn, cn)
+  cdec <- ifelse(cn == '$n$', 0, digits)
+  ## Bug in htmlTable::txtRound for vector digits
+  z <- unclass(x)
+  for(i in 1 : length(cdec)) z[, i] <- round(z[, i], cdec[i])
+  cat(htmlTable::htmlTable(z, rowlabel='Index', caption=caption,
+                           css.cell = 'min-width: 9em;'), sep='\n')
+  cat('<p style="padding-top:2em;">\n')
+                         
+  if(length(kept) && B > 0) {
+    varin <- ifelse(kept, '&#9900;', ' ')   ## html medium white circle
+    nr <- nrow(varin)
+    varin <- varin[1:min(nrow(varin), B),, drop=FALSE]
+    cap <- 'Factors Retained in Backwards Elimination'
+    if(nr > B) cap <- c(cap, paste('First', B, 'Resamples'))
+    cat(htmlTable::htmlTable(varin, caption=cap, rnames=FALSE,
+                             css.cell = 'min-width: 9em;'), sep='\n')
+
+    cap <- 'Frequencies of Numbers of Factors Retained'
+    nkept <- apply(kept, 1, sum)
+    tkept <- t(as.matrix(table(nkept)))
+    cat(htmlTable::htmlTable(tkept, caption=cap, rnames=FALSE,
+                             css.cell = 'min-width: 9em;'))
+    }
+  }

@@ -3,12 +3,20 @@ latex.ols <-
            file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
            append=FALSE, which, varnames, columns=65, inline=FALSE, 
            before=if(inline)"" else "& &", after="",
-           pretrans=TRUE, caption=NULL, digits=.Options$digits, size='', ...)
+           pretrans=TRUE, caption=NULL, digits=.Options$digits, size='',
+           md=FALSE, ...)
 {
+  if(md) file <- ''
+  
   f <- object
   
-  w <- if(length(caption)) paste('\\begin{center} \\bf',
-                                 caption,'\\end{center}')
+  w <- if(length(caption)) {
+         if(md) paste('<div align=center><strong>', caption,
+                      '</strong></div>', sep='')
+         else
+           paste('\\begin{center} \\bf',
+                 caption,'\\end{center}')
+         }
   
   if(missing(which) & !inline)
     {
@@ -26,7 +34,7 @@ latex.ols <-
   latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
            before=before, after=after, prefix="X\\hat{\\beta}", inline=inline, 
-           pretrans=pretrans, digits=digits, size=size)
+           pretrans=pretrans, digits=digits, size=size, md=md)
 }
 
 

@@ -2,6 +2,7 @@
 \alias{summary.rms}
 \alias{print.summary.rms}
 \alias{latex.summary.rms}
+\alias{html.summary.rms}
 \alias{plot.summary.rms}
 \title{Summary of Effects in Model}
 
@@ -16,13 +17,14 @@ the predictor.  Factors requiring multiple parameters are handled, as
 differences.  By default, inter-quartile range effects (odds ratios,
 hazards ratios, etc.) are printed for continuous factors, and all
 comparisons with the reference level are made for categorical factors.
-\code{print.summary.rms} prints the results, \code{latex.summary.rms} typesets
-the results, and \code{plot.summary.rms}
+\code{print.summary.rms} prints the results, \code{latex.summary.rms}
+and \code{html.summary.rms} typeset the results, and \code{plot.summary.rms}
 plots shaded confidence bars to display the results graphically.
 The longest confidence bar on each page is labeled with confidence levels
 (unless this bar has been ignored due to \code{clip}).  By default, the
 following confidence levels are all shown: .9, .95, and .99, using 
-blue of different transparencies.
+blue of different transparencies.  The \code{html} method is for use
+with R Markdown using html with LaTeX math (using MathJax).
 
 If \code{usebootcoef=TRUE} and the fit was run through \code{bootcov},
 the confidence intervals are bootstrap nonparametric percentile
@@ -48,6 +50,8 @@ usebootcoef=TRUE, boot.type=c("percentile","bca","basic"), verbose=FALSE)
 \method{print}{summary.rms}(x, \dots)
 
 \method{latex}{summary.rms}(object, title, table.env=TRUE, \dots)
+
+\method{html}{summary.rms}(object, \dots)
 
 \method{plot}{summary.rms}(x, at, log=FALSE,
     q=c(0.9, 0.95, 0.99), xlim, nbar, cex=1, nint=10,
@@ -233,7 +237,8 @@ s <- summary(fit)                # Estimate effects using default ranges
                                  # compared to 1st quartile
 \dontrun{
 latex(s)                         # Use LaTeX to print nice version
-latex(s, file="")                # Just write LaTeX code to screen
+latex(s, file="")                # Just write LaTeX code to console
+html(s)                          # html/LaTeX to console for knitr
 }
 summary(fit, sex='male', age=60) # Specify ref. cell and adjustment val
 summary(fit, age=c(50,70))       # Estimate effect of increasing age from
