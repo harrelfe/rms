@@ -1099,7 +1099,7 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE, latex=FALSE)
     if(! all.is.numeric(x)) return(x)
     digits <- as.numeric(digits)  # Needed but can't figure out why
     x <- as.numeric(x)
-    f <- if(length(digits))
+    f <- if(length(digits) && ! is.na(digits))
       format(round(x, digits), nsmall=digits, scientific=1) else
       format(x, scientific=1)
     sci <- grep('e', f)
