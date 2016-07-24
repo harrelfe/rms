@@ -1096,7 +1096,7 @@ reVector <- function(..., na.rm=TRUE)
 
 formatNP <- function(x, digits=NULL, pvalue=FALSE, latex=FALSE)
   {
-    if(! all.is.numeric(x)) return(x)
+    if(! is.numeric(x)) return(x)
     digits <- as.numeric(digits)  # Needed but can't figure out why
     x <- as.numeric(x)
     f <- if(length(digits) && ! is.na(digits))
@@ -1105,13 +1105,14 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE, latex=FALSE)
     sci <- grep('e', f)
     if(latex && length(sci)) f[sci] <- paste('$', latexSN(f[sci]), '$', sep='')
     f <- ifelse(is.na(x), '', f)
-    if(!pvalue) return(f)
-    if(!length(digits)) stop('must specify digits if pvalue=TRUE')
-    s <- !is.na(x) & x < 10^(-digits)
+    if(! pvalue) return(f)
+    if(! length(digits)) stop('must specify digits if pvalue=TRUE')
+    s <- ! is.na(x) & x < 10 ^ (-digits)
     if(any(s)) {
       w <- paste('0.', paste(rep('0', digits-1), collapse=''), '1', sep='')
-      f[s] <- if(latex) paste('$<', w, '$', sep='') else
-      paste('<', w, sep='')
+      f[s] <- if(latex) paste('$<', w, '$', sep='')
+              else
+                paste('<', w, sep='')
     }
     f
   }

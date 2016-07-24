@@ -524,7 +524,7 @@ latex.anova.rms <-
     for(nn in names(dstats)) {
       i <- i + 1
       dstats[[nn]] <- formatNP(dstats[[nn]], digits=dig[i], latex=TRUE,
-                               pvalue=nn == 'P')
+                               pvalue=nn == '$P$')
     }
     if(html) {
       al <- rep('r', length(sn))
@@ -540,9 +540,7 @@ latex.anova.rms <-
   }
 
 html.anova.rms <-
-  function(object,
-           title=paste('anova',attr(object,'obj.name'),sep='.'), ...)
-    latex(object, title, html=TRUE, ...)
+  function(object, ...) latex.anova.rms(object, title, html=TRUE, ...)
 
 
 plot.anova.rms <-

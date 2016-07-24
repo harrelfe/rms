@@ -56,7 +56,7 @@ notebooks.
       dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, table.env=TRUE,
       caption=NULL, html=FALSE, \dots)
 
-\method{html}{anova.rms}(object, title, \dots)
+\method{html}{anova.rms}(object, \dots)
 }
 \arguments{
 \item{object}{
