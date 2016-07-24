@@ -348,8 +348,8 @@ html.summary.rms <- function(object, ...) {
   names(cstats)[3] <- "$\\Delta$"
   
   cat(htmlTable::htmlTable(cstats, caption=caption,
-                           css.cell = 'min-width: 9em;',
-                           rowlabel='', align='r'), sep='\n')
+                           css.cell = 'min-width: 5em;',
+                           rowlabel='', align='r', align.header='r'), sep='\n')
 }
 
 

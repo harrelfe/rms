@@ -844,10 +844,13 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                   lines.page=lines.page,
                   col.just=rep('r',ncol(U)), rowlabel='',
                   math.col.names=TRUE, append=TRUE)
-          else ct(htmlTable::htmlTable(U,
-                               css.cell = 'min-width: 9em;',
-                               align=paste(rep('r', ncol(U)), collapse=''),
-                               rowlabel=''))              
+          else {
+            al <- paste(rep('r', ncol(U)), collapse='')
+            ct(htmlTable::htmlTable(U,
+                               css.cell = 'min-width: 7em;',
+                               align=al, align.header=al,
+                               rowlabel=''))
+            }
         } else {
           if(is.numeric(coefs)) {
             U <- U[1:coefs,,drop=FALSE]

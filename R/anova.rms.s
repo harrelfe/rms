@@ -527,9 +527,10 @@ latex.anova.rms <-
                                pvalue=nn == 'P')
     }
     if(html) {
+      al <- rep('r', length(sn))
       cat(htmlTable::htmlTable(dstats, caption=caption,
-                               css.cell='min-width: 9em;',
-                               align=rep('r', length(sn)),
+                               css.cell='min-width: 6em;',
+                               align=al, align.header=al,
                                rowlabel=''), sep='\n')
       }
     else
