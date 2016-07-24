@@ -845,7 +845,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                   col.just=rep('r',ncol(U)), rowlabel='',
                   math.col.names=TRUE, append=TRUE)
           else ct(htmlTable::htmlTable(U,
-                               css.cell = 'min-width: 9em;'
+                               css.cell = 'min-width: 9em;',
                                align=paste(rep('r', ncol(U)), collapse=''),
                                rowlabel=''))              
         } else {
@@ -1050,7 +1050,7 @@ prStats <- function(labels, w, latex=FALSE, md=FALSE,
     else 
       ct(htmlTable::htmlTable(z,
                               header=head,
-                              css.cell = 'min-width: 9em;'
+                              css.cell = 'min-width: 9em;',
                               align=al, align.header=al))
     return()
   }
