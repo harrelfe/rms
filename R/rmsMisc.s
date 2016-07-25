@@ -988,7 +988,7 @@ prStats <- function(labels, w, latex=FALSE, md=FALSE,
                  if(latex) paste('\\texttt{\\small ', latexTranslate(u[j]),
                                  '}', sep='')
                  else if(md) paste('<code style="font-size:0.8em">',
-                                     u[j], '</code>', sep='')
+                                     gsub('\\$',' ', u[j]), '</code>', sep='')
                  else u[j]
                }
                else

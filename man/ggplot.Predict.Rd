@@ -39,7 +39,7 @@
      layout=NULL, addlayer,
      histSpike.opts=list(frac=function(f) 0.01 + 
          0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1), side=1, nint=100),
-     type=NULL, ggexpr=FALSE, ..., environment)
+     type=NULL, ggexpr=FALSE, height=NULL, width=NULL, ..., environment)
 }
 \arguments{
   \item{data}{a data frame created by \code{Predict}}
@@ -197,6 +197,9 @@ current curve, \code{FALSE} otherwise.  See one of the latter examples.
 \item{ggexpr}{set to \code{TRUE} to have the function return the
   character string(s) constructed to invoke \code{ggplot} without
   executing the commands}
+\item{height,width}{used if \code{plotly} is in effect, to specify the
+  \code{plotly} image in pixels.  Default is to let \code{plotly} size
+  the image.}
 \item{\dots}{ignored}
 \item{environment}{ignored; used to satisfy rules because of the generic ggplot}
 }

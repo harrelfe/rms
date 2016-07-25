@@ -18,11 +18,27 @@ ggplot.Predict <-
            histSpike.opts=list(frac=function(f) 0.01 + 
                                  0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1),
              side=1, nint=100),
-           type=NULL, ggexpr=FALSE, ..., environment)
+           type=NULL, ggexpr=FALSE, height=NULL, width=NULL, ..., environment)
 {
   isbase <- Hmisc::grType() == 'base'   ## vs. 'plotly'
   if(! isbase && length(anova))
     stop('anova not yet implemented for grType plotly')
+  if(isbase && (length(height) || length(width)))
+    warning('height and width ignored for non-plotly graphics')
+  if(! isbase && ((length(height) && ! length(width)) ||
+                   length(width)  && ! length(height)))
+    stop('must specify both width and height if specify either')
+  if(! isbase) {
+    plrend <- if(length(height) + length(width) == 0)
+                function(obj) plotly::ggplotly(obj)
+              else
+                function(obj) {
+                  ggb <- plotly::plotly_build(obj)
+                  ggb$layout$height <- height
+                  ggb$layout$width  <- width
+                  ggb
+                }
+    }
 
   comb <- function(plist, nrow=1, ncol=1, ...) {
     ## Note: subplot does not take an ncols argument
@@ -344,7 +360,7 @@ ggplot.Predict <-
         }
         g <- paste(g, collapse=' + ')
         if(ggexpr) return(g)
-        if(! isbase) g <- paste('plotly::ggplotly(', g, ')')
+        if(! isbase) g <- paste('plrend(', g, ')')
         eval(parse(text = g))
       }    # end dogroup function
       
@@ -491,7 +507,7 @@ ggplot.Predict <-
       # print(g, vp = viewport(layout.pos.row=nr, layout.pos.col=nc))
       g <- paste(g, collapse = ' + ')
       if(ggexpr) return(g)
-      if(! isbase) g <- paste('plotly::ggplotly(', g, ')')
+      if(! isbase) g <- paste('plrend(', g, ')')
       g <- eval(parse(text=g))
       Plt[[jplot]] <- g
     }
@@ -606,7 +622,7 @@ ggplot.Predict <-
     }
     g <- paste(g, collapse=' + ')
     if(ggexpr) return(g)
-    if(! isbase) g <- paste('plotly::ggplotly(', g, ')')
+    if(! isbase) g <- paste('plrend(', g, ')')
     g <- eval(parse(text=g))
 #    if(length(sub)) g <- if(isbase) footnote(g, sub)
 #                         else
