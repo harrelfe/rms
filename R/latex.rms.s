@@ -27,7 +27,7 @@ latexrms <-
             'strat(*)','matrx(*)','I(*)')
   to   <- rep('*',9)
 
-  TLi <- paste("h(",sedit(TL, from, to),")",sep="")
+  TLi <- paste0("h(",sedit(TL, from, to),")")
   
   ## change wrapping function to h()
 
@@ -80,15 +80,15 @@ latexrms <-
   tl  <- sedit(tl, from, to)
   tl <- sedit(tl, varnames, vnames, wild.literal=TRUE)
   ltl <- nchar(tl)
-  tl <- paste("{\\rm ", tl, "}", sep="")
+  tl <- paste0("{\\rm ", tl, "}")
   if(anytr)
     {
       TLi <- sedit(TLi, from, to)
       TLi <- sedit(TLi, varnames, vnames, wild.literal=TRUE)
-      TLi <- ifelse(TLi == "", "", paste("{\\rm ", TLi, "}", sep=""))
+      TLi <- ifelse(TLi == "", "", paste0("{\\rm ", TLi, "}"))
     }
   
-  varnames <- paste("{\\rm ", vnames, "}", sep="")
+  varnames <- paste0("{\\rm ", vnames, "}")
   
   Two.Way <- function(prm,Nam,nam.coef,lNam,cof,coef,f,columns,lcof,varnames,
                       lnam, at, digits=digits)
@@ -131,7 +131,7 @@ latexrms <-
                   m <- 0
                   cur <- ""
                 }
-              v <- paste("+",N2[1],"[",sep="")
+              v <- paste0("+", N2[1], "[")
               n <- lNam[[i2]][1]
               if(m + n > columns)
                 {
@@ -139,7 +139,7 @@ latexrms <-
                   cur <- ""
                   m <- 0
                 }
-              cur <- paste(cur, v, sep="")
+              cur <- paste0(cur, v)
               m <- m+n
               cnam <- paste(nam.coef[[if(rev)i2 else i1]][1], "*",
                             nam.coef[[if(rev)i1 else i2]][-1])
@@ -157,16 +157,16 @@ latexrms <-
             }
           else if(lN2.act == 1)
             {
-              v <- paste(cof[act],"\\:",N1[j1],"\\:\\times\\:",
-                         N2[mnam>0], sep="")
-              n <- l1+lNam[[i2]][mnam>0]+2
+              v <- paste0(cof[act],"\\:",N1[j1],"\\:\\times\\:",
+                          N2[mnam>0])
+              n <- l1+lNam[[i2]][mnam > 0] + 2
               if(m + n > columns)
                 {
                   q <- c(q, cur)
                   cur <- ""
                   m <- 0
                 }
-              cur <- paste(cur, v, sep="")
+              cur <- paste0(cur, v)
               m <- m + n
             }
           else if(lN2.act>0)
@@ -177,7 +177,7 @@ latexrms <-
                   m <- 0
                   cur <- ""
                 }
-              v <- paste("+",N1[j1],"[",sep="")
+              v <- paste0("+", N1[j1], "[")
               n <- l1 + 1
               if(m + n > columns)
                 {
@@ -185,7 +185,7 @@ latexrms <-
                   cur <- ""
                   m <- 0
                 }
-              cur <- paste(cur, v, sep="")
+              cur <- paste0(cur, v)
               m <- m + n
               
               if(at$assume.code[i2] == 4 & ! any(mnam == 0))
@@ -214,15 +214,15 @@ latexrms <-
                         {	#not a restricted-out nonlinear term
                           if(j2 == 1 && substring(cof[l],1,1) == "+")
                             cof[l] <- substring(cof[l],2)
-                          v <- paste(cof[l],"\\:",N2[j2],sep="")
-                          n <- lcof[l]+lNam[[i2]][j2]
+                          v <- paste0(cof[l], "\\:", N2[j2])
+                          n <- lcof[l] + lNam[[i2]][j2]
                           if(m + n > columns)
                             {
                               q <- c(q, cur)
                               cur <- ""
                               m <- 0
                             }
-                          cur <- paste(cur, v, sep="")
+                          cur <- paste0(cur, v)
                           m <- m + n
                         }
                     }
@@ -250,9 +250,9 @@ latexrms <-
               for(j1 in 1:length(N1))
                 {
                   l <- l + 1
-                  v <- paste(cof[l], "\\:", N1[j1], "\\:\\times\\:", N2[j2],
-                             "\\:\\times\\:", N3[j3], sep="")
-                  n <- lcof[l] + lNam[[i1]][j1]+lNam[[i2]][j2] +
+                  v <- paste0(cof[l], "\\:", N1[j1], "\\:\\times\\:", N2[j2],
+                              "\\:\\times\\:", N3[j3])
+                  n <- lcof[l] + lNam[[i1]][j1] + lNam[[i2]][j2] +
                     lNam[[i3]][j3] + 3
                   if(m + n > columns)
                     {
@@ -260,7 +260,7 @@ latexrms <-
                       cur <- ""
                       m <- 0
                     }
-                  cur <- paste(cur, v, sep="")
+                  cur <- paste0(cur, v)
                   m <- m + n
                 }
             }
@@ -273,11 +273,11 @@ latexrms <-
   if(! inline)
     {
       tex <- "\\begin{eqnarray*}"
-      if(size != '') tex <- c(tex, paste('\\', size, sep=''))
+      if(size != '') tex <- c(tex, paste0('\\', size))
       if(length(prefix))
         tex <- c(tex,
-                 if(md) paste(prefix, '= & & \\\\', sep='') else
-                 paste("\\lefteqn{",prefix,"=}\\\\",sep=""))
+                 if(md) paste0(prefix, '= & & \\\\') else
+                 paste0("\\lefteqn{", prefix, "=}\\\\"))
     } else tex <- NULL
   
   cur <- ""
@@ -307,11 +307,11 @@ latexrms <-
           z <- substring(prm,1,1) == "["
           u <- ! z & ass == 7
           prm <- sedit(prm, c(' ','&','%'), c('\\ ','\\&','\\%'))
-          prm <- ifelse(z | u, prm, paste("{\\rm ", prm, "}", sep=""))
+          prm <- ifelse(z | u, prm, paste0("{\\rm ", prm, "}"))
           prm <- ifelse(z,paste(nam,"\\in ",prm),prm)
           prm <- ifelse(u,paste(nam,"=",prm),prm)
           lprm <- lprm + (z | u)*(lnam[i]+1)
-          prm <- paste("[", prm, "]", sep="")
+          prm <- paste0("[", prm, "]")
           anyivar <- TRUE
         }
       if(ass != 8)
@@ -322,17 +322,17 @@ latexrms <-
           cof <- formatSep(coef, digits=digits)
           lcof <- nchar(cof)
           cof <- latexSN(cof)
-          cof <- ifelse(coef<=0, cof, paste("+", cof, sep=""))
+          cof <- ifelse(coef<=0, cof, paste0("+", cof))
           cof.sp <- cof
           if(ass == 2 | ass == 10)
             {
               r <- grep("times",cof)
               r <- if(length(r) == 0) 1:length(cof) else -r
-              cof.sp[r] <- paste(cof.sp[r],"\\:",sep="")    
+              cof.sp[r] <- paste0(cof.sp[r], "\\:")    
             }
           else
             if(length(grep("time",cof[1])) == 0)
-              cof.sp[1] <- paste(cof[1],"\\:",sep="")
+              cof.sp[1] <- paste0(cof[1], "\\:")
           ## medium space between constant and variable names if constant
           ## does not end in 10^x
         }
@@ -342,7 +342,7 @@ latexrms <-
                nam <- tl[i]
                Nam[[i]] <- nam
                lNam[[i]] <- ltl[i]
-               q <- paste(cof.sp, nam, sep="")
+               q <- paste0(cof.sp, nam)
                m <- ltl[i]+lcof
              },
              
@@ -350,10 +350,10 @@ latexrms <-
                q <- ""
                m <- 0
                pow <- 1:prm
-               nams <- ifelse(pow == 1,nam,paste(nam,"^{",pow,"}",sep=""))
+               nams <- ifelse(pow == 1,nam, paste0(nam, "^{", pow, "}"))
                Nam[[i]] <- nams; lNam[[i]] <- rep(lnam[i],prm)
-               for(j in pow) q <- paste(q,cof.sp[j], nams[j], sep="")
-               m <- prm*lnam[i]+sum(lcof)
+               for(j in pow) q <- paste0(q,cof.sp[j], nams[j])
+               m <- prm * lnam[i] + sum(lcof)
              },
              
              { # 3 - lsp
@@ -364,20 +364,19 @@ latexrms <-
                    cols <- 0
                  }
                anyplus <- TRUE
-               q <- paste(cof.sp[1], nam, sep="")
+               q <- paste0(cof.sp[1], nam)
                m <- lcof[1]+lnam[i]
                nams <- nam; lnams <- lnam[i]
                kn <- format(-prm)
                lkn <- nchar(kn)
                for(j in 1:length(prm))
                  {
-                   z <- paste("(", nam, if(prm[j]<0) "+" else NULL, 
-                              if(prm[j] != 0) kn[j] else NULL, ")_{+}",
-                              sep="")
+                   z <- paste0("(", nam, if(prm[j]<0) "+" else NULL, 
+                              if(prm[j] != 0) kn[j] else NULL, ")_{+}")
                  nams <- c(nams, z)
                    u <- lnam[i]+lkn[j]+2
                    lnams <- c(lnams,u)
-                   v <- paste(cof[j+1], z, sep="")
+                   v <- paste0(cof[j+1], z)
                    n <- lcof[j+1]+u
                    if(m + n > columns)
                      {
@@ -388,7 +387,7 @@ latexrms <-
                        q <- ""
                        m <- 0
                      }
-                   q <- paste(q, v, sep="")
+                   q <- paste0(q, v)
                    m <- m + n
                  }
                Nam[[i]] <- nams; lNam[[i]] <- lnams
@@ -404,7 +403,7 @@ latexrms <-
                nn <- nam; ln <- lnam[i]
                for(j in 1:(length(prm)-2))
                  {
-                   nam <- paste(nam, "'", sep="")
+                   nam <- paste0(nam, "'")
                    nn <- c(nn, nam)
                    ln <- c(ln, lnam[i]+j)
                  }
@@ -413,7 +412,7 @@ latexrms <-
                ##Three.Way needs original design matrix
                q <- attr(q, "latex")
                if(substring(sedit(q[1]," ",""),1,1) != "-")
-                 q[1] <- paste("+", q[1], sep="")
+                 q[1] <- paste0("+", q[1])
                j <- length(q)
                if(cur != "")
                  {
@@ -440,7 +439,7 @@ latexrms <-
                m <- 0
                for(j in 2:length(prm))
                  {
-                   v <- paste(cof[j-1], prm[j], sep="")
+                   v <- paste0(cof[j-1], prm[j])
                    n <- lcof[j-1]+lprm[j]
                    if(m + n > columns)
                      {
@@ -451,7 +450,7 @@ latexrms <-
                        q <- ""
                        m <- 0
                      }
-                   q <- paste(q, v, sep="")
+                   q <- paste0(q, v)
                    m <- m + n
                  }
              },
@@ -464,14 +463,14 @@ latexrms <-
                    cur <- ""
                    cols <- 0
                  }
-               q <- paste(cof.sp[1], nam, sep="")
+               q <- paste0(cof.sp[1], nam)
                m <- nchar(q)
                nams <- nam
                lnams <- lnam[i]
                for(j in 3:length(prm))
                  {
                    z <- prm[j]
-                   v <- paste(cof[j-1], z, sep="")
+                   v <- paste0(cof[j-1], z)
                    u <- lprm[j]+lnam[i]+3
                    n <- lcof[j-1]+u
                    nams <- c(nams, z)
@@ -485,7 +484,7 @@ latexrms <-
                        q <- ""
                        m <- 0
                      }
-                   q <- paste(q, v, sep="")
+                   q <- paste0(q, v)
                    m <- m + n
                  }
                Nam[[i]] <- nams; lNam[[i]] <- lnams
@@ -496,8 +495,8 @@ latexrms <-
                ## if(length(Nam[[i]]) == 0 && any(interaction == i)) 22Nov10
                if(any(interaction == i))
                  {
-                   nam.coef[[i]] <- paste(name[i], "=", oprm[-1], sep="")
-                   Nam[[i]] <- prm[-1]
+                   nam.coef[[i]] <- paste0(name[i], "=", oprm[-1])
+                   Nam[[i]]  <- prm[-1]
                    lNam[[i]] <- lprm[-1]
                  }
                q <- ""
@@ -534,11 +533,11 @@ latexrms <-
                q <- ""
                m <- 0
                lnam <- nchar(nam)
-               nam <- paste("{\\rm ", nam, "}", sep="")
+               nam <- paste0("{\\rm ", nam, "}")
                Nam[[i]] <- nam; lNam[[i]] <- lnam
                for(j in 1:length(prm))
                  {
-                   v <- paste(cof.sp[j], nam[j], sep="")
+                   v <- paste0(cof.sp[j], nam[j])
                  n <- lcof[j]+lnam[j]
                    if(m + n > columns)
                      {
@@ -549,7 +548,7 @@ latexrms <-
                        q <- ""
                        m <- 0
                      }
-                   q <- paste(q, v, sep="")
+                   q <- paste0(q, v)
                    m <- m + n
                  }
              }
@@ -575,7 +574,7 @@ latexrms <-
   if(inline)
     {
       if(before != '') tex <- c(before, tex)
-      if(size != '')   tex <- c(paste('{\\', size, sep=''), tex)
+      if(size != '')   tex <- c(paste0('{\\', size), tex)
       if(after  != '') tex <- c(tex, after)
       if(size != '')   tex <- c(tex, '}')
       cat(tex, sep="\n", file=file, append=append)
@@ -585,29 +584,29 @@ latexrms <-
   
   tex <- c(tex,"\\end{eqnarray*}")
 
-  tex <- ifelse(tex == paste(prefix, '= & & \\\\', sep='') |
+  tex <- ifelse(tex == paste0(prefix, '= & & \\\\') |
                 substring(tex,1,1) == "\\", tex,
                 paste(before, tex, "\\\\"))
   
   if(anyivar | anyplus) {
-    s <- if(length(which) == p) "and" else "where"
+    s <- if(length(which) == p) "and" else "where "
     if(anyivar)
-      s <- paste(s,"$[c]=1$ if subject is in group $c$, 0 otherwise")
+      s <- paste0(s,"$[c]=1$ if subject is in group $c$, 0 otherwise")
+    if(anyivar && anyplus) s <- paste0(s, '; ')
     if(anyplus)
-      s <- paste(s, "$(x)_{+}=x$ if $x > 0$, 0 otherwise")
-    if(anyivar & anyplus) s <- paste(s, ';', brchar, sep='')
+      s <- paste0(s, "$(x)_{+}=x$ if $x > 0$, 0 otherwise", brchar)
     tex <- c(tex, s)
   }
   
   if(anytr & pretrans) {
     i <- TLi != ""
-    if(sum(i) == 1) tr <- paste("$",varnames[i],
-                                "$ is pre--transformed as $",
-                                TLi[i], "$.", sep="")
+    if(sum(i) == 1) tr <- paste0("$",varnames[i],
+                                 "$ is pre--transformed as $",
+                                 TLi[i], "$.")
     else {
       tr <- if(md) {
-              z <- cbind(Variable=paste('$', varnames, '$', sep=''),
-                         Transformation=paste('$', TLi, '$', sep=''))
+              z <- cbind(Variable=paste0('$', varnames, '$'),
+                         Transformation=paste0('$', TLi, '$'))
               cat(htmlTable::htmlTable(z, caption='Pre-transformations',
                                        css.cell='min-width: 9em;',
                                        align='|l|l|',
@@ -617,7 +616,7 @@ latexrms <-
               c("\\vspace{0.5ex}\\begin{center}{\\bf Pre--Transformations}\\\\",
                 "\\vspace{1.5ex}\\begin{tabular}{|l|l|} \\hline",
                 "\\multicolumn{1}{|c|}{Variable} & \\multicolumn{1}{c|}{Transformation} \\\\ \\hline",
-                paste("$",varnames[i],"$ & $",TLi[i],"$ \\\\",sep=""),
+                paste0("$",varnames[i],"$ & $",TLi[i],"$ \\\\"),
                 "\\hline", "\\end{tabular}\\end{center}")
     }
     tex <- c(tex, tr)
