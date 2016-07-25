@@ -173,7 +173,7 @@ matrx <- function(...) {
   }
   colname <- dimnames(xd)[[2]]
   if(length(colname)==0 && nc > 0)
-    colname <- paste(z$name, '[', 1:nc, ']', sep="")
+    colname <- paste0(z$name, '[', 1:nc, ']')
   else if(z$label==z$name)
     z$label <- paste(colname, collapse=",")
 
@@ -216,7 +216,7 @@ pol <- function(...) {
   xd[,1] <- x
 
   for(j in 2:poly.degree) {
-    name[j] <- paste(nam,"^",j,sep="")
+    name[j] <- paste0(nam,"^",j)
     xd[,j] <- x^j
   }
 
@@ -250,9 +250,9 @@ lsp <- function(...) {
   name[1] <- nam
 
   for(j in 1:lp) {
-    suffix <- paste(suffix,"'",sep="")
-    name[j+1] <- paste(nam,suffix,sep="")
-    xd[,j+1] <- pmax(x-parms[j],0)
+    suffix    <- paste0(suffix, "'")
+    name[j+1] <- paste0(nam, suffix)
+    xd[,j+1]  <- pmax(x - parms[j], 0)
   }
 
   attributes(xd) <- set.atr(xd,x,z,name,"lspline",3,parms,c(FALSE,rep(TRUE,lp)))
@@ -302,8 +302,8 @@ rcs <- function(...) {
   nam    <- z$name
   primes <- paste(rep("'",nknots-1), collapse="")
   name   <- if(pc)
-    paste(nam, substring(primes, 1, 1:(nknots-1)), sep="")
-  else c(nam, paste(nam, substring(primes, 1, 1:(nknots-2)), sep=""))
+    paste0(nam, substring(primes, 1, 1:(nknots-1)))
+  else c(nam, paste0(nam, substring(primes, 1, 1:(nknots-2))))
 
   if(pc) attr(parms, 'pcparms') <- attr(xd, 'pcparms')
   attributes(xd) <-
@@ -352,7 +352,7 @@ catg <- function(...) {
   attributes(x) <- list(levels=parms,class=c("factor","rms"),
                         name=nam,label=z$label,assume="category",assume.code=5,
                         parms=parms,nonlinear=rep(FALSE,lp-1),
-                        colnames=paste(nam,"=",parms[-1],sep=""))
+                        colnames=paste0(nam, "=", parms[-1]))
   x
 }
 
@@ -397,7 +397,7 @@ scored <- function(...) {
   i <- 1
   for(k in parms[3:length(parms)]) {
     i <- i+1
-    name[i] <- paste(nam,"=",k,sep="")
+    name[i] <- paste0(nam, "=", k)
     xd[,i] <- y==k
   }
 
@@ -443,7 +443,7 @@ strat <- function(...) {
   attributes(x) <- list(levels=parms,class=c("factor","rms"),
                         name=nam, label=z$label, assume="strata", assume.code=8,
                         parms=parms, nonlinear=FALSE,
-                        colnames=paste(nam,"=", parms[-1], sep=""))
+                        colnames=paste0(nam,"=", parms[-1]))
   x
 }
 
@@ -578,11 +578,11 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
       len      <- length(at$parms) - 1
     } else if(ass == 8) {
       prm <- at$parms
-      colnames <- paste(nam, "=", prm[-1], sep="")
+      colnames <- paste0(nam, "=", prm[-1])
       len <- length(prm) - 1
     } else if(ass == 7) {
       prm <- at$parms
-      colnames <- c(nam, paste(nam, "=", prm[-(1 : 2)], sep=""))
+      colnames <- c(nam, paste0(nam, "=", prm[-(1 : 2)]))
       len <- length(prm) - 1
     } else {
       if(! length(ncol(x))) {

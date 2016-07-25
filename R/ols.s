@@ -57,6 +57,7 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
     X <- model.matrix(Terms, X)
     alt <- attr(mmcolnames, 'alt')
     if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
+    ## prn(mmcolnames); prn(colnames(X))
     X <- X[, c('(Intercept)', mmcolnames), drop=FALSE]
     colnames(X) <- c('Intercept', atr$colnames)
     #if(length(atr$colnames)) 

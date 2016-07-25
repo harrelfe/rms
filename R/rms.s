@@ -39,27 +39,32 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
 
   mmnames <- function(assume.code, rmstrans.names, term.label, iaspecial,
                       class) {
-    ## prn(assume.code); prn(rmstrans.names); prn(term.label); prn(iaspecial); prn(class)
+     ## prn(assume.code); prn(rmstrans.names); prn(term.label); prn(iaspecial); prn(class)
     ## Don't let >=i be translated to >i:
     rmst <- gsub('>=', '>>', rmstrans.names)
     ## Don't let == be translated to blank
     rmst <- gsub('==', '@EQ@', rmst)
     w <- if(assume.code == 1)
-           ifelse(class == 'logical', paste(term.label, 'TRUE', sep=''),
+           ifelse(class == 'logical', paste0(term.label, 'TRUE'),
                   term.label)
     else if(length(iaspecial) && iaspecial) term.label
-    else if(assume.code == 5) gsub('=', '', rmst)
+    else if(assume.code == 5) {
+      ## Handle explicit catg() as well as implicit
+      if(substring(term.label, 1, 5) == 'catg(')
+        paste0(term.label, gsub('.*=', '', rmst))
+      else gsub('=', '', rmst)
+      }
     else if(assume.code == 8)
-      paste(term.label, gsub('.*=', '', rmst), sep='')
+      paste0(term.label, gsub('.*=', '', rmst))
     else if(assume.code == 10)
       if(length(rmst) > 1) gsub('\\[', '', gsub('\\]', '', rmst)) else
              term.label
-    else paste(term.label, rmst, sep='')
+    else paste0(term.label, rmst)
     w <- gsub('>>',   '>=', w)
     w <- gsub('@EQ@', '==', w)
     alt <- if(assume.code == 10)
              if(length(rmst) > 1)
-               paste(term.label, rmstrans.names, sep='') else term.label
+               paste0(term.label, rmstrans.names) else term.label
     else w
     ## Alternate names to try - handles case where model is fitted on a
     ## previous fit$x matrix
@@ -271,11 +276,11 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         nn <- mmnn <- mmnnalt <- list()
         for(k in 1 : nia) {
           if(asm[jf[k]] == 5 | asm[jf[k]] == 8)
-            nn[[k]] <- paste(fn[k], "=", parm[[fname[jf[k]]]][-1], sep="")
+            nn[[k]] <- paste0(fn[k], "=", parm[[fname[jf[k]]]][-1])
           else if(asm[jf[k]] == 7) {
             nn[[k]] <- c(fn[k],
-                         paste(fn[k], "=",
-                               parm[[fname[jf[k]]]][c(-1, -2)], sep=""))
+                         paste0(fn[k], "=",
+                               parm[[fname[jf[k]]]][c(-1, -2)]))
           }
           else nn[[k]] <- colnam[[jf[k]]]
           mmnn[[k]]    <- mmcolnam[[jf[k]]]
@@ -316,14 +321,12 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
                         if(nia == 2) paste(n1[j1], "*", n2[j2])
                         else paste(n1[j1], "*", n2[j2], "*", n3[j3]))
               mmname <- c(mmname,
-                          if(nia == 2) paste(mmn1[j1], ':', mmn2[j2], sep='')
-                          else paste(mmn1[j1], ':', mmn2[j2], ':', mmn3[j3],
-                                     sep=''))
+                          if(nia == 2) paste0(mmn1[j1], ':', mmn2[j2])
+                          else paste0(mmn1[j1], ':', mmn2[j2], ':', mmn3[j3]))
               Altcolnam <- c(Altcolnam,
-                             if(nia == 2) paste(mmnalt1[j1], ':', mmnalt2[j2],
-                                  sep='')
-                             else paste(mmnalt1[j1], ':', mmnalt2[j2], ':',
-                                        mmnalt3[j3], sep=''))
+                             if(nia == 2) paste0(mmnalt1[j1], ':', mmnalt2[j2])
+                             else paste0(mmnalt1[j1], ':', mmnalt2[j2], ':',
+                                        mmnalt3[j3]))
             }
           }
         }

@@ -15,6 +15,12 @@ status <- sample(0:1, N, replace = TRUE)
 S <- Surv(time, status)
 x1 <- gl(2, 50)
 x2 <- runif(N)
+x3 <- sample(1:3, N, replace=TRUE)
+
+ols(time ~ x1)
+ols(time ~ scored(x3))
+ols(time ~ catg(x3))
+
 
 # Makes last colname x1 %ia% x2 which is really inconsistent:
 model.matrix(~ x1 + rcs(x2) + x1 %ia% x2)
