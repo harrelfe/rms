@@ -1,4 +1,4 @@
-Changes in version 4.6-0 (2016-07-24)
+Changes in version 4.6-0 (2016-07-26)
    * plot.summary.rms: implemented plotly interactive plots if options(grType='plotly') in effect
 	 * plot.anova.rms: implemented plotly interactive plots if options(grType='plotly') in effect; remove psmall argument; changed margin default to chisq and P
 	 * ggplot.Predict: implemented plotly interactive plots if options(grType='plotly') in effect

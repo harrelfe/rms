@@ -23,31 +23,34 @@ ggplot.Predict <-
   isbase <- Hmisc::grType() == 'base'   ## vs. 'plotly'
   if(! isbase && length(anova))
     stop('anova not yet implemented for grType plotly')
-  if(isbase && (length(height) || length(width)))
+  lhw <- length(height) + length(width)
+  if(isbase && lhw)
     warning('height and width ignored for non-plotly graphics')
-  if(! isbase && ((length(height) && ! length(width)) ||
-                   length(width)  && ! length(height)))
-    stop('must specify both width and height if specify either')
-  if(! isbase) {
-    plrend <- if(length(height) + length(width) == 0)
-                function(obj) plotly::ggplotly(obj)
-              else
-                function(obj) {
-                  ggb <- plotly::plotly_build(obj)
-                  ggb$layout$height <- height
-                  ggb$layout$width  <- width
-                  ggb
-                }
-    }
+
+  plrend <- if(isbase) function(obj, ...) obj
+            else
+              function(obj, final=TRUE) {
+                if(final) plotly::ggplotly(obj, height=height, width=width)
+                else
+                  plotly::ggplotly(obj)
+              }
 
   comb <- function(plist, nrow=1, ncol=1, ...) {
     ## Note: subplot does not take an ncols argument
-    if(isbase) do.call(arrGrob,
-                       c(plist, list(nrow=nrow, ncol=ncol), list(...)))
-    else
+    if(isbase) return(do.call(arrGrob,
+                              c(plist, list(nrow=nrow, ncol=ncol), list(...))))
+    z <- 
       do.call(plotly::subplot,
               c(plist, list(nrows=nrow,
-                            titleX=TRUE, titleY=TRUE, margin=0.065), list(...)))
+                            titleX=TRUE, titleY=TRUE, margin=0.065),
+                list(...)))
+    if(lhw) {
+      z <- plotly::plotly_build(z)
+      z$layout$height <- height
+      z$layout$width  <- width
+    }
+    # if(lhw) z <- layout(z, height=height, width=width)  # also works
+    z
   }
   
   if(! length(formula) && ! missing(mapping)) formula <- mapping
@@ -104,7 +107,7 @@ ggplot.Predict <-
       if(chr) r <- sprintf('expression(%s)', as.character(r))
     } else {
       qc <- if(length(grep("'", r))) '"' else "'"
-      r <- paste(qc, r, qc, sep='')
+      r <- paste0(qc, r, qc)
       }
     r
   }
@@ -147,11 +150,12 @@ ggplot.Predict <-
 
   if(missing(adj.subtitle)) adj.subtitle <- length(adjust) > 0
   sub <- if(adj.subtitle && length(adjust)==1)
-           paste('Adjusted to:', adjust, sep='') else NULL
-  if(length(sub) & ! isbase)
-    sub <- paste('<span style="font-size:0.6em">', sub, '</span>',
-                 sep='')
+           paste0('Adjusted to:', adjust) else NULL
   cap <- expch(sub, chr=TRUE)
+  ## Won't need the following when ggplot2 really gets subtitle captions working
+  thm <- if(length(sub)) 'theme(plot.title=element_text(size=8, hjust=1))'
+  ## hjust seems to be ignored some of the time
+  
   ## ggplot2 is supposed to implement labs(subtitle= caption=) but
   ## neither of these work as of 2016-07-18.  labs(title=) used for now.
 
@@ -245,10 +249,11 @@ ggplot.Predict <-
 
         ylimc <- limc(ylim., 'y')
         if(type == 'continuous') {
-          if(length(groups)) g <- 
-            sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s)) +
+          if(length(groups))
+            g <- 
+              sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s)) +
                      labs(x=NULL, y=%s, title=%s) + %s',
-                    aestype[1], groups[1], expch(ylab, chr=TRUE), cap, ylimc)
+                     aestype[1], groups[1], expch(ylab, chr=TRUE), cap, ylimc)
           else
             g <- sprintf("ggplot(dat, aes(x=.xx., y=yhat)) +
                          labs(x=NULL, y=%s, title=%s) + %s",
@@ -257,9 +262,10 @@ ggplot.Predict <-
           g <- c(g, if(length(layout))
                       sprintf("facet_wrap(~ .Predictor., scales='free_x',
                                 ncol=%s%s)",
-                              layout[2], lbr) else
-               sprintf("facet_wrap(~ .Predictor., scales='free_x'%s)", lbr),
-                 "geom_line()")
+                              layout[2], lbr)
+                    else
+                      sprintf("facet_wrap(~ .Predictor., scales='free_x'%s)",
+                              lbr), "geom_line()")
           if(conf.int) {
             h <- 
               if(conf == 'fill')
@@ -353,30 +359,34 @@ ggplot.Predict <-
             data.frame(.Predictor. = if(vnames != 'labels') v else pmlabel[v],
                        .xx., yhat, .label.,
                        hjust, vjust)
-           g <- c(g, sprintf("geom_text(aes(label=.label., hjust=hjust, vjust=vjust),
+          g <- c(g, sprintf("geom_text(aes(label=.label., hjust=hjust, vjust=vjust),
                              size=size.anova, nudge_y=%s,
                              data=.anova., parse=TRUE, show.legend=FALSE)",
-                             if(type == 'discrete') -0.25 else 0))
+                            if(type == 'discrete') -0.25 else 0))
         }
+        g <- c(g, thm)
         g <- paste(g, collapse=' + ')
         if(ggexpr) return(g)
-        if(! isbase) g <- paste('plrend(', g, ')')
-        eval(parse(text = g))
+        g <- eval(parse(text = g))
+        g
       }    # end dogroup function
       
       gcont <- if(any(! isdis)) dogroup('continuous')
       gdis  <- if(any(  isdis)) dogroup('discrete')
       if(ggexpr) return(list(continuous=gcont, discrete=gdis))
       r <- mean(! isdis)
-        
+
       return(if(length(gcont) && length(gdis))
                switch(sepdiscrete,
-                      list = list(continuous=gcont, discrete=gdis),
-                      vertical  = comb(list(gcont, gdis), nrow=2,
-                                       heights=c(r, 1-r)),
-                      horizontal= comb(list(gcont, gdis), ncol=2,
-                                       widths =c(r, 1-r)))
-             else if(length(gcont)) gcont else gdis)
+                      list = list(continuous = plrend(gcont),
+                                  discrete   = plrend(gdis )),
+                      vertical  = comb(list(plrend(gcont, final=FALSE),
+                                            plrend(gdis,  final=FALSE)),
+                                       nrow=2, heights=c(r, 1-r)),
+             horizontal= comb(list(plrend(gcont, final=FALSE),
+                                   plrend(gdis,  final=FALSE)),
+                              ncol=2, widths =c(r, 1-r)))
+             else if(length(gcont)) plrend(gcont) else plrend(gdis))
     }  # end if(sepdiscrete)
     ## Form separate plots and combine at end
     p <- data$.predictor.
@@ -505,23 +515,26 @@ ggplot.Predict <-
                           form, deparse(ylim.)))
       }
       # print(g, vp = viewport(layout.pos.row=nr, layout.pos.col=nc))
+      g <- c(g, thm)
       g <- paste(g, collapse = ' + ')
       if(ggexpr) return(g)
-      if(! isbase) g <- paste('plrend(', g, ')')
       g <- eval(parse(text=g))
       Plt[[jplot]] <- g
     }
-    Plt <- if(jplot == 1) Plt[[1]]
-           else
+
+res <- if(jplot == 1) plrend(Plt[[1]])
+       else {
+             for(j in 1 : jplot) Plt[[j]] <- plrend(Plt[[j]], final=FALSE)
              comb(Plt, nrow=layout[1], ncol=layout[2])
+           }
 #    if(length(sub)) {
 #      Plt <- if(isbase) footnote(Plt, sub, size=size.adj)
 #             else
 #               plotly::layout(p, title=sub, margin=0.03)
 #      }
-    return(Plt)
+return(res)
 
-  } else  { # .predictor. not included; user specified predictors to show
+   } else  { # .predictor. not included; user specified predictors to show
     v  <- varying
     xn <- v[1]    ## name of x-axis variable (first variable given to Predict)
     if(missing(xlab))
@@ -535,10 +548,10 @@ ggplot.Predict <-
       data$yhat[! j] <- NA
       if(conf.int) data$lower[! j] <- data$upper[! j] <- NA
     }
-    ae <- paste('aes(x=', xn, ', y=yhat', sep='')
+    ae <- paste0('aes(x=', xn, ', y=yhat')
     if(length(groups)) for(j in 1 : length(groups))
-      ae <- paste(ae, ', ', aestype[j], '=', groups[j], sep='')
-    ae <- eval(parse(text=paste(ae, ')', sep='')))
+      ae <- paste0(ae, ', ', aestype[j], '=', groups[j])
+    ae <- eval(parse(text=paste0(ae, ')')))
     g <- c("ggplot(data, ae)", sprintf("labs(x=%s, y=%s, title=%s)",
               expch(xlab, chr=TRUE), expch(ylab, chr=TRUE), cap))
 
@@ -620,10 +633,10 @@ ggplot.Predict <-
       } else formula <- deparse(formula)
       g <- c(g, sprintf("facet_grid(%s)", formula))
     }
+    g <- c(g, thm)
     g <- paste(g, collapse=' + ')
     if(ggexpr) return(g)
-    if(! isbase) g <- paste('plrend(', g, ')')
-    g <- eval(parse(text=g))
+    g <- plrend(eval(parse(text=g)))
 #    if(length(sub)) g <- if(isbase) footnote(g, sub)
 #                         else
 #                           plotly::layout(g, title=sub, margin=0.03)
