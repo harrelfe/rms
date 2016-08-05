@@ -10,6 +10,7 @@ Changes in version 5.0-0 (2016-08-05)
 	 * latex.anova.rms: fixed error in not rounding enough columns doe to using all.is.numeric intead of is.numeric
 	 * catg: corrected bug that disallowed explicit catg() in formulas
 	 * ggplot.Predict: added height and width for plotly
+	 * survplot: respected xlim with diffbands.  Thanks: Toni G
 	 
 Changes in version 4.5-1 (2016-06-01)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations

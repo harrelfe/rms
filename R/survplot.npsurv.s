@@ -263,7 +263,7 @@ survplot.npsurv <-
                 col = col.fill[i], type = "s")
       }
       else if(conf == 'diffbands')
-        survdiffplot(fit.orig, conf=conf, fun=fun, convert=convert)
+        survdiffplot(fit.orig, conf=conf, fun=fun, convert=convert, xlim=xlim)
 
       else {
         j <- if(ns == 1) TRUE else vs == olev[i]
@@ -402,7 +402,7 @@ survdiffplot <-
   if(conf == 'diffbands') {
     lo <- surv - 0.5 * z * se
     hi <- surv + 0.5 * z * se
-    k <- !is.na(times + lo + hi)
+    k <- ! is.na(times + lo + hi) & times < xlim[2]
     polyg(c(times[k], rev(times[k])), c(lo[k], rev(hi[k])),
            col=gray(.9), type='s')
     return(invisible(slev))

@@ -1056,7 +1056,7 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
       'Median Y'   = c(latex = '$Y_{0.5}$',  html = '<i>Y</i><sub>0.5</sub>'),
       '|Pr(Y>=median)-0.5|' =
         c(latex = '$|\\overline{\\mathrm{Pr}(Y\\geq Y_{0.5})-\\frac{1}{2}}|$',
-          html  = '<span style="text-decoration: overline">&#124;Pr(<i>Y</i> &#8805; median)-&#189&#124;</span>')
+          html  = '<span style="text-decoration: overline">&#124;Pr(<i>Y</i> &#8805; median)-&#189;&#124;</span>')
 
     )
 
