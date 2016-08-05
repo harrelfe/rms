@@ -289,7 +289,7 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
     z[[k]] <- list(type='print', list(stats))
   }
   prModFit(x, title=title, z, digits=digits,
-           coefs=coefs, latex=latex, md=md, ...)
+           coefs=coefs, lang=if(latex) 'latex' else if(md) 'html' else 'plain', ...)
 }
 
 

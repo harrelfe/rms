@@ -345,10 +345,11 @@ html.summary.rms <- function(object, ...) {
   caption <- paste0(caption, '</code>')
   cstats <- as.data.frame(cstats)
   attr(cstats,"row.names") <- rowl
-  names(cstats)[3] <- "$\\Delta$"
+  names(cstats)[3] <- "&Delta;"
   
   cat(htmlTable::htmlTable(cstats, caption=caption,
-                           css.cell = 'min-width: 6em;',
+  ##                         css.cell = 'min-width: 6em;',
+                           css.cell=c('', rep('padding-left:3ex;', ncol(cstats))),
                            rowlabel='', align='r', align.header='r'), sep='\n')
 }
 

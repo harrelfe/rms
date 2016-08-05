@@ -163,8 +163,9 @@ print.Rq <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE, title, ...)
         z[[k]] <- list(type='cat', list(mes, '\n'))
       }
 
-    prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex,
-             md=md, ...)
+    prModFit(x, title=title, z, digits=digits, coefs=coefs,
+             lang=if(latex) 'latex' else if(html) 'html' else 'plain',
+             ...)
   }
 
 latex.Rq <-

@@ -476,27 +476,29 @@ latex.anova.rms <-
            title=paste('anova',attr(object,'obj.name'),sep='.'),
            dec.chisq=2, dec.F=2, dec.ss=NA,
            dec.ms=NA, dec.P=4, table.env=TRUE, caption=NULL, html=FALSE, ...) {
+
+    lang <- if(html) 'html' else 'latex'
+    
     sn   <- colnames(object)
     rowl <- rownames(object)
-    if(any(sn=='MS'))
-      rowl[rowl=='TOTAL'] <- 'REGRESSION'
+    if(any(sn=='MS')) rowl[rowl=='TOTAL'] <- 'REGRESSION'
     
     if(! html) rowl <- latexTranslate(rowl)
+
+    specs <- markupSpecs[[lang]]
+    bold  <- specs$bold
+    math  <- specs$math
+    
     
     ## Translate interaction symbol (*) to times symbol
-    rowl <- gsub('\\*', if(html) '&times;' else '$\\times$', rowl)
+    rowl <- gsub('\\*', specs$times, rowl)
   
     ## Put TOTAL rows in boldface
-    if(html) {a <- '<strong>'; b <- '</strong>'}
-        else {a <- '\\textbf{'; b <- '}'}
     rowl <- ifelse(substring(rowl, 1, 5) %in% c("REGRE", "ERROR"),
-                   paste(a, rowl, b, sep=''), rowl)
+                   bold(rowl), rowl)
 
-    if(html) {a <- '&nbsp;&nbsp;<i>'; b <- '</i>'}
-    else {a <- '~~\\emph{'; b <- '}'}
-      
     rowl <- ifelse(substring(rowl, 1, 1) == " ",
-                 paste(a, substring(rowl,2), b, sep=""),
+                 paste0(specs$lspace, specs$italics(substring(rowl,2)), sep=""),
                  rowl) # preserve leading blank
 
     P <- object[,3]
@@ -508,28 +510,28 @@ latex.anova.rms <-
                 'Partial SS'=dec.ss, MS=dec.ms, P=dec.P)
 
     dig <- digits[sn]
-    sn[sn=='Chi-Square'] <- '\\chi^2'
+    sn[sn=='Chi-Square'] <- specs$chisq(add='')
     names(dstats) <- ifelse(sn %nin% c('d.f.','MS','Partial SS'),
-                            paste('$', sn, '$', sep=''), sn)
+                            math(sn), sn)
 
     resp <- as.character(attr(object, 'formula')[2])
     if(! html) resp <- latexTranslate(resp)
-    ## Make LaTeX preserve spaces in heading
-    if(html) {a <- '<code>'; b <- '</code>'} else {a <- '\\texttt{'; b <- '}'}
+
     if(! length(caption))
-      caption <- paste(if(any(sn == 'F')) "Analysis of Variance"
-      else "Wald Statistics", " for ", a, resp, b, sep='')
+      caption <- paste0(if(any(sn == 'F')) "Analysis of Variance"
+      else "Wald Statistics", " for ", specs$code(resp))
 
     i <- 0
     for(nn in names(dstats)) {
       i <- i + 1
-      dstats[[nn]] <- formatNP(dstats[[nn]], digits=dig[i], latex=TRUE,
-                               pvalue=nn == '$P$')
+      dstats[[nn]] <- formatNP(dstats[[nn]], digits=dig[i],
+                               lang   = lang,
+                               pvalue = nn == math('P'))
     }
     if(html) {
       al <- rep('r', length(sn))
       cat(htmlTable::htmlTable(dstats, caption=caption,
-                               css.cell='min-width: 6em;',
+                               css.cell=rep('padding-left:3ex;', ncol(dstats)),
                                align=al, align.header=al,
                                rowlabel=''), sep='\n')
       }
@@ -540,7 +542,7 @@ latex.anova.rms <-
   }
 
 html.anova.rms <-
-  function(object, ...) latex.anova.rms(object, title, html=TRUE, ...)
+  function(object, ...) latex.anova.rms(object,  html=TRUE, ...)
 
 
 plot.anova.rms <-
@@ -557,6 +559,8 @@ plot.anova.rms <-
     what <- match.arg(what)
     sort <- match.arg(sort)
     isbase <- Hmisc::grType() == 'base'
+
+    htmlSpecs <- markupSpecs$html
 
     if(! length(xlab)) {
 
@@ -675,8 +679,7 @@ plot.anova.rms <-
                      'proportion R2' = list('Proportion~R^2', fn(pss / ssr, 2)))
             else
               switch(marg, 
-                     chisq = paste('&chi;<sup>2</sup><sub>', dof,
-                                   '</sub>=', fn(chisq, 1)),
+                     chisq = paste(htmlSpecs$chisq(dof), fn(chisq, 1)),
                      'proportion chisq' =
                        paste('Proportion &chi;<sup>2</sup>=',
                              fn(chisq / totchisq, 2)),

@@ -321,5 +321,7 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
     }
   }
   prModFit(x, title=title, z, digits=digits,
-           coefs=coefs, latex=latex, md=md, ...)
+           coefs=coefs,
+           lang=if(latex) 'latex' else if(md) 'html' else 'plain',
+           md=md, ...)
 }

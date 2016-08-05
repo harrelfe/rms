@@ -142,7 +142,8 @@ optional named element is fetched that doesn't exist.
 \code{digits} is specified, \code{formatNP} will make sure that the
 formatted representation has \code{digits} positions to the right of the
 decimal place.  If \code{latex=TRUE} it will translate any scientific
-notation to LaTeX math form.  If \code{pvalue=TRUE}, it will replace
+notation to LaTeX math form.  If \code{html=TRUE} will convert to html.
+If \code{pvalue=TRUE}, it will replace
 formatted values with "< 0.0001" (if \code{digits=4}).
 
 \code{latex.naprint.delete} will, if appropriate, use LaTeX to draw a
@@ -209,7 +210,7 @@ prStats(labels, w, latex=FALSE, md=FALSE, file="", append=TRUE)
 
 reVector(\dots, na.rm=TRUE)
 
-formatNP(x, digits=NULL, pvalue=FALSE, latex=FALSE)
+formatNP(x, digits=NULL, pvalue=FALSE, latex=FALSE, html=FALSE)
 
 \method{latex}{naprint.delete}(object, file="", append=TRUE, \dots)
 
@@ -331,6 +332,8 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   model.}
 \item{latex}{a logical value indicating whether information should be
   formatted as plain text or as LaTeX markup}
+\item{html}{a logical value indicating whether information should be
+	formatted as html}
 \item{md}{a logical value indicating that the information should be
 	formatted using html and latex with MathJax in RMarkdown}
 \item{file}{name of file to which to write model output from

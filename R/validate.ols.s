@@ -228,7 +228,8 @@ html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...) {
   z <- unclass(x)
   for(i in 1 : length(cdec)) z[, i] <- round(z[, i], cdec[i])
   cat(htmlTable::htmlTable(z, rowlabel='Index', caption=caption,
-                           css.cell = 'min-width: 9em;'), sep='\n')
+                           css.cell = c('', rep('padding-left:3ex;', ncol(z) - 1)),
+                                        sep='\n'))
   cat('<p style="padding-top:2em;">\n')
                          
   if(length(kept) && B > 0) {
@@ -238,12 +239,13 @@ html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...) {
     cap <- 'Factors Retained in Backwards Elimination'
     if(nr > B) cap <- c(cap, paste('First', B, 'Resamples'))
     cat(htmlTable::htmlTable(varin, caption=cap, rnames=FALSE,
-                             css.cell = 'min-width: 9em;'), sep='\n')
+                             css.cell = c('', rep('padding-left:3ex;', ncol(varin) - 1))),
+        sep='\n')
 
     cap <- 'Frequencies of Numbers of Factors Retained'
     nkept <- apply(kept, 1, sum)
     tkept <- t(as.matrix(table(nkept)))
     cat(htmlTable::htmlTable(tkept, caption=cap, rnames=FALSE,
-                             css.cell = 'min-width: 9em;'))
+                             css.cell = c('', rep('padding-left:3ex;', length(nkept) - 1))))
     }
   }

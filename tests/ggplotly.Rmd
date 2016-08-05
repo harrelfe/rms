@@ -1,0 +1,100 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+require(rms)
+require(plotly)
+set.seed(1)   # so can reproduce
+x1 <- runif(100)
+x2 <- runif(100)
+x3 <- sample(c('a','b'), 100, TRUE)
+x4 <- sample(c('k','l','m'), 100, TRUE)
+y <- runif(100)
+dd <- datadist(x1, x2, x3, x4); options(datadist='dd')
+f <- ols(y ~ x1 + x2 + x3 + x4)
+```
+
+# Using `ggplotly` on `ggplot.Predict` object
+This method works fine.
+```{r}
+options(grType=NULL)
+g <- ggplot(Predict(f,x1))
+ggplotly(g)
+```
+
+```{r}
+z <- 900
+g <- ggplot(Predict(f,x1))
+ggplotly(g, height=z, width=z)
+```
+This
+
+```{r}
+ggplot(Predict(f,x1))
+```
+That
+
+
+
+# Using `plotly_build` on `ggplot.Predict` object
+You see that when a plot is large, it covers the next output area.
+
+```{r}
+b <- function(g, h=NULL, w=NULL) {
+  a <- plotly_build(g)
+	if(length(h)) {
+	  a$layout$height <- h
+		a$layout$width  <- w
+		}
+	a
+	}
+g <- ggplot(Predict(f,x1))
+b(g)
+```
+
+```{r}
+z <- 900
+g <- ggplot(Predict(f,x1))
+b(g, h=z, w=z)
+```
+This
+
+```{r}
+ggplot(Predict(f,x1))
+```
+That
+
+# Using `ggplotly` within `ggplot.Predict`
+This worked fine.
+```{r}
+options(grType='plotly')
+ggplot(Predict(f,x1))
+```
+
+```{r}
+z <- 1200
+ggplot(Predict(f,x1), height=z, width=z)
+```
+This
+
+```{r}
+ggplot(Predict(f,x1))
+```
+That
+
+
+# Repeat for more complex ggplot output
+1200 at 72 dpi is 16.67 inches.  Tex and histogram were cut off if figure size was omitted from chunk header.
+```{r tt,fig.width=17,fig.height=17}
+ggplot(Predict(f), sepdiscrete='vertical', height=z, width=z)
+```
+
+And here is ...
+
+More stuff ....
+
+```{r}
+hist(rnorm(1000))
+```

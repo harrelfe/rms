@@ -356,8 +356,9 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
                    title='Correlation Matrix for Parameter Estimates')
 	}
   
-  prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex,
-           md=md, ...)
+  prModFit(x, title=title, z, digits=digits, coefs=coefs,
+           lang=if(latex) 'latex' else if(md) 'html' else 'plain',
+           ...)
 }
 
 predict.bj <- 

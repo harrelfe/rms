@@ -57,8 +57,9 @@ print.psm <- function(x, correlation = FALSE, digits=4,
     }
   }
   
-  prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex,
-           md=md, ...)
+  prModFit(x, title=title, z, digits=digits, coefs=coefs,
+           lang=if(latex) 'latex' else if(md) 'html' else 'plain',
+           ...)
 }
 
 #  wt <- x$weights

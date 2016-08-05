@@ -368,8 +368,9 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
                      title = 'Bootstrap Nonparametric 0.95 Confidence Limits for Correlation Parameters')
     }
   
-  prModFit(x, title=title, z, digits=digits, coefs=coefs, latex=latex,
-           md=md, ...)
+  prModFit(x, title=title, z, digits=digits, coefs=coefs,
+           lang=if(latex) 'latex' else if(md) 'html' else 'plain',
+           ...)
 }
 
 vcov.Gls <- function(object, intercepts='all', ...)
