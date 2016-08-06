@@ -11,6 +11,7 @@ Changes in version 5.0-0 (2016-08-05)
 	 * catg: corrected bug that disallowed explicit catg() in formulas
 	 * ggplot.Predict: added height and width for plotly
 	 * survplot: respected xlim with diffbands.  Thanks: Toni G
+	 * reVector: changed to reListclean and stored model stats components as lists so can handle mixture of numeric and character, e.g., name of clustering variable
 	 
 Changes in version 4.5-1 (2016-06-01)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations

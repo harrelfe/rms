@@ -608,17 +608,17 @@ print.cph <- function(x, digits=4, table=TRUE, conf.int=FALSE,
   if(length(x$coef)) {
     stats <- x$stats
     ci <- x$clusterInfo
-    misc <- reVector(Obs   =stats['Obs'],
+    misc <- reListclean(Obs   =stats['Obs'],
                      Events=stats['Events'],
                      'Cluster on' = ci$name,
                      Clusters = ci$n,
                      Center   = round(x$center, digits))
-    lr   <- reVector('LR chi2'     = stats['Model L.R.'],
+    lr   <- reListclean('LR chi2'     = stats['Model L.R.'],
                      'd.f.'        = stats['d.f.'],
                      'Pr(> chi2)'  = stats['P'],
                      'Score chi2'  = stats['Score'],
                      'Pr(> chi2)'  = stats['Score P'])
-    disc <- reVector(R2 = stats['R2'],
+    disc <- reListclean(R2 = stats['R2'],
                      Dxy = stats['Dxy'],
                      g  = stats['g'],
                      gr = stats['gr'])

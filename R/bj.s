@@ -323,14 +323,14 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
   
   stats <- x$stats
   ci    <- x$clusterInfo
-  misc   <- reVector(Obs          = stats['Obs'],
+  misc   <- reListclean(Obs          = stats['Obs'],
                      Events       = stats['Events'],
                      'Cluster on' = ci$name,
                      'Clusters'   = ci$n)
-  dfstat <- reVector('Regression d.f.' = stats['d.f.'],
+  dfstat <- reListclean('Regression d.f.' = stats['d.f.'],
                      sigma=stats['sigma'],
                      'd.f.'=stats['error d.f.'])
-  disc <- reVector(g = stats['g'], gr = stats['gr'])
+  disc <- reListclean(g = stats['g'], gr = stats['gr'])
   k <- k + 1
   z[[k]] <- list(type='stats',
                  list(headings=list('', '', c('Discrimination','Indexes')),

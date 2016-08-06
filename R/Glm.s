@@ -111,12 +111,12 @@ print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
   pval <- 1 - pchisq(lr, dof)
 
   ci <- x$clusterInfo
-  misc <- reVector(Obs=length(x$residuals),
+  misc <- reListclean(Obs=length(x$residuals),
                    'Residual d.f.'=x$df.residual,
                    'Cluster on'=ci$name,
                    Clusters=ci$n,
                    g = x$g)
-  lr   <- reVector('LR chi2'     = lr,
+  lr   <- reListclean('LR chi2'     = lr,
                    'd.f.'        = dof,
                    'Pr(> chi2)' = pval)
   headings <- list('',

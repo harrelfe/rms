@@ -324,7 +324,7 @@ latex.summary.rms <-
         col.just=rep("r", 7), table.env=table.env, ...)
 }
 
-html.summary.rms <- function(object, ...) { 
+html.summary.rms <- function(object, digits=4, dec=NULL,...) { 
 
   caption <- attr(object, "heading")
   ## scale   <- attr(object, "scale")
@@ -337,7 +337,10 @@ html.summary.rms <- function(object, ...) {
   rowl <- sedit(rowl, "-", "---")
   cstats <- matrix("", nrow=nrow(object), ncol=ncol(object), 
                    dimnames=dimnames(object))
-  for(i in 1 : 7) cstats[,i] <- format(signif(object[, i], 5))
+  for(i in 1 : 7)
+    cstats[,i] <- if(length(dec)) format(round(object[, i], dec))
+                  else
+                    format(signif(object[, i], digits))
   cstats[is.na(object)] <- ""
   caption <- sub('^ *', '', caption)
   ## htmlTable creates invalid html if start caption with blank
@@ -349,7 +352,7 @@ html.summary.rms <- function(object, ...) {
   
   cat(htmlTable::htmlTable(cstats, caption=caption,
   ##                         css.cell = 'min-width: 6em;',
-                           css.cell=c('', rep('padding-left:3ex;', ncol(cstats))),
+                           css.cell=c('', rep('padding-left:4ex;', ncol(cstats))),
                            rowlabel='', align='r', align.header='r'), sep='\n')
 }
 

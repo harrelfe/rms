@@ -40,7 +40,7 @@
 \alias{survest.rms}
 \alias{prModFit}
 \alias{prStats}
-\alias{reVector}
+\alias{reListclean}
 \alias{formatNP}
 \alias{latex.naprint.delete}
 \alias{html.naprint.delete}
@@ -133,9 +133,10 @@ summary statistics is done by \code{prStats}, which uses the Hmisc
 LaTeX longtable and epic packages must be in effect to use these
 LaTeX functions.
 
-\code{reVector} allows one to rename a subset of a named vector,
+\code{reListclean} allows one to rename a subset of a named list,
 ignoring the previous names and not concatenating them as \R does.  It
-also removes (by default) elements that are \code{NA}, as when an
+also removes \code{NULL} elements and (by default) elements that are
+\code{NA}, as when an 
 optional named element is fetched that doesn't exist.
 
 \code{formatNP} is a function to format a vector of numerics.  If
@@ -208,7 +209,7 @@ prModFit(x, title, w, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
 
 prStats(labels, w, latex=FALSE, md=FALSE, file="", append=TRUE)
 
-reVector(\dots, na.rm=TRUE)
+reListclean(\dots, na.rm=TRUE)
 
 formatNP(x, digits=NULL, pvalue=FALSE, latex=FALSE, html=FALSE)
 
@@ -349,7 +350,7 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   needspace style is available.  Example:
   \code{needspace='6\\baselineskip'} or \code{needspace='1.5in'}.}
 \item{na.rm}{set to \code{FALSE} to keep \code{NA}s in the vector
-  created by \code{reVector}}
+  created by \code{reListclean}}
 \item{pvalue}{set to \code{TRUE} if you want values below 10 to the
   minus \code{digits} to be formatted to be less than that value}
 \item{form}{a formula object}
@@ -358,7 +359,7 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
 	\code{"cluster"}.  By default no right-hand-side terms are removed.}
 \item{delete.response}{set to \code{TRUE} to remove the dependent
 	variable(s) from the formula}
-\item{\dots}{other arguments.  For \code{reVector} this contains the
+\item{\dots}{other arguments.  For \code{reListclean} this contains the
   elements being extracted.  For \code{prModFit} this information is
   passed to the \code{Hmisc latexTabular} function when a block of
   output is a vector to be formatted in LaTeX.}
@@ -384,7 +385,7 @@ in parameter values about the mean, including a portion for the reference
 cell in which the parameter is by definition zero.
 \code{Newlabels} returns a new fit object with the labels adjusted.
 
-\code{reVector} returns a vector of named (by its arguments) elements.
+\code{reListclean} returns a vector of named (by its arguments) elements.
 \code{formatNP} returns a character vector.
 
 \code{removeFormulaTerms} returns a formula object.

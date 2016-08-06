@@ -293,12 +293,12 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
          'likelihood',  sep='')
   if(latex) ltype <- paste(ltype, ' ', sep='')
   
-  misc <- reVector(Obs=dd$N,
+  misc <- reListclean(Obs=dd$N,
                    Clusters=if(length(x$groups)) length(unique(x$groups)) else
                     dd$N,
                    g=x$g)
   
-  llike <- reVector(ll=x$logLik,
+  llike <- reListclean(ll=x$logLik,
                     'Model d.f.' = dd$p - 1L,
                     sigma  = x$sigma,
                     'd.f.' = errordf)

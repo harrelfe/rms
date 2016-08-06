@@ -51,7 +51,7 @@ usebootcoef=TRUE, boot.type=c("percentile","bca","basic"), verbose=FALSE)
 
 \method{latex}{summary.rms}(object, title, table.env=TRUE, \dots)
 
-\method{html}{summary.rms}(object, \dots)
+\method{html}{summary.rms}(object, digits=4, dec=NULL, \dots)
 
 \method{plot}{summary.rms}(x, at, log=FALSE,
     q=c(0.9, 0.95, 0.99), xlim, nbar, cex=1, nint=10,
@@ -132,6 +132,11 @@ factor levels for categorical variables in the model.}
 \code{title} to pass to \code{latex}.  Default is name of fit object passed to
 \code{summary} prefixed with \code{"summary"}.}
 \item{table.env}{see \code{\link[Hmisc]{latex}}}
+\item{digits,dec}{for \code{html.summary.rms}; \code{digits} is the
+	number of significant digits for printing for effects, standard
+	errors, and confidence limits.  It is ignored if \code{dec} is
+	given. The statistics are rounded to \code{dec} digits to the right of
+	the decimal point of \code{dec} is given.}
 \item{at}{
 vector of coordinates at which to put tick mark labels on the main axis.  If
 \code{log=TRUE}, \code{at} should be in anti-log units.

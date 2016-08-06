@@ -254,15 +254,15 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
   lrchisq <- stats['Model L.R.']
   ci <- x$clusterInfo
   if(lst <- length(stats)) {
-    misc <- reVector(Obs=stats['n'],
+    misc <- reListclean(Obs=stats['n'],
                      sigma=sigma,
                      'd.f.'=df[2],
                      'Cluster on'=ci$name,
                      Clusters=ci$n)
-    lr   <- reVector('LR chi2'     = lrchisq,
+    lr   <- reListclean('LR chi2'     = lrchisq,
                      'd.f.'        = ndf,
                      'Pr(> chi2)' = 1 - pchisq(lrchisq, ndf))
-    disc <- reVector(R2=r2, 'R2 adj'=rsqa, g=stats['g'])
+    disc <- reListclean(R2=r2, 'R2 adj'=rsqa, g=stats['g'])
     headings <- list('',
                      c('Model Likelihood', 'Ratio Test'),
                      c('Discrimination', 'Indexes'))

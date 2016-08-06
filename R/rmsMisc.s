@@ -770,7 +770,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
     ct('\n')
     everb()
   }
-  
+
   for(z in w) {
     type <- z$type
     obj  <- z[[2]]
@@ -837,12 +837,15 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
         }
         if(la == 'latex') {
           ct(skipt(1))
-          rownames(U) <- if(lang == 'latex') latexTranslate(names(beta))
-                         else htmlTranslate(names(beta))
+          rownames(U) <- if(lang == 'latex')
+                           latexTranslate(names(beta))
+                         else
+                           htmlTranslate(names(beta))
+          
           if(is.numeric(coefs)) {
             U <- U[1:coefs,,drop=FALSE]
             U <- rbind(U, rep('', ncol(U)))
-            rownames(U)[nrow(U)] <- if(md) '&hellip;' else '\\dots'
+            rownames(U)[nrow(U)] <- if(lang == 'html') '&hellip;' else '\\dots'
           }
           ## Translate interaction symbol (*) to times symbol
           rownames(U) <- gsub('\\*', specs$times, rownames(U))
@@ -957,11 +960,12 @@ html.naprint.delete <- function(object, ...) {
 ## Function to print model fit statistics
 ## Example:
 #prStats(list('Observations', c('Log','Likelihood'),
-#            c('Rank','Measures'),
-#            c('Mean |difference|','Measures')),
-#       list(c(N0=52, N1=48), c('max |deriv|'=1e-9,'-2 LL'=1332.23,c(NA,2)),
-#            c(tau=-.75, Dxy=-.64, C=.743, 2),
-#            c(g=1.25, gr=11.3, 2)))
+##            c('Rank','Measures'),
+##            c('Mean |difference|','Measures')),
+##       list(list(N0=52, N1=48), list('max |deriv|'=1e-9,'-2 LL'=1332.23,
+##            c(NA,2)),
+#            list(tau=-.75, Dxy=-.64, C=.743, 2),
+#            list(g=1.25, gr=11.3, 2)))
 ## Note that when there is an unnamed element of w, it is assumed to be
 ## the number of digits to the right of the decimal place (recycling of
 ## elements is done if fewer elements are in this vector), causing
@@ -981,6 +985,10 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
   lorh <- lang != 'plain'
 
   specs <- markupSpecs[[lang]]
+  trans <- switch(lang,
+                  latex = latexTranslate,
+                  html  = htmlTranslate,
+                  plain = function(x) x )
   
   ## Find maximum width used for each column
   p <- length(labels)
@@ -990,35 +998,34 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
     u <- w[[i]]
     dig <- NA
     if(any(names(u)=='')) {
-      dig <- u[names(u)=='']
-      u   <- u[names(u)!='']
+      dig <- unlist(u[names(u) == ''])
+      u   <- u[names(u) != '']
     }
-    lu <- length(u)
+    lu  <- length(u)
     dig <- rep(dig, length=lu)
-    fu <- character(lu)
+    fu  <- character(lu)
     for(j in 1 : length(u)) {
+      uj <- u[[j]]
+      nuj <- names(u)[j]
       dg <- dig[j]
-      fu[j] <- if(names(u)[j] == 'Cluster on') {
-                 if(lang == 'latex')     specs$code(latexTranslate(u[j]))
-                 else if(lang == 'html') specs$code(htmlTranslate (u[j]))
-                 else u[j]
-               }
+      fu[j] <- if(nuj == 'Cluster on') specs$code(trans(uj))
                else
-                 if(is.na(dg)) format(u[j])
+                 if(nuj == 'max |deriv|')
+                   formatNP(signif(uj, 1), lang=lang)
                else
-                 if(dg < 0) formatNP(u[j], -dg, pvalue=TRUE, lang=lang)
+                 if(is.na(dg)) format(uj)
                else
-                 formatNP(u[j], dg, lang=lang)
+                 if(dg < 0) formatNP(uj, -dg, pvalue=TRUE, lang=lang)
+               else
+                 formatNP(uj, dg, lang=lang)
     }
     names(fu) <- names(u)
     w[[i]]    <- fu
     for(j in 1 : length(u))
       width[i] <- max(width[i],
-                      1 + nchar(names(u))[j] + nchar(fu[j]))
+                      1 + nchar(nuj) + nchar(fu[j]))
   }
   if(lorh) {
-#    ct('\\centerline{\\begin{tabular}{|', rep('c|', p), '}\\hline\n',
-#        sep='')
     head <- NULL
     if(sum(nchar(unlist(labels))) > 0) {
       maxl <- max(sapply(labels, length))
@@ -1027,34 +1034,44 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
         head <- if(i == 1) lab
                 else
                   paste(head, lab, sep=if(lang == 'html') '<br>' else '\n')
-#        ct(paste(lab, collapse='&'), '\\\\ \n', sep='')
         }
-#      ct('\\hline\n')
     }
     maxl <- max(sapply(w, length))
     z <- matrix('', nrow=maxl, ncol=p)
     fil <- if(lang == 'latex') '~\\hfill ' else '&emsp;'
 
     trans <- rbind(
-      'Dxy'        = c(latex = '$D_{xy}$', html = '<i>D</i><sub>xy</sub>'),
-      'LR chi2'    = c(latex = 'LR $\\chi^{2}$', html = 'LR &chi;<sup>2</sup>'),
-      'Score chi2' = c(latex = 'Score $\\chi^{2}$', html = 'Score &chi;<sup>2</sup>'),
-      'Pr(> chi2)' = c(latex = 'Pr$(>\\chi^{2})$', html = 'Pr(&#62;&chi;<sup>2</sup>)'),
-      'tau-a'      = c(latex = '$\\tau_{a}$', html = '&tau;<sub>a</sub>'),
-      'R2'         = c(latex = '$R^{2}$', html = '<i>R</i><sup>2</sup>'),
+      'Dxy'        = c(latex = '$D_{xy}$',
+                       html  = '<i>D</i><sub>xy</sub>'),
+      'LR chi2'    = c(latex = 'LR $\\chi^{2}$',
+                       html  = 'LR &chi;<sup>2</sup>'),
+      'Score chi2' = c(latex = 'Score $\\chi^{2}$',
+                       html  = 'Score &chi;<sup>2</sup>'),
+      'Pr(> chi2)' = c(latex = 'Pr$(>\\chi^{2})$',
+                       html  = 'Pr(&#62;&chi;<sup>2</sup>)'),
+      'tau-a'      = c(latex = '$\\tau_{a}$',
+                       html  = '&tau;<sub>a</sub>'),
+      'R2'         = c(latex = '$R^{2}$',
+                       html  = '<i>R</i><sup>2</sup>'),
       'R2 adj'     = c(latex = '$R^{2}_{\\textrm{adj}}$',
                        html  = paste0('<i>R</i>', specs$subsup('adj', '2'))),
-      'C'          = c(latex = '$C$', html = '<i>C</i>'),
-      'g'          = c(latex = '$g$', html = '<i>g</i>'),
-      'gp'         = c(latex = '$g_{p}$', html = '<i>g</i><sub>p</sub>'),
-      'gr'         = c(latex = '$g_{r}$', html = '<i>g</i><sub>r</sub>'),
+      'C'          = c(latex = '$C$',
+                       html  = '<i>C</i>'),
+      'g'          = c(latex = '$g$',
+                       html  = '<i>g</i>'),
+      'gp'         = c(latex = '$g_{p}$',
+                       html  = '<i>g</i><sub>p</sub>'),
+      'gr'         = c(latex = '$g_{r}$',
+                       html  = '<i>g</i><sub>r</sub>'),
       'max |deriv|'   = c(latex = '$\\max|\\frac{\\partial\\log L}{\\partial \\beta}|$',
                           html  = 'max &#124;&#8706;log <i>L</i>/&#8706;&beta;&#124;'),
       'mean |Y-Yhat|' = c(latex = 'mean $|Y-\\hat{Y}|$',
                           html  = 'mean &#124;<i>Y - Y</i>&#770;&#124;'),
-      'Unique Y'   = c(latex = 'Unique $Y$', html = 'Unique <i>Y</i>'),
-      'Median Y'   = c(latex = '$Y_{0.5}$',  html = '<i>Y</i><sub>0.5</sub>'),
-      '|Pr(Y>=median)-0.5|' =
+      'Unique Y'   = c(latex = 'Unique $Y$',
+                       html  = 'Unique <i>Y</i>'),
+      'Median Y'   = c(latex = '$Y_{0.5}$',
+                       html  = '<i>Y</i><sub>0.5</sub>'),
+      '|Pr(Y>=median)-0.5|'  =
         c(latex = '$|\\overline{\\mathrm{Pr}(Y\\geq Y_{0.5})-\\frac{1}{2}}|$',
           html  = '<span style="text-decoration: overline">&#124;Pr(<i>Y</i> &#8805; median)-&#189;&#124;</span>')
 
@@ -1074,9 +1091,6 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
       
       z[1 : length(k), i] <- paste0(k, fil, w[[i]])
     }
-#    for(j in 1:maxl) ct(paste(z[j,], collapse='&'), '\\\\ \n', sep='')
-#    ct('\\hline\n')
-#    ct('\\end{tabular}}\n\n')
 
     al <- paste0('|', paste(rep('c|', p), collapse=''))
     if(lang == 'latex') ct(latexTabular(z, headings=head, align=al, halign=al,
@@ -1110,22 +1124,31 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
                     top.border=FALSE, left.border=FALSE)
 }
 
-## reVector is used in conjunction with pstats
+## reListclean is used in conjunction with pstats
 ## Example:
 # x <- c(a=1, b=2)
 # c(A=x[1], B=x[2])
-# reVector(A=x[1], B=x[2])
-# reVector(A=x['a'], B=x['b'], C=x['c'])
-reVector <- function(..., na.rm=TRUE)
-  {
-    d <- list(...)
-    d <- d[sapply(d, function(x) !is.null(x))]
-    x <- unlist(d)
-    names(x) <- names(d)
-    if(na.rm) x[!is.na(x)] else x
-  }
+# reListclean(A=x[1], B=x[2])
+# reListclean(A=x['a'], B=x['b'], C=x['c'])
+#reListclean <- function(..., na.rm=TRUE) {
+#  d <- list(...)
+#  d <- d[sapply(d, function(x) ! is.null(x))]
+#  x <- unlist(d)
+#  names(x) <- names(d)
+#  if(na.rm) x[! is.na(x)] else x
+#}
+reListclean <- function(..., na.rm=TRUE) {
+  d <- list(...)
+  g <- if(na.rm) function(x) length(x) > 0 && ! is.na(x)
+       else
+         function(x) length(x) > 0
+  d[sapply(d, g)]
+}
 
-formatNP <- function(x, digits=NULL, pvalue=FALSE, lang=c('plain', 'latex', 'html')) {
+
+
+formatNP <- function(x, digits=NULL, pvalue=FALSE,
+                     lang=c('plain', 'latex', 'html')) {
   lang <- match.arg(lang)
   if(! is.numeric(x)) return(x)
     digits <- as.numeric(digits)  # Needed but can't figure out why

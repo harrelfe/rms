@@ -218,10 +218,9 @@ print.orm <- function(x, digits=4, coefs=TRUE,
   cof   <- x$coef
   stats <- x$stats
 
-  maxd <- signif(stats['Max Deriv'], 1)
-  if(latex) maxd <- paste('$', latexSN(maxd), '$', sep='')
+  maxd <- stats['Max Deriv']
   ci <- x$clusterInfo
-  misc <- reVector(Obs           = stats['Obs'],
+  misc <- reListclean(Obs           = stats['Obs'],
                    'Unique Y'    = stats['Unique Y'],
                    'Cluster on'  = ci$name,
                    Clusters      = ci$n,
@@ -232,15 +231,15 @@ print.orm <- function(x, digits=4, coefs=TRUE,
                            names(x$freq), sep='')
     misc <- c(misc[1], x$freq, misc[-1])
   }
-  lr   <- reVector('LR chi2'    = stats['Model L.R.'],
+  lr   <- reListclean('LR chi2'    = stats['Model L.R.'],
                    'd.f.'       = round(stats['d.f.'],3),
                    'Pr(> chi2)' = stats['P'],
                    'Score chi2' = stats['Score'],
                    'Pr(> chi2)' = stats['Score P'],
                    Penalty      = penaltyFactor)
-  disc <- reVector(R2=stats['R2'], g=stats['g'], gr=stats['gr'],
+  disc <- reListclean(R2=stats['R2'], g=stats['g'], gr=stats['gr'],
                    '|Pr(Y>=median)-0.5|'=stats['pdm'])
-  discr <-reVector(rho=stats['rho'])
+  discr <-reListclean(rho=stats['rho'])
   
   headings <- list('',
                    c('Model Likelihood','Ratio Test'),
