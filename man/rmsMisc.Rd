@@ -124,14 +124,14 @@ with levels of categorical predictors changed.  These two functions are
 vary may be specified without values (after an equals sign).
 
 \code{prModFit} is the workhorse for the \code{print} methods for
-highest-level \code{rms} model fitting functions, handling both regular
-and LaTeX printing, the latter resulting in LaTeX code written to the
-terminal, automatically ready for \code{Sweave}.  The work of printing
+highest-level \code{rms} model fitting functions, handling both regular,
+html, and LaTeX printing, the latter two resulting in html or LaTeX code
+written to the console, automatically ready for \code{knitr}.  The work
+of printing 
 summary statistics is done by \code{prStats}, which uses the Hmisc
 \code{print.char.matrix} function to print overall model statistics if
-\code{latex=FALSE}, otherwise it generates customized LaTeX code.  The
-LaTeX longtable and epic packages must be in effect to use these
-LaTeX functions.
+\code{lang="plain"}, otherwise it generates customized LaTeX or html
+code.  The LaTeX longtable and epic packages must be in effect to use LaTeX.
 
 \code{reListclean} allows one to rename a subset of a named list,
 ignoring the previous names and not concatenating them as \R does.  It
@@ -142,8 +142,8 @@ optional named element is fetched that doesn't exist.
 \code{formatNP} is a function to format a vector of numerics.  If
 \code{digits} is specified, \code{formatNP} will make sure that the
 formatted representation has \code{digits} positions to the right of the
-decimal place.  If \code{latex=TRUE} it will translate any scientific
-notation to LaTeX math form.  If \code{html=TRUE} will convert to html.
+decimal place.  If \code{lang="latex"} it will translate any scientific
+notation to LaTeX math form.  If \code{lang="html"} will convert to html.
 If \code{pvalue=TRUE}, it will replace
 formatted values with "< 0.0001" (if \code{digits=4}).
 
@@ -204,14 +204,16 @@ Newlevels(fit, \dots)
 \method{Newlabels}{rms}(fit, labels, \dots)
 \method{Newlevels}{rms}(fit, levels, \dots)
 
-prModFit(x, title, w, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
+prModFit(x, title, w, digits=4, coefs=TRUE,
+         lang=c("plain", "latex", "html"), 
          lines.page=40, long=TRUE, needspace, \dots)
 
-prStats(labels, w, latex=FALSE, md=FALSE, file="", append=TRUE)
+prStats(labels, w, lang=c("plain", "latex", "html"), file="", append=TRUE)
 
 reListclean(\dots, na.rm=TRUE)
 
-formatNP(x, digits=NULL, pvalue=FALSE, latex=FALSE, html=FALSE)
+formatNP(x, digits=NULL, pvalue=FALSE,
+         lang=c("plain", "latex", "html"))
 
 \method{latex}{naprint.delete}(object, file="", append=TRUE, \dots)
 
@@ -331,16 +333,11 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   of model coefficients, standard errors, etc.  Specify \code{coefs=n}
   to print only the first \code{n} regression coefficients in the
   model.}
-\item{latex}{a logical value indicating whether information should be
-  formatted as plain text or as LaTeX markup}
-\item{html}{a logical value indicating whether information should be
-	formatted as html}
-\item{md}{a logical value indicating that the information should be
-	formatted using html and latex with MathJax in RMarkdown}
 \item{file}{name of file to which to write model output from
 	\code{print()} using \code{prStats}.  Default is the console.}
 \item{append}{specify \code{append=FALSE} when using \code{file} and you
 	want to start over instead of adding to an existing file.}
+\item{lang}{specifies the typesetting language: plain text, LaTeX, or html}
 \item{lines.page}{see \code{\link[Hmisc]{latex}}}
 \item{long}{set to \code{FALSE} to suppress printing of formula and
   certain other model output}
@@ -412,9 +409,3 @@ nomogram(g)
 }
 \keyword{models}
 \keyword{methods}
-
-
-
-
-
-

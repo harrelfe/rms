@@ -136,7 +136,9 @@ factor levels for categorical variables in the model.}
 	number of significant digits for printing for effects, standard
 	errors, and confidence limits.  It is ignored if \code{dec} is
 	given. The statistics are rounded to \code{dec} digits to the right of
-	the decimal point of \code{dec} is given.}
+	the decimal point of \code{dec} is given.  \code{digits} is also the
+	number of significant digits to format numeric hover text and labels
+	for \code{plotly}.}
 \item{at}{
 vector of coordinates at which to put tick mark labels on the main axis.  If
 \code{log=TRUE}, \code{at} should be in anti-log units.
@@ -178,8 +180,6 @@ e.g., \code{"log Odds Ratio"}.
 \item{pch}{symbol for point estimates.  Default is solid triangle.}
 \item{lwd}{line width for confidence intervals, corresponding to
 	\code{q}}
-\item{digits}{number of significant digits to format numeric hover text
-	and labels for \code{plotly}}
 }
 \value{
 For \code{summary.rms}, a matrix of class \code{summary.rms} 
