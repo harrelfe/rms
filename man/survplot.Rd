@@ -2,6 +2,7 @@
 \alias{survplot}
 \alias{survplot.rms}
 \alias{survplot.npsurv}
+\alias{survplotp.npsurv}
 \alias{survdiffplot}
 \title{Plot Survival Curves and Hazard Functions}
 \description{
@@ -25,6 +26,15 @@ at risk over the two strata.  When \code{conf='diffbands'},
 polygon to an existing plot, showing the midpoint of two survival
 estimates plus or minus 1/2 the width of the confidence interval for the
 difference of two Kaplan-Meier estimates.
+
+\code{survplotp} creates an interactive \code{plotly} graphic with
+shaded confidence bands.  In the two strata case, it draws the 1/2
+confidence bands for the difference in two probabilities centered at the
+midpoint of the probability estimates, so that where the two curves
+touch this band there is no significant difference (no multiplicity
+adjustment is made).  For the two strata case, the two individual
+confidence bands have entries in the legend but are not displayed until
+the user clicks on the legend.
 
 When \code{code} was from running \code{npsurv} on a
 multi-state/competing risk \code{Surv} object, \code{survplot} plots
@@ -65,6 +75,11 @@ survplot(fit, \dots)
          srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,
          y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'), cex.ylab=cex.xlab,
          pr=FALSE, \dots)
+\method{survplotp}{npsurv}(fit, xlim, ylim, xlab, ylab, time.inc, state=NULL,
+         conf=c("bands", "none"), mylim=NULL, abbrev.label=FALSE,
+         col=colorspace::rainbow_hcl,  levels.only=TRUE,
+         loglog=FALSE, fun, aehaz=FALSE, times=NULL,
+         logt=FALSE, pr=FALSE, \dots)
 survdiffplot(fit, order=1:2, fun=function(y) y,
            xlim, ylim, xlab, ylab="Difference in Survival Probability",
            time.inc, conf.int, conf=c("shaded", "bands","diffbands","none"),
@@ -100,7 +115,8 @@ defined to \code{datadist}, you must specify non-missing constant
 settings (or a vector of settings for the one displayed variable).  Note
 that since \code{npsurv} objects do not use the variable list in 
 \code{\dots}, you can specify any extra arguments to \code{labcurve} by
-adding them at the end of the list of arguments.
+adding them at the end of the list of arguments.  For \code{survplotp}
+\dots is ignored.
 }
 \item{xlim}{
 a vector of two numbers specifiying the x-axis range for follow-up time.
@@ -221,7 +237,9 @@ current \code{par} setting for \code{lwd}.
 }
 \item{col}{
 color for curve, default is \code{1}.  Specify a vector to assign different
-colors to different curves.
+colors to different curves.  For \code{survplotp}, \code{col} is a
+vector of colors corresponding to strata, or a function that will be
+called to generate such colors.
 }
 \item{col.fill}{a vector of colors to used in filling confidence bands}
 \item{adj.subtitle}{

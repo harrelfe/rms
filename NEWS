@@ -1,4 +1,4 @@
-Changes in version 5.0-0 (2016-08-05)
+Changes in version 5.0-0 (2016-08-09)
    * plot.summary.rms: implemented plotly interactive plots if options(grType='plotly') in effect
 	 * plot.anova.rms: implemented plotly interactive plots if options(grType='plotly') in effect; remove psmall argument; changed margin default to chisq and P
 	 * ggplot.Predict: implemented plotly interactive plots if options(grType='plotly') in effect
@@ -12,6 +12,7 @@ Changes in version 5.0-0 (2016-08-05)
 	 * ggplot.Predict: added height and width for plotly
 	 * survplot: respected xlim with diffbands.  Thanks: Toni G
 	 * reVector: changed to reListclean and stored model stats components as lists so can handle mixture of numeric and character, e.g., name of clustering variable
+	 * survplotp.npsurv: new function for interactive survival curve graphs using plotly
 	 
 Changes in version 4.5-1 (2016-06-01)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations

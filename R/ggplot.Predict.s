@@ -30,7 +30,8 @@ ggplot.Predict <-
   plrend <- if(isbase) function(obj, ...) obj
             else
               function(obj, final=TRUE) {
-                if(final) plotly::ggplotly(obj, height=height, width=width)
+                if(final && (length(width) > 0 || length(height) > 0))
+                  plotly::ggplotly(obj, height=height, width=width)
                 else
                   plotly::ggplotly(obj)
               }
@@ -91,7 +92,11 @@ ggplot.Predict <-
   pmlabel <- character(length(label))
   names(pmlabel) <- names(label)
   for(i in 1 : length(label))
-    pmlabel[i] <- as.character(labelPlotmath(label[i], units[i], html=! isbase))
+    pmlabel[i] <-
+      if(isbase) as.character(labelPlotmath(label[i], units[i]))
+      else markupSpecs$html$varlabel(label[i], units[i], ufont='')
+  ## ufont='' prevents units from being surrounded by <tt> </tt> which
+  ## is not preserved when ggplot2 object is converted to plotly
   
   if(predpres)
     data$.Predictor. <- if(vnames != 'labels') data$.predictor.
