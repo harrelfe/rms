@@ -167,7 +167,7 @@ survplotp.npsurv <-
     pl <- function(x, y, n.risk=NULL, col, slev, type='est') {
       sname  <- if(ns == 1) '' else slev
       snames <- if(sname == '') '' else paste0(sname, ' ')
-      d <- 'Difference<br>&half; CL'
+      d <- paste0('Difference<br>&half; ', conf.int, ' CL')
       nam   <- switch(type,
                       est   = sname,
                       lower = paste0(snames, conf.int, ' CL'),
@@ -282,7 +282,7 @@ survplotp.npsurv <-
       if(pr) {
         zest <- rbind(time, surv)
         dimnames(zest) <- list(c("Time", "Survival"),
-                               rep("", sum(s)))
+                               rep("", length(time)))
         if(slevp)cat("\nEstimates for ", slev[i], "\n\n")
         print(zest, digits=3)
       }
@@ -339,7 +339,7 @@ survplotp.npsurv <-
     
     plotly::layout(p,
            xaxis=xaxis, 
-           yaxis=list(range=ylim, title=ylab))
+           yaxis=list(range=ylim, title=ylab), ..., evaluate=TRUE, autosize=TRUE)
 }
 
 

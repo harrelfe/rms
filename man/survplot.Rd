@@ -1,5 +1,6 @@
 \name{survplot}
 \alias{survplot}
+\alias{survplotp}
 \alias{survplot.rms}
 \alias{survplot.npsurv}
 \alias{survplotp.npsurv}
@@ -47,6 +48,7 @@ first call.
 }
 \usage{
 survplot(fit, \dots)
+survplotp(fit, \dots)
 \method{survplot}{rms}(fit, \dots, xlim,
          ylim=if(loglog) c(-5, 1.5) else if
                  (what == "survival" & missing(fun)) c(0, 1),
@@ -116,7 +118,7 @@ settings (or a vector of settings for the one displayed variable).  Note
 that since \code{npsurv} objects do not use the variable list in 
 \code{\dots}, you can specify any extra arguments to \code{labcurve} by
 adding them at the end of the list of arguments.  For \code{survplotp}
-\dots is ignored.
+\dots is passed to \code{plotly::layout}.
 }
 \item{xlim}{
 a vector of two numbers specifiying the x-axis range for follow-up time.
