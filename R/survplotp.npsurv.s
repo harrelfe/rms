@@ -6,12 +6,26 @@ survplotp.npsurv <-
            conf=c("bands", "none"), mylim=NULL, abbrev.label=FALSE,
            col=colorspace::rainbow_hcl,
            levels.only=TRUE,
-           loglog=FALSE, fun, aehaz=FALSE, times=NULL,
+           loglog=FALSE, fun=function(y) y, aehaz=FALSE, times=NULL,
            logt=FALSE, pr=FALSE, ...) {
     
     conf     <- match.arg(conf)
     conf.int <- fit$conf.int
     if(!length(conf.int) | conf == "none") conf.int <- 0
+
+    if(loglog)
+      fun <- function(y) logb(-logb(ifelse(y == 0 | y == 1, NA, y)))
+
+    mstate <- inherits(fit, 'survfitms')
+    if(mstate) fun <- function(y) 1 - y
+    ## Multi-state model for competing risks
+
+    z <- seq(.1, .9, by = .1)
+    funtype <- if(loglog) 'loglog'
+               else if(all(fun(z) == z)) 'identity'
+               else if(all(abs(fun(z) - (1 - z)) < 1e-6)) 'inverse'
+               else if(loglog) 'loglog'
+               else 'other'
 
     cylim <- function(ylim)
       if(length(mylim)) c(min(ylim[1], mylim[1]), max(ylim[2], mylim[2]))
@@ -19,17 +33,18 @@ survplotp.npsurv <-
 
     mu <- markupSpecs$html
 
-    survdiffplotp <-
-      function(fit, fun=function(y) y, xlim, 
-               conf.int, convert=function(f) f, pobj)
-    {
-      if(length(fit$strata) != 2)
-        stop('must have exactly two strata')
+    if(funtype %in% c('identity', 'inverse'))
+      survdiffplotp <-
+        function(fit, fun, xlim, 
+                 conf.int, convert=function(f) f, pobj)
+      {
+        if(length(fit$strata) != 2)
+          stop('must have exactly two strata')
       
       h <- function(level, f) {
         i <- f$strata == levels(f$strata)[level]
         tim   <- f$time[i]
-        surv  <- f$surv[i]
+        surv  <- fun(f$surv[i])
         se    <- f$std.err[i]
         list(time=tim, surv=surv, se=se)
       }
@@ -69,10 +84,8 @@ survplotp.npsurv <-
       if(time.inc > maxtime) time.inc <- (maxtime - mintime) / 10
     }
 
-    mstate <- inherits(fit, 'survfitms')
     if(mstate) {
       ## Multi-state model for competing risks
-      if(missing(fun)) fun <- function(y) 1 - y
       if(missing(state))
         stop('state must be given when response is a multi-state/competing risk object from Surv()')
       if(length(state) != 1) stop('at present state can only be a single state')
@@ -80,17 +93,15 @@ survplotp.npsurv <-
       if(state %nin% states) stop(paste('state is not in',
                                         paste(states, collapse=', ')))
     }
-    
-    trans <- loglog || mstate || ! missing(fun)
-    if(missing(ylab))
-      ylab <- 
-       if(loglog) "log(-log Survival Probability)"
-       else if(mstate) paste('Cumulative Incidence of', upFirst(state))
-       else if(trans) ""
-       else "Survival Probability"
 
-    if(loglog) fun <- function(y) logb(-logb(ifelse(y == 0 | y == 1, NA, y)))
-     else if(! trans) fun <- function(y) y
+    if(missing(ylab))
+      ylab <- switch(funtype,
+                     identity = 'Survival Probability',
+                     inverse  = if(mstate) paste('Cumulative Incidence of',
+                                                 upFirst(state))
+                                else 'Cumulative Incidence',
+                     loglog   = 'log(-log Survival Probability)',
+                     other    = '')
 
     un <- fit$units
     if(un != '') un <- paste0(un, 's')
@@ -119,7 +130,7 @@ survplotp.npsurv <-
     fit <- convert(fit)
   
     origsurv <- fit$surv
-    if(trans) {
+    if(funtype != 'identity') {
       fit$surv <- fun(fit$surv)
       fit$surv[is.infinite(fit$surv)] <- NA
       ##  handle e.g. logit(1) - Inf would mess up ylim in plot()
@@ -155,13 +166,9 @@ survplotp.npsurv <-
 #    vs <- if(ns > 1) as.character(v$strata)
     ## survival:::summary.survfit was not preserving order of strata levels
 
-    ## One curve for each value of y, excl style used for C.L.
-    
-    curves <- vector('list', ns)
-    Tim <- Srv <- list()
-  
     nevents <- totaltime <- numeric(ns)
     cuminc  <- character(ns)
+
     p <- plotly::plot_ly()
 
     pl <- function(x, y, n.risk=NULL, col, slev, type='est') {
@@ -190,6 +197,17 @@ survplotp.npsurv <-
                     upper = paste0('t=', rx, '<br>Upper:', ry),
                     'diff lower' = NULL,
                     'diff upper' = NULL)
+
+      ## Mark in text the point estimates that correspond to every time.inc
+      if(type == 'est' && ! logt) {
+        nicet <- seq(mintime, maxtime, by=time.inc)
+        nicet <- nicet[nicet > 0]
+        for(ti in nicet) {
+          if(any(abs(ti - x) < 1e-6)) next  # nice time already covered
+          k <- which(x < ti); k <- max(k)
+          txt[k] <- paste0(txt[k], '<br>(Also for t=', ti, ')')
+        }
+      }
       
       fcol <- plotly::toRGB(col, 0.2)
       vis  <- if(ns == 2 && type %in% c('lower', 'upper'))
@@ -203,7 +221,7 @@ survplotp.npsurv <-
                                'tonexty' else 'none',
                         visible=vis, legendgroup=lg,
                         name=nam, evaluate=TRUE)
-      }
+    }
                         
     for(i in 1 : ns) {
       st <- strat == i
@@ -213,11 +231,12 @@ survplotp.npsurv <-
       upper        <- fit$upper[st]
       osurv        <- origsurv[st]
       n.risk       <- fit$n.risk[st]
+
       if(! logt && xlim[1] ==0 && all(time > xlim[1])) {
         time   <- c(xlim[1], time)
-        surv   <- c(1, surv)
-        lower  <- c(1, lower)
-        upper  <- c(1, upper)
+        surv   <- c(fun(1), surv)
+        lower  <- c(fun(1), lower)
+        upper  <- c(fun(1), upper)
         osurv  <- c(1, osurv)
         n.risk <- c(fit$n[i], n.risk)
       }
@@ -238,47 +257,40 @@ survplotp.npsurv <-
       if(length(times)) {
         cumi <- 1. - approx(time, osurv, xout=times, method='constant')$y
         noun <- units %in% c('', ' ')
-        cuminc[i]   <- paste('Cum. inc.@ ',
-                             if(noun) 't=',
-                             paste(times, collapse=','),
-                             if(! noun) paste(' ', units, sep=''),
-                             ':', paste(round(cumi, 3), collapse=','),
-                             sep='')
+        cuminc[i]   <- paste(round(cumi, 3), collapse=', ')
       }
       if(logt) time <- logb(time)
-      tim <- time; srv <- surv
-      if(conf.int > 0) {
-        blower <- lower
-        bupper <- upper
-      }
       ##don't let step function go beyond x-axis -
       ##this cuts it off but allows step to proceed axis end
-      if(max(tim) > xlim[2]) {
-        srvl <- srv[tim <= xlim[2] + 1e-6]
+      if(max(time) > xlim[2]) {
+        srvl <- surv[time <= xlim[2] + 1e-6]
         s.last <- srvl[length(srvl)]
-        k <- tim < xlim[2]
-        tim <- c(tim[k], xlim[2])
-        srv <- c(srv[k], s.last)
+        k <- time < xlim[2]
+        time <- c(time[k], xlim[2])
+        surv <- c(surv[k], s.last)
+        n.risk <- c(n.risk[k], n.risk[length(srvl)])
         if(conf.int > 0) {
-          low.last <- blower[time <= xlim[2] + 1e-6]
+          low.last <- lower[time <= xlim[2] + 1e-6]
           low.last <- low.last[length(low.last)]
-          up.last  <- bupper[time <= xlim[2] + 1e-6]
+          up.last  <- upper[time <= xlim[2] + 1e-6]
           up.last  <- up.last[length(up.last)]
-          blower   <- c(blower[k], low.last)
-          bupper   <- c(bupper[k], up.last)
+          lower   <- c(lower[k], low.last)
+          upper   <- c(upper[k], up.last)
         }
       }
       
-      if(logt) {
-        p <- pl(tim, srv, n.risk, col=col[i], slev=sleva[i])
-        curves[[i]] <- list(tim, srv)
-        }
-        else {
-          xxx <- c(mintime, tim)
-          yyy <- c(fun(1), srv)
-          p <- pl(xxx, yyy, n.risk, col=col[i], slev=sleva[i])
-          curves[[i]] <- list(xxx, yyy)
-        }
+      if(logt) p <- pl(time, surv, n.risk, col=col[i], slev=sleva[i])
+      else {
+        xxx <- time
+        yyy <- surv
+        nr  <- n.risk
+        if(mintime < min(time)) {
+          xxx <- c(mintime, time)
+          yyy <- c(fun(1), surv)
+          nr  <- c(fit$n[i], n.risk)
+          }
+        p <- pl(xxx, yyy, nr, col=col[i], slev=sleva[i])
+      }
       if(pr) {
         zest <- rbind(time, surv)
         dimnames(zest) <- list(c("Time", "Survival"),
@@ -288,50 +300,51 @@ survplotp.npsurv <-
       }
       if(conf.int > 0) {
         if(logt) {
-          p <- pl(tim, blower, type='lower', col=col[i], slev=sleva[i])
-          p <- pl(tim, bupper, type='upper', col=col[i], slev=sleva[i])
+          p <- pl(time, lower, type='lower', col=col[i], slev=sleva[i])
+          p <- pl(time, upper, type='upper', col=col[i], slev=sleva[i])
         }
         else {
-          p <- pl(c(min(tim), tim), c(fun(1), blower),
+          p <- pl(c(min(time), time), c(fun(1), lower),
                   col=col[i], slev=slev[i], type='lower')  # see survplot ?max(tim)?
-          p <- pl(c(min(tim), tim), c(fun(1), bupper),
+          p <- pl(c(min(time), time), c(fun(1), upper),
                   col=col[i], slev=slev[i], type='upper')
         }
       }
     }
 
-    if(ns == 2 && conf.int > 0) {
-      z <- survdiffplotp(fit.orig, conf.int=conf.int,
+    if(funtype %in% c('identity', 'inverse') && ns == 2 && conf.int > 0) {
+      z <- survdiffplotp(fit.orig, fun=fun, conf.int=conf.int,
                          convert=convert, xlim=xlim, pobj=p)
       g <- plotly::toRGB('gray')
       p <- pl(z$time, z$lower, type='diff lower', col=g, slev='')
       p <- pl(z$time, z$upper, type='diff upper', col=g, slev='')
-}      
+    }      
 
     
-  if(FALSE) {
     if(aehaz || length(times)) {
-      un <- if(units == ' ' | units == '') '' else
-                                                paste('/', tolower(units), sep='')
+      un <- if(units == ' ' | units == '') ''
+            else
+              paste('/', tolower(units), sep='')
       haz <- round(nevents / totaltime, 4)
       txt <- paste(nevents, 'events')
-      if(aehaz) txt <- paste(txt, ', hazard=', haz, un, sep='')
-      if(length(times)) txt <- paste(txt, ', ', sep='')
-      if(length(times)) txt <- paste(txt, cuminc)
-      if(! labelc)
-        text(xlim[2], ylim[2], txt, adj=1)
-      else {
-        maxlen <- max(nchar(sleva))
-        sleva <- substring(paste(sleva, '                               '),
-                           1, maxlen)
-        for(j in 1 : ns)
-          sleva[j] <- eval(parse(text=sprintf("expression(paste('%s   ',scriptstyle('(%s)')))", sleva[j], txt[j])))
-      }
+      if(aehaz) txt <- paste(txt, '<br>&nbsp;&nbsp;&nbsp;&lambda;=',
+                             haz, un, sep='')
+      z <- paste(paste0(sleva, ':', txt), collapse='<br>')
+      if(length(times)) {
+        z2 <- paste0('<br>Cumulative<br>Incidence at<br>',
+                     't=', paste(times, collapse=', '), ' ', units,
+                     if(un !='') 's', '<br>',
+                     paste0(sleva, ':', cuminc, collapse='<br>'))
+        z <- paste0(z, z2)
+        }
     }
-    if(labelc) labcurve(curves, sleva, type='s', lty=lty, lwd=lwd,
-                        opts=label.curves, col.=col)
-}
+    else z <- paste(paste0(sleva, ': ', nevents, ' events'), collapse='<br>')
     
+    ## Add empty trace just to add to bottom of legend
+    p <- plotly::add_trace(x=NA, y=NA, mode='markers',
+                           marker=list(symbol='asterisk'),  # suppresses pt
+                           name=z)
+        
     xaxis <- list(range=xlim, title=xlab)
     if(! logt) xaxis <-
                  c(xaxis,

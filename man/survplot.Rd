@@ -80,7 +80,7 @@ survplotp(fit, \dots)
 \method{survplotp}{npsurv}(fit, xlim, ylim, xlab, ylab, time.inc, state=NULL,
          conf=c("bands", "none"), mylim=NULL, abbrev.label=FALSE,
          col=colorspace::rainbow_hcl,  levels.only=TRUE,
-         loglog=FALSE, fun, aehaz=FALSE, times=NULL,
+         loglog=FALSE, fun=function(y) y, aehaz=FALSE, times=NULL,
          logt=FALSE, pr=FALSE, \dots)
 survdiffplot(fit, order=1:2, fun=function(y) y,
            xlim, ylim, xlab, ylab="Difference in Survival Probability",
