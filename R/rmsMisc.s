@@ -852,12 +852,13 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
  
           if(! missing(needspace) && lang == 'latex')
             ct('\\Needspace{', needspace, '}\n', sep='')
+
           if(lang == 'latex') 
             latex(U, file=file, first.hline.double=FALSE,
                   table=FALSE, longtable=TRUE,
                   lines.page=lines.page,
                   col.just=rep('r',ncol(U)), rowlabel='',
-                  math.col.names=TRUE, append=TRUE)
+                  math.col.names=FALSE, append=TRUE)
           else {
             al <- paste(rep('r', ncol(U)), collapse='')
             ct(htmlTable::htmlTable(U,
@@ -1051,6 +1052,8 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
                        html  = 'Pr(&#62;&chi;<sup>2</sup>)'),
       'tau-a'      = c(latex = '$\\tau_{a}$',
                        html  = '&tau;<sub>a</sub>'),
+      'gamma'      = c(latex = '$\\gamma$',
+                       html  = '&gamma;'),
       'R2'         = c(latex = '$R^{2}$',
                        html  = '<i>R</i><sup>2</sup>'),
       'R2 adj'     = c(latex = '$R^{2}_{\\textrm{adj}}$',
