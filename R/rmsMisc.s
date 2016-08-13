@@ -982,6 +982,12 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
   spaces <- function(n) if(n <= 0.5) '' else
    substring('                                                         ',
              1, floor(n))
+  ## strsplit returns character(0) for ""
+  ssplit <- function(x) {
+    x <- strsplit(x, split='\n')
+    for(i in 1 : length(x)) if(! length(x[[i]])) x[[i]] <- ''
+    x
+    }
 
   lorh <- lang != 'plain'
 
@@ -995,7 +1001,8 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
   p <- length(labels)
   width <- numeric(p)
   for(i in 1:p) {
-    width[i] <- max(nchar(labels[[i]]))
+    labs <- ssplit(labels[i])[[1]]
+    width[i] <- max(nchar(labs))
     u <- w[[i]]
     dig <- NA
     if(any(names(u)=='')) {
@@ -1026,21 +1033,20 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
       width[i] <- max(width[i],
                       1 + nchar(nuj) + nchar(fu[j]))
   }
+#  if(lorh) {
+#    if(sum(nchar(unlist(labels))) > 0) {
+#      maxl <- max(sapply(labels, length))
+#      head <- vector('list', maxl)
+#      for(i in 1:maxl) {
+#        lab <- sapply(labels, function(x) if(length(x) < i) '' else x[i])
+#        head[[i]] <- lab
+#      }
+                                        #   }
   if(lorh) {
-    head <- NULL
-    if(sum(nchar(unlist(labels))) > 0) {
-      maxl <- max(sapply(labels, length))
-      for(i in 1:maxl) {
-        lab <- sapply(labels, function(x) if(length(x) < i) '' else x[i])
-        head <- if(i == 1) lab
-                else
-                  paste(head, lab, sep=if(lang == 'html') '<br>' else '\n')
-        }
-    }
     maxl <- max(sapply(w, length))
     z <- matrix('', nrow=maxl, ncol=p)
     fil <- if(lang == 'latex') '~\\hfill ' else '&emsp;'
-
+    
     trans <- rbind(
       'Dxy'        = c(latex = '$D_{xy}$',
                        html  = '<i>D</i><sub>xy</sub>'),
@@ -1079,7 +1085,6 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
           html  = '<span style="text-decoration: overline">&#124;Pr(<i>Y</i> &#8805; median)-&#189;&#124;</span>')
 
     )
-
     
     for(i in 1 : p) {
       k <- names(w[[i]])
@@ -1094,21 +1099,24 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
       
       z[1 : length(k), i] <- paste0(k, fil, w[[i]])
     }
-
+    
     al <- paste0('|', paste(rep('c|', p), collapse=''))
-    if(lang == 'latex') ct(latexTabular(z, headings=head, align=al, halign=al,
-                              translate=FALSE))
-    else 
+    
+    if(lang == 'latex') ct(latexTabular(z, headings=labels, align=al, halign=al,
+                                        translate=FALSE, hline=2))
+    else {
+      labels <- gsub('\n', '<br>', labels)
       ct(htmlTable::htmlTable(z,
-                              header=head,
+                              header=labels,
                               css.cell = 'min-width: 9em;',
                               align=al, align.header=al))
+    }
     return()
   }
   z <- labs <- character(0)
   for(i in 1:p) {
     wid <- width[i]
-    lab <- labels[[i]]
+    lab <- ssplit(labels[i])[[1]]
     for(j in 1:length(lab))
       lab[j] <- paste0(spaces((wid - nchar(lab[j]))/2), lab[j])
     labs <- c(labs, paste(lab, collapse='\n'))

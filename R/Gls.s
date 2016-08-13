@@ -306,7 +306,7 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
   k <- k + 1L
   z[[k]] <- list(type='stats',
                  list(
-                      headings = list('', ''),
+                      headings = c('', ''),
                       data     = list(c(misc, c(NA,NA,3L)),
                                       c(llike, c(2L,NA,digits,NA)))))
 

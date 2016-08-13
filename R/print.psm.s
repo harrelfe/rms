@@ -23,9 +23,9 @@ print.psm <- function(x, correlation = FALSE, digits=4,
   disc <- reListclean(R2=stats['R2'], Dxy=stats['Dxy'],
                    g=stats['g'],   gr=stats['gr'])
 
-  headings <- list('',
-                   c('Model Likelihood','Ratio Test'),
-                   c('Discrimination','Indexes'))
+  headings <- c('',
+                'Model Likelihood\nRatio Test',
+                'Discrimination\nIndexes')
   digcounts <- c(NA, NA, NA,
                  if(length(ci$name)) NA,
                  if(length(ci$n))    NA,

@@ -263,9 +263,9 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
                      'd.f.'        = ndf,
                      'Pr(> chi2)' = 1 - pchisq(lrchisq, ndf))
     disc <- reListclean(R2=r2, 'R2 adj'=rsqa, g=stats['g'])
-    headings <- list('',
-                     c('Model Likelihood', 'Ratio Test'),
-                     c('Discrimination', 'Indexes'))
+    headings <- c('',
+                  'Model Likelihood\nRatio Test',
+                  'Discrimination\nIndexes')
     data <- list(c(misc, c(NA,digits,NA,NA,NA)), c(lr, c(2,NA,4)), c(disc,3))
     k <- k + 1
     z[[k]] <- list(type='stats', list(headings=headings, data=data))

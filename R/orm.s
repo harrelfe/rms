@@ -241,10 +241,10 @@ print.orm <- function(x, digits=4, coefs=TRUE,
                    '|Pr(Y>=median)-0.5|'=stats['pdm'])
   discr <-reListclean(rho=stats['rho'])
   
-  headings <- list('',
-                   c('Model Likelihood','Ratio Test'),
-                   c('Discrimination',' Indexes'),
-                   c('Rank Discrim.','Indexes'))
+  headings <- c('',
+                'Model Likelihood\nRatio Test',
+                'Discrimination\n Indexes',
+                'Rank Discrim.\nIndexes')
   data <- list(misc, c(lr, c(2,NA,-4,2,-4,2)), c(disc,3), c(discr,3))
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))

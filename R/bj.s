@@ -333,7 +333,7 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE,
   disc <- reListclean(g = stats['g'], gr = stats['gr'])
   k <- k + 1
   z[[k]] <- list(type='stats',
-                 list(headings=list('', '', c('Discrimination','Indexes')),
+                 list(headings=c('', '', 'Discrimination\nIndexes'),
                       data=list(misc, c(dfstat,c(NA,digits,NA)), c(disc, 3))))
   
   cof <- x$coefficients

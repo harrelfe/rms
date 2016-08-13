@@ -265,10 +265,9 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
                       gamma   = stats['Gamma'],
                       'tau-a' = stats['Tau-a'])
   
-  headings <- list('',
-                   c('Model Likelihood','Ratio Test'),
-                   c('Discrimination',' Indexes'),
-                   c('Rank Discrim.','Indexes'))
+  headings <- c('','Model Likelihood\nRatio Test',
+                   'Discrimination\nIndexes',
+                   'Rank Discrim.\nIndexes')
   
   data <- list(misc, c(lr, c(2,NA,-4,2)), c(disc,3), c(discr,3))
   k <- k + 1

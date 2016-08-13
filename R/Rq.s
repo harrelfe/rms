@@ -145,7 +145,7 @@ print.Rq <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE, title, ...)
                      Clusters    =ci$n,
                      'mean |Y-Yhat|'=mad)
     disc <- reListclean(g=g)
-    headings <- list('', c('Discrimination', 'Index'))
+    headings <- c('', 'Discrimination\nIndex')
     data     <- list(misc, c(disc,3))
     k <- k + 1
     z[[k]] <- list(type='stats', list(headings=headings, data=data))

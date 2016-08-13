@@ -119,8 +119,7 @@ print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
   lr   <- reListclean('LR chi2'     = lr,
                    'd.f.'        = dof,
                    'Pr(> chi2)' = pval)
-  headings <- list('',
-                   c('Model Likelihood', 'Ratio Test'))
+  headings <- c('', 'Model Likelihood\nRatio Test')
   data <-  list(c(misc, c(NA,NA,NA,NA,3)),
                 c(lr,   c(2, NA,-4)))
   k <- k + 1

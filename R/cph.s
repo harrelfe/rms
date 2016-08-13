@@ -623,7 +623,7 @@ print.cph <- function(x, digits=4, table=TRUE, conf.int=FALSE,
                      g  = stats['g'],
                      gr = stats['gr'])
     k <- k + 1
-    headings <- list('', 'Model Tests', c('Discrimination', 'Indexes'))
+    headings <- c('', 'Model Tests', 'Discrimination\nIndexes')
     data     <- list(misc,
                      c(lr,   c(2,NA,4,2,4)),
                      c(disc, 3))
