@@ -1103,7 +1103,7 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html'),
     al <- paste0('|', paste(rep('c|', p), collapse=''))
     
     if(lang == 'latex') ct(latexTabular(z, headings=labels, align=al, halign=al,
-                                        translate=FALSE, hline=2))
+                                        translate=FALSE, hline=2, center=TRUE))
     else {
       labels <- gsub('\n', '<br>', labels)
       ct(htmlTable::htmlTable(z,
