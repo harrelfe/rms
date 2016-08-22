@@ -1,12 +1,11 @@
 latexrms <-
   function(object,
-           file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
+           file="",
            append=FALSE, which=1:p, varnames, columns=65, prefix=NULL, 
            inline=FALSE, before=if(inline)"" else "& &", after="",
            intercept, pretrans=TRUE, digits=.Options$digits, size='',
            md=FALSE)
 {
-  if(md) file <- ''
   ## Break character for non-math mode:
   brchar <- if(md) '<br>' else '\\\\'
   

@@ -1,13 +1,13 @@
 latex.psm <-
   function(object,  title,
-           file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
+           file='',
            append=FALSE, which=NULL, varnames, 
            columns=65, inline=FALSE, 
            before=if(inline)"" else "& &", after="",
            pretrans=TRUE, caption=NULL, digits=.Options$digits, size='',
-           md=FALSE, ...)
+           ...)
 {
-  if(md) file <- ''
+  md <- prType() %in% c('html', 'md', 'markdown')
   
   f <- object
   whichNot <- length(which)==0
@@ -31,12 +31,16 @@ latex.psm <-
   if(whichNot) which <- 1:length(atr$name)
   if(missing(varnames)) varnames <- atr$name[atr$assume.code!=9]
 
-  cat(w, sep=if(length(w)) "\n" else "", file=file, append=append)
-  latexrms(f, file=file, append=TRUE, which=which,
-           varnames=varnames, columns=columns, 
-           before=before, after=after,
-           prefix=if(whichNot)"X\\hat{\\beta}" else NULL, 
-           inline=inline,pretrans=pretrans, digits=digits, size=size, md=md)
+  if(! md)
+    cat(w, sep=if(length(w)) "\n" else "", file=file, append=append)
+  z <- latexrms(f, file=file, append=TRUE, which=which,
+                varnames=varnames, columns=columns, 
+                before=before, after=after,
+                prefix=if(whichNot)"X\\hat{\\beta}" else NULL, 
+                inline=inline,pretrans=pretrans, digits=digits,
+                size=size, md=md)
+  if(md) htmltools::HTML(c(paste0(w, '\n'), as.character(z)))
+  else z
 }
 
 

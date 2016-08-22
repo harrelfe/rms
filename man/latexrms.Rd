@@ -17,7 +17,7 @@ called internally by \code{latexrms} (which is called by
 }
 \usage{
 latexrms(object,
- file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
+ file='',
  append=FALSE, which=1:p, varnames, columns=65, prefix=NULL, inline=FALSE,
  before=if(inline)"" else "& &", after="", intercept, pretrans=TRUE,
  digits=.Options$digits, size="", md=FALSE)
@@ -27,10 +27,8 @@ latexrms(object,
 a fit object created by a fitting function in the \code{rms} series
 }
 \item{file}{
-  name of \code{.tex} file to create, default is first word of argument
-  \code{object} with \code{".tex"} added.  Set to \code{""} to send LaTeX
-  output to standard output.  \code{file} is set to \code{""} when
-	\code{md=TRUE}. 
+  name of \code{.tex} file to create, default is to write to console.
+	\code{file} is ignored when \code{md=TRUE}. 
 }
 \item{append}{whether or not to append to an existing file}
 \item{which}{
@@ -109,10 +107,11 @@ f.harrell@vanderbilt.edu
 \examples{
 \dontrun{
 f <- lrm(death ~ rcs(age)+sex)
-w <- latex(f)
+w <- latex(f, file='f.tex')
 w     # displays, using e.g. xdvi
-latex(f, file="")    # send LaTeX code to screen
-latex(f, md=TRUE)    # emit html and latex for knitr html and html notebooks
+latex(f)    # send LaTeX code to console
+options(prType='html')
+latex(f)    # emit html and latex for knitr html and html notebooks
 }
 }
 \keyword{models}

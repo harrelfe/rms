@@ -14,6 +14,7 @@ Changes in version 5.0-0 (2016-08-13)
 	 * reVector: changed to reListclean and stored model stats components as lists so can handle mixture of numeric and character, e.g., name of clustering variable
 	 * survplotp.npsurv: new function for interactive survival curve graphs using plotly
 	 * anova, summary, latex, print for model fits: use options(grType='html') or 'latex' to set output type, output htmltools::HTML marked html so that chunk header doesn't need results='asis'
+	 * latex methods - set file default to ''
 	 
 Changes in version 4.5-1 (2016-06-01)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations

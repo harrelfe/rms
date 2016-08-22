@@ -1,14 +1,14 @@
 latex.ols <-
   function(object, title,
-           file=paste(first.word(deparse(substitute(object))),".tex",sep=""),
+           file='',
            append=FALSE, which, varnames, columns=65, inline=FALSE, 
            before=if(inline)"" else "& &", after="",
            pretrans=TRUE, caption=NULL, digits=.Options$digits, size='',
-           md=FALSE, ...)
+           ...)
 {
-  if(md) file <- ''
-  
   f <- object
+
+  md <- prType() %in% c('html', 'md', 'markdown')
   
   w <- if(length(caption)) {
          if(md) paste('<div align=center><strong>', caption,
@@ -30,11 +30,15 @@ latex.ols <-
   if(missing(which)) which <- 1:length(at$name)
   
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
-  cat(w, file=file, sep=if(length(w)) "\n" else "", append=append)
-  latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
-           columns=columns, 
-           before=before, after=after, prefix="X\\hat{\\beta}", inline=inline, 
-           pretrans=pretrans, digits=digits, size=size, md=md)
+  if(! md)
+    cat(w, file=file, sep=if(length(w)) "\n" else "", append=append)
+  z <- latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
+                columns=columns, 
+                before=before, after=after, prefix="X\\hat{\\beta}",
+                inline=inline, 
+                pretrans=pretrans, digits=digits, size=size, md=md)
+  if(md) htmltools::HTML(c(paste0(w, '\n'), as.character(z)))
+  else z
 }
 
 
