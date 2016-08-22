@@ -94,9 +94,7 @@ ggplot.Predict <-
   for(i in 1 : length(label))
     pmlabel[i] <-
       if(isbase) as.character(labelPlotmath(label[i], units[i]))
-      else markupSpecs$html$varlabel(label[i], units[i], ufont='')
-  ## ufont='' prevents units from being surrounded by <tt> </tt> which
-  ## is not preserved when ggplot2 object is converted to plotly
+      else markupSpecs$html$varlabel(label[i], units[i])
   
   if(predpres)
     data$.Predictor. <- if(vnames != 'labels') data$.predictor.

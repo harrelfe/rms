@@ -108,7 +108,7 @@ survplotp.npsurv <-
     if(missing(xlab))
       xlab <- if(logt) paste0("log Follow-up Time in ", un)
               else 
-                mu$varlabel('Follow-up Time', un, ufont='')
+                mu$varlabel('Follow-up Time', un)
   
     if(missing(xlim)) 
       xlim <- if(logt) logb(c(maxtime / 100, maxtime)) else c(mintime, maxtime)
