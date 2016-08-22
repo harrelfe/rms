@@ -578,7 +578,7 @@ latexrms <-
       if(after  != '') tex <- c(tex, after)
       if(size != '')   tex <- c(tex, '}')
       cat(tex, sep="\n", file=file, append=append)
-      if(md) return(invisible())
+      if(md) return(htmltools::HTML(paste0(tex, '\n')))
       return(structure(list(file=file,style=NULL), class='latex'))
     }
   
@@ -607,10 +607,10 @@ latexrms <-
       tr <- if(md) {
               z <- cbind(Variable=paste0('$', varnames, '$'),
                          Transformation=paste0('$', TLi, '$'))
-              cat(htmlTable::htmlTable(z, caption='Pre-transformations',
-                                       css.cell='min-width: 9em;',
-                                       align='|l|l|',
-                                       align.header='|c|c|'), sep='\n')
+              as.character(htmlTable::htmlTable(z, caption='Pre-transformations',
+                                                css.cell='min-width: 9em;',
+                                                align='|l|l|',
+                                                align.header='|c|c|'), sep='\n')
             }
             else
               c("\\vspace{0.5ex}\\begin{center}{\\bf Pre--Transformations}\\\\",
@@ -621,8 +621,7 @@ latexrms <-
     }
     tex <- c(tex, tr)
   }
-  
+  if(md) return(htmltools::HTML(paste0(tex, '\n')))
   cat(tex, sep="\n", file=file, append=append)
-  if(md) return(invisible())
   structure(list(file=file, style=NULL), class='latex')
 }

@@ -350,10 +350,11 @@ html.summary.rms <- function(object, digits=4, dec=NULL,...) {
   attr(cstats,"row.names") <- rowl
   names(cstats)[3] <- "&Delta;"
   
-  cat(htmlTable::htmlTable(cstats, caption=caption,
-  ##                         css.cell = 'min-width: 6em;',
-                           css.cell=c('', rep('padding-left:4ex;', ncol(cstats))),
-                           rowlabel='', align='r', align.header='r'), sep='\n')
+  htmltools::HTML(paste0(
+    htmlTable::htmlTable(cstats, caption=caption,
+                         ## css.cell = 'min-width: 6em;',
+                         css.cell=c('', rep('padding-left:4ex;', ncol(cstats))),
+                         rowlabel='', align='r', align.header='r'), '\n'))
 }
 
 

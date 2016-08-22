@@ -4,9 +4,10 @@ latex.lrm <-
            append=FALSE, which, varnames, columns=65, inline=FALSE, 
            before=if(inline)"" else "& &", after="",
            pretrans=TRUE, caption=NULL, digits=.Options$digits, size='',
-           md=FALSE, ...)
+           ...)
 {
   f <- object
+  md <- prType() %in% c('html', 'md', 'markdown')
   if(md) file <- ''
   
   if(missing(which) & !inline)
@@ -51,11 +52,15 @@ latex.lrm <-
 
   if(missing(which)) which <- 1:length(at$name)
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
-  cat(w, file=file, append=append, sep=if(length(w))"\n" else "")
-  latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
-           columns=columns, 
-           before=before, after=after, prefix="X\\hat{\\beta}",
-           inline=inline, pretrans=pretrans, digits=digits, size=size, md=md)
+  if(! md) 
+    cat(w, file=file, append=append, sep=if(length(w))"\n" else "")
+  z <- latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
+                columns=columns, 
+                before=before, after=after, prefix="X\\hat{\\beta}",
+                inline=inline, pretrans=pretrans, digits=digits,
+                size=size, md=md)
+  if(md) htmltools::HTML(c(paste0(w, '\n'), as.character(z)))
+  else z
 }
 
 

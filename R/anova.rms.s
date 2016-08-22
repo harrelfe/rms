@@ -530,10 +530,11 @@ latex.anova.rms <-
     }
     if(html) {
       al <- rep('r', length(sn))
-      cat(htmlTable::htmlTable(dstats, caption=caption,
+      w <- htmlTable::htmlTable(dstats, caption=caption,
                                css.cell=rep('padding-left:3ex;', ncol(dstats)),
                                align=al, align.header=al,
-                               rowlabel=''), sep='\n')
+                               rowlabel='')
+      htmltools::HTML(as.character(paste0(w, '\n')))
       }
     else
       latex(dstats, title=title,
@@ -588,7 +589,6 @@ plot.anova.rms <-
                  "remaining R2"='Remaining R<sup>2</sup> After Removing Variable',
                  "proportion R2"='Proportion of Overall R<sup>2</sup>')
       }
-
     rm <- c(if(rm.totals) c("TOTAL NONLINEAR","TOTAL NONLINEAR + INTERACTION",
                             "TOTAL INTERACTION","TOTAL"), 
             " Nonlinear"," All Interactions", "ERROR",
