@@ -842,7 +842,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
           rownames(U) <- gsub('\\*', specs$times, rownames(U))
  
           if(! missing(needspace) && lang == 'latex')
-            ct('\\Needspace{', needspace, '}\n', sep='')
+            R <- c(R, paste0('\\Needspace{', needspace, '}'))
 
           if(lang == 'latex') 
             R <- c(R,

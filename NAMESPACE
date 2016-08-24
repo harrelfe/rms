@@ -19,6 +19,7 @@ importFrom(polspline, hare, phare)
 import(multcomp)
 # importFrom(multcomp, confint.glht, glht)  FAILS confint.glht not exported by namespace:multcomp
 importFrom(htmlTable, htmlTable, txtRound)
+importFrom(htmltools, HTML)
 
 importFrom(grDevices, gray, grey, rgb)
 importFrom(graphics, abline, axis, boxplot, hist, legend,

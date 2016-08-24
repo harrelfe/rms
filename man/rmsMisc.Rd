@@ -130,7 +130,8 @@ written to the console, automatically ready for \code{knitr}.  The work
 of printing 
 summary statistics is done by \code{prStats}, which uses the Hmisc
 \code{print.char.matrix} function to print overall model statistics if
-\code{lang="plain"}, otherwise it generates customized LaTeX or html
+\code{options(prType=)} was not set to \code{"latex"} or \code{"html"}.
+Otherwise it generates customized LaTeX or html
 code.  The LaTeX longtable and epic packages must be in effect to use LaTeX.
 
 \code{reListclean} allows one to rename a subset of a named list,
@@ -205,10 +206,9 @@ Newlevels(fit, \dots)
 \method{Newlevels}{rms}(fit, levels, \dots)
 
 prModFit(x, title, w, digits=4, coefs=TRUE,
-         lang=c("plain", "latex", "html"), 
          lines.page=40, long=TRUE, needspace, \dots)
 
-prStats(labels, w, lang=c("plain", "latex", "html"), file="", append=TRUE)
+prStats(labels, w, lang=c("plain", "latex", "html"))
 
 reListclean(\dots, na.rm=TRUE)
 
@@ -332,9 +332,8 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
 \item{coefs}{specify \code{coefs=FALSE} to suppress printing the table
   of model coefficients, standard errors, etc.  Specify \code{coefs=n}
   to print only the first \code{n} regression coefficients in the
-  model.}
-\item{file}{name of file to which to write model output from
-	\code{print()} using \code{prStats}.  Default is the console.}
+  model.}\
+\item{file}{name of file to which to write model output}
 \item{append}{specify \code{append=FALSE} when using \code{file} and you
 	want to start over instead of adding to an existing file.}
 \item{lang}{specifies the typesetting language: plain text, LaTeX, or html}

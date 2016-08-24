@@ -17,7 +17,7 @@ lrm(formula, data, subset, na.action=na.delete, method="lrm.fit",
     weights, normwt, scale=FALSE, \dots)
 
 \method{print}{lrm}(x, digits=4, strata.coefs=FALSE,
-    coefs=TRUE, latex=FALSE, md=FALSE, title='Logistic Regression Model', \dots)
+    coefs=TRUE, title='Logistic Regression Model', \dots)
 }
 \arguments{
 \item{formula}{
@@ -147,10 +147,6 @@ variances estimates that are too low.
   of model coefficients, standard errors, etc.  Specify \code{coefs=n}
   to print only the first \code{n} regression coefficients in the
   model.}
-\item{latex}{a logical value indicating whether information should be
-  formatted as plain text or as LaTeX markup}
-\item{md}{a logical directing that LaTeX and html be composed for use
-	with R Markdown}
 \item{title}{a character string title to be passed to \code{prModFit}}
 }
 \value{
@@ -283,7 +279,8 @@ units(blood.pressure) <- 'mmHg'
 ch <- cut2(cholesterol, g=40, levels.mean=TRUE) # use mean values in intervals
 table(ch)
 f <- lrm(ch ~ age)
-print(f, latex=TRUE, coefs=4)
+options(prType='latex')
+print(f, coefs=4)  # write latex code to console
 m <- Mean(f)    # see help file for Mean.lrm
 d <- data.frame(age=seq(0,90,by=10))
 m(predict(f, d))
