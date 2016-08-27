@@ -1,5 +1,5 @@
 ---
-title: "Examples of rms Package"
+title: "Examples for rms Package"
 author: "FE Harrell"
 date: '`r Sys.Date()`'
 output:
@@ -16,25 +16,21 @@ This is an R Markdown html notebookdocument. Markdown is a simple formatting syn
 
 ```{r, results='hide'}
 require(rms)
-# knitrSet(lang='markdown')
 ```
 
 # Data {.tabset}
 ## Setup
 ```{r t3}
 getHdata(titanic3)  # Get the dataset from the VU DataSets page
-# For some reason this takes several minutes under RStudio.  If so run:
-# load('~/data/teaching/titanic/titanic3.sav')
 mu <- markupSpecs$html   # markupSpecs is in Hmisc
 subtext <- mu$subtext
 code    <- mu$code
 ```
 ## Data Dictionary
 ```{r ddict}
-# results='asis' in the chunk header because html(contents) outputs
-# html the old way
 html(contents(titanic3), maxlevels=10, levelType='table')
 ```
+
 ## Descriptive Statistics`r subtext('for the', code('titanic3'), 'dataset')`
 ```{r t3d, height=150}
 # Set graphics type so that Hmisc and rms packages use plotly
@@ -47,6 +43,7 @@ plot(s)
 d <- describe(titanic3)
 plot(d)
 ```
+
 The following doesn't work because it overlays two different legends
 ```{r sub,height=600,eval=FALSE}
 # Try combining two plots into one
@@ -54,8 +51,8 @@ p <- plot(d)
 plotly::subplot(p[[1]], p[[2]],
                 nrows=2, heights=c(.3, .7), which_layout=1)
 ```
-# Logistic Regression Model
 
+# Logistic Regression Model
 ```{r lrmt}
 dd <- datadist(titanic3); options(datadist='dd')
 f <- lrm(survived ~ rcs(sqrt(age),5) * sex, data=titanic3)
@@ -72,13 +69,13 @@ plot(s, log=TRUE)
 html(s, dec=2)
 ```
 
-```{r ggp,h=5,w=6}
+```{r ggp,fig.height=5,fig.width=6}
 ggplot(Predict(f, age, sex), height=500, width=650)
 plot(nomogram(f, fun=plogis, funlabel='Prob(survive)'))
 ```
 
 # Survival Plots for `r mu$code('pbc')` Dataset
-```{r pbc,h=6,w=7}
+```{r pbc,fig.height=6,fig.width=7}
 getHdata(pbc)
 pbc <- upData(pbc, 
               fu.yrs = fu.days / 365.25,

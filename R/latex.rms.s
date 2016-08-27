@@ -570,42 +570,42 @@ latexrms <-
   
   if(cur != "") tex <- c(tex, cur)
 
-  if(inline)
-    {
-      if(before != '') tex <- c(before, tex)
-      if(size != '')   tex <- c(paste0('{\\', size), tex)
-      if(after  != '') tex <- c(tex, after)
-      if(size != '')   tex <- c(tex, '}')
-      cat(tex, sep="\n", file=file, append=append)
-      if(md) return(htmltools::HTML(paste0(tex, '\n')))
-      return(structure(list(file=file,style=NULL), class='latex'))
-    }
+  if(inline) {
+    if(before != '') tex <- c(before, tex)
+    if(size != '')   tex <- c(paste0('{\\', size), tex)
+    if(after  != '') tex <- c(tex, after)
+    if(size != '')   tex <- c(tex, '}')
+    if(md) return(htmltools::HTML(paste0(tex, '\n')))
+    cat(tex, sep="\n", file=file, append=append)
+    return(structure(list(file=file,style=NULL), class='latex'))
+  }
   
-  tex <- c(tex,"\\end{eqnarray*}")
+  tex <- c(tex, "\\end{eqnarray*}")
 
   tex <- ifelse(tex == paste0(prefix, '= & & \\\\') |
                 substring(tex,1,1) == "\\", tex,
                 paste(before, tex, "\\\\"))
   
   if(anyivar | anyplus) {
-    s <- if(length(which) == p) "and" else "where "
+    s <- if(length(which) == p) "and " else "where "
     if(anyivar)
-      s <- paste0(s,"$[c]=1$ if subject is in group $c$, 0 otherwise")
+      s <- paste0(s, "\\([c]=1\\) if subject is in group \\(c\\), 0 otherwise")
+    ## Had trouble with Rmarkdown recognizing math mode with $...$
     if(anyivar && anyplus) s <- paste0(s, '; ')
     if(anyplus)
-      s <- paste0(s, "$(x)_{+}=x$ if $x > 0$, 0 otherwise", brchar)
+      s <- paste0(s, "\\((x)_{+}=x\\) if \\(x > 0\\), 0 otherwise", brchar)
     tex <- c(tex, s)
   }
   
   if(anytr & pretrans) {
     i <- TLi != ""
-    if(sum(i) == 1) tr <- paste0("$",varnames[i],
-                                 "$ is pre--transformed as $",
-                                 TLi[i], "$.")
+    if(sum(i) == 1) tr <- paste0("\\(", varnames[i],
+                                 "\\) is pre--transformed as \\(",
+                                 TLi[i], "\\).")
     else {
       tr <- if(md) {
-              z <- cbind(Variable=paste0('$', varnames, '$'),
-                         Transformation=paste0('$', TLi, '$'))
+              z <- cbind(Variable=paste0('\\(', varnames, '\\)'),
+                         Transformation=paste0('\\(', TLi, '\\)'))
               as.character(htmlTable::htmlTable(z, caption='Pre-transformations',
                                                 css.cell='min-width: 9em;',
                                                 align='|l|l|',
@@ -615,7 +615,7 @@ latexrms <-
               c("\\vspace{0.5ex}\\begin{center}{\\bf Pre--Transformations}\\\\",
                 "\\vspace{1.5ex}\\begin{tabular}{|l|l|} \\hline",
                 "\\multicolumn{1}{|c|}{Variable} & \\multicolumn{1}{c|}{Transformation} \\\\ \\hline",
-                paste0("$",varnames[i],"$ & $",TLi[i],"$ \\\\"),
+                paste0("\\(",varnames[i],"\\) & \\(",TLi[i],"\\) \\\\"),
                 "\\hline", "\\end{tabular}\\end{center}")
     }
     tex <- c(tex, tr)

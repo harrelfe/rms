@@ -36,20 +36,21 @@ latex.lrm <-
                        '\\end{center}'), w)
         }
       
-      if(nrp>1)
-        {
-          w <- c(w,"\\begin{eqnarray*}")
-          cof <- format(f$coef[1:nrp])
-          for(i in 1:nrp)
-            w <- c(w, paste("\\hat{\\alpha}_{\\rm ",
-                            lev[i+1],"} &=&",cof[i],"\\\\",sep=""))
-          w <- c(w,"\\end{eqnarray*}",sep="")
-        }
-							}
-  else w <- NULL
+      if(nrp > 1) {
+        w <- c(w,"\\begin{eqnarray*}")
+        cof <- format(f$coef[1:nrp])
+        for(i in 1:nrp)
+          w <- c(w, paste("\\hat{\\alpha}_{\\rm ",
+                          lev[i+1],"} &=&",cof[i],"\\\\",sep=""))
+        w <- c(w,"\\end{eqnarray*}",sep="")
+      }
+    }
+  else
+    w <- NULL
+  
   if(missing(which) | missing(varnames)) at <- f$Design
 
-  if(missing(which)) which <- 1:length(at$name)
+  if(missing(which))    which    <- 1:length(at$name)
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
   if(! md) 
     cat(w, file=file, append=append, sep=if(length(w))"\n" else "")
