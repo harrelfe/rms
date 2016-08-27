@@ -772,9 +772,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
         type <- 'latex.naprint.delete'
         tex <- TRUE
       }
-      if(lang == 'html') {
-        type <- 'html.naprint.delete'
-      }
+      if(lang == 'html') type <- 'html.naprint.delete'
     }
     
     preskip <- z$preskip
@@ -797,15 +795,14 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                  html  = paste0('&nbsp;', x),
                  plain  = x)
 
-        la   <- if(lang == 'plain') 'plain' else 'latex'
         U    <- cbind('Coef' =
-                        pad(formatNP(beta, digits, lang=la)),
+                        pad(formatNP(beta, digits, lang=lang)),
                       'S.E.' =
-                        pad(formatNP(se,   digits, lang=la)),
+                        pad(formatNP(se,   digits, lang=lang)),
                       'Wald Z'  =
-                        formatNP(Z,    2, lang=la),
+                        formatNP(Z,    2, lang=lang),
                       'Pr(>|Z|)' =
-                        formatNP(P, 4, lang=la, pvalue=TRUE))
+                        formatNP(P, 4, lang=lang, pvalue=TRUE))
         if(lang == 'latex')
           colnames(U) <- c('$\\hat{\\beta}$', 'S.E.', 'Wald $Z$',
                            'Pr$(>|Z|)$')
@@ -823,10 +820,10 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
         rownames(U) <- names(beta)
 
         if(length(obj$aux)) {
-          U <- cbind(U, formatNP(obj$aux, digits, lang=la))
+          U <- cbind(U, formatNP(obj$aux, digits, lang=lang))
           colnames(U)[ncol(U)] <- obj$auxname
         }
-        if(la == 'latex') {
+        if(lang %in% c('latex', 'html')) {
           R <- c(R, skipt(1))
           rownames(U) <- if(lang == 'latex')
                            latexTranslate(names(beta))
@@ -983,16 +980,14 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html')) {
     for(i in 1 : length(x)) if(! length(x[[i]])) x[[i]] <- ''
     x
     }
-
   trans <- switch(lang,
                   latex = latexTranslate,
                   html  = htmlTranslate,
                   plain = function(x) x )
-  
   ## Find maximum width used for each column
   p <- length(labels)
   width <- numeric(p)
-  for(i in 1:p) {
+for(i in 1:p) {
     labs <- ssplit(labels[i])[[1]]
     width[i] <- max(nchar(labs))
     u <- w[[i]]
@@ -1025,7 +1020,6 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html')) {
       width[i] <- max(width[i],
                       1 + nchar(nuj) + nchar(fu[j]))
   }
-
   if(lorh) {
     maxl <- max(sapply(w, length))
     z <- matrix('', nrow=maxl, ncol=p)
@@ -1148,30 +1142,32 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE,
                      lang=c('plain', 'latex', 'html')) {
   lang <- match.arg(lang)
   if(! is.numeric(x)) return(x)
-    digits <- as.numeric(digits)  # Needed but can't figure out why
+  digits <- as.numeric(digits)  # Needed but can't figure out why
     x <- as.numeric(x)
-    f <- if(length(digits) && ! is.na(digits))
-      format(round(x, digits), nsmall=digits, scientific=1) else
-      format(x, scientific=1)
-    sci <- grep('e', f)
-    if(length(sci)) {
-      if(lang == 'latex') f[sci] <- paste0('$', latexSN(f[sci]), '$')
-      else
-        if(lang == 'html') f[sci] <- htmlSN(f[sci])
-      }
-    f <- ifelse(is.na(x), '', f)
-    if(! pvalue) return(f)
-    if(! length(digits)) stop('must specify digits if pvalue=TRUE')
-    s <- ! is.na(x) & x < 10 ^ (-digits)
-    if(any(s)) {
-      w <- paste0('0.', paste0(rep('0', digits - 1), collapse=''), '1')
-      f[s] <- switch(lang,
-                     latex = paste0('$<', w, '$'),
-                     html  = paste0('&#60;', w),
-                     plain = paste0('<', w))
-    }
-    f
+  f <- if(length(digits) && ! is.na(digits))
+         format(round(x, digits), nsmall=digits, scientific=1) else
+         format(x, scientific=1)
+  sci <- grep('e', f)
+  if(length(sci)) {
+    if(lang == 'latex') f[sci] <- paste0('$', latexSN(f[sci]), '$')
+    else
+      if(lang == 'html') f[sci] <- htmlSN(f[sci])
   }
+  f <- ifelse(is.na(x), '', f)
+
+  if(! pvalue) return(f)
+  
+  if(! length(digits)) stop('must specify digits if pvalue=TRUE')
+  s <- ! is.na(x) & x < 10 ^ (-digits)
+  if(any(s)) {
+    w <- paste0('0.', paste0(rep('0', digits - 1), collapse=''), '1')
+    f[s] <- switch(lang,
+                   latex = paste0('$<$', w),
+                   html  = paste0('&#60;', w),
+                   plain = paste0('<', w))
+  }
+  f
+}
 
 logLik.ols <- function(object, ...) {
   ll <- getS3method('logLik', 'lm')(object)
