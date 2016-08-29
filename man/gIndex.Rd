@@ -2,10 +2,7 @@
 \alias{gIndex}
 \alias{print.gIndex}
 \alias{plot.gIndex}
-\alias{GiniMd}
-\title{
-Calculate Total and Partial g-indexes for an rms Fit
-}
+\title{Calculate Total and Partial g-indexes for an rms Fit}
 \description{
   \code{gIndex} computes the total \eqn{g}-index for a model based on
   the vector of linear predictors, and the partial \eqn{g}-index for
@@ -26,17 +23,7 @@ Calculate Total and Partial g-indexes for an rms Fit
   method is defined, and there is a \code{plot} method for displaying
   \eqn{g}-indexes using a dot chart.
 
-  A basic function \code{GiniMD} computes Gini's mean difference on a
-  numeric vector.  This index is defined as the mean absolute difference
-  between any two distinct elements of a vector.  For a Bernoulli
-  (binary) variable with proportion of ones equal to \eqn{p} and sample
-  size \eqn{n}, Gini's mean difference is
-  \eqn{2\frac{n}{n-1}p(1-p)}{2np(1-p)/(n-1)}.  For a 
-  trinomial variable (e.g., predicted values for a 3-level categorical
-  predictor using two dummy variables) having (predicted)
-  values \eqn{A, B, C} with corresponding proportions \eqn{a, b, c},
-  Gini's mean difference is
-  \eqn{2\frac{n}{n-1}[ab|A-B|+ac|A-C|+bc|B-C|]}{2n[ab|A-B|+ac|A-C|+bc|B-C|]/(n-1).}
+	These functions use \code{Hmisc::GiniMd}.
 }
 \usage{
 gIndex(object, partials=TRUE, type=c('ccterms', 'cterms', 'terms'),
@@ -59,8 +46,6 @@ gIndex(object, partials=TRUE, type=c('ccterms', 'cterms', 'terms'),
 \method{plot}{gIndex}(x, what=c('pre', 'post'),
  xlab=NULL, pch=16, rm.totals=FALSE,
 sort=c('descending', 'ascending', 'none'), \dots)
-
-GiniMd(x, na.rm=FALSE)
 }
 \arguments{
   \item{object}{result of an \code{rms} fitting function}
@@ -93,7 +78,6 @@ GiniMd(x, na.rm=FALSE)
 }
 \item{x}{
   an object created by \code{gIndex} (for \code{print} or \code{plot})
-  or a numeric vector (for \code{GiniMd})
 }
 \item{digits}{causes rounding to the \code{digits} decimal place}
 \item{abbrev}{set to \code{TRUE} to abbreviate labels if
@@ -108,9 +92,6 @@ GiniMd(x, na.rm=FALSE)
   when plotting}
 \item{sort}{specifies how to sort predictors by \eqn{g}-index; default
   is in descending order going down the dot chart}
-\item{na.rm}{set to \code{TRUE} if you suspect there may be \code{NA}s
-  in \code{x}; these will then be removed.  Otherwise an error will
-  result.}
 }
 \details{
   For stratification factors in a Cox proportional hazards model, there is
@@ -131,7 +112,7 @@ Department of Biostatistics\cr
 Vanderbilt University\cr
 \email{f.harrell@vanderbilt.edu}
 }
-\seealso{\code{\link{predict.rms}}}
+\seealso{\code{\link{predict.rms}},\code{\link[Hmisc]{GiniMd}}}
 \examples{
 set.seed(1)
 n <- 40
@@ -152,14 +133,7 @@ for(type in c('terms','cterms','ccterms'))
     z[[type]] <- zc
   }
 
-# Test GiniMd against a brute-force solution
-gmd <- function(x)
-  {
-    n <- length(x)
-    sum(outer(x, x, function(a, b) abs(a - b)))/n/(n-1)
-  }
 zc <- z$cterms
-gmd(zc[, 1])
 GiniMd(zc[, 1])
 GiniMd(zc[, 2])
 GiniMd(zc[, 3])
@@ -170,17 +144,6 @@ g['Total',]
 gIndex(f, partials=FALSE)
 gIndex(f, type='cterms')
 gIndex(f, type='terms')
-
-z <- c(rep(0,17), rep(1,6))
-n <- length(z)
-GiniMd(z)
-2*mean(z)*(1-mean(z))*n/(n-1)
-
-a <- 12; b <- 13; c <- 7; n <- a + b + c
-A <- -.123; B <- -.707; C <- 0.523
-xx <- c(rep(A, a), rep(B, b), rep(C, c))
-GiniMd(xx)
-2*(a*b*abs(A-B) + a*c*abs(A-C) + b*c*abs(B-C))/n/(n-1)
 
 y <- y > .8
 f <- lrm(y ~ x * w * u, x=TRUE, y=TRUE)
