@@ -27,7 +27,7 @@ nomogram <-
   se <- any(conf.int > 0)
 
   nfun <- if(!length(fun)) 0 else if(is.list(fun)) length(fun) else 1
-  if(nfun>1 && length(funlabel)==1) funlabel <- rep(funlabel, nfun)
+  if(nfun>1 && length(funlabel) == 1) funlabel <- rep(funlabel, nfun)
   if(nfun>0 && is.list(fun) && length(names(fun))) funlabel <- names(fun)
 
   if(length(fun.at) && !is.list(fun.at)) 
@@ -37,17 +37,17 @@ nomogram <-
 
   at <- fit$Design
   assume <- at$assume.code
-  if(any(assume==10))
+  if(any(assume == 10))
     warning("does not currently work with matrix factors in model")
   name  <- at$name
   names(assume) <- name
   parms <- at$parms
-  label <- if(vnames=="labels") at$label else name
+  label <- if(vnames == "labels") at$label else name
   if(any(d <- duplicated(name)))
     stop(paste("duplicated variable names:",
                paste(name[d],collapse=" ")))
   label <- name
-  if(vnames=="labels") {
+  if(vnames == "labels") {
     label <- at$label
     if(any(d <- duplicated(label)))
       stop(paste("duplicated variable labels:",
@@ -64,7 +64,7 @@ nomogram <-
     (1:length(assume))[assume != 8 & assume != 9]
   if(nf > 0) {
     jw <- charmatch(names(factors), name, 0)
-    if(any(jw==0)) stop(paste("factor name(s) not in the design:",
+    if(any(jw == 0)) stop(paste("factor name(s) not in the design:",
              paste(names(factors)[jw == 0], collapse=" ")))
     if(!est.all) which <- jw
   }
@@ -87,7 +87,7 @@ nomogram <-
     if(ucat[i]) parms[[name[i]]] <- V
   }
 
-  discrete <- assume==5 | assume==8 | ucat
+  discrete <- assume == 5 | assume == 8 | ucat
   names(discrete) <- name
 
   ## Number of non-slopes:
@@ -172,7 +172,7 @@ nomogram <-
       set[[iset]] <- x
       nset <- c(nset, label[i])
       
-      start <- c(start, end+1)
+      start <- c(start, end + 1)
       n <- length(settings[[nam]])
       len <- c(len, n)
       end <- end + n
@@ -198,8 +198,8 @@ nomogram <-
           if(discrete[n]) { 
             acombo[[n]] <-
               abbreviate(parms[[n]],
-                         minlength=if(minlength==1)4
-                         else minlength)[combo[[n]]]  
+                         minlength=if(minlength == 1) 4
+                                   else minlength)[combo[[n]]]
             ## lucky that abbreviate function names its result
           }
         }
@@ -211,8 +211,8 @@ nomogram <-
       entities <- entities + 1
       already.done[namo] <- TRUE
       for(k in 1:length(combo[[1]])) {
-        num.lines <- num.lines+1
-        if(k==1) main.space.used <- main.space.used + 1
+        num.lines <- num.lines + 1
+        if(k == 1) main.space.used <- main.space.used + 1
         else ia.space.used <- ia.space.used + 1
         x <- list()
         x[[nam]] <- settings[[nam]]   #store fastest first
@@ -237,7 +237,7 @@ nomogram <-
         attr(x,'info') <-
           list(predictor=nam,
                effect.name=c(nam, namo[assume[namo] != 8], ia.names), 
-               type=if(k==1) "first" else "continuation")
+               type=if(k == 1) "first" else "continuation")
         set[[iset]] <- x
         nset <- c(nset, set.name)
         ## Don't include strata main effects
@@ -257,7 +257,7 @@ nomogram <-
     ns  <- names(S)
     nam <- names(S)
     for(k in 1:length(nam))
-      xadj[[nam[k]]][start[j] : (start[j]+len[j]-1)] <- S[[k]]
+      xadj[[nam[k]]][start[j] : (start[j] + len[j]-1)] <- S[[k]]
   }
   xadj <- structure(xadj, class='data.frame',
                     row.names=as.character(1 : sum(len)))
@@ -278,7 +278,7 @@ nomogram <-
   ## variable combinations that were never used in constructing axes
 
   for(i in 1:num.lines) {
-    is <- start[i]; ie <- is+len[i]-1
+    is <- start[i]; ie <- is + len[i]-1
     s <- set[[i]]
     setinfo <- attr(s, 'info')
     nam <- setinfo$effect.name
@@ -319,7 +319,7 @@ nomogram <-
     sedit(Format(x)," ","") #axis not like bl   - was translate()
     if(abb && discrete[nam] && (is.logical(abbrev) || nam %in% abbrev)) {
       old.text <- fx
-      fx <- if(abb && minlength==1)letters[1:length(fx)] else 
+      fx <- if(abb && minlength == 1)letters[1:length(fx)] else 
       abbreviate(fx, minlength=minlength)
       Abbrev[[nam]] <- list(abbrev=fx, full=old.text)
     }
@@ -383,9 +383,9 @@ nomogram <-
         xse <- c(xse, S$se.fit)
       }
       i <- order(xxb)
-      if(length(xxb)<16 | conf.lp=="representative") 
+      if(length(xxb)<16 | conf.lp == "representative") 
         {nlev <- 4; w <- 1} else {nlev <- 8; w <- 2}
-      if(conf.lp=="representative") {
+      if(conf.lp == "representative") {
         deciles   <- cut2(xxb[i], g=10)
         mean.xxb  <- tapply(xxb[i], deciles, mean)
         median.se <- tapply(xse[i], deciles, median)
@@ -462,7 +462,7 @@ print.nomogram <- function(x, dec=0, ...)
   
   fun <- FALSE
   for(x in names(obj)) {
-    k <- x=='total.points' || x=='lp' || x=='abbrev'
+    k <- x == 'total.points' || x == 'lp' || x == 'abbrev'
     if(k) { fun <- TRUE; next }
     y <- obj[[x]]
     if(fun) {

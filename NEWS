@@ -1,4 +1,4 @@
-Changes in version 5.0-0 (2016-08-29)
+Changes in version 5.0-0 (2016-08-30)
    * plot.summary.rms: implemented plotly interactive plots if options(grType='plotly') in effect
 	 * plot.anova.rms: implemented plotly interactive plots if options(grType='plotly') in effect; remove psmall argument; changed margin default to chisq and P
 	 * ggplot.Predict: implemented plotly interactive plots if options(grType='plotly') in effect
@@ -16,6 +16,7 @@ Changes in version 5.0-0 (2016-08-29)
 	 * anova, summary, latex, print for model fits: use options(grType='html') or 'latex' to set output type, output htmltools::HTML marked html so that chunk header doesn't need results='asis'
 	 * latex methods - set file default to ''
 	 * GiniMd: moved to Hmisc package
+	 * plot.nomogram: fixed bug where abbreviations were being ignored.  Thanks: Zongheng Zhang
 	 
 Changes in version 4.5-1 (2016-06-01)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations
