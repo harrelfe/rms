@@ -1,4 +1,4 @@
-Changes in version 5.0-0 (2016-08-30)
+Changes in version 5.0-0 (2016-09-12)
    * plot.summary.rms: implemented plotly interactive plots if options(grType='plotly') in effect
 	 * plot.anova.rms: implemented plotly interactive plots if options(grType='plotly') in effect; remove psmall argument; changed margin default to chisq and P
 	 * ggplot.Predict: implemented plotly interactive plots if options(grType='plotly') in effect
@@ -17,6 +17,8 @@ Changes in version 5.0-0 (2016-08-30)
 	 * latex methods - set file default to ''
 	 * GiniMd: moved to Hmisc package
 	 * plot.nomogram: fixed bug where abbreviations were being ignored.  Thanks: Zongheng Zhang
+	 * nomogram: improved examples in help file
+	 * survplot.npsurv: fixed n.risk when competing risks
 	 
 Changes in version 4.5-1 (2016-06-01)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations

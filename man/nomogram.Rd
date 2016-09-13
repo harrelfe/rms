@@ -33,6 +33,11 @@
   displayed using different colors or gray scales.  Functions of the
   linear predictors may be added to the nomogram.
 
+	The \code{\link{datadist}} object that was in effect when the model
+	was fit is used to specify the limits of the axis for continuous
+	predictors when the user does not specify tick mark locations in the
+	\code{nomogram} call.
+
   \code{print.nomogram} prints axis information stored in an object returned
   by \code{nomogram}.  This is useful in producing tables of point assignments
   by levels of predictors.  It also prints how many linear predictor
@@ -405,24 +410,23 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
 \examples{
 n <- 1000    # define sample size
 set.seed(17) # so can reproduce the results
-age            <- rnorm(n, 50, 10)
-blood.pressure <- rnorm(n, 120, 15)
-cholesterol    <- rnorm(n, 200, 25)
-sex            <- factor(sample(c('female','male'), n,TRUE))
-
+d <- data.frame(age = rnorm(n, 50, 10),
+                blood.pressure = rnorm(n, 120, 15),
+                cholesterol = rnorm(n, 200, 25),
+                sex = factor(sample(c('female','male'), n,TRUE)))
 
 # Specify population model for log odds that Y=1
-L <- .4*(sex=='male') + .045*(age-50) +
-  (log(cholesterol - 10)-5.2)*(-2*(sex=='female') + 2*(sex=='male'))
 # Simulate binary y to have Prob(y=1) = 1/[1+exp(-L)]
-y <- ifelse(runif(n) < plogis(L), 1, 0)
+d <- upData(d,
+  L = .4*(sex=='male') + .045*(age-50) +
+       (log(cholesterol - 10)-5.2)*(-2*(sex=='female') + 2*(sex=='male')),
+  y = ifelse(runif(n) < plogis(L), 1, 0))
+
+ddist <- datadist(d); options(datadist='ddist')
 
 
-ddist <- datadist(age, blood.pressure, cholesterol, sex)
-options(datadist='ddist')
-
-
-f <- lrm(y ~ lsp(age,50)+sex*rcs(cholesterol,4)+blood.pressure)
+f <- lrm(y ~ lsp(age,50) + sex * rcs(cholesterol, 4) + blood.pressure,
+         data=d)
 nom <- nomogram(f, fun=function(x)1/(1+exp(-x)),  # or fun=plogis
     fun.at=c(.001,.01,.05,seq(.1,.9,by=.1),.95,.99,.999),
     funlabel="Risk of Death")
@@ -432,20 +436,20 @@ plot(nom, xfrac=.45)
 print(nom)
 nom <- nomogram(f, age=seq(10,90,by=10))
 plot(nom, xfrac=.45)
-g <- lrm(y ~ sex + rcs(age,3)*rcs(cholesterol,3))
+g <- lrm(y ~ sex + rcs(age, 3) * rcs(cholesterol, 3), data=d)
 nom <- nomogram(g, interact=list(age=c(20,40,60)), 
                 conf.int=c(.7,.9,.95))
 plot(nom, col.conf=c(1,.5,.2), naxes=7)
 
+w <- upData(d,
+            cens = 15 * runif(n),
+            h = .02 * exp(.04 * (age - 50) + .8 * (sex == 'Female')),
+            d.time = -log(runif(n)) / h,
+            death = ifelse(d.time <= cens, 1, 0),
+            d.time = pmin(d.time, cens))
 
-cens <- 15*runif(n)
-h <- .02*exp(.04*(age-50)+.8*(sex=='Female'))
-d.time <- -log(runif(n))/h
-death <- ifelse(d.time <= cens,1,0)
-d.time <- pmin(d.time, cens)
 
-
-f <- psm(Surv(d.time,death) ~ sex*age, dist='lognormal')
+f <- psm(Surv(d.time,death) ~ sex * age, data=w, dist='lognormal')
 med  <- Quantile(f)
 surv <- Survival(f)  # This would also work if f was from cph
 plot(nomogram(f, fun=function(x) med(lp=x), funlabel="Median Survival Time"))
@@ -469,8 +473,8 @@ legend.nomabbrev(nom, 'treatment', locator(1), ncol=2, bty='n')
 
 #Make a nomogram with axes predicting probabilities Y>=j for all j=1-3
 #in an ordinal logistic model, where Y=0,1,2,3
-Y <- ifelse(y==0, 0, sample(1:3, length(y), TRUE))
-g <- lrm(Y ~ age+rcs(cholesterol,4)*sex)
+w <- upData(w, Y = ifelse(y==0, 0, sample(1:3, length(y), TRUE)))
+g <- lrm(Y ~ age+rcs(cholesterol,4) * sex, data=w)
 fun2 <- function(x) plogis(x-g$coef[1]+g$coef[2])
 fun3 <- function(x) plogis(x-g$coef[1]+g$coef[3])
 f <- Newlabels(g, c(age='Age in Years'))  

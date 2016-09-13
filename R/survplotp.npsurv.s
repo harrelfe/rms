@@ -120,6 +120,9 @@ survplotp.npsurv <-
         f$lower   <- 1 - f$lower  [, istate]
         f$upper   <- 1 - f$upper  [, istate]
         f$std.err <-     f$std.err[, istate]
+        f$n.risk  <-     f$n.risk[, ncol(f$n.risk)]
+        if(all(f$n.risk == 0))
+          stop('expected n.risk to be last column of n.risk matrix for competing risks')
         f
       }
       formals(conv) <- list(f=NULL, istate=istate)
