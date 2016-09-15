@@ -1,6 +1,0 @@
-library(rms)
-library(nlme)
-set.seed(1) 
-d <- data.frame(x = rnorm(50), y = rnorm(50)) 
-gls(y ~ x, data=d, correlation = corARMA(p=2))
-Gls(y ~ x, data=d, correlation = corARMA(p=2), B=10)
