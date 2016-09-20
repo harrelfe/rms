@@ -709,7 +709,8 @@ plot.anova.rms <-
       dc <- if(isbase) dotchart3 else dotchartp
 
       if(! isbase && ! length(height))
-        height <- min(400, 100 + 25 * length(w))
+        height <- plotlyParm$heightDotchart(length(w))
+      
       if(length(trans)) {
         nan <- names(w)
         w <- pmax(0, w)

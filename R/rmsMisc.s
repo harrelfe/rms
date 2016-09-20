@@ -937,7 +937,7 @@ html.naprint.delete <- function(object, ...) {
                       sort   = 'descending',
                       xlab   = 'Missing',
                       width  = min(550, 300 + 20 * maxlen),
-                      height = min(400, 100 + 25 * lg)))
+                      height = plotlyParm$heightDotchart(lg)))
     }
   }
   

@@ -538,16 +538,16 @@ plot.summary.rms <-
                            evaluate=TRUE)
   }
 
-  leftmargin <- min(160, max(nchar(lb)) * 6)
+  pp <- plotlyParm
 
   p <-
     plotly::layout(p,
                    xaxis = list(type = if(log) 'log' else 'linear',
                                 zeroline=FALSE, title=tlab),
                    yaxis  = list(title='', autorange='reversed'),
-                   margin = list(l=leftmargin),
+                   margin = list(l=pp$lrmargin(lb)),
                    autosize = FALSE,
-                   height = min(400, 100 + 25 * length(lb)),
+                   height = pp$heightDotchart(length(lb)),
                    shapes = list(
                      list(type = "line",
                           line = list(color = "lightgray"), 
