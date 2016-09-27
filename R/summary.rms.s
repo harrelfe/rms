@@ -514,8 +514,9 @@ plot.summary.rms <-
   hte     <- format(feffect, digits=digits)
   if(adjust != '') hte <- paste(hte, adjust, sep='<br>')
   
-  p <- plotly::plot_ly(x=feffect, y=lb,
-                       text=hte, mode='markers', hoverinfo='text',
+  p <- plotly::plot_ly(x=~ feffect, y=~ lb,
+                       text=~ hte,
+                       type='scatter', mode='markers', hoverinfo='text',
                        name='Estimate')
   
   for(i in 1 : n) {
@@ -530,12 +531,11 @@ plot.summary.rms <-
     ht <-ifelse(is.na(x), '', format(x, digits=digits))
     cl95 <- which(abs(q - 0.95) < 0.000001)
     vis  <- ! length(cl95) || i %in% cl95
-    p <- plotly::add_trace(x=x, y=ycl, text=ht,
+    p <- plotly::add_markers(x=~ x, y=~ ycl, text=~ ht,
                            marker=list(symbol='line-ns-open'),
                            hoverinfo='text',
                            name=paste(format(q)[i], 'CI'),
-                           visible=if(vis) TRUE else 'legendonly',
-                           evaluate=TRUE)
+                           visible=if(vis) TRUE else 'legendonly')
   }
 
   pp <- plotlyParm

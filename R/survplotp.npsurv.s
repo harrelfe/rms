@@ -217,13 +217,13 @@ survplotp.npsurv <-
                 'legendonly' else TRUE
       ln <- if(type == 'est') list(shape='hv', color=col)
             else list(shape='hv', color=col, width=0)
-      plotly::add_trace(p, x=x, y=y, mode='lines',
-                        text=txt, hoverinfo='text', line=ln,
+      plotly::add_lines(p, x=! x, y=~ y,
+                        text=~ txt, hoverinfo='text', line=ln,
                         fillcolor=fcol,
                         fill=if(type %in% c('upper', 'diff upper'))
                                'tonexty' else 'none',
                         visible=vis, legendgroup=lg,
-                        name=nam, evaluate=TRUE)
+                        name=nam)
     }
                         
     for(i in 1 : ns) {
@@ -344,7 +344,7 @@ survplotp.npsurv <-
     else z <- paste(paste0(sleva, ': ', nevents, ' events'), collapse='<br>')
     
     ## Add empty trace just to add to bottom of legend
-    p <- plotly::add_trace(x=NA, y=NA, mode='markers',
+    p <- plotly::add_markers(x=NA, y=NA,   # mode='markers',
                            marker=list(symbol='asterisk'),  # suppresses pt
                            name=z)
         
@@ -355,7 +355,7 @@ survplotp.npsurv <-
     
     plotly::layout(p,
            xaxis=xaxis, 
-           yaxis=list(range=ylim, title=ylab), ..., evaluate=TRUE, autosize=TRUE)
+           yaxis=list(range=ylim, title=ylab), ..., autosize=TRUE)
 }
 
 
