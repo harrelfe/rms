@@ -19,6 +19,8 @@ Changes in version 5.0-0 (2016-09-12)
 	 * plot.nomogram: fixed bug where abbreviations were being ignored.  Thanks: Zongheng Zhang
 	 * nomogram: improved examples in help file
 	 * survplot.npsurv: fixed n.risk when competing risks
+	 * survest.cph, survfit.cph, others: fixed large problems due to incompatibility with survival 2.39-5 for survival predictions; changed object Strata to strata in cph to be compatible with survival package
+	 * new test survest.r to more comprehensively check survfit.cph and survest.cph
 	 
 Changes in version 4.5-1 (2016-06-01)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations
