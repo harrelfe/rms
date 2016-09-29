@@ -181,7 +181,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   Y <- as.matrix(if(is.factor(Y)) unclass(Y) else Y)
   ny <- ncol(Y)
 
-  Strata <- fit$Strata
+  Strata <- fit$strata
   
   nac <- fit$na.action
   

@@ -41,7 +41,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
   
   surv.by.strata <- ssum[2, , 1] #2nd time= at u, all strata
   xb <- fit$linear.predictors
-  if(length(stra <- fit$Strata)) 
+  if(length(stra <- fit$strata)) 
     surv.by.strata <- surv.by.strata[stra]
   survival <- as.vector(surv.by.strata ^ exp(xb))
 

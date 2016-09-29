@@ -144,7 +144,7 @@ predictrms <-
               LP <- LP - coeff[lpkint] + coeff[kint]
             }
         }
-        if(length(stra <- fit$Strata))
+        if(length(stra <- fit$strata))
           attr(LP, "strata") <- naresid(naa, stra)
         if(! se.fit && ! conf.int) return(LP)
         else
@@ -163,7 +163,7 @@ predictrms <-
       }   # end type='lp'
       else
         if(type=="x") return(structure(naresid(naa, fit$x),
-             strata=if(length(stra <- fit$Strata))
+             strata=if(length(stra <- fit$strata))
              naresid(naa, stra) else NULL))
       X <- fit[['x']]
       rnam <- dimnames(X)[[1]]

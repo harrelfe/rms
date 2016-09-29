@@ -140,7 +140,7 @@ predab.resample <-
     }
   }
   
-  stra <- fit.orig$Strata
+  stra <- fit.orig$strata
 
   if(bw) {
     if(fit.orig$fail) return()

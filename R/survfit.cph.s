@@ -5,10 +5,10 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
   object <- formula
   Call <- match.call()
   Call[[1]] <- as.name("survfit")  ## nicer output for the user
-  censor <- FALSE
+  censor <- TRUE
 
-  type <- object$type
-  if (! length(type)) {
+  ftype <- object$type
+  if (! length(ftype)) {
     ## Use the appropriate one from the model
     w <- c("exact", "breslow", "efron")
     survtype <- match(object$method, w)
@@ -18,24 +18,25 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
            "kaplan-meier", "breslow", "fleming-harrington",
            "greenwood", "tsiatis", "exact")
     survtype <- match(match.arg(type, w), w)
-    survtype <- c(1,2,3,1,2,3,1,2,3)[survtype]
+    survtype <- c(1,2,3,1,2,3,2,2,1)[survtype]
   }
-  vartype <- if(!length(vartype)) survtype
+  vartype <- if(! length(vartype)) survtype
   else {
     w <- c("greenwood", "aalen", "efron", "tsiatis")
     vt <- match(match.arg(vartype, w), w)
     if(vt == 4) 2 else vt
   }
   
-  if (!se.fit) conf.type <- "none"
+  if (! se.fit) conf.type <- "none"
   else conf.type <- match.arg(conf.type)
 
   xpres <- length(object$means) > 0
-  y <- object$y
-  if(!length(y)) stop('must use y=TRUE with fit')
+  y <- object[['y']]  # require exact name match
+  type <- attr(y, 'type')
+  if(! length(y)) stop('must use y=TRUE with fit')
   if(xpres) {
-    X <- object$x
-    if(!length(X)) stop('must use x=TRUE with fit')
+    X <- object[['x']]
+    if(! length(X)) stop('must use x=TRUE with fit')
     n <- nrow(X)
     xcenter <- object$means
     X <- X - rep(xcenter, rep.int(n, ncol(X)))
@@ -45,18 +46,19 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
     X <- matrix(0, nrow=n, ncol=1)
   }
 
-  strata <- object$Strata
-  if(!length(strata)) strata <- rep(0,  n)
+  strata <- object$strata  ###
+  strata.pres <- length(strata) > 0
+  if(! length(strata)) strata <- rep(0,  n)
   offset <- object$offset
-  if(!length(offset)) offset <- rep(0., n)
+  if(! length(offset)) offset <- rep(0., n)
   weights <- object$weights
-  if(!length(weights)) weights <- rep(1., n)
+  if(! length(weights)) weights <- rep(1., n)
 
   missid <- missing(id)
-  if (!missid) individual <- TRUE
+  if (! missid) individual <- TRUE
   else if (missid && individual) id <- rep(0, n)
   else id <- NULL
-  if (individual && attr(y, 'type') != "counting") 
+  if (individual && type != "counting") 
     stop("The individual option is  only valid for start-stop data")
   
   ## Compute confidence limits for survival based on -log survival,
@@ -84,7 +86,7 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
     n2 <- nrow(X2)
     if(length(rq) && any(levels(rq) %nin% levels(strata)))
       stop('new dataset has strata levels not found in the original')
-    if(!length(rq)) rq <- rep(1,  n2)
+    if(! length(rq)) rq <- rep(1,  n2)
     ro <- if(length(ro)) ro - mean(offset) else rep(0., n2)
     X2 <- X2 - rep(xcenter, rep.int(n2, ncol(X2)))
     newrisk <- exp(matxv(X2, object$coefficients) + ro)
@@ -98,20 +100,52 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
     if(sum(isS) != 1)
       stop("newdata must contain exactly one Surv object when individual=TRUE")
     y2 <- newdata[[which(isS)]]
+    warning('some aspects of individual=TRUE not yet implemented.  Try survfit.coxph.')
   }
   g <- survfitcoxph.fit(y, X, weights, X2, risk, newrisk, strata,
                         se.fit, survtype, vartype,
                         if(length(object$var)) object$var else
                         matrix(0, nrow=1, ncol=1),
                         id=id, y2=y2, strata2=rq)
-  if (!censor) {
+
+  if(strata.pres) {
+    if (is.matrix(g$surv)) {
+      nr <- nrow(g$surv)  #a vector if newdata had only 1 row
+      indx1 <- split(1:nr, rep(1:length(g$strata), g$strata))
+      rows <- indx1[as.numeric(rq)]  #the rows for each curve
+      
+      indx2 <- unlist(rows)  #index for time, n.risk, n.event, n.censor
+      indx3 <- as.integer(rq) #index for n and strata
+      
+      for(i in 2:length(rows)) rows[[i]] <- rows[[i]]+ (i-1)*nr #linear subscript
+      indx4 <- unlist(rows)   #index for surv and std.err
+      temp <- g$strata[indx3]
+      names(temp) <- row.names(X2)    #row.names(mf2)
+      new <- list(n = g$n[indx3],
+                  time= g$time[indx2],
+                  n.risk= g$n.risk[indx2],
+                  n.event=g$n.event[indx2],
+                  n.censor=g$n.censor[indx2],
+                  strata = temp,
+                  surv= g$surv[indx4],
+                  cumhaz = g$cumhaz[indx4])
+      if (se.fit) new$std.err <- g$std.err[indx4]
+      g <- new
+    }
+  }
+  
+  
+  ## Insert type so that survfit.cph produces object like survfit.coxph
+  g$type <- type
+
+  if (! censor) {
     kfun <- function(x, keep) {
       if (is.matrix(x)) x[keep,, drop=FALSE] 
       else if (length(x) == length(keep)) x[keep] else x
     }
     keep <- g$n.event > 0
     if(length(g$strata)) {
-      w <- factor(rep(names(g$strata), g$strata), names(g$strata))
+      w <- factor(rep(names(g$strata), g$strata), levels=names(g$strata))
       g$strata <- c(table(w[keep]))
     }
     g <- lapply(g, kfun, keep)
@@ -142,6 +176,6 @@ survfit.cph <- function(formula, newdata, se.fit=TRUE, conf.int=.95,
   }
   g$requested.strata <- rq
   g$call <- Call
-  class(g) <- c('survfit.cph', 'survfit')
+  class(g) <- c('survfit.cph', 'survfit.cox', 'survfit')
   g
 }

@@ -12,7 +12,7 @@ specs.rms <- function(fit, long=FALSE, ...)
   tl <- attr(fit$terms, "term.labels")
   if(!length(tl)) tl <- attr(terms(formula(fit)), 'term.labels')
   ass <- fit$assign
-  strata <- fit$strata
+  strata <- levels(fit$strata)
   if(is.null(fit$assume))
     {
       d <- fit$Design

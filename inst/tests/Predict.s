@@ -13,3 +13,4 @@ p <- Predict(f, x1, x2, np=10)
 plot(p, subset=x2=='a' | (x2=='b' & x1 < .5))
 
 ggplot(Predict(f, name='x1'), anova=anova(f), pval=TRUE)
+

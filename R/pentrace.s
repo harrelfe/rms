@@ -48,7 +48,7 @@ pentrace <-
   
   if(!length(fitter))stop("fitter not valid")
 
-  Strata <- fit$Strata
+  Strata <- fit$strata
 
   if(!missing(subset)) {
     Y <- Y[subset,, drop=FALSE]
