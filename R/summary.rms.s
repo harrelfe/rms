@@ -531,7 +531,7 @@ plot.summary.rms <-
     ht <-ifelse(is.na(x), '', format(x, digits=digits))
     cl95 <- which(abs(q - 0.95) < 0.000001)
     vis  <- ! length(cl95) || i %in% cl95
-    p <- plotly::add_markers(x=~ x, y=~ ycl, text=~ ht,
+    p <- plotly::add_markers(p, x=~ x, y=~ ycl, text=~ ht,
                            marker=list(symbol='line-ns-open'),
                            hoverinfo='text',
                            name=paste(format(q)[i], 'CI'),
