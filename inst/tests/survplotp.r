@@ -36,7 +36,6 @@ survplot(f, conf='diffbands')
 survdiffplot(f)   # modern art
 
 
-source('~/R/rms/R/survplotp.npsurv.s')
 survplotp(f)
 survplotp(f, aehaz=TRUE)
 survplotp(f, times=c(50,60))

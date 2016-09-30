@@ -43,10 +43,10 @@ chl <- labelPlotmath(a$label['cholesterol'],
 #               line=list(color='transparent'), fillcolor='light gray')
 #a
 
-a <- plot_ly(p, x=cholesterol, y=yhat, group=sex)
-a <- add_trace(a, x=cholesterol, y=lower, group=sex,
+a <- plot_ly(p, x=~cholesterol, y=~yhat, group=~sex)
+a <- add_trace(a, x=~cholesterol, y=~lower, group=~sex,
                fill='tonexty')
-a <- add_trace(a, x=cholesterol, y=upper, group=sex)
+a <- add_trace(a, x=~cholesterol, y=~upper, group=~sex)
 layout(a, xaxis=list(title=chl), yaxis=list(title='<b>y</b><i>h</i>at'))
 
 
@@ -61,7 +61,7 @@ g + histSpikeg(yhat ~ cholesterol, data=d, ylim=c(-1, 1.25), side=3)
 p <- Predict(f, cholesterol, sex)
 class(p) <- setdiff(class(p), 'Predict')
 
-plot_ly(p, x=cholesterol, y=yhat, color=sex, mode="lines", type="scatter", name="")
+plot_ly(p, x=~cholesterol, y=~yhat, color=~sex, mode="lines", type="scatter", name="")
 
 
 g <- ggplot(p, aes(x=cholesterol, y=yhat, color=sex)) + geom_line() +

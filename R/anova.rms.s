@@ -580,9 +580,9 @@ plot.anova.rms <-
                                                   ~R^2)))
         else
           switch(what,
-                 chisq='&chi;<sup>2</sup>',
-                 "proportion chisq"='Proportion of Overall &chi;<sup>2</sup>',
-                 chisqminusdf='&chi;<sup>2</sup>&nbsp;-&nbsp;df',
+                 chisq='\u03C7<sup>2</sup>',
+                 "proportion chisq"='Proportion of Overall \u03C7<sup>2</sup>',
+                 chisqminusdf='\u03C7<sup>2</sup>&nbsp;-&nbsp;df',
                  aic="Akaike Information Criterion",
                  P="P-value",
                  "partial R2"='Partial R<sup>2</sup>',
@@ -681,7 +681,7 @@ plot.anova.rms <-
               switch(marg, 
                      chisq = paste(htmlSpecs$chisq(dof), fn(chisq, 1)),
                      'proportion chisq' =
-                       paste('Proportion &chi;<sup>2</sup>=',
+                       paste('Proportion \u03C7<sup>2</sup>=',
                              fn(chisq / totchisq, 2)),
                      'd.f.' = paste('d.f.=', fn(dof, 0)),
                      P = paste('P=', fn(P, 4)),

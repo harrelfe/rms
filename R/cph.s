@@ -203,7 +203,9 @@ cph <- function(formula     = formula(data),
         else agreg.fit
       }
       else if (method == 'exact') {
-        if(type == 'right') coxexact.fit else agexact.fit
+        if(type == 'right') getFromNamespace('coxexact.fit', 'survival')
+        else
+          agexact.fit
         }
       else
         stop(paste ("Unknown method", method))
@@ -410,7 +412,9 @@ coxphFit <- function(..., method, strata=NULL, rownames=NULL, offset=NULL,
               if (type == 'right') coxph.fit else agreg.fit
             }
             else if (method == 'exact') {
-              if(type == 'right') coxexact.fit else agexact.fit
+              if(type == 'right') getFromNamespace('coxexact.fit', 'survival')
+              else
+                agexact.fit
               }
   else stop("Unkown method ", method)
 

@@ -40,7 +40,7 @@ importFrom(stats, .getXlevels, AIC, approx, as.formula,
            qnorm, qqline, qqnorm, qt, quantile,
            reformulate, reshape, resid, residuals, runif,
            supsmu, terms, uniroot, update, var, vcov)
-importFrom(utils, capture.output, de, getS3method)
+importFrom(utils, capture.output, de, getS3method, getFromNamespace)
 
 
 S3method(AIC, rms)

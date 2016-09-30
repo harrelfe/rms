@@ -174,10 +174,10 @@ survplotp.npsurv <-
 
     p <- plotly::plot_ly()
 
-    pl <- function(x, y, n.risk=NULL, col, slev, type='est') {
+    pl <- function(p, x, y, n.risk=NULL, col, slev, type='est') {
       sname  <- if(ns == 1) '' else slev
       snames <- if(sname == '') '' else paste0(sname, ' ')
-      d <- paste0('Difference<br>&half; ', conf.int, ' CL')
+      d <- paste0('Difference<br>\u00BD ', conf.int, ' CL')    # \u00BD = &half;
       nam   <- switch(type,
                       est   = sname,
                       lower = paste0(snames, conf.int, ' CL'),
@@ -217,13 +217,24 @@ survplotp.npsurv <-
                 'legendonly' else TRUE
       ln <- if(type == 'est') list(shape='hv', color=col)
             else list(shape='hv', color=col, width=0)
-      plotly::add_lines(p, x=! x, y=~ y,
-                        text=~ txt, hoverinfo='text', line=ln,
-                        fillcolor=fcol,
-                        fill=if(type %in% c('upper', 'diff upper'))
-                               'tonexty' else 'none',
-                        visible=vis, legendgroup=lg,
-                        name=nam)
+
+      p <- if(length(txt))
+             plotly::add_lines(p, x=~ x, y=~ y, text=~ txt,
+                               hoverinfo='text', line=ln,
+                               fillcolor=fcol,
+                               fill=if(type %in% c('upper', 'diff upper'))
+                                      'tonexty' else 'none',
+                               visible=vis, legendgroup=lg,
+                               name=nam)
+           else
+             plotly::add_lines(p, x=~ x, y=~ y,
+                               hoverinfo='none', line=ln,
+                               fillcolor=fcol,
+                               fill=if(type %in% c('upper', 'diff upper'))
+                                      'tonexty' else 'none',
+                               visible=vis, legendgroup=lg,
+                               name=nam)
+
     }
                         
     for(i in 1 : ns) {
@@ -281,8 +292,8 @@ survplotp.npsurv <-
           upper   <- c(upper[k], up.last)
         }
       }
-      
-      if(logt) p <- pl(time, surv, n.risk, col=col[i], slev=sleva[i])
+
+      if(logt) p <- pl(p, time, surv, n.risk, col=col[i], slev=sleva[i])
       else {
         xxx <- time
         yyy <- surv
@@ -291,8 +302,8 @@ survplotp.npsurv <-
           xxx <- c(mintime, time)
           yyy <- c(fun(1), surv)
           nr  <- c(fit$n[i], n.risk)
-          }
-        p <- pl(xxx, yyy, nr, col=col[i], slev=sleva[i])
+        }
+        p <- pl(p, xxx, yyy, nr, col=col[i], slev=sleva[i])
       }
       if(pr) {
         zest <- rbind(time, surv)
@@ -303,13 +314,13 @@ survplotp.npsurv <-
       }
       if(conf.int > 0) {
         if(logt) {
-          p <- pl(time, lower, type='lower', col=col[i], slev=sleva[i])
-          p <- pl(time, upper, type='upper', col=col[i], slev=sleva[i])
+          p <- pl(p, time, lower, type='lower', col=col[i], slev=sleva[i])
+          p <- pl(p, time, upper, type='upper', col=col[i], slev=sleva[i])
         }
         else {
-          p <- pl(c(min(time), time), c(fun(1), lower),
+          p <- pl(p, c(min(time), time), c(fun(1), lower),
                   col=col[i], slev=slev[i], type='lower')  # see survplot ?max(tim)?
-          p <- pl(c(min(time), time), c(fun(1), upper),
+          p <- pl(p, c(min(time), time), c(fun(1), upper),
                   col=col[i], slev=slev[i], type='upper')
         }
       }
@@ -319,8 +330,8 @@ survplotp.npsurv <-
       z <- survdiffplotp(fit.orig, fun=fun, conf.int=conf.int,
                          convert=convert, xlim=xlim, pobj=p)
       g <- plotly::toRGB('gray')
-      p <- pl(z$time, z$lower, type='diff lower', col=g, slev='')
-      p <- pl(z$time, z$upper, type='diff upper', col=g, slev='')
+      p <- pl(p, z$time, z$lower, type='diff lower', col=g, slev='')
+      p <- pl(p, z$time, z$upper, type='diff upper', col=g, slev='')
     }      
 
     
@@ -330,7 +341,7 @@ survplotp.npsurv <-
               paste('/', tolower(units), sep='')
       haz <- round(nevents / totaltime, 4)
       txt <- paste(nevents, 'events')
-      if(aehaz) txt <- paste(txt, '<br>&nbsp;&nbsp;&nbsp;&lambda;=',
+      if(aehaz) txt <- paste(txt, '<br>&nbsp;&nbsp;&nbsp;\u03BB=',    # \u03BB = &lambda;
                              haz, un, sep='')
       z <- paste(paste0(sleva, ':', txt), collapse='<br>')
       if(length(times)) {
@@ -343,8 +354,10 @@ survplotp.npsurv <-
     }
     else z <- paste(paste0(sleva, ': ', nevents, ' events'), collapse='<br>')
     
-    ## Add empty trace just to add to bottom of legend
-    p <- plotly::add_markers(x=NA, y=NA,   # mode='markers',
+    ## Add empty trace just to add to bottom of legend.  Used to have x=~NA y=~NA
+    ## but plotly update made that point ignored in every way
+
+    p <- plotly::add_markers(p, x=~ xlim[1], y=~ ylim[1],   # mode='markers',
                            marker=list(symbol='asterisk'),  # suppresses pt
                            name=z)
         
@@ -354,8 +367,8 @@ survplotp.npsurv <-
                    list(tickvals = seq(xlim[1], max(pretty(xlim)), time.inc)))
     
     plotly::layout(p,
-           xaxis=xaxis, 
-           yaxis=list(range=ylim, title=ylab), ..., autosize=TRUE)
+                   xaxis=xaxis, 
+                   yaxis=list(range=ylim, title=ylab), ..., autosize=TRUE)
 }
 
 
