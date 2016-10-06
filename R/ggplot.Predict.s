@@ -126,6 +126,10 @@ ggplot.Predict <-
   ## Function to construct xlim() or ylim() call
   limc <- function(limits, which)
     sprintf("%slim(%s, %s)", which, limits[1], limits[2])
+
+  xlimc <- if(missing(xlim.)) ''
+           else
+             paste('+', limc(xlim., 'x'))
   
   if(! missing(subset)) {
     subset <- eval(substitute(subset), data)
@@ -232,9 +236,9 @@ ggplot.Predict <-
           j <- which(p == iv)
           datj <- dat[j, iv]
           if(type == 'continuous') {
-			  xx[j] <- datj
-			  ## firstLev[iv] <- ''
-		  }
+            xx[j] <- datj
+            ## firstLev[iv] <- ''
+          }
           else {
             levj <- levels(datj)
             if(! length(levj)) levj <- unique(datj)
@@ -249,18 +253,19 @@ ggplot.Predict <-
         }
         dat$.xx. <- xx
         if(length(groups)) dat$.co. <- as.factor(dat[[groups]])
-
+        
         ylimc <- limc(ylim., 'y')
         if(type == 'continuous') {
           if(length(groups))
             g <- 
               sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s)) +
-                     labs(x=NULL, y=%s, title=%s) + %s',
-                     aestype[1], groups[1], expch(ylab, chr=TRUE), cap, ylimc)
+                     labs(x=NULL, y=%s, title=%s) + %s %s',
+                     aestype[1], groups[1], expch(ylab, chr=TRUE), cap,
+                     ylimc, xlimc)
           else
             g <- sprintf("ggplot(dat, aes(x=.xx., y=yhat)) +
-                         labs(x=NULL, y=%s, title=%s) + %s",
-                         expch(ylab, chr=TRUE), cap, ylimc)
+                         labs(x=NULL, y=%s, title=%s) + %s %s",
+                         expch(ylab, chr=TRUE), cap, ylimc, xlimc)
           
           g <- c(g, if(length(layout))
                       sprintf("facet_wrap(~ .Predictor., scales='free_x',
@@ -535,9 +540,9 @@ res <- if(jplot == 1) plrend(Plt[[1]])
 #             else
 #               plotly::layout(p, title=sub, margin=0.03)
 #      }
-return(res)
-
-   } else  { # .predictor. not included; user specified predictors to show
+    return(res)
+    
+  } else  { # .predictor. not included; user specified predictors to show
     v  <- varying
     xn <- v[1]    ## name of x-axis variable (first variable given to Predict)
     if(missing(xlab))
@@ -555,8 +560,8 @@ return(res)
     if(length(groups)) for(j in 1 : length(groups))
       ae <- paste0(ae, ', ', aestype[j], '=', groups[j])
     ae <- eval(parse(text=paste0(ae, ')')))
-    g <- c("ggplot(data, ae)", sprintf("labs(x=%s, y=%s, title=%s)",
-              expch(xlab, chr=TRUE), expch(ylab, chr=TRUE), cap))
+    g <- c("ggplot(data, ae)", sprintf("labs(x=%s, y=%s, title=%s) %s",
+              expch(xlab, chr=TRUE), expch(ylab, chr=TRUE), cap, xlimc))
 
     flipped <- FALSE
     if(xdiscrete) {

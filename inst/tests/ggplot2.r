@@ -27,6 +27,11 @@ options(datadist='ddist')
 fit <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
                x=TRUE, y=TRUE)
 an <- anova(fit)
+p <- Predict(fit, age)
+ggplot(p)
+ggplot(p, ylim=c(-.5, .5))
+ggplot(p, xlim=c(40,50))   # problem reported by JoAnn Alvarez
+
 p <- Predict(fit)
 # Plot effects in two vertical sub-panels with continuous predictors on top
 ggplot(p, sepdiscrete='vertical')
