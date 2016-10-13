@@ -704,7 +704,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
     if(n == 1) return('')
     specs$lineskip(n)
   }
-  
+
   catl  <- function(x, skip=1, bold=FALSE, verb=FALSE, pre=0,
                     center=TRUE, indent=FALSE) {
     if(lang == 'latex') {
@@ -746,7 +746,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
   
   if(length(x$fail) && x$fail) {
     return(catl('Model Did Not Converge.  No summary provided.',
-                bold=TRUE, pre=1))
+                bold=TRUE, pre=1, verb=TRUE))
   }
 
   R <- character(0)
@@ -842,7 +842,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
             R <- c(R, paste0('\\Needspace{', needspace, '}'))
 
           if(lang == 'latex') 
-            R <- c(R,
+            R <- c(R,   # was capture.output(latex())
                    capture.output(latex(U, file='',
                                         first.hline.double=FALSE,
                                         table=FALSE, longtable=TRUE,
@@ -880,7 +880,8 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
              else if(type == 'latex.naprint.delete')
                capture.output(do.call(type,
                                       c(obj, list(file=''))))
-             else capture.output(do.call(type, obj)),
+             else do.call(type, obj),
+#####             else capture.output(do.call(type, obj)),
              ## unlike do.call, eval(call(...)) dispatches on class of ...
              if(tex) '\\end{center}' else c('')
       )
