@@ -74,7 +74,7 @@ survplot.npsurv <-
     convert <- if(mstate) {
       istate    <- match(state, states)
       conv <- function(f, istate) {
-        f$surv    <- 1 - f$prev   [, istate]
+        f$surv    <- 1 - f$pstate [, istate]
         f$lower   <- 1 - f$lower  [, istate]
         f$upper   <- 1 - f$upper  [, istate]
         f$std.err <-     f$std.err[, istate]
