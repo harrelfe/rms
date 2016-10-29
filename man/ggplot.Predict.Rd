@@ -65,7 +65,9 @@
   of more than one predictor, \code{groups}
   is a character string that specifies a single variable name in
   \code{data} that can be used to form panels.  Only applies if using
-  \code{rbind} to combine several \code{Predict} results. }
+  \code{rbind} to combine several \code{Predict} results. If there is
+  more than one \code{groups} variable, confidence bands are suppressed
+  because \code{ggplot2:geom_ribbon} does not handle the aesthetics correctly.}
 \item{aestype}{a string vector of aesthetic names corresponding to
   variables in the \code{groups} vector.  Default is to use, in order,
   \code{color}, and \code{linetype}.  Other permissible values are
