@@ -1,4 +1,4 @@
-Changes in version 5.0-0 (2016-10-27)
+Changes in version 5.0-0 (2016-10-29)
    * plot.summary.rms: implemented plotly interactive plots if options(grType='plotly') in effect
 	 * plot.anova.rms: implemented plotly interactive plots if options(grType='plotly') in effect; remove psmall argument; changed margin default to chisq and P
 	 * ggplot.Predict: implemented plotly interactive plots if options(grType='plotly') in effect
@@ -21,7 +21,7 @@ Changes in version 5.0-0 (2016-10-27)
 	 * survplot.npsurv: fixed n.risk when competing risks
 	 * survest.cph, survfit.cph, others: fixed large problems due to incompatibility with survival 2.39-5 for survival predictions; changed object Strata to strata in cph to be compatible with survival package
 	 * new test survest.r to more comprehensively check survfit.cph and survest.cph
-	 * ggplot.Predict: quit ignoring xlim
+	 * ggplot.Predict: quit ignoring xlim; suppress confidence bands if two group bariables because ggplot2 geom_ribbon doesn't support multiple aesthetics
 	 * predictrms: set contrasts for ordered factors to contr.treatment instead of contr.poly
 	 
 Changes in version 4.5-1 (2016-06-01)

@@ -136,11 +136,13 @@ ggplot.Predict <-
     data   <- data[subset,, drop=FALSE]
   }
 
-  if(length(groups) && is.logical(groups) && ! groups) groups <- NULL
+  if(length(groups) == 1 && is.logical(groups) && ! groups) groups <- NULL
   else if(length(groups)) {
     if(length(groups) > 2 || !is.character(groups) ||
        any(groups %nin% names(data)))
       stop('groups must be one or two predictor names')
+    ## geom_ribbon will not handle two aesthetics
+    if(length(groups) == 2) conf.int <- FALSE
   } else if(! predpres && length(varying) > 1) groups <- varying[2]
 
   ## Make all grouping variables discrete for proper aesthetic mapping
@@ -446,7 +448,7 @@ ggplot.Predict <-
           'ggplot(zz, aes(x=.xx., y=.yhat, %s=.cond))', aestype[1])
       }
       else g <- 'ggplot(zz, aes(x=.xx., y=.yhat))'
-      
+
       xdiscrete <- is.factor(z) || is.character(z) ||
         length(unique(z[!is.na(z)])) <= nlevels
       flipped <- FALSE
@@ -474,6 +476,7 @@ ggplot.Predict <-
              "theme(plot.margin = grid::unit(rep(0, 4), 'cm'))")
       ## use rep(.1, 4) if using print(..., viewport=...) for multiple plots
       if(length(groups)) {
+#### ??
         # if(nr == 1 && nc == 1) {
         if(jplot == 1) {
           colFun <- if(aestype[1] == 'color') colorscale else
@@ -559,8 +562,10 @@ res <- if(jplot == 1) plrend(Plt[[1]])
     ae <- paste0('aes(x=', xn, ', y=yhat')
     if(length(groups)) for(j in 1 : length(groups))
       ae <- paste0(ae, ', ', aestype[j], '=', groups[j])
-    ae <- eval(parse(text=paste0(ae, ')')))
-    g <- c("ggplot(data, ae)", sprintf("labs(x=%s, y=%s, title=%s) %s",
+####    ae <- eval(parse(text=paste0(ae, ')')))
+    ae <- paste0(ae, ')')
+    g <- c(sprintf("ggplot(data, %s)", ae),
+           sprintf("labs(x=%s, y=%s, title=%s) %s",
               expch(xlab, chr=TRUE), expch(ylab, chr=TRUE), cap, xlimc))
 
     flipped <- FALSE
@@ -582,14 +587,22 @@ res <- if(jplot == 1) plrend(Plt[[1]])
 
       if(length(groups)) {
         for(j in 1 : length(groups)) {
-          colFun <- if(aestype[j] == 'color') colorscale else
-           get(paste('scale', aestype[j], 'discrete', sep='_'))
+#          colFun <- if(aestype[j] == 'color') colorscale else
+#           get(paste('scale', aestype[j], 'discrete', sep='_'))
+          colFun <- if(aestype[j] == 'color') 'colorscale'
+                    else
+                      paste('scale', aestype[j], 'discrete', sep='_')
           groupLabel <- glabel(groups[j], j, chr=TRUE)
+#??          g <- c(g, if(aestype[j] == 'size')
+#                 sprintf("colFun(name=%s, range=c(.2, 1.5))",
+#                         groupLabel) else
+#                 sprintf("colFun(name=%s)", groupLabel))
           g <- c(g, if(aestype[j] == 'size')
-                 sprintf("colFun(name=%s, range=c(.2, 1.5))",
-                         groupLabel) else
-                 sprintf("colFun(name=%s)", groupLabel))
-
+                      sprintf('%s(name=%s, range=c(.2, 1.5))',
+                              colFun, groupLabel)
+                    else
+                      sprintf('%s(name=%s)', colFun, groupLabel))
+          
         }
         g <- c(g, sprintf("theme(legend.position='%s')",
                           legend.position))

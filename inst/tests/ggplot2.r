@@ -205,3 +205,44 @@ p <- Predict(fit, fun=plogis)
 ggplot(p)
 ggplot(p, sepdiscrete='vertical', colfill='green', anova=anova(fit))
 
+
+## From JoAnn Alvarez 2016-10
+
+n <- 800     # define sample size
+set.seed(17) # so can reproduce the results
+age            <- rnorm(n, 50, 10)
+cholesterol    <- rnorm(n, 200, 25)
+sex            <- factor(sample(c('female','male'), n,TRUE))
+eyecolor       <- factor(sample(c('green','blue'), n,TRUE))
+L <- .4*(sex=='male') +
+  .045*(age-50) +
+  3*(eyecolor == 'blue')*(sex=='female') +
+  (log(cholesterol - 10)-5.2)*(-2*(sex=='female') + 2*(sex=='male'))
+y <- ifelse(runif(n) < plogis(L), 1, 0)
+ddist <- datadist(age, eyecolor, cholesterol, sex)
+options(datadist='ddist')
+fit <- lrm(y ~ sex * (eyecolor + age + rcs(cholesterol,4)))
+p <- Predict(fit, cholesterol, sex, eyecolor)
+
+ggplot(p)
+
+# Confidence bands automatically suppessed:
+ggplot(p, groups = c('eyecolor', 'sex'), aestype=c('color', 'linetype'))
+
+colorscale <- function(...)
+  scale_color_manual(...,
+                     values=c("#000000", "#E69F00", "#56B4E9",
+                              "#009E73","#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
+ 
+ggplot(p, aes(x=cholesterol, y=yhat, color=eyecolor, linetype=sex)) +
+  labs(x=expression(cholesterol), y="log odds",
+       title="Adjusted to:age=50.2 ")  +
+  geom_line(data=p, mapping=aes(color=eyecolor, linetype=sex)) +
+  colorscale(name=expression(eyecolor)) +
+  scale_linetype_discrete(name=expression(sex)) +
+  theme(legend.position='right') +
+  geom_ribbon(data=p, aes(ymin=lower, ymax=upper), alpha=0.2,
+              linetype=0, fill=I('black'), show.legend=FALSE) +
+  coord_cartesian(ylim=c(-4, 6)) +
+  theme(plot.title=element_text(size=8, hjust=1))
+
