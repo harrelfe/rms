@@ -166,7 +166,7 @@ for the mouse, \code{FALSE} to suppress statistics.
 This is plotted after the curve legends.
 }
 \item{riskdist}{
-Defaults to \code{"calibrated"} to plot the relative frequency distribution of
+Use \code{"calibrated"} to plot the relative frequency distribution of
 calibrated probabilities after dividing into 101 bins from \code{lim[1]} to
 \code{lim[2]}.
 Set to \code{"predicted"} (the default as of rms 4.5-1) to use raw assigned risk, \code{FALSE} to omit risk distribution.

@@ -110,21 +110,24 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   
   if(pl) {
     plot(.5, .5, xlim=lim, ylim=lim, type="n", xlab=xlab, ylab=ylab)
-    abline(0, 1, lty=2)
-    lt <- 2; leg <- "Ideal"; marks <- -1
+    abline(0, 1, lwd=6, col=gray(.85))
+    lt <- 1; leg <- "Ideal"; marks <- -1; lwd <- 6; col <- gray(.85)
     if(logistic.cal) {
       lt <- c(lt, 1); leg <- c(leg, "Logistic calibration")
+      lwd <- c(lwd, 1); col <- c(col, 'black')
       marks <- c(marks, -1)
     }
     if(smooth) {
       if(connect.smooth) { 
         lines(Sm, lty=3)
         lt <- c(lt, 3)
+        lwd <- c(lwd, 1); col <- c(col, 'black')
         marks <- c(marks, -1)
       }
       else {
         points(Sm)
         lt <- c(lt, 0)
+        lwd <- c(lwd, 1); col <- c(col, 'black')
         marks <- c(marks, 1)
       }
       leg <- c(leg, "Nonparametric")
@@ -139,7 +142,8 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
       points(means, prop, pch=2)
       if(connect.group) {lines(means, prop); lt <- c(lt, 1)}
       else lt <- c(lt, 0)
-      leg <- c(leg, "Grouped observations")
+           leg <- c(leg, "Grouped observations")
+      col <- c(col, 'black'); lwd <- c(lwd, 1)     
       marks <- c(marks, 2)
     }
 	}
@@ -171,7 +175,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
     lp <- legendloc
     if(! is.logical(lp)) {
       if(! is.list(lp)) lp <- list(x=lp[1],y=lp[2])
-      legend(lp, leg, lty=lt, pch=marks, cex=cex, bty="n")
+      legend(lp, leg, lty=lt, pch=marks, cex=cex, lwd=lwd, col=col, bty="n")
     }
     if(! is.logical(statloc)) {
       dostats <- c("Dxy", "C (ROC)", "R2", "D", "U", "Q", "Brier",
@@ -303,7 +307,7 @@ plot.val.prob <- function(x,
 
   labcurve(curves, pl=TRUE, xlim=lim, ylim=lim, 
 		   xlab=xlab, ylab=ylab, cex=cex, lwd=lwd, ...)
-  abline(a=0,b=1,lty=2)
+  abline(a=0, b=1, lwd=6, col=gray(.86))
   if(is.logical(statloc) && ! statloc) return(invisible())
 
   if(length(quantiles))
