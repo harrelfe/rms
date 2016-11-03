@@ -491,7 +491,8 @@ latex.anova.rms <-
     
     
     ## Translate interaction symbol (*) to times symbol
-    rowl <- gsub('\\*', specs$times, rowl)
+    ## rowl <- gsub('\\*', specs$times, rowl)   # changed * to $times$
+    rowl <- gsub('*', specs$times, rowl, fixed=TRUE)
   
     ## Put TOTAL rows in boldface
     rowl <- ifelse(substring(rowl, 1, 5) %in% c("REGRE", "ERROR"),
@@ -505,7 +506,7 @@ latex.anova.rms <-
   
     dstats <- as.data.frame(object)
     attr(dstats, 'row.names') <- rowl
-  
+    
     digits <- c('Chi-Square'=dec.chisq, F=dec.F, 'd.f.'=0,
                 'Partial SS'=dec.ss, MS=dec.ms, P=dec.P)
 
