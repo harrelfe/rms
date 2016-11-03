@@ -1,10 +1,14 @@
 C Output from Public domain Ratfor, version 1.01
+C Modified to remove compiler warnings in pedantic mode. SPG, 11/3/16
       subroutine ormuv(n, p, kint, nx, x, y, pr, fpa, fpb, fppa, fppb, u
      *, v, ja, ia, l, lia, kk)
-      implicit real*8 (a-h,o-z)
+C      implicit double precision (a-h,o-z)
+      implicit none
+      integer n, lia, l, nx, kint, iv, j, ik, ki, m, mi, k, mm, nkk
+      double precision pa, pb, ppa, uk, vmk, w, ppb
       integer p, y(n), ja(l), ia(lia), z, kk(p)
-      real*8 x(n,nx), pr(n), fpa(n), fpb(n), fppa(n), fppb(n), u(p), v(l
-     *), ld
+      double precision x(n,nx), pr(n), fpa(n), fpb(n), fppa(n), fppb(n)
+      double precision a, u(p), v(l), ld
       do23000 k=1,kint 
       uk = 0d0
       do23002 j=1, n 
@@ -19,20 +23,20 @@ C Output from Public domain Ratfor, version 1.01
       endif
       uk = uk + a / pr(j)
 23002 continue
-23003 continue
+      continue
       u(k) = uk
 23000 continue
-23001 continue
+      continue
       if(nx .gt. 0)then
       do23010 k = (kint + 1), p 
       uk = 0d0
       do23012 j=1, n 
       uk = uk + (fpa(j) - fpb(j)) * x(j, k-kint) / pr(j)
 23012 continue
-23013 continue
+      continue
       u(k) = uk
 23010 continue
-23011 continue
+      continue
       endif
       iv = 0
       do23014 m = 1,p 
@@ -57,7 +61,7 @@ C Output from Public domain Ratfor, version 1.01
       do23024 mm=1, kint 
       kk(mm) = mm
 23024 continue
-23025 continue
+      continue
       endif
       endif
       endif
@@ -65,7 +69,7 @@ C Output from Public domain Ratfor, version 1.01
       nkk = nkk + 1
       kk(nkk) = mm
 23026 continue
-23027 continue
+      continue
       else
       nkk = p
       endif
@@ -101,7 +105,7 @@ C Output from Public domain Ratfor, version 1.01
       endif
       vmk = vmk + a
 23032 continue
-23033 continue
+      continue
       iv = iv + 1
       v(iv) = - vmk
       if(kint .gt. 1)then
@@ -111,20 +115,21 @@ C Output from Public domain Ratfor, version 1.01
       endif
       endif
 23028 continue
-23029 continue
+      continue
 23014 continue
-23015 continue
+      continue
       if(kint .gt. 1)then
       ia(p+1) = iv + 1
       endif
       return
       end
-      real*8 function ld(a)
-      logical a
+      
+      double precision function ld(a)
+        logical a
       if(a)then
-      ld = 1d0
+        ld = 1d0
       else
-      ld = 0d0
+        ld = 0d0
       endif
       return
       end

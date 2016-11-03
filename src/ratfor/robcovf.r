@@ -2,9 +2,9 @@
 ## Computes sum of (within cluster sum of U)(within cluster sum of U)'
 ##
 SUBROUTINE robcovf(n, p, nc, start, len, u, s, v, w)
-IMPLICIT REAL*8 (a-h,o-z)
+IMPLICIT DOUBLE PRECISION (a-h,o-z)
 INTEGER p, start(nc), len(nc)
-REAL*8 u(n,p), s(p), v(p,p), w(p,p)
+DOUBLE PRECISION u(n,p), s(p), v(p,p), w(p,p)
 
 do i=1,p		{
    do j=1,p		{
