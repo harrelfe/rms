@@ -167,6 +167,14 @@ C
       DOUBLE PRECISION lprob
       INTEGER IDX(nxm),R(NMAX),ftable(501,KINT+1)
       LOGICAL DVRG,ofpres,calcc,normwt
+C Default initializations
+      VIY = 0
+      VIY1 = 0
+      PIY = 0
+      PIY1 = 0
+      CPIY = 0
+      CPIY1 = 0
+      MID = 0
       NV=NVI
       BX=0
       KINT1=KINT + 1
@@ -235,7 +243,7 @@ C
             cpiy=lprob(bx + off)
             IF(calcc) THEN
                ipp=INT(500d0*cpiy + 1d0)
-               if(.NOT. normwt) incobs=w + .5D0
+               if(.NOT. normwt) incobs=INT(w + .5D0)
                ftable(ipp,iy + 1)=ftable(ipp,iy + 1) + incobs
             ENDIF
             viy=cpiy*(1D0 - cpiy)
@@ -275,7 +283,7 @@ C     Add to first and second derivatives
 C     COMPUTE EXCEEDENCE PROBABILITIES AND CHECK FOR DIVERGENCE
          IF(calcc) THEN
             ipp=INT(500d0*prob(bx + beta(mid) + off) + 1d0)
-            if(.NOT. normwt)incobs=w + .5D0
+            if(.NOT. normwt)incobs=INT(w + .5D0)
             ftable(ipp,iy + 1)=ftable(ipp,iy + 1) + incobs
          ENDIF
          IF(iy.NE.0) THEN
