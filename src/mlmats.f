@@ -73,8 +73,7 @@ C-----------------------------------------------------------------------------
 C     MULTIPLIES N*N SYMMETRIC MATRIX M STORED IN COMPRESSED FORMAT BY
 C     THE N*1 VECTOR V AND RETURNS THE N*1 VECTOR PRODUCT P
 C-----------------------------------------------------------------------------
-C      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      IMPLICIT NONE
+      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       INTEGER I, N, II, J, IR, isgn
       DOUBLE PRECISION PI
       DOUBLE PRECISION M(N*(N+1)/2),V(N),P(N)
