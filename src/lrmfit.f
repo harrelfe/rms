@@ -282,7 +282,7 @@ C     Add to first and second derivatives
          ENDIF
 C     COMPUTE EXCEEDENCE PROBABILITIES AND CHECK FOR DIVERGENCE
          IF(calcc) THEN
-            ipp=INT(500d0*prob(bx + beta(mid) + off) + 1d0)
+            ipp=INT(500d0*lprob(bx + beta(mid) + off) + 1d0)
             if(.NOT. normwt)incobs=INT(w + .5D0)
             ftable(ipp,iy + 1)=ftable(ipp,iy + 1) + incobs
          ENDIF
