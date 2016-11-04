@@ -1,10 +1,10 @@
-C Output from Public domain Ratfor, version 1.01
+C Output from Public domain Ratfor, version 1.03
       subroutine ormuv(n, p, kint, nx, x, y, pr, fpa, fpb, fppa, fppb, u
      *, v, ja, ia, l, lia, kk)
-      implicit real*8 (a-h,o-z)
+      implicit double precision (a-h,o-z)
       integer p, y(n), ja(l), ia(lia), z, kk(p)
-      real*8 x(n,nx), pr(n), fpa(n), fpb(n), fppa(n), fppb(n), u(p), v(l
-     *), ld
+      double precision x(n,nx), pr(n), fpa(n), fpb(n), fppa(n), fppb(n),
+     * u(p), v(l), ld
       do23000 k=1,kint 
       uk = 0d0
       do23002 j=1, n 
@@ -119,7 +119,7 @@ C Output from Public domain Ratfor, version 1.01
       endif
       return
       end
-      real*8 function ld(a)
+      double precision function ld(a)
       logical a
       if(a)then
       ld = 1d0

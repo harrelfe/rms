@@ -5,9 +5,9 @@
 ## If kint=1 just use a regular square matrix, l=p^2
 SUBROUTINE ormuv(n, p, kint, nx, x, y, pr, fpa, fpb, fppa, fppb, u, v,
                  ja, ia, l, lia, kk)
-IMPLICIT REAL*8 (a-h,o-z)
+IMPLICIT DOUBLE PRECISION (a-h,o-z)
 INTEGER p, y(n), ja(l), ia(lia), z, kk(p)
-REAL*8 X(n,nx), pr(n), fpa(n), fpb(n), fppa(n), fppb(n), u(p), v(l), ld
+DOUBLE PRECISION X(n,nx), pr(n), fpa(n), fpb(n), fppa(n), fppb(n), u(p), v(l), ld
 do k=1,kint {
   uk = 0d0
   do j=1, n {
@@ -97,7 +97,7 @@ if(kint > 1) ia(p+1) = iv + 1
 return
 end
 
-real*8 function ld(a)
+double precision function ld(a)
 logical a
 if(a) ld = 1d0
 else ld = 0d0

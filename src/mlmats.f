@@ -1,12 +1,33 @@
+C-----------------------------------------------------------------------------
+C     Helper function to compute sign of a number
+C     returns 1 when number is greater than zero
+C     returns 0 when number is zero
+C     returns -1 when number is less than zero
+C-----------------------------------------------------------------------------
+      function isgn(i)
+        implicit none
+        integer isgn, i
+      
+        isgn = isign(1,i)
+        if(i.eq.0) isgn = 0
+        
+        return
+      end function isgn
+      
+      
       FUNCTION isub(i,j)
 C-----------------------------------------------------------------------------
 C     Computes subscript in lower triangular matrix corresponding to (i,j)
 C-----------------------------------------------------------------------------
-      INTEGER i,j,isub
-      IF(i-j)10,10,20
-10    isub=i+j*(j-1)/2
-      RETURN
-20    isub=j+i*(i-1)/2
+      INTEGER i,j,isub,isgn
+
+      SELECT CASE (isgn(i-j))
+         CASE (: 0)
+            isub=i+j*(j-1)/2
+         CASE (1 : )
+            isub=j+i*(i-1)/2
+      END SELECT
+      
       RETURN
       END
         SUBROUTINE sqtria(vsq,vtri,n,k)
@@ -46,24 +67,30 @@ C-----------------------------------------------------------------------------
         end do
       return
       end
+      
       SUBROUTINE SPROD(M,V,P,N)
 C-----------------------------------------------------------------------------
 C     MULTIPLIES N*N SYMMETRIC MATRIX M STORED IN COMPRESSED FORMAT BY
 C     THE N*1 VECTOR V AND RETURNS THE N*1 VECTOR PRODUCT P
 C-----------------------------------------------------------------------------
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      INTEGER I, N, II, J, IR, isgn
+      DOUBLE PRECISION PI
       DOUBLE PRECISION M(N*(N+1)/2),V(N),P(N)
-      DO 20 I=1,N
-      PI=0D0
-      II=I*(I-1)/2
-      DO 10 J=1,N
-      IF(I-J)2,4,4
-    2 IR=I+J*(J-1)/2
-      GO TO 10
-    4 IR=J+II
-   10 PI=PI+M(IR)*V(J)
-      P(I)=PI
-   20 CONTINUE
+      DO I=1,N
+        PI=0D0
+        II=I*(I-1)/2
+        DO J=1,N
+          SELECT CASE(isgn(I-J))
+            CASE ( : -1)
+              IR=I+J*(J-1)/2
+            CASE (0 : )
+              IR=J+II
+          END SELECT
+          PI=PI+M(IR)*V(J)
+        END DO
+        P(I)=PI
+      END DO
       RETURN
       END
       SUBROUTINE AVA(A,V,P,N)
@@ -341,9 +368,10 @@ C
       IF (N.LT.1.OR.E.LT.ZERO) RETURN
       IFAULT=0
       J=0
-      DO 10 I=1,N
-      J=J+I
-   10 S(I)=T(J)
+      DO I=1,N
+        J=J+I
+        S(I)=T(J)
+      END DO
 C
       NRANK=0
       DO j=1,ne
@@ -389,6 +417,7 @@ C     Modified F. Harrell 25Sep90 to allow E=0 to effectively turn
 C     off singularity checking.
 C
       DOUBLE PRECISION A,B,E,S(N),T(N*(N+1)/2),ZERO,ONE
+      INTEGER isgn
       LOGICAL SWEPT(N)
       DATA ZERO,ONE /0.0D0,1.0E0/
 C
@@ -426,21 +455,35 @@ C
       IJ=0
       DO 90 I=1,N
       IK=IK+1
-      IF (I-K) 50,30,40
-   30 IJ=IJ+K
-      GO TO 90
-   40 IK=IK+I-2
-   50 B=T(IK)
+
+      SELECT CASE(isgn(I-K))
+        CASE (: -1)
+          B=T(IK)
+        CASE (0)
+          IJ=IJ+K
+          GO TO 90
+        CASE (1 : )
+          IK=IK+I-2
+          B=T(IK)
+      END SELECT
+      
       IF (T(KK).LT.ZERO) B=-B
       T(IK)=A*T(IK)
       JK=KK-K
-      DO 80 J=1,I
-      IJ=IJ+1
-      JK=JK+1
-      IF (J-K) 70,80,60
-   60 JK=JK+J-2
-   70 T(IJ)=T(IJ)+B*T(JK)
-   80 CONTINUE
+      DO J=1,I
+        IJ=IJ+1
+        JK=JK+1
+        SELECT CASE (isgn(J-K))
+          CASE (: -1)
+            T(IJ)=T(IJ)+B*T(JK)
+          CASE (0)
+            JK=JK
+          CASE (1 : )
+            JK=JK+J-2
+            T(IJ)=T(IJ)+B*T(JK)
+        END SELECT
+      END DO
+   
    90 CONTINUE
       SWEPT(K)=.NOT.SWEPT(K)
       RETURN

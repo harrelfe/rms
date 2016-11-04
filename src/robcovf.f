@@ -1,8 +1,8 @@
-C Output from Public domain Ratfor, version 1.01
+C Output from Public domain Ratfor, version 1.03
       subroutine robcovf(n, p, nc, start, len, u, s, v, w)
-      implicit real*8 (a-h,o-z)
+      implicit double precision (a-h,o-z)
       integer p, start(nc), len(nc)
-      real*8 u(n,p), s(p), v(p,p), w(p,p)
+      double precision u(n,p), s(p), v(p,p), w(p,p)
       do23000 i=1,p 
       do23002 j=1,p 
       w(i,j)=0d0 

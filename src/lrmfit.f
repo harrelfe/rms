@@ -22,6 +22,7 @@ C       for solving system of equations using Fortran routines called
 C       by S function solve).
 C
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
+      INTEGER maxit
       DOUBLE PRECISION BETA(nvi),U(nvi),V(nvi*(nvi+1)/2),LOGLIK,
      &     C(nvi), wv(2*nvi),
      &     deltab(nvi),vsq(nvi,nvi),penalt(nvi,nvi),wt(NOBS)
@@ -33,7 +34,7 @@ C     Dimensions of X, penalt, wt not needed until inside LLOGIT
       LOGICAL DVRG,ofpres,piter,normwt
       eps   = opts(1)
       dlike = opts(2)
-      maxit = opts(3)
+      maxit = INT(opts(3))
       piter = opts(4) .EQ. 1d0
       ofpres= opts(5) .EQ. 1d0
       normwt= opts(12) .EQ. 1d0
@@ -96,8 +97,9 @@ C     Compute V inverse * U by solving system of equations
             RETURN
          ENDIF
 C     UPDATE BETA ESTIMATES
-         DO 630 I=1,NVI
- 630        BETA(I)=BETA(I) + deltab(I)
+         DO I=1,NVI
+           BETA(I)=BETA(I) + deltab(I)
+         END DO
 C     call dblepr('v',1,v,nvi*(nvi+1)/2)
 C     call dblepr('deltab',6,deltab,nvi)
 C     call dblepr('beta',4,beta,nvi)
@@ -127,6 +129,16 @@ C     NOTE: V IS NOT INVERTED.
          IF(dvrg)opts(6)=1d0
          RETURN
          END
+
+C Statement Functions have been deprecated
+C This is now a top level function.
+      FUNCTION lprob(bb)
+        implicit none
+        double precision lprob, bb
+        lprob=1D0/(1D0 + DEXP(-DMIN1(DMAX1(bb,-30D0),30D0)))
+        RETURN
+      END
+         
       SUBROUTINE LLOGIT(BETA, IDX, X, R, offset, U, V, C,
      & LOGLIK, NOBS, NMAX, nxm, ofpres, NVI, KINT, DVRG,
      & ftable, calcc, penalt, wt, normwt)
@@ -152,9 +164,17 @@ C
       DOUBLE PRECISION BETA(nvi),U(nvi),V(nvi*(nvi+1)/2),
      & C(nvi), LOGLIK, penalt(nvi,nvi), wt(nmax)
       DOUBLE PRECISION X(NMAX,nxm),offset(nmax)
+      DOUBLE PRECISION lprob
       INTEGER IDX(nxm),R(NMAX),ftable(501,KINT+1)
       LOGICAL DVRG,ofpres,calcc,normwt
-      PROB(BB)=1D0/(1D0 + DEXP(-DMIN1(DMAX1(BB,-30D0),30D0)))
+C Default initializations
+      VIY = 0
+      VIY1 = 0
+      PIY = 0
+      PIY1 = 0
+      CPIY = 0
+      CPIY1 = 0
+      MID = 0
       NV=NVI
       BX=0
       KINT1=KINT + 1
@@ -220,10 +240,10 @@ C
                ENDIF
                bx=bx + beta(i)*c(i)
             ENDDO
-            cpiy=PROB(bx + off)
+            cpiy=lprob(bx + off)
             IF(calcc) THEN
-               ipp=500d0*cpiy + 1d0
-               if(.NOT. normwt) incobs=w + .5D0
+               ipp=INT(500d0*cpiy + 1d0)
+               if(.NOT. normwt) incobs=INT(w + .5D0)
                ftable(ipp,iy + 1)=ftable(ipp,iy + 1) + incobs
             ENDIF
             viy=cpiy*(1D0 - cpiy)
@@ -262,16 +282,16 @@ C     Add to first and second derivatives
          ENDIF
 C     COMPUTE EXCEEDENCE PROBABILITIES AND CHECK FOR DIVERGENCE
          IF(calcc) THEN
-            ipp=500d0*prob(bx + beta(mid) + off) + 1d0
-            if(.NOT. normwt)incobs=w + .5D0
+            ipp=INT(500d0*prob(bx + beta(mid) + off) + 1d0)
+            if(.NOT. normwt)incobs=INT(w + .5D0)
             ftable(ipp,iy + 1)=ftable(ipp,iy + 1) + incobs
          ENDIF
          IF(iy.NE.0) THEN
-            CPIY=PROB(bx + beta(iy) + off)
+            CPIY=lprob(bx + beta(iy) + off)
             VIY=CPIY*(1D0 - CPIY)
             IF(IY .EQ. KINT)GO TO 78
          ENDIF
-         CPIY1=PROB(BX + BETA(IY + 1) + off)
+         CPIY1=lprob(BX + BETA(IY + 1) + off)
          VIY1=CPIY1*(1D0 - CPIY1)
          IF(CPIY1 .LT. 1D0)GO TO 80
          GO TO 74
