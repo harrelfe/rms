@@ -777,7 +777,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
     
     preskip <- z$preskip
     if(! length(preskip)) preskip <- 0
-    if(! tex && length(titl)) R <- c(R, catl(titl, pre=preskip, skip=1))
+    if(! tex && length(titl)) R <- c(R, '', catl(titl, pre=preskip, skip=1))
     if(type == 'stats') {
       R <- c(R, prStats(obj[[1]], obj[[2]], lang=lang))
     } else if(type == 'coefmatrix') {
@@ -880,10 +880,10 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
              else if(type == 'latex.naprint.delete')
                capture.output(do.call(type,
                                       c(obj, list(file=''))))
-             else do.call(type, obj),
-#####             else capture.output(do.call(type, obj)),
+##             else do.call(type, obj),   ????
+             else capture.output(do.call(type, obj)),
              ## unlike do.call, eval(call(...)) dispatches on class of ...
-             if(tex) '\\end{center}' else c('')
+             if(tex) '\\end{center}' else ''
       )
     }
   }
