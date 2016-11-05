@@ -881,7 +881,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                capture.output(do.call(type,
                                       c(obj, list(file=''))))
 ##             else do.call(type, obj),   ????
-             else capture.output(do.call(type, obj)),
+             else c(bverb(), capture.output(do.call(type, obj)), everb()),
              ## unlike do.call, eval(call(...)) dispatches on class of ...
              if(tex) '\\end{center}' else ''
       )

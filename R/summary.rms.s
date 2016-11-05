@@ -274,22 +274,28 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
 
 print.summary.rms <- function(x, ...)
 {
-  cstats <- dimnames(x)[[1]]
-  for(i in 1 : 7) cstats <- cbind(cstats, format(signif(x[, i], 5)))
-#  for(i in 4 : 7) cstats <- cbind(cstats, format(round (x[, i], 2)))
-  dimnames(cstats) <- list(rep("", nrow(cstats)), 
-                           c("Factor", dimnames(x)[[2]][1 : 7]))
-  cat(attr(x,"heading"), "\n\n")
-  print(cstats, quote=FALSE)
-  if((A <- attr(x, "adjust")) != "") cat("\nAdjusted to:", A, "\n")
-  blab <- switch(attr(x, 'conf.type'),
-                 'bootstrap nonparametric percentile' = 
-                  'Bootstrap nonparametric percentile confidence intervals',
-                 'bootstrap BCa' = 'Bootstrap BCa confidence intervals',
-                 'basic bootstrap' = 'Basic bootstrap confidence intervals',
-                 '')
-  if(blab != '') cat('\n', blab, '\n', sep='')
-  cat('\n')
+  switch(prType(),
+         latex = latex.summary.rms(x, ..., file='', table.env=FALSE),
+         html  = html.summary.rms(x, ...),
+         plain = {
+  
+           cstats <- dimnames(x)[[1]]
+           for(i in 1 : 7) cstats <- cbind(cstats, format(signif(x[, i], 5)))
+           dimnames(cstats) <- list(rep("", nrow(cstats)), 
+                                    c("Factor", dimnames(x)[[2]][1 : 7]))
+           cat(attr(x,"heading"), "\n\n")
+           print(cstats, quote=FALSE)
+           if((A <- attr(x, "adjust")) != "") cat("\nAdjusted to:", A, "\n")
+           blab <- switch(attr(x, 'conf.type'),
+              'bootstrap nonparametric percentile' = 
+              'Bootstrap nonparametric percentile confidence intervals',
+              'bootstrap BCa' = 'Bootstrap BCa confidence intervals',
+              'basic bootstrap' = 'Basic bootstrap confidence intervals',
+              '')
+           if(blab != '') cat('\n', blab, '\n', sep='')
+           cat('\n')
+         }
+         )
   invisible()
 }
 

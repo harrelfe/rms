@@ -24,7 +24,12 @@ The longest confidence bar on each page is labeled with confidence levels
 (unless this bar has been ignored due to \code{clip}).  By default, the
 following confidence levels are all shown: .9, .95, and .99, using 
 blue of different transparencies.  The \code{html} method is for use
-with R Markdown using html with LaTeX math (using MathJax).
+with R Markdown using html.
+
+The \code{print} method will call the \code{latex} or \code{html} method
+if \code{options(prType=)} is set to \code{"latex"} or \code{"html"}.
+For \code{"latex"} printing through \code{print()}, the LaTeX table
+environment is turned off.
 
 If \code{usebootcoef=TRUE} and the fit was run through \code{bootcov},
 the confidence intervals are bootstrap nonparametric percentile
@@ -244,6 +249,11 @@ s <- summary(fit)                # Estimate effects using default ranges
 latex(s)                         # Use LaTeX to print nice version
 latex(s, file="")                # Just write LaTeX code to console
 html(s)                          # html/LaTeX to console for knitr
+# Or:
+options(prType='latex')
+summary(fit)                     # prints with LaTeX, table.env=FALSE
+options(prType='html')
+summary(fit)                     # prints with html
 }
 summary(fit, sex='male', age=60) # Specify ref. cell and adjustment val
 summary(fit, age=c(50,70))       # Estimate effect of increasing age from
