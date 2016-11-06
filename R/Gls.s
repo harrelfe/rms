@@ -7,9 +7,6 @@ Gls <-
     weights = NULL, subset, method = c("REML", "ML"), na.action = na.omit, 
     control = list(), verbose = FALSE, B=0, dupCluster=FALSE,
             pr=FALSE, x=FALSE) {
-    ## require(nlme)
-    if(!existsFunction('glsEstimate'))
-      stop('nlme package must be version 3.1-113 or later')
     
     Call <- match.call()
     controlvals <- glsControl()
