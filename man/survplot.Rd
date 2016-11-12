@@ -118,7 +118,7 @@ settings (or a vector of settings for the one displayed variable).  Note
 that since \code{npsurv} objects do not use the variable list in 
 \code{\dots}, you can specify any extra arguments to \code{labcurve} by
 adding them at the end of the list of arguments.  For \code{survplotp}
-\dots is passed to \code{plotly::layout}.
+\dots (e.g., \code{height}, \code{width}) is passed to \code{plotly::plot_ly}.
 }
 \item{xlim}{
 a vector of two numbers specifiying the x-axis range for follow-up time.

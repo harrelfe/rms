@@ -523,7 +523,9 @@ plot.summary.rms <-
   p <- plotly::plot_ly(x=~ feffect, y=~ lb,
                        text=~ hte,
                        type='scatter', mode='markers', hoverinfo='text',
-                       name='Estimate')
+                       name='Estimate',
+                       height = pp$heightDotchart(length(lb)))
+
   
   for(i in 1 : n) {
     lower <- fun(effect + se * qfun(1. - q[i]))
@@ -552,8 +554,7 @@ plot.summary.rms <-
                                 zeroline=FALSE, title=tlab),
                    yaxis  = list(title='', autorange='reversed'),
                    margin = list(l=pp$lrmargin(lb)),
-                   autosize = FALSE,
-                   height = pp$heightDotchart(length(lb)),
+#                   autosize = FALSE,
                    shapes = list(
                      list(type = "line",
                           line = list(color = "lightgray"), 

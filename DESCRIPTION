@@ -1,12 +1,12 @@
 Package: rms
 Version: 5.0-1
-Date: 2016-11-06
+Date: 2016-11-12
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Maintainer: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
-Depends: Hmisc (>= 4.0-0), survival (>= 2.40-1), lattice, ggplot2 (>= 2.0), SparseM
+Depends: Hmisc (>= 4.0-0), survival (>= 2.40-1), lattice, ggplot2 (>= 2.2), SparseM
 Imports: methods, quantreg, rpart, nlme (>= 3.1-123), polspline, multcomp, htmlTable, htmltools
-Suggests: boot, tcltk, plotly (>= 4.5.2)
+Suggests: boot, tcltk, plotly (>= 4.5.6)
 Description: Regression modeling, testing, estimation, validation,
 	graphics, prediction, and typesetting by storing enhanced model design
 	attributes in the fit.  'rms' is a collection of functions that

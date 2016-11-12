@@ -172,7 +172,7 @@ survplotp.npsurv <-
     nevents <- totaltime <- numeric(ns)
     cuminc  <- character(ns)
 
-    p <- plotly::plot_ly()
+    p <- plotly::plot_ly(...)
 
     pl <- function(p, x, y, n.risk=NULL, col, slev, type='est') {
       sname  <- if(ns == 1) '' else slev
@@ -368,7 +368,7 @@ survplotp.npsurv <-
     
     plotly::layout(p,
                    xaxis=xaxis, 
-                   yaxis=list(range=ylim, title=ylab), ..., autosize=TRUE)
+                   yaxis=list(range=ylim, title=ylab))
 }
 
 
