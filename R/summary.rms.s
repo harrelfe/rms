@@ -376,6 +376,8 @@ plot.summary.rms <-
            digits=4, ...)
 {
   isbase <- Hmisc::grType() == 'base'
+  pp <- plotlyParm   # in Hmisc
+
   scale  <- attr(x, "scale")
   adjust <- attr(x, "adjust")
   if(adjust != '') adjust <- paste("Adjusted to:", adjust, sep="")
@@ -418,100 +420,101 @@ plot.summary.rms <-
   
 
   
-  if(isbase)
-  {
-  confbar <-
-    function(y, est, se, q, col, col.points,
-             pch=17, lwd=rep(3, length(q)), clip=c(-1e30, 1e30),
-             fun  = function(x) x, 
-             qfun = function(x) ifelse(x==.5, qnorm(x),
-               ifelse(x < .5, qnorm(x / 2), qnorm((1 + x) / 2)))) {
+  if(isbase) {
+    confbar <-
+      function(y, est, se, q, col, col.points,
+               pch=17, lwd=rep(3, length(q)), clip=c(-1e30, 1e30),
+               fun  = function(x) x, 
+               qfun = function(x) ifelse(x==.5, qnorm(x),
+                                  ifelse(x < .5, qnorm(x / 2),
+                                         qnorm((1 + x) / 2)))) {
 
-      n <- length(q)
-      q <- c(1 - rev(q), .5, q)
-      a <- fun(est)
-      points(a, y, col=col.points, pch=pch)
-      a <- fun(est + se * qfun(q))
-      a[a < clip[1]] <- NA; a[a > clip[2]] <- NA
-      m <- length(q)
-      segments(c(a[1], a[m]), y, c(a[2], a[m - 1]), y, col=col[1], lwd=lwd[1])
-      if(n > 1) segments(c(a[2], a[m - 1]), y, c(a[3], a[m - 2]),
-                         col=col[2], lwd=lwd[2])
-      if(n > 2) segments(c(a[3], a[m - 2]), y, c(a[4], a[m - 3]),
-                         col=col[3], lwd=lwd[3])
-      names(a) <- format(q)
-      invisible(a)
+        n <- length(q)
+        q <- c(1 - rev(q), .5, q)
+        a <- fun(est)
+        points(a, y, col=col.points, pch=pch)
+        a <- fun(est + se * qfun(q))
+        a[a < clip[1]] <- NA; a[a > clip[2]] <- NA
+        m <- length(q)
+        segments(c(a[1], a[m]), y, c(a[2], a[m - 1]), y, col=col[1], lwd=lwd[1])
+        if(n > 1) segments(c(a[2], a[m - 1]), y, c(a[3], a[m - 2]),
+                           col=col[2], lwd=lwd[2])
+        if(n > 2) segments(c(a[3], a[m - 2]), y, c(a[4], a[m - 3]),
+                           col=col[3], lwd=lwd[3])
+        names(a) <- format(q)
+        invisible(a)
+      }
+    
+    augment <- if(log | any(Type == 2)) c(.1, .5, .75, 1) else 0
+    n     <- length(effect)
+    out   <- qnorm((max(q) + 1) / 2)
+    if(missing(xlim) && !missing(at))
+      xlim <- range(if(log) logb(at) else at)
+    else
+      if(missing(xlim)) {
+        xlim <- fun(range(c(effect - out * se, effect + out * se)))
+        xlim[1] <- max(xlim[1], clip[1])
+        xlim[2] <- min(xlim[2], clip[2])
+      }
+    else
+      augment <- c(augment, if(log) exp(xlim) else xlim)
+    
+    plot.new(); par(new=TRUE)
+    mxlb <- .1 + max(strwidth(lb, units='inches', cex=cex))
+    tmai <- par('mai')
+    on.exit(par(mai=tmai))
+    par(mai=c(tmai[1], mxlb, 1.5*tmai[3], tmai[4]))
+    
+    outer.widths <- fun(effect + out * se) - fun(effect - out * se)
+    if(missing(nbar)) nbar <- n
+    npage <- ceiling(n/nbar)
+    is <- 1
+    for(p in 1 : npage) {
+      ie <- min(is + nbar - 1, n)
+      plot(1:nbar, rep(0,nbar), xlim=xlim, ylim=c(1,nbar),
+           type="n", axes=FALSE, 
+           xlab="", ylab="")
+      if(cex.main > 0) title(tlab, cex=cex.main)
+      lines(fun(c(0, 0)), c(nbar - (ie - is), nbar), lty=2)
+      if(log) {
+        pxlim <- pretty(exp(xlim), n=nint)
+        pxlim <- sort(unique(c(pxlim, augment)))
+        ## For wome weird reason, sometimes duplicates (at xlim[2])
+        ## still remain
+        pxlim <- pxlim[pxlim >= exp(xlim[1])]
+        if(!missing(at)) pxlim <- at
+        axis(3, logb(pxlim), labels=format(pxlim))
+      }
+      else {
+        pxlim <- pretty(xlim, n=nint)
+        pxlim <- sort(unique(c(pxlim, augment)))
+        pxlim <- pxlim[pxlim >= xlim[1]]
+        if(!missing(at)) pxlim <- at
+        axis(3, pxlim)
+      }
+      imax <- (is : ie)[outer.widths[is : ie] == max(outer.widths[is : ie])][1]
+      for(i in is : ie) {
+        confbar(nbar - (i - is + 1) + 1, effect[i], se[i], q=q,
+                col=col, col.points=col.points,
+                fun=fun, clip=clip, lwd=lwd, pch=pch)
+        mtext(lb[i], 2, 0, at=nbar - (i - is + 1) + 1, cex=cex,
+              adj=1, las=1)
+      }
+      if(adjust != "") {
+        xx <- par('usr')[2]
+        if(nbar > ie) text(xx, nbar - (ie - is + 1), adjust, adj=1, cex=cex)
+        else title(sub=adjust, adj=1, cex=cex)
+      }
+      is <- ie + 1
     }
-
-  augment <- if(log | any(Type==2)) c(.1, .5, .75, 1) else 0
-  n     <- length(effect)
-  out   <- qnorm((max(q) + 1) / 2)
-  if(missing(xlim) && !missing(at))
-    xlim <- range(if(log) logb(at) else at) else
-  if(missing(xlim)) {
-    xlim <- fun(range(c(effect - out * se, effect + out * se)))
-    xlim[1] <- max(xlim[1], clip[1])
-    xlim[2] <- min(xlim[2], clip[2])
+    return(invisible())
   }
-  else
-    augment <- c(augment, if(log) exp(xlim) else xlim)
   
-  plot.new(); par(new=TRUE)
-  mxlb <- .1 + max(strwidth(lb, units='inches', cex=cex))
-  tmai <- par('mai')
-  on.exit(par(mai=tmai))
-  par(mai=c(tmai[1], mxlb, 1.5*tmai[3], tmai[4]))
-  
-  outer.widths <- fun(effect + out * se) - fun(effect - out * se)
-  if(missing(nbar)) nbar <- n
-  npage <- ceiling(n/nbar)
-  is <- 1
-  for(p in 1 : npage) {
-    ie <- min(is + nbar - 1, n)
-    plot(1:nbar, rep(0,nbar), xlim=xlim, ylim=c(1,nbar),
-         type="n", axes=FALSE, 
-         xlab="", ylab="")
-    if(cex.main > 0) title(tlab, cex=cex.main)
-    lines(fun(c(0, 0)), c(nbar - (ie - is), nbar), lty=2)
-    if(log) {
-      pxlim <- pretty(exp(xlim), n=nint)
-      pxlim <- sort(unique(c(pxlim, augment)))
-      ## For wome weird reason, sometimes duplicates (at xlim[2])
-      ## still remain
-      pxlim <- pxlim[pxlim >= exp(xlim[1])]
-      if(!missing(at)) pxlim <- at
-      axis(3, logb(pxlim), labels=format(pxlim))
-    }
-    else {
-      pxlim <- pretty(xlim, n=nint)
-      pxlim <- sort(unique(c(pxlim, augment)))
-      pxlim <- pxlim[pxlim >= xlim[1]]
-      if(!missing(at)) pxlim <- at
-      axis(3, pxlim)
-    }
-    imax <- (is : ie)[outer.widths[is : ie] == max(outer.widths[is : ie])][1]
-    for(i in is : ie) {
-      confbar(nbar - (i - is + 1) + 1, effect[i], se[i], q=q,
-              col=col, col.points=col.points,
-              fun=fun, clip=clip, lwd=lwd, pch=pch)
-      mtext(lb[i], 2, 0, at=nbar - (i - is + 1) + 1, cex=cex,
-            adj=1, las=1)
-    }
-    if(adjust != "") {
-      xx <- par('usr')[2]
-      if(nbar > ie) text(xx, nbar - (ie - is + 1), adjust, adj=1, cex=cex)
-      else title(sub=adjust, adj=1, cex=cex)
-    }
-    is <- ie + 1
-  }
-  return(invisible())
-  }
-
   ## Use plotly instead
-
-  qfun <- function(x) ifelse(x==.5, qnorm(x),
-                      ifelse(x < .5, qnorm(x / 2),
-                             qnorm((1 + x) / 2)))
+  
+  qfun <- function(x) ifelse(x == 0.5, qnorm(x),
+                      ifelse(x  < 0.5, qnorm(x / 2),
+                                       qnorm((1 + x) / 2)))
 
   ## ??? don't we need a different qfun for ols using t dist?
   
@@ -521,9 +524,9 @@ plot.summary.rms <-
   if(adjust != '') hte <- paste(hte, adjust, sep='<br>')
   
   p <- plotly::plot_ly(x=~ feffect, y=~ lb,
-                       text=~ hte,
-                       type='scatter', mode='markers', hoverinfo='text',
-                       name='Estimate',
+                       text = ~ hte,
+                       type = 'scatter', mode='markers', hoverinfo='text',
+                       name = 'Estimate',
                        height = pp$heightDotchart(length(lb)))
 
   
@@ -531,35 +534,31 @@ plot.summary.rms <-
     lower <- fun(effect + se * qfun(1. - q[i]))
     upper <- fun(effect + se * qfun(q[i]))
     ## Interrupt line segments with NA
-    m <- 3 * length(effect)
+    m <- 2 * length(effect)
     x <- rep(NA, m)
-    x[seq(1, m, by=3)] <- lower
-    x[seq(2, m, by=3)] <- upper
-    ycl <- rep(lb, each=3)
+    x[seq(1, m, by=2)] <- lower
+    x[seq(2, m, by=2)] <- upper
+    ycl <- rep(lb, each=2)
     ht <-ifelse(is.na(x), '', format(x, digits=digits))
     cl95 <- which(abs(q - 0.95) < 0.000001)
     vis  <- ! length(cl95) || i %in% cl95
-    p <- plotly::add_markers(p, x=~ x, y=~ ycl, text=~ ht,
-                           marker=list(symbol='line-ns-open'),
-                           hoverinfo='text',
-                           name=paste(format(q)[i], 'CI'),
-                           visible=if(vis) TRUE else 'legendonly')
+    dat <- data.frame(x, ycl, ht)
+    p <- plotly::add_markers(p, x=~ x, y=~ ycl, text=~ ht, data=dat,
+                             marker = list(symbol='line-ns-open'),
+                             hoverinfo = 'text',
+                             name = paste(format(q)[i], 'CI'),
+                             visible = if(vis) TRUE else 'legendonly')
   }
-
-  pp <- plotlyParm
-
-  p <-
-    plotly::layout(p,
-                   xaxis = list(type = if(log) 'log' else 'linear',
-                                zeroline=FALSE, title=tlab),
-                   yaxis  = list(title='', autorange='reversed'),
-                   margin = list(l=pp$lrmargin(lb)),
-#                   autosize = FALSE,
-                   shapes = list(
-                     list(type = "line",
-                          line = list(color = "lightgray"), 
-                          x0 =fun(0), x1 = fun(0), xref = "x",
-                          y0 = 0, y1=length(lb), yref='y'))
-                   )
-  p
+  
+  plotly::layout(p,
+                 xaxis = list(type = if(log) 'log' else 'linear',
+                              zeroline=FALSE, title=tlab),
+                 yaxis  = list(title='', autorange='reversed'),
+                 margin = list(l=pp$lrmargin(lb)),
+                 shapes = list(
+                   list(type = "line",
+                        line = list(color = "lightgray"), 
+                        x0 =fun(0), x1 = fun(0), xref = "x",
+                        y0 = 0, y1=length(lb), yref='y'))
+                 )
 }

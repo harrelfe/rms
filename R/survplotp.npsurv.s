@@ -218,8 +218,9 @@ survplotp.npsurv <-
       ln <- if(type == 'est') list(shape='hv', color=col)
             else list(shape='hv', color=col, width=0)
 
+      dat <- if(length(txt)) data.frame(x, y, txt) else data.frame(x, y)
       p <- if(length(txt))
-             plotly::add_lines(p, x=~ x, y=~ y, text=~ txt,
+             plotly::add_lines(p, x=~ x, y=~ y, text=~ txt, data=dat,
                                hoverinfo='text', line=ln,
                                fillcolor=fcol,
                                fill=if(type %in% c('upper', 'diff upper'))
@@ -227,7 +228,7 @@ survplotp.npsurv <-
                                visible=vis, legendgroup=lg,
                                name=nam)
            else
-             plotly::add_lines(p, x=~ x, y=~ y,
+             plotly::add_lines(p, x=~ x, y=~ y, data=dat,
                                hoverinfo='none', line=ln,
                                fillcolor=fcol,
                                fill=if(type %in% c('upper', 'diff upper'))
@@ -357,9 +358,10 @@ survplotp.npsurv <-
     ## Add empty trace just to add to bottom of legend.  Used to have x=~NA y=~NA
     ## but plotly update made that point ignored in every way
 
-    p <- plotly::add_markers(p, x=~ xlim[1], y=~ ylim[1],   # mode='markers',
+    dam <- data.frame(x=xlim[1], y=ylim[1])
+    p <- plotly::add_markers(p, x=~ x, y=~ y,               # mode='markers',
                            marker=list(symbol='asterisk'),  # suppresses pt
-                           name=z)
+                           name=z, data=dam)
         
     xaxis <- list(range=xlim, title=xlab)
     if(! logt) xaxis <-
