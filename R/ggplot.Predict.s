@@ -161,12 +161,6 @@ ggplot.Predict <-
   sub <- if(adj.subtitle && length(adjust)==1)
            paste0('Adjusted to:', adjust) else NULL
   cap <- expch(sub, chr=TRUE)
-  ## Won't need the following when ggplot2 really gets subtitle captions working
-  thm <- if(length(sub)) 'theme(plot.title=element_text(size=8, hjust=1))'
-  ## hjust seems to be ignored some of the time
-  
-  ## ggplot2 is supposed to implement labs(subtitle= caption=) but
-  ## neither of these work as of 2016-07-18.  labs(title=) used for now.
 
   tanova <- if(length(anova))
     function(name, x, y, xlim, ylim, flip=FALSE,
@@ -261,12 +255,12 @@ ggplot.Predict <-
           if(length(groups))
             g <- 
               sprintf('ggplot(dat, aes(x=.xx., y=yhat, %s=%s)) +
-                     labs(x=NULL, y=%s, title=%s) + %s %s',
+                     labs(x=NULL, y=%s, caption=%s) + %s %s',
                      aestype[1], groups[1], expch(ylab, chr=TRUE), cap,
                      ylimc, xlimc)
           else
             g <- sprintf("ggplot(dat, aes(x=.xx., y=yhat)) +
-                         labs(x=NULL, y=%s, title=%s) + %s %s",
+                         labs(x=NULL, y=%s, caption=%s) + %s %s",
                          expch(ylab, chr=TRUE), cap, ylimc, xlimc)
           
           g <- c(g, if(length(layout))
@@ -323,11 +317,11 @@ ggplot.Predict <-
           if(length(groups)) g <- 
             c(sprintf('ggplot(dat, aes(x=yhat, y=.xx., %s=%s))',
                       aestype[1], groups[1]),
-              sprintf("labs(x=%s, y=NULL, title=%s)",
+              sprintf("labs(x=%s, y=NULL, caption=%s)",
                       expch(ylab, chr=TRUE), cap))
           else
             g <- c("ggplot(dat, aes(x=yhat, y=.xx.))",
-                   sprintf("labs(x=%s, y=NULL, title=%s)",
+                   sprintf("labs(x=%s, y=NULL, caption=%s)",
                            expch(ylab, chr=TRUE), cap))
           if(! maddlayer) g <- c(g, addlayer)
           g <- c(g, limc(ylim., 'x'),
@@ -374,7 +368,6 @@ ggplot.Predict <-
                              data=.anova., parse=TRUE, show.legend=FALSE)",
                             if(type == 'discrete') -0.25 else 0))
         }
-        g <- c(g, thm)
         g <- paste(g, collapse=' + ')
         if(ggexpr) return(g)
         g <- eval(parse(text = g))
@@ -471,7 +464,7 @@ ggplot.Predict <-
       ## Need the following or geom_ribbon will improperly clip regions
       if(flipped) g <- c(g, limc(ylim., 'y')) else
       g <- c(g, sprintf('coord_cartesian(ylim=%s)', deparse(ylim.)))
-      g <- c(g, sprintf('labs(x=%s, y=%s, title=%s)',
+      g <- c(g, sprintf('labs(x=%s, y=%s, caption=%s)',
                         expch(xl, chr=TRUE), expch(ylab, chr=TRUE), cap),
              "theme(plot.margin = grid::unit(rep(0, 4), 'cm'))")
       ## use rep(.1, 4) if using print(..., viewport=...) for multiple plots
@@ -526,7 +519,6 @@ ggplot.Predict <-
                           form, deparse(ylim.)))
       }
       # print(g, vp = viewport(layout.pos.row=nr, layout.pos.col=nc))
-      g <- c(g, thm)
       g <- paste(g, collapse = ' + ')
       if(ggexpr) return(g)
       g <- eval(parse(text=g))
@@ -565,7 +557,7 @@ res <- if(jplot == 1) plrend(Plt[[1]])
 ####    ae <- eval(parse(text=paste0(ae, ')')))
     ae <- paste0(ae, ')')
     g <- c(sprintf("ggplot(data, %s)", ae),
-           sprintf("labs(x=%s, y=%s, title=%s) %s",
+           sprintf("labs(x=%s, y=%s, caption=%s) %s",
               expch(xlab, chr=TRUE), expch(ylab, chr=TRUE), cap, xlimc))
 
     flipped <- FALSE
@@ -654,7 +646,6 @@ res <- if(jplot == 1) plrend(Plt[[1]])
       } else formula <- deparse(formula)
       g <- c(g, sprintf("facet_grid(%s)", formula))
     }
-    g <- c(g, thm)
     g <- paste(g, collapse=' + ')
     if(ggexpr) return(g)
     g <- plrend(eval(parse(text=g)))

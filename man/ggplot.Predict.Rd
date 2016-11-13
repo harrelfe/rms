@@ -145,7 +145,8 @@ variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm},
 	panel, mm}
 \item{adj.subtitle}{
 Set to \code{FALSE} to suppress subtitling the graph with the list of
-settings of non-graphed adjustment values.
+settings of non-graphed adjustment values.  Subtitles appear as captions
+  with \code{ggplot2} using \code{labs(caption=)}.
 }
 \item{size.adj}{Size of adjustment settings in subtitles in mm.  Default is 2.5.}
 \item{perim}{
