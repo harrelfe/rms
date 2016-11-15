@@ -836,7 +836,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
             rownames(U)[nrow(U)] <- if(lang == 'html') '&hellip;' else '\\dots'
           }
           ## Translate interaction symbol (*) to times symbol
-          rownames(U) <- gsub('\\*', specs$times, rownames(U))
+          rownames(U) <- gsub('*', specs$times, rownames(U), fixed=TRUE)
  
           if(! missing(needspace) && lang == 'latex')
             R <- c(R, paste0('\\Needspace{', needspace, '}'))
