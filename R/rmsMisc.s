@@ -1164,7 +1164,7 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE,
   if(any(s)) {
     w <- paste0('0.', paste0(rep('0', digits - 1), collapse=''), '1')
     f[s] <- switch(lang,
-                   latex = paste0('$<$', w),
+                   latex = paste0('\\textless ', w),
                    html  = paste0('&#60;', w),
                    plain = paste0('<', w))
   }
