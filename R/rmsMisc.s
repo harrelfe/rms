@@ -848,7 +848,8 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                                         table=FALSE, longtable=TRUE,
                                         lines.page=lines.page,
                                         col.just=rep('r',ncol(U)), rowlabel='',
-                                        math.col.names=FALSE, append=TRUE)))
+                                        already.math.col.names=TRUE,
+                                        append=TRUE)))
           else {
             al <- paste(rep('r', ncol(U)), collapse='')
             R <- c(R, as.character(
