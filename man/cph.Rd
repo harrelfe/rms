@@ -247,7 +247,9 @@ cph(formula = formula(data), data=parent.frame(),
     vector containing the named elements \code{Obs}, \code{Events}, \code{Model L.R.}, \code{d.f.},
     \code{P}, \code{Score}, \code{Score P}, \code{R2}, Somers'
     \code{Dxy}, \code{g}-index, 
-    and \code{gr}, the \code{g}-index on the hazard ratio scale
+    and \code{gr}, the \code{g}-index on the hazard ratio scale.
+    \code{R2} is the Nagelkerke R-squared, with division by the maximum
+    attainable R-squared.
   }
   \item{var}{
     variance/covariance matrix of coefficients
