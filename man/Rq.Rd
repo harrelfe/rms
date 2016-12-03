@@ -12,13 +12,18 @@ The \code{Rq} function is the \code{rms} front-end to the
 \code{latex} methods are also provided, and a fitting function
 \code{RqFit} is defined for use in bootstrapping, etc.  Its result is a
 function definition.
+
+For the \code{print} method, format of output is controlled by the
+user previously running \code{options(prType="lang")} where
+\code{lang} is \code{"plain"} (the default), \code{"latex"}, or
+\code{"html"}. 
 }
 \usage{
 Rq(formula, tau = 0.5, data, subset, weights, na.action=na.delete,
    method = "br", model = FALSE, contrasts = NULL,
    se = "nid", hs = TRUE, x = FALSE, y = FALSE, ...)
 
-\method{print}{Rq}(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE, title, \dots)
+\method{print}{Rq}(x, digits=4, coefs=TRUE, title, \dots)
 
 \method{latex}{Rq}(object,
            file = paste(first.word(deparse(substitute(object))),
@@ -55,10 +60,6 @@ RqFit(fit, wallow=TRUE, passdots=FALSE)
 	of model coefficients, standard errors, etc.  Specify \code{coefs=n}
 	to print only the first \code{n} regression coefficients in the
 	model.}
-  \item{latex}{a logical value indicating whether information should be
-		formatted as plain text or as LaTeX markup}
-	\item{md}{a logical directing that LaTeX and html be composed for use
-	with R Markdown}
   \item{title}{a character string title to be passed to \code{prModFit}}
   \item{object}{an object created by \code{Rq}}
   \item{file,append,which,varnames,columns,inline,caption}{see

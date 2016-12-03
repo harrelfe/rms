@@ -49,7 +49,7 @@ latex.cph <-
                 before=before, after=after,
                 prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
                 intercept=Intercept, inline=inline,
-                pretrans=pretrans, digits=digits, size=size, md=md)
+                pretrans=pretrans, digits=digits, size=size)
   if(md) Z <- c(paste0(w, '\n'), as.character(z))
 
   if(inline)

@@ -878,11 +878,15 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
       R <- c(R,
              if(type == 'html.naprint.delete')
                do.call(type, obj)
-             else if(type == 'latex.naprint.delete')
-               capture.output(do.call(type,
-                                      c(obj, list(file=''))))
-##             else do.call(type, obj),   ????
-             else c(bverb(), capture.output(do.call(type, obj)), everb()),
+             else
+               if(type == 'latex.naprint.delete')
+                 capture.output(do.call(type,
+                                        c(obj, list(file=''))))
+             else
+               if(type == 'print')
+                 c(bverb(), capture.output(do.call(type, obj)), everb())
+             else
+               do.call(type, obj),
              ## unlike do.call, eval(call(...)) dispatches on class of ...
              if(tex) '\\end{center}' else ''
       )

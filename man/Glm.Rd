@@ -7,6 +7,11 @@ This function saves \code{rms} attributes with the fit object so that
 \code{anova.rms}, \code{Predict}, etc. can be used just as with
 \code{ols} and other fits.  No \code{validate} or \code{calibrate}
 methods exist for \code{Glm} though.
+
+For the \code{print} method, format of output is controlled by the
+user previously running \code{options(prType="lang")} where
+\code{lang} is \code{"plain"} (the default), \code{"latex"}, or
+\code{"html"}. 
 }
 \usage{
 Glm(formula, family = gaussian, data = list(), weights = NULL, subset =
@@ -14,7 +19,7 @@ NULL, na.action = na.delete, start = NULL, offset = NULL, control =
 glm.control(...), model = TRUE, method = "glm.fit", x = FALSE, y = TRUE,
 contrasts = NULL, \dots)
 
-\method{print}{Glm}(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
+\method{print}{Glm}(x, digits=4, coefs=TRUE,
 title='General Linear Model', \dots)
 }
 \arguments{
@@ -26,9 +31,6 @@ title='General Linear Model', \dots)
 	of model coefficients, standard errors, etc.  Specify \code{coefs=n}
 	to print only the first \code{n} regression coefficients in the
 	model.}
-  \item{latex}{a logical value indicating whether information should be
-		formatted as plain text or as LaTeX markup}
-	\item{md}{a logical directing that LaTeX and html be generated for R Markdown}
   \item{title}{a character string title to be passed to \code{prModFit}}
 }
 \value{a fit object like that produced by \code{\link{glm}} but with

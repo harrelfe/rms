@@ -87,7 +87,7 @@ f.harrell@vanderbilt.edu
 units(ftime) <- "Day"
 f <- cph(Surv(ftime, death) ~ rcs(age)+sex, surv=TRUE, time.inc=60)
 w <- latex(f, file='f.tex')  #Interprets fitted model and makes table of S0(t)
-               #for t=0,60,120,180,\dots 
+               #for t=0,60,120,180,...
 w              #displays image, if viewer installed and file given above
 latex(f)   # send LaTeX code to the console for knitr
 options(prType='html')

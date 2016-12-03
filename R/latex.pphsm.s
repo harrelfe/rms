@@ -36,7 +36,7 @@ latex.pphsm <-
                 before=before, after=after,
                 prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
                 inline=inline,pretrans=pretrans, digits=digits,
-                size=size, md=md)
+                size=size)
   if(md) htmltools::HTML(c(paste0(w, '\n'), as.character(z)))
   else z
 }

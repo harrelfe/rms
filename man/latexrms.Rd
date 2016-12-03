@@ -8,19 +8,19 @@
 Creates a file containing a LaTeX representation of the fitted model.  For
 model-specific typesetting there is \code{latex.lrm}, \code{latex.cph},
 \code{latex.psm} and \code{latex.ols}. \code{latex.cph} has some
-arguments that are specific to \code{cph} models.  These routines work
-with the \code{display} package from statlib to display and print the
-formatted model fits.  \code{latexrms} is the core function which is
+arguments that are specific to \code{cph} models.
+\code{latexrms} is the core function which is
 called internally by \code{latexrms} (which is called by
-\code{latex.cph}, \code{latex.ols}, etc.).  R Markdown-compatible markup
-(using MathJax) is written if \code{md=TRUE}. 
+\code{latex.cph}, \code{latex.ols}, etc.).  \code{html} and R
+Markdown-compatible markup (using MathJax) are written if
+\code{options(prType='html')}.
 }
 \usage{
 latexrms(object,
  file='',
  append=FALSE, which=1:p, varnames, columns=65, prefix=NULL, inline=FALSE,
  before=if(inline)"" else "& &", after="", intercept, pretrans=TRUE,
- digits=.Options$digits, size="", md=FALSE)
+ digits=.Options$digits, size="")
 }
 \arguments{
 \item{object}{
@@ -28,7 +28,7 @@ a fit object created by a fitting function in the \code{rms} series
 }
 \item{file}{
   name of \code{.tex} file to create, default is to write to console.
-	\code{file} is ignored when \code{md=TRUE}. 
+	\code{file} is ignored when \code{options(prType='html'}. 
 }
 \item{append}{whether or not to append to an existing file}
 \item{which}{
@@ -90,10 +90,8 @@ a fit object created by a fitting function in the \code{rms} series
   coefficients and other numbers}
 \item{size}{a LaTeX font size to use for the output, without the slash.
 	Default is current size.}
-\item{md}{set to \code{TRUE} to produce code that is consistent with
-	the use of MathJax with R markdown}
 }
-\value{a file name of class \code{"latex"}, or if \code{md=TRUE},
+\value{a file name of class \code{"latex"}, or if \code{options(prType='html')},
 	nothing (output direct to console)}
 \author{
 Frank Harrell\cr
@@ -109,7 +107,7 @@ f.harrell@vanderbilt.edu
 f <- lrm(death ~ rcs(age)+sex)
 w <- latex(f, file='f.tex')
 w     # displays, using e.g. xdvi
-latex(f)    # send LaTeX code to console
+latex(f)    # send LaTeX code to console, as for knitr
 options(prType='html')
 latex(f)    # emit html and latex for knitr html and html notebooks
 }

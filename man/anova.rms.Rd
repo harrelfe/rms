@@ -6,7 +6,7 @@
 \alias{html.anova.rms}
 \title{Analysis of Variance (Wald and F Statistics)}
 \description{
-  The \code{anova} function automatically tests most meaningful hypotheses
+The \code{anova} function automatically tests most meaningful hypotheses
 in a design. For example, suppose that age and cholesterol are
 predictors, and that a general interaction is modeled using a restricted
 spline surface. \code{anova} prints Wald statistics (\eqn{F} statistics
@@ -32,10 +32,12 @@ substitutes Greek/math symbols in column headings, uses boldface for
 \code{TOTAL} lines, and constructs a caption.  Then it passes the result
 to \code{latex.default} for conversion to LaTeX.
 
-\code{html.anova.rms} just calls \code{latex.anova.rms} with
-\code{html=TRUE}.  The \code{html} method uses latex markup so can only
-run in environments in which MathJax is available, e.g., RStudio html
-notebooks.
+The \code{print} method calls \code{latex} or \code{html} methods
+depending on \code{options(prType=)}, and output is to the console.  For
+\code{latex} a \code{table} environment is not used and an ordinary
+\code{tabular} is produced.
+
+\code{html.anova.rms} just calls \code{latex.anova.rms}.
 }
 \usage{
 \method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9, 
@@ -54,7 +56,7 @@ notebooks.
 
 \method{latex}{anova.rms}(object, title, dec.chisq=2,
       dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, table.env=TRUE,
-      caption=NULL, html=FALSE, \dots)
+      caption=NULL, \dots)
 
 \method{html}{anova.rms}(object, \dots)
 }
@@ -192,7 +194,6 @@ digits to the right for mean squares (default is \code{NA})
 \item{table.env}{see \code{\link[Hmisc]{latex}}}
 \item{caption}{caption for table if \code{table.env} is \code{TRUE}.
   Default is constructed from the response variable.}
-\item{html}{set by \code{html.anova.rms} to use html table instead of latex}
 }
 \value{
 \code{anova.rms} returns a matrix of class \code{anova.rms} containing factors 

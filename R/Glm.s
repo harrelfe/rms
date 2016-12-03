@@ -93,7 +93,7 @@ Glm <-
   fit
 }
 
-print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
+print.Glm <- function(x, digits=4, coefs=TRUE,
                       title='General Linear Model', ...)
 {
   k <- 0
@@ -129,9 +129,7 @@ print.Glm <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
   k <- k + 1
   z[[k]] <- list(type='coefmatrix',
                  list(coef=cof, se=se))
-  prModFit(x, title=title, z, digits=digits, coefs=coefs,
-           lang=if(latex) 'latex' else if(md) 'html' else 'plain',
-           ...)
+  prModFit(x, title=title, z, digits=digits, coefs=coefs, ...)
 }
 
 summary.Glm <- function(...) summary.rms(...)

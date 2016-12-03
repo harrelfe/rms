@@ -152,7 +152,6 @@ orm <- function(formula, data, subset, na.action=na.delete,
 
 print.orm <- function(x, digits=4, coefs=TRUE,
                       intercepts=x$non.slopes < 10,
-                      latex=FALSE, md=FALSE,
                       title, ...) {
 
   if(missing(title)) {
@@ -227,7 +226,7 @@ print.orm <- function(x, digits=4, coefs=TRUE,
                    'Median Y'    = stats['Median Y'],
                    'max |deriv|' = maxd)
   if(length(x$freq) < 4) {
-    names(x$freq) <- paste(if(latex)'~~' else ' ',
+    names(x$freq) <- paste(if(prType() == 'latex') '~~' else ' ',
                            names(x$freq), sep='')
     misc <- c(misc[1], x$freq, misc[-1])
   }
@@ -264,9 +263,7 @@ print.orm <- function(x, digits=4, coefs=TRUE,
   }
   
   prModFit(x, title=title, z, digits=digits,
-           coefs=coefs,
-           lang=if(latex) 'latex' else if(md) 'html' else 'plain',
-           ...)
+           coefs=coefs, ...)
 }
 
 Mean.orm <- function(object, codes=FALSE, ...)

@@ -1,5 +1,5 @@
 print.psm <- function(x, correlation = FALSE, digits=4,
-                      coefs=TRUE, latex=FALSE, md=FALSE, title, ...)
+                      coefs=TRUE, title, ...)
 {
   k <- 0
   z <- list()
@@ -57,9 +57,7 @@ print.psm <- function(x, correlation = FALSE, digits=4,
     }
   }
   
-  prModFit(x, title=title, z, digits=digits, coefs=coefs,
-           lang=if(latex) 'latex' else if(md) 'html' else 'plain',
-           ...)
+  prModFit(x, title=title, z, digits=digits, coefs=coefs, ...)
 }
 
 #  wt <- x$weights

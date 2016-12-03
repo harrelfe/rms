@@ -267,7 +267,7 @@ Gls <-
   }
 
 
-print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
+print.Gls <- function(x, digits=4, coefs=TRUE,
                       title, ...)
 {
   ## Following taken from print.gls with changes marked FEH
@@ -288,7 +288,7 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
   ltype <- if (inherits(x, "gnls")) 'Log-likelihood' else
    paste('Log-', ifelse(x$method == "REML", "restricted-", ""),
          'likelihood',  sep='')
-  if(latex) ltype <- paste(ltype, ' ', sep='')
+  if(prType() == 'latex') ltype <- paste(ltype, ' ', sep='')
   
   misc <- reListclean(Obs=dd$N,
                    Clusters=if(length(x$groups)) length(unique(x$groups)) else
@@ -365,9 +365,7 @@ print.Gls <- function(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
                      title = 'Bootstrap Nonparametric 0.95 Confidence Limits for Correlation Parameters')
     }
   
-  prModFit(x, title=title, z, digits=digits, coefs=coefs,
-           lang=if(latex) 'latex' else if(md) 'html' else 'plain',
-           ...)
+  prModFit(x, title=title, z, digits=digits, coefs=coefs, ...)
 }
 
 vcov.Gls <- function(object, intercepts='all', ...)

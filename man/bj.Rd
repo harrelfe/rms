@@ -21,6 +21,11 @@
   Buckley-James covariance matrix estimator are not fully known for
   strange censoring patterns.
 
+	For the \code{print} method, format of output is controlled by the
+	user previously running \code{options(prType="lang")} where
+	\code{lang} is \code{"plain"} (the default), \code{"latex"}, or
+	\code{"html"}. 
+
   The \code{residuals.bj} function exists mainly to compute 
   residuals and to censor them (i.e., return them as
   \code{Surv} objects) just as the original
@@ -49,7 +54,7 @@ bj(formula=formula(data), data, subset, na.action=na.delete,
    link="log", control, method='fit', x=FALSE, y=FALSE, 
    time.inc)
 
-\method{print}{bj}(x, digits=4, long=FALSE, coefs=TRUE, latex=FALSE, md=FALSE,
+\method{print}{bj}(x, digits=4, long=FALSE, coefs=TRUE, 
 title="Buckley-James Censored Data Regression", \dots)
 
 \method{residuals}{bj}(object, type=c("censored","censored.normalized"),\dots)
@@ -123,9 +128,6 @@ bj.fit(x, y, control)
 	of model coefficients, standard errors, etc.  Specify \code{coefs=n}
 	to print only the first \code{n} regression coefficients in the
 	model.}
-  \item{latex}{a logical value indicating whether information should be
-		formatted as plain text or as LaTeX markup}
-	\item{md}{a logital; set to \code{TRUE} to use LaTeX and html with R markdown}
   \item{title}{a character string title to be passed to \code{prModFit}}
   \item{object}{the result of \code{bj}}
   \item{type}{

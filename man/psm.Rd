@@ -23,6 +23,12 @@
   functions analytically, as functions of time or probabilities and the
   linear predictor values.
 
+	For the \code{print} method, format of output is controlled by the
+	user previously running \code{options(prType="lang")} where
+	\code{lang} is \code{"plain"} (the default), \code{"latex"}, or
+	\code{"html"}. 
+
+
   The \code{residuals.psm} function exists mainly to compute normalized
   (standardized) residuals and to censor them (i.e., return them as
   \code{Surv} objects) just as the original failure time variable was
@@ -48,7 +54,7 @@ psm(formula=formula(data),
     model=FALSE, x=FALSE, y=TRUE, time.inc, \dots)
 
 \method{print}{psm}(x, correlation=FALSE, digits=4, coefs=TRUE,
-latex=FALSE, md=FALSE, title, \dots) 
+title, \dots) 
 
 Hazard(object, \dots)
 \method{Hazard}{psm}(object, \dots)   # for psm fit
@@ -121,10 +127,6 @@ lwd=3, \dots)
 	of model coefficients, standard errors, etc.  Specify \code{coefs=n}
 	to print only the first \code{n} regression coefficients in the
 	model.}
-  \item{latex}{a logical value indicating whether information should be
-		formatted as plain text or as LaTeX markup}
-	\item{md}{a logical directing that LaTeX and html be composed for use
-	with R Markdown}
   \item{title}{a character string title to be passed to \code{prModFit}}
   \item{\dots}{
     other arguments to fitting routines, or to pass to \code{survplot} from
@@ -235,11 +237,9 @@ cens <- 15*runif(n)
 death <- ifelse(d.time <= cens,1,0)
 d.time <- pmin(d.time, cens)
 
-
 f <- psm(Surv(d.time,death) ~ sex*pol(age,2), 
          dist='lognormal')
 # Log-normal model is a bad fit for proportional hazards data
-
 
 anova(f)
 fastbw(f)  # if deletes sex while keeping age*sex ignore the result

@@ -1,11 +1,15 @@
-Changes in version 5.0-1 (2016-11-24)
+Changes in version 5.0-1 (2016-12-03)
    * latex.anova.rms: fixed problem with conversion of * to $\times$
 	 * prModStats: fixed problem with print.ols residuals
 	 * print.summary.rms: made it respect options(prType), and default latex to no table environment
 	 * plot.summary.rms, survplot.npsurv: height and width moved from plotly::layout to plot_ly due to changes in plotly 4.5.6
 	 * plot.summary.rms, survplotp.npsurv: added data= to plot::add_* because plotly was evaluating using the wrong copy of x,y, etc.
 	 * ggplot.Predict: used new labs(caption=) feature for ggplot2 instead of title
-	 * prModFit: fixed translation of * to \times, fixed \textgreater and \textless for row and column names for latex
+	 * prModFit: fixed translation of * to \times, fixed \textgreater and \textless for row and column names for latex, fixed all model print methods to use options(prType=...)
+	 * latexrms: remove md argument, use options(prType='html')
+	 * latex methods for model fits: change default file to console
+	 * latex.anova.rms: remove html argument, use options(prType)
+	 * print.anova.rms: use options(prType) to automatically use LateX or html printing to console
 
 Changes in version 5.0-0 (2016-10-31)
    * plot.summary.rms: implemented plotly interactive plots if options(grType='plotly') in effect

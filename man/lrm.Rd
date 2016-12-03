@@ -8,6 +8,11 @@ Fit binary and proportional odds ordinal
 logistic regression models using maximum likelihood estimation or
 penalized maximum likelihood estimation.  See \code{cr.setup} for how to
 fit forward continuation ratio models with \code{lrm}.
+
+For the \code{print} method, format of output is controlled by the
+user previously running \code{options(prType="lang")} where
+\code{lang} is \code{"plain"} (the default), \code{"latex"}, or
+\code{"html"}. 
 }
 \usage{
 lrm(formula, data, subset, na.action=na.delete, method="lrm.fit",

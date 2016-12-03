@@ -3,11 +3,11 @@ latexrms <-
            file="",
            append=FALSE, which=1:p, varnames, columns=65, prefix=NULL, 
            inline=FALSE, before=if(inline)"" else "& &", after="",
-           intercept, pretrans=TRUE, digits=.Options$digits, size='',
-           md=FALSE)
+           intercept, pretrans=TRUE, digits=.Options$digits, size='')
 {
+  html <- prType() == 'html'
   ## Break character for non-math mode:
-  brchar <- if(md) '<br>' else '\\\\'
+  brchar <- if(html) '<br>' else '\\\\'
   
   f    <- object	
   at   <- f$Design
@@ -275,7 +275,7 @@ latexrms <-
       if(size != '') tex <- c(tex, paste0('\\', size))
       if(length(prefix))
         tex <- c(tex,
-                 if(md) paste0(prefix, '= & & \\\\') else
+                 if(html) paste0(prefix, '= & & \\\\') else
                  paste0("\\lefteqn{", prefix, "=}\\\\"))
     } else tex <- NULL
   
@@ -575,7 +575,7 @@ latexrms <-
     if(size != '')   tex <- c(paste0('{\\', size), tex)
     if(after  != '') tex <- c(tex, after)
     if(size != '')   tex <- c(tex, '}')
-    if(md) return(htmltools::HTML(paste0(tex, '\n')))
+    if(html) return(htmltools::HTML(paste0(tex, '\n')))
     cat(tex, sep="\n", file=file, append=append)
     return(structure(list(file=file,style=NULL), class='latex'))
   }
@@ -603,7 +603,7 @@ latexrms <-
                                  "\\) is pre--transformed as \\(",
                                  TLi[i], "\\).")
     else {
-      tr <- if(md) {
+      tr <- if(html) {
               z <- cbind(Variable=paste0('\\(', varnames, '\\)'),
                          Transformation=paste0('\\(', TLi, '\\)'))
               as.character(htmlTable::htmlTable(z, caption='Pre-transformations',
@@ -620,7 +620,7 @@ latexrms <-
     }
     tex <- c(tex, tr)
   }
-  if(md) return(htmltools::HTML(paste0(tex, '\n')))
+  if(html) return(htmltools::HTML(paste0(tex, '\n')))
   cat(tex, sep="\n", file=file, append=append)
   structure(list(file=file, style=NULL), class='latex')
 }

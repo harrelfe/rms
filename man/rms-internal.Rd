@@ -5,6 +5,7 @@
 \alias{lm.pfit}
 \alias{ols.influence}
 \alias{plotmathAnova}
+\alias{prType}
 \alias{survreg.auxinfo}
 \alias{val.probg}
 \description{Internal rms functions}

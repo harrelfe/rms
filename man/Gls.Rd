@@ -2,12 +2,26 @@
 \alias{Gls}
 \alias{print.Gls}
 \title{Fit Linear Model Using Generalized Least Squares}
+\description{
+  This function fits a linear model using generalized least
+  squares. The errors are allowed to be correlated and/or have unequal
+  variances.  \code{Gls} is a slightly enhanced version of the
+  Pinheiro and Bates \code{gls} function in the \code{nlme} package to
+  make it easy to use with the rms package and to implement cluster
+  bootstrapping (primarily for nonparametric estimates of the
+  variance-covariance matrix of the parameter estimates and for
+  nonparametric confidence limits of correlation parameters).
+
+	For the \code{print} method, format of output is controlled by the
+	user previously running \code{options(prType="lang")} where
+	\code{lang} is \code{"plain"} (the default), \code{"latex"}, or
+	\code{"html"}. 
+}
 \usage{
 Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
     control, verbose, B=0, dupCluster=FALSE, pr=FALSE, x=FALSE)
 
-\method{print}{Gls}(x, digits=4, coefs=TRUE, latex=FALSE, md=FALSE,
-title, \dots) 
+\method{print}{Gls}(x, digits=4, coefs=TRUE, title, \dots) 
 }
 \arguments{
  \item{model}{a two-sided linear formula object describing the
@@ -61,22 +75,8 @@ title, \dots)
   of model coefficients, standard errors, etc.  Specify \code{coefs=n}
   to print only the first \code{n} regression coefficients in the
   model.}
-\item{latex}{a logical value indicating whether information should be
-  formatted as plain text or as LaTeX markup}
-\item{md}{a logical directing that LaTeX and html be composed for use
-	with R Markdown}
 \item{title}{a character string title to be passed to \code{prModFit}}
  \item{\dots}{ignored}
-}
-\description{
-  This function fits a linear model using generalized least
-  squares. The errors are allowed to be correlated and/or have unequal
-  variances.  \code{Gls} is a slightly enhanced version of the
-  Pinheiro and Bates \code{Gls} function in the \code{nlme} package to
-  make it easy to use with the rms package and to implement cluster
-  bootstrapping (primarily for nonparametric estimates of the
-  variance-covariance matrix of the parameter estimates and for
-  nonparametric confidence limits of correlation parameters).
 }
 \value{
   an object of classes \code{Gls}, \code{rms}, and \code{gls}

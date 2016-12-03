@@ -58,7 +58,7 @@ latex.lrm <-
                 columns=columns, 
                 before=before, after=after, prefix="X\\hat{\\beta}",
                 inline=inline, pretrans=pretrans, digits=digits,
-                size=size, md=md)
+                size=size)
   if(md) htmltools::HTML(c(paste0(w, '\n'), as.character(z)))
   else z
 }
@@ -130,7 +130,7 @@ latex.orm <-
                 columns=columns, 
                 before=before, after=after, prefix="X\\hat{\\beta}",
                 inline=inline, pretrans=pretrans, digits=digits,
-                size=size, md=md)
+                size=size)
   if(md) htmltools::HTML(c(paste0(w, '\n'), as.character(z)))
   else z
 }
