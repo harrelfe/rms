@@ -16,7 +16,8 @@ function definition.
 For the \code{print} method, format of output is controlled by the
 user previously running \code{options(prType="lang")} where
 \code{lang} is \code{"plain"} (the default), \code{"latex"}, or
-\code{"html"}. 
+\code{"html"}.  For the \code{latex} method, \code{html} will actually
+be used of \code{options(prType='html')}.
 }
 \usage{
 Rq(formula, tau = 0.5, data, subset, weights, na.action=na.delete,
@@ -28,8 +29,7 @@ Rq(formula, tau = 0.5, data, subset, weights, na.action=na.delete,
 \method{latex}{Rq}(object,
            file = paste(first.word(deparse(substitute(object))),
              ".tex", sep = ""), append=FALSE,
-           which, varnames, columns=65, inline=FALSE, caption=NULL,
-           md=FALSE, ...)
+           which, varnames, columns=65, inline=FALSE, caption=NULL, ...)
 
 \method{predict}{Rq}(object, \dots, kint=1, se.fit=FALSE)
 
