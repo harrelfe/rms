@@ -170,17 +170,17 @@ latex.Rq <-
   function(object,
            file = paste(first.word(deparse(substitute(object))),
              ".tex", sep = ""), append=FALSE,
-           which, varnames, columns=65, inline=FALSE, caption=NULL,
-           md=FALSE, ...)
+           which, varnames, columns=65, inline=FALSE, caption=NULL, ...)
 {
-  if(md) file <- ''
+  html <- prType() == 'html'
+  if(html) file <- ''
   
   f   <- object
-    tau <- f$tau
-    at  <- f$Design
+  tau <- f$tau
+  at  <- f$Design
     
   w <- if (length(caption)) {
-         if(md) paste('<div align=center><strong>', caption,
+         if(html) paste('<div align=center><strong>', caption,
                       '</strong></div>', sep='')
          else
            paste("\\begin{center} \\bf", caption, "\\end{center}")
@@ -197,7 +197,7 @@ latex.Rq <-
     
     cat(w, file = file, sep = if (length(w)) "\n"  else "", append = append)
     latexrms(f, file=file, append=TRUE, which=which, inline=inline,
-             varnames=varnames, columns=columns, caption, md=md, ...)
+             varnames=varnames, columns=columns, caption, ...)
   }
 
 predict.Rq <- function(object, ..., kint=1, se.fit=FALSE)
