@@ -203,7 +203,7 @@ cph <- function(formula     = formula(data),
         else agreg.fit
       }
       else if (method == 'exact') {
-        if(type == 'right') getFromNamespace('coxexact.fit', 'survival')
+        if(ytype == 'right') getFromNamespace('coxexact.fit', 'survival')
         else
           agexact.fit
         }
