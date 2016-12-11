@@ -567,6 +567,7 @@ plot.anova.rms <-
     isbase <- Hmisc::grType() == 'base'
 
     htmlSpecs <- markupSpecs$html
+    schisq    <- htmlSpecs$chisq()
 
     if(! length(xlab)) {
 
@@ -585,13 +586,13 @@ plot.anova.rms <-
                                                   ~R^2)))
         else
           switch(what,
-                 chisq='\u03C7<sup>2</sup>',
-                 "proportion chisq"='Proportion of Overall \u03C7<sup>2</sup>',
-                 chisqminusdf='\u03C7<sup>2</sup>&nbsp;-&nbsp;df',
-                 aic="Akaike Information Criterion",
-                 P="P-value",
-                 "partial R2"='Partial R<sup>2</sup>',
-                 "remaining R2"='Remaining R<sup>2</sup> After Removing Variable',
+                 chisq        = schisq,
+                 "proportion chisq" = paste('Proportion of Overall', schisq),
+                 chisqminusdf = paste0(schisq, '&nbsp;-&nbsp;df'),
+                 aic          = "Akaike Information Criterion",
+                 P            = "P-value",
+                 "partial R2" = 'Partial R<sup>2</sup>',
+                 "remaining R2" = 'Remaining R<sup>2</sup> After Removing Variable',
                  "proportion R2"='Proportion of Overall R<sup>2</sup>')
       }
     rm <- c(if(rm.totals) c("TOTAL NONLINEAR","TOTAL NONLINEAR + INTERACTION",
@@ -686,7 +687,7 @@ plot.anova.rms <-
               switch(marg, 
                      chisq = paste(htmlSpecs$chisq(dof), fn(chisq, 1)),
                      'proportion chisq' =
-                       paste('Proportion \u03C7<sup>2</sup>=',
+                       paste0('Proportion ', schisq, '=',
                              fn(chisq / totchisq, 2)),
                      'd.f.' = paste('d.f.=', fn(dof, 0)),
                      P = paste('P=', fn(P, 4)),

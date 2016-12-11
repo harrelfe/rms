@@ -177,7 +177,7 @@ survplotp.npsurv <-
     pl <- function(p, x, y, n.risk=NULL, col, slev, type='est') {
       sname  <- if(ns == 1) '' else slev
       snames <- if(sname == '') '' else paste0(sname, ' ')
-      d <- paste0('Difference<br>\u00BD ', conf.int, ' CL')    # \u00BD = &half;
+      d <- paste0('Difference<br>', mu$half(), ' ', conf.int, ' CL')
       nam   <- switch(type,
                       est   = sname,
                       lower = paste0(snames, conf.int, ' CL'),
@@ -342,8 +342,9 @@ survplotp.npsurv <-
               paste('/', tolower(units), sep='')
       haz <- round(nevents / totaltime, 4)
       txt <- paste(nevents, 'events')
-      if(aehaz) txt <- paste(txt, '<br>&nbsp;&nbsp;&nbsp;\u03BB=',    # \u03BB = &lambda;
-                             haz, un, sep='')
+      if(aehaz) txt <- paste0(txt, '<br>&nbsp;&nbsp;&nbsp;',
+                              htmlGreek('lambda'), '=', 
+                              haz, un, sep='')
       z <- paste(paste0(sleva, ':', txt), collapse='<br>')
       if(length(times)) {
         z2 <- paste0('<br>Cumulative<br>Incidence at<br>',

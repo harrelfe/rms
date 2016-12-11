@@ -1,3 +1,6 @@
+Changes in version 5.0-2 (2016-12-11)
+   * anova.rms, survplotp.npsurv: use Hmisc htmlGreek to encode Greek letters
+
 Changes in version 5.0-1 (2016-12-04)
    * latex.anova.rms: fixed problem with conversion of * to $\times$
 	 * prModStats: fixed problem with print.ols residuals
