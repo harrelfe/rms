@@ -5,6 +5,7 @@ set.seed(17) # so can reproduce the results
 age            <- rnorm(n, 50, 10)
 blood.pressure <- rnorm(n, 120, 15)
 sex            <- factor(sample(c('female','male'), n, TRUE))
+country        <- factor(sample(c('US', 'Canada'),  n, TRUE))
 i <- sex == 'female'
 cholesterol <- numeric(n)
 cholesterol[i]   <- rnorm(sum(i),   170, 15)
@@ -21,163 +22,116 @@ L <- .4*(sex=='male') + .045*(age-50) +
 # Simulate binary y to have Prob(y=1) = 1/[1+exp(-L)]
 y <- ifelse(runif(n) < plogis(L), 1, 0)
 cholesterol[1:3] <- NA   # 3 missings, at random
-d <- data.frame(y, blood.pressure, age, cholesterol, sex)
-rm(y, blood.pressure, age, cholesterol, sex)
+d <- data.frame(y, blood.pressure, age, cholesterol, sex, country)
+rm(y, blood.pressure, age, cholesterol, sex, country)
 dd <- datadist(d); options(datadist='dd')
 
-f <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
+f <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)) + country,
          data=d)
+
+
 p <- Predict(f, cholesterol, sex)
+source('~/R/Hmisc/R/histSpikeg.s')
+source('~/R/rms/R/plotp.Predict.s')
+source('~/R/Hmisc/R/scat1d.s')
+# plotp(p, rdata=d, ylim=c(-1,2))
+
+i <- attr(p, 'info')
+cllab <- if(i$conf.int) paste0(i$conf.int, ' C.L.')
+
 class(p) <- setdiff(class(p), 'Predict')
+
+fm <- function(x) format(x, digits=4)
+
 # pm <- subset(p, sex == 'male')
-a <- attributes(p)$info$Design
+a <- i$Design
 bpl <- labelPlotmath(a$label['blood.pressure'],
                      a$units['blood.pressure'], html=TRUE)
 chl <- labelPlotmath(a$label['cholesterol'],
                      a$units['cholesterol'], html=TRUE)
+agl <- labelPlotmath(a$label['age'],
+                     a$units['age'], html=TRUE)
 
-#a <- plot_ly(p, x=cholesterol, y=yhat)
-#a <- add_trace(a, x=cholesterol, y=lower,
-#               line=list(color='transparent'), fillcolor='light gray')
-#a <- add_trace(a, x=cholesterol, y=upper, fill='tonexty',
-#               line=list(color='transparent'), fillcolor='light gray')
-#a
+a <- plot_ly()
+ht <- with(p, paste0('cholesterol=', fm(cholesterol), '<br>', 
+                       fm(yhat), ' [', fm(lower), ',', fm(upper), ']'))
+j <- which(p$cholesterol == min(p$cholesterol))
+ht[j] <- paste0(ht[j], '<br>Adjusted to:<br>', i$adjust[1])
 
-a <- plot_ly(p, x=~cholesterol, y=~yhat, group=~sex)
-a <- add_trace(a, x=~cholesterol, y=~lower, group=~sex,
-               fill='tonexty')
-a <- add_trace(a, x=~cholesterol, y=~upper, group=~sex)
-layout(a, xaxis=list(title=chl), yaxis=list(title='<b>y</b><i>h</i>at'))
+a <- add_lines(a, data=p, x=~cholesterol, y=~yhat, color=~sex,
+               text=~ht, hoverinfo='text')
+a <- add_ribbons(a, data=p, x=~cholesterol, ymin=~lower, ymax=~upper,
+                 color=~sex, hoverinfo='none')
+source('~/R/Hmisc/R/histSpikeg.s')
+a <- histSpikeg(yhat ~ cholesterol + sex, predictions=p,
+                data=d, plotly=a, ylim=c(-1, 2))
+layout(a, xaxis=list(title=chl),
+          yaxis=list(title=i$ylabhtml, range=c(-1, 2)))
 
+p <- Predict(f)
+# w <- plotp(p, rdata=d)
+# w$Continuous
+# w$Categorical
 
-g <- ggplot(p, aes(x=cholesterol, y=yhat)) + geom_line()
-g <- g + xlab(xl)
-g <- g + geom_ribbon(data=p, aes(ymin=lower, ymax=upper), alpha=0.2, linetype=0)
-g
-g + histSpikeg(yhat ~ cholesterol, p, d, ylim=c(-1, 1.25))
-g + histSpikeg(yhat ~ cholesterol, data=d, ylim=c(-1, 1.25))
-g + histSpikeg(yhat ~ cholesterol, data=d, ylim=c(-1, 1.25), side=3)
+i <- attr(p, 'info')
+ylim <- range(c(p$lower, p$upper, p$yhat), na.rm=TRUE)
+p <- subset(p, .predictor. %nin% c('sex', 'country'))
+class(p) <- 'data.frame'
+r <- subset(p, .predictor. == 'age')
+r$ht <- with(r, paste0('age=', fm(age), '<br>', 
+                       fm(yhat), ' [', fm(lower), ',', fm(upper), ']'))
+r$ht[1] <- paste0(r$ht[1], '<br>Adjusted to:<br>', i$adjust[3])
+a <- plot_ly(r)
+a <- add_lines(a, x=~age, y=~yhat, text=~ht, color=I('black'), hoverinfo='text',
+               name='yhat', legendgroup='yhat')
+a <- add_ribbons(a, x=~age, ymin=~lower, ymax=~upper, color=I('lightgray'),
+                 hoverinfo='none', name=cllab, legendgroup=cllab)
+source('~/R/Hmisc/R/histSpikeg.s')
+a <- histSpikeg(yhat ~ age, data=d, predictions=r, ylim=ylim, plotly=a)
+#aa <- histSpikep(a, x=d$age, y=approx(r$age, r$yhat, xout=d$age)$y, z=1)
+ex <- function(x, delta=0) {
+    r <- range(x, na.rm=TRUE)
+    if(delta == 0) return(r)
+    c(r[1] - delta * diff(r), r[2] + delta * diff(r))
+}
+a <- plotly::layout(a, xaxis=list(title=agl, range=ex(d$age)))
 
-p <- Predict(f, cholesterol, sex)
-class(p) <- setdiff(class(p), 'Predict')
+r <- subset(p, .predictor. == 'cholesterol')
+r$ht <- with(r, paste0('cholesterol=', fm(cholesterol), '<br>',
+                       fm(yhat), ' [', fm(lower), ',', fm(upper), ']'))
+r$ht[1] <- paste0(r$ht[1], '<br>Adjusted to:<br>', i$adjust[4])
+b <- plot_ly(r)
+b <- add_lines(b, x=~cholesterol, y=~yhat, text=~ht, color=I('black'), hoverinfo='text',
+               name='yhat', showlegend=FALSE, legendgroup='yhat')
+b <- add_ribbons(b, x=~cholesterol, ymin=~lower, ymax=~upper, color=I('lightgray'),
+                 hoverinfo='none', name=cllab, showlegend=FALSE, legendgroup=cllab)
+b <- histSpikeg(yhat ~ cholesterol, data=d, predictions=r, ylim=ylim, 
+                plotly=b, showlegend=FALSE)
+b <- layout(b, xaxis=list(title='cholesterol', range=ex(d$cholesterol)))
+plotly::subplot(a, b, nrows=1, shareY=TRUE, titleX=TRUE)
 
-plot_ly(p, x=~cholesterol, y=~yhat, color=~sex, mode="lines", type="scatter", name="")
+p <- Predict(f)
+r <- subset(p, .predictor. == 'sex')
+a <- plot_ly(r, color=I('black'), height=plotlyParm$heightDotchart(2))
+a <- add_segments(a, y=~sex, x=~lower, yend=~sex, xend=~upper, color=I('lightgray'), name=cllab, legendgroup=cllab)
+a <- add_markers(a, y=~sex, x=~yhat, name='Estimate', legendgroup='Estimate')
+#lm <- plotlyParm$lrmargin('female')
+a <- layout(a, xaxis=list(title=i$ylabhtml), 
+               yaxis=list(title='Sex', titlefont=list(size=10)))
 
+r <- subset(p, .predictor. == 'country')
+b <- plot_ly(r, color=I('black'), height=plotlyParm$heightDotchart(2))
+b <- add_segments(b, y=~country, x=~lower, yend=~country, xend=~upper, color=I('lightgray'), name=cllab, legendgroup=cllab, showlegend=FALSE)
+b <- add_markers(b, y=~country, x=~yhat, name='Estimate', legendgroup='Estimate', showlegend=FALSE)
+#lm <- plotlyParm$lrmargin('Canada')
+b <- layout(b, xaxis=list(title=i$ylabhtml),
+               yaxis=list(title='Country', titlefont=list(size=10)))
 
-g <- ggplot(p, aes(x=cholesterol, y=yhat, color=sex)) + geom_line() +
-  xlab(xl2) + ylim(-1, 1)
-# show.legend=FALSE gets rid of slash in legend boxes
-# See http://stackoverflow.com/questions/10660775/ggplot-legend-slashes
-g <- g + geom_ribbon(data=p, aes(ymin=lower, ymax=upper), alpha=0.2,
-                linetype=0, show.legend=FALSE)
-g
-g + histSpikeg(yhat ~ cholesterol + sex, p, d, ylim=c(-1, 1.25))
+plotly::subplot(a, b, shareX=TRUE, titleY=TRUE, nrows=2, heights=c(2, 2) / sum(c(2, 2)))
 
 p <- Predict(f, sex)
 class(p) <- setdiff(class(p), 'Predict')
-ggplot(p, aes(x=sex, y=yhat)) + coord_flip() + geom_point() +
-  geom_errorbar(aes(ymin=lower, ymax=upper), width=0)
-
-p     <- Predict(f)
-a     <- attributes(p)$info
-yl    <- a$ylabPlotmath
-xlabs <- a$Design$label
-unts  <- a$Design$units
-ylim <- range(pretty(
-  if(TRUE) c(p$yhat, p$lower, p$upper)
-  else p$yhat), na.rm=TRUE)
-
-grid::grid.newpage()
-grid::pushViewport(grid::viewport(layout = grid::grid.layout(2, 2)))
-nr <- 1; nc <- 0
-for(w in unique(p$.predictor.)) {
-  nc <- nc + 1
-  if(nc > 2) {nr <- nr + 1; nc <- 1}
-  i <- p$.predictor. == w
-  z <- p[i, w]
-  yhat <- p[i, 'yhat']
-  l  <- levels(z)
-  ll <- length(l)
-  xl <- labelPlotmath(xlabs[w], unts[w])
-  zz <- data.frame(z, yhat)
-  g  <- ggplot(zz, aes(x=z, y=yhat)) + ylim(ylim) +
-    theme(plot.margin = unit(rep(.2, 4), 'cm'))
-
-  g <- g + if(ll) geom_point() else geom_line()
-  g <- g + xlab(xl) + ylab(yl)
-  g <- g + if(ll)
-    geom_errorbar(data=p[i,], aes(ymin=lower, ymax=upper), width=0)
-    else
-      geom_ribbon(data=p[i,], aes(ymin=lower, ymax=upper), alpha=0.2,
-                  linetype=0, show.legend=FALSE)
-  print(g, vp = grid::viewport(layout.pos.row = nr, layout.pos.col = nc))
-}
-
-# Change y scale to be uniform
-# try to narrow gaps
-
 
 
 p <- Predict(f, age, sex, blood.pressure=c(120,140,160),
              cholesterol=c(180,200,215))
-class(p) <- setdiff(class(p), 'Predict')
-g <- ggplot(p, aes(x=age, y=yhat, color=sex)) + geom_line()
-g <- g + geom_ribbon(data=p, aes(ymin=lower, ymax=upper), alpha=0.2,
-                linetype=0, show.legend=FALSE)
-g + facet_grid(blood.pressure ~ cholesterol)
-g + facet_grid(cholesterol ~ blood.pressure)
-eval(parse(text='g + facet_grid(cholesterol ~ blood.pressure)'))
-
-
-# attr(p, 'info')$varying shows 4 predictors varying in order: age bp ch sex
-
-g <- ggplot(p, aes(x=age, y=yhat)) + geom_line()
-g <- g + geom_ribbon(data=p, aes(ymin=lower, ymax=upper), alpha=0.2,
-                linetype=0, show.legend=FALSE)
-g + facet_grid(blood.pressure ~ cholesterol*sex)
-g + facet_grid(cholesterol*sex ~ blood.pressure)
-
-# Add superposition
-g <- ggplot(p, aes(x=age, y=yhat, color=blood.pressure)) + geom_line()
-g <- g +
-  geom_ribbon(data=p, aes(ymin=lower, ymax=upper), alpha=0.2,
-                linetype=0, show.legend=FALSE)
-g=g + facet_grid(sex ~ blood.pressure)
-
-if(FALSE) {   # doesn't work - where is .predictor.?
-p <- as.data.frame(p)
-g <- ggplot(p, aes(y=yhat)) + facet_wrap(~ .predictor., scales='free_x') +
-  xlab(NULL)
-require(plyr)
-pa <- subset(p, .predictor. == 'age')
-pc <- subset(p, .predictor. == 'cholesterol')
-
-g <- g + geom_line(subset=.(.predictor.=='age'), aes(x=age)) +
-  geom_ribbon(subset=.(.predictor.=='age'), aes(x=age, ymin=lower, ymax=upper),
-              alpha=0.2, linetype=0, show.legend=FALSE) +
-  geom_line(subset=.(.predictor.=='cholesterol'), aes(x=cholesterol)) +
-  geom_ribbon(subset=.(.predictor.=='cholesterol'),
-              aes(x=cholesterol, ymin=lower, ymax=upper),
-              alpha=0.2, linetype=0, show.legend=FALSE)
-g
-g + geom_point(subset=.(.predictor.=='sex'), aes(x=as.numeric(sex))) +
-    geom_errorbar(subset=.(.predictor.=='sex'),
-               aes(x=as.numeric(sex), ymin=lower, ymax=upper), width=0)
-
-
-## Will not work:
-##  g + geom_point(subset=.(.predictor.=='sex'), aes(x=sex)) +
-##  geom_errorbar(subset=.(.predictor.=='sex'),
-##                aes(x=sex, ymin=lower, ymax=upper), width=0)
-## Error: Discrete value supplied to continuous scale
-
-xx <- NULL
-pred <- p$.predictor.
-for(i in unique(pred)) xx <- c(xx, p[pred == i, i])
-p$xx <- xx
-z <- ggplot(p, aes(x=xx, y=yhat)) +
-     facet_wrap(~ .predictor., scales='free_x') + xlab(NULL) +
-     geom_line() + geom_ribbon(aes(x=xx, ymin=lower, ymax=upper),
-                            alpha=0.2, linetype=0, show.legend=FALSE)
-z
-}

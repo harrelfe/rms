@@ -112,6 +112,8 @@ S3method(plot, val.surv)
 S3method(plot, val.survh)
 S3method(plot, xmean.ordinaly)
 
+S3method(plotp, Predict)
+
 S3method(ggplot, Predict)
 
 S3method(predict, bj)
