@@ -40,7 +40,7 @@
      rdata=NULL, nlevels=3, vnames=c('labels','names'),
      histSpike.opts=list(frac=function(f) 0.01 + 
          0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1), side=1, nint=100),
-     ncols=3, ...)
+     ncols=3, width=800, ...)
 
 plotp(data, ...)
 }
@@ -88,6 +88,7 @@ variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm},
   information and not specified by the user.}
 \item{ncols}{number of columns of plots to use when plotting multiple
 	continuous predictors}
+\item{width}{width in pixels for \code{plotly} graphics}
 \item{\dots}{ignored}
 }
 \value{a \code{plotly} object or a list containing two elements, each

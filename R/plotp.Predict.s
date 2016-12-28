@@ -8,7 +8,7 @@ plotp.Predict <-
            histSpike.opts=list(frac=function(f) 0.01 + 
                                  0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1),
                                side=1, nint=100),
-           ncols=3, ...)
+           ncols=3, width=800, ...)
 {
   varypred <- ('.set.'       %in%  names(data)) &&
               ('.predictor.' %nin% names(data))
@@ -60,9 +60,11 @@ plotp.Predict <-
   cllab <- if(conf.int) paste(conf.int, 'C.L.')
   
   if(missing(ylim))
-    ylim <- range(
-      if(conf.int) c(data$yhat, data$lower, data$upper)
-      else         data$yhat, na.rm=TRUE)
+    ylim <- if(conf.int) 
+              with(data, c(min(c(yhat, lower), na.rm=TRUE),
+                           max(c(yhat, upper), na.rm=TRUE)))
+            else
+              range(data$yhat, na.rm=TRUE)
 
   adjto <- paste0('Adjusted to:<br>', adjust)
   if(predpres) names(adjto) <- unique(data$.predictor.)
@@ -96,7 +98,7 @@ plotp.Predict <-
       if(length(varying) != 2) {
         ht[1] <- paste0(ht[1], '<br>', adjto[v])
         dat$.ht. <- ht
-        a <- plotly::plot_ly(dat, height=height)
+        a <- plotly::plot_ly(dat, height=height, width=width)
         a <- plotly::add_lines(a, x=~.x., y=~yhat, text=~.ht., color=I('black'),
                                hoverinfo='text',
                                name='Estimate', legendgroup='Estimate',
@@ -117,7 +119,7 @@ plotp.Predict <-
         j <- which(dat$.x. == min(dat$.x.))
         ht[j] <- paste0(ht[j], '<br>', adjto[v])
         dat$.ht. <- ht
-        a <- plotly::plot_ly(dat, height=height)
+        a <- plotly::plot_ly(dat, height=height, width=width)
         a <- plotly::add_lines(a, x=~.x., y=~yhat, text=~.ht., color=~.g.,
                                hoverinfo='text',
                                name='Estimate', legendgroup='Estimate',
@@ -172,7 +174,9 @@ plotp.Predict <-
     }
 
     catg <- dotchartpl(X, major, minor, lower=Lower, upper=Upper,
-                       htext=format(X, digits=4), xlab=ylab)
+                       htext=format(X, digits=4), xlab=ylab,
+                       tracename='Estimate', limitstracename=cllab,
+                       width=width)
     return(list(Continuous=cont, Categorical=catg))
   }
 
