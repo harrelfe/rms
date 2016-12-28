@@ -143,6 +143,8 @@ fit <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
 p <- plotp(Predict(fit))
 p$Continuous
 p$Categorical
+# When using Rmarkdown html notebook, best to use
+# prList(p) to render the two objects
 plotp(Predict(fit), rdata=llist(blood.pressure, age))$Continuous
 # spike histogram plot for two of the predictors
 
