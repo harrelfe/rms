@@ -1,6 +1,7 @@
 Changes in version 5.0-2 (2016-12-27)
    * anova.rms, survplotp.npsurv: use Hmisc htmlGreek to encode Greek letters
 	 * plotp.Predict: new function for direct plotly graphics for Predict
+	 * rbind.Predict: carry adjust object
 
 Changes in version 5.0-1 (2016-12-04)
    * latex.anova.rms: fixed problem with conversion of * to $\times$

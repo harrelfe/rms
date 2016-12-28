@@ -40,6 +40,8 @@ ols                     Linear Model Estimation Using Ordinary Least
 orm                     Ordinal Regression Model
 orm.fit                 Ordinal Regression Model Fitter
 pentrace                Trace AIC and BIC vs. Penalty
+plotp.Predict           Plot Effects of Variables Estimated by a
+                        Regression Model Fit Using plotly
 plot.Predict            Plot Effects of Variables Estimated by a
                         Regression Model Fit
 plot.xmean.ordinaly     Plot Mean X vs. Ordinal Y

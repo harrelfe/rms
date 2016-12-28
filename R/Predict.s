@@ -334,10 +334,22 @@ rbind.Predict <- function(..., rename) {
   info$varying <- c(info$varying, '.set.')
 
   sets <- names(d)
-  if(! length(sets)) sets <- paste('Set', 1:ns)
+  if(! length(sets)) sets <- paste('Set', 1 : ns)
   obs.each.set <- sapply(d, function(x) length(x[[1]]))
   .set. <- rep(sets, obs.each.set)
   .set. <- factor(.set., levels=unique(.set.))
+
+  info$adjust <- sapply(d, function(x) attr(x, 'info')$adjust)
+
+  ## If first varying variable is not always the same but the second
+  ## is, take varying[1] to be ".x."
+
+  first  <- sapply(d, function(x) attr(x, 'info')$varying[1])
+  second <- sapply(d, function(x) {
+    y <- attr(x, 'info')$varying
+    if(length(y) < 2) '' else y[2] } )
+  if((length(unique(first)) > 1) && (all(second == second[1])))
+    info$varying[1] <- '.x.'
 
   if(! missing(rename)) for(i in 1L : ns)
     names(d[[i]]) <- trans(names(d[[i]]), rename)

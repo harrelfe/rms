@@ -2,22 +2,13 @@ plotp <- function(data, ...) UseMethod("plotp")
 
 plotp.Predict <-
   function(data,
-#           varypred=FALSE,
            subset, xlim, ylim, xlab, ylab,
-#           colorscale=function(...)
-#             scale_color_manual(..., values=c("#000000", "#E69F00", "#56B4E9",
-#               "#009E73","#F0E442", "#0072B2", "#D55E00", "#CC79A7")),
-           rdata=NULL, #anova=NULL, pval=FALSE, size.anova=4,
-#           adj.subtitle, size.adj=2.5, perim=NULL,
-           nlevels=3,
-#           flipxdiscrete=TRUE,
-#           legend.position='right', legend.label=NULL,
-           vnames=c('labels', 'names'), abbrev=FALSE, minlength=6,
-#           layout=NULL, addlayer,
+           rdata=NULL, nlevels=3,
+           vnames=c('labels', 'names'),
            histSpike.opts=list(frac=function(f) 0.01 + 
                                  0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1),
-             side=1, nint=100),
-#           type=NULL, ggexpr=FALSE, height=NULL, width=NULL, ..., environment)
+                               side=1, nint=100),
+           ncolscon=3, ncolscat=1,
            ...)
 {
   varypred <- ('.set.'       %in%  names(data)) &&
@@ -39,8 +30,13 @@ plotp.Predict <-
   label    <- at$label
   units    <- at$units
   adjust   <- info$adjust
-  varying  <- info$varying
+  varying  <- setdiff(info$varying, '.set.')
+  if(predpres && identical(sort(unique(data$.predictor.)), sort(varying)))
+    varying <- NULL
   conf.int <- info$conf.int
+
+  if(length(varying) > 2)
+    stop('more than 2 varying variables not allowed')
 
   pmlabel <- character(length(label))
   names(pmlabel) <- names(label)
@@ -69,7 +65,6 @@ plotp.Predict <-
       if(conf.int) c(data$yhat, data$lower, data$upper)
       else         data$yhat, na.rm=TRUE)
 
-#  if(missing(adj.subtitle)) adj.subtitle <- length(adjust) > 0
   adjto <- paste0('Adjusted to:<br>', adjust)
   if(predpres) names(adjto) <- unique(data$.predictor.)
 
@@ -94,40 +89,66 @@ plotp.Predict <-
       dat <- data[data$.predictor. == v,, drop=FALSE]
       dat$.x. <- dat[[v]]
       xlab <- pmlabel[v]
-      ht   <- with(dat, paste0(v, '=', .x., '<br>',
+      ht   <- with(dat, paste0(v, '=', fm(.x.), '<br>',
                                fm(yhat), ' [', fm(lower), ',',
                                fm(upper), ']'))
-      ht[1] <- paste0(ht[1], '<br>', adjto[v])
-      dat$.ht. <- ht
-      a <- plotly::plot_ly(dat)
-      a <- plotly::add_lines(a, x=~.x., y=~yhat, text=~.ht., color=I('black'),
-                             hoverinfo='text',
-                             name='Estimate', legendgroup='Estimate',
-                             showlegend=ncont == 1)
-      if(conf.int)
-        a <- plotly::add_ribbons(a, x=~.x., ymin=~lower, ymax=~upper,
-                                 color=I('lightgray'), hoverinfo='none',
-                                 name=cllab, legendgroup=cllab,
-                                 showlegend=ncont == 1)
-      if(length(rdata) && v %in% names(rdata)) {
-        form <- as.formula(paste('yhat ~', v))
-        a <- histSpikeg(form, data=rdata, predictions=dat, ylim=ylim,
-                        plotly=a, showlegend=ncont == 1)
+
+      if(length(varying) != 2) {
+        ht[1] <- paste0(ht[1], '<br>', adjto[v])
+        dat$.ht. <- ht
+        a <- plotly::plot_ly(dat)
+        a <- plotly::add_lines(a, x=~.x., y=~yhat, text=~.ht., color=I('black'),
+                               hoverinfo='text',
+                               name='Estimate', legendgroup='Estimate',
+                               showlegend=ncont == 1)
+        if(conf.int)
+          a <- plotly::add_ribbons(a, x=~.x., ymin=~lower, ymax=~upper,
+                                   color=I('lightgray'), hoverinfo='none',
+                                   name=cllab, legendgroup=cllab,
+                                   showlegend=ncont == 1)
+        if(length(rdata) && v %in% names(rdata)) {
+          form <- as.formula(paste('yhat ~', v))
+          a <- histSpikeg(form, data=rdata, predictions=dat, ylim=ylim,
+                          plotly=a, showlegend=ncont == 1)
         }
+      } else { # a second variable (for superpositioning) is varying
+        w <- varying[2]
+        dat$.g. <- dat[[w]]
+        j <- which(dat$.x. == min(dat$.x.))
+        ht[j] <- paste0(ht[j], '<br>', adjto[v])
+        dat$.ht. <- ht
+        a <- plotly::plot_ly(dat)
+        a <- plotly::add_lines(a, x=~.x., y=~yhat, text=~.ht., color=~.g.,
+                               hoverinfo='text',
+                               name='Estimate', legendgroup='Estimate',
+                               showlegend=ncont == 1)
+        if(conf.int)
+          a <- plotly::add_ribbons(a, x=~.x., ymin=~lower, ymax=~upper,
+                                   color=~.g., hoverinfo='none',
+                                   name=cllab, legendgroup=cllab,
+                                   showlegend=ncont == 1)
+        if(length(rdata) && all(c(v, w) %in% names(rdata))) {
+          form <- as.formula(paste('yhat ~', v, '+', w))
+          a <- histSpikeg(form, data=rdata, predictions=dat, ylim=ylim,
+                          plotly=a, showlegend=ncont == 1)
+        }
+      }
       a <- plotly::layout(a, xaxis=list(title=xlab),
                              yaxis=list(title=ylab))
       cont[[ncont]] <- a
     }
     if(ncont > 0) {
-      nrows <- ceiling(ncont / 3)
+      nrows <- ceiling(ncont / ncolscon)
       cont <- plotly::subplot(cont, nrows=nrows, shareY=TRUE, titleX=TRUE)
     }
-
+    
     ## Do all categorical predictors
     vcat  <- lp[isdis]
     ncat  <- 0
     catg  <- list()
     nlev  <- integer(length(vcat))
+#    if(length(vcat) && (length(varying) > 1))
+#      stop('varying more than one variable not implemented for categorical predictors')
 
     for(v in vcat) {
       ncat <- ncat + 1
@@ -155,14 +176,13 @@ plotp.Predict <-
 
   if(ncat > 0)
     catg <- plotly::subplot(catg, shareX=TRUE, titleY=TRUE,
-                            nrows=ncat, heights=nlev / sum(nlev))
+                            nrows=ceiling(ncat / ncolscat),
+                            heights=nlev / sum(nlev))
 
     return(list(Continuous=cont, Categorical=catg))
   }
 
   ## .predictor. not present; assume one plot
-
-  if(length(varying) > 2) stop('more than 2 varying variables not allowed')
 
   v        <- varying[1]
   data$.x. <- data[[v]]
@@ -179,11 +199,12 @@ plotp.Predict <-
 
   a <- plotly::plot_ly(data)
   if(length(varying) == 1) {
-    a <- plotly::add_lines(a, x=~.x., y=~yhat,
+    a <- plotly::add_lines(a, x=~.x., y=~yhat, color=I('black'),
                            text=~.ht., hoverinfo='text',
                            name='Estimate')
     a <- plotly::add_ribbons(a, x=~.x., ymin=~lower, ymax=~upper,
-                             hoverinfo='none', name=cllab)
+                             hoverinfo='none', name=cllab,
+                             color=I('lightgray'))
     if(length(rdata) && varying %in% names(rdata)) {
       form <- as.formula(paste('yhat ~', v))
       a <- histSpikeg(form, predictions=data, data=rdata,
@@ -205,5 +226,4 @@ plotp.Predict <-
   if(missing(xlim)) xlim <- NULL  #range(data$.x.)
   plotly::layout(a, xaxis=list(title=xlab, range=xlim),
                     yaxis=list(title=ylab, range=ylim))
-  }
-      
+}
