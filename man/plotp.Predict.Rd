@@ -18,7 +18,9 @@
 	\code{plotly} object containing a single graphic with all the
 	continuous predictors varying.  The second, named \code{Categorical},
 	is a \code{plotly} object containing a single graphic with all the
-	categorical predictors varying.
+	categorical predictors varying.  If there are no categorical
+	predictors, the value returned by by \code{plotp.Predict} is a single
+	\code{plotly} object and not a list of objects.
 
   If \code{rdata} is given, a spike histogram is drawn showing
   the location/density of data values for the \eqn{x}-axis variable.  If
@@ -38,8 +40,7 @@
      rdata=NULL, nlevels=3, vnames=c('labels','names'),
      histSpike.opts=list(frac=function(f) 0.01 + 
          0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1), side=1, nint=100),
-     ncolscon=3, ncolscat=1,
-     ...)
+     ncols=3, ...)
 
 plotp(data, ...)
 }
@@ -85,10 +86,8 @@ variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm},
   parameters to \code{\link{histSpikeg}} when \code{rdata} is given.  The
   \code{col} parameter is usually derived from other plotting
   information and not specified by the user.}
-\item{ncolscon}{number of columns of plots to use when plotting multiple
+\item{ncols}{number of columns of plots to use when plotting multiple
 	continuous predictors}
-\item{ncolscat}{number of columns of plots to use when plotting multiple
-	cagtegorical predictors}
 \item{\dots}{ignored}
 }
 \value{a \code{plotly} object or a list containing two elements, each
@@ -169,7 +168,7 @@ p1 <- Predict(fit, age, sex)
 p2 <- Predict(fit, cholesterol, sex)
 p3 <- Predict(fit, blood.pressure, sex)
 p <- rbind(age=p1, cholesterol=p2, blood.pressure=p3)
-plotp(p, ncolscon=2, rdata=llist(age, cholesterol, sex))
+plotp(p, ncols=2, rdata=llist(age, cholesterol, sex))
 }
 }
 \keyword{models}

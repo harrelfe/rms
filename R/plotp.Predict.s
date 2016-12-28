@@ -8,8 +8,7 @@ plotp.Predict <-
            histSpike.opts=list(frac=function(f) 0.01 + 
                                  0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1),
                                side=1, nint=100),
-           ncolscon=3, ncolscat=1,
-           ...)
+           ncols=3, ...)
 {
   varypred <- ('.set.'       %in%  names(data)) &&
               ('.predictor.' %nin% names(data))
@@ -83,6 +82,7 @@ plotp.Predict <-
     vcon  <- lp[! isdis]
     ncont <- 0
     cont  <- list()
+    height <- 400 * ceiling(length(vcon) / ncols)
 
     for(v in vcon) {
       ncont <- ncont + 1
@@ -96,7 +96,7 @@ plotp.Predict <-
       if(length(varying) != 2) {
         ht[1] <- paste0(ht[1], '<br>', adjto[v])
         dat$.ht. <- ht
-        a <- plotly::plot_ly(dat)
+        a <- plotly::plot_ly(dat, height=height)
         a <- plotly::add_lines(a, x=~.x., y=~yhat, text=~.ht., color=I('black'),
                                hoverinfo='text',
                                name='Estimate', legendgroup='Estimate',
@@ -117,7 +117,7 @@ plotp.Predict <-
         j <- which(dat$.x. == min(dat$.x.))
         ht[j] <- paste0(ht[j], '<br>', adjto[v])
         dat$.ht. <- ht
-        a <- plotly::plot_ly(dat)
+        a <- plotly::plot_ly(dat, height=height)
         a <- plotly::add_lines(a, x=~.x., y=~yhat, text=~.ht., color=~.g.,
                                hoverinfo='text',
                                name='Estimate', legendgroup='Estimate',
@@ -133,52 +133,46 @@ plotp.Predict <-
                           plotly=a, showlegend=ncont == 1)
         }
       }
-      a <- plotly::layout(a, xaxis=list(title=xlab),
-                             yaxis=list(title=ylab))
+      a <- plotly::layout(a,
+                          xaxis=list(title=xlab),
+                          yaxis=list(title=ylab))
       cont[[ncont]] <- a
     }
     if(ncont > 0) {
-      nrows <- ceiling(ncont / ncolscon)
-      cont <- plotly::subplot(cont, nrows=nrows, shareY=TRUE, titleX=TRUE)
+      if(ncont == 1) cont <- cont[[1]]
+      else {
+        nrows <- ceiling(ncont / ncols)
+        cont <- plotly::subplot(cont, nrows=nrows, shareY=TRUE, titleX=TRUE)
+        }
     }
     
     ## Do all categorical predictors
+    if(sum(isdis) == 0) return(cont)
+    
     vcat  <- lp[isdis]
     ncat  <- 0
     catg  <- list()
     nlev  <- integer(length(vcat))
-#    if(length(vcat) && (length(varying) > 1))
-#      stop('varying more than one variable not implemented for categorical predictors')
 
+    major <- minor <- character(0)
+    X <- Lower <- Upper <- numeric(0)
     for(v in vcat) {
       ncat <- ncat + 1
       dat <- data[data$.predictor. == v,, drop=FALSE]
       dat$.x. <- dat[[v]]
       xlab <- pmlabel[v]
 
-      ## Compute number of categories in predictor
-      k <- length(unique(dat$.x.))
-      nlev[ncat] <- k
-      a <- plotly::plot_ly(dat, color=I('black'),
-                           height=plotlyParm$heightDotchart(k))
-      a <- plotly::add_segments(a, y=~.x., x=~lower,
-                                yend=~.x., xend=~upper,
-                                color=I('lightgray'),
-                                name=cllab, legendgroup=cllab,
-                                showlegend=ncat == 1)
-      a <- plotly::add_markers(a, y=~.x., x=~yhat,
-                               name='Estimate', legendgroup='Estimate',
-                               showlegend=ncat == 1)
-      a <- plotly::layout(a, xaxis=list(title=ylab),
-                             yaxis=list(title=xlab, titlefont=list(size=10)))
-      catg[[ncat]] <- a
+      X <- c(X, dat$yhat)
+      if(conf.int) {
+        Lower <- c(Lower, dat$lower)
+        Upper <- c(Upper, dat$upper)
+      }
+      minor <- c(minor, as.character(dat[[v]]))
+      major <- c(major, rep(xlab, nrow(dat)))
     }
 
-  if(ncat > 0)
-    catg <- plotly::subplot(catg, shareX=TRUE, titleY=TRUE,
-                            nrows=ceiling(ncat / ncolscat),
-                            heights=nlev / sum(nlev))
-
+    catg <- dotchartpl(X, major, minor, lower=Lower, upper=Upper,
+                       htext=format(X, digits=4), xlab=ylab)
     return(list(Continuous=cont, Categorical=catg))
   }
 

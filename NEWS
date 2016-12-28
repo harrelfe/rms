@@ -1,4 +1,4 @@
-Changes in version 5.0-2 (2016-12-27)
+Changes in version 5.0-2 (2016-12-28)
    * anova.rms, survplotp.npsurv: use Hmisc htmlGreek to encode Greek letters
 	 * plotp.Predict: new function for direct plotly graphics for Predict
 	 * rbind.Predict: carry adjust object
