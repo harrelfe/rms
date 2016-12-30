@@ -38,7 +38,7 @@ html(contents(titanic3), maxlevels=10, levelType='table')
 # For certain print methods set to use html
 options(grType='plotly', prType='html')
 s <- summaryM(age + pclass ~ sex, data=titanic3)
-html(s)
+s
 plot(s)
 d <- describe(titanic3)
 plot(d)
@@ -56,21 +56,22 @@ plotly::subplot(p[[1]], p[[2]],
 ```{r lrmt}
 dd <- datadist(titanic3); options(datadist='dd')
 f <- lrm(survived ~ rcs(sqrt(age),5) * sex, data=titanic3)
-print(f)
+f
 latex(f)
 a <- anova(f)
-html(a)
+a
 plot(a)
 ```
 
 ```{r summary}
 s <- summary(f, age=c(2, 21))
 plot(s, log=TRUE)
-html(s, dec=2)
+print(s, dec=2)
 ```
 
 ```{r ggp,fig.height=5,fig.width=6}
-ggplot(Predict(f, age, sex), height=500, width=650)
+ggplot(Predict(f, age, sex), height=500, width=650)  # uses ggplotly()
+plotp(Predict(f, age, sex))                          # uses plotly directly
 plot(nomogram(f, fun=plogis, funlabel='Prob(survive)'))
 ```
 

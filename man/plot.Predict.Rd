@@ -239,7 +239,7 @@ f.harrell@vanderbilt.edu
   }
 \seealso{
   \code{\link{Predict}}, \code{\link{ggplot.Predict}},
-	\code{\link{rbind.Predict}},
+	\code{link{plotp.Predict}}, \code{\link{rbind.Predict}},
   \code{\link{datadist}}, \code{\link{predictrms}}, \code{\link{anova.rms}},
   \code{\link{contrast.rms}}, \code{\link{summary.rms}},
   \code{\link{rms}}, \code{\link{rmsMisc}}, 

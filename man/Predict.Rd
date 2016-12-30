@@ -27,13 +27,14 @@ intervals do not make distributional assumptions.  You can force
 \code{usebootcoef=FALSE}.  If \code{coef.reps} was \code{FALSE},
 \code{usebootcoef=FALSE} is the default.
 
-There are \code{ggplot} and  \code{plot} method for \code{Predict}
-objects that makes it easy to show predicted values and confidence bands.
+There are \code{ggplot}, \code{plotp}, and \code{plot} methods for
+\code{Predict} objects that makes it easy to show predicted values and
+confidence bands. 
 
 The \code{rbind} method for \code{Predict} objects allows you to create
 separate sets of predictions under different situations and to combine
-them into one set for feeding to \code{plot.Predict}.  or
-\code{ggplot.Predict}.  For example you
+them into one set for feeding to \code{plot.Predict}, 
+\code{ggplot.Predict}, or \code{plotp.Predict}.  For example you
 might want to plot confidence intervals for means and for individuals
 using \code{ols}, and have the two types of confidence bands be
 superposed onto one plot or placed into two panels.  Another use for
@@ -210,13 +211,14 @@ Department of Biostatistics, Vanderbilt University\cr
 f.harrell@vanderbilt.edu
 }
 \seealso{
-\code{\link{plot.Predict}}, \code{\link{ggplot.Predict}},
-\code{\link{datadist}}, \code{\link{predictrms}},
-\code{\link{contrast.rms}}, \code{\link{summary.rms}},  
-\code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{survest}},
-\code{\link{survplot}}, \code{\link{rmsMisc}},
-\code{\link[Hmisc]{transace}}, \code{rbind}, \code{\link{bootcov}},
-\code{\link{bootBCa}}, \code{\link[boot]{boot.ci}}
+	\code{\link{plot.Predict}}, \code{\link{ggplot.Predict}},
+	\code{\link{plotp.Predict}},
+	\code{\link{datadist}}, \code{\link{predictrms}},
+	\code{\link{contrast.rms}}, \code{\link{summary.rms}},  
+	\code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{survest}},
+	\code{\link{survplot}}, \code{\link{rmsMisc}},
+	\code{\link[Hmisc]{transace}}, \code{rbind}, \code{\link{bootcov}},
+	\code{\link{bootBCa}}, \code{\link[boot]{boot.ci}}
 }
 \examples{
 n <- 1000    # define sample size
@@ -264,7 +266,7 @@ xYplot(Cbind(yhat,lower,upper) ~ age | sex, data=w,
        method='filled bands', type='l', col.fill=gray(.95))
 # If non-displayed variables were in the model, add a subtitle to show
 # their settings using title(sub=paste('Adjusted to',attr(w,'info')$adjust),adj=0)
-# Easier: feed w into plot.Predict
+# Easier: feed w into plot.Predict, ggplot.Predict, plotp.Predict
 \dontrun{
 # Predictions form a parametric survival model
 n <- 1000
