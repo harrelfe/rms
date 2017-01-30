@@ -675,13 +675,13 @@ rmsArgs <- function(.object, envir=parent.frame(2))
     .res
   }
 
-## General function to print model fit objects using latex or regular
+## General function to print model fit objects using latex, html, or regular
 ## print (the default)
 
 prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                      lines.page=40, long=TRUE, needspace, ...) {
 
-  lang <- prType()
+  lang  <- prType()
   specs <- markupSpecs[[lang]]
   
   R <- character(0)
@@ -751,7 +751,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
 
   R <- character(0)
   
-  if(! missing(needspace) && latex)
+  if(! missing(needspace) && lang == 'latex')
     R <- paste0('\\Needspace{', needspace, '}')
 
   if(title != '') R <- c(R, catl(title, pre=1, bold=TRUE))

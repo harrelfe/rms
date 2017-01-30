@@ -1,4 +1,8 @@
-Changes in version 5.0-2 (2016-12-28)
+Changes in version 5.1-1 (2017-02-01)
+   * latex.anova.rms: if table.env is FALSE but caption is specified, passes caption as insert.top argument to latex.default; when options(prType='latex') you can do print(anova(), caption=) to use this
+	 * prModFit: fixed one latex to lang=='latex' bug
+
+Changes in version 5.1-0 (2017-01-01)
    * anova.rms, survplotp.npsurv: use Hmisc htmlGreek to encode Greek letters
 	 * plotp.Predict: new function for direct plotly graphics for Predict
 	 * rbind.Predict: carry adjust object

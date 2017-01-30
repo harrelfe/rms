@@ -476,7 +476,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 
 latex.anova.rms <-
   function(object,
-           title=paste('anova',attr(object,'obj.name'),sep='.'),
+           title=paste('anova', attr(object, 'obj.name'), sep='.'),
            dec.chisq=2, dec.F=2, dec.ss=NA,
            dec.ms=NA, dec.P=4, table.env=TRUE, caption=NULL, ...) {
 
@@ -543,7 +543,9 @@ latex.anova.rms <-
       }
     else
       latex(dstats, title=title,
-            caption = if(table.env) caption else NULL,
+            caption    = if(table.env) caption else NULL,
+            insert.top = if(length(caption) && ! table.env)
+                           paste0('\\Needspace{2in}\n', caption),
             rowlabel="", col.just=rep('r',length(sn)), table.env=table.env, ...)
   }
 
