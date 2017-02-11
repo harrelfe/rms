@@ -62,6 +62,7 @@ Changes in version 4.5-1 (2016-06-01)
    * NAMESPACE: added graphics::grconvertX grconvertY
 	 * latex.naprint.delete: fixed width algorithm for dot chart
 	 * survplot.npsurv, survplotp.npsurv: changed $prev to $pstate for competing risk estimation due to change in survival package 2.40-0
+	 * rbind.Predict: removed varying .x.; can't figure out what it was doing and cause a bug
 
 Changes in version 4.5-0 (2016-04-02)
    * val.prob: fixed longstanding error: U was always -2/n because used wrong deviance.  Thanks: Kai Chen
