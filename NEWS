@@ -1,6 +1,7 @@
-Changes in version 5.1-1 (2017-02-01)
+Changes in version 5.1-1 (2017-02-11)
    * latex.anova.rms: if table.env is FALSE but caption is specified, passes caption as insert.top argument to latex.default; when options(prType='latex') you can do print(anova(), caption=) to use this
 	 * prModFit: fixed one latex to lang=='latex' bug
+	 * print.anova.rms, print.summary.rms: added table.env argument
 
 Changes in version 5.1-0 (2017-01-01)
    * anova.rms, survplotp.npsurv: use Hmisc htmlGreek to encode Greek letters

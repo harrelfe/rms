@@ -272,10 +272,10 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   stats
 }
 
-print.summary.rms <- function(x, ...)
+print.summary.rms <- function(x, ..., table.env=FALSE)
 {
   switch(prType(),
-         latex = latex.summary.rms(x, ..., file='', table.env=FALSE),
+         latex = latex.summary.rms(x, ..., file='', table.env=table.env),
          html  = html.summary.rms(x, ...),
          plain = {
   

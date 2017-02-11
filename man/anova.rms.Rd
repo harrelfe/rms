@@ -44,7 +44,9 @@ depending on \code{options(prType=)}, and output is to the console.  For
       test=c('F','Chisq'), india=TRUE, indnl=TRUE, ss=TRUE,
       vnames=c('names','labels'))
 
-\method{print}{anova.rms}(x, which=c('none','subscripts','names','dots'), \dots)
+\method{print}{anova.rms}(x,
+      which=c('none','subscripts','names','dots'),
+      table.env=FALSE, \dots)
 
 \method{plot}{anova.rms}(x, 
      what=c("chisqminusdf","chisq","aic","P","partial R2","remaining R2",

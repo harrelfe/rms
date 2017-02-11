@@ -381,10 +381,12 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
 }
 
 print.anova.rms <- function(x, which=c('none','subscripts',
-                                          'names','dots'),
+                                       'names','dots'),
+                            table.env=FALSE, 
                             ...) {
   lang <- prType()
-  if(lang != 'plain') return(latex.anova.rms(x, file='', table.env=FALSE, ...))
+  if(lang != 'plain')
+    return(latex.anova.rms(x, file='', table.env=table.env, ...))
 
   stats <- x
   digits <- c('Chi-Square'=2, F=2, 'd.f.'=0, 'Partial SS'=15, MS=15, P=4)

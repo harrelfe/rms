@@ -52,7 +52,7 @@ conf.int=.95, abbrev=FALSE, vnames=c("names","labels"),
 conf.type=c('individual','simultaneous'),
 usebootcoef=TRUE, boot.type=c("percentile","bca","basic"), verbose=FALSE)
 
-\method{print}{summary.rms}(x, \dots)
+\method{print}{summary.rms}(x, \dots, table.env=FALSE)
 
 \method{latex}{summary.rms}(object, title, table.env=TRUE, \dots)
 
