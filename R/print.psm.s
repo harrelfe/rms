@@ -11,17 +11,17 @@ print.psm <- function(x, correlation = FALSE, digits=4,
 
   stats <- x$stats
   ci <- x$clusterInfo
-  counts <- reListclean(Obs   = stats['Obs'],
-                     Events= stats['Events'],
-                     'Cluster on' = ci$name,
-                     Clusters = ci$n,
-                     'Sum of Weights'=stats['Sum of Weights'],
-                     sigma = if(length(x$scale) == 1) x$scale)
+  counts <- reListclean(Obs              = stats['Obs'],
+                        Events           = stats['Events'],
+                        'Cluster on'     = ci$name,
+                        Clusters         = ci$n,
+                        'Sum of Weights' = stats['Sum of Weights'],
+                        sigma            = if(length(x$scale) == 1) x$scale)
   lr <- reListclean('LR chi2'     = stats['Model L.R.'],
-                 'd.f.'        = stats['d.f.'],
-                 'Pr(> chi2)'  = stats['P'])
+                    'd.f.'        = stats['d.f.'],
+                    'Pr(> chi2)'  = stats['P'])
   disc <- reListclean(R2=stats['R2'], Dxy=stats['Dxy'],
-                   g=stats['g'],   gr=stats['gr'])
+                      g=stats['g'],   gr=stats['gr'])
 
   headings <- c('',
                 'Model Likelihood\nRatio Test',
