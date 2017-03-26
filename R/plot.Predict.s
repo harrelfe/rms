@@ -70,7 +70,9 @@ plot.Predict <-
   else
     eval(substitute(subset),x)
 
-  oldopt <- options(digits=digits)
+  
+  oldopt <- options('digits')
+  options(digits=digits)
   on.exit(options(oldopt))
 
   tanova <- if(length(anova))

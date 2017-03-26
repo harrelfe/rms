@@ -371,7 +371,8 @@ scored <- function(...) {
     if(! length(parms)) parms <- levx
 
     ## .Options$warn <- -1   #suppress warning about NAs
-    oldopt <- options(warn=-1)
+    oldopt <- options('warn')
+    options(warn=-1)
     on.exit(options(oldopt))
     x <- levx[x]
   }

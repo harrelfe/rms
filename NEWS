@@ -1,8 +1,9 @@
-Changes in version 5.1-1 (2017-02-12)
+Changes in version 5.1-1 (2017-03-26)
    * latex.anova.rms: if table.env is FALSE but caption is specified, passes caption as insert.top argument to latex.default; when options(prType='latex') you can do print(anova(), caption=) to use this
 	 * prModFit: fixed one latex to lang=='latex' bug
 	 * print.anova.rms, print.summary.rms: added table.env argument
 	 * psm: fixed bug in storage of g and gr that made output for them invalid
+   * calibrate.cph,calibrate.psm,Function.rms,plot.Predict,predab.resample,Predict,rms.trans,summary.rms,which.influence:fixed preservation of options()
 
 Changes in version 5.1-0 (2017-01-01)
    * anova.rms, survplotp.npsurv: use Hmisc htmlGreek to encode Greek letters

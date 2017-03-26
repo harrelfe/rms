@@ -1,7 +1,8 @@
 Function.rms <- function(object, intercept=NULL,
                          digits=max(8,.Options$digits), ...)
 {
-  oldopt <- options(digits=digits)
+  oldopt <- options('digits')
+  options(digits=digits)
   on.exit(options(oldopt))
 
   at   <- object$Design

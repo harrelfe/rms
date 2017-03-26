@@ -18,8 +18,9 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
   ##    }
   ##  }
   
-  if(!length(fit$y)) stop("fit did not store y")
-  oldopt <- options(digits=3)
+  if(! length(fit$y)) stop("fit did not store y")
+  oldopt <- options('digits')
+  options(digits=3)
   on.exit(options(oldopt))
   unit <- fit$units
   if(unit=="") unit <- "Day"
@@ -46,7 +47,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
 
   dist <- fit$dist
   inverse <- survreg.distributions[[dist]]$itrans
-  if(!length(inverse)) inverse <- function(x) x
+  if(! length(inverse)) inverse <- function(x) x
   parms <- fit$parms
   
   distance <- function(x, y, fit, iter, u, fit.orig, what="observed", inverse,

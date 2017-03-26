@@ -28,8 +28,9 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
   ##      cmethod <- 'KM'
   ##    }
   ##  }
-  
-  oldopt <- options(digits=3)
+
+  oldopt <- options('digits')
+  options(digits=3)
   on.exit(options(oldopt))
   unit <- fit$units
   if(unit=="") unit <- "Day"

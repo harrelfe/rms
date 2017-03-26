@@ -23,7 +23,8 @@ predab.resample <-
            ...)
 {
   method <- match.arg(method)
-  oldopt <- options(digits=4)
+  oldopt <- options('digits')
+  options(digits=4)
   on.exit(options(oldopt))
 
   efit <- function(...) list(fail=TRUE)

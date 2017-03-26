@@ -15,7 +15,8 @@ Predict <-
   conf.type <- match.arg(conf.type)
   boot.type <- match.arg(boot.type)
   
-  oldopt <- options(digits=digits)
+  oldopt <- options('digits')
+  options(digits=digits)
   on.exit(options(oldopt))
   
   dotlist <- if(length(factors)) factors else rmsArgs(substitute(list(...)))

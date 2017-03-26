@@ -68,7 +68,8 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   ## The next statement (9Jun98) makes limits[1:3,] keep all levels of
   ## factors.  Problem is that [.data.frame does not pass drop to []
   ## when first subscripts are specified
-  oldopt <- options(drop.factor.levels=FALSE)
+  oldopt <- options('drop.factor.levels')
+  options(drop.factor.levels=FALSE)
   on.exit(options(oldopt))
 
   lims <- Limval$limits[1 : 3 , , drop=FALSE]

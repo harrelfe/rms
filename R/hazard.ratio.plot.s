@@ -11,33 +11,33 @@ hazard.ratio.plot <-
   if(is.matrix(x))
     {
       nam <- dimnames(x)[[2]]
-      if(!length(nam)) nam <- paste("x[",1:ncol(x),"]",sep="")
+      if(! length(nam)) nam <- paste("x[",1:ncol(x),"]",sep="")
     }
   else
 	{
       nam <- label(x)
       x <- as.matrix(unclass(x))
-      if(!length(nam)) nam <- ""
+      if(! length(nam)) nam <- ""
     }
 
   y <- Srv[,1];   event <- Srv[,2]
-  if(length(y)!=nrow(x))stop("number of rows in x must be length of y")
+  if(length(y)! =nrow(x))stop("number of rows in x must be length of y")
   nx <- ncol(x)
   if(missing(which)) which <- 1:nx
 
   labele <- label(Srv, type='event')
-  if(! length(labele)) labele <- ""
+  if(!  length(labele)) labele <- ""
 
   isna <- is.na(matxv(x,rep(1,nx)) + y + event)
 
-  if(!missing(subset))isna <- isna | (!subset)
-  x <- x[!isna,,drop=FALSE]
+  if(! missing(subset))isna <- isna | (! subset)
+  x <- x[! isna,,drop=FALSE]
   if(length(dimnames(x)[[2]])==0)
     dimnames(x) <- list(NULL,paste("x",1:nx,sep=""))
-  y <- y[!isna]
-  event <- event[!isna]
+  y <- y[! isna]
+  event <- event[! isna]
 
-  if(!missing(times))uft<-c(0,sort(times),1000000)
+  if(! missing(times))uft<-c(0,sort(times),1000000)
   else
     {
       nblock <- max(round(sum(event) / e), 2)
@@ -58,7 +58,7 @@ hazard.ratio.plot <-
           cox <- coxphFit(x[s,,drop=FALSE], cbind(tt,ev),
                           iter.max=10, eps=.0001, method="efron",
                           type=attr(Srv, 'type'))
-          if(!is.character(cox))
+          if(! is.character(cox))
             {
               if(pr)
                 {
@@ -79,7 +79,7 @@ hazard.ratio.plot <-
         }
     }
 
-  if(!pl) return(list(time=thr,log.hazard.ratio=lhr,se=se))
+  if(! pl) return(list(time=thr,log.hazard.ratio=lhr,se=se))
 
   zcrit<-qnorm((1+conf.int)/2)
   for(j in which)
@@ -88,14 +88,14 @@ hazard.ratio.plot <-
       sej <- se[j,]
       labelx <- nam[j]
       if(missing(ylim)) ylim <- trans(range(c(lhrj+zcrit*sej,lhrj-zcrit*sej)))
-      if(!add)
+      if(! add)
         {
           oldpar <- par(c('err','mar'))
           on.exit(par(oldpar))
           oldmar <- oldpar$mar
-          if(labelx!="" & labele!="")oldmar[1]<-oldmar[1]+1
+          if(labelx != "" & labele != "") oldmar[1] <- oldmar[1] + 1
           par(err=-1,mar=oldmar)
-          plot(thr,trans(lhrj),xlab=xlab,ylim=ylim,ylab=ylab,...)
+          plot(thr, trans(lhrj), xlab=xlab, ylim=ylim, ylab=ylab,...)
         }
       else
         points(thr,trans(lhrj))
@@ -111,28 +111,28 @@ hazard.ratio.plot <-
           ltype <- c(ltype,3)
         }
 
-      if(!add)
+      if(! add)
         {
           labels <- ""
           if(labelx != "")labels <- paste("Predictor:",labelx,"\n",sep="")
           if(labele != "")labels <- paste(labels,"Event:",labele,sep="")
           title(sub=labels,adj=1,cex=cex)
 
-          if(!interactive() && !length(legendloc))legendloc <- "ll"
-          if(!length(legendloc))
+          if(! interactive() && ! length(legendloc)) legendloc <- "ll"
+          if(! length(legendloc))
             {
               cat("Click left mouse button at upper left corner for legend\n")
               z <- locator(1)
               legendloc <- "l"
             }
           else
-            if(legendloc[1]!="none")
+            if(legendloc[1] != "none")
               {
-                if(legendloc[1]=="ll")
+                if(legendloc[1] == "ll")
                   z <- list(x=par("usr")[1],y=par("usr")[3])
                 else
                   z <- list(x=legendloc[1],y=legendloc[2]) 		  }	
-          if(legendloc[1]!="none")legend(z,leg,lty=ltype,cex=cex,bty="n")
+          if(legendloc[1] != "none") legend(z,leg,lty=ltype,cex=cex,bty="n")
         }
     }
   list(time=thr,log.hazard.ratio=lhr,se=se)

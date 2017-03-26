@@ -13,7 +13,8 @@ which.influence <- function(fit, cutoff=.2)
   w <- list()
   namw <- NULL
   k <- 0
-  oldopt <- options(warn=-1)
+  oldopt <- options('warn')
+  options(warn=-1)
   on.exit(options(oldopt))
   
   if(!cox)
