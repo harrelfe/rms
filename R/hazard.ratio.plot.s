@@ -21,12 +21,12 @@ hazard.ratio.plot <-
     }
 
   y <- Srv[,1];   event <- Srv[,2]
-  if(length(y)! =nrow(x))stop("number of rows in x must be length of y")
+  if(length(y) != nrow(x))stop("number of rows in x must be length of y")
   nx <- ncol(x)
   if(missing(which)) which <- 1:nx
 
   labele <- label(Srv, type='event')
-  if(!  length(labele)) labele <- ""
+  if(! length(labele)) labele <- ""
 
   isna <- is.na(matxv(x,rep(1,nx)) + y + event)
 
