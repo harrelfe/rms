@@ -72,8 +72,8 @@ lrm.fit <- function(x, y, offset=0, initial, est,
     if(scale) {
       x <- scale(x)
       scinfo <- attributes(x)[c('scaled:center', 'scaled:scale')]
-      xbar <- scinfo[[1]]
-      xsd  <- scinfo[[2]]
+      xbar <- as.matrix(scinfo[[1]])
+      xsd  <- as.matrix(scinfo[[2]])
     }
     
     storage.mode(x) <- "double"
