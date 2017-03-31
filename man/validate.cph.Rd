@@ -108,7 +108,7 @@ dxy.cens(x, y, type=c('time','hazard'))
   resample, average optimism, corrected index, and number of successful
   resamples.\cr
 
-  The values corresponting to the row \eqn{D_{xy}}{Dxy} are equal to \eqn{2 *
+  The values corresponding to the row \eqn{D_{xy}}{Dxy} are equal to \eqn{2 *
     (C - 0.5)} where C is the C-index or concordance probability.
   If the user is correlating the linear predictor (predicted log hazard)
   with survival time, \eqn{D_{xy}}{Dxy} is automatically negated. 

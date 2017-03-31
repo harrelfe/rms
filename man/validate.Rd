@@ -104,7 +104,7 @@ validate(fit, method="boot", B=40,
   For \code{validate.cph} and \code{validate.psm}, there is
   an extra argument \code{dxy}, which if \code{TRUE} causes the \code{dxy.cens}
   function to be invoked to compute the Somers' \eqn{D_{xy}}{Dxy} rank correlation
-  to be computed at each resample. The values corresponting to the row
+  to be computed at each resample. The values corresponding to the row
   \eqn{D_{xy}}{Dxy} are equal to \eqn{2 * (C - 0.5)} where C is the
   C-index or concordance probability. \cr
   
