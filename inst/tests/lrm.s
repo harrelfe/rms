@@ -78,3 +78,21 @@ print(f, latex=TRUE)
 cat('\\end{document}\n')
 sink()
 
+# From Ferenci Tamas  <ferenci.tamas@nik.uni-obuda.hu>
+set.seed(1)
+d <- data.frame( y = runif( 1000 ) > 0.5, x = rnorm( 1000 ),
+                 w = sample( 1:100, 1000, replace = TRUE ) )
+wt <- d$w
+g <- d[ rep(1 : nrow(d), wt), ]
+wtd.mean(d$y, wt); mean(g$y)
+wtd.var(d$y, wt); var(g$y)
+wtd.mean(d$x, wt); mean(g$x)
+wtd.var(d$x, wt); var(g$x)
+# The 2 models will disagree if allow to use different knots
+k <- quantile(d$x, c(5,20,50,80,95) / 100)
+a <- lrm( y ~ rcs( x, k ), data = d, weights = w)
+b <- lrm( y ~ rcs( x, k ), data = g )
+# xless(a); xless(b)
+
+
+
