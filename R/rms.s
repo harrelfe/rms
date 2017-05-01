@@ -374,7 +374,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
                   "matrix")[asm],
                 assume.code=as.integer(asm), parms=parm, limits=limits,
                 values=values, nonlinear=nonlinear,
-                interactions=structure(ia, dimnames=NULL))
+                interactions=if(length(ia)) structure(ia, dimnames=NULL))
     
     nact <- attr(mf, 'na.action')
     if(length(nact) && length(nmiss <- nact$nmiss)) {

@@ -1,6 +1,7 @@
 export(annotateAnova,asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineRelatedPredictors,confplot,contrast,coxphFit,cph,cr.setup,datadist,dxy.cens,effective.df,ExProb,fastbw,formatNP,gendata,gIndex,Glm,Gls,groupkm,Hazard,hazard.ratio.plot,histdensity,"%ia%",ie.setup,interactions.containing,legend.nomabbrev,lm.pfit,lrm,lrm.fit,lrtest,lsp,matinv,matrx,Newlabels,Newlevels,nomogram,npsurv,ols,ols.influence,oos.loglik,orm,orm.fit,pantext,Penalty.matrix,Penalty.setup,pentrace,perimeter,perlcode,plotmathAnova,plotp,plot.lrm.partial,plot.xmean.ordinaly,pol,pphsm,predab.resample,Predict,psm,rcs,related.predictors,reListclean,robcov,Rq,sascode,scored,sensuc,setPb,show.influence,specs,strat,survreg.auxinfo,survdiffplot,survest,Survival,survplot,survplotp,univarLR,validate,val.prob,val.probg,val.surv,vif,which.influence)
 
-useDynLib(rms)
+useDynLib(rms, .registration=TRUE, .fixes="F_")
+
 
 import(Hmisc)
 importFrom(survival, Surv, is.Surv, survConcordance.fit, coxph.fit, coxph.control, survfit, survfitcoxph.fit, survreg.fit, survreg.control, survpenal.fit, survfitKM, survreg.distributions, agreg.fit, agexact.fit, attrassign, untangle.specials)

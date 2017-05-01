@@ -349,9 +349,9 @@ ormfit <- function(x, y, kint, nx, initial, offset, penmat=NULL,
       else
         as.integer(nx * nx + 2L * kint * nx + 3L * kint - 2L)
       lia <- as.integer(p + 1L)
-      w <- .Fortran('ormuv', n, p, kint, nx, x, y, P, fpa, fpb, fppa, fppb,
+      w <- .Fortran(F_ormuv, n, p, kint, nx, x, y, P, fpa, fpb, fppa, fppb,
                     u=double(p), v=double(l), ja=integer(l), ia=integer(lia),
-                    l=as.integer(l), lia=lia, integer(p), PACKAGE='rms')
+                    l=as.integer(l), lia=lia, integer(p))
       U <-  w$u
       V <- if(any(is.nan(w$v))) NULL else {  ## assume step-halving happens
         V <- if(kint == 1L) matrix(w$v, nrow=p, ncol=p)

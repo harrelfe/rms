@@ -32,11 +32,11 @@ matinv <- function(a, which, negate=TRUE, eps=1E-12)
   if(m!=ncol(a))stop("matrix must be square")
 
 	y <- 
-      .Fortran("matinv",x = a, as.integer(m), 
+      .Fortran(F_matinv,x = a, as.integer(m), 
                as.integer(length(which)),which,
                swept=swept, logical(m), double(m*(m+1)/2), 
                double(m), rank = integer(1), as.double(eps),
-               as.logical(negate), PACKAGE="rms")
+               as.logical(negate))
 
   x <- y$x
   attr(x,"rank") <- y$rank
