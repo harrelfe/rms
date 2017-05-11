@@ -17,3 +17,20 @@ f <- lrm(y ~ lsp(age, 50) * sex, x=TRUE, y=TRUE )
 g <- robcov(f, id)
 g$clusterInfo
 
+# From Jennifer Thompson, modified
+afun <- function(...) bootcov(..., B=500)   # or just robcov
+set.seed(56)
+df <- data.frame(y = rnorm(n = 100),
+                 x1 = rnorm(n = 100),
+                 x2 = rnorm(mean = 5, sd = 0.5, n = 100))
+ 
+for(nsites in 7:2) {
+  cat('nsites:', nsites, '\n')
+  df$site <- sample(LETTERS[1:nsites], size = 100, replace = TRUE)
+  f <- ols(y ~ rcs(x1, 3) + rcs(x2, 3), data = df, x = TRUE, y = TRUE)
+  g <- afun(f, cluster=df$site)
+  print(anova(g))
+}
+
+
+
