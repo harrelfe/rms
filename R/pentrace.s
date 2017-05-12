@@ -290,10 +290,10 @@ plot.pentrace <- function(x, method=c('points', 'image'),
                   xlab="Penalty",
                   ylab=expression(paste("Information Criterion (", chi^2,
                       " scale)")),
-                  type=if('aic' %in% which)"l" else "n", lty=1, ...)
+                  type=if('aic' %in% which)"l" else "n", lty=3, ...)
     else
-      if('aic' %in% which) lines(penalty, aic,   lty=2, ...)
-    if('bic'   %in% which) lines(penalty, bic,   lty=3, ...)
+      if('aic' %in% which) lines(penalty, aic,   lty=3, ...)
+    if('bic'   %in% which) lines(penalty, bic,   lty=2, ...)
     if('aic.c' %in% which) lines(penalty, aic.c, lty=1, ...)
     if(!add && length(setdiff(which, 'effective.df')) > 1)
       title(sub=paste(if('aic.c' %in% which) "Solid: AIC_c",

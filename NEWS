@@ -1,3 +1,6 @@
+Changes in version 5.1-2 (2017-05-12)
+   * plot.pentrace: corrected lty for AIC if ! add, interchanged lty for AIC and BIC.  Thanks: Ferenci Tamas
+
 Changes in version 5.1-1 (2017-05-01)
    * latex.anova.rms: if table.env is FALSE but caption is specified, passes caption as insert.top argument to latex.default; when options(prType='latex') you can do print(anova(), caption=) to use this
    * prModFit: fixed one latex to lang=='latex' bug
