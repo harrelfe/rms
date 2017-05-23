@@ -38,7 +38,7 @@ html(contents(titanic3), maxlevels=10, levelType='table')
 # For certain print methods set to use html
 options(grType='plotly', prType='html')
 s <- summaryM(age + pclass ~ sex, data=titanic3)
-s
+html(s)
 plot(s)
 d <- describe(titanic3)
 plot(d)
@@ -53,13 +53,13 @@ plotly::subplot(p[[1]], p[[2]],
 ```
 
 # Logistic Regression Model
-```{r lrmt}
+```{r lrmt,results='asis'}
 dd <- datadist(titanic3); options(datadist='dd')
 f <- lrm(survived ~ rcs(sqrt(age),5) * sex, data=titanic3)
-f
+print(f)
 latex(f)
 a <- anova(f)
-a
+print(a)
 plot(a)
 ```
 
