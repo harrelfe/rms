@@ -1259,7 +1259,7 @@ removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
   }
   ## [.terms ignores offset variables.  Above logic handles nested () unlike
   ## what is below
-  form <- deparse(form, width.cutoff=500)
+  form <- paste(deparse(form), collapse='')  # no string splitting
   if(delete.response) form <- gsub('.*~', '~', form)
   for(w in which) {
     pattern <- sprintf('\\+?[ ]*?%s\\(.*?\\)[ ]*?\\+{0,1}', w)  ## assume additive form
