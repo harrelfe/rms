@@ -49,8 +49,7 @@ d <- data.frame(
 X1 = factor(c('05: X1 <= 178','01: X1 <= 6', '03: X1 <= 52', '05: X1 <= 178')),
 X2 = factor(c('04: X2 <= 75','01: X2 <= 6', '05: X2 > 75', '05: X2 > 75')),
 X3 = factor(c('04: X3 <= 552','01: X3 <= 1', '04: X3 <= 552', '06: X3 > 1313')),
-TARGET = c(0, 1, 1, 0)
-)
+TARGET = c(0, 1, 1, 0))
 
 lrm(TARGET ~ ., data = d)
 options(debug=TRUE)
