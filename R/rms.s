@@ -42,6 +42,8 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
      ## prn(assume.code); prn(rmstrans.names); prn(term.label); prn(iaspecial); prn(class)
     ## Don't let >=i be translated to >i:
     rmst <- gsub('>=', '>>', rmstrans.names)
+    ## Don't let <=i be translated to <i:
+    rmst <- gsub('<=', '<<', rmst)
     ## Don't let == be translated to blank
     rmst <- gsub('==', '@EQ@', rmst)
     w <- if(assume.code == 1)
@@ -61,6 +63,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
              term.label
     else paste0(term.label, rmst)
     w <- gsub('>>',   '>=', w)
+    w <- gsub('<<',   '<=', w)
     w <- gsub('@EQ@', '==', w)
     alt <- if(assume.code == 10)
              if(length(rmst) > 1)

@@ -2,6 +2,7 @@ Changes in version 5.1-2 (2017-05-24)
    * plot.pentrace: corrected lty for AIC if ! add, interchanged lty for AIC and BIC.  Thanks: Ferenci Tamas
    * removeFormulaTerms: added width.cutoff=500 to deparse call to avoid problems with long variable names.  Thanks: Ferenci Tamas
    * removeFormulaTerms: changed above fix to use paste collapse instead (Thanks: Tamas)
+   * Design: mmnames function: escaped <= like >= already escaped.  See https://github.com/harrelfe/rms/issues/29#issuecomment-303423887
 
 Changes in version 5.1-1 (2017-05-01)
    * latex.anova.rms: if table.env is FALSE but caption is specified, passes caption as insert.top argument to latex.default; when options(prType='latex') you can do print(anova(), caption=) to use this
