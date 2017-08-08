@@ -66,7 +66,7 @@ groupkm <- function(x, Srv, m=50, g,
       else
         {
           pred[i] <- mean(x[s], na.rm=TRUE)
-          dummystrat <- as.factor(rep(1, nobs))
+          dummystrat <- as.factor(rep("1", nobs))
           f <- survfitKM(dummystrat,Srv[s,]) 
           ##doesn't need conf.int since only need s.e.
           tt <- c(0, f$time)
