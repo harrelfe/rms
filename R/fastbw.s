@@ -11,9 +11,13 @@
 #
 # F. Harrell 18Jan91
 
-fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0, 
-			eps=1e-9, k.aic=2, force=NULL)
+fastbw <- function(fit, rule=c("aic", "p"),
+                   type=c("residual","individual","total"), sls=.05, aics=0, 
+                   eps=1e-9, k.aic=2, force=NULL)
 {
+  rule <- match.arg(rule)
+  type <- match.arg(type)
+  
   ns <- num.intercepts(fit)
   if(length(force)) force <- force + ns
   L <- if(ns==0) NULL else 1:ns
@@ -43,13 +47,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
   name <- atr$name[assume != 8]
   ed <- as.integer(strt + len - 1)
 
-  rule <- charmatch(rule, c("aic","p"), 0)
-  if(rule==0)
-    stop("rule must be aic or p for Akaike's info criterion or p-value")
-  type <- charmatch(type,c("residual","individual","total"), 0)
-  if(type==0)
-    stop("type must be residual or individual")
-  if(type==3) type <- 1
+  if(type == 'total') type <- 'residual'
   if(length(force) && type != 'individual')
     warning('force probably does not work unless type="individual"')
 
@@ -123,7 +121,7 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
                beta[q] %*% solvet(cov[q,q], beta[q], tol=eps)
       df <- length(q)
       
-      switch(rule, crit <- chisq-k.aic * df, crit <- pchisq(chisq, df))
+      crit <- switch(rule, aic=chisq-k.aic * df, p=pchisq(chisq, df))
       if(crit < crit.min) {
         jmin     <- j
         crit.min <- crit
@@ -153,11 +151,11 @@ fastbw <- function(fit, rule="aic", type="residual", sls=.05, aics=0,
     resid <- fit$coef[q] %*% solvet(Cov[q,q], fit$coef[q], tol=eps)
     resid.df <- length(q)
 
-    switch(type,
-           switch(rule, del <- resid - k.aic*resid.df <= aics,
-                  del <- 1 - pchisq(resid,resid.df) > sls),
-           switch(rule, del <- crit.min <= aics,
-                  del <- 1 - crit.min > sls)	)
+    del <- switch(type,
+           residual   = switch(rule, aic=resid - k.aic*resid.df <= aics,
+                                     p=1 - pchisq(resid,resid.df) > sls),
+           individual = switch(rule, aic = crit.min <= aics,
+                                     p   = 1 - crit.min > sls)	)
     if(del) {
       d              <- d + 1
       factors.del[d] <- jmin
