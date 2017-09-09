@@ -31,7 +31,7 @@ survplotp.npsurv <-
       if(length(mylim)) c(min(ylim[1], mylim[1]), max(ylim[2], mylim[2]))
       else ylim
 
-    mu <- markupSpecs$html
+    mu      <- markupSpecs$html
 
     if(funtype %in% c('identity', 'inverse'))
       survdiffplotp <-
@@ -177,7 +177,8 @@ survplotp.npsurv <-
     pl <- function(p, x, y, n.risk=NULL, col, slev, type='est') {
       sname  <- if(ns == 1) '' else slev
       snames <- if(sname == '') '' else paste0(sname, ' ')
-      d <- paste0('Difference<br>', mu$half(), ' ', conf.int, ' CL')
+      d <- paste0('Difference<br>', mu$half(), ' ',
+                  conf.int, ' CL')
       nam   <- switch(type,
                       est   = sname,
                       lower = paste0(snames, conf.int, ' CL'),

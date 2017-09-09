@@ -3,12 +3,12 @@ title: "Examples for rms Package"
 author: "FE Harrell"
 date: '`r Sys.Date()`'
 output:
+  html_document:
+    toc: yes
   html_notebook:
     toc: yes
     toc_float:
       collapsed: yes
-  html_document:
-    toc: yes
 ---
 # Introduction
 ## Markdown
