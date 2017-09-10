@@ -1,4 +1,4 @@
-Changes in version 5.1-2 (2017-09-08)
+Changes in version 5.1-2 (2017-09-10)
    * plot.pentrace: corrected lty for AIC if ! add, interchanged lty for AIC and BIC.  Thanks: Ferenci Tamas
    * removeFormulaTerms: added width.cutoff=500 to deparse call to avoid problems with long variable names.  Thanks: Ferenci Tamas
    * removeFormulaTerms: changed above fix to use paste collapse instead (Thanks: Tamas)
@@ -6,6 +6,7 @@ Changes in version 5.1-2 (2017-09-08)
 	 * groupkm: speed improvement (helps calibrate*; thanks Cole Beck)
    * fastbw: improved messages for rule and type
    * num.intercepts: exported
+   * prModFit: changed to have htmlSpecial, htmlTranslate do all the html special character coding, allowing default to unicode
 
 Changes in version 5.1-1 (2017-05-01)
    * latex.anova.rms: if table.env is FALSE but caption is specified, passes caption as insert.top argument to latex.default; when options(prType='latex') you can do print(anova(), caption=) to use this

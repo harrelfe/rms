@@ -683,6 +683,14 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
 
   lang  <- prType()
   specs <- markupSpecs[[lang]]
+
+  cca  <- htmlSpecial('combiningcircumflexaccent')
+  nbsp <- htmlSpecial('nbsp')
+  gt   <- htmlTranslate('>')
+  vbar <- htmlTranslate('|')
+  chi2 <- specs$chisq()
+  partial <- htmlSpecial('part')
+  beta <- htmlGreek('beta')
   
   R <- character(0)
 
@@ -808,13 +816,14 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                            'Pr$(>|Z|)$')
         else
           if(lang == 'html')
-            colnames(U) <- c('&beta;&#770;', 'S.E.', 'Wald <i>Z</i>',
-                             'Pr(&#62;&#124;<i>Z</i>&#124;)')
+            colnames(U) <- c(paste0('&beta', cca), 'S.E.', 'Wald <i>Z</i>',
+                             paste0('Pr(', gt, vbar, '<i>Z</i>', vbar))
         if(length(errordf))
           colnames(U)[3:4] <-
             switch(lang,
                    latex = c('$t$', 'Pr$(>|t|)$'),
-                   html  = c('<i>t</i>', 'Pr(&#62;&#124;<i>t</i>&#124;)'),
+                   html  = c('<i>t</i>', paste0('Pr(', gt, vbar, '<i>t</i>',
+                                                vbar)),
                    plain = c('t',   'Pr(>|t|)') )
 
         rownames(U) <- names(beta)
@@ -1039,7 +1048,7 @@ for(i in 1:p) {
       'Score chi2' = c(latex = 'Score $\\chi^{2}$',
                        html  = 'Score &chi;<sup>2</sup>'),
       'Pr(> chi2)' = c(latex = 'Pr$(>\\chi^{2})$',
-                       html  = 'Pr(&#62;&chi;<sup>2</sup>)'),
+                       html  = paste0('Pr(', gt, chisq, ')')),
       'tau-a'      = c(latex = '$\\tau_{a}$',
                        html  = '&tau;<sub>a</sub>'),
       'gamma'      = c(latex = '$\\gamma$',
@@ -1057,16 +1066,21 @@ for(i in 1:p) {
       'gr'         = c(latex = '$g_{r}$',
                        html  = '<i>g</i><sub>r</sub>'),
       'max |deriv|'   = c(latex = '$\\max|\\frac{\\partial\\log L}{\\partial \\beta}|$',
-                          html  = 'max &#124;&#8706;log <i>L</i>/&#8706;&beta;&#124;'),
+                          html  = paste0('max ', vbar, partial,
+                                         'log <i>L</i>/', partial,
+                                         beta, vbar)),
       'mean |Y-Yhat|' = c(latex = 'mean $|Y-\\hat{Y}|$',
-                          html  = 'mean &#124;<i>Y - Y</i>&#770;&#124;'),
+                          html  = paste0('mean ', vbar, '<i>Y - Y</i>',
+                                         cca, vbar)),
       'Unique Y'   = c(latex = 'Unique $Y$',
                        html  = 'Unique <i>Y</i>'),
       'Median Y'   = c(latex = '$Y_{0.5}$',
                        html  = '<i>Y</i><sub>0.5</sub>'),
       '|Pr(Y>=median)-0.5|'  =
         c(latex = '$|\\overline{\\mathrm{Pr}(Y\\geq Y_{0.5})-\\frac{1}{2}}|$',
-          html  = '<span style="text-decoration: overline">&#124;Pr(<i>Y</i> &#8805; median)-&#189;&#124;</span>')
+          html  = paste0('<span style="text-decoration: overline">', vbar,
+                         'Pr(<i>Y</i> ', geq, ' median)-', half, vbar,
+                         '</span>'))
 
     )
     
@@ -1169,7 +1183,7 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE,
     w <- paste0('0.', paste0(rep('0', digits - 1), collapse=''), '1')
     f[s] <- switch(lang,
                    latex = paste0('\\textless ', w),
-                   html  = paste0('&#60;', w),
+                   html  = paste0(htmlTranslate('<'), w),
                    plain = paste0('<', w))
   }
   f

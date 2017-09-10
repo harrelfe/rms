@@ -233,7 +233,7 @@ html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...) {
   cat('<p style="padding-top:2em;">\n')
                          
   if(length(kept) && B > 0) {
-    varin <- ifelse(kept, '&#9900;', ' ')   ## html medium white circle
+    varin <- ifelse(kept, htmlSpecial('mediumsmallwhitecircle'), ' ')
     nr <- nrow(varin)
     varin <- varin[1:min(nrow(varin), B),, drop=FALSE]
     cap <- 'Factors Retained in Backwards Elimination'
