@@ -689,7 +689,6 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
   gt   <- htmlTranslate('>')
   vbar <- htmlTranslate('|')
   chi2 <- specs$chisq()
-  partial <- htmlSpecial('part')
   beta <- htmlGreek('beta')
   
   R <- character(0)
@@ -986,6 +985,13 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html')) {
   lorh  <- lang != 'plain'
   specs <- markupSpecs[[lang]]
 
+  partial <- htmlSpecial('part')
+  vbar    <- htmlTranslate('|')
+  cca     <- htmlSpecial('combiningcircumflexaccent')
+  beta    <- htmlGreek('beta')
+  geq     <- htmlTranslate('>=')
+
+
   spaces <- function(n) if(n <= 0.5) '' else
    substring('                                                         ',
              1, floor(n))
@@ -1039,16 +1045,18 @@ for(i in 1:p) {
     maxl <- max(sapply(w, length))
     z <- matrix('', nrow=maxl, ncol=p)
     fil <- if(lang == 'latex') '~\\hfill ' else '&emsp;'
+
+    chisq <- specs$chisq()
     
     trans <- rbind(
       'Dxy'        = c(latex = '$D_{xy}$',
                        html  = '<i>D</i><sub>xy</sub>'),
-      'LR chi2'    = c(latex = 'LR $\\chi^{2}$',
-                       html  = 'LR &chi;<sup>2</sup>'),
-      'Score chi2' = c(latex = 'Score $\\chi^{2}$',
-                       html  = 'Score &chi;<sup>2</sup>'),
+      'LR chi2'    = c(latex = paste0('LR ', chisq),
+                       html  = paste0('LR ', chisq)),
+      'Score chi2' = c(latex = paste0('Score ', chisq),
+                       html  = paste0('Score ', chisq)),
       'Pr(> chi2)' = c(latex = 'Pr$(>\\chi^{2})$',
-                       html  = paste0('Pr(', gt, chisq, ')')),
+                       html  = paste0('Pr(', htmlTranslate('>'), chisq, ')')),
       'tau-a'      = c(latex = '$\\tau_{a}$',
                        html  = '&tau;<sub>a</sub>'),
       'gamma'      = c(latex = '$\\gamma$',
@@ -1079,7 +1087,8 @@ for(i in 1:p) {
       '|Pr(Y>=median)-0.5|'  =
         c(latex = '$|\\overline{\\mathrm{Pr}(Y\\geq Y_{0.5})-\\frac{1}{2}}|$',
           html  = paste0('<span style="text-decoration: overline">', vbar,
-                         'Pr(<i>Y</i> ', geq, ' median)-', half, vbar,
+                         'Pr(<i>Y</i> ', geq, ' median)-',
+                       htmlSpecial('half'), vbar,
                          '</span>'))
 
     )
