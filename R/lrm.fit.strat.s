@@ -44,7 +44,7 @@ lrm.fit.strat <- function(x, y, strata, offset=0, initial,
   if(n < 3)stop("must have >=3 non-missing observations")
   kint <- as.integer(length(ylevels)-1)
   if(kint != 1) stop('only works for binary y')
-  ftable <- integer(501*(kint+1))
+  ftable <- integer(5001*(kint+1))
   levels(y) <- ylevels
   numy <- table(y)
   y <- as.integer(y-1)

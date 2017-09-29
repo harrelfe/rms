@@ -29,7 +29,7 @@ C
       DOUBLE PRECISION opts(12),prc(4)
       DOUBLE PRECISION X(NOBS,NX),offset(NOBS)
 C     Dimensions of X, penalt, wt not needed until inside LLOGIT
-      INTEGER IDX(nxin), R(NOBS), ftable(501,nvi-nxin+1),
+      INTEGER IDX(nxin), R(NOBS), ftable(5001,nvi-nxin+1),
      &     numy(nvi-nxin+1), pivot(nvi)
       LOGICAL DVRG,ofpres,piter,normwt
       eps   = opts(1)
@@ -165,7 +165,7 @@ C
      & C(nvi), LOGLIK, penalt(nvi,nvi), wt(nmax)
       DOUBLE PRECISION X(NMAX,nxm),offset(nmax)
       DOUBLE PRECISION lprob
-      INTEGER IDX(nxm),R(NMAX),ftable(501,KINT+1)
+      INTEGER IDX(nxm),R(NMAX),ftable(5001,KINT+1)
       LOGICAL DVRG,ofpres,calcc,normwt
 C Default initializations
       VIY = 0
@@ -217,7 +217,7 @@ C       Get middle category for predicted prob.
 C
       IF(calcc) THEN
          mid=kint1 / 2
-         DO i=1, 501
+         DO i=1, 5001
             DO j=1, kint1
                ftable(i,j)=0
             ENDDO
@@ -242,7 +242,7 @@ C
             ENDDO
             cpiy=lprob(bx + off)
             IF(calcc) THEN
-               ipp=INT(500d0*cpiy + 1d0)
+               ipp=INT(5000d0*cpiy + 1d0)
                if(.NOT. normwt) incobs=INT(w + .5D0)
                ftable(ipp,iy + 1)=ftable(ipp,iy + 1) + incobs
             ENDIF
@@ -282,7 +282,7 @@ C     Add to first and second derivatives
          ENDIF
 C     COMPUTE EXCEEDENCE PROBABILITIES AND CHECK FOR DIVERGENCE
          IF(calcc) THEN
-            ipp=INT(500d0*lprob(bx + beta(mid) + off) + 1d0)
+            ipp=INT(5000d0*lprob(bx + beta(mid) + off) + 1d0)
             if(.NOT. normwt)incobs=INT(w + .5D0)
             ftable(ipp,iy + 1)=ftable(ipp,iy + 1) + incobs
          ENDIF
@@ -353,7 +353,7 @@ C     0<IY<KINT
       END
       SUBROUTINE gcorr(ftable, kint, numy, nx, c, somer,
      &     gamma, taua)
-      INTEGER ftable(501, kint + 1), numy(kint + 1)
+      INTEGER ftable(5001, kint + 1), numy(kint + 1)
       DOUBLE PRECISION fn, c, somer, gamma, taua, con, dis, tie,
      &   k, ic, nn
       kint1=kint + 1
@@ -371,14 +371,14 @@ C     0<IY<KINT
       ENDDO
       DO i1=1,kint
          i1p1=i1 + 1
-         DO j1=1,501
+         DO j1=1,5001
             k=ftable(j1,i1)
             IF(k .GT. 0d0) THEN
                j1p1=j1 + 1
                DO i2=i1p1,kint1
                   ic=0d0
-                  if(j1.lt.501) then
-                     DO j2=j1p1,501
+                  if(j1.lt.5001) then
+                     DO j2=j1p1,5001
                         ic=ic + ftable(j2,i2)
                      ENDDO
                   ENDIF

@@ -104,7 +104,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   
   if(n < 3) stop("must have >=3 non-missing observations")
   kint <- as.integer(length(ylevels) - 1)
-  ftable <- integer(501 * (kint + 1))
+  ftable <- integer(5001 * (kint + 1))
   levels(y) <- ylevels
   numy <- table(y)
   names(numy) <- ylevels

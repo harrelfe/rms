@@ -177,7 +177,7 @@ Nagelkerke \eqn{R^2} index, the Brier score computed with respect to
 \eqn{Y >} its lowest level, the \eqn{g}-index, \eqn{gr} (the
 \eqn{g}-index on the odds ratio scale), and \eqn{gp} (the \eqn{g}-index
 on the probability scale using the same cutoff used for the Brier
-score).  Probabilities are rounded to the nearest 0.002 
+score).  Probabilities are rounded to the nearest 0.0002 
 in the computations or rank correlation indexes.
 In the case of penalized estimation, the \code{"Model L.R."} is computed
 without the penalty factor, and \code{"d.f."} is the effective d.f. from
