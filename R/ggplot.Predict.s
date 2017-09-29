@@ -91,10 +91,12 @@ ggplot.Predict <-
 
   pmlabel <- character(length(label))
   names(pmlabel) <- names(label)
-  for(i in 1 : length(label))
-    pmlabel[i] <-
-      if(isbase) as.character(labelPlotmath(label[i], units[i]))
-      else markupSpecs$html$varlabel(label[i], units[i])
+  for(i in 1 : length(label)) {
+    rl <- if(isbase) as.character(labelPlotmath(label[i], units[i]))
+          else
+            markupSpecs$html$varlabel(label[i], units[i])
+    if(length(rl)) pmlabel[i] <- rl
+  }
   
   if(predpres)
     data$.Predictor. <- if(vnames != 'labels') data$.predictor.
