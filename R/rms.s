@@ -46,6 +46,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     rmst <- gsub('<=', '<<', rmst)
     ## Don't let == be translated to blank
     rmst <- gsub('==', '@EQ@', rmst)
+    ## prn(class);prn(assume.code);prn(term.label)
     w <- if(assume.code == 1)
            ifelse(class == 'logical', paste0(term.label, 'TRUE'),
                   term.label)

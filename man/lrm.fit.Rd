@@ -99,7 +99,7 @@ When \code{penalty.matrix} is present, the \eqn{\chi^2}{chi-square},
 d.f., and P-value are not corrected for the effective d.f.
 }
 \item{fail}{
-set to \code{TRUE} if convergence failed (and \code{maxiter>1})
+set to \code{TRUE} if convergence failed (and \code{maxit>1})
 }
 \item{coefficients}{
 estimated parameters
