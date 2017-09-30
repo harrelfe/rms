@@ -30,7 +30,7 @@ fit <- ols( y ~ x3*( x1 + x2 ), data = d )
 
 p1 <- Predict( fit, x1, x3 )
 p2 <- Predict( fit, x2, x3 )
-p  <- rbind(x1=p1, b2=p2)
+p  <- rbind(x1=p1, x2=p2)
 plot(p, groups='x3', varypred=TRUE)
 
 #Now, if you run plot( p1 ) or plot( p2 ), everything is fine. However, in 
