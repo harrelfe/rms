@@ -28,7 +28,6 @@
 \alias{logLik.rms}
 \alias{AIC.rms}
 \alias{nobs.rms}
-\alias{num.intercepts}
 \alias{lrtest}
 \alias{univarLR}
 \alias{Newlabels}
@@ -103,9 +102,6 @@ invoking \code{logLik.lm} in the \code{stats} package.
 \code{logLik.Gls} is also defined.
 
 \code{nobs.rms} returns the number of observations used in the fit.
-
-\code{num.intercepts} returns the number of intercept parameters in the
-model fit.
 
 The \code{lrtest} function does likelihood ratio tests for
 two nested models, from fits that have \code{stats} components with
@@ -198,7 +194,7 @@ Penalty.setup(at, penalty)
 \method{logLik}{rms}(object, \dots)
 \method{AIC}{rms}(object, \dots, k=2, type=c('loglik', 'chisq'))
 \method{nobs}{rms}(object, \dots)
-\method{num.intercepts}(object)
+num.intercepts(object)
 
 lrtest(fit1, fit2)
 \method{print}{lrtest}(x, \dots)

@@ -5,7 +5,6 @@ Changes in version 5.1-2 (2017-09-29)
    * Design: mmnames function: escaped <= like >= already escaped.  See https://github.com/harrelfe/rms/issues/29#issuecomment-303423887
 	 * groupkm: speed improvement (helps calibrate*; thanks Cole Beck)
    * fastbw: improved messages for rule and type
-   * num.intercepts: exported
    * prModFit: changed to have htmlSpecial, htmlTranslate do all the html special character coding, allowing default to unicode
    * lrm, lrm.fit: for rank correlation measures, made more accurate by binning probabilities into bins of width 0.0002 instead of 0.002
    * ggplot.Predict: fixed case of empty labels when defining pmlabel
