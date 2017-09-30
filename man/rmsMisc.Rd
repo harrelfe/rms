@@ -194,7 +194,6 @@ Penalty.setup(at, penalty)
 \method{logLik}{rms}(object, \dots)
 \method{AIC}{rms}(object, \dots, k=2, type=c('loglik', 'chisq'))
 \method{nobs}{rms}(object, \dots)
-num.intercepts(object)
 
 lrtest(fit1, fit2)
 \method{print}{lrtest}(x, \dots)

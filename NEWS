@@ -8,6 +8,8 @@ Changes in version 5.1-2 (2017-09-29)
    * prModFit: changed to have htmlSpecial, htmlTranslate do all the html special character coding, allowing default to unicode
    * lrm, lrm.fit: for rank correlation measures, made more accurate by binning probabilities into bins of width 0.0002 instead of 0.002
    * ggplot.Predict: fixed case of empty labels when defining pmlabel
+   * vcov.orm: fixed bug when intercepts longer than 1
+   * lrm.fit, orm.fit: diag(1 / sd) not returning matrix if sd is a matrix and not a vector
 
 Changes in version 5.1-1 (2017-05-01)
    * latex.anova.rms: if table.env is FALSE but caption is specified, passes caption as insert.top argument to latex.default; when options(prType='latex') you can do print(anova(), caption=) to use this

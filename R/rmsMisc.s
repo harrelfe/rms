@@ -54,13 +54,14 @@ vcov.orm <- function(object, regcoef.only=TRUE,
                      intercepts='mid', ...) {
   v <- object$var
   if(! length(intercepts)) return(v)
+  li1 <- length(intercepts) == 1
   iat <- attr(v, 'intercepts')  # handle fit.mult.impute (?), robcov
   # robcov re-writes var object and uses all intercepts
   iref <- object$interceptRef
-  if(is.numeric(intercepts) && length(intercepts) == 1 &&
+  if(is.numeric(intercepts) && li1 &&
      intercepts == iref) intercepts <- 'mid'
   if(! length(iat)) {
-    if(length(intercepts) == 1 && intercepts == 'mid') {
+    if(li1 && intercepts == 'mid') {
       i <- c(iref, (num.intercepts(object, 'var') + 1) : nrow(v))
       return(object$var[i, i, drop=FALSE])
     }
@@ -68,10 +69,10 @@ vcov.orm <- function(object, regcoef.only=TRUE,
                     intercepts=intercepts, ...))
   }
   
-  if(intercepts == 'none')
+  if(li1 && intercepts == 'none')
     return(object$var[-(1 : length(iat)),
                       -(1 : length(iat)), drop=FALSE])
-    if(intercepts == 'mid' && length(iat) == 1) return(object$var)
+    if(li1 && intercepts == 'mid' && length(iat) == 1) return(object$var)
   
   iref <- object$interceptRef
   info <- object$info.matrix
@@ -82,15 +83,18 @@ vcov.orm <- function(object, regcoef.only=TRUE,
   nx <- p - ns
   scale <- attr(info, 'scale')
   name <- names(coef(object))
-  if(length(scale) && (! is.character(intercepts) || intercepts == 'all')) {
+  if(length(scale) && (! is.character(intercepts) ||
+                       (li1 && intercepts == 'all'))) {
     xbar  <- scale$mean
     xsd   <- scale$sd
     trans <- 
       rbind(cbind(diag(ns), matrix(0, nrow=ns, ncol=nx)),
-            cbind(-matrix(rep(xbar / xsd, ns), ncol=ns), diag(1 / xsd)))
+            cbind(-matrix(rep(xbar / xsd, ns), ncol=ns),
+                  diag(1 / as.vector(xsd))))
   }
+  
                        
-  if(is.character(intercepts)) {
+  if(li1 && is.character(intercepts)) {
     if(intercepts != 'mid' && isbootcov)
       stop('intercepts must be "mid" if object produced by bootcov')
       switch(intercepts,

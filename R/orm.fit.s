@@ -183,7 +183,8 @@ orm.fit <- function(x=NULL, y,
   }
   if(scale) {
     trans <- rbind(cbind(1, matrix(0, nrow=1, ncol=nx)),
-                   cbind(-matrix(rep(xbar/xsd, 1), ncol=1), diag(1 / xsd)))
+                   cbind(-matrix(rep(xbar/xsd, 1), ncol=1),
+                         diag(1 / as.vector(xsd))))
     v <- t(trans) %*% v %*% trans
   }
   name <- if(kint == 1) "Intercept" else
