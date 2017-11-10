@@ -13,8 +13,9 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
   m$na.action <- na.action
   m$drop.unused.levels <- TRUE
   m[[1]] <- as.name("model.frame")
-  ##X's present) 
-  if(length(attr(terms(formula), "term.labels"))) {
+  ##X's present)
+  w <- if(missing(data)) terms(formula) else terms(formula, data=data)
+  if(length(attr(w, "term.labels"))) {
     ## R's model.frame.default gives wrong model frame if [.factor
     ## removes unused factor levels
     dul <- .Options$drop.unused.levels
