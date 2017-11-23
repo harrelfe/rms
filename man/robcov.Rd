@@ -84,11 +84,6 @@ functions.
 
 Long, JS, Ervin, LH.  The American Statistician 54:217--224, 2000.
 }
-\section{Warnings}{
-Adjusted \code{ols} fits do not have the corrected standard errors printed with
-\code{print.ols}. Use \code{sqrt(diag(adjfit$var))} to get this, where
-\code{adjfit} is the result of \code{robcov}.
-}
 \seealso{
 \code{\link{bootcov}}, \code{\link{naresid}},
 \code{\link{residuals.cph}}, \code{http://gforge.se/gmisc} interfaces

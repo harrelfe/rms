@@ -15,6 +15,8 @@ vcov(f)
 g <- ols(y ~ x1 + x2, x=TRUE, y=TRUE)
 vcov(g)
 h <- robcov(g, clus)
+h
+sqrt(diag(h$var))
 vcov(h)
 vcov(h) / vcov(f)
 
