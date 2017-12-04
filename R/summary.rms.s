@@ -277,7 +277,7 @@ print.summary.rms <- function(x, ..., table.env=FALSE)
 {
   switch(prType(),
          latex = latex.summary.rms(x, ..., file='', table.env=table.env),
-         html  = html.summary.rms(x, ...),
+         html  = return(html.summary.rms(x, ...)),
          plain = {
   
            cstats <- dimnames(x)[[1]]
@@ -362,7 +362,7 @@ html.summary.rms <- function(object, digits=4, dec=NULL,...) {
                          ## css.cell = 'min-width: 6em;',
                          css.cell=c('', rep('padding-left:4ex;', ncol(cstats))),
                          rowlabel='', align='r', align.header='r',
-                         escape.html=FALSE), '\n'))
+                         escape.html=FALSE)))
 }
 
 

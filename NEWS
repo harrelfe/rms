@@ -14,6 +14,7 @@ Changes in version 5.1-2 (2017-12-03)
    * robcov: removed warning in help file about printed standard errors (Thanks: Ferenci Tamás)
    * anova, rmsMisc, survplotp.npsurv: changed nbsp to htmlSpecial version
    * prModStat, anova, latex.cph, latex.rms, summary, validate.ols: added escape.html=FALSE to htmlTable
+   * print.summary.rms: for html returned HTML object instead of invisible
 
 Changes in version 5.1-1 (2017-05-01)
    * latex.anova.rms: if table.env is FALSE but caption is specified, passes caption as insert.top argument to latex.default; when options(prType='latex') you can do print(anova(), caption=) to use this
