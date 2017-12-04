@@ -71,7 +71,7 @@ latex.cph <-
       dimnames(s) <- list(format(times), "$S_{0}(t)$")
       if(md) {
         z <- htmlTable::txtRound(s, digits=dec)
-        z <- htmlTable::htmlTable(z, rowlabel='$t$',
+        z <- htmlTable::htmlTable(z, rowlabel='$t$', escape.html=FALSE,
                                   css.cell='min-width: 9em;')
         Z <- c(Z, as.character(z))
       }
@@ -101,6 +101,7 @@ latex.cph <-
         z <- htmlTable::txtRound(s, digits=dec)
         Z <- c(Z, as.character(
                     htmlTable::htmlTable(z, rowlabel='$t$',
+                                         escape.html=FALSE,
                                          css.cell='min-width: 9em;')))
       }
       else

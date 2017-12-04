@@ -609,7 +609,9 @@ latexrms <-
               as.character(htmlTable::htmlTable(z, caption='Pre-transformations',
                                                 css.cell='min-width: 9em;',
                                                 align='|l|l|',
-                                                align.header='|c|c|'), sep='\n')
+                                                align.header='|c|c|',
+                                                escape.html=FALSE))
+#                           sep='\n')
             }
             else
               c("\\vspace{0.5ex}\\begin{center}{\\bf Pre--Transformations}\\\\",

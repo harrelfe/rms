@@ -540,7 +540,7 @@ latex.anova.rms <-
       w <- htmlTable::htmlTable(dstats, caption=caption,
                                css.cell=rep('padding-left:3ex;', ncol(dstats)),
                                align=al, align.header=al,
-                               rowlabel='')
+                               rowlabel='', escape.html=FALSE)
       htmltools::HTML(as.character(paste0(w, '\n')))
       }
     else
@@ -572,6 +572,7 @@ plot.anova.rms <-
 
     htmlSpecs <- markupSpecs$html
     schisq    <- htmlSpecs$chisq()
+    nbsp      <- htmlSpecial('nbsp')
 
     if(! length(xlab)) {
 
@@ -592,7 +593,7 @@ plot.anova.rms <-
           switch(what,
                  chisq        = schisq,
                  "proportion chisq" = paste('Proportion of Overall', schisq),
-                 chisqminusdf = paste0(schisq, '&nbsp;-&nbsp;df'),
+                 chisqminusdf = paste0(schisq, nbsp, '-', nbsp, 'df'),
                  aic          = "Akaike Information Criterion",
                  P            = "P-value",
                  "partial R2" = 'Partial R<sup>2</sup>',
@@ -709,7 +710,7 @@ plot.anova.rms <-
             else auxdata  <- aux[[2]]
           } else 
             auxdata <- if(length(auxdata))
-                         paste(auxdata, aux, sep='&nbsp;&nbsp;')
+                         paste(auxdata, aux, sep=paste0(nbsp,nbsp))
                        else
                          aux
       }

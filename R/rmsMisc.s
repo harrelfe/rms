@@ -688,7 +688,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
   lang  <- prType()
   specs <- markupSpecs[[lang]]
 
-  cca  <- htmlSpecial('combiningcircumflexaccent')
+#  cca  <- htmlSpecial('combiningcircumflexaccent')
   nbsp <- htmlSpecial('nbsp')
   gt   <- htmlTranslate('>')
   vbar <- htmlTranslate('|')
@@ -796,14 +796,14 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
         errordf <- obj$errordf
         beta <- obj$coef
         se   <- obj$se
-        Z    <- beta/se
+        Z    <- beta / se
         P    <- if(length(errordf)) 2 * (1 - pt(abs(Z), errordf))
                 else
                   1 - pchisq(Z ^ 2, 1)
         pad <- function(x)
           switch(lang, 
                  latex = paste0('~', x, '~'),
-                 html  = paste0('&nbsp;', x),
+                 html  = paste0(nbsp, x),
                  plain  = x)
 
         U    <- cbind('Coef' =
@@ -819,14 +819,15 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                            'Pr$(>|Z|)$')
         else
           if(lang == 'html')
-            colnames(U) <- c(paste0('&beta', cca), 'S.E.', 'Wald <i>Z</i>',
-                             paste0('Pr(', gt, vbar, '<i>Z</i>', vbar))
+            colnames(U) <- c(htmlGreek('beta'),   # did have cca
+                             'S.E.', 'Wald <i>Z</i>',
+                             paste0('Pr(', gt, vbar, '<i>Z</i>', vbar, ')'))
         if(length(errordf))
           colnames(U)[3:4] <-
             switch(lang,
                    latex = c('$t$', 'Pr$(>|t|)$'),
                    html  = c('<i>t</i>', paste0('Pr(', gt, vbar, '<i>t</i>',
-                                                vbar)),
+                                                vbar, ')')),
                    plain = c('t',   'Pr(>|t|)') )
 
         rownames(U) <- names(beta)
@@ -868,7 +869,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                         htmlTable::htmlTable(U,
                                              css.cell = 'min-width: 7em;',
                                              align=al, align.header=al,
-                                             rowlabel='')))
+                                             rowlabel='', escape.html=FALSE)))
             }
         } else {
           if(is.numeric(coefs)) {
@@ -1048,7 +1049,7 @@ for(i in 1:p) {
   if(lorh) {
     maxl <- max(sapply(w, length))
     z <- matrix('', nrow=maxl, ncol=p)
-    fil <- if(lang == 'latex') '~\\hfill ' else '&emsp;'
+    fil <- if(lang == 'latex') '~\\hfill ' else htmlSpecial('emsp')
 
     chisq <- specs$chisq()
     
@@ -1062,9 +1063,9 @@ for(i in 1:p) {
       'Pr(> chi2)' = c(latex = 'Pr$(>\\chi^{2})$',
                        html  = paste0('Pr(', htmlTranslate('>'), chisq, ')')),
       'tau-a'      = c(latex = '$\\tau_{a}$',
-                       html  = '&tau;<sub>a</sub>'),
+                       html  = paste0(htmlGreek('tau'), '<sub>a</sub>')),
       'gamma'      = c(latex = '$\\gamma$',
-                       html  = '&gamma;'),
+                       html  = htmlGreek('gamma')),
       'R2'         = c(latex = '$R^{2}$',
                        html  = '<i>R</i><sup>2</sup>'),
       'R2 adj'     = c(latex = '$R^{2}_{\\textrm{adj}}$',
@@ -1107,7 +1108,7 @@ for(i in 1:p) {
                        plain = k[j],
                        latex = latexTranslate(k[j], greek=TRUE),
                        html  = htmlTranslate (k[j], greek=TRUE) )
-      
+
       z[1 : length(k), i] <- paste0(k, fil, w[[i]])
     }
     
@@ -1121,7 +1122,8 @@ for(i in 1:p) {
       w <- htmlTable::htmlTable(z,
                                 header=labels,
                                 css.cell = 'min-width: 9em;',
-                                align=al, align.header=al)
+                                align=al, align.header=al,
+                                escape.html=FALSE)
       w <- htmltools::HTML(paste0(w, '\n'))
     }
     return(w)

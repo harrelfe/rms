@@ -32,6 +32,7 @@ survplotp.npsurv <-
       else ylim
 
     mu      <- markupSpecs$html
+    nbsp    <- htmlSpecial('nbsp')
 
     if(funtype %in% c('identity', 'inverse'))
       survdiffplotp <-
@@ -343,7 +344,7 @@ survplotp.npsurv <-
               paste('/', tolower(units), sep='')
       haz <- round(nevents / totaltime, 4)
       txt <- paste(nevents, 'events')
-      if(aehaz) txt <- paste0(txt, '<br>&nbsp;&nbsp;&nbsp;',
+      if(aehaz) txt <- paste0(txt, '<br>', nbsp, nbsp, nbsp,
                               htmlGreek('lambda'), '=', 
                               haz, un, sep='')
       z <- paste(paste0(sleva, ':', txt), collapse='<br>')
