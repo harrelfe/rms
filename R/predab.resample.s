@@ -343,7 +343,6 @@ predab.resample <-
           measure(xb[xtrain], y[train,,drop=FALSE], strata=stra[xtrain], 
                   fit=f, iter=i, fit.orig=fit.orig, evalfit=TRUE,
                   kint=kint, ...)
-        
         test.statj <- measure(xb[test], y[test,,drop=FALSE],
                               strata=stra[test],
                               fit=f, iter=i, fit.orig=fit.orig,

@@ -1,4 +1,4 @@
-Changes in version 5.1-2 (2017-12-03)
+Changes in version 5.1-2 (2017-12-14)
    * plot.pentrace: corrected lty for AIC if ! add, interchanged lty for AIC and BIC.  Thanks: Ferenci Tamas
    * removeFormulaTerms: added width.cutoff=500 to deparse call to avoid problems with long variable names.  Thanks: Ferenci Tamas
    * removeFormulaTerms: changed above fix to use paste collapse instead (Thanks: Tamas)
@@ -15,6 +15,7 @@ Changes in version 5.1-2 (2017-12-03)
    * anova, rmsMisc, survplotp.npsurv: changed nbsp to htmlSpecial version
    * prModStat, anova, latex.cph, latex.rms, summary, validate.ols: added escape.html=FALSE to htmlTable
    * print.summary.rms: for html returned HTML object instead of invisible
+   * validate.ols, calibrate.default: fixed fitter so that NA coefficient results in fail=TRUE
 
 Changes in version 5.1-1 (2017-05-01)
    * latex.anova.rms: if table.env is FALSE but caption is specified, passes caption as insert.top argument to latex.default; when options(prType='latex') you can do print(anova(), caption=) to use this

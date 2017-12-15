@@ -57,23 +57,26 @@ calibrate.default <- function(fit, predy,
       cal - predy
     }
 
-  fitit <- function(x, y, model, penalty.matrix=NULL, xcol=NULL, ...)
-    {
+  fitit <- function(x, y, model, penalty.matrix=NULL, xcol=NULL, ...) {
     if(length(penalty.matrix) && length(xcol)) {
       if(model=='ol') xcol <- xcol[-1] - 1   # take off intercept position
       penalty.matrix <- penalty.matrix[xcol, xcol, drop=FALSE]
     }
-    switch(model,
-           lr=lrm.fit(x, y, penalty.matrix=penalty.matrix, tol=1e-13),
-           ol=c(if(length(penalty.matrix)==0)
-             {
+    f <-
+      switch(model,
+             lr = lrm.fit(x, y, penalty.matrix=penalty.matrix, tol=1e-13),
+             ol = if(length(penalty.matrix)==0)
+                {
                   w <- lm.fit.qr.bare(x, y, intercept=TRUE, xpxi=TRUE)
                   w$var <- w$xpxi * sum(w$residuals^2) /
                     (length(y) - length(w$coefficients))
                   w
                 }
                 else 
-                  lm.pfit(x, y, penalty.matrix=penalty.matrix), fail=FALSE))
+                  lm.pfit(x, y, penalty.matrix=penalty.matrix)
+             )
+    if(any(is.na(f$coefficients))) f$fail <- TRUE
+    f
   }
 
   z <- predab.resample(fit, method=method, fit=fitit, measure=cal.error,

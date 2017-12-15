@@ -68,31 +68,34 @@ validate.ols <- function(fit, method="boot",
   
   ols.fit <- function(x, y, tolerance=1e-7, backward, 
                       penalty.matrix=NULL, xcol=NULL, ...)
-    {
-      if(!length(x)) {
-        ybar <- mean(y)
-        n <- length(y)
-        residuals <- y - ybar
-        v <- sum(residuals^2)/(n-1)
-        return(list(coef=ybar, var=v/n, residuals=residuals, fail=FALSE))
-      }
-      if(length(penalty.matrix) > 0) {
-        if(length(xcol)) {
-          xcol <- xcol[-1]-1   # remove position for intercept
-          penalty.matrix <- penalty.matrix[xcol, xcol, drop=FALSE]
-        }
-        fit <- lm.pfit(x, y, penalty.matrix=penalty.matrix,
-                       tol=tolerance)
-      }
-      else {
-        fit <- lm.fit.qr.bare(x, as.vector(y), tolerance=tolerance,
-                              intercept=TRUE, xpxi=TRUE)
-        if(backward) 
-          fit$var <- sum(fit$residuals^2) * fit$xpxi/
-            (length(y) - length(fit$coefficients))
-      }
-      c(fit, fail=FALSE)
+  {
+    fail <- FALSE
+    if(!length(x)) {
+      ybar <- mean(y)
+      n <- length(y)
+      residuals <- y - ybar
+      v <- sum(residuals ^ 2) / (n - 1)
+      return(list(coef=ybar, var=v / n, residuals=residuals, fail=fail))
     }
+    if(length(penalty.matrix) > 0) {
+      if(length(xcol)) {
+        xcol <- xcol[-1] - 1   # remove position for intercept
+        penalty.matrix <- penalty.matrix[xcol, xcol, drop=FALSE]
+      }
+      fit <- lm.pfit(x, y, penalty.matrix=penalty.matrix,
+                     tol=tolerance)
+      if(any(is.na(fit$coefficients))) fail <- TRUE
+    }
+    else {
+      fit <- lm.fit.qr.bare(x, as.vector(y), tolerance=tolerance,
+                            intercept=TRUE, xpxi=TRUE)
+      if(any(is.na(fit$coefficients))) fail <- TRUE
+      if(backward) 
+        fit$var <- sum(fit$residuals^2) * fit$xpxi/
+          (length(y) - length(fit$coefficients))
+    }
+    c(fit, fail=fail)
+  }
   
   predab.resample(fit.orig, method=method, fit=ols.fit, measure=discrim,
                   pr=pr, B=B, bw=bw, rule=rule, type=type, sls=sls, aics=aics,
