@@ -22,7 +22,7 @@ Gls <-
 
     method <- match.arg(method)
     REML <- method == "REML"
-    if (length(correlation))
+    if (! is.null(correlation))
       groups <- getGroupsFormula(correlation)
     else groups <- NULL
     glsSt <- glsStruct(corStruct = correlation, varStruct = varFunc(weights))

@@ -76,9 +76,9 @@ latex.cph <-
         Z <- c(Z, as.character(z))
       }
       else
-        latex.default(s, file=file, append=TRUE, rowlabel="$t$",
-                      rowlabel.just="r",
-                      dec=dec, table.env=FALSE)
+        latex(s, file=file, append=TRUE, rowlabel="$t$",
+              rowlabel.just="r",
+              dec=dec, table.env=FALSE)
     } else {
           
       ## Change . to ,blank
@@ -105,9 +105,9 @@ latex.cph <-
                                          css.cell='min-width: 9em;')))
       }
       else
-        latex.default(s, file=file, append=TRUE,
-                      rowlabel="$t$", rowlabel.just="r",
-                      dec=dec, table.env=FALSE)
+        latex(s, file=file, append=TRUE,
+              rowlabel="$t$", rowlabel.just="r",
+              dec=dec, table.env=FALSE)
     }
   }
   if(md) htmltools::HTML(Z)
