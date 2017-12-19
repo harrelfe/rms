@@ -1,4 +1,4 @@
-Changes in version 5.1-2 (2017-12-17)
+Changes in version 5.1-2 (2017-12-19)
    * plot.pentrace: corrected lty for AIC if ! add, interchanged lty for AIC and BIC.  Thanks: Ferenci Tamas
    * removeFormulaTerms: added width.cutoff=500 to deparse call to avoid problems with long variable names.  Thanks: Ferenci Tamas
    * removeFormulaTerms: changed above fix to use paste collapse instead (Thanks: Tamas)
