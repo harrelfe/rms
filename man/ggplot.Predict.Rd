@@ -25,6 +25,7 @@
 \method{ggplot}{Predict}(data, mapping, formula=NULL, groups=NULL,
      aestype=c('color', 'linetype'),
      conf=c('fill', 'lines'),
+     conflinetype=1,
      varypred=FALSE, sepdiscrete=c('no', 'list', 'vertical', 'horizontal'),
      subset, xlim., ylim., xlab, ylab, 
      colorscale=function(...) scale_color_manual(...,
@@ -74,6 +75,8 @@
 	\code{size}, \code{shape}.}
 \item{conf}{specify \code{conf="line"} to show confidence bands with
   lines instead of filled ribbons, the default}
+\item{conflinetype}{specify an alternative \code{linetype} for confidence
+  intervals if \code{conf="line"}}
 \item{varypred}{set to \code{TRUE} if \code{data} is the result of
   passing multiple \code{Predict} results, that represent different
   predictors, to \code{rbind.Predict}.  This will cause the \code{.set.}
