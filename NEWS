@@ -1,4 +1,7 @@
-Changes in version 5.1-2 (2017-12-19)
+Changes in version 5.1-3 (2018-01-13)
+   * lrm: when lrm.fit fails, don't stop altogether but print warning and return fit with fail=TRUE
+
+Changes in version 5.1-2 (2018-01-06)
    * plot.pentrace: corrected lty for AIC if ! add, interchanged lty for AIC and BIC.  Thanks: Ferenci Tamas
    * removeFormulaTerms: added width.cutoff=500 to deparse call to avoid problems with long variable names.  Thanks: Ferenci Tamas
    * removeFormulaTerms: changed above fix to use paste collapse instead (Thanks: Tamas)
@@ -18,6 +21,7 @@ Changes in version 5.1-2 (2017-12-19)
    * validate.ols, calibrate.default: fixed fitter so that NA coefficient results in fail=TRUE
    * Gls: fixed major bug where correlation pattern was being ignored if not corAR1,corCAR1,corCompSymm.  Thanks: Tamas Ferenci
    * latex.cph.s: changed to use latex instead of latex.default
+   * ggplot.Predict: added conflinetype parameter (thanks: jphdotam; https://github.com/harrelfe/rms/pull/54)
 
 Changes in version 5.1-1 (2017-05-01)
    * latex.anova.rms: if table.env is FALSE but caption is specified, passes caption as insert.top argument to latex.default; when options(prType='latex') you can do print(anova(), caption=) to use this
