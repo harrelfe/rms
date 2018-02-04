@@ -46,9 +46,6 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   scale <- object$scale.pred
   if(missing(antilog)) antilog <- length(scale)==2
   if(antilog & length(scale) < 2) scale <- c("","Antilog")
-  ## Hazard ratio is antilog of negative of difference if orm and
-  ## ratio pertains
-  logRatioAdj <- if(inherits(object, 'orm') && object$family == 'loglog') -1 else 1
 
   factors <- rmsArgs(substitute(list(...)))
   nf <- length(factors)
@@ -174,7 +171,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
     if(antilog) {
       stats <- rbind(stats,
                      cbind(stats[, 1 : 3,drop=FALSE],
-                           exp(logRatioAdj * xb), NA, exp(low), exp(up), 2))
+                           exp(xb), NA, exp(low), exp(up), 2))
       lab <- c(lab, rep(paste("", scale[2]), m))
       w <- integer(M)
       w[odd] <- 1 : m
@@ -237,7 +234,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                       parmi.a[ki], sep=""))
         if(antilog) {
           stats <- rbind(stats,cbind(ki, kj, NA,
-                                     exp(logRatioAdj * xb),
+                                     exp(xb),
                                      NA, exp(low), exp(up), 2))
           lab <- c(lab, paste("", scale[2]))}
       }

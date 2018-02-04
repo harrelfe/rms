@@ -1,5 +1,6 @@
-Changes in version 5.1-3 (2018-01-13)
+Changes in version 5.1-3 (2018-02-04)
    * lrm: when lrm.fit fails, don't stop altogether but print warning and return fit with fail=TRUE
+   * summary.orm: stopped negating linear predictor before computing hazard ratio for orm fit with log-log family (confidence limits never attempted to do this).  See https://github.com/harrelfe/rms/issues/56
 
 Changes in version 5.1-2 (2018-01-06)
    * plot.pentrace: corrected lty for AIC if ! add, interchanged lty for AIC and BIC.  Thanks: Ferenci Tamas
