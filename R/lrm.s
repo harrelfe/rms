@@ -122,7 +122,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
   }
   
   if(f$fail) {
-    warn("Unable to fit model using ", dQuote(method))
+    warning("Unable to fit model using ", dQuote(method))
     return(f)
     }
   
