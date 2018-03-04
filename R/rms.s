@@ -26,6 +26,7 @@
 
 
 Design <- function(mf, allow.offset=TRUE, intercept=1) {
+  debug <- length(.Options$rmsdebug) && .Options$rmsdebug
   Terms <- Terms.orig <- attr(mf, "terms")
   Term.labels <- attr(Terms, 'term.labels')
   ## offsets are not included anywhere in terms even though they are
@@ -39,14 +40,15 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
 
   mmnames <- function(assume.code, rmstrans.names, term.label, iaspecial,
                       class) {
-     ## prn(assume.code); prn(rmstrans.names); prn(term.label); prn(iaspecial); prn(class)
+    if(debug) {
+      prn(assume.code); prn(rmstrans.names); prn(term.label); prn(iaspecial); prn(class) }
     ## Don't let >=i be translated to >i:
     rmst <- gsub('>=', '>>', rmstrans.names)
     ## Don't let <=i be translated to <i:
     rmst <- gsub('<=', '<<', rmst)
     ## Don't let == be translated to blank
     rmst <- gsub('==', '@EQ@', rmst)
-    ## prn(class);prn(assume.code);prn(term.label)
+    if(debug) {prn(class);prn(assume.code);prn(term.label)}
     w <- if(assume.code == 1)
            ifelse(class == 'logical', paste0(term.label, 'TRUE'),
                   term.label)
@@ -206,6 +208,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         mmcolnam[[i1]] <- mmn
         alt <- attr(mmn, 'alt')
         mmcolnamalt[[i1]] <- alt
+        if(debug) prn(c(mmn, alt))
         if(za != 8 && length(colnam)) {
           name   <- c(name,   colnam  [[i1]])
           mmname <- c(mmname, mmcolnam[[i1]])
@@ -371,6 +374,10 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     else names(funits) <- fname[asm != 9]
 
     attr(mmname, 'alt') <- if(! all(Altcolnam == mmname)) Altcolnam
+    if(any(duplicated(mmname)))
+      stop(paste0('duplicated column name in for design matrix:',
+                 paste(mmname[duplicated(mmname)], collapse=' '),
+                 '\nMost likely caused by a variable name concatenated to a factor level\nbeing the same is the name of another variable.'))
     atr <- list(name=fname, label=flabel, units=funits,
                 colnames=name, mmcolnames=mmname,
                 assume=c("asis", "polynomial", "lspline", "rcspline",
