@@ -16,11 +16,13 @@ contrast.rms <-
   bcoef <- if(usebootcoef) fit$boot.Coef
 
   betas <- coef(fit)
+  fite  <- fit
   if(inherits(fit, 'orm')) {
     nrp <- 1
     ## Note: is 1 for orm because vcov defaults to intercepts='mid'
     w <- c(fit$interceptRef, (num.intercepts(fit) + 1) : length(betas))
     betas <- betas[w]
+    fite$coefficients <- betas    # for simult confint
     if(usebootcoef) bcoef <- bcoef[, w, drop=FALSE]
   } else nrp <- num.intercepts(fit, 'var')
     
@@ -145,7 +147,7 @@ contrast.rms <-
       upper <- est + zcrit*se
     }
   } else {
-    u <- confint(multcomp::glht(fit, X,
+    u <- confint(multcomp::glht(fite, X,
                       df=if(length(idf)) idf else 0),
                  level=conf.int)$confint
     lower <- u[,'lwr']

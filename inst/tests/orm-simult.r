@@ -1,29 +1,26 @@
+# From Matthew Shun-Shin <m@shun-shin.com>  2018-01-14
+
 require(rms)
 set.seed(1)
-
-xa <- runif(100, 0, 5)
-xb <- runif(100, 0, 5)
-
-ya <- xa + rnorm(100, 0, 1)
-yb <- xb + rnorm(100, 0.25, 1)
-
-arma <- rep("Placebo", 100)
-armb <- rep("Intervention", 100)
-
-x <- c(xa, xb)
-y <- c(ya, yb)
-arm <- c(arma, armb)
-
-dd <- datadist(x, y, arm)
+m <- 50
+d <- expand.grid(arm=c('a','b','c'), i=1 : m)
+d$x <- runif(nrow(d))
+d$y <- rnorm(nrow(d))
+dd <- datadist(d)
 options(datadist="dd")
 
-f_ols <- ols(y ~ x + arm)
+f <- ols(y ~ x + arm, data=d)
+summary(f, verbose=TRUE)
+summary(f, conf.type='simult', verbose=TRUE)  # simult ignored
 #Works
-c_ols <- contrast(f_ols, list(arm="Placebo"), list(arm="Intervention"), conf.type='simultaneous')
+contrast(f, list(arm=c('c','b')), list(arm='a'))
+contrast(f, list(arm=c('c','b')), list(arm="a"),
+                  conf.type='simultaneous')
 
-f_orm <- orm(y ~ x + arm)
-#Fails with dimensions of coefficients and covariance matrix don't match 
-c_orm <- contrast(f_orm, list(arm="Placebo"), list(arm="Intervention"), conf.type='simultaneous')
-#Error in modelparm.default(model, ...) : 
-#  dimensions of coefficients and covariance matrix don't match
+g <- orm(y ~ x + arm, data=d)
+summary(g, verbose=TRUE)
+summary(g, conf.type='simultaneous', verbose=TRUE)  # simult ignored
+
+contrast(g, list(arm=c('b','c')), list(arm='a'))
+contrast(g, list(arm=c('b','c')), list(arm='a'), conf.type='simult')
 
