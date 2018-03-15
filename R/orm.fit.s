@@ -227,7 +227,7 @@ orm.fit <- function(x=NULL, y,
   stats <- c(n, length(numy), mediany, z$dmax, model.lr, model.df,
              model.p, score, score.p, rho, r2, g, exp(g), pdm)
   
-  nam <- c("Obs", "Unique Y", "Median Y", "Max Deriv",
+  nam <- c("Obs", "Distinct Y", "Median Y", "Max Deriv",
            "Model L.R.", "d.f.", "P", "Score", "Score P",
            "rho", "R2", "g", "gr", "pdm") 
   names(stats) <- nam

@@ -1085,8 +1085,8 @@ for(i in 1:p) {
       'mean |Y-Yhat|' = c(latex = 'mean $|Y-\\hat{Y}|$',
                           html  = paste0('mean ', vbar, '<i>Y - Y</i>',
                                          cca, vbar)),
-      'Unique Y'   = c(latex = 'Unique $Y$',
-                       html  = 'Unique <i>Y</i>'),
+      'Distinct Y'   = c(latex = 'Distinct $Y$',
+                       html  = 'Distinct <i>Y</i>'),
       'Median Y'   = c(latex = '$Y_{0.5}$',
                        html  = '<i>Y</i><sub>0.5</sub>'),
       '|Pr(Y>=median)-0.5|'  =

@@ -220,7 +220,7 @@ print.orm <- function(x, digits=4, coefs=TRUE,
   maxd <- stats['Max Deriv']
   ci <- x$clusterInfo
   misc <- reListclean(Obs           = stats['Obs'],
-                   'Unique Y'    = stats['Unique Y'],
+                   'Distinct Y'    = stats['Distinct Y'],
                    'Cluster on'  = ci$name,
                    Clusters      = ci$n,
                    'Median Y'    = stats['Median Y'],
