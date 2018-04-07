@@ -27,6 +27,7 @@ This is an R Markdown html document using the template that is [here](http://bio
 
 ```{r, results='hide'}
 require(rms)
+knitrSet(lang='markdown')
 ```
 
 # Data {.tabset}
@@ -87,13 +88,14 @@ plot(nomogram(f, fun=plogis, funlabel='Prob(survive)'))
 ```
 
 # Survival Plots for `r mu$code('pbc')` Dataset
+Hover over the curves to see particular probability estimates and numbers at risk.  click on legend components to show/hide components.
 ```{r pbc,fig.height=6,fig.width=7}
 getHdata(pbc)
 pbc <- upData(pbc, 
               fu.yrs = fu.days / 365.25,
               units = c(fu.yrs = 'year'))
 f <- npsurv(Surv(fu.yrs, status) ~ spiders, data=pbc)
-survplotp(f, time.inc=1, times=c(5, 10))
+survplotp(f, time.inc=1, times=c(5, 10), fun=function(y) 1 - y)
 ```
 
 # Computing Environment
