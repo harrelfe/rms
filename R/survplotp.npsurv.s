@@ -183,9 +183,9 @@ survplotp.npsurv <-
       nam   <- switch(type,
                       est   = sname,
                       lower = paste0(snames, conf.int, ' CL'),
-                      upper = '',
+                      upper = paste0(snames, conf.int, ' CL', type),
                       'diff lower' = d,
-                      'diff upper' = '')
+                      'diff upper' = paste0(d, type))
       lg <- switch(type,
                    est = 'Estimates',
                    lower = paste0(snames, 'CL'),
@@ -221,6 +221,7 @@ survplotp.npsurv <-
             else list(shape='hv', color=col, width=0)
 
       dat <- if(length(txt)) data.frame(x, y, txt) else data.frame(x, y)
+      up <- type %in% c('upper', 'diff upper')
       p <- if(length(txt))
              plotly::add_lines(p, x=~ x, y=~ y, text=~ txt, data=dat,
                                hoverinfo='text', line=ln,
@@ -228,7 +229,7 @@ survplotp.npsurv <-
                                fill=if(type %in% c('upper', 'diff upper'))
                                       'tonexty' else 'none',
                                visible=vis, legendgroup=lg,
-                               name=nam)
+                               name=nam, showlegend=! up)
            else
              plotly::add_lines(p, x=~ x, y=~ y, data=dat,
                                hoverinfo='none', line=ln,
@@ -236,7 +237,7 @@ survplotp.npsurv <-
                                fill=if(type %in% c('upper', 'diff upper'))
                                       'tonexty' else 'none',
                                visible=vis, legendgroup=lg,
-                               name=nam)
+                               name=nam, showlegend=! up)
 
     }
                         
