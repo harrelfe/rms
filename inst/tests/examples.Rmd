@@ -88,7 +88,7 @@ plot(nomogram(f, fun=plogis, funlabel='Prob(survive)'))
 ```
 
 # Survival Plots for `r mu$code('pbc')` Dataset
-Hover over the curves to see particular probability estimates and numbers at risk.  click on legend components to show/hide components.
+Hover over the curves to see particular probability estimates and numbers at risk.  Click on legend components to show/hide components.
 ```{r pbc,fig.height=6,fig.width=7}
 getHdata(pbc)
 pbc <- upData(pbc, 

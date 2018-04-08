@@ -280,6 +280,7 @@ predab.resample <-
     }
     f <- tryCatch(fit(x[xtrain, , drop=FALSE], y[train, , drop=FALSE],
                       strata=stra[train], iter=i, tol=tol, ...), error=efit)
+    if(! length(f$fail)) f$fail <- FALSE
     f$assign <- NULL  #Some programs put a NULL assign (e.g. ols.val fit)
     ni <- num.intercepts(f)
     
@@ -328,7 +329,7 @@ predab.resample <-
                             iter=i, tol=tol, xcol=xcol, ...), error=efit)
         }
 
-        if(f$fail) fail <- TRUE
+        if(length(f$fail) && f$fail) fail <- TRUE
         else coef <- f$coef
       }
     }
