@@ -61,7 +61,7 @@ orm.fit <- function(x=NULL, y,
   
   n <- length(y)
   
-  initial.there <- !missing(initial)
+  initial.there <- ! missing(initial)
   if(! length(x)) {
       nx <- 0
       xname <- NULL
@@ -73,7 +73,7 @@ orm.fit <- function(x=NULL, y,
       nx <- dx[2L]
       if(dx[1] != n) stop("x and y must have same length")
       xname <- dimnames(x)[[2]]
-      if(!length(xname)) xname <- paste("x[", 1 : nx, "]", sep="")
+      if(! length(xname)) xname <- paste("x[", 1 : nx, "]", sep="")
       if(scale) {
         x <- scale(x)
         scinfo <- attributes(x)[c('scaled:center', 'scaled:scale')]
@@ -99,29 +99,27 @@ orm.fit <- function(x=NULL, y,
     ylevels <- sort(unique(y))
     y       <- match(y, ylevels)
   }
-  if(!ynumeric) {
+  if(! ynumeric) {
     mediany <- quantile(y, probs=.5, type=1L)
     kmid    <- max(1, which(1L : length(ylevels) == mediany) - 1L)
   }
 
   kint <- length(ylevels) - 1L
   if(kint == 1) kmid <- 1
-  ofpres <- !all(offset == 0)
+  ofpres <- ! all(offset == 0)
   if(ofpres && length(offset) != n) stop("offset and y must have same length")
   
   if(n < 3) stop("must have >=3 non-missing observations")
   numy        <- tabulate(y)
   names(numy) <- ylevels
   p           <- as.integer(nx + kint)
-  
+
   if(missing(initial)) {
       cp   <- (n - cumsum(numy)[- length(numy)]) / n
       names(cp) <- NULL
       initial <- fam$inverse(cp)
       if(ofpres) initial <- initial - mean(offset)
   }
-  if(length(initial) < p)
-      initial <- c(initial, rep(0, p - length(initial)))
   
   loglik <- -2 * sum(numy * log(numy / n))
 
@@ -138,38 +136,39 @@ orm.fit <- function(x=NULL, y,
   }
   else penmat <- NULL
   
-  if(nx==0 & !ofpres) {
+  if(nx==0 & ! ofpres) {
       loglik <- rep(loglik, 2)
-      z <- list(coef=initial, u=rep(0,kint))
+      z <- list(coef=initial, u=rep(0, kint))
   }
-  if(ofpres) {
-      ##Fit model with only intercept(s) and offset
-      z <- ormfit(NULL, y, kint, 0, initial, offset=offset,
-                  maxit=maxit, tol=tol, eps=eps, trace=trace, fam)
-      if(z$fail) return(structure(list(fail=TRUE), class="orm"))
-      loglik <- c(loglik, z$loglik)
-      initial <- z$coef
-  }
- 
-  if(nx > 0) {
-      ##Fit model with intercept(s), offset, covariables
-      z <- ormfit(x, y, kint, nx, initial=initial, offset=offset, penmat=penmat,
-                  maxit=maxit, tol=tol, eps=eps, trace=trace, fam)
-      if(z$fail) return(structure(list(fail=TRUE), class="orm"))
-      loglik <- c(loglik, z$loglik)
-      kof  <- z$coef
-      ## Compute linear predictor before unscaling beta, as x is scaled
-      lp <- matxv(x, kof, kint=kmid)
-      
-      info <- z$v
-      if(scale) {
-        attr(info, 'scale') <- list(mean=xbar, sd=xsd)
-        betas <- kof[- (1 : kint)]
-        kof[1 : kint] <- kof[1 : kint] - sum(betas * xbar / xsd)
-        kof[-(1 : kint)] <- betas / xsd
-      }
-  } else lp <- rep(kof[kmid], n)
 
+  if(ofpres) {
+    ## Fit model with only intercept(s) and offset
+    z <- ormfit(NULL, y, kint, 0, initial=initial, offset=offset,
+                maxit=maxit, tol=tol, eps=eps, trace=trace, fam=fam)
+    if(z$fail) return(structure(list(fail=TRUE), class="orm"))
+    loglik <- c(loglik, z$loglik)
+    initial <- z$coef
+  }
+  
+  if(nx > 0) {
+    ##Fit model with intercept(s), offset, covariables
+    z <- ormfit(x, y, kint, nx, initial=initial, offset=offset, penmat=penmat,
+                maxit=maxit, tol=tol, eps=eps, trace=trace, fam=fam)
+    if(z$fail) return(structure(list(fail=TRUE), class="orm"))
+    loglik <- c(loglik, z$loglik)
+    kof  <- z$coef
+    ## Compute linear predictor before unscaling beta, as x is scaled
+    lp <- matxv(x, kof, kint=kmid)
+    
+    info <- z$v
+    if(scale) {
+      attr(info, 'scale') <- list(mean=xbar, sd=xsd)
+      betas <- kof[- (1 : kint)]
+      kof[1 : kint] <- kof[1 : kint] - sum(betas * xbar / xsd)
+      kof[-(1 : kint)] <- betas / xsd
+    }
+  } else lp <- rep(kof[kmid], n)
+  
 
   ## Keep variance matrix for middle intercept and all predictors
   ## Middle intercept take to be intercept corresponding to y that is
@@ -250,11 +249,18 @@ orm.fit <- function(x=NULL, y,
 
 ormfit <- function(x, y, kint, nx, initial, offset, penmat=NULL,
                    maxit=12L, eps=.005, tol=1e-7, trace=FALSE, fam) {
+
+  if(missing(x) || ! length(x) || nx == 0) {
+    x  <- 0.
+    nx <- 0
+  }
   n <- length(y)
   p <- as.integer(kint + nx)
   ymax <- kint + 1L
   iter <- 0L
   oldL <- 1e100
+  if(length(initial) < p)
+    initial <- c(initial, rep(0, p - length(initial)))
   coef <- initial
   del  <- rep(0., p)
   curstp <- 1.
@@ -274,7 +280,7 @@ ormfit <- function(x, y, kint, nx, initial, offset, penmat=NULL,
     }
     iter <- iter + 1L
     ## Compute linear predictor less intercept
-    xb <- offset + (if(nx == 0L) 0. else x %*% coef[-(1L : kint)])
+    xb <- if(nx == 0L) offset else offset + x %*% coef[-(1L : kint)]
     ## Compute current Prob y=observed y
     ## P <- rep(0., n)
     ## P[y == 1]           <- f(xb + coef[1]) - f(xb + coef[2])
