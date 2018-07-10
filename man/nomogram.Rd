@@ -363,7 +363,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
   \dQuote{Points} axis (with extrapolation if needed).  Then transfer these
   points to the
   \dQuote{Total Points} axis.  In this way, points can be added without
-  without writing them down.
+  writing them down.
 
   Confidence limits for an individual predictor score are really confidence
   limits for the entire linear predictor, with other predictors set to
