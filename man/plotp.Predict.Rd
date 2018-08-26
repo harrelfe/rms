@@ -1,6 +1,5 @@
 \name{plotp.Predict}
 \alias{plotp.Predict}
-\alias{plotp}
 \title{Plot Effects of Variables Estimated by a Regression Model Fit
 	Using plotly}
 \description{
@@ -41,8 +40,6 @@
      histSpike.opts=list(frac=function(f) 0.01 + 
          0.02 * sqrt(f - 1)/sqrt(max(f, 2) - 1), side=1, nint=100),
      ncols=3, width=800, ...)
-
-plotp(data, ...)
 }
 \arguments{
 \item{data}{a data frame created by \code{Predict}}

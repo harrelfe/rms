@@ -184,8 +184,9 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         else if(is.character(xi) | is.factor(xi)) {
           if(is.ordered(xi) &&
              .Options$contrasts[2] != 'contr.treatment')
-            stop(paste('Variable', nam, 'is an ordered factor.\n',
-                          'You should set options(contrasts=c("contr.treatment", "contr.treatment"))\nor rms will not work properly.'))
+            stop(paste('Variable', nam,
+                       'is an ordered factor with non-numeric levels.\n',
+                       'You should set options(contrasts=c("contr.treatment", "contr.treatment"))\nor rms will not work properly.'))
           xi <- catg(xi, name=nam, label=lab)
         }
         else if(is.matrix(xi)) xi <- matrx(xi, name=nam, label=lab)

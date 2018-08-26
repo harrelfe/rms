@@ -196,6 +196,7 @@ predictrms <-
             levels(xi) <- parms[[name[i]]]
             class(xi) <- "factor"
           }
+          else if(as == 7L) xi <- scored(xi, name=name[i])
           else if(as == 10L) {
             if(i == 1) ifact <- 1L
             else ifact <- 1L + sum(assume[1L : (i - 1L)] != 8L)

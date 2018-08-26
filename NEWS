@@ -1,4 +1,4 @@
-Changes in version 5.1-3 (2018-07-11))
+Changes in version 5.1-3 (2018-08-26)
    * lrm: when lrm.fit fails, don't stop altogether but print warning and return fit with fail=TRUE
    * summary.orm: stopped negating linear predictor before computing hazard ratio for orm fit with log-log family (confidence limits never attempted to do this).  See https://github.com/harrelfe/rms/issues/56
    * Design: stop with error message any any design matrix column name is duplicated as with a predictor X1 with factor level 2 (forming name X12 in model.matrix) and a numeric predictor named X12.  See https://github.com/harrelfe/rms/issues/55
@@ -8,7 +8,10 @@ Changes in version 5.1-3 (2018-07-11))
    * predab.resample: handled case where fitter doesn't include fail=FALSE
    * orm.fit: fixed problem with omission of name of fam argument with offset is present, and bug where initial had the wrong length.  Thanks: Tamas Ferenci
    * inst/tests/cph4.r: commented out line that caused failure
-	 
+   * plotp: moved generic to Hmisc
+   * Design: gave better error message re:ordered factors
+   * predictrms: remembered to run scored() when producing design matrix
+
 Changes in version 5.1-2 (2018-01-06)
    * plot.pentrace: corrected lty for AIC if ! add, interchanged lty for AIC and BIC.  Thanks: Ferenci Tamas
    * removeFormulaTerms: added width.cutoff=500 to deparse call to avoid problems with long variable names.  Thanks: Ferenci Tamas

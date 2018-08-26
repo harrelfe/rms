@@ -1,5 +1,3 @@
-plotp <- function(data, ...) UseMethod("plotp")
-
 plotp.Predict <-
   function(data,
            subset, xlim, ylim, xlab, ylab,
