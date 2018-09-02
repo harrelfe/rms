@@ -55,12 +55,14 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     else if(length(iaspecial) && iaspecial) term.label
     else if(assume.code == 5) {
       ## Handle explicit catg() as well as implicit
+      ## Use sub to only change the first occurrence; value
+      ## labels may contain = also
       if(substring(term.label, 1, 5) == 'catg(')
-        paste0(term.label, gsub('.*=', '', rmst))
-      else gsub('=', '', rmst)
+        paste0(term.label, sub('.*=', '', rmst))
+      else sub('=', '', rmst)
       }
     else if(assume.code == 8)
-      paste0(term.label, gsub('.*=', '', rmst))
+      paste0(term.label, sub('.*=', '', rmst))
     else if(assume.code == 10)
       if(length(rmst) > 1) gsub('\\[', '', gsub('\\]', '', rmst)) else
              term.label
