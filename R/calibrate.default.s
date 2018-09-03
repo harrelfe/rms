@@ -137,8 +137,10 @@ print.calibrate.default <- function(x, B=Inf, ...)
   invisible()
 }
 
-plot.calibrate.default <- function(x, xlab, ylab, xlim, ylim, legend=TRUE, 
-                                   subtitles=TRUE, scat1d.opts=NULL, ...)
+plot.calibrate.default <-
+  function(x, xlab, ylab, xlim, ylim, legend=TRUE, 
+           subtitles=TRUE, cex.subtitles=.75,
+           riskdist=TRUE, scat1d.opts=list(nhistSpike=200), ...)
 {
   at <- attributes(x)
   if(missing(ylab))
@@ -179,14 +181,17 @@ plot.calibrate.default <- function(x, xlab, ylab, xlim, ylim, legend=TRUE,
         '\n0.9 Quantile of absolute error=',
         round(quantile(abs(err), .9, na.rm=TRUE),3),	   '\n\n', sep='')
     if(subtitles) title(sub=paste('Mean absolute error=', round(mae,3),
-                          ' n=', n, sep=''), cex=.65, adj=1)
-    do.call('scat1d', c(list(x=predicted), scat1d.opts))
+                                  ' n=', n, sep=''),
+                        cex.sub=cex.subtitles, adj=1)
+
+    if(riskdist) do.call('scat1d', c(list(x=predicted), scat1d.opts))
   }
   
   lines(p, p.app, lty=3)
   lines(p, p.cal, lty=1)
   abline(a=0, b=1, lty=2)
-  if(subtitles) title(sub=paste("B=", at$B, "repetitions,", at$method), adj=0)
+  if(subtitles) title(sub=paste("B=", at$B, "repetitions,", at$method),
+                      cex.sub=cex.subtitles, adj=0)
   if(!(is.logical(legend) && !legend)) {
     if(is.logical(legend)) legend <- list(x=xlim[1] + .55*diff(xlim),
                                           y=ylim[1] + .32*diff(ylim))

@@ -12,6 +12,8 @@ Changes in version 5.1-3 (2018-09-02)
    * Design: gave better error message re:ordered factors
    * predictrms: remembered to run scored() when producing design matrix
    * Design: allowed for = in value labels in mmnames.  See github.com/harrelfe/rms/issues/29#issuecomment-417901353
+   * plot.calibrate.default: added cex.subtitles, riskdist options and changed default for scat1d.opts
+   * inst/tests/calibrate.r: new test
 
 Changes in version 5.1-2 (2018-01-06)
    * plot.pentrace: corrected lty for AIC if ! add, interchanged lty for AIC and BIC.  Thanks: Ferenci Tamas

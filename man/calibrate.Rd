@@ -66,7 +66,8 @@ calibrate(fit, \dots)
  scat1d.opts=list(nhistSpike=200), par.corrected=NULL, \dots)
 
 \method{plot}{calibrate.default}(x, xlab, ylab, xlim, ylim,
-  legend=TRUE, subtitles=TRUE, scat1d.opts=NULL, \dots)
+  legend=TRUE, subtitles=TRUE, cex.subtitles=.75, riskdist=TRUE,
+  scat1d.opts=list(nhistSpike=200), \dots)
 }
 \arguments{
 \item{fit}{
