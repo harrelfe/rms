@@ -11,15 +11,10 @@ output:
       collapsed: false
     code_folding: hide
     theme: cerulean
-css: stewarttoc.css
 ---
-<button id="toc-toggle" type="button" class="btn btn-default btn-xs code-folding-btn pull-right collapsed" onclick="toggletoc()"><span>Outline</span></button>
-
-<script>
-function toggletoc(){
-$("#TOC").toggle();
-}
-</script>
+<!--
+To copy html output of server: cpaws examples.html R/rms/
+-->
 
 # Introduction
 ## Markdown
@@ -30,6 +25,10 @@ require(rms)
 knitrSet(lang='markdown')
 ```
 
+The following (<code>r hidingTOC(buttonLabel="Outline")</code>) uses the Hmisc `hidingTOC` function to define HTML styles related to a floating table of contents that can be minimized or be collapsed to major outline levels.  For more details see [this](http://biostat.mc.vanderbilt.edu/KnitrHtmlTemplate).
+
+`r hidingTOC(buttonLabel="Outline")`
+
 # Data {.tabset}
 ## Setup
 ```{r t3}
@@ -38,6 +37,8 @@ mu <- markupSpecs$html   # markupSpecs is in Hmisc
 subtext <- mu$subtext
 code    <- mu$code
 ```
+
+
 ## Data Dictionary
 ```{r ddict}
 html(contents(titanic3), maxlevels=10, levelType='table')
@@ -100,8 +101,3 @@ survplotp(f, time.inc=1, times=c(5, 10), fun=function(y) 1 - y)
 
 # Computing Environment
 `r mu$session()`
-
-
-<!---
-To update html notebook on the server: cdatar examples.html rms
--->
