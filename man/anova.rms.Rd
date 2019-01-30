@@ -211,6 +211,9 @@ which the statistics in the vector are calculated.
 If the statistics being plotted with \code{plot.anova.rms} are few in
 number and one of them is negative or zero, \code{plot.anova.rms}
 will quit because of an error in \code{dotchart2}.
+
+The \code{latex} method requires LaTeX packages \code{relsize} and
+\code{needspace}.
 }
 \author{
 Frank Harrell\cr
