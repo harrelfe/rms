@@ -129,6 +129,9 @@ survplot.npsurv <-
   if(n.risk | (conf.int > 0 & conf == "bars")) {
     stime <- seq(mintime, maxtime, time.inc)
     v <- convert(summary(fit.orig, times=stime, print.it=FALSE))
+    v$surv  <- fun(v$surv)
+    v$lower <- fun(v$lower)
+    v$upper <- fun(v$upper)
     vs <- if(ns > 1) as.character(v$strata)
     ## survival:::summary.survfit was not preserving order of strata levels
   }
