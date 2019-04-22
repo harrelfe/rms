@@ -229,6 +229,7 @@ bj.fit(x, y, control)
   \code{\link{prModFit}}, \code{\link{dxy.cens}}
 }
 \examples{
+suppressWarnings(RNGversion("3.5.0"))
 set.seed(1)
 ftime  <- 10*rexp(200)
 stroke <- ifelse(ftime > 10, 0, 1)

@@ -78,6 +78,7 @@ f.harrell@vanderbilt.edu
 \code{\link{predict.rms}}, \code{\link{rms}}, \code{\link{rms.trans}} 
 }
 \examples{
+suppressWarnings(RNGversion("3.5.0"))
 set.seed(1331)
 x1 <- exp(rnorm(100))
 x2 <- factor(sample(c('a','b'),100,rep=TRUE))
