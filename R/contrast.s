@@ -125,7 +125,7 @@ contrast.rms <-
                 dimnames=list(NULL, dimnames(X)[[2]]))
 
   est <- matxv(X, betas)
-  v <- X %*% vcov(fit, regcoef.only=FALSE) %*% t(X)
+  v <- X %*% vcov(fit, regcoef.only=TRUE) %*% t(X)
   ndf <- if(is.matrix(v)) nrow(v) else 1
   se <- as.vector(if(ndf == 1) sqrt(v) else sqrt(diag(v)))
   Z <- est / se

@@ -1,4 +1,4 @@
-Changes in version 5.1-4 (2019-04-22)
+Changes in version 5.1-4 (2019-05-25)
    * anova.rms: added which LaTeX packages are needed in help page
 	 * survplot.npsurv: added use of fun for conf type bars.  Thanks: Joonas Lehto
    * made rms dependent on Hisc 4.2-0 or later
