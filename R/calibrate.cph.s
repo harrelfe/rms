@@ -52,7 +52,8 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
   }
   if(cmethod=='KM' && missing(cuts)) {
     g <- max(1, floor(length(xb) / m))
-    cuts <- quantile(c(0, 1, survival), seq(0, 1, length=g + 1), na.rm=TRUE)
+    cuts <- unique(quantile(c(0, 1, survival), seq(0, 1, length=g + 1),
+                            na.rm=TRUE))
   }
   if(cmethod=='hare') cuts <- NULL
   else pred <- NULL
