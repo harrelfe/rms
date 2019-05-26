@@ -24,7 +24,6 @@ coef(f) - coef(g)
 f
 g
 
-P
 Predict(f, bmi=20, offset=list(wtpre=5))   # 4.849534
 d <- data.frame(bmi=20, wtpre=5)
 predict(f, d)       # 4.849534
