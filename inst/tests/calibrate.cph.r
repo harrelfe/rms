@@ -1,11 +1,12 @@
 ## Eduwin Pakpahan <epakpahan@gmail.com>
 
-library(rms)
-library(haven)
+require(rms)
+require(haven)
 
 d <- read_dta("pakpahan.dta")
 
-fit <- cph(Surv(data_dftime, data_demfu) ~ data_age, ties="breslow", data=d, surv=TRUE, x=T, y=T, time.inc=1200)
+fit <- cph(Surv(data_dftime, data_demfu) ~ data_age, ties="breslow", data=d,
+           surv=TRUE, x=T, y=T, time.inc=1200)
 fit
 
 cal <- calibrate(fit, u=1200, B=120)
