@@ -764,7 +764,7 @@ demo(all, 'rms')
   Harrell FE (2009): rms: S functions for
   biostatistical/epidemiologic modeling, testing,
   estimation, validation, graphics, and prediction.
-  Programs available from \url{biostat.mc.vanderbilt.edu/rms}.
+  Programs available from \url{http://biostat.mc.vanderbilt.edu/rms}.
   Be sure to reference other packages used as well as 
   \R itself.
 }
