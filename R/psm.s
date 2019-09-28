@@ -38,6 +38,7 @@ psm <- function(formula=formula(data),
   
   weights <- model.extract(m, 'weights')
   Y <- model.extract(m, "response")
+  Ysave <- Y
   
   ## Start FEH
   atY <- attributes(Y)
@@ -234,9 +235,9 @@ psm <- function(formula=formula(data),
   fit$assign <- DesignAssign(atr, 1, Terms)
   fit$formula <- formula
   if(y) {
-    class(Y) <- 'Surv'
-    attr(Y, 'type') <- atY$type
-    fit$y <- Y
+    class(Ysave) <- 'Surv'
+    attr(Ysave, 'type') <- atY$type
+    fit$y <- Ysave
   }
   scale.pred <-
     if(dist %in% c('weibull','exponential','lognormal','loglogistic'))
@@ -260,7 +261,8 @@ psm <- function(formula=formula(data),
   names(stats) <- c("Obs", "Events", "Model L.R.", "d.f.", "P",
                     "R2", "Dxy", "g", "gr")
   if(length(weights)) stats <- c(stats, 'Sum of Weights'=sum(weights))
-  fit <- c(fit, list(stats=stats, maxtime=maxtime, units=time.units,
+  fit <- c(fit, list(stats=stats, weights=weights,
+                     maxtime=maxtime, units=time.units,
                      time.inc=time.inc, scale.pred=scale.pred,
                      non.slopes=1, Design=atr, fail=FALSE))
   class(fit) <-
@@ -324,13 +326,21 @@ residuals.psm <-
   function(object,
            type=c("censored.normalized",
              "response", "deviance","dfbeta","dfbetas", 
-             "working","ldcase","ldresp","ldshape", "matrix"), ...) {
+             "working","ldcase","ldresp","ldshape", "matrix", "score"), ...) {
   type <- match.arg(type)
   if(type != 'censored.normalized') {
-    if(type == 'score')
-      stop('score residuals not implemented')
-    ## TODO
-    return(getS3method('residuals', 'survreg')(object, type=type))
+    r <- getS3method('residuals', 'survreg')
+    s <- if(type == 'score') {
+      X <- cbind('(Intercept)'=1, object$x)
+      if(! length(X)) stop('did not use x=T with fit')
+      wts <- object$weights
+      if(! length(wts)) wts <- 1
+      res <- r(object, type='matrix')
+      s <- as.vector(res[, 'dg']) * wts * X
+      if(NROW(object$var) > length(coef(object)))
+        s <- cbind(s, 'Log(scale)'=unname(res[,'ds']))
+    } else r(object, type=type)
+    return(s)
   }
   
   y <- object$y
