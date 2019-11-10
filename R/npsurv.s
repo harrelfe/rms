@@ -27,9 +27,10 @@ npsurv <- function(formula, data, subset, na.action, ...)
 
   f$numevents <- if(inherits(f, 'survfitms')) {
     ## competing risk data; survfit.formula forgot to compute
-    ## number of events for each state.  ??Todo see if with survival 2.40
+    ## number of events for each state
     states <- attr(Y, 'states')
-    state  <- factor(Y[, 'status'], 0 : length(states), c('censor', states))
+    state  <- factor(Y[, 'status'], 0 : length(states),
+                     attr(Y, 'inputAttributes')$event$levels)                   #                                    c('censor', states))
     table(strat, state)
   }
   else tapply(Y[, 'status'], strat, sum, na.rm=TRUE)

@@ -121,9 +121,12 @@ survplotp.npsurv <-
         f$lower   <- 1 - f$lower  [, istate]
         f$upper   <- 1 - f$upper  [, istate]
         f$std.err <-     f$std.err[, istate]
-        f$n.risk  <-     f$n.risk[, ncol(f$n.risk)]
+        icens     <- which(states == '(s0)')
+        if(! length(icens))
+          stop('Program logic error: did not find (s0) column with competing risks')
+        f$n.risk  <- f$n.risk[, icens]
         if(all(f$n.risk == 0))
-          stop('expected n.risk to be last column of n.risk matrix for competing risks')
+          stop('program logic error: all n.risk are zero')
         f
       }
       formals(conv) <- list(f=NULL, istate=istate)

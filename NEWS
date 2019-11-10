@@ -1,4 +1,4 @@
-Changes in version 5.1-4 (2019-09-28)
+Changes in version 5.1-4 (2019-11-10)
    * anova.rms: added which LaTeX packages are needed in help page
 	 * survplot.npsurv: added use of fun for conf type bars.  Thanks: Joonas Lehto
    * made rms dependent on Hisc 4.2-0 or later
@@ -6,7 +6,7 @@ Changes in version 5.1-4 (2019-09-28)
    * calibrate.cph: subset cuts to unique values.  Thanks: Eduwin Pakpahan <epakpahan@gmail.com>
    * psm: stored original Y if y=TRUE
    * residuals.psm: implemented type='score' (used by robcov)
-
+   * depend on survival >= 3.1-6 and use survival's new coding of reference (censoring) event for competing risk models
    
 Changes in version 5.1-3 (2019-01-27)
    * lrm: when lrm.fit fails, don't stop altogether but print warning and return fit with fail=TRUE
