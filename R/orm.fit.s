@@ -360,7 +360,9 @@ ormfit <- function(x, y, kint, nx, initial, offset, penmat=NULL,
                     u=double(p), v=double(l), ja=integer(l), ia=integer(lia),
                     l=as.integer(l), lia=lia, integer(p))
       U <-  w$u
-      V <- if(any(is.nan(w$v))) NULL else {  ## assume step-halving happens
+      ## if any element of w$v is a NaN then return that the fitting attempt
+      ## has failed
+      V <- if(any(is.nan(w$v))) return(list(fail=TRUE)) else {  ## assume step-halving happens
         V <- if(kint == 1L) matrix(w$v, nrow=p, ncol=p)
         else new('matrix.csr', ra=w$v, ja=w$ja, ia=w$ia, dimension=c(p, p))
         V <- (V + t(V))/2.   # force symmetry; chol() complains if 1e-15 off

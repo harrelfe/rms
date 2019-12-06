@@ -77,7 +77,7 @@ Survival(object, \dots)
 
 \method{residuals}{psm}(object, type=c("censored.normalized",
 "response", "deviance", "dfbeta",
-"dfbetas", "working", "ldcase", "ldresp", "ldshape", "matrix"), \dots)
+"dfbetas", "working", "ldcase", "ldresp", "ldshape", "matrix", "score"), \dots)
 
 \method{survplot}{residuals.psm.censored.normalized}(fit, x, g=4, col, main, \dots)
 
@@ -152,7 +152,7 @@ lwd=3, \dots)
     type of residual desired.  Default is censored normalized residuals,
     defined as (link(Y) - linear.predictors)/scale parameter, where the
     link function was usually the log function.  See \code{survreg} for other
-    types.
+    types.  \code{type="score"} returns the score residual matrix.
   }
   \item{n}{
     number of points to evaluate theoretical standardized survival
