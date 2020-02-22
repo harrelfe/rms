@@ -717,7 +717,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
   }
 
   catl  <- function(x, skip=1, bold=FALSE, verb=FALSE, pre=0,
-                    center=TRUE, indent=FALSE) {
+                    center=FALSE, indent=FALSE) {
     if(lang == 'latex') {
       if(verb)
         c('\\begin{verbatim}', skipt(pre),
