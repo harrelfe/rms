@@ -349,8 +349,8 @@ residuals.psm <-
   ncy <- ncol(y)
   scale <- object$scale
   dist  <- object$dist
-  
-  r <- (y[, -ncy, drop=FALSE] - object$linear.predictors) / scale
+  trans <- survreg.distributions[[dist]]$trans
+  r <- (trans(y[, -ncy, drop=FALSE]) - object$linear.predictors) / scale
   label(r) <- 'Normalized Residual'
   ev <- y[, ncy]
   lab <- aty$inputAttributes$event$label

@@ -1,6 +1,7 @@
-Changes in version 5.1-5 (2020-02-22)
+Changes in version 5.1-5 (2020-02-23)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)
    * prModFit: changed default in catl function to center=FALSE
+   * residuals.psm: added transformation of survival time when computing censored normalized residuals
 
 Changes in version 5.1-4 (2019-11-16)
    * anova.rms: added which LaTeX packages are needed in help page
