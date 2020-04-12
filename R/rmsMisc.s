@@ -793,18 +793,40 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
       R <- c(R, prStats(obj[[1]], obj[[2]], lang=lang))
     } else if(type == 'coefmatrix') {
       if(coefs) {
-        errordf <- obj$errordf
-        beta <- obj$coef
-        se   <- obj$se
-        Z    <- beta / se
-        P    <- if(length(errordf)) 2 * (1 - pt(abs(Z), errordf))
-                else
-                  1 - pchisq(Z ^ 2, 1)
         pad <- function(x)
           switch(lang, 
                  latex = paste0('~', x, '~'),
                  html  = paste0(nbsp, x),
                  plain  = x)
+        betan <- switch(lang,
+                        plain = 'Beta',
+                        html  = htmlGreek('beta'),
+                        latex = '$\\hat{\\beta}$')
+                        
+        B   <- obj$bayes
+        if(length(B)) {
+          U <- matrix('', nrow=nrow(B), ncol=ncol(B))
+          for(i in 1:ncol(B)) {
+            dig <- if(colnames(B)[i] == 'Symmetry') 2 else digits
+            U[, i] <- pad(formatNP(B[, i], dig, lang=lang))
+          }
+          pn <- switch(lang, plain='Pr(Beta>0)',
+                       html = paste0('Pr(', betan, htmlTranslate('>'), '0)'),
+                       latex = 'Pr$(\\beta>0)$')
+          colnames(U) <- c(paste('Mean', betan), paste('Median', betan),
+                           'S.E.', 'Lower', 'Upper', pn, 'Symmetry')
+          rownames(U) <- rownames(B)
+          betanames   <- rownames(B)
+        }
+        else  {
+        errordf <- obj$errordf
+        beta <- obj$coef
+        betanames <- names(beta)
+        se   <- obj$se
+        Z    <- beta / se
+        P    <- if(length(errordf)) 2 * (1 - pt(abs(Z), errordf))
+                else
+                  1 - pchisq(Z ^ 2, 1)
 
         U    <- cbind('Coef' =
                         pad(formatNP(beta, digits, lang=lang)),
@@ -830,18 +852,19 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                                                 vbar, ')')),
                    plain = c('t',   'Pr(>|t|)') )
 
-        rownames(U) <- names(beta)
+        rownames(U) <- betanames
 
         if(length(obj$aux)) {
           U <- cbind(U, formatNP(obj$aux, digits, lang=lang))
           colnames(U)[ncol(U)] <- obj$auxname
         }
+        }
         if(lang %in% c('latex', 'html')) {
           R <- c(R, skipt(1))
           rownames(U) <- if(lang == 'latex')
-                           latexTranslate(names(beta))
+                           latexTranslate(betanames)
                          else
-                           htmlTranslate(names(beta))
+                           htmlTranslate(betanames)
           
           if(is.numeric(coefs)) {
             U <- U[1:coefs,,drop=FALSE]

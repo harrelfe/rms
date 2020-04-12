@@ -1,6 +1,9 @@
 Function.rms <- function(object, intercept=NULL,
-                         digits=max(8,.Options$digits), ...)
+                         digits=max(8,.Options$digits),
+                         posterior.summary=c('mean', 'median'), ...)
 {
+  posterior.summary <- match.arg(posterior.summary)
+  
   oldopt <- options('digits')
   options(digits=digits)
   on.exit(options(oldopt))
@@ -14,6 +17,10 @@ Function.rms <- function(object, intercept=NULL,
   pm        <- length(name.main)
   adj.to    <- Getlim(at, allow.null=TRUE, need.all=TRUE)$limits['Adjust to',]
 
+  draws <- object$draws    # uses coef.rmsb if Bayesian
+  Coef <- if(length(draws)) coef(object, stat=posterior.summary)
+          else
+            object$coef
 
   chr <- function(y, digits) if(is.factor(y) || is.character(y)) 
     paste('"',as.character(y),'"',sep='') else formatSep(y, digits)
@@ -145,11 +152,10 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
   }
   
 
-  Coef <- object$coef
   if(nrp==1 | length(intercept))
     {
       cof <- if(!length(intercept))formatSep(Coef[1],digits) else 
-      formatSep(intercept,digits)
+      formatSep(intercept, digits)
       z <- paste(z, cof, sep='')
     }
   

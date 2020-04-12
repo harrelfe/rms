@@ -220,9 +220,10 @@ predict.ols <-
            na.action=na.keep, expand.na=TRUE, center.terms=type=="terms", ...)
   {
     type <- match.arg(type)
-    predictrms(object, newdata, type, se.fit, conf.int, conf.type,
-               kint=kint,
-               na.action, expand.na, center.terms, ...)
+    predictrms(object, newdata, type=type, se.fit=se.fit, conf.int=conf.int,
+               conf.type=conf.type,  kint=kint,
+               na.action=na.action, expand.na=expand.na,
+               center.terms=center.terms, ...)
   }
 
 print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,

@@ -1,7 +1,17 @@
-Changes in version 5.1-5 (2020-02-23)
+Changes in version 6.0-0 (2020-04-09)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)
    * prModFit: changed default in catl function to center=FALSE
    * residuals.psm: added transformation of survival time when computing censored normalized residuals
+   * added SUGGESTS for rstan
+   * added utility functions for rstan: stanDx, stanGet, coef.rmsb, vcov.rmsb, print.rmsb, stanCompile (fetches Stan code from github.com/harrelfe/stan and compiles it to a central place on your machine)
+   * new function blrm for Bayesian binary and ordinal logistic regression along the lines of rms::lrm
+   * new function blrmStats to compute posterior distributions and credible intervals for several predictive accuracy measures for blrm including Dxy (which is easily translated to c-index (= AUROC in binary Y case), Brier score, and measures of explained variation; print method print.blrmStats also added
+   * modified predictrms and contrast.rms for Bayesian calculations, adding new argument posterior.summary for predictrms and Predict
+   * enhanced anova.rms for approximate relative explained variation measures for Bayesian models
+   * extended Function.rms to use posterior mean/median coefficients
+   * new function PostF to generate an R function that computes posterior probabilities of assertions
+   * added stanDxplot and plot methods for Bayesian fits
+   * extended nomogram to use posterior mean or median parameter values
 
 Changes in version 5.1-4 (2019-11-16)
    * anova.rms: added which LaTeX packages are needed in help page

@@ -1,0 +1,185 @@
+--- 
+title: "`rms::blrm` Examples"
+author: "Frank Harrell"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: no
+    code_folding: show
+    theme: yeti
+description: "`blrm` Examples"
+---
+
+`blrm` is for Bayesian binary and ordinal proportional odds logistic regression.  It is the analog of `rms::lrm` and for ordinal responses is intended for outcomes with up to a few dozen ordinal levels.  `blrm` uses precompiled Stan code written by Ben Goodrich of Columbia University.
+
+```{r setup}
+require(rms)
+knitrSet(lang='markdown', w=7, h=7, fig.path='png/')
+options(mc.cores = parallel::detectCores())   # use max # CPUs
+options(stancompiled='~/R/stan', prType='html')
+# Run the following once to store compiled Stan code in a central
+# place for all projects
+# stanCompile('~/R/stan')
+```
+
+Simulate a dataset with three predictors and one 10-level ordinal outcome.  Run the frequentist proportional odds model then the Bayesian one.
+
+```{r sim,results='asis'}
+set.seed(1)
+n <- 500
+x1 <- runif(n, -1, 1)
+x2 <- runif(n, -1, 1)
+x3 <- sample(0 : 1, n, TRUE)
+y <- x1 + 0.5 * x2 + x3 + rnorm(n)
+y <- as.integer(cut2(y, g=10))
+dd <- datadist(x1, x2, x3); options(datadist='dd')
+f <- lrm(y ~ x1 + pol(x2, 2) + x3, eps=1e-7) # eps to check against rstan
+f
+```
+
+Before getting posterior distributions of parameters, use `rstan` to just get maximum likelihood estimates and compare them with those from `lrm`.  Do this for increasingly flat priors for the $\beta$s.  The default prior SD for `blrm` is 100.  Running `method='optimizing'` is a quick way to study the effect of priors on the posterior modes for non-intercepts.  It is also a good way to get a sense of the scaling of parameters used in the actual calculations.  Except for the last parameter in the model, prior standard deviations apply to the QR orthonormalized version of the design matrix.  The magnitude of maximum (penalized) maximum likelihood estimates on the QR transformed scale ($\theta$s) can be compared to magnitudes of parameter estimates on the original scale by comparing the `blrm` returned object `coefficients` with the returned object `theta` when `method='optimizing'`.
+
+```{r stanmle}
+for(psd in c(0.25, 1, 10, 100, 10000)) {
+	cat('\nPrior SD:', psd, '\n')
+	g <- blrm(y ~ x1 + pol(x2, 2) + x3, method='optimizing', priorsd=psd)
+	cat('-2 log likelihood:', g$deviance, '\n')
+	print(g$coefficients)
+}
+# Compare with ordinary MLEs and deviance
+f$deviance
+coef(f)
+
+# For the last model fitted with blrm compare the point estimates on the
+# QR decomposition scale with those on the original scale
+g$theta
+g$coefficients[10:13]
+```
+
+Fit the model with Dirichlet priors on intercepts and wide normal priors on the $\beta$s.  Show the model fit summary.  Note that the indexes of predictive discrimination/accuracy include 0.95 credible intervals.  In frequentist inference we pretend that quantities such as AUROC and $R^2$ are estimated without error, which is far from the case.
+
+In several places you will see an index named `Symmetry`.  This is a measure of the symmetry of a posterior distribution.  Values farther from 1.0 indicate asymmetry, which indicates that the use of standard errors of posterior means/medians and the use of a normal approximation for the posterior distribution are not justified.  The symmetry index is the ratio of the gap between the posterior mean and the 0.95 quantile of the posterior distribution to the gap between the 0.05 quantile and the mean.
+
+```{r blrmsim,results='asis'}
+g <- blrm(y ~ x1 + pol(x2, 2) + x3, x=TRUE, y=TRUE)
+g
+```
+
+```{r blrmStats}
+# Show more detailed analysis of model performance measures
+blrmStats(g, pl=TRUE)
+```
+
+Show basic Stan diagnostics. Intercepts are shifted from what is in `g` because of subtractions of covariate means before passing data to `rstan`.
+
+```{r standx}
+stanDxplot(g)
+stanDx(g)
+```
+
+Here are the posterior distributions, calculated using kernel density estimates from posterior draws.
+
+```{r stanpost}
+plot(g)    # invokes rstan::stan_dens, defaults to showing betas
+
+# Print frequentist side-by-side with Bayesian posterior mean, median, mode
+# `draws` object in g is for the original data scale
+
+cbind(MLE=coef(f), 'Post Mean'=coef(g), 'Post Median'=coef(g, 'median'),
+			'Post Mode'=coef(g, 'mode'))
+
+# Compare covariance matrix of posterior draws with MLE
+round(diag(vcov(f)) / diag(vcov(g)), 2)
+range(vcov(f) / vcov(g))
+```
+
+Next show frequentist and Bayesian contrasts.  For the Bayesian contrast the point estimate is the posterior mean, and the 0.95 credible interval is computed.  Instead of a p-value, the posterior probability that the contrast is positive is computed.
+
+```{r contrast}
+contrast(f, list(x1=0, x3=1), list(x1=.25, x3=0))
+contrast(g, list(x1=0, x3=1), list(x1=.25, x3=0))
+```
+
+Compute posterior probabilities for various assertions about unknown true parameter values.  The `PostF` function is a function generator that effectively evaluates the assertion to a 0/1 value and computes the mean of these binary values over posterior draws. 
+
+```{r postprobs}
+P <- PostF(g, pr=TRUE)   # show new short legal R names
+P(b3 > 0 & b1 > 1.5)
+P(b3 > 0)
+P(abs(b3) < 0.25)        # evidence for small |nonlinearity|
+mean(g$draws[, 'x2^2'] > 0)    # longhand calculation
+P <- PostF(g, name='orig')
+P(`x2^2` > 0)
+P(`x2^2` > 0 & x1 > 1.5)
+
+# Remove rstan results from g when finished with diagnostics
+s1 <- format(object.size(g), 'MB')
+g$rstan <- NULL
+s2 <- format(object.size(g), 'MB')
+cat('Before:', s1, '  After:', s2, '\n')
+```
+
+Turn to the `support` dataset and fit a binary logistic model to predict the probability of in-hospital death of critically ill adults.
+`blrm` keeps posterior sampling efficient by orthonormalizing the design matrix before doing the sampling (this is done internally in the Stan code).  This allows for arbitrary collinearities, for example in the basis functions used in restricted cubic splines.  When there are such collinearities, expect to see some disagreements in estimates between `blrm` and `lrm`, because the latter does not do orthonormalization (only normalization to mean 0 variance 1).  Collinearity implies that there are many different solutions to the equations, all giving almost the same predicted values.
+
+```{r support,results='asis'}
+getHdata(support)
+dd <- datadist(support); options(datadist='dd')
+f <- lrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5),
+				 data=support, eps=1e-4, x=TRUE)
+f
+htmlVerbatim(Function(f))
+g <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
+					x=TRUE, y=TRUE, data=support)
+g
+htmlVerbatim(Function(g))   # by default uses posterior mean parameter values
+
+htmlVerbatim(stanDx(g))
+stanDxplot(g)
+plot(g)
+```
+Show approximate relative explained variation (REV) and compare this with Wald statistics from the frequentist `lrm` model.  REV is less accurate the more the multivariate posterior distribution differs from a multivariate normal distribution.  On a given posterior draw, REV for a term in the model is the Wald $\chi^2$ statistic divided by the Wald statistic for the whole model.
+
+```{r rev,results='asis'}
+anova(g)
+anova(f)
+```
+Compute odds ratios over default inter-quartile ranges for continuous predictors, based on posterior mean parameters.  Also show 0.95 credible intervals.  Note that unlike the `print` method, the `plot` method for `summary` doesn't actually compute credible intervals, but approximates them by assuming normality and using the standard deviation of the posterior samples.  Compute the plot with the ordinary `lrm` result.
+
+```{r summary, results='asis'}
+s <- summary(g)
+s
+plot(s)
+plot(summary(f))
+```
+
+Draw partial effect plots with 0.95 credible intervals.  Point estimates are posterior means.
+
+```{r peffect}
+ggplot(Predict(g))
+```
+
+Draw a nomogram from posterior mean parameter values.
+
+```{r nomogram}
+p <- nomogram(g, fun=plogis, funlabel='P(death)')
+plot(p)
+```
+For comparison here is a nomogram based on maximum likelihood estimates of parameters rather than posterior means.
+
+```{r nomfreq}
+plot(nomogram(f, fun=plogis, funlabel='P(death)'))
+```
+
+Simulate a two-sample situation for a rare outcome to study shape of posterior distribution of the log odds ratio.
+
+```{r sim2,results='asis'}
+set.seed(11)
+n <- 2000
+x <- c(rep(0, n/2), rep(1, n/2))
+L <- -4.2 + 0.8 * x
+y <- ifelse(runif(n) <= plogis(L), 1, 0)
+f <- blrm(y ~ x, x=TRUE, y=TRUE, iter=3000)
+f
+plot(f)
+```

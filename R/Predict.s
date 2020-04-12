@@ -5,6 +5,7 @@ Predict <-
            conf.int=.95,
            conf.type=c('mean', 'individual', 'simultaneous'),
            usebootcoef=TRUE, boot.type=c('percentile', 'bca', 'basic'),
+           posterior.summary=c('mean', 'median'),
            adj.zero=FALSE, ref.zero=FALSE,
            kint=NULL, time=NULL, loglog=FALSE, digits=4, name, factors=NULL,
            offset=NULL)
@@ -14,6 +15,11 @@ Predict <-
   type      <- match.arg(type)
   conf.type <- match.arg(conf.type)
   boot.type <- match.arg(boot.type)
+  posterior.summary <- match.arg(posterior.summary)
+  draws     <- x$draws
+  bayes     <- length(draws) > 0
+  if(bayes && conf.type == 'simultaneous')
+    stop('conf.type simultaneous does not work for Bayesian models')
   
   oldopt <- options('digits')
   options(digits=digits)
@@ -197,7 +203,7 @@ Predict <-
   if(! length(time)) {
     xx <- predictrms(fit, settings, kint=kint,
                      conf.int=conf.int, conf.type=conf.type,
-                     ref.zero=ref.zero)
+                     ref.zero=ref.zero, posterior.summary=posterior.summary)
     if(length(attr(xx, "strata")) && any(is.na(attr(xx, "strata"))))
       warning("Computed stratum NA.  Requested stratum may not\nexist or reference values may be illegal strata combination\n")
     
@@ -206,7 +212,8 @@ Predict <-
     xb <- if(is.list(xx)) xx$linear.predictors else xx
     if(bootdone) {
       X <- predictrms(fit, settings, kint=kint,
-                      ref.zero=ref.zero, type='x')
+                      ref.zero=ref.zero, type='x',
+                      posterior.summary=posterior.summary)
       pred <- t(matxv(X, boot.Coef,
                       kint=kint,  bmat=TRUE))
       if(isMean) {
@@ -220,8 +227,18 @@ Predict <-
       if(! is.matrix(lim)) lim <- as.matrix(lim)
       xx$lower <- lim[1L, ]
       xx$upper <- lim[2L, ]
-    }
-  }
+    }    # end if(bootdone)
+    if(bayes) {
+      X <- predictrms(fit, settings, kint=kint,
+                      ref.zero=ref.zero, type='x',
+                      posterior.summary=posterior.summary)
+      pred <- t(matxv(X, draws, kint=kint,  bmat=TRUE))
+      alp  <- 1. - conf.int
+      lim  <- apply(pred, 2, quantile, probs=c(alp, 1. - alp))
+      xx$lower <- lim[1L, ]
+      xx$upper <- lim[2L, ]
+      }
+  }      # if(! length(time))
   else {   ## time specified
     if(bootdone)
       stop('time may not be specified if bootcov was used with coef.reps=TRUE')

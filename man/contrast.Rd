@@ -25,6 +25,10 @@ the latter case, you can specify \code{type="average"} and an optional
 The design contrast matrix computed by \code{contrast.rms} can be used
 by other functions.
 
+When the model was fitted by a Bayesian function such as \code{blrm},
+credible intervals for contrasts are computed instead, along with the
+posterior probability that the contrast is positive.
+
 \code{contrast.rms} also allows one to specify four settings to
 contrast, yielding contrasts that are double differences - the
 difference between the first two settings (\code{a} - \code{b}) and the
@@ -60,6 +64,7 @@ contrast(fit, \dots)
          type=c("individual", "average", "joint"),
          conf.type=c("individual","simultaneous"), usebootcoef=TRUE,
          boot.type=c("percentile","bca","basic"),
+         posterior.summary=c('mean', 'median'),
          weights="equal", conf.int=0.95, tol=1e-7, expand=TRUE, \dots)
 
 \method{print}{contrast.rms}(x, X=FALSE, fun=function(u)u, jointonly=FALSE, \dots)
@@ -120,12 +125,15 @@ and no averaging.
   coefficients), specify \code{usebootcoef=FALSE}.}
 \item{boot.type}{set to \code{'bca'} to compute BCa confidence
 	limits or \code{'basic'} to use the basic bootstrap.  The default is
-	to compute percentile intervals} 
+	to compute percentile intervals}
+\item{posterior.summary}{By default the posterior mean is usedd.
+	Specify \code{posterior.summary='median'} to instead use the posterior median.}
 \item{weights}{
 a numeric vector, used when \code{type="average"}, to obtain weighted contrasts
 }
 \item{conf.int}{
-confidence level for confidence intervals for the contrasts
+confidence level for confidence intervals for the contrasts (credible
+interval probability for Bayesian analyses)
 }
 \item{tol}{tolerance for \code{qr} function for determining which
   contrasts are redundant, and for inverting the covariance matrix

@@ -1,12 +1,12 @@
 Package: rms
-Version: 5.1-5
-Date: 2019-02-23
+Version: 6.0-0
+Date: 2020-04-09
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Maintainer: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Depends: R (>= 3.5.0), Hmisc (>= 4.3-0), survival (>= 3.1-6), lattice, ggplot2 (>= 2.2), SparseM
 Imports: methods, quantreg, rpart, nlme (>= 3.1-123), polspline, multcomp, htmlTable (>= 1.11.0), htmltools
-Suggests: boot, tcltk, plotly (>= 4.5.6)
+Suggests: boot, tcltk, plotly (>= 4.5.6), rstan
 Description: Regression modeling, testing, estimation, validation,
 	graphics, prediction, and typesetting by storing enhanced model design
 	attributes in the fit.  'rms' is a collection of functions that
@@ -20,7 +20,8 @@ Description: Regression modeling, testing, estimation, validation,
 	models, Cox regression, accelerated failure time models,
 	ordinary linear models,	the Buckley-James model, generalized least
 	squares for serially or spatially correlated observations, generalized
-	linear models, and quantile regression.
+	linear models, and quantile regression.  Bayesian methods are implemented for b inary and ordinal logistic regression.
 License: GPL (>= 2)
 URL: http://biostat.mc.vanderbilt.edu/rms
 LazyLoad: yes
+RoxygenNote: 7.1.0

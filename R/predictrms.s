@@ -11,10 +11,21 @@ predictrms <-
            conf.type=c('mean', 'individual', 'simultaneous'),
            kint=NULL,
            na.action=na.keep, expand.na=TRUE,
-           center.terms=type=="terms", ref.zero=FALSE, ...)
+           center.terms=type=="terms", ref.zero=FALSE,
+           posterior.summary=c('mean', 'median'), ...)
 {
-  type <- match.arg(type)
-  conf.type <- match.arg(conf.type)
+  type              <- match.arg(type)
+  conf.type         <- match.arg(conf.type)
+  posterior.summary <- match.arg(posterior.summary)
+  
+  draws <- fit$draws
+  bayes <- length(draws) > 0
+  if(bayes && conf.type == 'simultaneous')
+    stop('conf.type simultaneous not supported for Bayesian models')
+  if(bayes && se.fit) {
+    warning('se.fit ignored for Bayesian models')
+    se.fit <- FALSE
+    }
   if(conf.type == 'simultaneous') {
     ## require(multcomp)
     if(missing(newdata) || ! length(newdata))
@@ -38,10 +49,15 @@ predictrms <-
 
   parms   <- at$parms
   name    <- at$name
-  coeff   <- fit$coefficients
+  coeff   <- if(bayes)
+               switch(posterior.summary,
+                      mean   = colMeans(draws),
+                      median = apply(draws, 2, median))
+             else
+               fit$coefficients
   nrp     <- num.intercepts(fit)
   nrpcoef <- num.intercepts(fit, 'coef')
-  if(! length(kint)) kint <- fit$interceptRef  # orm or lrm otherwise NULL
+  if(! length(kint)) kint <- fit$interceptRef  # orm, lrm, blrm otherwise NULL
 
   int.pres <- nrp > 0L
 
@@ -59,7 +75,7 @@ predictrms <-
   on.exit({options(contrasts=oldopts$contrasts)
            options(Design.attr=NULL)})
 
-  ## Formula without resposne variable any offsets:
+  ## Formula without response variable any offsets:
   formulano <- removeFormulaTerms(fit$sformula, which='offset',
                                   delete.response=TRUE)
 
@@ -283,7 +299,7 @@ predictrms <-
     }   # end !length(X)
     else strata <- attr(X, "strata")
   }   # if(end adj.to adj.to.data.frame)
-  if(somex) {
+  if(somex && ! bayes) {
     cov <- vcov(fit, regcoef.only=TRUE, intercepts=kint)
     covnoint <- if(nrp == 0) cov
                  else 
@@ -303,6 +319,13 @@ predictrms <-
     if(somex) {
       xb <- matxv(X, coeff, kint=kint) - Center + offset
       names(xb) <- rnam
+      if(bayes && conf.int) {
+        xB <- matxv(X, draws, kint=kint, bmat=TRUE)
+        alp <- (1. - conf.int) / 2.
+        xB <- apply(xB, 1, quantile, probs=c(alp, 1. - alp))  #?
+        lower <- xB[, 1]
+        upper <- xB[, 2]
+        }
     }
     else {
       xb <- if(offpres) offset else numeric(0)
@@ -328,21 +351,24 @@ predictrms <-
         if(! length(adjto)) adjto <- Adjto(type)
         X <- X - rep(adjto, rep.int(n, p))
       }
-      se <- drop(if(ref.zero || nrp == 0L)
-                 sqrt(((X %*% covnoint) * X) %*% rep(1L, ncol(X)))
-                 else {
-                  Xx <- cbind(Intercept=1., X)
-                  sqrt(((Xx %*% cov) * Xx) %*% rep(1L, ncol(Xx)))
-                 })
-      names(se) <- rnam
-      
-      sef <- naresid(naa, se)
-      ww <- if(conf.int || se.fit) {
+      if(! bayes) {
+        se <- drop(if(ref.zero || nrp == 0L)
+                     sqrt(((X %*% covnoint) * X) %*% rep(1L, ncol(X)))
+                   else {
+                     Xx <- cbind(Intercept=1., X)
+                     sqrt(((Xx %*% cov) * Xx) %*% rep(1L, ncol(Xx)))
+                   })
+        names(se) <- rnam
+        sef <- naresid(naa, se)
+        }
+        ww <- if(conf.int || se.fit) {
         if(se.fit)
           list(linear.predictors = xb - ycenter, se.fit = sef) else
         list(linear.predictors = xb - ycenter)
       }
-      else xb - ycenter
+              else
+                xb - ycenter
+      if(bayes) {lower <- lower - ycenter; upper <- upper - ycenter}
       retlist <- structure(ww, 
                            na.action=if(expand.na) NULL else naa)
       if(conf.int) {
@@ -355,9 +381,15 @@ predictrms <-
           retlist$lower <- u[,'lwr']
           retlist$upper <- u[,'upr']
         } else {
-          plminus <- zcrit*sqrt(sef^2 + vconstant)
-          retlist$lower <- xb - plminus - ycenter
-          retlist$upper <- xb + plminus - ycenter
+          if(bayes) {
+            retlist$lower <- lower
+            retlist$upper <- upper
+          }
+          else {
+            plminus <- zcrit*sqrt(sef^2 + vconstant)
+            retlist$lower <- xb - plminus - ycenter
+            retlist$upper <- xb + plminus - ycenter
+            }
         }
       }
       return(retlist)
