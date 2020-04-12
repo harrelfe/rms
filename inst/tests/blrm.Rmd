@@ -100,7 +100,7 @@ contrast(f, list(x1=0, x3=1), list(x1=.25, x3=0))
 contrast(g, list(x1=0, x3=1), list(x1=.25, x3=0))
 ```
 
-Compute posterior probabilities for various assertions about unknown true parameter values.  The `PostF` function is a function generator that effectively evaluates the assertion to a 0/1 value and computes the mean of these binary values over posterior draws. 
+Compute posterior probabilities for various assertions about unknown true parameter values.  The `PostF` function is a function generator that effectively evaluates the assertion to a 0/1 value and computes the mean of these binary values over posterior draws.   As is the case with inference about the quadratic effect of `x2` below, when the assertion does not evaluate to a binary 0/1 or logical `TRUE/FALSE` value, it is taken as a quantity that is derived from one or more model parameters, and a posterior density is drawn for the derived parameter.  We use that to get a posterior distribution on the vertex of the quadratic `x2` effect.
 
 ```{r postprobs}
 P <- PostF(g, pr=TRUE)   # show new short legal R names
@@ -108,6 +108,14 @@ P(b3 > 0 & b1 > 1.5)
 P(b3 > 0)
 P(abs(b3) < 0.25)        # evidence for small |nonlinearity|
 mean(g$draws[, 'x2^2'] > 0)    # longhand calculation
+# Plot posterior distribution for the vertex of the quadratic x2 effect
+# This distribution should be wide because the relationship is linear
+P(-b2 / (2 * b3))
+```
+
+```{r postprobs2}
+# Recreate the P function using original parameter names
+# (which may not be legal R name)
 P <- PostF(g, name='orig')
 P(`x2^2` > 0)
 P(`x2^2` > 0 & x1 > 1.5)

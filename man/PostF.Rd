@@ -20,7 +20,7 @@ an R function
 Function Generator for Posterior Probabilities of Assertions
 }
 \details{
-From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.
+From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and a posterior density for that parameter is drawn.
 }
 \examples{
 \dontrun{
@@ -32,6 +32,10 @@ From a Bayesian fit object such as that from \code{blrm} generates an R function
   P <- PostF(f, name='orig')
   P(age < 0)    # Post prob of negative age effect
   P(`sex=male` > 0)
+  f <- blrm(y ~ sex + pol(age, 2))
+  P <- PostF(f)
+  # Compute posterior density of the vertex of the quadratic age effect
+  P(-b2 / (2 * b3))
 }
 }
 \author{

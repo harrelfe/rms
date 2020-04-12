@@ -15,7 +15,9 @@ blrm(
   refresh = 0,
   x = FALSE,
   y = FALSE,
-  fitter = "lrmqr"
+  fitter = "lrmqr",
+  method = c("sampling", "optimizing"),
+  ...
 )
 }
 \arguments{
@@ -27,7 +29,7 @@ blrm(
 
 \item{na.action}{default is \code{na.delete} to remove missings and report on them}
 
-\item{priorsd}{vector of prior standard deviations}
+\item{priorsd}{vector of prior standard deviations.  If the vector is shorter than the number of model parameters, it will be repeated until the length equals the number of parameters.}
 
 \item{iter}{number of posterior samples per chain for \link[rstan:sampling]{rstan::sampling} to run}
 
@@ -40,9 +42,13 @@ blrm(
 \item{y}{set to \code{TRUE} to store the response variable in the fit}
 
 \item{fitter}{base name of Stan code file, choices are \code{lrmqr} (the default; recommended) and \code{lrm}}
+
+\item{method}{set to \code{'optimizing'} to run the Stan optimizer instead of sampling from the posterior distribution.  This is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{optimizing} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).}
+
+\item{...}{passed to \code{rstan::sampling} or \code{rstan:optimizing}}
 }
 \value{
-an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.
+an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  When \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
 }
 \description{
 Bayesian Binary and Ordinal Logistic Regression

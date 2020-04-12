@@ -213,7 +213,7 @@ stanDxplot <- function(x, which=x$betas, ...) {
 
 ##' Function Generator for Posterior Probabilities of Assertions
 ##'
-##' From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.
+##' From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and a posterior density for that parameter is drawn.
 ##' @title PostF
 ##' @param fit a Bayesian fit object
 ##' @param name specifies whether assertions will refer to shortened parameter names (the default) or original names.  Shorted names are of the form \code{a1, ..., ak} where \code{k} is the number of intercepts in the model, and \code{b1, ..., bp} where \code{p} is the number of non-intercepts.  When using original names that are not legal R variable names, you must enclose them in backticks.
@@ -229,6 +229,10 @@ stanDxplot <- function(x, which=x$betas, ...) {
 ##'   P <- PostF(f, name='orig')
 ##'   P(age < 0)    # Post prob of negative age effect
 ##'   P(`sex=male` > 0)
+##'   f <- blrm(y ~ sex + pol(age, 2))
+##'   P <- PostF(f)
+##'   # Compute posterior density of the vertex of the quadratic age effect
+##'   P(-b2 / (2 * b3))
 ##' }
 ##' @author Frank Harrell
 PostF <- function(fit, name=c('short', 'orig'), pr=FALSE) {
@@ -250,8 +254,13 @@ PostF <- function(fit, name=c('short', 'orig'), pr=FALSE) {
       }
     colnames(draws) <- nam
     }
-  f <- function(assert, draws) mean(eval(substitute(assert), draws))
-  # Convert draws to data frame so with() will work
+  f <- function(assert, draws) {
+    w <- eval(substitute(assert), draws)
+    if(length(unique(w)) < 3) return(mean(w))
+    ggplot(data.frame(w), aes(x=w)) + geom_density() +
+      xlab(as.character(sys.call()[2])) + ylab('')
+    }
+  # Convert draws to data frame so eval() will work
   formals(f) <- list(assert=NULL, draws=as.data.frame(draws))
   f
 }
