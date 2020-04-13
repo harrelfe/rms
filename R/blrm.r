@@ -13,9 +13,9 @@
 ##' @param x set to \code{TRUE} to store the design matrix in the fit.  Needed if running \code{blrmStats} for example
 ##' @param y set to \code{TRUE} to store the response variable in the fit
 ##' @param fitter base name of Stan code file, choices are \code{lrmqr} (the default; recommended) and \code{lrm}
-##' @param method set to \code{'optimizing'} to run the Stan optimizer instead of sampling from the posterior distribution.  This is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{optimizing} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).
+##' @param method set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.
 ##' @param ... passed to \code{rstan::sampling} or \code{rstan:optimizing}
-##' @return an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  When \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
+##' @return an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
 ##' @examples
 ##' \dontrun{
 ##'   options(stancompiled='~/R/stan')    # need this always
@@ -44,7 +44,8 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 								 priorsd=rep(100, p),
 								 iter=2000, chains=4, refresh=0,
 								 x=FALSE, y=FALSE, fitter='lrmqr',
-                 method=c('sampling', 'optimizing'), ...) {
+                 method=c('both', 'sampling', 'optimizing'),
+                 ...) {
 
 	call <- match.call()
   m <- match.call(expand.dots=FALSE)
@@ -120,8 +121,12 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     stop('you did not run rms::stanCompile to compile Stan code')
   mod <- readRDS(file)
 
-  if(method == 'optimizing') {
-    g <- rstan::optimizing(mod, data=d, ...)
+  opt <- NULL
+  if(method != 'sampling') {
+    otime <- system.time(
+      g <- rstan::optimizing(mod, data=d, ...))
+    if(g$return_code != 0)
+      warning(paste('optimizing did not work; return code', g$return_code))
     parm <- g$par
     nam <- names(parm)
     th  <- nam[grep('theta\\[', nam)]
@@ -134,10 +139,11 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     names(alphas) <- paste0(ineq, ylev[-1])
     alphas <- alphas - sum(betas * xbar)
     names(betas)  <- names(thetas) <- atr$colnames
-    g <- list(coefficients=c(alphas, betas), theta=thetas,
+    opt <- list(coefficients=c(alphas, betas), theta=thetas,
               deviance=-2 * g$value,
-              return_code=g$return_code, hessian=g$hessian)
-    return(g)
+              return_code=g$return_code, hessian=g$hessian,
+              executionTime=otime)
+    if(method == 'optimizing') return(opt)
     }
 
 	g <- rstan::sampling(mod, 
@@ -161,15 +167,23 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 	colnames(alphas) <- paste0(ineq, ylev[-1])
 	colnames(betas)  <- atr$colnames
 	draws            <- cbind(alphas, betas)
-		
+
+
+  param <- rbind(mean=colMeans(draws), median=apply(draws, 2, median))
+  if(method != 'sampling') {
+    param <- rbind(mode=opt$coefficients, param)
+    opt$coefficients <- NULL
+    }
+  
 	res <- list(call=call,
-							draws=draws, N=n, p=p, ylevels=ylev, freq=table(Y),
+							draws=draws, param=param, N=n, p=p, ylevels=ylev, freq=table(Y),
 						  alphas=al, betas=be,
 						  xbar=xbar, Design=atr, scale.pred=c('log odds', 'Odds Ratio'),
 							terms=Terms, assign=ass, na.action=atrx$na.action, fail=FALSE,
 							non.slopes=nrp, interceptRef=kmid, sformula=sformula,
 							x=if(x) X, y=if(y) Y,
-							rstan=g, diagnostics=diagnostics, iter=iter, chains=chains)
+							rstan=g, opt=opt, diagnostics=diagnostics,
+              iter=iter, chains=chains)
 	class(res) <- c('blrm', 'rmsb', 'rms')
 	res
 }
@@ -270,7 +284,7 @@ blrmStats <- function(fit, ns=1000, cint=0.95, pl=FALSE) {
                    non.slopes=nrp, intercept=kmid), class='blrmStats')
   }
 
-##' Print Details for \code{blrmStats} Predictive Accuray Measures
+##' Print Details for \code{blrmStats} Predictive Accuracy Measures
 ##'
 ##' Prints results of \code{blrmStats} with brief explanations
 ##' @title print.blrmStats
@@ -310,8 +324,7 @@ print.blrmStats <- function(x, dec=3, ...) {
 ##' Prints main results from \code{blrm} along with indexes and predictive accuracy and their credible intervals computed from \code{blrmStats}.
 ##' @title print.blrm
 ##' @param x object created by \code{blrm}
-##' @param posterior.summary set to \code{'median'} to compute posterior median parameters instead of means
-##' @param digits number of digits to print to the right of the decimal
+##' @param dec number of digits to print to the right of the decimal
 ##' @param coefs specify \code{FALSE} to suppress printing parameter estimates, and in integer k to print only the first k
 ##' @param cint credible interval probability for summary indexes
 ##' @param ns number of random samples of the posterior draws for use in computing credible intervals for accuracy indexes
@@ -325,10 +338,8 @@ print.blrmStats <- function(x, dec=3, ...) {
 ##'   print(f, posterior.summary='median')   # instead of post. means
 ##' }
 ##' @author Frank Harrell
-print.blrm <- function(x, posterior.summary=c('mean', 'median'),
-                       digits=4, coefs=TRUE, cint=0.95, ns=1000,
+print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=1000,
                       title='Bayesian Logistic Regression Model', ...) {
-  posterior.summary <- match.arg(posterior.summary)
   latex <- prType() == 'latex'
   
   z <- list()
@@ -380,12 +391,10 @@ print.blrm <- function(x, posterior.summary=c('mean', 'median'),
   if(coefs) {
     k <- k + 1
     z[[k]] <- list(type='coefmatrix',
-                   list(bayes=print.rmsb(x, cint=cint, pr=FALSE,
-                                         posterior.summary=posterior.summary)))
+                   list(bayes=print.rmsb(x, cint=cint, pr=FALSE)))
   }
   
-  prModFit(x, title=title, z, digits=digits,
-           coefs=coefs, ...)
+  prModFit(x, title=title, z, digits=dec, coefs=coefs, ...)
 }
 
 ## ??
@@ -396,7 +405,7 @@ print.blrm <- function(x, posterior.summary=c('mean', 'median'),
 ##' Predict method for \code{blrm} objects
 ##' @title predict.blrm
 ##' @param object,...,type,se.fit,codes see [predict.lrm] 
-##' @param posterior.summary set to \code{'median'} to use posterior median instead of mean
+##' @param posterior.summary set to \code{'mean'} or \code{'median'} to use posterior mean/median instead of mode
 ##' @return a data frame,  matrix, or vector
 ##' @examples
 ##' \dontrun{
@@ -410,20 +419,23 @@ predict.blrm <- function(object, ...,
 		type=c("lp","fitted","fitted.ind","mean","x","data.frame",
 		  "terms", "cterms", "ccterms", "adjto", "adjto.data.frame",
       "model.frame"),
-		se.fit=FALSE, codes=FALSE, posterior.summary=c('mean', 'median'))
-{
+		se.fit=FALSE, codes=FALSE,
+    posterior.summary=c('mode', 'mean', 'median')) {
+  
   type           <- match.arg(type)
   posterior.summary <- match.arg(posterior.summary)
 
   if(type %in% c('x', 'data.frame', 'terms', 'cterms', 'ccterms',
                  'adjto', 'adjto.data.frame', 'model.frame'))
-    return(predictrms(object,...,type=type))
+    return(predictrms(object,...,type=type,
+                      posterior.summary=posterior.summary))
 
   if(type != 'x') stop('types other than x not yet implemented')
-  X <- predictrms(object, ..., type='x')
+  X <- predictrms(object, ..., type='x', posterior.summary=posterior.summary)
   lp <- X %*% object$draws
   
-  xb <- predictrms(object, ..., type="lp", se.fit=FALSE)
+  xb <- predictrms(object, ..., type="lp", se.fit=FALSE,
+                   posterior.summary=posterior.summary)
   rnam <- names(xb)
   ns <- object$non.slopes
   cnam <- names(object$coef[1:ns])

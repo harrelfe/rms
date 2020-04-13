@@ -36,7 +36,7 @@ For Bayesian models such as \code{blrm}, \code{anova} computes relative
 explained variation indexes (REV) based on approximate Wald statistics.
 This uses the variance-covariance matrix of all of the posterior draws,
 and the individual draws of betas, plus an overall summary from the
-posterior mean/median beta.  Wald chi-squares assuming multivariate
+posterior mode/mean/median beta.  Wald chi-squares assuming multivariate
 normality of betas are computed just as with frequentist models, and for
 each draw (or for the summary) the ratio of the partial Wald chi-square
 to the total Wald statistic for the model is computed as REV.
@@ -52,7 +52,7 @@ depending on \code{options(prType=)}, and output is to the console.  For
 \method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9, 
       test=c('F','Chisq'), india=TRUE, indnl=TRUE, ss=TRUE,
       vnames=c('names','labels'),
-      posterior.summary=c('mean', 'median'), ns=500, cint=0.95)
+      posterior.summary=c('mode', 'mean', 'median'), ns=500, cint=0.95)
 
 \method{print}{anova.rms}(x,
       which=c('none','subscripts','names','dots'),
@@ -114,7 +114,7 @@ sums of squares, mean squares, and the Error SS and MS.
 }
 \item{vnames}{set to \code{'labels'} to use variable labels rather than
   variable names in the output}
-\item{posterior.summary}{specifies whether the posterior mean or median
+\item{posterior.summary}{specifies whether the posterior mode/mean/median
 	beta are to be used as a measure of central tendence of the posterior
 	distribution, for use in relative explained variation from Bayesian
 	models}

@@ -4,7 +4,7 @@
 \alias{plot.rmsb}
 \title{plot.rmsb}
 \usage{
-\method{plot}{rmsb}(x, which = NULL, nrow = NULL, ncol = NULL, ...)
+\method{plot}{rmsb}(x, which = NULL, nrow = NULL, ncol = NULL, cint = 0.95, ...)
 }
 \arguments{
 \item{x}{an \code{rms} Bayesian fit object}
@@ -15,16 +15,18 @@
 
 \item{ncol}{number of columns of plots}
 
+\item{cint}{probability for credible interval}
+
 \item{...}{passed to \code{ggplot2::geom_density}}
 }
 \value{
 \code{ggplot2} object
 }
 \description{
-Plot Posterior Densities
+Plot Posterior Densities and Summaries
 }
 \details{
-For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters
+For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters along with posterior mode, mean, median, and credible interval
 }
 \author{
 Frank Harrell

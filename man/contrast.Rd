@@ -28,6 +28,8 @@ by other functions.
 When the model was fitted by a Bayesian function such as \code{blrm},
 credible intervals for contrasts are computed instead, along with the
 posterior probability that the contrast is positive.
+\code{posterior.summary} specifies whether posterior mean/median/mode is
+to be used for contrast point estimates.
 
 \code{contrast.rms} also allows one to specify four settings to
 contrast, yielding contrasts that are double differences - the
@@ -64,7 +66,7 @@ contrast(fit, \dots)
          type=c("individual", "average", "joint"),
          conf.type=c("individual","simultaneous"), usebootcoef=TRUE,
          boot.type=c("percentile","bca","basic"),
-         posterior.summary=c('mean', 'median'),
+         posterior.summary=c('mean', 'median', 'mode'),
          weights="equal", conf.int=0.95, tol=1e-7, expand=TRUE, \dots)
 
 \method{print}{contrast.rms}(x, X=FALSE, fun=function(u)u, jointonly=FALSE, \dots)
@@ -126,8 +128,12 @@ and no averaging.
 \item{boot.type}{set to \code{'bca'} to compute BCa confidence
 	limits or \code{'basic'} to use the basic bootstrap.  The default is
 	to compute percentile intervals}
-\item{posterior.summary}{By default the posterior mean is usedd.
-	Specify \code{posterior.summary='median'} to instead use the posterior median.}
+\item{posterior.summary}{By default the posterior mean is used.
+	Specify \code{posterior.summary='median'} to instead use the posterior
+	median and likewise \code{posterior.summary='mode'}.  Unlike other
+functions, \code{contrast.rms} does not default to \code{'mode'} because
+point estimates come from contrasts and not the original model
+coefficients point estimates.}
 \item{weights}{
 a numeric vector, used when \code{type="average"}, to obtain weighted contrasts
 }

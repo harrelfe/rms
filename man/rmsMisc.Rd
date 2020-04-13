@@ -45,6 +45,7 @@
 \alias{latex.naprint.delete}
 \alias{html.naprint.delete}
 \alias{removeFormulaTerms}
+\alias{getParamCoef}
 \title{Miscellaneous Design Attributes and Utility Functions}
 \description{
 These functions are used internally to \code{anova.rms},
@@ -159,6 +160,9 @@ formula, using strictly character manipulation.  This handles problems
 such as \code{[.terms} removing \code{offset()} if you subset on
 anything.  The function can also be used to remove the dependent
 variable(s) from the formula.
+
+\code{getParamCoef} extracts Bayesian model point estimates, with an
+error message if the mode is requested and it was not computed for the fit
 }
 \usage{
 \method{vcov}{rms}(object, regcoef.only=TRUE, intercepts='all', \dots)
@@ -220,6 +224,8 @@ formatNP(x, digits=NULL, pvalue=FALSE,
 \method{html}{naprint.delete}(object, \dots)
 
 removeFormulaTerms(form, which=NULL, delete.response=FALSE)
+
+getParamCoef(fit, posterior.summary=c('mode', 'mean', 'median'))
 }
 \arguments{
 \item{fit}{result of a fitting function}
@@ -355,6 +361,7 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
 	\code{"cluster"}.  By default no right-hand-side terms are removed.}
 \item{delete.response}{set to \code{TRUE} to remove the dependent
 	variable(s) from the formula}
+\item{posterior.summary}{type of Bayesian point estimate to use from coefficients}
 \item{\dots}{other arguments.  For \code{reListclean} this contains the
   elements being extracted.  For \code{prModFit} this information is
   passed to the \code{Hmisc latexTabular} function when a block of

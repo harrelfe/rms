@@ -16,7 +16,7 @@ blrm(
   x = FALSE,
   y = FALSE,
   fitter = "lrmqr",
-  method = c("sampling", "optimizing"),
+  method = c("both", "sampling", "optimizing"),
   ...
 )
 }
@@ -43,12 +43,12 @@ blrm(
 
 \item{fitter}{base name of Stan code file, choices are \code{lrmqr} (the default; recommended) and \code{lrm}}
 
-\item{method}{set to \code{'optimizing'} to run the Stan optimizer instead of sampling from the posterior distribution.  This is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{optimizing} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).}
+\item{method}{set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.}
 
 \item{...}{passed to \code{rstan::sampling} or \code{rstan:optimizing}}
 }
 \value{
-an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  When \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
+an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
 }
 \description{
 Bayesian Binary and Ordinal Logistic Regression

@@ -14,7 +14,7 @@
 \item{...}{ignored}
 }
 \description{
-Print Details for \code{blrmStats} Predictive Accuray Measures
+Print Details for \code{blrmStats} Predictive Accuracy Measures
 }
 \details{
 Prints results of \code{blrmStats} with brief explanations

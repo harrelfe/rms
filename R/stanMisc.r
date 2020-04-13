@@ -52,17 +52,13 @@ stanGet <- function(object) object$rstan
 ##'   coef(f, stat='mode')
 ##' }
 ##' @author Frank Harrell
-coef.rmsb <- function(object, stat=c('mean', 'median', 'mode'), ...) {
+coef.rmsb <- function(object, stat=c('mode', 'mean', 'median'), ...) {
 	stat <- match.arg(stat)
-	pmode <- function(x) {
-		dens <- density(x)
-		dens$x[which.max(dens$y)[1]]
-	}
-	switch(stat, 
-		mean   = colMeans(object$draws),
-		median = apply(object$draws, 2, median),
-		mode   = apply(object$draws, 2, pmode)
-	)
+	# pmode <- function(x) {
+	# 	dens <- density(x)
+	# 	dens$x[which.max(dens$y)[1]]
+	# }
+  getParamCoef(object, stat)
 }
 
 ##' Variance-Covariance Matrix
@@ -110,7 +106,6 @@ vcov.rmsb <- function(object, regcoef.only=TRUE,
 ##' For a Bayesian regression fit prints the posterior mean, median, SE, credible interval, and symmetry coefficient from the posterior draws.  For a given parameter, the symmetry is the gap between the mean and 0.94 quantile divided by the gap between the 0.05 quantile and the mean.
 ##' @title print.rmsb
 ##' @param x an object created by an \code{rms} Bayesian fitting function
-##' @param posterior.summary set to \code{'median'} compute posterior median coefficients instead of means
 ##' @param cint credible interval coverage probability (default is 0.95)
 ##' @param dec amount of rounding (digits to the right of the decimal)
 ##' @param pr set to \code{FALSE} to return an unrounded matrix and not print
@@ -122,18 +117,18 @@ vcov.rmsb <- function(object, regcoef.only=TRUE,
 ##'   print.rmsb(f)
 ##' }
 ##' @author Frank Harrell
-print.rmsb <- function(x, posterior.summary=c('mean', 'median'),
-                       cint=0.95, dec=4, pr=TRUE, ...) {
-  posterior.summary <- match.arg(posterior.summary)
-	s  <- x$draws
-	means <- colMeans(s)
+print.rmsb <- function(x, cint=0.95, dec=4, pr=TRUE, ...) {
+	s     <- x$draws
+  param <- t(x$param)
+  means <- param[, 'mean']
+  colnames(param) <- upFirst(colnames(param))
+
 	se <- sqrt(diag(var(s)))
-	a  <- 1 - cint; prob <- c(a / 2, 0.5, 1 - a / 2, 0.05, 0.95)
+	a  <- 1 - cint; prob <- c(a / 2, 1 - a / 2, 0.05, 0.95)
 	ci <- apply(s, 2, quantile, probs=prob)
   P  <- apply(s, 2, function(u) mean(u > 0))
-	sym <- (ci[5,] - means) / (means - ci[4,])
-	w <- cbind(Mean=means, Median=ci[2, ],
-						 SE=se, Lower=ci[1,], Upper=ci[3,], P, Symmetry=sym)
+	sym <- (ci[4,] - means) / (means - ci[3,])
+	w <- cbind(param, SE=se, Lower=ci[1,], Upper=ci[2,], P, Symmetry=sym)
   rownames(w) <- names(means)
   if(! pr) return(w)
 	cat(nrow(s), 'draws from the posterior distribution\n\n')
@@ -171,28 +166,48 @@ stanCompile <-
   invisible()
   }
 
-##' Plot Posterior Densities
+##' Plot Posterior Densities and Summaries
 ##'
-##' For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters
+##' For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters along with posterior mode, mean, median, and credible interval
 ##' @title plot.rmsb
 ##' @param x an \code{rms} Bayesian fit object
 ##' @param which names of parameters to plot, defaulting to all non-intercepts. Can instead be a vector of integers.
 ##' @param nrow number of rows of plots
 ##' @param ncol number of columns of plots
+##' @param cint probability for credible interval
 ##' @param ... passed to \code{ggplot2::geom_density}
 ##' @return \code{ggplot2} object
 ##' @author Frank Harrell
-plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, ...) {
+plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, cint=0.95, ...) {
+  alp   <- (1. - cint) / 2.
   nrp   <- num.intercepts(x)
   draws <- x$draws
   nd    <- nrow(draws)
   nam   <- colnames(draws)
   if(! length(which)) which <- if(nrp == 0) nam else nam[-(1 : nrp)]
   if(! is.character(which)) which <- nam[which]
-  draws <- as.vector(draws[, which, drop=FALSE])
-  param <- factor(rep(which, each=nd), which)
-  ggplot(data.frame(param, draws), aes(x=draws)) + geom_density() +
+  draws <- draws[, which, drop=FALSE]
+  ci    <- apply(draws, 2, quantile, probs=c(alp, 1. - alp))
+  rownames(ci) <- c('Lower', 'Upper')
+  
+  draws  <- as.vector(draws)
+  param  <- factor(rep(which, each=nd), which)
+  est    <- x$param[, which, drop=FALSE]
+  est    <- rbind(est, ci)
+  ne     <- nrow(est)
+  stat   <- rownames(est)
+  stat   <- ifelse(stat %in% c('Lower', 'Upper'),
+                   paste(cint, 'CI'), stat)
+  est    <- as.vector(est)
+  eparam <- factor(rep(which, each=ne), which)
+  stat   <- rep(stat, length(which))
+
+  d  <- data.frame(param, draws)
+  de <- data.frame(param=eparam, est, stat)
+  ggplot(d, aes(x=draws)) + geom_density() +
+    geom_vline(data=de, aes(xintercept=est, color=stat, alpha=I(0.4))) +
     facet_wrap(~ param, scales='free', nrow=nrow, ncol=ncol) +
+    guides(color=guide_legend(title='')) +
     xlab('') + ylab('')
 }
 
@@ -270,3 +285,11 @@ PostF <- function(fit, name=c('short', 'orig'), pr=FALSE) {
 #formals(f) <- list(assert=NULL, draws=list(a=1:5, b1=2:6, b3=3:7))
 #f(a); f(b1); f(b2)   # with(draws, assert) did not work
 
+# Help info is in rmsMisc.Rd since this is a non-exported function
+getParamCoef <- function(fit, posterior.summary=c('mode', 'mean', 'median')) {
+  posterior.summary <- match.arg(posterior.summary)
+  param <- fit$param
+  if(posterior.summary == 'mode' && 'mode' %nin% rownames(param))
+    stop('posterior mode not included in model fit')
+  param[posterior.summary, ]
+}

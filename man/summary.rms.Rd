@@ -53,7 +53,7 @@ there are any.  \code{nbar} is not implemented for \code{plotly}.
 conf.int=.95, abbrev=FALSE, vnames=c("names","labels"),
 conf.type=c('individual','simultaneous'),
 usebootcoef=TRUE, boot.type=c("percentile","bca","basic"),
-posterior.summary=c('mean', 'median'), verbose=FALSE)
+posterior.summary=c('mode', 'mean', 'median'), verbose=FALSE)
 
 \method{print}{summary.rms}(x, \dots, table.env=FALSE)
 
@@ -133,8 +133,8 @@ factor levels for categorical variables in the model.}
 \item{boot.type}{set to \code{'bca'} to compute BCa confidence
 	limits or to \code{'basic'} to use the basic bootstrap.  The default
 	is to compute percentile intervals.}
-\item{posterior.summary}{set to \code{'median'} to use the posterior
-	median instead of the mean for point estimates of contrasts}
+\item{posterior.summary}{set to \code{'mean'} or \code{'median'} to use the posterior
+	mean/median instead of the mode for point estimates of contrasts}
 \item{verbose}{set to \code{TRUE} when \code{conf.type='simultaneous'}
   to get output describing scope of simultaneous adjustments}
 \item{x}{result of \code{summary}}

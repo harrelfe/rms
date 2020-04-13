@@ -51,7 +51,7 @@ Predict(x, ..., fun,
         np = 200, conf.int = 0.95,
         conf.type = c("mean", "individual","simultaneous"),
         usebootcoef=TRUE, boot.type=c("percentile","bca","basic"),
-        posterior.summary=c('mean', 'median'),
+        posterior.summary=c('mode', 'mean', 'median'),
         adj.zero = FALSE, ref.zero = FALSE,
         kint=NULL, time = NULL, loglog = FALSE, digits=4, name,
         factors=NULL, offset=NULL)
@@ -127,9 +127,9 @@ Predict(x, ..., fun,
   \item{boot.type}{set to \code{'bca'} to compute BCa confidence
 	limits or \code{'basic'} to use the basic bootstrap.  The default is
 	to compute percentile intervals}
-  \item{posterior.summary}{defaults to using the posterior mean of the
-		regression coefficients.  Specify \code{'median'} to instead use the
-		posterior median.}
+  \item{posterior.summary}{defaults to using the posterior mode of the
+		regression coefficients.  Specify \code{'mean'} or \code{'median'}
+		to instead use the other summaries.}
   \item{adj.zero}{
 	Set to \code{TRUE} to adjust all non-plotted variables to 0 (or
 	reference cell for categorical variables) and to omit intercept(s)

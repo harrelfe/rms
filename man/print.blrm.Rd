@@ -6,8 +6,7 @@
 \usage{
 \method{print}{blrm}(
   x,
-  posterior.summary = c("mean", "median"),
-  digits = 4,
+  dec = 4,
   coefs = TRUE,
   cint = 0.95,
   ns = 1000,
@@ -18,9 +17,7 @@
 \arguments{
 \item{x}{object created by \code{blrm}}
 
-\item{posterior.summary}{set to \code{'median'} to compute posterior median parameters instead of means}
-
-\item{digits}{number of digits to print to the right of the decimal}
+\item{dec}{number of digits to print to the right of the decimal}
 
 \item{coefs}{specify \code{FALSE} to suppress printing parameter estimates, and in integer k to print only the first k}
 

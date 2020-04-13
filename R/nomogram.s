@@ -5,7 +5,7 @@ nomogram <-
            interact=NULL, kint=NULL,
            conf.int=FALSE, 
            conf.lp=c("representative", "all", "none"),
-           est.all=TRUE, posterior.summary=c('mean', 'median'),
+           est.all=TRUE, posterior.summary=c('mode', 'mean', 'median'),
            abbrev=FALSE, minlength=4, maxscale=100, nint=10, 
            vnames=c("labels","names"),
            varname.label=TRUE, varname.label.sep="=",

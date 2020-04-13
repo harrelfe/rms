@@ -1,6 +1,6 @@
 Function.rms <- function(object, intercept=NULL,
                          digits=max(8,.Options$digits),
-                         posterior.summary=c('mean', 'median'), ...)
+                         posterior.summary=c('mode', 'mean', 'median'), ...)
 {
   posterior.summary <- match.arg(posterior.summary)
   
@@ -43,12 +43,12 @@ Function.rms <- function(object, intercept=NULL,
   ##change wrapping function to h()
   h <- function(x,...) deparse(substitute(x))
   for(i in (1:pm)) trans[i] <- eval(parse(text=trans[i]))
-  j <- trans!=name.main
+  j <- trans != name.main
   if(any(j)) z <- paste(z, paste(name.main[j],'<-',trans[j],collapse=';'),
                         ';',sep='')
 
   interaction <- at$interactions
-  if(length(interaction)==0) interaction <- 0
+  if(length(interaction) == 0) interaction <- 0
   
   parms <- at$parms
   
@@ -154,8 +154,8 @@ Three.Way <- function(prm,Nam,nam.coef,cof,coef,f,at,digits)
 
   if(nrp==1 | length(intercept))
     {
-      cof <- if(!length(intercept))formatSep(Coef[1],digits) else 
-      formatSep(intercept, digits)
+      cof <- if(! length(intercept)) formatSep(Coef[1], digits) else 
+        formatSep(intercept, digits)
       z <- paste(z, cof, sep='')
     }
   

@@ -5,7 +5,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
                       test=c('F','Chisq'),
                       india=TRUE, indnl=TRUE, ss=TRUE,
                       vnames=c('names', 'labels'),
-                      posterior.summary=c('mean', 'median'),
+                      posterior.summary=c('mode', 'mean', 'median'),
                       ns=500, cint=0.95) {
 
   ava <- function(idx) {
@@ -54,9 +54,8 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   if(bayes) {
     if(nrp > 0) draws <- draws[, -(1 : nrp), drop=FALSE]
 
-    betaSummary <- switch(posterior.summary,
-                          mean   = colMeans(draws),
-                          median = apply(draws, 2, median))
+    betaSummary <- getParamCoef(object, posterior.summary)
+
     X <- object$x
     if(! length(X)) stop('x=TRUE must have been specified to fit')
     nc <- ncol(X)

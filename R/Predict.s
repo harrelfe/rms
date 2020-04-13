@@ -5,7 +5,7 @@ Predict <-
            conf.int=.95,
            conf.type=c('mean', 'individual', 'simultaneous'),
            usebootcoef=TRUE, boot.type=c('percentile', 'bca', 'basic'),
-           posterior.summary=c('mean', 'median'),
+           posterior.summary=c('mode', 'mean', 'median'),
            adj.zero=FALSE, ref.zero=FALSE,
            kint=NULL, time=NULL, loglog=FALSE, digits=4, name, factors=NULL,
            offset=NULL)

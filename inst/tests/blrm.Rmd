@@ -58,7 +58,7 @@ g$coefficients[10:13]
 
 Fit the model with Dirichlet priors on intercepts and wide normal priors on the $\beta$s.  Show the model fit summary.  Note that the indexes of predictive discrimination/accuracy include 0.95 credible intervals.  In frequentist inference we pretend that quantities such as AUROC and $R^2$ are estimated without error, which is far from the case.
 
-In several places you will see an index named `Symmetry`.  This is a measure of the symmetry of a posterior distribution.  Values farther from 1.0 indicate asymmetry, which indicates that the use of standard errors of posterior means/medians and the use of a normal approximation for the posterior distribution are not justified.  The symmetry index is the ratio of the gap between the posterior mean and the 0.95 quantile of the posterior distribution to the gap between the 0.05 quantile and the mean.
+In several places you will see an index named `Symmetry`.  This is a measure of the symmetry of a posterior distribution.  Values farther from 1.0 indicate asymmetry, which indicates that the use of standard errors and the use of a normal approximation for the posterior distribution are not justified.  The symmetry index is the ratio of the gap between the posterior mean and the 0.95 quantile of the posterior distribution to the gap between the 0.05 quantile and the mean.
 
 ```{r blrmsim,results='asis'}
 g <- blrm(y ~ x1 + pol(x2, 2) + x3, x=TRUE, y=TRUE)
@@ -83,10 +83,8 @@ Here are the posterior distributions, calculated using kernel density estimates 
 plot(g)    # invokes rstan::stan_dens, defaults to showing betas
 
 # Print frequentist side-by-side with Bayesian posterior mean, median, mode
-# `draws` object in g is for the original data scale
 
-cbind(MLE=coef(f), 'Post Mean'=coef(g), 'Post Median'=coef(g, 'median'),
-			'Post Mode'=coef(g, 'mode'))
+cbind(MLE=coef(f), t(g$param))
 
 # Compare covariance matrix of posterior draws with MLE
 round(diag(vcov(f)) / diag(vcov(g)), 2)
@@ -110,6 +108,7 @@ P(abs(b3) < 0.25)        # evidence for small |nonlinearity|
 mean(g$draws[, 'x2^2'] > 0)    # longhand calculation
 # Plot posterior distribution for the vertex of the quadratic x2 effect
 # This distribution should be wide because the relationship is linear
+# (true value of b3 is zero)
 P(-b2 / (2 * b3))
 ```
 
@@ -120,7 +119,7 @@ P <- PostF(g, name='orig')
 P(`x2^2` > 0)
 P(`x2^2` > 0 & x1 > 1.5)
 
-# Remove rstan results from g when finished with diagnostics
+# Remove rstan results from g when finished with trace plots
 s1 <- format(object.size(g), 'MB')
 g$rstan <- NULL
 s2 <- format(object.size(g), 'MB')
@@ -140,7 +139,8 @@ htmlVerbatim(Function(f))
 g <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
 					x=TRUE, y=TRUE, data=support)
 g
-htmlVerbatim(Function(g))   # by default uses posterior mean parameter values
+htmlVerbatim(Function(g))   # by default uses posterior mode parameter values
+# To add an intercept use e.g. Function(g, intercept=coef(g, 'mode')[5])
 
 htmlVerbatim(stanDx(g))
 stanDxplot(g)
@@ -152,7 +152,7 @@ Show approximate relative explained variation (REV) and compare this with Wald s
 anova(g)
 anova(f)
 ```
-Compute odds ratios over default inter-quartile ranges for continuous predictors, based on posterior mean parameters.  Also show 0.95 credible intervals.  Note that unlike the `print` method, the `plot` method for `summary` doesn't actually compute credible intervals, but approximates them by assuming normality and using the standard deviation of the posterior samples.  Compute the plot with the ordinary `lrm` result.
+Compute odds ratios over default inter-quartile ranges for continuous predictors, based on posterior mode parameters.  Also show 0.95 credible intervals.  Note that unlike the `print` method, the `plot` method for `summary` doesn't actually compute credible intervals, but approximates them by assuming normality and using the standard deviation of the posterior samples.  Compute the plot with the ordinary `lrm` result.
 
 ```{r summary, results='asis'}
 s <- summary(g)
@@ -161,19 +161,19 @@ plot(s)
 plot(summary(f))
 ```
 
-Draw partial effect plots with 0.95 credible intervals.  Point estimates are posterior means.
+Draw partial effect plots with 0.95 credible intervals.  Point estimates are posterior modes (which can be easily changed).
 
 ```{r peffect}
 ggplot(Predict(g))
 ```
 
-Draw a nomogram from posterior mean parameter values.
+Draw a nomogram from posterior mode parameter values.
 
 ```{r nomogram}
 p <- nomogram(g, fun=plogis, funlabel='P(death)')
 plot(p)
 ```
-For comparison here is a nomogram based on maximum likelihood estimates of parameters rather than posterior means.
+For comparison here is a nomogram based on maximum likelihood estimates of parameters rather than posterior modes.
 
 ```{r nomfreq}
 plot(nomogram(f, fun=plogis, funlabel='P(death)'))

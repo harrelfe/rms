@@ -813,8 +813,15 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
           pn <- switch(lang, plain='Pr(Beta>0)',
                        html = paste0('Pr(', betan, htmlTranslate('>'), '0)'),
                        latex = 'Pr$(\\beta>0)$')
-          colnames(U) <- c(paste('Mean', betan), paste('Median', betan),
-                           'S.E.', 'Lower', 'Upper', pn, 'Symmetry')
+          coltrans <- c(Mean     = paste('Mean', betan),
+                        Median   = paste('Median', betan),
+                        Mode     = paste('Mode', betan),
+                        SE       = 'S.E.',
+                        Lower    = 'Lower',
+                        Upper    = 'Upper',
+                        P        = pn,
+                        Symmetry = 'Symmetry')
+          colnames(U) <- coltrans[colnames(B)]
           rownames(U) <- rownames(B)
           betanames   <- rownames(B)
         }

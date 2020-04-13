@@ -4,19 +4,10 @@
 \alias{print.rmsb}
 \title{print.rmsb}
 \usage{
-\method{print}{rmsb}(
-  x,
-  posterior.summary = c("mean", "median"),
-  cint = 0.95,
-  dec = 4,
-  pr = TRUE,
-  ...
-)
+\method{print}{rmsb}(x, cint = 0.95, dec = 4, pr = TRUE, ...)
 }
 \arguments{
 \item{x}{an object created by an \code{rms} Bayesian fitting function}
-
-\item{posterior.summary}{set to \code{'median'} compute posterior median coefficients instead of means}
 
 \item{cint}{credible interval coverage probability (default is 0.95)}
 

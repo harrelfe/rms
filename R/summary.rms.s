@@ -21,7 +21,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                         conf.type=c('individual','simultaneous'),
                         usebootcoef=TRUE,
                         boot.type=c('percentile','bca','basic'),
-                        posterior.summary=c('mean', 'median'),
+                        posterior.summary=c('mode', 'mean', 'median'),
                         verbose=FALSE)
 {	
   obj.name <- as.character(sys.call())[2]

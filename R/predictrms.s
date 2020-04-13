@@ -12,7 +12,7 @@ predictrms <-
            kint=NULL,
            na.action=na.keep, expand.na=TRUE,
            center.terms=type=="terms", ref.zero=FALSE,
-           posterior.summary=c('mean', 'median'), ...)
+           posterior.summary=c('mode', 'mean', 'median'), ...)
 {
   type              <- match.arg(type)
   conf.type         <- match.arg(conf.type)
@@ -20,6 +20,7 @@ predictrms <-
   
   draws <- fit$draws
   bayes <- length(draws) > 0
+  if(bayes) param <- fit$param
   if(bayes && conf.type == 'simultaneous')
     stop('conf.type simultaneous not supported for Bayesian models')
   if(bayes && se.fit) {
@@ -49,10 +50,7 @@ predictrms <-
 
   parms   <- at$parms
   name    <- at$name
-  coeff   <- if(bayes)
-               switch(posterior.summary,
-                      mean   = colMeans(draws),
-                      median = apply(draws, 2, median))
+  coeff   <- if(bayes) getParamCoef(fit, posterior.summary)
              else
                fit$coefficients
   nrp     <- num.intercepts(fit)

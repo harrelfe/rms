@@ -5,7 +5,7 @@ contrast.rms <-
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'), usebootcoef=TRUE,
            boot.type=c('percentile','bca','basic'),
-           posterior.summary=c('mean', 'median'),
+           posterior.summary=c('mean', 'median', 'mode'),
            weights='equal', conf.int=0.95, tol=1e-7, expand=TRUE, ...)
 {
   type <- match.arg(type)
@@ -23,6 +23,11 @@ contrast.rms <-
               qnorm((1 + conf.int) / 2)
   bcoef <- if(usebootcoef) fit$boot.Coef
 
+  pmode <- function(x) {
+    dens <- density(x)
+    dens$x[which.max(dens$y)[1]]
+    }
+  
   if(! bayes) betas <- coef(fit)
   fite  <- fit
   if(inherits(fit, 'orm')) {
@@ -142,8 +147,10 @@ contrast.rms <-
     upper <- ci[2, ]
     PP    <- apply(est, 2, function(u) mean(u > 0))
     se    <- apply(est, 2, sd)
+
     est   <- switch(posterior.summary,
-                    mean = colMeans(est),
+                    mode   = apply(est, 2, pmode),
+                    mean   = colMeans(est),
                     median = apply(est, 2, median))
     P <- Z <- NULL
   }
