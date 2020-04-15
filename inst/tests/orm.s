@@ -227,3 +227,22 @@ abline(a=co[1], b=co[2], col='gray70')
 ## Compare coefficients with those from partial likelihood (Cox model)
 orm(y ~ pol(x1,2), family=loglog)
 cph(Surv(y) ~ pol(x1,2))
+
+
+## Simulate from a linear model with normal residuals and compute
+## quantiles for one x value, two ways
+
+set.seed(7)
+n <- 10000
+x <- rnorm(n)
+y <- round(x + rnorm(n), 2)
+f <- ols(y ~ x)
+k <- coef(f)
+s <- f$stats['Sigma']
+print(c(k, s))
+k[1] + qnorm((1:3)/4) * s
+
+g <- orm(y ~ x, family='probit')
+quant <- Quantile(g)
+lp <- predict(g, data.frame(x=0))
+for(qu in (1:3)/4) print(quant(qu, lp))

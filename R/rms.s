@@ -97,7 +97,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     Terms       <- Terms[! iscluster]
     Term.labels <- Term.labels[! iscluster]
   }
-  else cluster <- NULL
+  else {cluster <- clustername <- NULL}
 
   ioffset <- integer(0)
   if(length(offs)) {
@@ -408,7 +408,10 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   attr(mf, 'Design')     <- atr
   attr(mf, 'terms')      <- Terms
   attr(mf, 'sformula') <- sformula
-  if(length(cluster)) attr(mf, 'cluster') <- cluster
+  if(length(cluster)) {
+    attr(mf, 'cluster') <- cluster
+    attr(mf, 'clustername') <- var.inner(as.formula(paste0('~', clustername)))
+    }
   if(length(offs))    attr(mf, 'offset')  <- offs
   mf
 }

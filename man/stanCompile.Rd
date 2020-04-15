@@ -4,9 +4,14 @@
 \alias{stanCompile}
 \title{Compile Stan Code}
 \usage{
-stanCompile(repo = "https://raw.githubusercontent.com/harrelfe/stan/master")
+stanCompile(
+  mods = c("lrm", "lrmqr", "lrmqrc"),
+  repo = "https://raw.githubusercontent.com/harrelfe/stan/master"
+)
 }
 \arguments{
+\item{mods}{character vector of base names of \code{.stan} model files to compile.  Default is to compile all those currently in use in \code{rms}}
+
 \item{repo}{URL to online source file base}
 }
 \description{

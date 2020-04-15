@@ -55,6 +55,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     if(nrp > 0) draws <- draws[, -(1 : nrp), drop=FALSE]
 
     betaSummary <- getParamCoef(object, posterior.summary)
+    if(nrp > 0) betaSummary <- betaSummary[-(1 : nrp)]
 
     X <- object$x
     if(! length(X)) stop('x=TRUE must have been specified to fit')
@@ -63,8 +64,9 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     ns     <- min(ndraws, ns)
     if(ns < ndraws) {
       j <- sample(1 : ndraws, ns, replace=FALSE)
-      draws <- draws[j, ]
+      draws <- draws[j,, drop=FALSE]
     }
+
     ## Augment draws with a last row with posterior central tendency
     draws <- rbind(draws, posteriorSummary=betaSummary)
     ## Compute variances of linear predictor without omitting variables
@@ -669,6 +671,7 @@ plot.anova.rms <-
     sort <- match.arg(sort)
     isbase <- Hmisc::grType() == 'base'
 
+
     htmlSpecs <- markupSpecs$html
     schisq    <- htmlSpecs$chisq()
     nbsp      <- htmlSpecial('nbsp')
@@ -711,6 +714,30 @@ plot.anova.rms <-
     
     an <- x[k,, drop=FALSE]
     
+    if(! isbase && ! length(height))
+      height <- plotlyParm$heightDotchart(length(w))
+
+    if('REV' %in% colnames(x)) {    # Bayesian
+      xlab <- 'Relative Explained Variation'
+      i <- switch(sort,
+                  none = 1 : nrow(an),
+                  descending = order(an[, 'REV'], decreasing=TRUE),
+                  ascending = order(an[, 'REV']))
+      an <- an[i,, drop=FALSE]
+      if(isbase) {
+        xlim <- range(an[, 1:3])
+        dotchart2(an[, 'REV'], xlab=xlab, pch=pch, xlim=xlim, ...)
+        dotchart2(an[, 'Lower'], pch=91, add=TRUE)
+        dotchart2(an[, 'Upper'], pch=93, add=TRUE)
+        return(invisible(an))
+      }
+      p <- dotchartpl(an[, 'REV'], major=rownames(an),
+                      lower=an[,'Lower'], upper=an[,'Upper'],
+                      xlab=xlab,
+                      limitstracename='Credible Interval',
+                      width=width, height=height)
+      return(p)
+      }
     
     if(what %in% c("partial R2", "remaining R2", "proportion R2")) {
       if("Partial SS" %nin% colnames(x))
@@ -721,10 +748,10 @@ plot.anova.rms <-
       pss <- an[, 'Partial SS']
       sst <- sse + ssr
     }
-    
+
     dof <- an[, 'd.f.']
     P   <- an[, 'P']
-
+    
     if(any(colnames(an) == 'F')) {
       chisq    <- an[, 'F'] * dof
       totchisq <- x['TOTAL', 'F'] * x['TOTAL', 'd.f.']
@@ -818,9 +845,6 @@ plot.anova.rms <-
 
       dc <- if(isbase) dotchart3 else dotchartp
 
-      if(! isbase && ! length(height))
-        height <- plotlyParm$heightDotchart(length(w))
-      
       if(length(trans)) {
         nan <- names(w)
         w <- pmax(0, w)

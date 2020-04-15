@@ -1,18 +1,21 @@
 ##' Bayesian Binary and Ordinal Logistic Regression
 ##'
 ##' Uses \code{rstan} with pre-compiled Stan code whose location is given by the user in \code{options(stancompiled='...')} to get posterior draws of parameters from a binary logistic or proportional odds semiparametric ordinal logistic model.  The Stan code internally using the qr decompositon on the design matrix so that highly collinear columns of the matrix do not hinder the posterior sampling.  The parameters are transformed back to the original scale before returning results to R.   Design matrix columns re centered before running Stan, so Stan diagnostic output will have the intercept terms shifted but the results of \code{blrm} for intercepts are for the original uncentered data.  The only prior distributions are normal with mean zero, and the vector of prior standard deviations is given in \code{priorsd}.  These priors are for the qr-projected design matrix elements, except that the very last element is not changed.  So if one has a single non-interactive linear or binary variable for which a skeptical prior is designed, put that variable last in the model.
+##'
+##' \code{blrm} also handles single-level hierarchical random effects models for the case when there are repeated measurements per subject which are reflected as random intercepts.
 ##' @title blrm
 ##' @param formula a R formula object that can use \code{rms} package enhancements such as the restricted interaction operator
 ##' @param data a data frame
 ##' @param subset a logical vector or integer subscript vector specifying which subset of data whould be used
 ##' @param na.action default is \code{na.delete} to remove missings and report on them
 ##' @param priorsd vector of prior standard deviations.  If the vector is shorter than the number of model parameters, it will be repeated until the length equals the number of parameters.
+##' @param rsdmean the assumed mean of the prior distribution of the standard deviation of random effects.  An exponential prior distribution is assumed, and the rate for that distribution is the reciprocal of the mean.  The default is a mean of 1.0, which is reasonable for a unitless regression model scale such as log odds.
 ##' @param iter number of posterior samples per chain for [rstan::sampling] to run
 ##' @param chains number of separate chains to run
 ##' @param refresh see [rstan::sampling]
 ##' @param x set to \code{TRUE} to store the design matrix in the fit.  Needed if running \code{blrmStats} for example
 ##' @param y set to \code{TRUE} to store the response variable in the fit
-##' @param fitter base name of Stan code file, choices are \code{lrmqr} (the default; recommended) and \code{lrm}
+##' @param fitter base name of Stan code file, choices are \code{lrmqr} or \code{lrmqrc} (the defaults, with the second being used if \code{cluster} is present; recommended) and \code{lrm} (only if no clusterming)
 ##' @param method set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.
 ##' @param ... passed to \code{rstan::sampling} or \code{rstan:optimizing}
 ##' @return an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
@@ -36,14 +39,19 @@
 ##'   summary(f, ...)     # invokes summary.rms
 ##'   contrast(f, ...)    # contrast.rms computes credible intervals
 ##'   plot(nomogram(f, ...)) # plot nomogram using posterior mean parameters
+##'
+##'   # Fit a random effects model to handle multiple observations per
+##'   # subject ID
+##'   f <- blrm(outcome ~ rcs(age, 5) + sex + cluster(id), data=mydata)
 ##' } 
 ##' @author Frank Harrell and Ben Goodrich
 ##' @seealso \code{\link{print.blrm}}, \code{\link{blrmStats}}, \code{\link{stanDx}}, \code{\link{stanGet}}, \code{\link{coef.rmsb}}, \code{\link{vcov.rmsb}}, \code{\link{print.rmsb}}, \code{\link{coef.rmsb}}, [stanCompile]
 ##' @md
 blrm <- function(formula, data, subset, na.action=na.delete,
-								 priorsd=rep(100, p),
+								 priorsd=rep(100, p), rsdmean=1, 
 								 iter=2000, chains=4, refresh=0,
-								 x=FALSE, y=FALSE, fitter='lrmqr',
+								 x=FALSE, y=FALSE,
+                 fitter=if(length(cluster)) 'lrmqrc' else 'lrmqr',
                  method=c('both', 'sampling', 'optimizing'),
                  ...) {
 
@@ -59,7 +67,8 @@ blrm <- function(formula, data, subset, na.action=na.delete,
   nact <- NULL
   if(missing(data)) data <- NULL
 
-  tform <- terms(formula, data=data)
+  tform   <- terms(formula, specials='cluster', data=data)
+  
   dul <- .Options$drop.unused.levels
   if(!length(dul) || dul) {
     on.exit(options(drop.unused.levels=dul))
@@ -70,19 +79,22 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 
   method <- match.arg(method)
   
-  X <- Design(eval.parent(m))
-  atrx <- attributes(X)
-  sformula <- atrx$sformula
-  nact <- atrx$na.action
-  Terms <- atrx$terms
+  X <- Design(eval.parent(m))   # Design handles cluster()
+  cluster     <- attr(X, 'cluster')
+  clustername <- attr(X, 'clustername')
+  
+  atrx       <- attributes(X)
+  sformula   <- atrx$sformula
+  nact       <- atrx$na.action
+  Terms      <- atrx$terms
   attr(Terms, "formula") <- formula
-  atr <- atrx$Design
+  atr        <- atrx$Design
   mmcolnames <- atr$mmcolnames
 
   Y <- model.extract(X, 'response')
   offs <- atrx$offset
   if(!length(offs)) offs <- 0
-  X <- model.matrix(sformula, X)
+  X <- model.matrix(Terms, X)
   alt <- attr(mmcolnames, 'alt')
   if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
   X <- X[, mmcolnames, drop=FALSE]
@@ -111,9 +123,17 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 
 	ass <- DesignAssign(atr, nrp, Terms)
   priorsd <- rep(priorsd, length=p)
-	d <- list(X=Xs, y=yint, N=n, p=p, k=k, sds=as.array(priorsd))
+	d <- list(X=Xs, y=yint, N=n, p=p, k=k, sds=as.array(priorsd),
+            rate = 1. / rsdmean)
+  Nc <- 0
+  if(length(cluster)) {
+    cl        <- as.integer(as.factor(cluster))
+    Nc        <- max(cl, na.rm=TRUE)
+    d$Nc      <- Nc
+    d$cluster <- cl
+    }
+  
 	if(any(is.na(Xs)) | any(is.na(yint))) stop('program logic error')
-	# fitter <- paste0(find.package('rms'), '/', fitter, '.stan')
   stanloc <- .Options$stancompiled
   if(! length(stanloc)) stop('options(stancompiled) not defined')
   file <- paste0(stanloc, '/', fitter, '.rds')
@@ -135,12 +155,11 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     alphas <- parm[al]
     betas  <- parm[be]
     thetas <- parm[th]
-    ineq <- if(nrp == 1) 'y=' else 'y>='
-    names(alphas) <- paste0(ineq, ylev[-1])
+    names(alphas) <- if(nrp == 1) 'Intercept' else paste0('y>=', ylev[-1])
     alphas <- alphas - sum(betas * xbar)
     names(betas)  <- names(thetas) <- atr$colnames
     opt <- list(coefficients=c(alphas, betas), theta=thetas,
-              deviance=-2 * g$value,
+              sigmag=parm['sigmag'], deviance=-2 * g$value,
               return_code=g$return_code, hessian=g$hessian,
               executionTime=otime)
     if(method == 'optimizing') return(opt)
@@ -152,22 +171,31 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 	nam <- names(g)
 	al  <- nam[grep('alpha\\[', nam)]
 	be  <- nam[grep('beta\\[', nam)]
-	
-	alphas <- as.matrix(g)[, al, drop=FALSE]
-	betas  <- as.matrix(g)[, be, drop=FALSE]
-	
+  ga  <- nam[grep('gamma\\[', nam)]
+
+  draws  <- as.matrix(g)
+	alphas <- draws[, al, drop=FALSE]
+	betas  <- draws[, be, drop=FALSE]
+
+  sigmags <- NULL; clparm <- character(0); gammas <- NULL
+  if(length(cluster)) {
+    sigmags <- draws[, 'sigmag']
+    clparm  <- 'sigmag'
+    cle     <- draws[, ga, drop=FALSE]
+    gammas  <- apply(cle, 2, median)
+  }
+  
 	diagnostics <-
-		rstan::summary(g, pars=c(al, be), probs=NULL)$summary[,c('n_eff', 'Rhat')]
+		rstan::summary(g, pars=c(al, be, clparm),
+                   probs=NULL)$summary[,c('n_eff', 'Rhat')]
 		
 	# Back-scale to original data scale
 	alphacorr <- rowSums(sweep(betas, 2, xbar, '*')) # was xbar/xsd
 	alphas    <- sweep(alphas, 1, alphacorr, '-')
 	# betas     <- sweep(betas, 2, xsd, '/')
-  ineq <- if(nrp == 1) 'y=' else 'y>='
-	colnames(alphas) <- paste0(ineq, ylev[-1])
+	colnames(alphas) <- if(nrp == 1) 'Intercept' else paste0('y>=', ylev[-1])
 	colnames(betas)  <- atr$colnames
 	draws            <- cbind(alphas, betas)
-
 
   param <- rbind(mean=colMeans(draws), median=apply(draws, 2, median))
   if(method != 'sampling') {
@@ -176,17 +204,22 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     }
   
 	res <- list(call=call,
-							draws=draws, param=param, N=n, p=p, ylevels=ylev, freq=table(Y),
+							draws=draws, sigmags=sigmags,
+              gammas=gammas,
+              param=param, N=n, p=p, ylevels=ylev, freq=table(Y),
 						  alphas=al, betas=be,
 						  xbar=xbar, Design=atr, scale.pred=c('log odds', 'Odds Ratio'),
 							terms=Terms, assign=ass, na.action=atrx$na.action, fail=FALSE,
 							non.slopes=nrp, interceptRef=kmid, sformula=sformula,
 							x=if(x) X, y=if(y) Y,
+              clusterInfo=if(length(cluster))
+                list(cluster=if(x) cluster else NULL, n=Nc, name=clustername),
 							rstan=g, opt=opt, diagnostics=diagnostics,
               iter=iter, chains=chains)
 	class(res) <- c('blrm', 'rmsb', 'rms')
 	res
 }
+
 ##' Compute Indexes of Predictive Accuracy and Their Uncertainties
 ##'
 ##' For a binary or ordinal logistic regression fit from \code{blrm}, computes several indexes of predictive accuracy along with credible intervals for them.  Optionally plots their posterior densities.
@@ -355,10 +388,21 @@ print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=1000,
     z[[k]] <- list(type=paste('naprint',class(x$na.action),sep='.'),
                    list(x$na.action))
   }
-  
-  misc <- reListclean(Obs   = x$N,
-                      Draws = nrow(x$draws),
-                      p     = x$p)
+
+  ci       <- x$clusterInfo
+  sigmasum <- NULL
+  if(length(ci)) {
+    sig <- x$sigmags
+    alp <- (1. - cint) / 2.
+    sq <- round(quantile(sig, c(alp, 0.5, 1. - alp)), 4)
+    sigmasum <- paste0(sq[2], ' [', sq[1], ', ', sq[3], ']')
+    }
+  misc <- reListclean(Obs           = x$N,
+                      Draws         = nrow(x$draws),
+                      p             = x$p,
+                      'Cluster on'  = ci$name,
+                      Clusters      = ci$n,
+                      'sigma gamma' = sigmasum)
   
   if(length(x$freq) < 4) {
     names(x$freq) <- paste(if(latex)'~~' else ' ',

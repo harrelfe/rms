@@ -77,7 +77,7 @@ stanDxplot(g)
 stanDx(g)
 ```
 
-Here are the posterior distributions, calculated using kernel density estimates from posterior draws.
+Here are the posterior distributions, calculated using kernel density estimates from posterior draws.  Posterior models, shown as vertical lines, are parameter values that maximize the log posterior density (using `rstan::optimizing` in the original model fit) so do not necessarily coincide with the peak of the kernel density estimates.
 
 ```{r stanpost}
 plot(g)    # invokes rstan::stan_dens, defaults to showing betas
@@ -149,7 +149,8 @@ plot(g)
 Show approximate relative explained variation (REV) and compare this with Wald statistics from the frequentist `lrm` model.  REV is less accurate the more the multivariate posterior distribution differs from a multivariate normal distribution.  On a given posterior draw, REV for a term in the model is the Wald $\chi^2$ statistic divided by the Wald statistic for the whole model.
 
 ```{r rev,results='asis'}
-anova(g)
+a <- anova(g)
+plot(a)
 anova(f)
 ```
 Compute odds ratios over default inter-quartile ranges for continuous predictors, based on posterior mode parameters.  Also show 0.95 credible intervals.  Note that unlike the `print` method, the `plot` method for `summary` doesn't actually compute credible intervals, but approximates them by assuming normality and using the standard deviation of the posterior samples.  Compute the plot with the ordinary `lrm` result.
@@ -190,4 +191,61 @@ y <- ifelse(runif(n) <= plogis(L), 1, 0)
 f <- blrm(y ~ x, x=TRUE, y=TRUE, iter=3000)
 f
 plot(f)
+```
+
+## Longitudinal Data Examples: Random Effects
+
+Let's generate some data with repeatedly measured outcome per subject where the outcome is binary and the random effects have a $N(0, 0.25^2)$ distribution.  500 subjects have 10 measurements each.
+
+```{r re, results='asis'}
+n <- 500   # subjects
+set.seed(2)
+re <- rnorm(n) * 0.25
+X <- runif(n)   # baseline covariate, will be duplicated over repeats
+m <- 10         # measurements per subject
+
+id <- rep(1 : n, each = m)
+x  <- X[id]
+L <- x + re[id]   # actual logit
+y <- ifelse(runif(n * m) <= plogis(L), 1, 0)
+f <- lrm(y ~ x, x=TRUE, y=TRUE)     # ordinary fit
+f     # now use cluster sandwich covariance estimator:
+g <- robcov(f, id)  # covariance matrix adjusted for clustering
+g
+```
+
+Now use a Bayesian random effects model.  The prior distribution for the standard deviation $\sigma_{\gamma}$ of the random effects ($\gamma$s) is assumed to be exponential, and we will use the default mean of this distribution of 1.0.
+
+```{r bayesre, results='asis'}
+b <- blrm(y ~ x + cluster(id), x=TRUE, y=TRUE)
+b
+plot(b)
+```
+
+```{r bayesreh}
+# Plot distribution of the 500 estimated random effects (posterior medians)
+hist(b$gammas, xlab='Estimated Random Effects', nclass=40)
+```
+
+Now generate similar data except for a bimodal random effects distribution.  This will fool the random effects normal prior into having a wider variance for a single normal distribution but will still result in estimated random effects that are somewhat realistic.
+
+```{r re2, results='asis',w=7,h=6}
+n <- 500
+set.seed(3)
+re <- c(rnorm(n/2, mean=-1.75), rnorm(n/2, mean=1.75)) * 0.25
+cat('SD of real random effects:', round(sd(re), 4), '\n')
+X <- runif(n)   # baseline covariate, will be duplicated over repeats
+m <- 10         # measurements per subject
+
+id <- rep(1 : n, each = m)
+x  <- X[id]
+L <- x + re[id]   # actual logit
+y <- ifelse(runif(n * m) <= plogis(L), 1, 0)
+b <- blrm(y ~ x + cluster(id), x=TRUE, y=TRUE)
+b
+par(mfrow=c(2, 2))
+hist(b$gammas, xlab='Estimated Random Effects', nclass=40, main='')
+hist(re,       xlab='Real Random Effects',      nclass=40, main='')
+plot(re, b$gammas, xlab='Real', ylab='Estimated')
+abline(a=0, b=1)
 ```

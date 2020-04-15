@@ -18,9 +18,12 @@ stanDx <- function(object) {
 			'and Rhat is the potential scale reduction factor on split chains',
 			'(at convergence, Rhat=1)\n', sep='\n')
 	d <- object$diagnostics
-	d[, 'n_eff'] <- round(d[, 'n_eff'])
-	d[, 'Rhat']  <- round(d[, 'Rhat'], 3)
-	rownames(d) <- colnames(draws)
+	d[, 'n_eff']  <- round(d[, 'n_eff'])
+	d[, 'Rhat']   <- round(d[, 'Rhat'], 3)
+  cn            <- colnames(draws)
+  rn            <- rownames(d)
+  if((length(cn) < length(rn)) && ('sigmag' %in% rn)) cn <- c(cn, 'sigmag')
+	rownames(d)   <- cn
 	d
 }
 
@@ -139,6 +142,7 @@ print.rmsb <- function(x, cint=0.95, dec=4, pr=TRUE, ...) {
 ##'
 ##' Retrieves Stan code files from the github repository, compiles then with \code{rstan::stan_model}, and stores the compiled code in a central placed defined by the user with e.g. \code{options(stancompiled='~/R/stan')}.
 ##' stanCompile
+##' @param mods character vector of base names of \code{.stan} model files to compile.  Default is to compile all those currently in use in \code{rms}
 ##' @param repo URL to online source file base
 ##' @examples
 ##'   \dontrun{
@@ -147,13 +151,13 @@ print.rmsb <- function(x, cint=0.95, dec=4, pr=TRUE, ...) {
 ##'   }
 ##' @author Frank Harrell
 stanCompile <-
-  function(repo='https://raw.githubusercontent.com/harrelfe/stan/master') {
+  function(mods=c('lrm', 'lrmqr', 'lrmqrc'),
+           repo='https://raw.githubusercontent.com/harrelfe/stan/master') {
   requireNamespace('rstan', quietly=TRUE)
   options(auto_write = FALSE)
   stanloc <- .Options$stancompiled
   if(! length(stanloc)) stop('options(stancompiled=) not defined')
 
-  mods <- c('lrm', 'lrmqr')
   cat('Compiling', length(mods), 'programs to', stanloc, '\n')
   for(m in mods) {
     cat('Compiling', m, '\n')
@@ -182,6 +186,11 @@ plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, cint=0.95, ...) {
   alp   <- (1. - cint) / 2.
   nrp   <- num.intercepts(x)
   draws <- x$draws
+  est   <- x$param
+  if(length(x$sigmags)) {
+    draws <- cbind(draws, sigmag=x$sigmags)
+    est   <- cbind(est, sigmag=c(NA, mean(x$sigmags), median(x$sigmags)))
+    }
   nd    <- nrow(draws)
   nam   <- colnames(draws)
   if(! length(which)) which <- if(nrp == 0) nam else nam[-(1 : nrp)]
@@ -192,7 +201,7 @@ plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, cint=0.95, ...) {
   
   draws  <- as.vector(draws)
   param  <- factor(rep(which, each=nd), which)
-  est    <- x$param[, which, drop=FALSE]
+  est    <- est[, which, drop=FALSE]
   est    <- rbind(est, ci)
   ne     <- nrow(est)
   stat   <- rownames(est)

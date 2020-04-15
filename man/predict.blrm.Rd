@@ -11,13 +11,13 @@
     "ccterms", "adjto", "adjto.data.frame", "model.frame"),
   se.fit = FALSE,
   codes = FALSE,
-  posterior.summary = c("mean", "median")
+  posterior.summary = c("mode", "mean", "median")
 )
 }
 \arguments{
 \item{object, ..., type, se.fit, codes}{see \link{predict.lrm}}
 
-\item{posterior.summary}{set to \code{'median'} to use posterior median instead of mean}
+\item{posterior.summary}{set to \code{'mean'} or \code{'median'} to use posterior mean/median instead of mode}
 }
 \value{
 a data frame,  matrix, or vector

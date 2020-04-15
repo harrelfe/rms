@@ -10,12 +10,13 @@ blrm(
   subset,
   na.action = na.delete,
   priorsd = rep(100, p),
+  rsdmean = 1,
   iter = 2000,
   chains = 4,
   refresh = 0,
   x = FALSE,
   y = FALSE,
-  fitter = "lrmqr",
+  fitter = if (length(cluster)) "lrmqrc" else "lrmqr",
   method = c("both", "sampling", "optimizing"),
   ...
 )
@@ -31,6 +32,8 @@ blrm(
 
 \item{priorsd}{vector of prior standard deviations.  If the vector is shorter than the number of model parameters, it will be repeated until the length equals the number of parameters.}
 
+\item{rsdmean}{the assumed mean of the prior distribution of the standard deviation of random effects.  An exponential prior distribution is assumed, and the rate for that distribution is the reciprocal of the mean.  The default is a mean of 1.0, which is reasonable for a unitless regression model scale such as log odds.}
+
 \item{iter}{number of posterior samples per chain for \link[rstan:sampling]{rstan::sampling} to run}
 
 \item{chains}{number of separate chains to run}
@@ -41,7 +44,7 @@ blrm(
 
 \item{y}{set to \code{TRUE} to store the response variable in the fit}
 
-\item{fitter}{base name of Stan code file, choices are \code{lrmqr} (the default; recommended) and \code{lrm}}
+\item{fitter}{base name of Stan code file, choices are \code{lrmqr} or \code{lrmqrc} (the defaults, with the second being used if \code{cluster} is present; recommended) and \code{lrm} (only if no clusterming)}
 
 \item{method}{set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.}
 
@@ -55,6 +58,8 @@ Bayesian Binary and Ordinal Logistic Regression
 }
 \details{
 Uses \code{rstan} with pre-compiled Stan code whose location is given by the user in \code{options(stancompiled='...')} to get posterior draws of parameters from a binary logistic or proportional odds semiparametric ordinal logistic model.  The Stan code internally using the qr decompositon on the design matrix so that highly collinear columns of the matrix do not hinder the posterior sampling.  The parameters are transformed back to the original scale before returning results to R.   Design matrix columns re centered before running Stan, so Stan diagnostic output will have the intercept terms shifted but the results of \code{blrm} for intercepts are for the original uncentered data.  The only prior distributions are normal with mean zero, and the vector of prior standard deviations is given in \code{priorsd}.  These priors are for the qr-projected design matrix elements, except that the very last element is not changed.  So if one has a single non-interactive linear or binary variable for which a skeptical prior is designed, put that variable last in the model.
+
+\code{blrm} also handles single-level hierarchical random effects models for the case when there are repeated measurements per subject which are reflected as random intercepts.
 }
 \examples{
 \dontrun{
@@ -76,6 +81,10 @@ Uses \code{rstan} with pre-compiled Stan code whose location is given by the use
   summary(f, ...)     # invokes summary.rms
   contrast(f, ...)    # contrast.rms computes credible intervals
   plot(nomogram(f, ...)) # plot nomogram using posterior mean parameters
+
+  # Fit a random effects model to handle multiple observations per
+  # subject ID
+  f <- blrm(outcome ~ rcs(age, 5) + sex + cluster(id), data=mydata)
 } 
 }
 \seealso{
