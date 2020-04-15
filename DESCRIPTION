@@ -20,7 +20,7 @@ Description: Regression modeling, testing, estimation, validation,
 	models, Cox regression, accelerated failure time models,
 	ordinary linear models,	the Buckley-James model, generalized least
 	squares for serially or spatially correlated observations, generalized
-	linear models, and quantile regression.  Bayesian methods are implemented for b inary and ordinal logistic regression.
+	linear models, and quantile regression.  Bayesian methods are implemented for binary and ordinal logistic regression with or without random effects.
 License: GPL (>= 2)
 URL: http://biostat.mc.vanderbilt.edu/rms
 LazyLoad: yes
