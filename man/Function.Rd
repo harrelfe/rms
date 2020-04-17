@@ -26,7 +26,7 @@ regression model.
 }
 \usage{
 \method{Function}{rms}(object, intercept=NULL,
- digits=max(8, .Options$digits), posterior.summary=c('mode', 'mean', 'median'), \dots)
+ digits=max(8, .Options$digits), posterior.summary=c('mean', 'median', 'mode'), \dots)
 \method{Function}{cph}(object, intercept=-object$center, \dots)
 
 # Use result as fun(predictor1=value1, predictor2=value2, \dots)

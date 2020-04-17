@@ -29,7 +29,7 @@ predictrms(fit, newdata=NULL,
            kint=NULL,
            na.action=na.keep, expand.na=TRUE,
            center.terms=type=="terms", ref.zero=FALSE,
-           posterior.summary=c('mode', 'mean', 'median'), ...)
+           posterior.summary=c('mean', 'median', 'mode'), ...)
 \method{predict}{bj}(object, newdata,
         type=c("lp", "x", "data.frame", "terms", "cterms", "ccterms",
                "adjto", "adjto.data.frame", "model.frame"), 
@@ -148,8 +148,8 @@ individual predicted values by specifying \code{conf.type="individual"}.
 }
 \item{posterior.summary}{when making predictions from a Bayesian model,
         specifies whether you want the linear predictor to be computed
-        from the posterior mode of parameters (default) or the posterior
-        mean or median median}
+        from the posterior mean of parameters (default) or the posterior
+        mode or median median}
 \item{kint}{
 a single integer specifying the number of the intercept to use in
 multiple-intercept models.  The default is 1 for \code{lrm} and the

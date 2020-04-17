@@ -4,12 +4,12 @@
 \alias{blrmStats}
 \title{blrmStats}
 \usage{
-blrmStats(fit, ns = 1000, cint = 0.95, pl = FALSE)
+blrmStats(fit, ns = 400, cint = 0.95, pl = FALSE)
 }
 \arguments{
 \item{fit}{an object produced by \code{blrm}}
 
-\item{ns}{number of posterior draws to use in the calculations (default is 1000)}
+\item{ns}{number of posterior draws to use in the calculations (default is 400)}
 
 \item{cint}{credible interval probability (default is 0.95)}
 

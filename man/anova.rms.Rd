@@ -52,7 +52,7 @@ depending on \code{options(prType=)}, and output is to the console.  For
 \method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9, 
       test=c('F','Chisq'), india=TRUE, indnl=TRUE, ss=TRUE,
       vnames=c('names','labels'),
-      posterior.summary=c('mode', 'mean', 'median'), ns=500, cint=0.95)
+      posterior.summary=c('mean', 'median', 'mode'), ns=500, cint=0.95)
 
 \method{print}{anova.rms}(x,
       which=c('none','subscripts','names','dots'),

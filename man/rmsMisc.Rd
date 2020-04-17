@@ -225,7 +225,7 @@ formatNP(x, digits=NULL, pvalue=FALSE,
 
 removeFormulaTerms(form, which=NULL, delete.response=FALSE)
 
-getParamCoef(fit, posterior.summary=c('mode', 'mean', 'median'))
+getParamCoef(fit, posterior.summary=c('mean', 'median', 'mode'))
 }
 \arguments{
 \item{fit}{result of a fitting function}

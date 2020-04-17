@@ -10,7 +10,20 @@ output:
 description: "`blrm` Examples"
 ---
 
-`blrm` is for Bayesian binary and ordinal proportional odds logistic regression.  It is the analog of `rms::lrm` and for ordinal responses is intended for outcomes with up to a few dozen ordinal levels.  `blrm` uses precompiled Stan code written by Ben Goodrich of Columbia University.
+# Overview and Setup
+
+`blrm` is for Bayesian binary and ordinal proportional odds logistic regression.  It is the analog of `rms::lrm` and for ordinal responses is intended for outcomes with up to a few dozen ordinal levels.  `blrm` uses precompiled Stan code written by Ben Goodrich of Columbia University.  To use `blrm` you must prepare by doing the following:
+
+1. Install the `rstan` package
+1. Run the following R commands to compile Stan code used by `rms` whenever one of the `.stan` files changes [here](https://github.com/harrelfe/stan)
+```
+require(rms)    # On my system: stancompiled='~/R/stan'
+options(stancompiled='whatever directory to hold compiled Stan code')
+stanCompile()
+```
+This will download and compile the `.stan` programs, and will abort if you did not install `rstan` first.  Each program takes about a minute to compile, and you **do not** need to do this step for each of your project directories.
+
+It is recommended that you put something like `options(stancompiled='~/R/stan')` in your home directory's `.Rprofile` file.
 
 ```{r setup}
 require(rms)
@@ -21,6 +34,8 @@ options(stancompiled='~/R/stan', prType='html')
 # place for all projects
 # stanCompile('~/R/stan')
 ```
+
+# Example: 10-level Ordinal Outcome
 
 Simulate a dataset with three predictors and one 10-level ordinal outcome.  Run the frequentist proportional odds model then the Bayesian one.
 
@@ -61,7 +76,7 @@ Fit the model with Dirichlet priors on intercepts and wide normal priors on the 
 In several places you will see an index named `Symmetry`.  This is a measure of the symmetry of a posterior distribution.  Values farther from 1.0 indicate asymmetry, which indicates that the use of standard errors and the use of a normal approximation for the posterior distribution are not justified.  The symmetry index is the ratio of the gap between the posterior mean and the 0.95 quantile of the posterior distribution to the gap between the 0.05 quantile and the mean.
 
 ```{r blrmsim,results='asis'}
-g <- blrm(y ~ x1 + pol(x2, 2) + x3, x=TRUE, y=TRUE)
+g <- blrm(y ~ x1 + pol(x2, 2) + x3)
 g
 ```
 
@@ -126,6 +141,8 @@ s2 <- format(object.size(g), 'MB')
 cat('Before:', s1, '  After:', s2, '\n')
 ```
 
+# Example Using the `support` Dataset with Restricted Cubic Splines
+
 Turn to the `support` dataset and fit a binary logistic model to predict the probability of in-hospital death of critically ill adults.
 `blrm` keeps posterior sampling efficient by orthonormalizing the design matrix before doing the sampling (this is done internally in the Stan code).  This allows for arbitrary collinearities, for example in the basis functions used in restricted cubic splines.  When there are such collinearities, expect to see some disagreements in estimates between `blrm` and `lrm`, because the latter does not do orthonormalization (only normalization to mean 0 variance 1).  Collinearity implies that there are many different solutions to the equations, all giving almost the same predicted values.
 
@@ -180,20 +197,7 @@ For comparison here is a nomogram based on maximum likelihood estimates of param
 plot(nomogram(f, fun=plogis, funlabel='P(death)'))
 ```
 
-Simulate a two-sample situation for a rare outcome to study shape of posterior distribution of the log odds ratio.
-
-```{r sim2,results='asis'}
-set.seed(11)
-n <- 2000
-x <- c(rep(0, n/2), rep(1, n/2))
-L <- -4.2 + 0.8 * x
-y <- ifelse(runif(n) <= plogis(L), 1, 0)
-f <- blrm(y ~ x, x=TRUE, y=TRUE, iter=3000)
-f
-plot(f)
-```
-
-## Longitudinal Data Examples: Random Effects
+# Longitudinal Data Examples: Random Effects
 
 Let's generate some data with repeatedly measured outcome per subject where the outcome is binary and the random effects have a $N(0, 0.25^2)$ distribution.  500 subjects have 10 measurements each.
 
@@ -208,7 +212,7 @@ id <- rep(1 : n, each = m)
 x  <- X[id]
 L <- x + re[id]   # actual logit
 y <- ifelse(runif(n * m) <= plogis(L), 1, 0)
-f <- lrm(y ~ x, x=TRUE, y=TRUE)     # ordinary fit
+f <- lrm(y ~ x)     # ordinary fit
 f     # now use cluster sandwich covariance estimator:
 g <- robcov(f, id)  # covariance matrix adjusted for clustering
 g
@@ -217,7 +221,7 @@ g
 Now use a Bayesian random effects model.  The prior distribution for the standard deviation $\sigma_{\gamma}$ of the random effects ($\gamma$s) is assumed to be exponential, and we will use the default mean of this distribution of 1.0.
 
 ```{r bayesre, results='asis'}
-b <- blrm(y ~ x + cluster(id), x=TRUE, y=TRUE)
+b <- blrm(y ~ x + cluster(id))
 b
 plot(b)
 ```
@@ -241,7 +245,7 @@ id <- rep(1 : n, each = m)
 x  <- X[id]
 L <- x + re[id]   # actual logit
 y <- ifelse(runif(n * m) <= plogis(L), 1, 0)
-b <- blrm(y ~ x + cluster(id), x=TRUE, y=TRUE)
+b <- blrm(y ~ x + cluster(id))
 b
 par(mfrow=c(2, 2))
 hist(b$gammas, xlab='Estimated Random Effects', nclass=40, main='')
@@ -249,3 +253,71 @@ hist(re,       xlab='Real Random Effects',      nclass=40, main='')
 plot(re, b$gammas, xlab='Real', ylab='Estimated')
 abline(a=0, b=1)
 ```
+
+# Absorbing State in Mixed Effects Ordinal Regression
+
+`blrm` is not designed to handle this situation but let's see how it performs.
+
+For an ordinal outcome y=0, 1, 2, 3, 4, 5 suppose that y=5 represents an absorbing state such as death.  Suppose that subjects are observed for 10 days, and if death occurs within those days, all later values of y for that subject are set to 5.  Generate repeated outcomes under a $n(0, 0.25^2)$ random effects model with two treatments: `a` and `b`.  The `b:a` odds ratio is 0.65 and the cell probabilities are 0.3, 0.3, 0.1, 0.1, 0.1, 0.1 corresponding to y=0-5, when the random effect is zero.
+
+```{r os}
+# Generate data as if there is no absorbing state
+n <- 1000
+set.seed(6)
+pa <- c(.3, .3, .1, .1, .1, .1)     # P(Y=0-5 | tx=a, random effect=0)
+pb <- pomodm(p=pa, odds.ratio=0.65) # P(Y=0-5 | tx=b, re=0)   # Hmisc
+round(pb, 3)
+
+re <- rnorm(n) * 0.25
+tx <- c(rep('a', n/2), rep('b', n/2))   # will be duplicated over repeats
+m <- 10         # measurements per subject
+
+id   <- rep(1 : n, each = m)
+time <- rep(1 : m, n)
+or   <- exp(log(0.65) * (tx[id] == 'b') + re[id])
+y   <- integer(n * m)
+for(j in 1 : (n * m)) {
+  p    <- pomodm(p=pa, odds.ratio=or[j])
+	y[j] <- sample(0:5, 1, p, replace=TRUE)
+}
+Tx <- tx[id]
+table(Tx, y)
+```
+
+The first Bayesian proportional odds model fitted is the one that exactly matches the data generation model, as we have not yet imposed an absorbing state, so that outcomes with y < 5 can appear after a y=5 outcome for the subject.
+
+```{r noabs,results='asis'}
+b <- blrm(y ~ Tx + cluster(id))
+b
+```
+
+Now assume that state y=5 is an absorbing state.  Change observations after the first y=5 within subject to also have y=5.
+
+```{r absorb, results='asis'}
+require(data.table)
+g <- function(x) if(length(x)) min(x, na.rm=TRUE) else 99L
+u <- data.table(id, time, Tx, y, key='id')
+w <- u[, .(first=g(time[y == 5])), by=id]
+d <- u[w]
+
+# Show distribution of first time of y=5
+table(d[time == 1, first])
+# Set all observations after the first y=5 to also have y=5
+z <- d
+z[time > first, y:=5]
+table(u$y); table(d$y); table(z$y)
+bcf <- blrm(y ~ Tx + cluster(id), data=z)
+bcf
+```
+
+Next we truncate patient records so that y=5 is not carried forward.
+
+```{r nocarry,results='asis'}
+zt <- z[time <= first]
+bnc <- blrm(y ~ Tx + cluster(id), data=zt)
+bnc
+```
+
+# Computing Environment
+
+`r markupSpecs$html$session()`

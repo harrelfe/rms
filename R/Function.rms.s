@@ -1,6 +1,6 @@
 Function.rms <- function(object, intercept=NULL,
                          digits=max(8,.Options$digits),
-                         posterior.summary=c('mode', 'mean', 'median'), ...)
+                         posterior.summary=c('mean', 'median', 'mode'), ...)
 {
   posterior.summary <- match.arg(posterior.summary)
   

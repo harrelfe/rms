@@ -295,7 +295,7 @@ PostF <- function(fit, name=c('short', 'orig'), pr=FALSE) {
 #f(a); f(b1); f(b2)   # with(draws, assert) did not work
 
 # Help info is in rmsMisc.Rd since this is a non-exported function
-getParamCoef <- function(fit, posterior.summary=c('mode', 'mean', 'median')) {
+getParamCoef <- function(fit, posterior.summary=c('mean', 'median', 'mode')) {
   posterior.summary <- match.arg(posterior.summary)
   param <- fit$param
   if(posterior.summary == 'mode' && 'mode' %nin% rownames(param))

@@ -13,10 +13,10 @@
 ##' @param iter number of posterior samples per chain for [rstan::sampling] to run
 ##' @param chains number of separate chains to run
 ##' @param refresh see [rstan::sampling]
-##' @param x set to \code{TRUE} to store the design matrix in the fit.  Needed if running \code{blrmStats} for example
-##' @param y set to \code{TRUE} to store the response variable in the fit
+##' @param x set to \code{FALSE} to not store the design matrix in the fit.  \code{x=TRUE} is needed if running \code{blrmStats} for example.
+##' @param y set to \code{FALSE} to not store the response variable in the fit
 ##' @param fitter base name of Stan code file, choices are \code{lrmqr} or \code{lrmqrc} (the defaults, with the second being used if \code{cluster} is present; recommended) and \code{lrm} (only if no clusterming)
-##' @param method set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.
+##' @param method set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.  When random effects are present, \code{method} is automatically set to \code{'sampling'} as maximum likelihood estimates without marginalizing over the random effects do not make sense.
 ##' @param ... passed to \code{rstan::sampling} or \code{rstan:optimizing}
 ##' @return an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
 ##' @examples
@@ -50,7 +50,7 @@
 blrm <- function(formula, data, subset, na.action=na.delete,
 								 priorsd=rep(100, p), rsdmean=1, 
 								 iter=2000, chains=4, refresh=0,
-								 x=FALSE, y=FALSE,
+								 x=TRUE, y=TRUE,
                  fitter=if(length(cluster)) 'lrmqrc' else 'lrmqr',
                  method=c('both', 'sampling', 'optimizing'),
                  ...) {
@@ -131,6 +131,7 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     Nc        <- max(cl, na.rm=TRUE)
     d$Nc      <- Nc
     d$cluster <- cl
+    method    <- 'sampling'
     }
   
 	if(any(is.na(Xs)) | any(is.na(yint))) stop('program logic error')
@@ -225,7 +226,7 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 ##' For a binary or ordinal logistic regression fit from \code{blrm}, computes several indexes of predictive accuracy along with credible intervals for them.  Optionally plots their posterior densities.
 ##' @title blrmStats
 ##' @param fit an object produced by \code{blrm}
-##' @param ns number of posterior draws to use in the calculations (default is 1000)
+##' @param ns number of posterior draws to use in the calculations (default is 400)
 ##' @param cint credible interval probability (default is 0.95)
 ##' @param pl set to \code{TRUE} to plot the posterior densities using base graphics
 ##' @return list of class \code{'blrmStats'} whose most important element is \code{Stats}.  The indexes computed are defined below, with gp, B, EV, and vp computed using the intercept corresponding to the median value of Y.  See \url{http://fharrell.com/post/add-value} for more information.
@@ -245,7 +246,7 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 ##'   blrmStats(f, pl=TRUE)   # print and plot
 ##' }
 ##' @author Frank Harrell
-blrmStats <- function(fit, ns=1000, cint=0.95, pl=FALSE) {
+blrmStats <- function(fit, ns=400, cint=0.95, pl=FALSE) {
   X <- fit$x
   y <- fit$y
   if(length(X) == 0 | length(y) == 0)
@@ -270,7 +271,11 @@ blrmStats <- function(fit, ns=1000, cint=0.95, pl=FALSE) {
   dxy <- if(length(ylev) == 2)
            function(x, y) somers2(x, y)['Dxy']
          else
-           function(x, y) rcorr.cens(x, y)['Dxy']
+           function(x, y) {
+             con <- survival::survConcordance.fit(Surv(y), x)
+             conc <- con['concordant']; disc <- con['discordant']
+             - (conc - disc) / (conc + disc)
+             }
   brier <- function(x, y) mean((x - y) ^ 2)
   br2   <- function(p) var(p) / (var(p) + sum(p * (1 - p)) / length(p))
 
@@ -371,7 +376,7 @@ print.blrmStats <- function(x, dec=3, ...) {
 ##'   print(f, posterior.summary='median')   # instead of post. means
 ##' }
 ##' @author Frank Harrell
-print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=1000,
+print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=400,
                       title='Bayesian Logistic Regression Model', ...) {
   latex <- prType() == 'latex'
   
@@ -449,7 +454,7 @@ print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=1000,
 ##' Predict method for \code{blrm} objects
 ##' @title predict.blrm
 ##' @param object,...,type,se.fit,codes see [predict.lrm] 
-##' @param posterior.summary set to \code{'mean'} or \code{'median'} to use posterior mean/median instead of mode
+##' @param posterior.summary set to \code{'median'} or \code{'mode'} to use posterior median/mode instead of mean
 ##' @return a data frame,  matrix, or vector
 ##' @examples
 ##' \dontrun{
@@ -464,7 +469,7 @@ predict.blrm <- function(object, ...,
 		  "terms", "cterms", "ccterms", "adjto", "adjto.data.frame",
       "model.frame"),
 		se.fit=FALSE, codes=FALSE,
-    posterior.summary=c('mode', 'mean', 'median')) {
+    posterior.summary=c('mean', 'median', 'mode')) {
   
   type           <- match.arg(type)
   posterior.summary <- match.arg(posterior.summary)

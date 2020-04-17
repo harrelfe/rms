@@ -1,4 +1,4 @@
-Changes in version 6.0-0 (2020-04-15)
+Changes in version 6.0-0 (2020-04-17)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)
    * prModFit: changed default in catl function to center=FALSE
    * residuals.psm: added transformation of survival time when computing censored normalized residuals

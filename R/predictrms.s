@@ -12,7 +12,7 @@ predictrms <-
            kint=NULL,
            na.action=na.keep, expand.na=TRUE,
            center.terms=type=="terms", ref.zero=FALSE,
-           posterior.summary=c('mode', 'mean', 'median'), ...)
+           posterior.summary=c('mean', 'median', 'mode'), ...)
 {
   type              <- match.arg(type)
   conf.type         <- match.arg(conf.type)

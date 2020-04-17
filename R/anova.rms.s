@@ -5,7 +5,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
                       test=c('F','Chisq'),
                       india=TRUE, indnl=TRUE, ss=TRUE,
                       vnames=c('names', 'labels'),
-                      posterior.summary=c('mode', 'mean', 'median'),
+                      posterior.summary=c('mean', 'median', 'mode'),
                       ns=500, cint=0.95) {
 
   ava <- function(idx) {

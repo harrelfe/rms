@@ -9,7 +9,7 @@
   dec = 4,
   coefs = TRUE,
   cint = 0.95,
-  ns = 1000,
+  ns = 400,
   title = "Bayesian Logistic Regression Model",
   ...
 )

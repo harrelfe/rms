@@ -52,7 +52,7 @@ nomogram(fit, ..., adj.to, lp=TRUE, lp.at=NULL,
          fun=NULL, fun.at=NULL, fun.lp.at=NULL, funlabel="Predicted Value",
          interact=NULL, kint=NULL,  conf.int=FALSE, 
          conf.lp=c("representative", "all", "none"),
-         est.all=TRUE, posterior.summary=c('mode', 'mean', 'median'),
+         est.all=TRUE, posterior.summary=c('mean', 'median', 'mode'),
          abbrev=FALSE, minlength=4, maxscale=100, nint=10, 
          vnames=c("labels","names"),
          varname.label=TRUE, varname.label.sep="=",
@@ -174,8 +174,8 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
     meaning for the variables that are omitted from the graph.
   }
 	\item{posterior.summary}{when operating on a Bayesian model such as a
-		result of \code{blrm} specifies whether to use posterior mode
-		(default) vs. posterial mean/median of parameter values in constructing
+		result of \code{blrm} specifies whether to use posterior mean
+		(default) vs. posterior mode/median of parameter values in constructing
 		the nomogram}
   \item{abbrev}{
     Set to \code{TRUE} to use the \code{\link{abbreviate}} function to abbreviate levels of
