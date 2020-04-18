@@ -43,7 +43,7 @@ options(stancompiled='~/R/stan', prType='html')
 # Run the following once to store compiled Stan code in a central
 # place for all projects
 # stanCompile('~/R/stan')
-runfits <- FALSE   # set to FALSE if slow fits already run and saved
+runfits <- TRUE   # set to FALSE if slow fits already run and saved
 ```
 
 As the `rstan` component of `blrm` fit objects can be tens of megabytes in size. you'll see `rms` utility functions `fitSave` and `fitLoad` used in the examples below.  `fitSave` strips the `rstan` object out of a fit object and saves the much smaller fit object to an `.rds` file, and `fitLoad` restores the fit object (still without the `rstan` component).  You lose the ability to run the `rms::stanDxplot` on such restored objects, so the `stanDxplot` function tries to find an existing trace plot image file corresponding to the current R markdown chunk when the fit object no longer has the `rstan` component.  Note that using the `knitr` `cache=TRUE` option does not work well as the cache files for this script were about a GB in size, and the system does not accurately recognize when a model fit hasn't changed and doesn't need to be run when `rstan` is involved.
@@ -199,7 +199,10 @@ a
 plot(a)
 anova(f)
 ```
-Compute odds ratios over default inter-quartile ranges for continuous predictors, based on posterior mode parameters.  Also show 0.95 credible intervals.  Note that unlike the `print` method, the `plot` method for `summary` doesn't actually compute credible intervals, but approximates them by assuming normality and using the standard deviation of the posterior samples.  Compute the plot with the ordinary `lrm` result.
+
+**Note**: To get a Bayesian equivalent of a likelihood ratio test for comparing two models use the `rms` function `compareBmods`.
+
+Now compute odds ratios over default inter-quartile ranges for continuous predictors, based on posterior mode parameters.  Also show 0.95 credible intervals.  Note that unlike the `print` method, the `plot` method for `summary` doesn't actually compute credible intervals, but approximates them by assuming normality and using the standard deviation of the posterior samples.  Compute the plot with the ordinary `lrm` result.
 
 ```{r summary, results='asis',top=1}
 s <- summary(bsup)
@@ -249,7 +252,17 @@ g <- robcov(f, id)  # covariance matrix adjusted for clustering
 g
 ```
 
-Now use a Bayesian random effects model.  The prior distribution for the standard deviation $\sigma_{\gamma}$ of the random effects ($\gamma$s) is assumed to be exponential, and we will use the default mean of this distribution of 1.0.
+We first fit an inappropriate Bayesian model in which the random effects are omitted.
+
+```{r bayesreo, results='asis'}
+if(runfits) {
+  breo <- blrm(y ~ x)
+	fitSave(breo)
+	} else breo <- fitLoad(breo)
+breo
+```
+
+Now use a proper Bayesian random effects model.  The prior distribution for the standard deviation $\sigma_{\gamma}$ of the random effects ($\gamma$s) is assumed to be exponential, and we will use the default mean of this distribution of 1.0.
 
 ```{r bayesre, results='asis'}
 if(runfits) {
@@ -259,6 +272,16 @@ if(runfits) {
 bre
 plot(bre)
 ```
+
+Before delving more into the random effects model, let's compare this new model with the previous model that erroneously omitted the random effects.
+
+```{r compare}
+compareBmods(breo, bre)
+```
+
+Roughly speaking, of the two models, the one with random effects has a probability of 0.94 of being the correct one.  See `rstan::loo` and `loo::loo.array` for details.
+
+Now let's get into more details from the random effects model fit.
 
 ```{r bayesreh}
 # Plot distribution of the 500 estimated random effects (posterior medians)
