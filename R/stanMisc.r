@@ -222,17 +222,33 @@ plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, cint=0.95, ...) {
 
 ##' Diagnostic Trace Plots
 ##'
-##' For an \code{rms} Bayesian fit object, calls the \code{rstan} \code{traceplot} function on the \code{rstan} object inside the \code{rmsb} object, to check properties of posterior sampling
+##' For an \code{rms} Bayesian fit object, calls the \code{rstan} \code{traceplot} function on the \code{rstan} object inside the \code{rmsb} object, to check properties of posterior sampling.  If the \code{rstan} object has been removed and \code{previous=TRUE}, attempts to find an already existing plot created by a previous run of the \code{knitr} chunk, assuming it was the \code{plotno} numbered plot of the chunk.
 ##' @title stanDxplot
 ##' @param x an \code{rms} Bayesian fit object
 ##' @param which names of parameters to plot, defaulting to all non-intercepts
+##' @param previous see details
+##' @param plotno see details
 ##' @param ... passed to \code{rstan::traceplot}
-##' @return \code{ggplot2} object
+##' @return \code{ggplot2} object if \code{rstan} object was in \code{x}
 ##' @author Frank Harrell
-stanDxplot <- function(x, which=x$betas, ...) {
-  s <- stanGet(x)
-  rstan::traceplot(s, pars=which, ...)
-}
+stanDxplot <- function(x, which=x$betas, previous=TRUE, plotno=1, ...) {
+  s <- x$rstan
+  if(length(s)) return(rstan::traceplot(s, pars=which, ...))
+
+  if(! previous)
+    stop('fit did not have rstan information and you specified previous=FALSE')
+  ## Assume that the plot was generated in a previous run before
+  get   <- knitr::opts_current$get
+  path  <- get('fig.path')
+  cname <- get('label')
+  dev   <- get('dev')
+  if(! length(cname))
+    stop('with no rstan component in fit and previous=TRUE you must call stanDxplot inside a knitr Rmarkdown chunk')
+  file <- paste0(path, cname, '-', plotno, '.', dev)
+  if(! file.exists(file))
+    stop(paste('with no rstan component in fit, file', file, 'must exist when previous=TRUE'))
+  knitr::include_graphics(file)
+  }
 
 
 ##' Function Generator for Posterior Probabilities of Assertions
@@ -302,3 +318,46 @@ getParamCoef <- function(fit, posterior.summary=c('mean', 'median', 'mode')) {
     stop('posterior mode not included in model fit')
   param[posterior.summary, ]
 }
+
+##' Save Compact Version of rms Bayesian Fit
+##'
+##' Removes the \code{rstan} part a fit object and writes the fit object to the current working directory, with a \code{.rds} suffix, using \code{saveRDS}.
+##' @title fitSave
+##' @param fit 
+##' @param name suffix of file name to use if not the name of the object passed to \code{fitSave}
+##' @author Frank Harrell
+fitSave <- function(fit, name=as.character(substitute(fit))) {
+  file <- paste0(name, '.rds')
+  fit$rstan <- NULL
+  saveRDS(fit, file, compress='xz')
+  invisible()
+}
+
+##' Load a Saved rms Object
+##'
+##' Adds a suffix of \code{.rds} to the name of the argument and calls \code{readRDS} to read the stored object, returning it to the user
+##' @title fitLoad
+##' @param name 
+##' @return an object, using an rms package fit object
+##' @author Frank Harrell
+fitLoad <- function(name) {
+  file <- paste0(as.character(substitute(name)), '.rds')
+  readRDS(file)
+}
+
+
+##' Compare Bayesian Model Fits
+##'
+##' Uses \code{loo::loo_model_weights} to compare a series of models such as those created with \code{blrm}
+##' @title compareBmods
+##' @param ... a series of model fits
+##' @param method see [loo::loo_model_weights]
+##' @param r_eff_list see [loo::loo_model_weights]
+##' @return a \code{loo::loo_model_weights} object
+##' @author Frank Harrell
+##' @md
+compareBmods <- function(..., method='stacking', r_eff_list=NULL) {
+  fits <- list(...)
+  lo   <- lapply(fits, function(x) x$loo)
+  loo::loo_model_weights(lo, method=method, r_eff_list=r_eff_list)
+  }

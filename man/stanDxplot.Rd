@@ -4,23 +4,27 @@
 \alias{stanDxplot}
 \title{stanDxplot}
 \usage{
-stanDxplot(x, which = x$betas, ...)
+stanDxplot(x, which = x$betas, previous = TRUE, plotno = 1, ...)
 }
 \arguments{
 \item{x}{an \code{rms} Bayesian fit object}
 
 \item{which}{names of parameters to plot, defaulting to all non-intercepts}
 
+\item{previous}{see details}
+
+\item{plotno}{see details}
+
 \item{...}{passed to \code{rstan::traceplot}}
 }
 \value{
-\code{ggplot2} object
+\code{ggplot2} object if \code{rstan} object was in \code{x}
 }
 \description{
 Diagnostic Trace Plots
 }
 \details{
-For an \code{rms} Bayesian fit object, calls the \code{rstan} \code{traceplot} function on the \code{rstan} object inside the \code{rmsb} object, to check properties of posterior sampling
+For an \code{rms} Bayesian fit object, calls the \code{rstan} \code{traceplot} function on the \code{rstan} object inside the \code{rmsb} object, to check properties of posterior sampling.  If the \code{rstan} object has been removed and \code{previous=TRUE}, attempts to find an already existing plot created by a previous run of the \code{knitr} chunk, assuming it was the \code{plotno} numbered plot of the chunk.
 }
 \author{
 Frank Harrell

@@ -12,7 +12,17 @@ description: "`blrm` Examples"
 
 # Overview and Setup
 
-`blrm` is for Bayesian binary and ordinal proportional odds logistic regression.  It is the analog of `rms::lrm` and for ordinal responses is intended for outcomes with up to a few dozen ordinal levels.  `blrm` uses precompiled Stan code written by Ben Goodrich of Columbia University.  To use `blrm` you must prepare by doing the following:
+`blrm` is for Bayesian binary and ordinal proportional odds logistic regression.  It is the analog of `rms::lrm` and for ordinal responses is intended for outcomes with up to a few dozen ordinal levels.  The Bayesian approach has a number of advantage over traditional frequentist models, including
+
+1. the use of exact calculations (to within simulation error) instead of large sample (e.g., normal theory) approximations to p-values and confidence intervals
+1. exact and more intuitive inference when random effects are included in the model
+1. the ability to make probability statements about parameters and combinations of parameters, which includes computations or the probabilities of assertions such as "the effect of $x_1$ exceeds 1.2  **and** the effect of $x_2$ exceeds 0.7"
+1. capturing more sources of uncertainty.  For example, the `blrm` function automatically computes credible intervals on a variety of statistical indexes such as the Brier score and AUROC ($c$-index).  Note: By default these credible intervals are computed using only 400 posterior draws to save time.  For a `blrm` fit object `f` you can specify how many samples to draw, to get more accurate intervals, by specifying for example `print(f, ns=2000)`.
+1. the ability to incorporate external information or beliefs about parameters using prior distributions
+
+`blrm` uses normal priors for the $\beta$ parameters, and the user may specify the standard deviation of these priors separately for each model parameters.  The default is $\sigma=100$ which is nearly flat.  When there are random effects, the analyst may specify the mean of the exponential distribution that serves as the prior for the standard deviation of the random effects, with the default mean being 1.0, a reasonable number for the logit scale.
+
+`blrm` uses [Stan](https://mc-stan.org) code written by Ben Goodrich of Columbia University.  To use `blrm` you must prepare by doing the following:
 
 1. Install the `rstan` package
 1. Run the following R commands to compile Stan code used by `rms` whenever one of the `.stan` files changes [here](https://github.com/harrelfe/stan)
@@ -21,7 +31,7 @@ require(rms)    # On my system: stancompiled='~/R/stan'
 options(stancompiled='whatever directory to hold compiled Stan code')
 stanCompile()
 ```
-This will download and compile the `.stan` programs, and will abort if you did not install `rstan` first.  Each program takes about a minute to compile, and you **do not** need to do this step for each of your project directories.
+This will download and compile the `.stan` programs, and will abort if you did not install `rstan` first.  Each program takes about a minute to compile, and you **do not** need to do this step for each of your project directories.  Instead, store the compiled R objects centrally.
 
 It is recommended that you put something like `options(stancompiled='~/R/stan')` in your home directory's `.Rprofile` file.
 
@@ -33,7 +43,10 @@ options(stancompiled='~/R/stan', prType='html')
 # Run the following once to store compiled Stan code in a central
 # place for all projects
 # stanCompile('~/R/stan')
+runfits <- FALSE   # set to FALSE if slow fits already run and saved
 ```
+
+As the `rstan` component of `blrm` fit objects can be tens of megabytes in size. you'll see `rms` utility functions `fitSave` and `fitLoad` used in the examples below.  `fitSave` strips the `rstan` object out of a fit object and saves the much smaller fit object to an `.rds` file, and `fitLoad` restores the fit object (still without the `rstan` component).  You lose the ability to run the `rms::stanDxplot` on such restored objects, so the `stanDxplot` function tries to find an existing trace plot image file corresponding to the current R markdown chunk when the fit object no longer has the `rstan` component.  Note that using the `knitr` `cache=TRUE` option does not work well as the cache files for this script were about a GB in size, and the system does not accurately recognize when a model fit hasn't changed and doesn't need to be run when `rstan` is involved.
 
 # Example: 10-level Ordinal Outcome
 
@@ -76,47 +89,54 @@ Fit the model with Dirichlet priors on intercepts and wide normal priors on the 
 In several places you will see an index named `Symmetry`.  This is a measure of the symmetry of a posterior distribution.  Values farther from 1.0 indicate asymmetry, which indicates that the use of standard errors and the use of a normal approximation for the posterior distribution are not justified.  The symmetry index is the ratio of the gap between the posterior mean and the 0.95 quantile of the posterior distribution to the gap between the 0.05 quantile and the mean.
 
 ```{r blrmsim,results='asis'}
-g <- blrm(y ~ x1 + pol(x2, 2) + x3)
-g
+if(runfits) {
+  bs <- blrm(y ~ x1 + pol(x2, 2) + x3)
+	fitSave(bs)
+	# If you want to compute leave-out-one cross-validation measures,
+	# do so before the rstan object is taken out of the fit object:
+	bs.loo <- loo(stanGet(bs))
+	print(bs.loo)
+	} else bs <- fitLoad(bs)
+bs
 ```
 
 ```{r blrmStats}
 # Show more detailed analysis of model performance measures
-blrmStats(g, pl=TRUE)
+blrmStats(bs, pl=TRUE)
 ```
 
 Show basic Stan diagnostics. Intercepts are shifted from what is in `g` because of subtractions of covariate means before passing data to `rstan`.
 
 ```{r standx}
-stanDxplot(g)
-stanDx(g)
+stanDxplot(bs)
+stanDx(bs)
 ```
 
 Here are the posterior distributions, calculated using kernel density estimates from posterior draws.  Posterior models, shown as vertical lines, are parameter values that maximize the log posterior density (using `rstan::optimizing` in the original model fit) so do not necessarily coincide with the peak of the kernel density estimates.
 
 ```{r stanpost}
-plot(g)    # invokes rstan::stan_dens, defaults to showing betas
+plot(bs)    # invokes rstan::stan_dens, defaults to showing betas
 
 # Print frequentist side-by-side with Bayesian posterior mean, median, mode
 
-cbind(MLE=coef(f), t(g$param))
+cbind(MLE=coef(f), t(bs$param))
 
 # Compare covariance matrix of posterior draws with MLE
-round(diag(vcov(f)) / diag(vcov(g)), 2)
-range(vcov(f) / vcov(g))
+round(diag(vcov(f)) / diag(vcov(bs)), 2)
+range(vcov(f) / vcov(bs))
 ```
 
 Next show frequentist and Bayesian contrasts.  For the Bayesian contrast the point estimate is the posterior mean, and the 0.95 credible interval is computed.  Instead of a p-value, the posterior probability that the contrast is positive is computed.
 
 ```{r contrast}
-contrast(f, list(x1=0, x3=1), list(x1=.25, x3=0))
-contrast(g, list(x1=0, x3=1), list(x1=.25, x3=0))
+contrast(f,  list(x1=0, x3=1), list(x1=.25, x3=0))
+contrast(bs, list(x1=0, x3=1), list(x1=.25, x3=0))
 ```
 
 Compute posterior probabilities for various assertions about unknown true parameter values.  The `PostF` function is a function generator that effectively evaluates the assertion to a 0/1 value and computes the mean of these binary values over posterior draws.   As is the case with inference about the quadratic effect of `x2` below, when the assertion does not evaluate to a binary 0/1 or logical `TRUE/FALSE` value, it is taken as a quantity that is derived from one or more model parameters, and a posterior density is drawn for the derived parameter.  We use that to get a posterior distribution on the vertex of the quadratic `x2` effect.
 
 ```{r postprobs}
-P <- PostF(g, pr=TRUE)   # show new short legal R names
+P <- PostF(bs, pr=TRUE)   # show new short legal R names
 P(b3 > 0 & b1 > 1.5)
 P(b3 > 0)
 P(abs(b3) < 0.25)        # evidence for small |nonlinearity|
@@ -130,18 +150,23 @@ P(-b2 / (2 * b3))
 ```{r postprobs2}
 # Recreate the P function using original parameter names
 # (which may not be legal R name)
-P <- PostF(g, name='orig')
+P <- PostF(bs, name='orig')
 P(`x2^2` > 0)
 P(`x2^2` > 0 & x1 > 1.5)
 
 # Remove rstan results from g when finished with trace plots
-s1 <- format(object.size(g), 'MB')
-g$rstan <- NULL
-s2 <- format(object.size(g), 'MB')
-cat('Before:', s1, '  After:', s2, '\n')
+# Note: this will only be accurate when run with runfits=TRUE
+# Result: 33.8MB before, 0.5MB after
+if(runfits) {
+  s1 <- format(object.size(bs), 'MB')
+  bs$rstan <- NULL
+  s2 <- format(object.size(bs), 'MB')
+  cat('Before:', s1, '  After:', s2, '\n')
+	}
 ```
 
 # Example Using the `support` Dataset with Restricted Cubic Splines
+<a name="support"></a>
 
 Turn to the `support` dataset and fit a binary logistic model to predict the probability of in-hospital death of critically ill adults.
 `blrm` keeps posterior sampling efficient by orthonormalizing the design matrix before doing the sampling (this is done internally in the Stan code).  This allows for arbitrary collinearities, for example in the basis functions used in restricted cubic splines.  When there are such collinearities, expect to see some disagreements in estimates between `blrm` and `lrm`, because the latter does not do orthonormalization (only normalization to mean 0 variance 1).  Collinearity implies that there are many different solutions to the equations, all giving almost the same predicted values.
@@ -153,42 +178,46 @@ f <- lrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5),
 				 data=support, eps=1e-4, x=TRUE)
 f
 htmlVerbatim(Function(f))
-g <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
-					x=TRUE, y=TRUE, data=support)
-g
-htmlVerbatim(Function(g))   # by default uses posterior mode parameter values
-# To add an intercept use e.g. Function(g, intercept=coef(g, 'mode')[5])
+if(runfits) {
+  bsup <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
+	    	  		 data=support)
+	fitSave(bsup)
+	} else bsup <- fitLoad(bsup)
+bsup
+htmlVerbatim(Function(bsup))   # by default uses posterior mode parameter values
+# To add an intercept use e.g. Function(bsup, intercept=coef(g, 'mode')[5])
 
-htmlVerbatim(stanDx(g))
-stanDxplot(g)
-plot(g)
+htmlVerbatim(stanDx(bsup))
+stanDxplot(bsup)
+plot(bsup)
 ```
 Show approximate relative explained variation (REV) and compare this with Wald statistics from the frequentist `lrm` model.  REV is less accurate the more the multivariate posterior distribution differs from a multivariate normal distribution.  On a given posterior draw, REV for a term in the model is the Wald $\chi^2$ statistic divided by the Wald statistic for the whole model.
 
-```{r rev,results='asis'}
-a <- anova(g)
+```{r rev,results='asis',h=2.5}
+a <- anova(bsup)
+a
 plot(a)
 anova(f)
 ```
 Compute odds ratios over default inter-quartile ranges for continuous predictors, based on posterior mode parameters.  Also show 0.95 credible intervals.  Note that unlike the `print` method, the `plot` method for `summary` doesn't actually compute credible intervals, but approximates them by assuming normality and using the standard deviation of the posterior samples.  Compute the plot with the ordinary `lrm` result.
 
-```{r summary, results='asis'}
-s <- summary(g)
+```{r summary, results='asis',top=1}
+s <- summary(bsup)
 s
 plot(s)
-plot(summary(f))
+plot(summary(bsup))
 ```
 
 Draw partial effect plots with 0.95 credible intervals.  Point estimates are posterior modes (which can be easily changed).
 
 ```{r peffect}
-ggplot(Predict(g))
+ggplot(Predict(bsup))
 ```
 
 Draw a nomogram from posterior mode parameter values.
 
 ```{r nomogram}
-p <- nomogram(g, fun=plogis, funlabel='P(death)')
+p <- nomogram(bsup, fun=plogis, funlabel='P(death)')
 plot(p)
 ```
 For comparison here is a nomogram based on maximum likelihood estimates of parameters rather than posterior modes.
@@ -196,6 +225,8 @@ For comparison here is a nomogram based on maximum likelihood estimates of param
 ```{r nomfreq}
 plot(nomogram(f, fun=plogis, funlabel='P(death)'))
 ```
+
+<a name="re"></a>
 
 # Longitudinal Data Examples: Random Effects
 
@@ -212,7 +243,7 @@ id <- rep(1 : n, each = m)
 x  <- X[id]
 L <- x + re[id]   # actual logit
 y <- ifelse(runif(n * m) <= plogis(L), 1, 0)
-f <- lrm(y ~ x)     # ordinary fit
+f <- lrm(y ~ x, x=TRUE, y=TRUE)     # ordinary fit
 f     # now use cluster sandwich covariance estimator:
 g <- robcov(f, id)  # covariance matrix adjusted for clustering
 g
@@ -221,14 +252,17 @@ g
 Now use a Bayesian random effects model.  The prior distribution for the standard deviation $\sigma_{\gamma}$ of the random effects ($\gamma$s) is assumed to be exponential, and we will use the default mean of this distribution of 1.0.
 
 ```{r bayesre, results='asis'}
-b <- blrm(y ~ x + cluster(id))
-b
-plot(b)
+if(runfits) {
+  bre <- blrm(y ~ x + cluster(id))
+	fitSave(bre)
+	} else bre <- fitLoad(bre)
+bre
+plot(bre)
 ```
 
 ```{r bayesreh}
 # Plot distribution of the 500 estimated random effects (posterior medians)
-hist(b$gammas, xlab='Estimated Random Effects', nclass=40)
+hist(bre$gammas, xlab='Estimated Random Effects', nclass=40)
 ```
 
 Now generate similar data except for a bimodal random effects distribution.  This will fool the random effects normal prior into having a wider variance for a single normal distribution but will still result in estimated random effects that are somewhat realistic.
@@ -245,12 +279,15 @@ id <- rep(1 : n, each = m)
 x  <- X[id]
 L <- x + re[id]   # actual logit
 y <- ifelse(runif(n * m) <= plogis(L), 1, 0)
-b <- blrm(y ~ x + cluster(id))
-b
+if(runfits) {
+  breb <- blrm(y ~ x + cluster(id))
+	fitSave(breb)
+	} else breb <- fitLoad(breb)
+breb
 par(mfrow=c(2, 2))
-hist(b$gammas, xlab='Estimated Random Effects', nclass=40, main='')
+hist(breb$gammas, xlab='Estimated Random Effects', nclass=40, main='')
 hist(re,       xlab='Real Random Effects',      nclass=40, main='')
-plot(re, b$gammas, xlab='Real', ylab='Estimated')
+plot(re, breb$gammas, xlab='Real', ylab='Estimated')
 abline(a=0, b=1)
 ```
 
@@ -258,7 +295,7 @@ abline(a=0, b=1)
 
 `blrm` is not designed to handle this situation but let's see how it performs.
 
-For an ordinal outcome y=0, 1, 2, 3, 4, 5 suppose that y=5 represents an absorbing state such as death.  Suppose that subjects are observed for 10 days, and if death occurs within those days, all later values of y for that subject are set to 5.  Generate repeated outcomes under a $n(0, 0.25^2)$ random effects model with two treatments: `a` and `b`.  The `b:a` odds ratio is 0.65 and the cell probabilities are 0.3, 0.3, 0.1, 0.1, 0.1, 0.1 corresponding to y=0-5, when the random effect is zero.
+For an ordinal outcome y=0, 1, 2, 3, 4, 5 suppose that y=5 represents an absorbing state such as death.  Suppose that subjects are observed for 10 days, and if death occurs within those days, all later values of y for that subject are set to 5.  Generate repeated outcomes under a $N(0, 0.25^2)$ random effects model with two treatments: `a` and `b`.  The `b:a` odds ratio is 0.65 and the cell probabilities are 0.3, 0.3, 0.1, 0.1, 0.1, 0.1 corresponding to y=0-5, when the random effect is zero.
 
 ```{r os}
 # Generate data as if there is no absorbing state
@@ -287,16 +324,22 @@ table(Tx, y)
 The first Bayesian proportional odds model fitted is the one that exactly matches the data generation model, as we have not yet imposed an absorbing state, so that outcomes with y < 5 can appear after a y=5 outcome for the subject.
 
 ```{r noabs,results='asis'}
-b <- blrm(y ~ Tx + cluster(id))
-b
+if(runfits) {
+  bst <- blrm(y ~ Tx + cluster(id))
+	fitSave(bst)
+	} else bst <- fitLoad(bst)
+bst
 ```
+
+If `time` were to be added to the above model, you'll see that its regression coefficient is very small ($\hat{\beta}=0.009$ in this case), in alignment with the data generating model.
 
 Now assume that state y=5 is an absorbing state.  Change observations after the first y=5 within subject to also have y=5.
 
-```{r absorb, results='asis'}
+```{r absorb}
 require(data.table)
 g <- function(x) if(length(x)) min(x, na.rm=TRUE) else 99L
 u <- data.table(id, time, Tx, y, key='id')
+# Add variable 'first' which is time of first y=5 for subject (99 if never)
 w <- u[, .(first=g(time[y == 5])), by=id]
 d <- u[w]
 
@@ -306,16 +349,86 @@ table(d[time == 1, first])
 z <- d
 z[time > first, y:=5]
 table(u$y); table(d$y); table(z$y)
-bcf <- blrm(y ~ Tx + cluster(id), data=z)
+```
+
+```{r absorb2, results='asis'}
+if(runfits) {
+  bcf <- blrm(y ~ Tx + cluster(id), data=z)
+	fitSave(bcf)
+	} else bcf <- fitLoad(bcf)
 bcf
 ```
+
+The regression coefficient for treatment is too large (the true value is log(0.65) = `r round(log(0.64), 3)`).  The standard deviation of random effects is far too large (the true value is 0.25), reflecting increased dependence of outcomes without subject due to the duplication of y=5 records.  **However** the data being analyzed were not formally generated with the model that has a treatment odds ratio of 0.65.  Repeated correlated ordinal outcomes were generated with that odds ratio and with a random effect standard deviation of 0.25, but then the outcomes were overridden in the following fashion: The first time within a subject that y=5 causes suppression of all later records.
+
+What happens with time is added to this model?
+
+```{r absorb3, results='asis'}
+if(runfits) {
+  bcft <- blrm(y ~ Tx + time + cluster(id), data=z)
+	fitSave(bcft)
+	} else bcft <- fitLoad(bcft)
+bcft
+```
+
+We see that the slope of time is very large, but the treatment effect and random effect standard deviation are still very large.
 
 Next we truncate patient records so that y=5 is not carried forward.
 
 ```{r nocarry,results='asis'}
 zt <- z[time <= first]
-bnc <- blrm(y ~ Tx + cluster(id), data=zt)
+if(runfits) {
+  bnc <- blrm(y ~ Tx + cluster(id), data=zt)
+	fitSave(bnc)
+	} else bnc <- fitLoad(bnc)
 bnc
+```
+
+Finally, add time to the above model.
+
+```{r nocarryt, results='asis'}
+if(runfits) {
+  bnct <- blrm(y ~ Tx + time + cluster(id), data=zt)
+	fitSave(bnct)
+	} else bnct <- fitLoad(bnct)
+bnct
+```
+
+The time effect is very weak, and adding it did not change the already-accurate treatment effect posterior mean.
+
+# Speed of `blrm` For Large Numbers of Categories
+
+When there is a large number of intercepts in the model, the speed of `blrm` will decrease.  What about the speed of using `blrm` just to get (potentially penalized) maximul likelihood estimates?  Let's try fitting a progressively more continuous dependent variable.
+
+```{r manyint}
+set.seed(1)
+n <- 1000
+x <- rnorm(n)
+y <- x + rnorm(n)
+for(g in c(2, 4, 8, 16, 32, 64, 128, 256)) {
+  cat('\n', g, 'distinct values of y\n')
+  yg <- cut2(y, g=g)
+  print(system.time(f <- blrm(yg ~ x, method='optimizing')))
+}
+
+```
+This is impressive.  For g=256 compare with the execution time of the Newton-Raphson method making optimum use of sparse matrices.  Also compare coefficients.
+
+```{r morm}
+system.time(g <- orm(yg ~ x))
+plot(coef(g), coef(f), xlab='Coefficients from orm',
+     ylab='Coefficients from blrm')
+abline(a=0, b=1, col=gray(0.8))
+```
+
+See how long it takes to do posterior sampling with `rstan` when there are 16, 64, or 128 levels of y.
+
+```{r sampmany}
+for(g in c(16, 64, 128)) {
+  cat('\n', g, 'distinct values of y\n')
+  yg <- cut2(y, g=g)
+  print(system.time(h <- blrm(yg ~ x)))
+}
 ```
 
 # Computing Environment

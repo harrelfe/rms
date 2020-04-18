@@ -15,6 +15,7 @@
 ##' @param refresh see [rstan::sampling]
 ##' @param x set to \code{FALSE} to not store the design matrix in the fit.  \code{x=TRUE} is needed if running \code{blrmStats} for example.
 ##' @param y set to \code{FALSE} to not store the response variable in the fit
+##' @param loo set to \code{FALSE} to not run \code{loo} and store its result as object \code{loo} in the returned object
 ##' @param fitter base name of Stan code file, choices are \code{lrmqr} or \code{lrmqrc} (the defaults, with the second being used if \code{cluster} is present; recommended) and \code{lrm} (only if no clusterming)
 ##' @param method set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.  When random effects are present, \code{method} is automatically set to \code{'sampling'} as maximum likelihood estimates without marginalizing over the random effects do not make sense.
 ##' @param ... passed to \code{rstan::sampling} or \code{rstan:optimizing}
@@ -50,7 +51,7 @@
 blrm <- function(formula, data, subset, na.action=na.delete,
 								 priorsd=rep(100, p), rsdmean=1, 
 								 iter=2000, chains=4, refresh=0,
-								 x=TRUE, y=TRUE,
+								 x=TRUE, y=TRUE, loo=TRUE,
                  fitter=if(length(cluster)) 'lrmqrc' else 'lrmqr',
                  method=c('both', 'sampling', 'optimizing'),
                  ...) {
@@ -202,7 +203,9 @@ blrm <- function(formula, data, subset, na.action=na.delete,
   if(method != 'sampling') {
     param <- rbind(mode=opt$coefficients, param)
     opt$coefficients <- NULL
-    }
+  }
+
+  Loo <- if(loo) rstan::loo(g)
   
 	res <- list(call=call,
 							draws=draws, sigmags=sigmags,
@@ -212,7 +215,7 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 						  xbar=xbar, Design=atr, scale.pred=c('log odds', 'Odds Ratio'),
 							terms=Terms, assign=ass, na.action=atrx$na.action, fail=FALSE,
 							non.slopes=nrp, interceptRef=kmid, sformula=sformula,
-							x=if(x) X, y=if(y) Y,
+							x=if(x) X, y=if(y) Y, loo=Loo,
               clusterInfo=if(length(cluster))
                 list(cluster=if(x) cluster else NULL, n=Nc, name=clustername),
 							rstan=g, opt=opt, diagnostics=diagnostics,
@@ -401,13 +404,27 @@ print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=400,
     alp <- (1. - cint) / 2.
     sq <- round(quantile(sig, c(alp, 0.5, 1. - alp)), 4)
     sigmasum <- paste0(sq[2], ' [', sq[1], ', ', sq[3], ']')
+  }
+
+  loo <- x$loo
+  elpd_loo <- p_loo <- looic <- NULL
+  if(length(loo)) {
+    lo <- loo$estimates
+    pm <- if(prType() == 'plain') '+/-' else
+              markupSpecs[[prType()]][['plminus']]
+    nlo <- rownames(lo)
+    lo <- paste0(round(lo[, 'Estimate'], 2), pm, round(lo[, 'SE'], 2))
+    elpd_loo <- lo[1]; p_loo <- lo[2]; looic <- lo[3]
     }
   misc <- reListclean(Obs           = x$N,
                       Draws         = nrow(x$draws),
                       p             = x$p,
                       'Cluster on'  = ci$name,
                       Clusters      = ci$n,
-                      'sigma gamma' = sigmasum)
+                      'sigma gamma' = sigmasum,
+                      'LOO log L'   = lo[1],
+                      'LOO IC'      = lo[3],
+                      'Effective p' = lo[2])
   
   if(length(x$freq) < 4) {
     names(x$freq) <- paste(if(latex)'~~' else ' ',

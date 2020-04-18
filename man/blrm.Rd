@@ -16,6 +16,7 @@ blrm(
   refresh = 0,
   x = TRUE,
   y = TRUE,
+  loo = TRUE,
   fitter = if (length(cluster)) "lrmqrc" else "lrmqr",
   method = c("both", "sampling", "optimizing"),
   ...
@@ -43,6 +44,8 @@ blrm(
 \item{x}{set to \code{FALSE} to not store the design matrix in the fit.  \code{x=TRUE} is needed if running \code{blrmStats} for example.}
 
 \item{y}{set to \code{FALSE} to not store the response variable in the fit}
+
+\item{loo}{set to \code{FALSE} to not run \code{loo} and store its result as object \code{loo} in the returned object}
 
 \item{fitter}{base name of Stan code file, choices are \code{lrmqr} or \code{lrmqrc} (the defaults, with the second being used if \code{cluster} is present; recommended) and \code{lrm} (only if no clusterming)}
 
