@@ -92,10 +92,6 @@ In several places you will see an index named `Symmetry`.  This is a measure of 
 if(runfits) {
   bs <- blrm(y ~ x1 + pol(x2, 2) + x3)
 	fitSave(bs)
-	# If you want to compute leave-out-one cross-validation measures,
-	# do so before the rstan object is taken out of the fit object:
-	bs.loo <- loo(stanGet(bs))
-	print(bs.loo)
 	} else bs <- fitLoad(bs)
 bs
 ```
