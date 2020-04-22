@@ -222,6 +222,30 @@ plot(nomogram(f, fun=plogis, funlabel='P(death)'))
 
 # Longitudinal Data Examples: Random Effects
 
+## Schizophrenia Dataset from `mixor` Package
+
+The R `mixor` package fits frequentist random effects proportional odds models.  Let's analyze the first dataset discussed in the `mixor` package vignette.  The outcome is a 4-level severity of illness scale.
+
+```{r mixor}
+require(mixor)
+data(schizophrenia)
+d <- schizophrenia
+f <- mixor(imps79o ~ sqrt(Week) * TxDrug, id=id, link='logit', data=d)
+f
+sqrt(diag(vcov(f)))
+```
+
+Fit the same model using the Bayesian approach.
+
+```{r mixorb, results='asis'}
+fitIf(bmixor <- blrm(imps79o ~ sqrt(Week) * TxDrug + cluster(id), data=d))
+bmixor
+```
+
+The square of the posterior median for $\sigma_\gamma$ is `r median(bmixor$sigmags)^2` which compares well with the `mixor` estimate of 3.774.  The $\hat{\beta}$s also compare very well.  Note that the model is stated differently, which makes two of the intercepts have different meanings across packages.
+
+## Simulated Random Effects Longitudinal Data
+
 Let's generate some data with repeatedly measured outcome per subject where the outcome is binary and the random effects have a $N(0, 0.25^2)$ distribution.  500 subjects have 10 measurements each.
 
 ```{r re, results='asis'}
@@ -474,8 +498,9 @@ Ordinary logistic model ignoring the correlation pattern (`lrm(y ~ x)`) yields $
 
 Fit a Bayesian model that has random effects but ignores the additional within-subject serial correlation given the random effect.
 
-```{r fitwrong}
+```{r fitwrong,results='asis'}
 fitIf(bnoar1 <- blrm(y ~ x + cluster(id)))
+bnoar1
 ```
 
 We see that the SD of the random effects, $\sigma_\gamma$ was underestimated.  The $\hat{\beta}$ posterior mean and median look good, as well as the standard deviation of the posterior distribution.
@@ -495,6 +520,22 @@ Now fit the combination random intercept/AR(1) Bayesian binary logistic model.
 ```{r fitar1}
 fitIf(bar1 <- blrm(y ~ x + cluster(id) + aTime(time)))
 ```
+
+First look at diagnostics.
+
+```{r bar1dx}
+stanDx(bar1)
+stanDxplot(bar1, which=c('beta[1]', 'sigmag', 'rho'))
+```
+
+And now the fit summary.
+
+```{r bar1summary,results='asis'}
+bar1
+```
+
+The posterior mean $\beta$ and standard deviation of the posterior for $\beta$ look good.  The posterior median of $\sigma_\gamma$ is $\frac{1}{4}$ that used in simulating the data, and $\rho$ is $\frac{1}{7}$th.
+
 
 # Speed of `blrm` For Large Numbers of Categories
 

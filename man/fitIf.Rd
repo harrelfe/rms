@@ -7,7 +7,7 @@
 fitIf(w)
 }
 \arguments{
-\item{w}{an expression of the form \code{fitname - fitting_function(...)}}
+\item{w}{an expression of the form \code{fitname <- fitting_function(...)}}
 }
 \description{
 fitIf

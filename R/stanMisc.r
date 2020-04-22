@@ -23,6 +23,7 @@ stanDx <- function(object) {
   cn            <- colnames(draws)
   rn            <- rownames(d)
   if((length(cn) < length(rn)) && ('sigmag' %in% rn)) cn <- c(cn, 'sigmag')
+  if((length(cn) < length(rn)) && ('rho'    %in% rn)) cn <- c(cn, 'rho')
 	rownames(d)   <- cn
 	d
 }
@@ -350,7 +351,7 @@ fitLoad <- function(fit) {
 ##'
 ##' By calling \code{fitIf(fitname <- fitting_function(...))} \code{fitIf} determines whether the fit object has already been created under the file named \code{"fitname.rds"} in the current working directory, and if so loads it.  It also looks for a file with a name such as \code{"fitname-rstan.rds"} and if it exists laods it and adds that object as the \code{rstan} part of the model fit, for \code{rstan} diagnostics.  If the \code{"fitname.rds"} does not exist, runs the model fit, strips off the large \code{rstan} object, stores the short fit object in \code{"fitname.rds"} and stores the full fit object in R object \code{fitname} in the global environment.  To force a re-fit, remove the \code{.rds} object.
 ##' @title fitIf
-##' @param w an expression of the form \code{fitname - fitting_function(...)}
+##' @param w an expression of the form \code{fitname <- fitting_function(...)}
 ##' @author Frank Harrell
 fitIf <- function(w) {
   x <- as.character(substitute(w))
@@ -364,7 +365,7 @@ fitIf <- function(w) {
       fit$rstan <- rs
     }
     assign(fitname, fit, envir=.GlobalEnv)
-    return(invisible())
+    return(invisible())    # note that w was never evaluated
     }
   fit <- w   # evaluates w (runs the fit) and assigns in .GlobalEnv
   fitsmall <- fit
