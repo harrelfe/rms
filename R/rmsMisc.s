@@ -1096,6 +1096,8 @@ for(i in 1:p) {
                        html  = paste0(htmlGreek('tau'), '<sub>a</sub>')),
       'sigma gamma'= c(latex = '$\\sigma_{\\gamma}$',
                        html  = '&sigma;<sub>&gamma;</sub>'),
+      'sigma w'    = c(latex = '$\\sigma_{w}$',
+                       html  = '&sigma;<sub>w</sub>'),
       'gamma'      = c(latex = '$\\gamma$',
                        html  = htmlGreek('gamma')),
       'R2'         = c(latex = '$R^{2}$',

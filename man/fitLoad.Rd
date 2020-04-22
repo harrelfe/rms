@@ -4,10 +4,10 @@
 \alias{fitLoad}
 \title{fitLoad}
 \usage{
-fitLoad(name)
+fitLoad(fit)
 }
 \arguments{
-\item{name}{}
+\item{name}{R object name (unquoted) that was passed to \code{fitSave}}
 }
 \value{
 an object, using an rms package fit object

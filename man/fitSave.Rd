@@ -7,9 +7,9 @@
 fitSave(fit, name = as.character(substitute(fit)))
 }
 \arguments{
-\item{fit}{}
+\item{fit}{fit object whose unquoted name becomes the base name of the \code{.rds} file}
 
-\item{name}{suffix of file name to use if not the name of the object passed to \code{fitSave}}
+\item{name}{suffix of file name to use if not the name of the first argument passed to \code{fitSave}}
 }
 \description{
 Save Compact Version of rms Bayesian Fit

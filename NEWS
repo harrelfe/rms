@@ -1,4 +1,4 @@
-Changes in version 6.0-0 (2020-04-18)
+Changes in version 6.0-0 (2020-04-22)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)
    * prModFit: changed default in catl function to center=FALSE
    * residuals.psm: added transformation of survival time when computing censored normalized residuals
@@ -12,6 +12,8 @@ Changes in version 6.0-0 (2020-04-18)
    * new function PostF to generate an R function that computes posterior probabilities of assertions
    * added stanDxplot and plot methods for Bayesian fits
    * extended nomogram to use posterior mean or median parameter values
+   * extended Design() to deal with time() variables (for blrm)
+   * extended blrm to use Ben Goodrich's AR(1) model
 
 Changes in version 5.1-4 (2019-11-16)
    * anova.rms: added which LaTeX packages are needed in help page

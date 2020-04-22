@@ -43,10 +43,9 @@ options(stancompiled='~/R/stan', prType='html')
 # Run the following once to store compiled Stan code in a central
 # place for all projects
 # stanCompile('~/R/stan')
-runfits <- TRUE   # set to FALSE if slow fits already run and saved
 ```
 
-As the `rstan` component of `blrm` fit objects can be tens of megabytes in size. you'll see `rms` utility functions `fitSave` and `fitLoad` used in the examples below.  `fitSave` strips the `rstan` object out of a fit object and saves the much smaller fit object to an `.rds` file, and `fitLoad` restores the fit object (still without the `rstan` component).  You lose the ability to run the `rms::stanDxplot` on such restored objects, so the `stanDxplot` function tries to find an existing trace plot image file corresponding to the current R markdown chunk when the fit object no longer has the `rstan` component.  Note that using the `knitr` `cache=TRUE` option does not work well as the cache files for this script were about a GB in size, and the system does not accurately recognize when a model fit hasn't changed and doesn't need to be run when `rstan` is involved.
+As the `rstan` component of `blrm` fit objects can be tens of megabytes in size. you'll see `rms` utility function `fitIf` used in the examples below.  `fitIf` determines whether the fit has already been run by sensing the existence of a file named like `fitname.rds` in the current working directory, and quickly loads this object if so.  If an optional file named like `fitname-rstan.rds` is found, that file is also loaded and stored as the `rstan` component of the fit.  `fitIf` also stores a much smaller version of the object by creating `fitname.rds` after removing the large `rstan` component.  If `fitname.rds` doesn't already exist, the model fit is run and the entire result is returned to the user.  Also, a new `fitname.rds` is created without the large `rstan` object.  You lose the ability to run the `rms::stanDxplot` on restored objects (when `fitname-rstan.rds` did not exist), so the `stanDxplot` function tries to find an existing trace plot image file corresponding to the current R markdown chunk when the fit object no longer has the `rstan` component.  Note that using the `knitr` `cache=TRUE` option does not work well as the cache files for this script were about a GB in size, and the system does not accurately recognize when a model fit hasn't changed and doesn't need to be run when `rstan` is involved.
 
 # Example: 10-level Ordinal Outcome
 
@@ -89,10 +88,7 @@ Fit the model with Dirichlet priors on intercepts and wide normal priors on the 
 In several places you will see an index named `Symmetry`.  This is a measure of the symmetry of a posterior distribution.  Values farther from 1.0 indicate asymmetry, which indicates that the use of standard errors and the use of a normal approximation for the posterior distribution are not justified.  The symmetry index is the ratio of the gap between the posterior mean and the 0.95 quantile of the posterior distribution to the gap between the 0.05 quantile and the mean.
 
 ```{r blrmsim,results='asis'}
-if(runfits) {
-  bs <- blrm(y ~ x1 + pol(x2, 2) + x3)
-	fitSave(bs)
-	} else bs <- fitLoad(bs)
+fitIf(bs <- blrm(y ~ x1 + pol(x2, 2) + x3))
 bs
 ```
 
@@ -136,7 +132,7 @@ P <- PostF(bs, pr=TRUE)   # show new short legal R names
 P(b3 > 0 & b1 > 1.5)
 P(b3 > 0)
 P(abs(b3) < 0.25)        # evidence for small |nonlinearity|
-mean(g$draws[, 'x2^2'] > 0)    # longhand calculation
+mean(g$draws[, 'x2^2'] > 0, na.rm=TRUE)    # longhand calculation
 # Plot posterior distribution for the vertex of the quadratic x2 effect
 # This distribution should be wide because the relationship is linear
 # (true value of b3 is zero)
@@ -151,14 +147,14 @@ P(`x2^2` > 0)
 P(`x2^2` > 0 & x1 > 1.5)
 
 # Remove rstan results from g when finished with trace plots
-# Note: this will only be accurate when run with runfits=TRUE
+# Note: this will only be accurate when running the fits for
+# the first time (not when restoring shortened forms of them from
+# disc)
 # Result: 33.8MB before, 0.5MB after
-if(runfits) {
-  s1 <- format(object.size(bs), 'MB')
-  bs$rstan <- NULL
-  s2 <- format(object.size(bs), 'MB')
-  cat('Before:', s1, '  After:', s2, '\n')
-	}
+s1 <- format(object.size(bs), 'MB')
+bs$rstan <- NULL
+s2 <- format(object.size(bs), 'MB')
+cat('Before:', s1, '  After:', s2, '\n')
 ```
 
 # Example Using the `support` Dataset with Restricted Cubic Splines
@@ -174,11 +170,8 @@ f <- lrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5),
 				 data=support, eps=1e-4, x=TRUE)
 f
 htmlVerbatim(Function(f))
-if(runfits) {
-  bsup <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
-	    	  		 data=support)
-	fitSave(bsup)
-	} else bsup <- fitLoad(bsup)
+fitIf(bsup <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
+	    	  		 data=support))
 bsup
 htmlVerbatim(Function(bsup))   # by default uses posterior mode parameter values
 # To add an intercept use e.g. Function(bsup, intercept=coef(g, 'mode')[5])
@@ -251,20 +244,14 @@ g
 We first fit an inappropriate Bayesian model in which the random effects are omitted.
 
 ```{r bayesreo, results='asis'}
-if(runfits) {
-  breo <- blrm(y ~ x)
-	fitSave(breo)
-	} else breo <- fitLoad(breo)
+fitIf(breo <- blrm(y ~ x))
 breo
 ```
 
 Now use a proper Bayesian random effects model.  The prior distribution for the standard deviation $\sigma_{\gamma}$ of the random effects ($\gamma$s) is assumed to be exponential, and we will use the default mean of this distribution of 1.0.
 
 ```{r bayesre, results='asis'}
-if(runfits) {
-  bre <- blrm(y ~ x + cluster(id))
-	fitSave(bre)
-	} else bre <- fitLoad(bre)
+fitIf(bre <- blrm(y ~ x + cluster(id)))
 bre
 plot(bre)
 ```
@@ -275,7 +262,7 @@ Before delving more into the random effects model, let's compare this new model 
 compareBmods(breo, bre)
 ```
 
-Roughly speaking, of the two models, the one with random effects has a probability of 0.94 of being the correct one.  See `rstan::loo` and `loo::loo.array` for details.
+Roughly speaking, of the two models, the one with random effects has a probability of 0.95 of being the correct one.  See `rstan::loo` and `loo::loo.array` for details.
 
 Now let's get into more details from the random effects model fit.
 
@@ -298,10 +285,7 @@ id <- rep(1 : n, each = m)
 x  <- X[id]
 L <- x + re[id]   # actual logit
 y <- ifelse(runif(n * m) <= plogis(L), 1, 0)
-if(runfits) {
-  breb <- blrm(y ~ x + cluster(id))
-	fitSave(breb)
-	} else breb <- fitLoad(breb)
+fitIf(breb <- blrm(y ~ x + cluster(id)))
 breb
 par(mfrow=c(2, 2))
 hist(breb$gammas, xlab='Estimated Random Effects', nclass=40, main='')
@@ -343,10 +327,7 @@ table(Tx, y)
 The first Bayesian proportional odds model fitted is the one that exactly matches the data generation model, as we have not yet imposed an absorbing state, so that outcomes with y < 5 can appear after a y=5 outcome for the subject.
 
 ```{r noabs,results='asis'}
-if(runfits) {
-  bst <- blrm(y ~ Tx + cluster(id))
-	fitSave(bst)
-	} else bst <- fitLoad(bst)
+fitIf(bst <- blrm(y ~ Tx + cluster(id)))
 bst
 ```
 
@@ -371,49 +352,149 @@ table(u$y); table(d$y); table(z$y)
 ```
 
 ```{r absorb2, results='asis'}
-if(runfits) {
-  bcf <- blrm(y ~ Tx + cluster(id), data=z)
-	fitSave(bcf)
-	} else bcf <- fitLoad(bcf)
+fitIf(bcf <- blrm(y ~ Tx + cluster(id), data=z))
 bcf
+hist(bcf$gammas, xlab='Estimated Random Effects', nclass=40, main='')
 ```
 
-The regression coefficient for treatment is too large (the true value is log(0.65) = `r round(log(0.64), 3)`).  The standard deviation of random effects is far too large (the true value is 0.25), reflecting increased dependence of outcomes without subject due to the duplication of y=5 records.  **However** the data being analyzed were not formally generated with the model that has a treatment odds ratio of 0.65.  Repeated correlated ordinal outcomes were generated with that odds ratio and with a random effect standard deviation of 0.25, but then the outcomes were overridden in the following fashion: The first time within a subject that y=5 causes suppression of all later records.
+The regression coefficient for treatment is too large (the true value is log(0.65) = `r round(log(0.64), 3)`).  The standard deviation of random effects is large (the true value is 0.25), reflecting increased dependence of outcomes without subject due to the duplication of y=5 records.  **However** the data being analyzed were not formally generated with the model that has a treatment odds ratio of 0.65.  Repeated correlated ordinal outcomes were generated with that odds ratio and with a random effect standard deviation of 0.25, but then the outcomes were overridden in the following fashion: The first time within a subject that y=5 causes suppression of all later records.
 
+The histogram of estimated subject random effects (posterior medians) shows some bimodality with heavy right tail due to the y=5 absorbing state.  Let
+s also plot the random effects against the time of death (99 if the subject did not die, recoded here to 15).
+
+```{r revst}
+t5 <- subset(z, time == 1)$first
+t5 <- ifelse(t5 == 99, 15, t5)
+plot(t5, bcf$gammas, xlab='Time of y=5', ylab='Random Effect')
+```
 What happens with time is added to this model?
 
 ```{r absorb3, results='asis'}
-if(runfits) {
-  bcft <- blrm(y ~ Tx + time + cluster(id), data=z)
-	fitSave(bcft)
-	} else bcft <- fitLoad(bcft)
+fitIf(bcft <- blrm(y ~ Tx + time + cluster(id), data=z))
 bcft
 ```
 
 We see that the slope of time is very large, but the treatment effect and random effect standard deviation are still very large.
 
+Look at random effects again.
+
+```{r bcftre}
+hist(bcft$gammas, xlab='Estimated Random Effects', nclass=40, main='')
+plot(t5, bcft$gammas, xlab='Time of y=5', ylab='Random Effect')
+```
+
 Next we truncate patient records so that y=5 is not carried forward.
 
 ```{r nocarry,results='asis'}
 zt <- z[time <= first]
-if(runfits) {
-  bnc <- blrm(y ~ Tx + cluster(id), data=zt)
-	fitSave(bnc)
-	} else bnc <- fitLoad(bnc)
+fitIf(bnc <- blrm(y ~ Tx + cluster(id), data=zt))
 bnc
 ```
 
 Finally, add time to the above model.
 
 ```{r nocarryt, results='asis'}
-if(runfits) {
-  bnct <- blrm(y ~ Tx + time + cluster(id), data=zt)
-	fitSave(bnct)
-	} else bnct <- fitLoad(bnct)
+fitIf(bnct <- blrm(y ~ Tx + time + cluster(id), data=zt))
 bnct
 ```
 
-The time effect is very weak, and adding it did not change the already-accurate treatment effect posterior mean.
+The time effect is very weak, and adding it did not change the already-accurate (with respect to the first part of the data generating mechanism) treatment effect posterior mean.
+
+<a name="ar1"></a>
+
+# AR(1) Correlation Structure
+
+Thanks to Stan code written by Ben Goodrich, `blrm` also implements a correlation struction that is more realistic for most problems.  Subject (cluster) random effects pertain to the first measurement for the subject, then subsequent measurements are correlated within cluster according to an `aTime` variable specified in the model.  The actual time values are not used in the analysis but the distinct values are converted to consecutive integers.  The within-cluster process is AR(1) for the random effects, and a separate within-cluster white noise variance $\sigma_w$ is incorporated.  This implies that the correlation of two measurements within a subject is higher when the measurements are closer together in time, the the correlation decaying exponentially as the time gap widens within cluster.
+
+Let's simulate a dataset that has exactly this structure and see if the Bayesian model can recover that structure.
+
+```{r simar1}
+n      <- 1000    # subjects
+sigmag <- 1      # SD of random intercepts
+rho    <- .7     # autocorrelation of random effects
+# To force constant variance of random effects over time (as the Stan
+# model assumes)
+sigmaw <- sigmag * sqrt(1 - rho*rho)
+sigmaw
+set.seed(20)
+re <- rnorm(n) * sigmag   # for time=1 for each subject
+X  <- runif(n)   # baseline covariate, will be duplicated over repeats
+m  <- 10         # measurements per subject
+id <- rep(1 : n, each = m)
+time <- rep(1 : m, n)
+re1  <- matrix(NA, nrow=n, ncol=m)
+re1[, 1] <- re
+for(j in 2 : m)
+  re1[, j] <- rho * re1[, j-1] + rnorm(n) * sigmaw
+# Check constancy of random effect variance over time
+round(diag(var(re1)), 2)
+round(cor(re1), 2)    # looks good
+re1[13, ]             # check 13th subject
+# Check within and between-subject correlations with no covariates
+L <- re1[cbind(id, time)]
+L[id == 13]
+# xless(cbind(id, time, plogis(L)))
+# Reconstruct with time going across to make sure everything is working
+LL <- matrix(NA, nrow=n, ncol=m)
+LL[cbind(id, time)] <- L
+identical(LL, re1)
+
+y <- ifelse(runif(n * m) <= plogis(L), 1, 0)
+# For a subset of pairs of different subjects compute between-subject
+# correlation measure for binary variables
+rp <- function(x, y) mean(x * y) - mean(x) * mean(y)
+r <- numeric(100^2)
+k <- 0
+for(i in 1 : 100) for(j in 101 : 200) {
+  k <- k + 1
+  r[k] <- rp(y[id == i], y[id == j])
+}
+hist(r, nclass=80)
+
+# For each pair of times compute within-subject correlation measure
+# and show this as a function of time gap
+nc <- n * m * (m - 1) / 2
+gap <- y1 <- y2 <- integer(nc)
+k <- 0
+for(i in 1 : (m-1)) for(j in (i+1):m) for(s in 1 : n) {
+  k <- k + 1
+  gap[k] <- abs(i - j)
+  y1[k] <- y[id == s & time == i]
+  y2[k] <- y[id == s & time == j]
+}
+u <- tapply(1 : k, gap, function(i) rp(y1[i], y2[i]))
+u
+
+# Now include the covariate (true beta = 1)
+L  <- X[id] + re1[cbind(id, time)]
+y  <- ifelse(runif(n * m) <= plogis(L), 1, 0)
+x  <- X[id]
+```
+Ordinary logistic model ignoring the correlation pattern (`lrm(y ~ x)`) yields $\hat{\beta} = 0.87$, SE=0.07 (0.09 with cluster sandwich correction).
+
+Fit a Bayesian model that has random effects but ignores the additional within-subject serial correlation given the random effect.
+
+```{r fitwrong}
+fitIf(bnoar1 <- blrm(y ~ x + cluster(id)))
+```
+
+We see that the SD of the random effects, $\sigma_\gamma$ was underestimated.  The $\hat{\beta}$ posterior mean and median look good, as well as the standard deviation of the posterior distribution.
+
+Before running the AR(1) model let's look at the correlation matrix of `y` as `rstan` sees it (as a matrix with rows = subjects and columns = times).
+
+```{r looky}
+d <- blrm(y ~ x + cluster(id) + aTime(time), standata=TRUE)
+saveRDS(d, file='/tmp/d.rds')
+round(cor(d$y), 2)
+```
+
+The within-subject correlation pattern in the raw binary responses are damped in comparison with the correlation pattern of the underlying random effects.  Help needed here.
+
+Now fit the combination random intercept/AR(1) Bayesian binary logistic model.
+
+```{r fitar1}
+fitIf(bar1 <- blrm(y ~ x + cluster(id) + aTime(time)))
+```
 
 # Speed of `blrm` For Large Numbers of Categories
 

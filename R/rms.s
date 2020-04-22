@@ -81,14 +81,16 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   }
 
   offs <- model.offset(mf)
-
   iscluster <- if(length(Term.labels))
                  substring(Term.labels, 1, 8) == 'cluster('  else FALSE
+  istime <- if(length(Term.labels))
+              substring(Term.labels, 1, 6) == 'aTime('  else FALSE
 
-  ## Handle cluster() for cph
-  ## Save right hand side of formula less cluster() terms
+  ## Handle cluster() and aTime()
+  ## Save right hand side of formula less cluster() and time() terms
   sformula <- formula(Terms)
   if(any(iscluster)) sformula <- removeFormulaTerms(sformula, 'cluster')
+  if(any(istime))    sformula <- removeFormulaTerms(sformula, 'aTime')
 
   if(any(iscluster)) {
     clustername <- Term.labels[iscluster]
@@ -96,8 +98,20 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
     mf[[clustername]] <- NULL
     Terms       <- Terms[! iscluster]
     Term.labels <- Term.labels[! iscluster]
+    if(any(istime)) istime <- if(length(Term.labels))
+     substring(Term.labels, 1, 6) == 'aTime('  else FALSE
   }
   else {cluster <- clustername <- NULL}
+
+  if(any(istime)) {
+    timename <- Term.labels[istime]
+    time     <- mf[[timename]]
+    mf[[timename]] <- NULL
+    Terms       <- Terms[! istime]
+    Term.labels <- Term.labels[! istime]
+  }
+  else {time <- timename <- NULL}
+  
 
   ioffset <- integer(0)
   if(length(offs)) {
@@ -411,7 +425,12 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   if(length(cluster)) {
     attr(mf, 'cluster') <- cluster
     attr(mf, 'clustername') <- var.inner(as.formula(paste0('~', clustername)))
-    }
+  }
+  if(length(time)) {
+    attr(mf, 'time') <- time
+    attr(mf, 'timename') <- var.inner(as.formula(paste0('~', timename)))
+  }
+  
   if(length(offs))    attr(mf, 'offset')  <- offs
   mf
 }
