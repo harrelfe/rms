@@ -45,7 +45,7 @@ options(stancompiled='~/R/stan', prType='html')
 # stanCompile('~/R/stan')
 ```
 
-As the `rstan` component of `blrm` fit objects can be tens of megabytes in size. you'll see `rms` utility function `fitIf` used in the examples below.  `fitIf` determines whether the fit has already been run by sensing the existence of a file named like `fitname.rds` in the current working directory, and quickly loads this object if so.  If an optional file named like `fitname-rstan.rds` is found, that file is also loaded and stored as the `rstan` component of the fit.  `fitIf` also stores a much smaller version of the object by creating `fitname.rds` after removing the large `rstan` component.  If `fitname.rds` doesn't already exist, the model fit is run and the entire result is returned to the user.  Also, a new `fitname.rds` is created without the large `rstan` object.  You lose the ability to run the `rms::stanDxplot` on restored objects (when `fitname-rstan.rds` did not exist), so the `stanDxplot` function tries to find an existing trace plot image file corresponding to the current R markdown chunk when the fit object no longer has the `rstan` component.  Note that using the `knitr` `cache=TRUE` option does not work well as the cache files for this script were about a GB in size, and the system does not accurately recognize when a model fit hasn't changed and doesn't need to be run when `rstan` is involved.
+As the `rstan` component of `blrm` fit objects can be tens of megabytes in size. you'll see `rms` utility function `fitIf` used in the examples below.  `fitIf(fitname <- ...)` determines whether the fit has already been run by sensing the existence of a file named like `fitname.rds` in the current working directory, and quickly loads this object if so.  If an optional file named like `fitname-rstan.rds` is found, that file is also loaded and stored as the `rstan` component of the fit.  `fitIf` also stores a much smaller version of the object by creating `fitname.rds` after removing the large `rstan` component.  If `fitname.rds` doesn't already exist, the model fit is run and the entire result is returned to the user.  Also, a new `fitname.rds` is created without the large `rstan` object.  You lose the ability to run the `rms::stanDxplot(..., rstan=TRUE)` on restored objects (when `fitname-rstan.rds` did not exist), so the `stanDxplot` function tries to find an existing trace plot image file corresponding to the current R markdown chunk when the fit object no longer has the `rstan` component.  For most purposes this doesn't matter, because running \code{stanDxplot} using the defaults shows the needed non-burning samples which are always stored in fit objects.  Note that using the `knitr` `cache=TRUE` option does not work well as the cache files for this script were about a GB in size, and the system does not accurately recognize when a model fit hasn't changed and doesn't need to be run when `rstan` is involved.
 
 # Example: 10-level Ordinal Outcome
 
@@ -525,7 +525,17 @@ First look at diagnostics.
 
 ```{r bar1dx}
 stanDx(bar1)
-stanDxplot(bar1, which=c('beta[1]', 'sigmag', 'rho'))
+stanDxplot(bar1, which=c('x', 'sigmag', 'rho'))
+# To check rho draws with rstan if the rstan object is saved in bar1:
+# (use stanDxplot(bar1, which='rho', rstan=TRUE) to get line plots)
+if(length(bar1$rstan)) {
+  z <- rstan::extract(bar1$rstan, permuted=FALSE)
+  par(mfrow=c(2,2), oma=c(0,0,0,0), mar=c(2, 2, 0.5, 1))
+  for(chain in 1 : 4) {
+    rhos <- z[, chain, 'rho']
+    plot(1 : length(rhos), rhos, col=gray(0.4), cex=.1, xlab='', ylab='')
+  }
+}
 ```
 
 And now the fit summary.

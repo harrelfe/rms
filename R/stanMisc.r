@@ -225,16 +225,42 @@ plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, cint=0.95, ...) {
 
 ##' Diagnostic Trace Plots
 ##'
-##' For an \code{rms} Bayesian fit object, calls the \code{rstan} \code{traceplot} function on the \code{rstan} object inside the \code{rmsb} object, to check properties of posterior sampling.  If the \code{rstan} object has been removed and \code{previous=TRUE}, attempts to find an already existing plot created by a previous run of the \code{knitr} chunk, assuming it was the \code{plotno} numbered plot of the chunk.
+##' For an \code{rms} Bayesian fit object, uses by default the stored posterior draws to check convergence properties of posterior sampling.  If instead \code{rstan=TRUE}, calls the \code{rstan} \code{traceplot} function on the \code{rstan} object inside the \code{rmsb} object, to check properties of posterior sampling.  If \code{rstan=TRUE} and the \code{rstan} object has been removed and \code{previous=TRUE}, attempts to find an already existing plot created by a previous run of the \code{knitr} chunk, assuming it was the \code{plotno} numbered plot of the chunk.
 ##' @title stanDxplot
 ##' @param x an \code{rms} Bayesian fit object
-##' @param which names of parameters to plot, defaulting to all non-intercepts
+##' @param which names of parameters to plot, defaulting to all non-intercepts.  When \code{rstan=FALSE} these are the friendly \code{rms} names, otherwise they are the \code{rstan} parameter names.
+##' @param rstan set to \code{TRUE} to use \code{rstan::traceplot} on a (presumed) stored \code{rstan} object in \code{x}, otherwise only real iterations are plotted and parameter values are shown as points instead of lines, with chains separated
 ##' @param previous see details
 ##' @param plotno see details
 ##' @param ... passed to \code{rstan::traceplot}
 ##' @return \code{ggplot2} object if \code{rstan} object was in \code{x}
 ##' @author Frank Harrell
-stanDxplot <- function(x, which=x$betas, previous=TRUE, plotno=1, ...) {
+stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE, plotno=1, ...) {
+  if(! rstan) {
+    draws <- x$draws
+    if(! length(which)) {
+      nrp <- x$non.slopes
+      which <- if(nrp > 0) colnames(draws)[-(1 : nrp)] else colnames(draws)
+    }
+    if('rho'    %in% which)  draws <- cbind(draws, rho    = x$rhos   )
+    if('sigmag' %in% which)  draws <- cbind(draws, sigmag = x$sigmags)
+    draws   <- draws[, which, drop=FALSE]
+    nchains <- x$chains
+    ndraws  <- nrow(draws)
+    chain   <- rep(rep(1 : nchains, each = ndraws / nchains), length(which))
+    chain   <- paste('Chain', chain)
+    draws   <- as.vector(draws)
+    param   <- rep(which, each=ndraws)
+    iter    <- rep(rep(1 : (ndraws / nchains), nchains), length(which))
+    d       <- data.frame(chain, iter, param, draws)
+    g <- ggplot(d, aes(x=iter, y=draws)) +
+                geom_point(size=I(0.03), alpha=I(0.3)) +
+         facet_grid(param ~ chain, scales='free_y') +
+         xlab('Post Burn-in Iteration') + ylab('Parameter Value')
+    return(g)
+    }
+
+  if(! length(which)) which <- x$betas
   s <- x$rstan
   if(length(s)) return(rstan::traceplot(s, pars=which, ...))
 

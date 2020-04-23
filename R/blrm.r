@@ -2,7 +2,7 @@
 ##'
 ##' Uses \code{rstan} with pre-compiled Stan code whose location is given by the user in \code{options(stancompiled='...')} to get posterior draws of parameters from a binary logistic or proportional odds semiparametric ordinal logistic model.  The Stan code internally using the qr decompositon on the design matrix so that highly collinear columns of the matrix do not hinder the posterior sampling.  The parameters are transformed back to the original scale before returning results to R.   Design matrix columns re centered before running Stan, so Stan diagnostic output will have the intercept terms shifted but the results of \code{blrm} for intercepts are for the original uncentered data.  The only prior distributions for regression betas are normal with mean zero, and the vector of prior standard deviations is given in \code{priorsd}.  These priors are for the qr-projected design matrix elements, except that the very last element is not changed.  So if one has a single non-interactive linear or binary variable for which a skeptical prior is designed, put that variable last in the model.
 ##'
-##' \code{blrm} also handles single-level hierarchical random effects models for the case when there are repeated measurements per subject which are reflected as random intercepts, and a different model that allows for AR(1) serial correlation within subject.  For both setups, a \code{cluster} term in the model signals the existence of subject-specific random effects, and an additional model term \code{aTime(time variable)}} signals the use of the AR(1) within-subject model.  The \code{time} variable must be integer valued and there can be arbitrary gaps between measurements.  However if the maximum time exceeds 200 or so one can expect much longer computation time.  When \code{aTime()} is present, the cluster-specific random effects then become the random effect for a subject's \code{time=1} record.  When \code{aTime} is specified, the covariates must not change over records within subject (no time-dependent covariates), as only the covariate vector for the earliest time for a subject is used.
+##' \code{blrm} also handles single-level hierarchical random effects models for the case when there are repeated measurements per subject which are reflected as random intercepts, and a different model that allows for AR(1) serial correlation within subject.  For both setups, a \code{cluster} term in the model signals the existence of subject-specific random effects, and an additional model term \code{aTime(time variable)} signals the use of the AR(1) within-subject model.  The \code{time} variable must be integer valued and there can be arbitrary gaps between measurements.  However if the maximum time exceeds 200 or so one can expect much longer computation time.  When \code{aTime()} is present, the cluster-specific random effects then become the random effect for a subject's \code{time=1} record.  When \code{aTime} is specified, the covariates must not change over records within subject (no time-dependent covariates), as only the covariate vector for the earliest time for a subject is used.
 ##' @title blrm
 ##' @param formula a R formula object that can use \code{rms} package enhancements such as the restricted interaction operator
 ##' @param data a data frame
@@ -74,6 +74,7 @@ blrm <- function(formula, data, subset, na.action=na.delete,
   if(missing(data)) data <- NULL
 
   tform   <- terms(formula, specials=c('cluster', 'aTime'), data=data)
+  yname   <- as.character(formula[2])
   
   dul <- .Options$drop.unused.levels
   if(!length(dul) || dul) {
@@ -157,6 +158,7 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     d$N       <- NULL
     tim       <- time - min(time) + 1    # start at 1
     Nt        <- max(tim)
+    Ntobs     <- length(unique(tim))
     d$Nt      <- Nt
     d$ratew   <- 1. / ar1sdmean
 
@@ -269,11 +271,13 @@ blrm <- function(formula, data, subset, na.action=na.delete,
   }
 
   Loo <- if(loo) rstan::loo(g)
-  
-	res <- list(call=call,
+
+  freq <- table(Y, dnn=yname)
+    
+	res <- list(call=call, 
 							draws=draws, sigmags=sigmags, rhos=rhos,
               gammas=gammas, eps=epsmed,
-              param=param, N=n, p=p, ylevels=ylev, freq=table(Y),
+              param=param, N=n, p=p, yname=yname, ylevels=ylev, freq=freq,
 						  alphas=al, betas=be,
 						  xbar=xbar, Design=atr, scale.pred=c('log odds', 'Odds Ratio'),
 							terms=Terms, assign=ass, na.action=atrx$na.action, fail=FALSE,
@@ -282,7 +286,8 @@ blrm <- function(formula, data, subset, na.action=na.delete,
               clusterInfo=if(length(cluster))
                 list(cluster=if(x) cluster else NULL, n=Nc, name=clustername),
               timeInfo=if(length(time))
-                list(time=if(x) time else NULL, n=Nt, name=timename),
+                         list(time=if(x) time else NULL, n=Nt, nobs=Ntobs,
+                              name=timename),
 							rstan=g, opt=opt, diagnostics=diagnostics,
               iter=iter, chains=chains)
 	class(res) <- c('blrm', 'rmsb', 'rms')
@@ -491,7 +496,8 @@ print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=400,
                       Clusters        = ci$n,
                       'sigma gamma'   = sigmasum,
                       'Time variable' = ti$name,
-                      Times           = ti$n,
+                      'Max time'      = ti$n,
+                      'Obs times'     = ti$nobs,
                       rho             = rhosum)
   
   if(length(x$freq) < 4) {

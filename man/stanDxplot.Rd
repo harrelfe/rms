@@ -4,12 +4,14 @@
 \alias{stanDxplot}
 \title{stanDxplot}
 \usage{
-stanDxplot(x, which = x$betas, previous = TRUE, plotno = 1, ...)
+stanDxplot(x, which = NULL, rstan = FALSE, previous = TRUE, plotno = 1, ...)
 }
 \arguments{
 \item{x}{an \code{rms} Bayesian fit object}
 
-\item{which}{names of parameters to plot, defaulting to all non-intercepts}
+\item{which}{names of parameters to plot, defaulting to all non-intercepts.  When \code{rstan=FALSE} these are the friendly \code{rms} names, otherwise they are the \code{rstan} parameter names.}
+
+\item{rstan}{set to \code{TRUE} to use \code{rstan::traceplot} on a (presumed) stored \code{rstan} object in \code{x}, otherwise only real iterations are plotted and parameter values are shown as points instead of lines, with chains separated}
 
 \item{previous}{see details}
 
@@ -24,7 +26,7 @@ stanDxplot(x, which = x$betas, previous = TRUE, plotno = 1, ...)
 Diagnostic Trace Plots
 }
 \details{
-For an \code{rms} Bayesian fit object, calls the \code{rstan} \code{traceplot} function on the \code{rstan} object inside the \code{rmsb} object, to check properties of posterior sampling.  If the \code{rstan} object has been removed and \code{previous=TRUE}, attempts to find an already existing plot created by a previous run of the \code{knitr} chunk, assuming it was the \code{plotno} numbered plot of the chunk.
+For an \code{rms} Bayesian fit object, uses by default the stored posterior draws to check convergence properties of posterior sampling.  If instead \code{rstan=TRUE}, calls the \code{rstan} \code{traceplot} function on the \code{rstan} object inside the \code{rmsb} object, to check properties of posterior sampling.  If \code{rstan=TRUE} and the \code{rstan} object has been removed and \code{previous=TRUE}, attempts to find an already existing plot created by a previous run of the \code{knitr} chunk, assuming it was the \code{plotno} numbered plot of the chunk.
 }
 \author{
 Frank Harrell
