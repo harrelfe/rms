@@ -1,0 +1,16 @@
+require(rms)
+set.seed(1)
+n  <- 100
+x  <- rnorm(n)
+x2 <- rnorm(n)
+x  <- x  - mean(x)
+x2 <- x2 - mean(x2)
+y <- round(3*(x + 2 * x2 + rnorm(n)))
+i <- rep(1 : 20, 5)
+f <- lrm(y ~ x + x2)
+b <- blrm(y ~ x + x2, priorsd=1000)
+bc <- blrm(y ~ x + x2 + cluster(i), priorsd=1000)
+cbind(lrm=coef(f), blrm=coef(b, 'mean'), 'cluster blrm'=coef(bc, 'mean'))
+
+d <- blrm(y ~ x + x2, priorsd=1000, standata=TRUE)
+saveRDS(d, '~/tmp/d.rds')
