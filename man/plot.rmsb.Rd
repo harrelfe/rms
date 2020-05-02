@@ -26,7 +26,7 @@
 Plot Posterior Densities and Summaries
 }
 \details{
-For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters along with posterior mode, mean, median, and highest posterior density interval
+For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters along with posterior mode, mean, median, and highest posterior density interval.  If the fit was produced by \code{stackMI} the density represents the distribution after stacking the posterior draws over imputations, and the per-imputation density is also drawn as pale curves.
 }
 \author{
 Frank Harrell

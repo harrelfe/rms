@@ -198,7 +198,7 @@ stanCompile <-
 ##' @param ... passed to \code{ggplot2::geom_density}
 ##' @return \code{ggplot2} object
 ##' @author Frank Harrell
-pw <- plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
+plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
   nrp      <- num.intercepts(x)
   draws    <- x$draws
   n.impute <- x$n.impute
@@ -236,9 +236,10 @@ pw <- plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...)
   eparam <- factor(rep(which, each=ne), which)
   stat   <- rep(stat, length(which))
 
+  sz <- if(n.impute > 1) 0.2 else 1.4
   d  <- data.frame(param, draws,
-                   imputation=if(n.impute > 1) imputation else 'Density',
-                   sz=if(n.impute > 1) 0.2 else 1.4)
+                   imputation = if(n.impute > 1) imputation else 'Density',
+                   sz         = sz)
   if(n.impute > 1) {
     d2 <- d
     d2$imputation <- 'Stacked'

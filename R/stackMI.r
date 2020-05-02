@@ -78,6 +78,11 @@ Fitting imputed dataset number', i, 'of', n.impute, '\n\n',
     dx <- f$diagnostics
     fail <- length(dx) && is.list(dx) && length(dx$fail) && dx$fail
     if(! fail) diagnostics[[i]] <- dx
+
+    if(inherits(f, 'rms')) {
+      using.Design <- TRUE
+      da           <- f$Design
+      }
    }
 
     if(length(gammas)) gammas <- gammas / n.impute
