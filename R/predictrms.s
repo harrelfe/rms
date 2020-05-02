@@ -319,8 +319,7 @@ predictrms <-
       names(xb) <- rnam
       if(bayes && conf.int) {
         xB <- matxv(X, draws, kint=kint, bmat=TRUE)
-        alp <- (1. - conf.int) / 2.
-        xB <- apply(xB, 1, quantile, probs=c(alp, 1. - alp))  #?
+        xB <- apply(xB, 1, HPDint, prob=conf.int)  # ??
         lower <- xB[, 1]
         upper <- xB[, 2]
         }

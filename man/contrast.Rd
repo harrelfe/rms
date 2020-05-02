@@ -26,7 +26,7 @@ The design contrast matrix computed by \code{contrast.rms} can be used
 by other functions.
 
 When the model was fitted by a Bayesian function such as \code{blrm},
-credible intervals for contrasts are computed instead, along with the
+highest posterior density intervals for contrasts are computed instead, along with the
 posterior probability that the contrast is positive.
 \code{posterior.summary} specifies whether posterior mean/median/mode is
 to be used for contrast point estimates.
@@ -138,7 +138,7 @@ coefficients point estimates.}
 a numeric vector, used when \code{type="average"}, to obtain weighted contrasts
 }
 \item{conf.int}{
-confidence level for confidence intervals for the contrasts (credible
+confidence level for confidence intervals for the contrasts (HPD
 interval probability for Bayesian analyses)
 }
 \item{tol}{tolerance for \code{qr} function for determining which

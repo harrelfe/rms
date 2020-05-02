@@ -17,7 +17,7 @@ description: "`blrm` Examples"
 1. the use of exact calculations (to within simulation error) instead of large sample (e.g., normal theory) approximations to p-values and confidence intervals
 1. exact and more intuitive inference when random effects are included in the model
 1. the ability to make probability statements about parameters and combinations of parameters, which includes computations or the probabilities of assertions such as "the effect of $x_1$ exceeds 1.2  **and** the effect of $x_2$ exceeds 0.7"
-1. capturing more sources of uncertainty.  For example, the `blrm` function automatically computes credible intervals on a variety of statistical indexes such as the Brier score and AUROC ($c$-index).  Note: By default these credible intervals are computed using only 400 posterior draws to save time.  For a `blrm` fit object `f` you can specify how many samples to draw, to get more accurate intervals, by specifying for example `print(f, ns=2000)`.
+1. capturing more sources of uncertainty.  For example, the `blrm` function automatically computes higheset posterior density intervals on a variety of statistical indexes such as the Brier score and AUROC ($c$-index).  Note: By default these intervals are computed using only 400 posterior draws to save time.  For a `blrm` fit object `f` you can specify how many samples to draw, to get more accurate intervals, by specifying for example `print(f, ns=2000)`.
 1. the ability to incorporate external information or beliefs about parameters using prior distributions
 
 `blrm` uses normal priors for the $\beta$ parameters, and the user may specify the standard deviation of these priors separately for each model parameters.  The default is $\sigma=100$ which is nearly flat.  When there are random effects, the analyst may specify the mean of the exponential distribution that serves as the prior for the standard deviation of the random effects, with the default mean being 1.0, a reasonable number for the logit scale.
@@ -85,7 +85,7 @@ g$theta
 g$coefficients[10:13]
 ```
 
-Fit the model with Dirichlet priors on intercepts and wide normal priors on the $\beta$s.  Show the model fit summary.  Note that the indexes of predictive discrimination/accuracy include 0.95 credible intervals.  In frequentist inference we pretend that quantities such as AUROC and $R^2$ are estimated without error, which is far from the case.
+Fit the model with Dirichlet priors on intercepts and wide normal priors on the $\beta$s.  Show the model fit summary.  Note that the indexes of predictive discrimination/accuracy include 0.95 highest posterior density intervals.  In frequentist inference we pretend that quantities such as AUROC and $R^2$ are estimated without error, which is far from the case.
 
 In several places you will see an index named `Symmetry`.  This is a measure of the symmetry of a posterior distribution.  Values farther from 1.0 indicate asymmetry, which indicates that the use of standard errors and the use of a normal approximation for the posterior distribution are not justified.  The symmetry index is the ratio of the gap between the posterior mean and the 0.95 quantile of the posterior distribution to the gap between the 0.05 quantile and the mean.
 
@@ -120,7 +120,7 @@ round(diag(vcov(f)) / diag(vcov(bs)), 2)
 range(vcov(f) / vcov(bs))
 ```
 
-Next show frequentist and Bayesian contrasts.  For the Bayesian contrast the point estimate is the posterior mean, and the 0.95 credible interval is computed.  Instead of a p-value, the posterior probability that the contrast is positive is computed.
+Next show frequentist and Bayesian contrasts.  For the Bayesian contrast the point estimate is the posterior mean, and the 0.95 highest posterior density interval is computed.  Instead of a p-value, the posterior probability that the contrast is positive is computed.
 
 ```{r contrast}
 contrast(f,  list(x1=0, x3=1), list(x1=.25, x3=0))
@@ -172,7 +172,7 @@ f <- lrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5),
 				 data=support, eps=1e-4, x=TRUE)
 f
 # Compute the apparent standard error of Dxy (not accounting for overfitting)
-# for comparison with the Bayesian credible interval for Dxy
+# for comparison with the Bayesian HPD interval for Dxy
 htmlVerbatim(rcorr.cens(predict(f), support$hospdead))
 htmlVerbatim(Function(f))
 fitIf(bsup <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
@@ -196,16 +196,16 @@ anova(f)
 
 **Note**: To get a Bayesian equivalent of a likelihood ratio test for comparing two models use the `rms` function `compareBmods`.
 
-Now compute odds ratios over default inter-quartile ranges for continuous predictors, based on posterior mode parameters.  Also show 0.95 credible intervals.  Note that unlike the `print` method, the `plot` method for `summary` doesn't actually compute credible intervals, but approximates them by assuming normality and using the standard deviation of the posterior samples.  Compute the plot with the ordinary `lrm` result.
+Now compute odds ratios over default inter-quartile ranges for continuous predictors, based on posterior mode parameters.  Also show 0.95 HPD intervals.  Note that unlike the `print` method, the `plot` method for `summary` doesn't actually compute HPD intervals, but approximates them by assuming normality and using the standard deviation of the posterior samples.  Compare the plot with the ordinary `lrm` result.
 
-```{r summary, results='asis',top=1}
+```{r summary, results='asis',top=2.5}
 s <- summary(bsup)
 s
 plot(s)
 plot(summary(bsup))
 ```
 
-Draw partial effect plots with 0.95 credible intervals.  Point estimates are posterior modes (which can be easily changed).
+Draw partial effect plots with 0.95 HPD intervals.  Point estimates are posterior modes (which can be easily changed).
 
 ```{r peffect}
 ggplot(Predict(bsup))
@@ -625,6 +625,42 @@ stanDx(srhs)
 stanDxplot(srhs)
 ```
 
+# Multiple Imputation
+
+When possible, full joint Bayesian modeling of (possibly missing) covariates and the outcome variable should be used to get exact inference in the presence of missing covariate values.  Another good approach is to use multiple imputation with stacking of posterior draws after running the Bayesian model for each completed dataset.  When doing posterior inference on the stacked posterior draws the uncertainty from multiple imputation is fully taken into account, and so is the change in posterior distribution.   Frequentist inference requires complex adjustments, as multiple imputation alters the sampling distribution of model parameter estimates.  For example, regression coefficient estimates that have a normal distribution with complete data may have a $t$-like distribution after multiple imputation.
+
+`blrm` works with the `stackMI` function in the `rms` package to make posterior stacking easier.  It works with `Hmisc::aregImpute` and the `mice` package.  `stackMI` is the analog of the `Hmisc::fit.mult.impute` but is much simpler due to the use of the Bayesian paradigm.
+
+Here is an example adapted from the `aregImpute` help file.
+
+```{r aregi,w=7,h=7}
+set.seed(2)
+n <- 1000
+x1 <- factor(sample(c('a','b','c'), n, TRUE))
+x2 <- (x1=='b') + 3*(x1=='c') + rnorm(n,0,2)
+x3 <- rnorm(n)
+xbeta <- 0.35 * (x2 + 1 * (x1 == 'c') + 0.2 * x3)
+y  <- ifelse(runif(n) <= plogis(xbeta), 1, 0)
+x1[1:250]   <- NA
+x2[251:350] <- NA
+d <- data.frame(x1,x2,x3,y, stringsAsFactors=TRUE)
+
+mi <- aregImpute(~ y + x1 + x2 + x3, nk=3, data=d, B=10, n.impute=5, pr=FALSE)
+mi
+
+fitIf(bmi <- stackMI(y ~ x1 + x2 + x3, blrm, mi, data=d, refresh=50))
+stanDx(bmi)
+stanDxplot(bmi, which='x1=c', rev=TRUE, stripsize=5)
+```
+
+```{r aregip,w=7,h=6}
+plot(bmi)
+```
+
+One can see that the 5 individual posterior distributions for the frequently missing variables `x1` and `x2` vary a lot, but not so for the never missing variable `x3`.
+
+Computations done on the `bmi` object will automatically use the full stacked posterior distribution.
+  
 # Scaling and Intepretation of Priors on $\beta$s
 
 `blrm` orthonormalizes the data design matrix to greatly improve posterior distribution sampling in the case of collinearities among predictors (especially among spline basis functions).    The very last parameter in the model is unchanged, but all proceeding parameters must have prior distributions specified with respect to the derived variables.  This is philosophically reasonable because if one has two collinear terms in a model, say terms as simple as $x$ and $x^2$, it is entirely unreasonable to specify independent priors for the corresponding pair of regression coefficients $\beta_1$ and $\beta_2$.  When $\beta_{1} \uparrow$, $\beta_{2} \downarrow$.  To understand at least the scaling part of the translation, we can compare the posterior draws for $\beta$ that pertain to the original $X$ scale with the posterior draws for $\theta$, the parameter values on the QR-decomposition transformed scale.  These $\theta$ values are stored in the `rstan` object that is part of the `blrm` fit object.  Here is an example where an ordinary cubic polynomial is fitted, first with `x` ranging from [-1,1] then [-10, 10].  A binary treatment variable is the last variable in the model, so it will be the only one that is not transformed.

@@ -111,7 +111,8 @@ Predict(x, ..., fun,
 	or \code{NA}
   }
   \item{conf.int}{
-	confidence level.  Default is 0.95.  Specify \code{FALSE} to suppress.}
+	confidence level (highest posterior density interval probability for
+	Bayesian models).  Default is 0.95.  Specify \code{FALSE} to suppress.}
   \item{conf.type}{
 	type of confidence interval.  Default is \code{"mean"} which applies
 	to all models.  For models containing a residual variance (e.g,

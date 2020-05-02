@@ -141,8 +141,7 @@ contrast.rms <-
     est   <- draws %*% t(X)
     v     <- var(est)
     ndf   <- if(is.matrix(v)) nrow(v) else 1
-    alpha <- 1. - conf.int
-    ci    <- apply(est, 2, quantile, probs=c(alpha, 1. - alpha))
+    ci    <- apply(est, 2, HPDint, prob=conf.int)
     lower <- ci[1, ]
     upper <- ci[2, ]
     PP    <- apply(est, 2, function(u) mean(u > 0))
@@ -272,7 +271,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
     cat('\nConfidence intervals are', x$conf.int, x$conf.type,
         'intervals\n')
   else {
-    cat('\nIntervals are', x$conf.int, 'credible intervals\n')
+    cat('\nIntervals are', x$conf.int, 'highest posterior density intervals\n')
     cat('Contrast is the posterior', x$posterior.summary, '\n')
     }
     

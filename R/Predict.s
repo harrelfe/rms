@@ -233,8 +233,7 @@ Predict <-
                       ref.zero=ref.zero, type='x',
                       posterior.summary=posterior.summary)
       pred <- t(matxv(X, draws, kint=kint,  bmat=TRUE))
-      alp  <- 1. - conf.int
-      lim  <- apply(pred, 2, quantile, probs=c(alp, 1. - alp))
+      lim  <- apply(pred, 2, HPDint, prob=conf.int)
       xx$lower <- lim[1L, ]
       xx$upper <- lim[2L, ]
       }

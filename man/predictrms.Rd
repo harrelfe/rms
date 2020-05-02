@@ -139,7 +139,8 @@ the new design matrix.
 Specify \code{conf.int} as a positive fraction to obtain upper and lower
 confidence intervals (e.g., \code{conf.int=0.95}).  The \eqn{t}-distribution is
 used in the calculation for \code{ols} fits.  Otherwise, the normal
-critical value is used.
+critical value is used.  For Bayesian models \code{conf.int} is the
+highest posterior density interval probability.
 }
 \item{conf.type}{
 specifies the type of confidence interval.  Default is for the mean.

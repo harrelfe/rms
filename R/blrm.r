@@ -268,7 +268,7 @@ blrm <- function(formula, data, subset, na.action=na.delete,
              error=function(...) list(fail=TRUE))
   if(itfailed(diagnostics)) {
     warning('rstan::summary failed; see fit component diagnostics')
-    diagnostics <- list(pars=c(al, be, clparm))
+    diagnostics <- list(pars=c(al, be, clparm), failed=TRUE)
     }
 
 	# Back-scale to original data scale
@@ -511,6 +511,8 @@ print.blrm <- function(x, dec=4, coefs=TRUE, prob=0.95, ns=400,
     }
   misc <- reListclean(Obs             = x$N,
                       Draws           = nrow(x$draws),
+                      Chains          = x$chains,
+                      Imputations     = x$n.impute,
                       p               = x$p,
                       'Cluster on'    = ci$name,
                       Clusters        = ci$n,

@@ -1,8 +1,8 @@
 ##' Print Stan Diagnostics
 ##'
-##' Retrieves the effect samples sizes and Rhats computed after a fitting function ran \code{rstan}, and prepares it for printing
+##' Retrieves the effect samples sizes and Rhats computed after a fitting function ran \code{rstan}, and prepares it for printing.  If the fit was created by \code{stackImpute}, the diagnostics for all imputations are printed (separately).
 ##' @title stanDx
-##' @param object an object created by an \code{rms} package Bayesian fitting function such as \code{blrm} 
+##' @param object an object created by an \code{rms} package Bayesian fitting function such as \code{blrm} or \code{stackMI}
 ##' @return matrix suitable for printing
 ##' @examples
 ##' \dontrun{
@@ -11,21 +11,37 @@
 ##' }
 ##' @author Frank Harrell
 stanDx <- function(object) {
-  draws <- object$draws
+  draws    <- object$draws
+  n.impute <- object$n.impute
+  if(! length(n.impute)) n.impute <- 1
   d <- object$diagnostics
-  if(length(names(d)) == 1 && names(d) == 'pars') {
+  if(n.impute == 1 && (length(names(d)) == 1 && names(d) == 'pars')) {
     cat('Diagnostics failed trying to summarize', d$pars, '\n')
     return(invisible())
-    }
+  }
+  if(n.impute > 1) cat('Diagnostics for each of', n.impute, 'imputations\n\n')
 	cat('Iterations:', object$iter, 'on each of', object$chains, 'chains, with',
-			nrow(draws), 'posterior distribution samples saved\n\n')
+			nrow(draws) / n.impute, 'posterior distribution samples saved\n\n')
 	cat('For each parameter, n_eff is a crude measure of effective sample size',
 			'and Rhat is the potential scale reduction factor on split chains',
 			'(at convergence, Rhat=1)\n', sep='\n')
-	d[, 'n_eff']  <- round(d[, 'n_eff'])
-	d[, 'Rhat']   <- round(d[, 'Rhat'], 3)
-  rownames(d)   <- colnames(cbind(draws, object$omega))
-	d
+  if(n.impute == 1) {
+    d[, 'n_eff']  <- round(d[, 'n_eff'])
+    d[, 'Rhat']   <- round(d[, 'Rhat'], 3)
+    rownames(d)   <- colnames(cbind(draws, object$omega))
+    return(d)
+  } else {
+    D <- NULL
+    for(i in 1 : n.impute) {
+      dx <- d[[i]]
+      dx[, 'n_eff']  <- round(dx[, 'n_eff'])
+      dx[, 'Rhat' ]  <- round(dx[, 'Rhat'], 3)
+      nams <- colnames(cbind(draws, object$omega))
+      rownames(dx)   <- paste0(paste0('Imputation ', i, ': '), nams)
+      D <- rbind(D, dx)
+      }
+  }
+  D
 }
 
 ##' Get Stan Output
@@ -172,7 +188,7 @@ stanCompile <-
 
 ##' Plot Posterior Densities and Summaries
 ##'
-##' For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters along with posterior mode, mean, median, and highest posterior density interval
+##' For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters along with posterior mode, mean, median, and highest posterior density interval.  If the fit was produced by \code{stackMI} the density represents the distribution after stacking the posterior draws over imputations, and the per-imputation density is also drawn as pale curves.
 ##' @title plot.rmsb
 ##' @param x an \code{rms} Bayesian fit object
 ##' @param which names of parameters to plot, defaulting to all non-intercepts. Can instead be a vector of integers.
@@ -182,9 +198,11 @@ stanCompile <-
 ##' @param ... passed to \code{ggplot2::geom_density}
 ##' @return \code{ggplot2} object
 ##' @author Frank Harrell
-plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
-  nrp   <- num.intercepts(x)
-  draws <- x$draws
+pw <- plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
+  nrp      <- num.intercepts(x)
+  draws    <- x$draws
+  n.impute <- x$n.impute
+  if(! length(n.impute)) n.impute <- 1
   omega <- x$omega
   est   <- x$param
   if(length(omega)) {
@@ -199,11 +217,15 @@ plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
   if(! length(which)) which <- if(nrp == 0) nam else nam[-(1 : nrp)]
   if(! is.character(which)) which <- nam[which]
   draws <- draws[, which, drop=FALSE]
+  
   hpd   <- apply(draws, 2, HPDint, prob=prob)
   # rownames(ci) <- c('Lower', 'Upper')
   
   draws  <- as.vector(draws)
   param  <- factor(rep(which, each=nd), which)
+  imputation <- rep(rep(1 : n.impute, each = nd / n.impute), length(which))
+  imputation <- paste('Imputation', imputation)
+
   est    <- est[, which, drop=FALSE]
   est    <- rbind(est, hpd)
   ne     <- nrow(est)
@@ -214,13 +236,23 @@ plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
   eparam <- factor(rep(which, each=ne), which)
   stat   <- rep(stat, length(which))
 
-  d  <- data.frame(param, draws)
+  d  <- data.frame(param, draws,
+                   imputation=if(n.impute > 1) imputation else 'Density',
+                   sz=if(n.impute > 1) 0.2 else 1.4)
+  if(n.impute > 1) {
+    d2 <- d
+    d2$imputation <- 'Stacked'
+    d2$sz <- 1.4
+    d <- rbind(d, d2)
+  }
+
   de <- data.frame(param=eparam, est, stat)
-  ggplot(d, aes(x=draws)) + geom_density() +
-    geom_vline(data=de, aes(xintercept=est, color=stat, alpha=I(0.4))) +
-    facet_wrap(~ param, scales='free', nrow=nrow, ncol=ncol) +
-    guides(color=guide_legend(title='')) +
-    xlab('') + ylab('')
+  g <- ggplot(d, aes(x=draws, color=imputation, size=I(sz))) + geom_density() +
+         geom_vline(data=de, aes(xintercept=est, color=stat, alpha=I(0.4))) +
+         facet_wrap(~ param, scales='free', nrow=nrow, ncol=ncol) +
+         guides(color=guide_legend(title='')) +
+         xlab('') + ylab('')
+  g
 }
 
 ##' Diagnostic Trace Plots
@@ -228,14 +260,17 @@ plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
 ##' For an \code{rms} Bayesian fit object, uses by default the stored posterior draws to check convergence properties of posterior sampling.  If instead \code{rstan=TRUE}, calls the \code{rstan} \code{traceplot} function on the \code{rstan} object inside the \code{rmsb} object, to check properties of posterior sampling.  If \code{rstan=TRUE} and the \code{rstan} object has been removed and \code{previous=TRUE}, attempts to find an already existing plot created by a previous run of the \code{knitr} chunk, assuming it was the \code{plotno} numbered plot of the chunk.
 ##' @title stanDxplot
 ##' @param x an \code{rms} Bayesian fit object
-##' @param which names of parameters to plot, defaulting to all non-intercepts.  When \code{rstan=FALSE} these are the friendly \code{rms} names, otherwise they are the \code{rstan} parameter names.
+##' @param which names of parameters to plot, defaulting to all non-intercepts.  When \code{rstan=FALSE} these are the friendly \code{rms} names, otherwise they are the \code{rstan} parameter names.  If the model fit was run through \code{stackMI} for multiple imputation, the number of traces is multiplied by the number of imputations.
 ##' @param rstan set to \code{TRUE} to use \code{rstan::traceplot} on a (presumed) stored \code{rstan} object in \code{x}, otherwise only real iterations are plotted and parameter values are shown as points instead of lines, with chains separated
 ##' @param previous see details
 ##' @param plotno see details
+##' @param rev set to \code{TRUE} to reverse direction for faceting chains
+##' @param stripsize specifies size of chain facet label text, default is 8
 ##' @param ... passed to \code{rstan::traceplot}
 ##' @return \code{ggplot2} object if \code{rstan} object was in \code{x}
 ##' @author Frank Harrell
-stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE, plotno=1, ...) {
+stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE,
+                       plotno=1, rev=FALSE, stripsize=8, ...) {
   if(! rstan) {
     draws <- x$draws
     if(! length(which)) {
@@ -244,7 +279,9 @@ stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE, plotno=1, ...)
     }
     draws   <- cbind(draws, x$omega)
     draws   <- draws[, which, drop=FALSE]
-    nchains <- x$chains
+    n.impute <- x$n.impute
+    if(! length(n.impute)) n.impute <- 1
+    nchains <- x$chains * n.impute
     ndraws  <- nrow(draws)
     chain   <- rep(rep(1 : nchains, each = ndraws / nchains), length(which))
     chain   <- paste('Chain', chain)
@@ -253,9 +290,12 @@ stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE, plotno=1, ...)
     iter    <- rep(rep(1 : (ndraws / nchains), nchains), length(which))
     d       <- data.frame(chain, iter, param, draws)
     g <- ggplot(d, aes(x=iter, y=draws)) +
-                geom_point(size=I(0.03), alpha=I(0.3)) +
-         facet_grid(param ~ chain, scales='free_y') +
-         xlab('Post Burn-in Iteration') + ylab('Parameter Value')
+      geom_point(size=I(0.03), alpha=I(0.3)) +
+      xlab('Post Burn-in Iteration') + ylab('Parameter Value') +
+      theme(strip.text = element_text(size = stripsize))
+
+    if(rev)  g <- g + facet_grid(chain ~ param, scales='free')
+    else     g <- g + facet_grid(param ~ chain, scales='free_y')
     return(g)
     }
 

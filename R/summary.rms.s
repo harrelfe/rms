@@ -176,7 +176,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
       }
     } else if(bayes) {
       best <- t(xd %*% t(draws))
-      lim  <- apply(best, 2, quantile, probs=c(alp, 1. - alp))
+      lim  <- apply(best, 2, HPDint, prob=conf.int)
       low  <- lim[1, ]
       up   <- lim[2, ]
     } else {
@@ -242,7 +242,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
           }
         } else if(bayes) {
           best <- t(xd %*% t(draws))
-          lim  <- apply(best, 2, quantile, probs=c(alp, 1. - alp))
+          lim  <- apply(best, 2, HPDint, prob=conf.int)
           low  <- lim[1, ]
           up   <- lim[2, ]
         } else {
@@ -288,7 +288,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   }
   attr(stats, "adjust") <- adjust
   attr(stats, "conf.type") <-
-    if(length(bcoef)) blabel else if(bayes) 'credible' else 'z'
+    if(length(bcoef)) blabel else if(bayes) 'HPD' else 'z'
   
   stats
 }
@@ -312,7 +312,7 @@ print.summary.rms <- function(x, ..., table.env=FALSE)
               'Bootstrap nonparametric percentile confidence intervals',
               'bootstrap BCa' = 'Bootstrap BCa confidence intervals',
               'basic bootstrap' = 'Basic bootstrap confidence intervals',
-              credible = 'Bayesian credible intervals',
+              HPD = 'Bayesian highest posterior density intervals',
               '')
            if(blab != '') cat('\n', blab, '\n', sep='')
            cat('\n')
@@ -387,7 +387,7 @@ html.summary.rms <- function(object, digits=4, dec=NULL,...) {
 }
 
 
-## plot is not using bootstrap percentile or Bayesian credible
+## plot is not using bootstrap percentile or Bayesian HPD
 ## intervals but is using SE-based CLs
 
 # was q=c(.7, .8, .9, .95, .99)

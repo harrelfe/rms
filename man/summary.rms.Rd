@@ -24,7 +24,7 @@ The longest confidence bar on each page is labeled with confidence levels
 (unless this bar has been ignored due to \code{clip}).  By default, the
 following confidence levels are all shown: .9, .95, and .99, using 
 blue of different transparencies.  The \code{plot} method currently
-ignores bootstrap and Bayesian credible intervals but approximates
+ignores bootstrap and Bayesian highest posterior density intervals but approximates
 intervals based on standard errors.  The \code{html} method is for use
 with R Markdown using html.
 
