@@ -11,20 +11,20 @@
 ##' }
 ##' @author Frank Harrell
 stanDx <- function(object) {
-	draws <- object$draws
+  draws <- object$draws
+  d <- object$diagnostics
+  if(length(names(d)) == 1 && names(d) == 'pars') {
+    cat('Diagnostics failed trying to summarize', d$pars, '\n')
+    return(invisible())
+    }
 	cat('Iterations:', object$iter, 'on each of', object$chains, 'chains, with',
 			nrow(draws), 'posterior distribution samples saved\n\n')
 	cat('For each parameter, n_eff is a crude measure of effective sample size',
 			'and Rhat is the potential scale reduction factor on split chains',
 			'(at convergence, Rhat=1)\n', sep='\n')
-	d <- object$diagnostics
 	d[, 'n_eff']  <- round(d[, 'n_eff'])
 	d[, 'Rhat']   <- round(d[, 'Rhat'], 3)
-  cn            <- colnames(draws)
-  rn            <- rownames(d)
-  if((length(cn) < length(rn)) && ('sigmag' %in% rn)) cn <- c(cn, 'sigmag')
-  if((length(cn) < length(rn)) && ('rho'    %in% rn)) cn <- c(cn, 'rho')
-	rownames(d)   <- cn
+  rownames(d)   <- colnames(cbind(draws, object$omega))
 	d
 }
 
@@ -56,7 +56,7 @@ stanGet <- function(object) object$rstan
 ##'   coef(f, stat='mode')
 ##' }
 ##' @author Frank Harrell
-coef.rmsb <- function(object, stat=c('mode', 'mean', 'median'), ...) {
+coef.rmsb <- function(object, stat=c('mean', 'median', 'mode'), ...) {
 	stat <- match.arg(stat)
 	# pmode <- function(x) {
 	# 	dens <- density(x)
@@ -98,19 +98,19 @@ vcov.rmsb <- function(object, regcoef.only=TRUE,
     return(var(draws))
 
   ns <- num.intercepts(object)
-  p <- ncol(draws)
+  p  <- ncol(draws)
   nx <- p - ns
   if(intercepts == 'none') intercepts <- integer(0)
-  i <- if(nx == 0) intercepts else c(intercepts, (ns+1):p)
+  i <- if(nx == 0) intercepts else c(intercepts, (ns + 1) : p)
   var(draws[, i, drop=FALSE])
 }
 
 ##' Basic Print for Bayesian Parameter Summary
 ##'
-##' For a Bayesian regression fit prints the posterior mean, median, SE, credible interval, and symmetry coefficient from the posterior draws.  For a given parameter, the symmetry is the gap between the mean and 0.94 quantile divided by the gap between the 0.05 quantile and the mean.
+##' For a Bayesian regression fit prints the posterior mean, median, SE, highest posterior density interval, and symmetry coefficient from the posterior draws.  For a given parameter, the symmetry measure is computed using the \code{distSym} function.
 ##' @title print.rmsb
 ##' @param x an object created by an \code{rms} Bayesian fitting function
-##' @param cint credible interval coverage probability (default is 0.95)
+##' @param prob HPD interval coverage probability (default is 0.95)
 ##' @param dec amount of rounding (digits to the right of the decimal)
 ##' @param pr set to \code{FALSE} to return an unrounded matrix and not print
 ##' @param ... ignored
@@ -121,18 +121,17 @@ vcov.rmsb <- function(object, regcoef.only=TRUE,
 ##'   print.rmsb(f)
 ##' }
 ##' @author Frank Harrell
-print.rmsb <- function(x, cint=0.95, dec=4, pr=TRUE, ...) {
+print.rmsb <- function(x, prob=0.95, dec=4, pr=TRUE, ...) {
 	s     <- x$draws
   param <- t(x$param)
   means <- param[, 'mean']
   colnames(param) <- upFirst(colnames(param))
 
 	se <- sqrt(diag(var(s)))
-	a  <- 1 - cint; prob <- c(a / 2, 1 - a / 2, 0.05, 0.95)
-	ci <- apply(s, 2, quantile, probs=prob)
-  P  <- apply(s, 2, function(u) mean(u > 0))
-	sym <- (ci[4,] - means) / (means - ci[3,])
-	w <- cbind(param, SE=se, Lower=ci[1,], Upper=ci[2,], P, Symmetry=sym)
+	hpd <- apply(s, 2, HPDint, prob=prob)
+  P   <- apply(s, 2, function(u) mean(u > 0))
+	sym <- apply(s, 2, distSym)
+	w <- cbind(param, SE=se, Lower=hpd[1,], Upper=hpd[2,], P, Symmetry=sym)
   rownames(w) <- names(means)
   if(! pr) return(w)
 	cat(nrow(s), 'draws from the posterior distribution\n\n')
@@ -173,43 +172,44 @@ stanCompile <-
 
 ##' Plot Posterior Densities and Summaries
 ##'
-##' For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters along with posterior mode, mean, median, and credible interval
+##' For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters along with posterior mode, mean, median, and highest posterior density interval
 ##' @title plot.rmsb
 ##' @param x an \code{rms} Bayesian fit object
 ##' @param which names of parameters to plot, defaulting to all non-intercepts. Can instead be a vector of integers.
 ##' @param nrow number of rows of plots
 ##' @param ncol number of columns of plots
-##' @param cint probability for credible interval
+##' @param prob probability for HPD interval
 ##' @param ... passed to \code{ggplot2::geom_density}
 ##' @return \code{ggplot2} object
 ##' @author Frank Harrell
-plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, cint=0.95, ...) {
-  alp   <- (1. - cint) / 2.
+plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
   nrp   <- num.intercepts(x)
   draws <- x$draws
+  omega <- x$omega
   est   <- x$param
-  if(length(x$sigmags)) {
-    draws <- cbind(draws, sigmag=x$sigmags)
-    sigmasummary <- c(mode=NA, mean=mean(x$sigmags), median=median(x$sigmags))
-    sigmasummary <- sigmasummary[rownames(est)]
-    est   <- cbind(est, sigmag=sigmasummary)
+  if(length(omega)) {
+    draws <- cbind(draws, omega)
+    g <- function(x) c(mode=NA, mean=mean(x), median=median(x))
+    osummary <- apply(omega, 2, g)
+    osummary <- osummary[rownames(est),, drop=FALSE]
+    est      <- cbind(est, osummary)
     }
   nd    <- nrow(draws)
   nam   <- colnames(draws)
   if(! length(which)) which <- if(nrp == 0) nam else nam[-(1 : nrp)]
   if(! is.character(which)) which <- nam[which]
   draws <- draws[, which, drop=FALSE]
-  ci    <- apply(draws, 2, quantile, probs=c(alp, 1. - alp))
-  rownames(ci) <- c('Lower', 'Upper')
+  hpd   <- apply(draws, 2, HPDint, prob=prob)
+  # rownames(ci) <- c('Lower', 'Upper')
   
   draws  <- as.vector(draws)
   param  <- factor(rep(which, each=nd), which)
   est    <- est[, which, drop=FALSE]
-  est    <- rbind(est, ci)
+  est    <- rbind(est, hpd)
   ne     <- nrow(est)
   stat   <- rownames(est)
   stat   <- ifelse(stat %in% c('Lower', 'Upper'),
-                   paste(cint, 'CI'), stat)
+                   paste(prob, 'HPDI'), stat)
   est    <- as.vector(est)
   eparam <- factor(rep(which, each=ne), which)
   stat   <- rep(stat, length(which))
@@ -242,8 +242,7 @@ stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE, plotno=1, ...)
       nrp <- x$non.slopes
       which <- if(nrp > 0) colnames(draws)[-(1 : nrp)] else colnames(draws)
     }
-    if('rho'    %in% which)  draws <- cbind(draws, rho    = x$rhos   )
-    if('sigmag' %in% which)  draws <- cbind(draws, sigmag = x$sigmags)
+    draws   <- cbind(draws, x$omega)
     draws   <- draws[, which, drop=FALSE]
     nchains <- x$chains
     ndraws  <- nrow(draws)
@@ -366,13 +365,14 @@ fitSave <- function(fit, name=as.character(substitute(fit))) {
 ##'
 ##' Adds a suffix of \code{.rds} to the name of the argument and calls \code{readRDS} to read the stored object, returning it to the user
 ##' @title fitLoad
-##' @param name R object name (unquoted) that was passed to \code{fitSave}
+##' @param fit R object name (unquoted) that was passed to \code{fitSave}
 ##' @return an object, using an rms package fit object
 ##' @author Frank Harrell
 fitLoad <- function(fit) {
   file <- paste0(as.character(substitute(fit)), '.rds')
   readRDS(file)
 }
+
 ##' fitIf
 ##'
 ##' By calling \code{fitIf(fitname <- fitting_function(...))} \code{fitIf} determines whether the fit object has already been created under the file named \code{"fitname.rds"} in the current working directory, and if so loads it.  It also looks for a file with a name such as \code{"fitname-rstan.rds"} and if it exists laods it and adds that object as the \code{rstan} part of the model fit, for \code{rstan} diagnostics.  If the \code{"fitname.rds"} does not exist, runs the model fit, strips off the large \code{rstan} object, stores the short fit object in \code{"fitname.rds"} and stores the full fit object in R object \code{fitname} in the global environment.  To force a re-fit, remove the \code{.rds} object.
@@ -416,3 +416,37 @@ compareBmods <- function(..., method='stacking', r_eff_list=NULL) {
   lo   <- lapply(fits, function(x) x$loo)
   loo::loo_model_weights(lo, method=method, r_eff_list=r_eff_list)
   }
+
+##' Highest Posterior Density Interval
+##'
+##' Adapts code from \code{coda::HPDinterval} to compute a highest posterior density interval from posterior samples for a single parameter.  Quoting from the \code{coda} help file, for each parameter the interval is constructed from the empirical cdf of the sample as the shortest interval  for  which  the  difference  in  the  ecdf  values  of  the  endpoints  is  the  nominal  probability.  Assuming that the distribution is not severely multimodal, this is the HPD interval.
+##' @title HPDint 
+##' @param x a vector of posterior draws
+##' @param prob desired probability coverage
+##' @return a 2-vector with elements \code{Lower} and \code{Upper}
+##' @author Douglas Bates and Frank Harrell
+HPDint <- function(x, prob = 0.95) {
+  x     <- sort(x)
+  nsamp <- length(x)
+  gap   <- max(1, min(nsamp - 1, round(nsamp * prob)))
+  init  <- 1:(nsamp - gap)
+  inds  <- which.min(x[init + gap] - x[init])
+  c(Lower =  x[inds], Upper = x[inds + gap])
+}
+
+##' Distribution Symmetry Measure
+##'
+##' From a sample from a distribution computes a symmetry measure.  By default it is the gap between the mean and the 0.95 quantile divided by the gap between the 0.05 quantile and the mean.
+##' @title distSym
+##' @param x a numeric vector representing a sample from a continuous distribution
+##' @param prob quantile interval coverage
+##' @param na.rm set to \code{TRUE} to remove \code{NA}s before proceeding.
+##' @return a scalar with a value of 1.0 indicating symmetry
+##' @author Frank Harrell
+distSym <- function(x, prob=0.9, na.rm=FALSE) {
+  if(na.rm) x <- x[! is.na(x)]
+  a <- (1. - prob) / 2.
+  w <- quantile(x, probs=c(a / 2., 1. - a / 2.))
+  xbar <- mean(x)
+  (w[2] - xbar) / (xbar - w[1])
+}

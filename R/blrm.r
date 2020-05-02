@@ -13,13 +13,14 @@
 ##' @param ar1sdmean the assumed mean of the prior distribution of the standard deviation of within-subject white noise.   The setup is the same as with \code{rsdmean}.
 ##' @param iter number of posterior samples per chain for [rstan::sampling] to run
 ##' @param chains number of separate chains to run
-##' @param refresh see [rstan::sampling]
+##' @param refresh see [rstan::sampling].  The default is 0, indicating that no progress notes are output.  If \code{refresh > 0} and \code{progress} is not \code{''}, progress output will be appended to file \code{progress}.  The default file name is \code{'stan-progress.txt'}.
+##' @param progress see \code{refresh}.  Defaults to \code{''} if \code{refresh = 0}.  Note: If running interactively but not under RStudio, \code{rstan} will open a browser window for monitoring progress.
 ##' @param x set to \code{FALSE} to not store the design matrix in the fit.  \code{x=TRUE} is needed if running \code{blrmStats} for example.
 ##' @param y set to \code{FALSE} to not store the response variable in the fit
 ##' @param loo set to \code{FALSE} to not run \code{loo} and store its result as object \code{loo} in the returned object
 ##' @param method set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.  When random effects are present, \code{method} is automatically set to \code{'sampling'} as maximum likelihood estimates without marginalizing over the random effects do not make sense.
 ##' @param standata set to \code{TRUE} to return the Stan data list and not run the model
-##' @param ... passed to \code{rstan::sampling} or \code{rstan:optimizing}
+##' @param ... passed to \code{rstan::sampling} or \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.
 ##' @return an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
 ##' @examples
 ##' \dontrun{
@@ -39,7 +40,7 @@
 ##'   blrmStats(f)        # more details about predictive accuracy measures
 ##'   ggplot(Predict(...))   # standard rms output
 ##'   summary(f, ...)     # invokes summary.rms
-##'   contrast(f, ...)    # contrast.rms computes credible intervals
+##'   contrast(f, ...)    # contrast.rms computes HPD intervals
 ##'   plot(nomogram(f, ...)) # plot nomogram using posterior mean parameters
 ##'
 ##'   # Fit a random effects model to handle multiple observations per
@@ -56,6 +57,7 @@
 blrm <- function(formula, data, subset, na.action=na.delete,
 								 priorsd=rep(100, p), rsdmean=1, ar1sdmean=1,
 								 iter=2000, chains=4, refresh=0,
+                 progress=if(refresh > 0) 'stan-progress.txt' else '',
 								 x=TRUE, y=TRUE, loo=TRUE,
                  method=c('both', 'sampling', 'optimizing'),
                  standata=FALSE,
@@ -192,6 +194,8 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     stop('you did not run rms::stanCompile to compile Stan code')
   mod <- readRDS(file)
 
+  itfailed <- function(w) is.list(w) && length(w$fail) && w$fail
+
   opt <- NULL
   if(method != 'sampling') {
     otime <- system.time(
@@ -216,8 +220,10 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     if(method == 'optimizing') return(opt)
     }
 
-	g <- rstan::sampling(mod, pars='sigmaw', include=FALSE,
+  if(progress != '') sink(progress, append=TRUE)
+ 	g <- rstan::sampling(mod, pars='sigmaw', include=FALSE,
                        data=d, iter=iter, chains=chains, refresh=refresh, ...)
+  if(progress != '') sink()
   ## g <- rstan::vb(mod, data=d)   # bombed
 	nam <- names(g)
 	al  <- nam[grep('alpha\\[', nam)]
@@ -228,17 +234,20 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 	alphas <- draws[, al, drop=FALSE]
 	betas  <- draws[, be, drop=FALSE]
 
-  sigmags <- NULL; clparm <- character(0); gammas <- NULL
+  omega   <- NULL      # non-intercepts, non-slopes
+  clparm  <- character(0)
+  gammas  <- NULL
+  
   if(length(cluster)) {
-    sigmags <- draws[, 'sigmag']
+    omega   <- cbind(sigmag = draws[, 'sigmag'])
     clparm  <- 'sigmag'
     cle     <- draws[, ga, drop=FALSE]
-    gammas  <- apply(cle, 2, median)
+    gammas  <- apply(cle, 2, median)      # posterior median per subject
   }
-
-  epsmed <- rhos <- NULL
+  
+  epsmed <- NULL
   if(length(time)) {
-    rhos    <- draws[, 'rho']
+    omega   <- cbind(omega, rho=draws[, 'rho'])
     clparm  <- c(clparm, 'rho')
     ep      <- nam[grep('eps', nam)]
     ## Summarize AR(1) random effects by taking median over draws
@@ -252,10 +261,16 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     for(i in uro) for(j in uco)
       epsmed[i, j] <- median(eps[, ro==i & co==j])
     }
-  
-	diagnostics <-
-		rstan::summary(g, pars=c(al, be, clparm),
-                   probs=NULL)$summary[,c('n_eff', 'Rhat')]
+
+  diagnostics <-
+		tryCatch(rstan::summary(g, pars=c(al, be, clparm),
+                            probs=NULL)$summary[,c('n_eff', 'Rhat')],
+             error=function(...) list(fail=TRUE))
+  if(itfailed(diagnostics)) {
+    warning('rstan::summary failed; see fit component diagnostics')
+    diagnostics <- list(pars=c(al, be, clparm))
+    }
+
 	# Back-scale to original data scale
 	alphacorr <- rowSums(sweep(betas, 2, xbar, '*')) # was xbar/xsd
 	alphas    <- sweep(alphas, 1, alphacorr, '-')
@@ -270,19 +285,25 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     opt$coefficients <- NULL
   }
 
-  Loo <- if(loo) rstan::loo(g)
-
+  Loo <- lootime <- NULL
+  if(loo) {
+    lootime <- system.time(
+      Loo <- tryCatch(rstan::loo(g), error=function(...) list(fail=TRUE)))
+    if(itfailed(Loo))
+      warning('loo failed; try running on loo(stanGet(fit object)) for more information')
+    }
+  
   freq <- table(Y, dnn=yname)
-    
+
 	res <- list(call=call, 
-							draws=draws, sigmags=sigmags, rhos=rhos,
+							draws=draws, omega=omega,
               gammas=gammas, eps=epsmed,
               param=param, N=n, p=p, yname=yname, ylevels=ylev, freq=freq,
 						  alphas=al, betas=be,
 						  xbar=xbar, Design=atr, scale.pred=c('log odds', 'Odds Ratio'),
 							terms=Terms, assign=ass, na.action=atrx$na.action, fail=FALSE,
 							non.slopes=nrp, interceptRef=kmid, sformula=sformula,
-							x=if(x) X, y=if(y) Y, loo=Loo,
+							x=if(x) X, y=if(y) Y, loo=Loo, lootime=lootime,
               clusterInfo=if(length(cluster))
                 list(cluster=if(x) cluster else NULL, n=Nc, name=clustername),
               timeInfo=if(length(time))
@@ -296,11 +317,12 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 
 ##' Compute Indexes of Predictive Accuracy and Their Uncertainties
 ##'
-##' For a binary or ordinal logistic regression fit from \code{blrm}, computes several indexes of predictive accuracy along with credible intervals for them.  Optionally plots their posterior densities.
+##' For a binary or ordinal logistic regression fit from \code{blrm}, computes several indexes of predictive accuracy along with highest posterior density intervals for them.  Optionally plots their posterior densities.
+##' When there are more than two levels of the outcome variable, computes Somers' Dxy and c-index on a random sample of 10,000 observations.
 ##' @title blrmStats
 ##' @param fit an object produced by \code{blrm}
 ##' @param ns number of posterior draws to use in the calculations (default is 400)
-##' @param cint credible interval probability (default is 0.95)
+##' @param prob HPD interval probability (default is 0.95)
 ##' @param pl set to \code{TRUE} to plot the posterior densities using base graphics
 ##' @return list of class \code{'blrmStats'} whose most important element is \code{Stats}.  The indexes computed are defined below, with gp, B, EV, and vp computed using the intercept corresponding to the median value of Y.  See \url{http://fharrell.com/post/add-value} for more information.
 ##' \describe{
@@ -319,7 +341,7 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 ##'   blrmStats(f, pl=TRUE)   # print and plot
 ##' }
 ##' @author Frank Harrell
-blrmStats <- function(fit, ns=400, cint=0.95, pl=FALSE) {
+blrmStats <- function(fit, ns=400, prob=0.95, pl=FALSE) {
   X <- fit$x
   y <- fit$y
   if(length(X) == 0 | length(y) == 0)
@@ -352,30 +374,30 @@ blrmStats <- function(fit, ns=400, cint=0.95, pl=FALSE) {
   brier <- function(x, y) mean((x - y) ^ 2)
   br2   <- function(p) var(p) / (var(p) + sum(p * (1 - p)) / length(p))
 
-
+  nobs <- length(y)
+  is <- if((nobs <= 10000) || (length(ylev) == 2)) 1 : nobs else
+              sample(1 : nobs, 10000, replace=FALSE)
   for(i in 1 : ns) {
     beta  <- s[i, ]
     alpha <- alphas[i]
     lp   <- alpha + X %*% beta
-    prob <- plogis(lp)
-    d    <- dxy(lp, y)
+    prb  <- plogis(lp)
+    d    <- dxy(lp[is], y[is])
     C    <- (d + 1.) / 2.
-    st <- c(d, C, GiniMd(lp), GiniMd(prob),
-            brier(prob, y > kmid - 1), 
-            br2(prob), var(lp), var(prob))
+    st <- c(d, C, GiniMd(lp), GiniMd(prb),
+            brier(prb, y > kmid - 1), 
+            br2(prb), var(lp), var(prb))
     stats[i,] <- st
   }
 
-  sbar <- colMeans(stats)
-  se   <- apply(stats, 2, sd)
-  alpha <- 1 - cint
-  cred <- apply(stats, 2, quantile,
-                probs=c(alpha / 2, 1 - alpha / 2, .05, .95))
-  sym  <- (cred[4, ] - sbar) / (sbar - cred[3, ])
+  sbar  <- colMeans(stats)
+  se    <- apply(stats, 2, sd)
+  hpd   <- apply(stats, 2, HPDint, prob=prob)
+  sym   <- apply(stats, 2, distSym)
   
-  text <- paste0(round(sbar, 3), ' [', round(cred[1,], 3), ', ',
-                 round(cred[2,], 3), ']')
-  Stats <- rbind(Mean=sbar, SE=se, ci=cred[1:2,], Symmetry=sym)
+  text <- paste0(round(sbar, 3), ' [', round(hpd[1,], 3), ', ',
+                 round(hpd[2,], 3), ']')
+  Stats <- rbind(Mean=sbar, SE=se, hpd=hpd, Symmetry=sym)
   statnames <- colnames(Stats)
   names(text) <- statnames
 
@@ -384,15 +406,14 @@ blrmStats <- function(fit, ns=400, cint=0.95, pl=FALSE) {
     for(w in setdiff(statnames, 'C')) {
       den <- density(stats[, w])
       plot(den, xlab=w, ylab='', type='l', main='')
-      ref <- c(sbar[w], cred[1, w], cred[2, w])
+      ref <- c(sbar[w], hpd[1, w], hpd[2, w])
       abline(v=ref, col=gray(0.85))
       text(min(den$x), max(den$y), paste0('Symmetry:', round(sym[w], 2)),
            adj=c(0, 1), cex=0.7)
     }
   }
-
-    structure(list(stats=Stats, text=text, ndraws=ndraws, ns=ns,
-                   non.slopes=nrp, intercept=kmid), class='blrmStats')
+  structure(list(stats=Stats, text=text, ndraws=ndraws, ns=ns,
+                 non.slopes=nrp, intercept=kmid), class='blrmStats')
   }
 
 ##' Print Details for \code{blrmStats} Predictive Accuracy Measures
@@ -432,13 +453,13 @@ print.blrmStats <- function(x, dec=3, ...) {
 
 ##' Print \code{blrm} Results
 ##'
-##' Prints main results from \code{blrm} along with indexes and predictive accuracy and their credible intervals computed from \code{blrmStats}.
+##' Prints main results from \code{blrm} along with indexes and predictive accuracy and their highest posterior density intervals computed from \code{blrmStats}.
 ##' @title print.blrm
 ##' @param x object created by \code{blrm}
 ##' @param dec number of digits to print to the right of the decimal
 ##' @param coefs specify \code{FALSE} to suppress printing parameter estimates, and in integer k to print only the first k
-##' @param cint credible interval probability for summary indexes
-##' @param ns number of random samples of the posterior draws for use in computing credible intervals for accuracy indexes
+##' @param prob HPD interval probability for summary indexes
+##' @param ns number of random samples of the posterior draws for use in computing HPD intervals for accuracy indexes
 ##' @param title title of output
 ##' @param ... passed to \code{prModFit}
 ##' @examples
@@ -449,7 +470,7 @@ print.blrmStats <- function(x, dec=3, ...) {
 ##'   print(f, posterior.summary='median')   # instead of post. means
 ##' }
 ##' @author Frank Harrell
-print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=400,
+print.blrm <- function(x, dec=4, coefs=TRUE, prob=0.95, ns=400,
                       title='Bayesian Logistic Regression Model', ...) {
   latex <- prType() == 'latex'
   
@@ -467,17 +488,16 @@ print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=400,
                    list(x$na.action))
   }
 
-  alp <- (1. - cint) / 2.
   qro <- function(x) {
-    r <- round(quantile(x, c(alp, 0.5, 1. - alp)), 4)
-    paste0(r[2], ' [', r[1], ', ', r[3], ']')
+    r <- round(c(median(x), HPDint(x, prob)), 4)
+    paste0(r[1], ' [', r[2], ', ', r[3], ']')
     }
   ci  <- x$clusterInfo
   sigmasum <- NULL
-  if(length(ci)) sigmasum <- qro(x$sigmags)
+  if(length(ci)) sigmasum <- qro(x$omega[, 'sigmag'])
 
-  ti  <- x$timeInfo
-  rhosum <- if(length(ti)) qro(x$rhos)
+  ti     <- x$timeInfo
+  rhosum <- if(length(ti)) qro(x$omega[, 'rho'])
  
   loo <- x$loo
   elpd_loo <- p_loo <- looic <- NULL
@@ -496,8 +516,8 @@ print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=400,
                       Clusters        = ci$n,
                       'sigma gamma'   = sigmasum,
                       'Time variable' = ti$name,
-                      'Max time'      = ti$n,
-                      'Obs times'     = ti$nobs,
+                      'Possible times'= ti$n,
+                      'Observed times'= ti$nobs,
                       rho             = rhosum)
   
   if(length(x$freq) < 4) {
@@ -534,7 +554,7 @@ print.blrm <- function(x, dec=4, coefs=TRUE, cint=0.95, ns=400,
   if(coefs) {
     k <- k + 1
     z[[k]] <- list(type='coefmatrix',
-                   list(bayes=print.rmsb(x, cint=cint, pr=FALSE)))
+                   list(bayes=print.rmsb(x, prob=prob, pr=FALSE)))
   }
   
   prModFit(x, title=title, z, digits=dec, coefs=coefs, ...)

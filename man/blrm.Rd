@@ -15,6 +15,7 @@ blrm(
   iter = 2000,
   chains = 4,
   refresh = 0,
+  progress = if (refresh > 0) "stan-progress.txt" else "",
   x = TRUE,
   y = TRUE,
   loo = TRUE,
@@ -42,7 +43,9 @@ blrm(
 
 \item{chains}{number of separate chains to run}
 
-\item{refresh}{see \link[rstan:sampling]{rstan::sampling}}
+\item{refresh}{see \link[rstan:sampling]{rstan::sampling}.  The default is 0, indicating that no progress notes are output.  If \code{refresh > 0} and \code{progress} is not \code{''}, progress output will be appended to file \code{progress}.  The default file name is \code{'stan-progress.txt'}.}
+
+\item{progress}{see \code{refresh}.  Defaults to \code{''} if \code{refresh = 0}.  Note: If running interactively but not under RStudio, \code{rstan} will open a browser window for monitoring progress.}
 
 \item{x}{set to \code{FALSE} to not store the design matrix in the fit.  \code{x=TRUE} is needed if running \code{blrmStats} for example.}
 
@@ -54,7 +57,7 @@ blrm(
 
 \item{standata}{set to \code{TRUE} to return the Stan data list and not run the model}
 
-\item{...}{passed to \code{rstan::sampling} or \code{rstan:optimizing}}
+\item{...}{passed to \code{rstan::sampling} or \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.}
 }
 \value{
 an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
@@ -85,7 +88,7 @@ Uses \code{rstan} with pre-compiled Stan code whose location is given by the use
   blrmStats(f)        # more details about predictive accuracy measures
   ggplot(Predict(...))   # standard rms output
   summary(f, ...)     # invokes summary.rms
-  contrast(f, ...)    # contrast.rms computes credible intervals
+  contrast(f, ...)    # contrast.rms computes HPD intervals
   plot(nomogram(f, ...)) # plot nomogram using posterior mean parameters
 
   # Fit a random effects model to handle multiple observations per

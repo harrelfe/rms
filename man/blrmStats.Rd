@@ -4,14 +4,14 @@
 \alias{blrmStats}
 \title{blrmStats}
 \usage{
-blrmStats(fit, ns = 400, cint = 0.95, pl = FALSE)
+blrmStats(fit, ns = 400, prob = 0.95, pl = FALSE)
 }
 \arguments{
 \item{fit}{an object produced by \code{blrm}}
 
 \item{ns}{number of posterior draws to use in the calculations (default is 400)}
 
-\item{cint}{credible interval probability (default is 0.95)}
+\item{prob}{HPD interval probability (default is 0.95)}
 
 \item{pl}{set to \code{TRUE} to plot the posterior densities using base graphics}
 }
@@ -31,7 +31,8 @@ list of class \code{'blrmStats'} whose most important element is \code{Stats}.  
 Compute Indexes of Predictive Accuracy and Their Uncertainties
 }
 \details{
-For a binary or ordinal logistic regression fit from \code{blrm}, computes several indexes of predictive accuracy along with credible intervals for them.  Optionally plots their posterior densities.
+For a binary or ordinal logistic regression fit from \code{blrm}, computes several indexes of predictive accuracy along with highest posterior density intervals for them.  Optionally plots their posterior densities.
+When there are more than two levels of the outcome variable, computes Somers' Dxy and c-index on a random sample of 10,000 observations.
 }
 \examples{
 \dontrun{

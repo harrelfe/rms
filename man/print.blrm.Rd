@@ -8,7 +8,7 @@
   x,
   dec = 4,
   coefs = TRUE,
-  cint = 0.95,
+  prob = 0.95,
   ns = 400,
   title = "Bayesian Logistic Regression Model",
   ...
@@ -21,9 +21,9 @@
 
 \item{coefs}{specify \code{FALSE} to suppress printing parameter estimates, and in integer k to print only the first k}
 
-\item{cint}{credible interval probability for summary indexes}
+\item{prob}{HPD interval probability for summary indexes}
 
-\item{ns}{number of random samples of the posterior draws for use in computing credible intervals for accuracy indexes}
+\item{ns}{number of random samples of the posterior draws for use in computing HPD intervals for accuracy indexes}
 
 \item{title}{title of output}
 
@@ -33,7 +33,7 @@
 Print \code{blrm} Results
 }
 \details{
-Prints main results from \code{blrm} along with indexes and predictive accuracy and their credible intervals computed from \code{blrmStats}.
+Prints main results from \code{blrm} along with indexes and predictive accuracy and their highest posterior density intervals computed from \code{blrmStats}.
 }
 \examples{
 \dontrun{

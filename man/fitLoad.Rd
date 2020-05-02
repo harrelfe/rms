@@ -7,7 +7,7 @@
 fitLoad(fit)
 }
 \arguments{
-\item{name}{R object name (unquoted) that was passed to \code{fitSave}}
+\item{fit}{R object name (unquoted) that was passed to \code{fitSave}}
 }
 \value{
 an object, using an rms package fit object

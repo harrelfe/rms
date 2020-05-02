@@ -4,12 +4,12 @@
 \alias{print.rmsb}
 \title{print.rmsb}
 \usage{
-\method{print}{rmsb}(x, cint = 0.95, dec = 4, pr = TRUE, ...)
+\method{print}{rmsb}(x, prob = 0.95, dec = 4, pr = TRUE, ...)
 }
 \arguments{
 \item{x}{an object created by an \code{rms} Bayesian fitting function}
 
-\item{cint}{credible interval coverage probability (default is 0.95)}
+\item{prob}{HPD interval coverage probability (default is 0.95)}
 
 \item{dec}{amount of rounding (digits to the right of the decimal)}
 
@@ -24,7 +24,7 @@ matrix (rounded if \code{pr=TRUE})
 Basic Print for Bayesian Parameter Summary
 }
 \details{
-For a Bayesian regression fit prints the posterior mean, median, SE, credible interval, and symmetry coefficient from the posterior draws.  For a given parameter, the symmetry is the gap between the mean and 0.94 quantile divided by the gap between the 0.05 quantile and the mean.
+For a Bayesian regression fit prints the posterior mean, median, SE, highest posterior density interval, and symmetry coefficient from the posterior draws.  For a given parameter, the symmetry measure is computed using the \code{distSym} function.
 }
 \examples{
 \dontrun{

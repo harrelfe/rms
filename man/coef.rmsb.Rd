@@ -4,7 +4,7 @@
 \alias{coef.rmsb}
 \title{coef.rmsb}
 \usage{
-\method{coef}{rmsb}(object, stat = c("mode", "mean", "median"), ...)
+\method{coef}{rmsb}(object, stat = c("mean", "median", "mode"), ...)
 }
 \arguments{
 \item{object}{an object created by an \code{rms} package Bayesian fitting function}

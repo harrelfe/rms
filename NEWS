@@ -1,4 +1,4 @@
-Changes in version 6.0-0 (2020-04-23)
+Changes in version 6.0-0 (2020-05-01)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)
    * prModFit: changed default in catl function to center=FALSE
    * residuals.psm: added transformation of survival time when computing censored normalized residuals
@@ -14,7 +14,9 @@ Changes in version 6.0-0 (2020-04-23)
    * extended nomogram to use posterior mean or median parameter values
    * extended Design() to deal with time() variables (for blrm)
    * extended blrm to use Ben Goodrich's AR(1) model
-
+   * HPDint: new function, adopted from the coda package
+   * distSym: new function: symmetry measure for a distribution
+	 
 Changes in version 5.1-4 (2019-11-16)
    * anova.rms: added which LaTeX packages are needed in help page
 	 * survplot.npsurv: added use of fun for conf type bars.  Thanks: Joonas Lehto

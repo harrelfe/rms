@@ -47,6 +47,8 @@ options(stancompiled='~/R/stan', prType='html')
 
 As the `rstan` component of `blrm` fit objects can be tens of megabytes in size. you'll see `rms` utility function `fitIf` used in the examples below.  `fitIf(fitname <- ...)` determines whether the fit has already been run by sensing the existence of a file named like `fitname.rds` in the current working directory, and quickly loads this object if so.  If an optional file named like `fitname-rstan.rds` is found, that file is also loaded and stored as the `rstan` component of the fit.  `fitIf` also stores a much smaller version of the object by creating `fitname.rds` after removing the large `rstan` component.  If `fitname.rds` doesn't already exist, the model fit is run and the entire result is returned to the user.  Also, a new `fitname.rds` is created without the large `rstan` object.  You lose the ability to run the `rms::stanDxplot(..., rstan=TRUE)` on restored objects (when `fitname-rstan.rds` did not exist), so the `stanDxplot` function tries to find an existing trace plot image file corresponding to the current R markdown chunk when the fit object no longer has the `rstan` component.  For most purposes this doesn't matter, because running \code{stanDxplot} using the defaults shows the needed non-burning samples which are always stored in fit objects.  Note that using the `knitr` `cache=TRUE` option does not work well as the cache files for this script were about a GB in size, and the system does not accurately recognize when a model fit hasn't changed and doesn't need to be run when `rstan` is involved.
 
+The `blrm` AR(1) approach is experimental; see warnings in examples below.
+
 # Example: 10-level Ordinal Outcome
 
 Simulate a dataset with three predictors and one 10-level ordinal outcome.  Run the frequentist proportional odds model then the Bayesian one.
@@ -97,7 +99,7 @@ bs
 blrmStats(bs, pl=TRUE)
 ```
 
-Show basic Stan diagnostics. Intercepts are shifted from what is in `g` because of subtractions of covariate means before passing data to `rstan`.
+Show basic Stan diagnostics. Had `stanDxplots(bs, rstan=TRUE)` been used, intercepts would have been shifted from what is in `g` because of subtractions of covariate means before passing data to `rstan`.
 
 ```{r standx}
 stanDxplot(bs)
@@ -132,7 +134,7 @@ P <- PostF(bs, pr=TRUE)   # show new short legal R names
 P(b3 > 0 & b1 > 1.5)
 P(b3 > 0)
 P(abs(b3) < 0.25)        # evidence for small |nonlinearity|
-mean(g$draws[, 'x2^2'] > 0, na.rm=TRUE)    # longhand calculation
+mean(bs$draws[, 'x2^2'] > 0, na.rm=TRUE)    # longhand calculation
 # Plot posterior distribution for the vertex of the quadratic x2 effect
 # This distribution should be wide because the relationship is linear
 # (true value of b3 is zero)
@@ -146,7 +148,7 @@ P <- PostF(bs, name='orig')
 P(`x2^2` > 0)
 P(`x2^2` > 0 & x1 > 1.5)
 
-# Remove rstan results from g when finished with trace plots
+# Remove rstan results from fit.  Compute  savings in object size.
 # Note: this will only be accurate when running the fits for
 # the first time (not when restoring shortened forms of them from
 # disc)
@@ -163,12 +165,15 @@ cat('Before:', s1, '  After:', s2, '\n')
 Turn to the `support` dataset and fit a binary logistic model to predict the probability of in-hospital death of critically ill adults.
 `blrm` keeps posterior sampling efficient by orthonormalizing the design matrix before doing the sampling (this is done internally in the Stan code).  This allows for arbitrary collinearities, for example in the basis functions used in restricted cubic splines.  When there are such collinearities, expect to see some disagreements in estimates between `blrm` and `lrm`, because the latter does not do orthonormalization (only normalization to mean 0 variance 1).  Collinearity implies that there are many different solutions to the equations, all giving almost the same predicted values.
 
-```{r support,results='asis'}
+```{r support,results='asis',w=7,h=7}
 getHdata(support)
 dd <- datadist(support); options(datadist='dd')
 f <- lrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5),
 				 data=support, eps=1e-4, x=TRUE)
 f
+# Compute the apparent standard error of Dxy (not accounting for overfitting)
+# for comparison with the Bayesian credible interval for Dxy
+htmlVerbatim(rcorr.cens(predict(f), support$hospdead))
 htmlVerbatim(Function(f))
 fitIf(bsup <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
 	    	  		 data=support))
@@ -242,7 +247,7 @@ fitIf(bmixor <- blrm(imps79o ~ sqrt(Week) * TxDrug + cluster(id), data=d))
 bmixor
 ```
 
-The square of the posterior median for $\sigma_\gamma$ is `r median(bmixor$sigmags)^2` which compares well with the `mixor` estimate of 3.774.  The $\hat{\beta}$s also compare very well.  Note that the model is stated differently, which makes two of the intercepts have different meanings across packages.
+The square of the posterior median for $\sigma_\gamma$ is `r median(bmixor$omega[,'sigmag'])^2` which compares well with the `mixor` estimate of 3.774.  The $\hat{\beta}$s also compare very well.  Note that the model is stated differently, which makes two of the intercepts have different meanings across packages.
 
 ## Simulated Random Effects Longitudinal Data
 
@@ -430,6 +435,39 @@ The time effect is very weak, and adding it did not change the already-accurate 
 
 Thanks to Stan code written by Ben Goodrich, `blrm` also implements a correlation struction that is more realistic for most problems.  Subject (cluster) random effects pertain to the first measurement for the subject, then subsequent measurements are correlated within cluster according to an `aTime` variable specified in the model.  The actual time values are not used in the analysis but the distinct values are converted to consecutive integers.  The within-cluster process is AR(1) for the random effects, and a separate within-cluster white noise variance $\sigma_w$ is incorporated.  This implies that the correlation of two measurements within a subject is higher when the measurements are closer together in time, the the correlation decaying exponentially as the time gap widens within cluster.
 
+<a name="simdat1"></a>
+
+## Simulated Data 1
+
+Before simulating data that has exactly the structure described above, let's simulate repeated ordinal responses where the repeats are exact duplicates.  This is done to determine whether the random effects/AR(1) model can recover a large value of $\rho$ (here 1.0).
+
+```{r ar1dup, results='asis'}
+n      <- 500    # subjects
+sigmag <- 1      # SD of random intercepts
+
+set.seed(7)
+re <- rnorm(n) * sigmag   # overall increment in logit per subject
+X  <- runif(n)   # baseline covariate, will be duplicated over repeats
+m  <- 5          # measurements per subject
+id <- rep(1 : n, each = m)
+# Generate the first ordinal response per subject (time 1)
+Y  <- round(pmax(-2, pmin(3, 2 * X + re)))
+time <- rep(1 : m, n)
+x <- X[id]
+y <- Y[id]
+fitIf(bdup <- blrm(y ~ x + cluster(id) + aTime(time), refresh=50))
+bdup
+```
+
+The posterior mean $\rho$ is 0.70 whereas the true value is 1.0.  The regression coefficients do not appear to be reasonable.
+
+```{r bdupdx}
+stanDx(bdup)
+stanDxplot(bdup)
+```
+
+## Simulated Data 2
+
 Let's simulate a dataset that has exactly this structure and see if the Bayesian model can recover that structure.
 
 ```{r simar1}
@@ -530,7 +568,6 @@ stanDxplot(bar1, which=c('x', 'sigmag', 'rho'))
 # (use stanDxplot(bar1, which='rho', rstan=TRUE) to get line plots)
 if(length(bar1$rstan)) {
   z <- rstan::extract(bar1$rstan, permuted=FALSE)
-  par(mfrow=c(2,2), oma=c(0,0,0,0), mar=c(2, 2, 0.5, 1))
   for(chain in 1 : 4) {
     rhos <- z[, chain, 'rho']
     plot(1 : length(rhos), rhos, col=gray(0.4), cex=.1, xlab='', ylab='')
@@ -546,6 +583,73 @@ bar1
 
 The posterior mean $\beta$ and standard deviation of the posterior for $\beta$ look good.  The posterior median of $\sigma_\gamma$ is $\frac{1}{4}$ that used in simulating the data, and $\rho$ is $\frac{1}{7}$th.
 
+## Example Real Data AR(1) Analysis
+The R [LMest package](https://www.jstatsoft.org/index.php/jss/article/view/v081i04/v81i04.pdf) comes with a dataset from the [Health and Retirement Study](http://hrsonline.isr.umich.edu) conducted at the University of Michigan.  The outcome is self-report health status on an ordinal 5-point scale.  Participants were interviewed approximately every two years for eight years.  The dataset is also analyzed in a [vignette for the R mvord package](https://cran.r-project.org/web/packages/mvord/vignettes/vignette_mvord2.html#example-4---a-longitudinal-model).  The dataset was retrieved from [here](https://github.com/cran/LMest/tree/master/data).  It has 56592 rows for 7074 individuals.
+
+```{r srhsdata, results='asis'}
+load('data_SRHS_long.rda')
+d <- data_SRHS_long
+d <- upData(d, rename=c(gender='sex'),
+               sex  = factor(sex, 1:2, c('male', 'female')),
+               race = factor(race, 1:3, c('white', 'black', 'other')),
+               education = factor(education, 1:5, c('high school', 'GED',
+                 'high school graduate', 'some college',
+                 'college and above')), print=FALSE)
+dd <- datadist(d); options(datadist='dd')
+html(describe(d))
+```
+
+Start with an approximate GEE-type proportional odds model.
+
+```{r srhsgee,results='asis'}
+f <- lrm(srhs ~ t + sex + race + education + age, data=d, x=TRUE, y=TRUE)
+g <- robcov(f, d$id)
+g
+```
+
+Now fit the Bayesian random effects AR(1) model on the first 1000 subjects.  Current implementation of `blrm` does not allow for varying covariates so we had to exclude the linear time trend effect on the overall log odds.  We do use time to specify the AR(1) correlation structure.  Runtime was 15m using four cores.
+
+```{r srhsb,results='asis'}
+d <- subset(d, id <= 1000)
+fitIf(srhs <- blrm(srhs ~ aTime(t) + cluster(id) +
+                   sex + race + education + age, data=d,
+                   refresh=50))
+srhs
+```
+
+We see that this Bayesian model was unable to recover the high value of $\rho$ of 0.76 found in Example 5 from [this](https://cran.r-project.org/web/packages/mvord/vignettes/vignette_mvord2.html#example-5---self-reported-health-status) (although that analysis included a linear time trend).
+
+```{r srhsbdx}
+srhs$loo
+stanDx(srhs)
+stanDxplot(srhs)
+```
+
+# Scaling and Intepretation of Priors on $\beta$s
+
+`blrm` orthonormalizes the data design matrix to greatly improve posterior distribution sampling in the case of collinearities among predictors (especially among spline basis functions).    The very last parameter in the model is unchanged, but all proceeding parameters must have prior distributions specified with respect to the derived variables.  This is philosophically reasonable because if one has two collinear terms in a model, say terms as simple as $x$ and $x^2$, it is entirely unreasonable to specify independent priors for the corresponding pair of regression coefficients $\beta_1$ and $\beta_2$.  When $\beta_{1} \uparrow$, $\beta_{2} \downarrow$.  To understand at least the scaling part of the translation, we can compare the posterior draws for $\beta$ that pertain to the original $X$ scale with the posterior draws for $\theta$, the parameter values on the QR-decomposition transformed scale.  These $\theta$ values are stored in the `rstan` object that is part of the `blrm` fit object.  Here is an example where an ordinary cubic polynomial is fitted, first with `x` ranging from [-1,1] then [-10, 10].  A binary treatment variable is the last variable in the model, so it will be the only one that is not transformed.
+
+```{r qrtest,w=7,h=5.5}
+par(mfrow=c(2,4), oma=c(0,0,0,0), mar=c(4, 4, 0.5, 1))
+set.seed(1)
+n <- 200
+xunscaled <- (1 : n) / n    # runif(n, 0, 1)
+tx        <- rep(0:1, n/2)
+L         <- 4 * (xunscaled - 0.5) + 0.5 * tx
+y         <- ifelse(runif(n) <= plogis(L), 1, 0)
+for(k in c(1, 10)) {
+  x <- xunscaled * k
+  f <- blrm(y ~ pol(x, 3) + tx, iter=500)
+  s <- as.matrix(f$rstan)
+  th <- s[, paste0('theta[', 1:4, ']')]
+  be <- s[, paste0('beta[',  1:4, ']')]
+  plot(th[, 1], be[, 1], xlab=expression(theta[1]), ylab=expression(beta[1]))
+  plot(th[, 2], be[, 2], xlab=expression(theta[2]), ylab=expression(beta[2]))
+  plot(th[, 3], be[, 3], xlab=expression(theta[3]), ylab=expression(beta[3]))
+  plot(th[, 4], be[, 4], xlab=expression(theta[4]), ylab=expression(beta[4]))
+  abline(a=0, b=1, col=gray(0.7))
+}
+```
 
 # Speed of `blrm` For Large Numbers of Categories
 
