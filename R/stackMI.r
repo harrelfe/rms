@@ -99,7 +99,7 @@ Fitting imputed dataset number', i, 'of', n.impute, '\n\n',
     f$diagnostics <- diagnostics
 
     f$formula <- formula
-    f$assign  <- assign
+#    f$assign  <- assign
     f$call    <- call
     if(using.Design) options(Design.attr=NULL)
     class(f) <- c('stackImpute', class(f))

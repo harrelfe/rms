@@ -188,21 +188,29 @@ stanCompile <-
 
 ##' Plot Posterior Densities and Summaries
 ##'
-##' For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters along with posterior mode, mean, median, and highest posterior density interval.  If the fit was produced by \code{stackMI} the density represents the distribution after stacking the posterior draws over imputations, and the per-imputation density is also drawn as pale curves.
+##' For an \code{rms} Bayesian fit object, plots posterior densities for selected parameters along with posterior mode, mean, median, and highest posterior density interval.  If the fit was produced by \code{stackMI} the density represents the distribution after stacking the posterior draws over imputations, and the per-imputation density is also drawn as pale curves.  If exactly two parameters are being plotted and \code{bivar=TRUE}, hightest bivariate posterior density contrours are plotted instead, for a variety of \code{prob} values including the one specified, using 
 ##' @title plot.rmsb
 ##' @param x an \code{rms} Bayesian fit object
 ##' @param which names of parameters to plot, defaulting to all non-intercepts. Can instead be a vector of integers.
 ##' @param nrow number of rows of plots
 ##' @param ncol number of columns of plots
 ##' @param prob probability for HPD interval
-##' @param ... passed to \code{ggplot2::geom_density}
+##' @param bivar set to \code{TRUE} to plot bivariate density contours instead of univariate results (ignored if the number of parameters plotted is not exactly two)
+##' @param bivarmethod passed as \code{method} argument to \code{pdensityContour}
+##' @param ... passed to \code{pdensityContour}
 ##' @return \code{ggplot2} object
 ##' @author Frank Harrell
-plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
+plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95,
+                      bivar=FALSE, bivarmethod=c('ellipse', 'kernel'), ...) {
+
+  bivarmethod <- match.arg(bivarmethod)
+  
   nrp      <- num.intercepts(x)
   draws    <- x$draws
+
   n.impute <- x$n.impute
   if(! length(n.impute)) n.impute <- 1
+
   omega <- x$omega
   est   <- x$param
   if(length(omega)) {
@@ -217,9 +225,16 @@ plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
   if(! length(which)) which <- if(nrp == 0) nam else nam[-(1 : nrp)]
   if(! is.character(which)) which <- nam[which]
   draws <- draws[, which, drop=FALSE]
+
+  if(length(which) == 2 && bivar) {
+    g    <- pdensityContour(draws[, 1], draws[, 2], prob=prob, pl=TRUE,
+                            method=bivarmethod, ...)
+    cn   <- colnames(draws)
+    g    <- g + xlab(cn[1]) +  ylab(cn[2])
+    return(g)
+    }
   
   hpd   <- apply(draws, 2, HPDint, prob=prob)
-  # rownames(ci) <- c('Lower', 'Upper')
   
   draws  <- as.vector(draws)
   param  <- factor(rep(which, each=nd), which)
@@ -245,6 +260,8 @@ plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95, ...) {
     d2$imputation <- 'Stacked'
     d2$sz <- 1.4
     d <- rbind(d, d2)
+    implev <- c('Stacked', paste('Imputation', 1:n.impute))
+    d$imputation <- factor(d$imputation, implev, implev)  # ignored ??
   }
 
   de <- data.frame(param=eparam, est, stat)
@@ -491,3 +508,83 @@ distSym <- function(x, prob=0.9, na.rm=FALSE) {
   xbar <- mean(x)
   (w[2] - xbar) / (xbar - w[1])
 }
+
+##' Bivariate Posterior Contour
+##'
+##' Computes coordinates of a highest density contour containing a given probability volume given a sample from a continuous bivariate distribution, and optionally plots.  The default method assumes an elliptical shape, but one can optionally use a kernel density estimator.
+##' Code adapted from \code{embbook::HPDregionplot}.  See \url{http://www.sumsar.net/blog/2014/11/how-to-summarize-a-2d-posterior-using-a-highest-density-ellipse}.
+##' @title pdensity2d
+##' @param x 
+##' @param y
+##' @param prob main probability coverage (the only one for \code{method='ellipse'})
+##' @param otherprob vector of other probability coverages for \code{method='kernel'}
+##' @param method defaults to \code{'ellipse'}, can be set to \code{'kernel'}
+##' @param h vector of bandwidths for x and y.  See \code{MASS::kde2d}.
+##' @param n number of grid points in each direction, defaulting to normal reference bandwidth (see \code{bandwidth.nrd}).
+##' @param pl set to \code{TRUE} to plot contours
+##' @return a 2-column matrix with x and y coordinates unless \code{pl=TRUE} in which case a \code{ggplot2} graphic is returned
+##' @author Ben Bolker and Frank Harrell
+pdensityContour <-
+  function(x, y, method=c('ellipse', 'kernel'),
+           prob=0.95, otherprob=c(0.01, 0.1, 0.25, 0.5, 0.75, 0.9),
+           h=c(1.3 * MASS::bandwidth.nrd(x),
+               1.3 * MASS::bandwidth.nrd(y)),
+           n=70, pl=FALSE) {
+
+method <- match.arg(method)
+
+rho    <- cor(x, y, method='spearman')
+rholab <- bquote(paste('Spearman ', rho == .(round(rho, 2))))
+    
+if(rho > 0.999) {
+  r    <- range(x)
+  xout <- seq(r[1], r[2], length=150)
+  lo   <- lowess(x, y)
+  d    <- as.data.frame(approx(lo, xout=xout))
+  if(pl) {
+    g <- ggplot(d, aes(x=x, y=y)) + geom_line() + labs(caption=rholab)
+    return(g)
+  }
+  return(d)
+}
+    
+if(method == 'ellipse') {
+  xy <- cbind(x, y)
+  f <- MASS::cov.mve(xy, quantile.used=round(nrow(xy) * prob))
+  points_in_ellipse <- xy[f$best, ]
+  boundary <- predict(cluster::ellipsoidhull(points_in_ellipse))
+  d <- data.frame(x=boundary[, 1], y=boundary[, 2])
+  if(pl) {
+ 
+    g <- ggplot(d, aes(x=x, y=y)) + geom_path() + labs(caption=rholab)
+    return(g)
+  }
+  return(d)
+}
+
+  prob <- unique(sort(c(prob, otherprob)))
+    
+  f <- MASS::kde2d(x, y, n=n, h=h)
+  x <- f$x
+  y <- f$y
+  z <- f$z
+  
+  dx <- diff(x[1:2])
+  dy <- diff(y[1:2])
+  sz <- sort(z)
+  c1 <- cumsum(sz) * dx * dy
+  ## trying to find level containing prob of volume ...
+  levels <- sapply(prob, function(p) approx(c1, sz, xout = 1. - p, rule=2)$y)
+  X <- Y <- Prob <- NULL
+  for(i in 1 : length(prob)) {
+    w <- contourLines(x, y, z, levels=levels[i])
+    X <- c(X, w[[1]]$x)
+    Y <- c(Y, w[[1]]$y)
+    Prob <- c(Prob, rep(prob[i], length(w[[1]]$x)))
+  }
+  d <- data.frame(x=X, y=Y, Probability=factor(Prob))
+  if(pl)
+    ggplot(d, aes(x=x, y=y, col=Probability)) + geom_path() +
+      scale_color_brewer(direction = -1) + labs(caption=rholab)
+  else d
+  }

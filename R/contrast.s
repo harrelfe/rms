@@ -137,20 +137,22 @@ contrast.rms <-
     X <- matrix(apply(weights*X, 2, sum) / sum(weights), nrow=1,
                 dimnames=list(NULL, dimnames(X)[[2]]))
 
+  cdraws <- NULL
+  
   if(bayes) {
-    est   <- draws %*% t(X)
-    v     <- var(est)
-    ndf   <- if(is.matrix(v)) nrow(v) else 1
-    ci    <- apply(est, 2, HPDint, prob=conf.int)
-    lower <- ci[1, ]
-    upper <- ci[2, ]
-    PP    <- apply(est, 2, function(u) mean(u > 0))
-    se    <- apply(est, 2, sd)
+    cdraws <- draws %*% t(X)
+    v      <- var(cdraws)
+    ndf    <- if(is.matrix(v)) nrow(v) else 1
+    ci     <- apply(cdraws, 2, HPDint, prob=conf.int)
+    lower  <- ci[1, ]
+    upper  <- ci[2, ]
+    PP     <- apply(cdraws, 2, function(u) mean(u > 0))
+    se     <- apply(cdraws, 2, sd)
 
-    est   <- switch(posterior.summary,
-                    mode   = apply(est, 2, pmode),
-                    mean   = colMeans(est),
-                    median = apply(est, 2, median))
+    est    <- switch(posterior.summary,
+                     mode   = apply(cdraws, 2, pmode),
+                     mean   = colMeans(cdraws),
+                     median = apply(cdraws, 2, median))
     P <- Z <- NULL
   }
   else {
@@ -193,7 +195,8 @@ contrast.rms <-
               cnames=if(type=='average')NULL else cnames,
               nvary=length(vary),
               conf.type=conf.type, conf.int=conf.int,
-              posterior.summary=posterior.summary)
+              posterior.summary=posterior.summary,
+              cdraws = cdraws)
   if(type != 'average') res <- c(vary, res)
   
   r <- qr(v, tol=tol)
@@ -281,4 +284,63 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
     print(x$X)
   }
   invisible()
+}
+
+##' Plot Bayesian Contrast Posterior Densities
+##'
+##' If there are exactly two contrasts and \code{bivar=TRUE} plots an elliptical or kernal (based on \code{bivarmethod} posterior density contour with probability \code{prob}.  Otherwise plots a series of posterior densities of contrasts along with HPD intervals, posterior means, and medians.
+##' @title plot.contrast.rms
+##' @param x the result of \code{contrast.rms}
+##' @param bivar set to \code{TRUE} to plot 2-d posterior density contour
+##' @param bivarmethod see \code{pdensityCountour}
+##' @param prob posterior coverage probability for HPD interval or 2-d contour
+##' @param nrow, ncol for \code{ggplot2::facet_wrap} 
+##' @return \code{ggplot2} object
+##' @author Frank Harrell
+plot.contrast.rms <- function(x, bivar=FALSE,
+                              bivarmethod=c('ellipse', 'kernel'), prob=0.95,
+                              nrow=NULL, ncol=NULL) {
+  bivarmethod <- match.arg(bivarmethod)
+  
+  cdraws <- x$cdraws
+  if(! length(cdraws))
+    stop('plot method for contrast.rms objects implemented only for Bayesian models')
+
+  colnames(cdraws) <- x$cnames
+  
+  if(ncol(cdraws) == 2 && bivar) {
+    g <- pdensityContour(cdraws[, 1], cdraws[, 2], prob=prob, pl=TRUE,
+                         method=bivarmethod)
+    cn <- colnames(cdraws)
+    if(all(cn == as.character(1 : ncol(cdraws))))
+      cn <- paste('Contrast', cn)
+    g <- g + xlab(cn[1]) +  ylab(cn[2])
+    return(g)
+  }
+
+  hpd   <- apply(cdraws, 2, HPDint, prob=prob)
+  
+  draws  <- as.vector(cdraws)
+  which  <- colnames(cdraws)
+  nd     <- nrow(cdraws)
+  param  <- factor(rep(which, each=nd), which)
+  g      <- function(x) c(mean=mean(x), median=median(x))
+  est    <- apply(cdraws, 2, g)
+  est    <- rbind(est, hpd)
+
+  stat   <- rownames(est)
+  stat   <- ifelse(stat %in% c('Lower', 'Upper'),
+                   paste(prob, 'HPDI'), stat)
+  eparam <- factor(rep(which, each=nrow(est)), which)
+  stat   <- rep(stat, length(which))
+  est    <- as.vector(est)
+ 
+  d  <- data.frame(param, draws)
+  de <- data.frame(param=eparam, est, stat)
+  g <- ggplot(d, aes(x=draws)) + geom_density() +
+         geom_vline(data=de, aes(xintercept=est, color=stat, alpha=I(0.4))) +
+         facet_wrap(~ param, scales='free', nrow=nrow, ncol=ncol) +
+         guides(color=guide_legend(title='')) +
+         xlab('') + ylab('')
+  g
 }

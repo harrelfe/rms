@@ -1,4 +1,4 @@
-Changes in version 6.0-0 (2020-05-02)
+Changes in version 6.0-0 (2020-05-03)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)
    * prModFit: changed default in catl function to center=FALSE
    * residuals.psm: added transformation of survival time when computing censored normalized residuals
@@ -17,6 +17,9 @@ Changes in version 6.0-0 (2020-05-02)
    * HPDint: new function, adopted from the coda package
    * distSym: new function: symmetry measure for a distribution
    * stackMI: new function: Bayesian fitting with multiple imputation by posterior stacking
+   * import MASS::kde2d and bandwidth.nrd and cluster::ellipsoidhull for 2-d posterior density estimation
+   * pdensityContour: new function
+   * plot.contrast.rms: new function for Bayesian posterior densities and 2-d densities
 	 
 Changes in version 5.1-4 (2019-11-16)
    * anova.rms: added which LaTeX packages are needed in help page
