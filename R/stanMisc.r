@@ -339,11 +339,11 @@ stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE,
 
 ##' Function Generator for Posterior Probabilities of Assertions
 ##'
-##' From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and a posterior density for that parameter is drawn.
+##' From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and a posterior density for that parameter is drawn.  \code{PostF} can also be used on objects created by \code{contrast.rms}
 ##' @title PostF
-##' @param fit a Bayesian fit object
-##' @param name specifies whether assertions will refer to shortened parameter names (the default) or original names.  Shorted names are of the form \code{a1, ..., ak} where \code{k} is the number of intercepts in the model, and \code{b1, ..., bp} where \code{p} is the number of non-intercepts.  When using original names that are not legal R variable names, you must enclose them in backticks.
-##' @param pr set to \code{TRUE} to have a table of short names and original names printed when \code{name='short'}
+##' @param fit a Bayesian fit or \code{contrast.rms} object
+##' @param name specifies whether assertions will refer to shortened parameter names (the default) or original names.  Shorted names are of the form \code{a1, ..., ak} where \code{k} is the number of intercepts in the model, and \code{b1, ..., bp} where \code{p} is the number of non-intercepts.  When using original names that are not legal R variable names, you must enclose them in backticks.  For \code{contrast} objects, \code{name} is ignored and you must use contrast names.  The \code{cnames} argument to \code{contrast.rms} is handy for assigning your own names.
+##' @param pr set to \code{TRUE} to have a table of short names and original names printed when \code{name='short'}.  For \code{contrasts} the contrast names are printed if \code{pr=TRUE}.
 ##' @return an R function
 ##' @examples
 ##' \dontrun{
@@ -359,15 +359,28 @@ stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE,
 ##'   P <- PostF(f)
 ##'   # Compute posterior density of the vertex of the quadratic age effect
 ##'   P(-b2 / (2 * b3))
-##' }
+##'
+##'   # The following would be useful in age and sex interacted
+##'   k <- contrast(f, list(age=c(30, 50), sex='male'),
+##'                    list(age=c(30, 50), sex='female'),
+##'                 cnames=c('age 30 M-F', 'age 50 M-F'))
+##'   P <- PostF(k)
+##'   P(`age 30 M-F` > 0 & `age 50 M-F` > 0)
+##' ##' }
 ##' @author Frank Harrell
 PostF <- function(fit, name=c('short', 'orig'), pr=FALSE) {
   name       <- match.arg(name)
   alphas     <- fit$alphas
   betas      <- fit$betas
   draws      <- fit$draws
+  # See if fit is really an object created by contrast.rms
+  iscon      <- length(fit$cdraws) > 0
+  if(iscon) draws <- fit$cdraws
+  if(iscon && pr) cat('Contrast names:', paste(colnames(draws), collapse=', '),
+                      '\n')
+  
   orig.names <- colnames(draws)
-  if(name == 'short') {
+  if(! iscon && (name == 'short')) {
     nrp <- num.intercepts(fit)
     rp  <- length(orig.names) - nrp
     nam <- c(if(nrp > 0) paste0('a', 1 : nrp),
@@ -514,8 +527,8 @@ distSym <- function(x, prob=0.9, na.rm=FALSE) {
 ##' Computes coordinates of a highest density contour containing a given probability volume given a sample from a continuous bivariate distribution, and optionally plots.  The default method assumes an elliptical shape, but one can optionally use a kernel density estimator.
 ##' Code adapted from \code{embbook::HPDregionplot}.  See \url{http://www.sumsar.net/blog/2014/11/how-to-summarize-a-2d-posterior-using-a-highest-density-ellipse}.
 ##' @title pdensity2d
-##' @param x 
-##' @param y
+##' @param x a numeric vector 
+##' @param y a numeric vector the same length of x
 ##' @param prob main probability coverage (the only one for \code{method='ellipse'})
 ##' @param otherprob vector of other probability coverages for \code{method='kernel'}
 ##' @param method defaults to \code{'ellipse'}, can be set to \code{'kernel'}
@@ -582,9 +595,10 @@ if(method == 'ellipse') {
     Y <- c(Y, w[[1]]$y)
     Prob <- c(Prob, rep(prob[i], length(w[[1]]$x)))
   }
-  d <- data.frame(x=X, y=Y, Probability=factor(Prob))
+    d <- data.frame(x=X, y=Y, Probability = factor(Prob))
   if(pl)
     ggplot(d, aes(x=x, y=y, col=Probability)) + geom_path() +
       scale_color_brewer(direction = -1) + labs(caption=rholab)
   else d
   }
+utils::globalVariables('Probability')     # why in the world needed?

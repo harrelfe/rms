@@ -109,7 +109,10 @@ stanDx(bs)
 Here are the posterior distributions, calculated using kernel density estimates from posterior draws.  Posterior models, shown as vertical lines, are parameter values that maximize the log posterior density (using `rstan::optimizing` in the original model fit) so do not necessarily coincide with the peak of the kernel density estimates.
 
 ```{r stanpost}
-plot(bs)    # invokes rstan::stan_dens, defaults to showing betas
+plot(bs)
+# Also show 2-d posterior density contour for two collinear terms
+plot(bs, c('x2', 'x2^2'), bivar=TRUE)   # assumes ellipse
+plot(bs, c('x2', 'x2^2'), bivar=TRUE, bivarmethod='kernel')   # kernel density
 
 # Print frequentist side-by-side with Bayesian posterior mean, median, mode
 
@@ -124,7 +127,16 @@ Next show frequentist and Bayesian contrasts.  For the Bayesian contrast the poi
 
 ```{r contrast}
 contrast(f,  list(x1=0, x3=1), list(x1=.25, x3=0))
-contrast(bs, list(x1=0, x3=1), list(x1=.25, x3=0))
+k <- contrast(bs, list(x1=0:1, x3=1), list(x1=.25, x3=0))
+k
+```
+
+For Bayesian contrasts we can also plot the posterior densities for the contrasts, and 2-d highest-density contour.
+
+```{r pcontrast}
+plot(k)
+plot(k, bivar=TRUE)   # applicable when exactly 2 contrasts
+plot(k, bivar=TRUE, bivarmethod='kernel')
 ```
 
 Compute posterior probabilities for various assertions about unknown true parameter values.  The `PostF` function is a function generator that effectively evaluates the assertion to a 0/1 value and computes the mean of these binary values over posterior draws.   As is the case with inference about the quadratic effect of `x2` below, when the assertion does not evaluate to a binary 0/1 or logical `TRUE/FALSE` value, it is taken as a quantity that is derived from one or more model parameters, and a posterior density is drawn for the derived parameter.  We use that to get a posterior distribution on the vertex of the quadratic `x2` effect.

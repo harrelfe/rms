@@ -16,7 +16,9 @@ pdensityContour(
 )
 }
 \arguments{
-\item{x}{}
+\item{x}{a numeric vector}
+
+\item{y}{a numeric vector the same length of x}
 
 \item{method}{defaults to \code{'ellipse'}, can be set to \code{'kernel'}}
 

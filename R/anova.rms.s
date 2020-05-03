@@ -720,10 +720,13 @@ plot.anova.rms <-
     if('REV' %in% colnames(x)) {    # Bayesian
       xlab <- 'Relative Explained Variation'
       i <- switch(sort,
-                  none = 1 : nrow(an),
+                  none       = 1 : nrow(an),
                   descending = order(an[, 'REV'], decreasing=TRUE),
-                  ascending = order(an[, 'REV']))
+                  ascending  = order(an[, 'REV']))
       an <- an[i,, drop=FALSE]
+      rownames(an) <- sub('  (Factor+Higher Order Factors)', '',
+                          rownames(an), fixed=TRUE)
+
       if(isbase) {
         xlim <- range(an[, 1:3])
         dotchart2(an[, 'REV'], xlab=xlab, pch=pch, xlim=xlim, ...)
