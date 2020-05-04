@@ -20,6 +20,8 @@ Changes in version 6.0-0 (2020-05-03)
    * import MASS::kde2d and bandwidth.nrd and cluster::ellipsoidhull for 2-d posterior density estimation
    * pdensityContour: new function
    * plot.contrast.rms: new function for Bayesian posterior densities and 2-d densities
+   * made dependent on survival >= 3.1-12
+   * fixed bug related to changes in survival which no longer stores $y matrix as transformed; affects val.surv.s, calibrate.psm.s, validate.psm.s, psm.s.  Thanks: Aida Eslami <Aida.Eslami@fmed.ulaval.ca>
 	 
 Changes in version 5.1-4 (2019-11-16)
    * anova.rms: added which LaTeX packages are needed in help page

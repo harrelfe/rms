@@ -1,7 +1,7 @@
 val.surv <- function(fit, newdata, S, est.surv, censor,
                      u, fun, lim, evaluate=100, pred, maxdim=5, ...)
 {
-  usehare <- !missing(u)
+  usehare <- ! missing(u)
   if(usehare) {
     ## require(polspline) || stop('must have polspline installed')
     if(missing(fun)) {
@@ -16,15 +16,11 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
   if(missing(S)) {
     S     <- fit$y
     units <- fit$units
-    if(!length(S)) stop('when S is omitted you must use y=TRUE in the fit')
-    if(!usehare) {
-      itrans <- survreg.distributions[[fit$dist]]$itrans
-      S[,1]  <- itrans(S[,1])
-    }
+    if(! length(S)) stop('when S is omitted you must use y=TRUE in the fit')
   }
   else units <- attr(S, 'units')
   
-  if(!any(attr(S,'class')=='Surv')) stop('S must be a Surv object')
+  if(! any(attr(S,'class')=='Surv')) stop('S must be a Surv object')
   if(ncol(S) != 2) stop('S must be a right-censored Surv object')
   if(missing(est.surv))
     est.surv <- if(usehare) {
@@ -40,7 +36,7 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
         survest(fit, newdata, times=S[,1], what='parallel')
     }
   if(usehare) {
-    i <- !is.na(est.surv + S[,1] + S[,2])
+    i <- ! is.na(est.surv + S[,1] + S[,2])
     est.surv   <- est.surv[i]
     S <- S[i,]
     curtail <- function(x) pmin(.9999, pmax(x, .0001))
@@ -64,11 +60,11 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
   }
   
   n <- nrow(S)
-  nac <- if(!missing(fit)) fit$na.action
-  if(!missing(censor) && length(censor) > 1 && !missing(fit)) {
+  nac <- if(! missing(fit)) fit$na.action
+  if(! missing(censor) && length(censor) > 1 && ! missing(fit)) {
     if(length(censor) > n && length(nac)) {
       ## Missing observations were deleted during fit
-      j <- !is.na(naresid(nac, censor))
+      j <- ! is.na(naresid(nac, censor))
       censor <- censor[j]
     }
     if(length(censor) != n)
@@ -76,7 +72,7 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
   }
   
   est.surv.censor <- lp <- NULL
-  if(!missing(censor)) {
+  if(! missing(censor)) {
     if(missing(fit))
       stop('fit must be specified when censor is specified')
     est.surv.censor <- if(missing(newdata))
@@ -153,15 +149,15 @@ plot.val.surv <- function(x, group, g.group=4,
   n <- length(est.surv)
   nac <- x$na.action
   
-  if(!missing(group)) {
+  if(! missing(group)) {
       if(length(group) > n && length(nac)) {
         ## Missing observations were deleted during fit
-        j <- !is.na(naresid(nac, est.surv))
+        j <- ! is.na(naresid(nac, est.surv))
         group <- group[j]
       }
       if(length(group) != n)
         stop("length of group does not match # rows used in fit")
-      if(!is.factor(group)) group <- 
+      if(! is.factor(group)) group <- 
         if(is.logical(group) || is.character(group)) 
           as.factor(group) else cut2(group, g=g.group)
     }
@@ -206,7 +202,7 @@ plot.val.surv <- function(x, group, g.group=4,
   if(missing(ylim)) ylim <- 0:1
   
   if(missing(group)) {
-    nma <- !is.na(est.surv + S[,2])
+    nma <- ! is.na(est.surv + S[,2])
     est.surv <- est.surv[nma]
     S <- S[nma,,drop=FALSE]
     f <- survfitKM(factor(rep(1,length(est.surv))),
@@ -220,7 +216,7 @@ plot.val.surv <- function(x, group, g.group=4,
     return(invisible())
   }
   
-  nma <- !(is.na(est.surv + S[,1] + S[,2]) | is.na(group))
+  nma <- ! (is.na(est.surv + S[,1] + S[,2]) | is.na(group))
   S <- S[nma,,drop=FALSE]
   est.surv <- est.surv[nma]
   
