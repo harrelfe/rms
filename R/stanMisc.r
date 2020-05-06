@@ -167,7 +167,7 @@ print.rmsb <- function(x, prob=0.95, dec=4, pr=TRUE, ...) {
 ##'   }
 ##' @author Frank Harrell
 stanCompile <-
-  function(mods=c('lrm', 'lrmqr', 'lrmqrc', 'lrmqrcar1'),
+  function(mods=c('lrm', 'lrmqr', 'lrmqrc', 'lrmqrcar1', 'lrmqrcppo'),
            repo='https://raw.githubusercontent.com/harrelfe/stan/master') {
   requireNamespace('rstan', quietly=TRUE)
   options(auto_write = FALSE)

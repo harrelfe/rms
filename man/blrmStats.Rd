@@ -16,7 +16,7 @@ blrmStats(fit, ns = 400, prob = 0.95, pl = FALSE)
 \item{pl}{set to \code{TRUE} to plot the posterior densities using base graphics}
 }
 \value{
-list of class \code{'blrmStats'} whose most important element is \code{Stats}.  The indexes computed are defined below, with gp, B, EV, and vp computed using the intercept corresponding to the median value of Y.  See \url{http://fharrell.com/post/add-value} for more information.
+list of class \code{'blrmStats'} whose most important element is \code{Stats}.  The indexes computed are defined below, with gp, B, EV, and vp computed using the intercept corresponding to the median value of Y.  See \url{https://fharrell.com/post/addvalue} for more information.
 \describe{
  \item{"Dxy"}{Somers' Dxy rank correlation between predicted and observed.  The concordance probability (c-index; AUROC in the binary Y case) may be obtained from the relationship Dxy=2(c-0.5).}
  \item{"g"}{Gini's mean difference: the average absolute difference over all pairs of linear predictor values}
