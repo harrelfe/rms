@@ -6,10 +6,13 @@
 \usage{
 blrm(
   formula,
+  ppo = NULL,
   data,
   subset,
   na.action = na.delete,
   priorsd = rep(100, p),
+  priorsdppo = rep(100, pppo),
+  conc = 1/k,
   rsdmean = 1,
   ar1sdmean = 1,
   iter = 2000,
@@ -20,12 +23,16 @@ blrm(
   y = TRUE,
   loo = TRUE,
   method = c("both", "sampling", "optimizing"),
+  inito = if (length(ppo)) 0 else "random",
+  inits = inito,
   standata = FALSE,
   ...
 )
 }
 \arguments{
 \item{formula}{a R formula object that can use \code{rms} package enhancements such as the restricted interaction operator}
+
+\item{ppo}{formula specifying the model predictors for which proportional odds is not assumed}
 
 \item{data}{a data frame}
 
@@ -34,6 +41,10 @@ blrm(
 \item{na.action}{default is \code{na.delete} to remove missings and report on them}
 
 \item{priorsd}{vector of prior standard deviations.  If the vector is shorter than the number of model parameters, it will be repeated until the length equals the number of parametertimes.}
+
+\item{priorsdppo}{vector of prior standard deviations for non-proportional odds parameters.  As with \code{priorsd} the last element is the only one for which the SD corresponds to the original data scale.}
+
+\item{conc}{the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of the number of distinct Y values.}
 
 \item{rsdmean}{the assumed mean of the prior distribution of the standard deviation of random effects.  An exponential prior distribution is assumed, and the rate for that distribution is the reciprocal of the mean.  The default is a mean of 1.0, which is reasonable for a unitless regression model scale such as log odds.}
 
@@ -55,9 +66,13 @@ blrm(
 
 \item{method}{set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.  When random effects are present, \code{method} is automatically set to \code{'sampling'} as maximum likelihood estimates without marginalizing over the random effects do not make sense.}
 
+\item{inito}{intial value for optimization.  The default is the \code{rstan} default \code{'random'}.  Frequently specifying \code{init=0} will benefit when the number of distinct Y categories grows or when using \code{ppo} hence 0 is the default for that.}
+
+\item{inits}{initial value for sampling, defaults to \code{inito}}
+
 \item{standata}{set to \code{TRUE} to return the Stan data list and not run the model}
 
-\item{...}{passed to \code{rstan::sampling} or \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.}
+\item{...}{passed to \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.}
 }
 \value{
 an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
@@ -68,7 +83,11 @@ Bayesian Binary and Ordinal Logistic Regression
 \details{
 Uses \code{rstan} with pre-compiled Stan code whose location is given by the user in \code{options(stancompiled='...')} to get posterior draws of parameters from a binary logistic or proportional odds semiparametric ordinal logistic model.  The Stan code internally using the qr decompositon on the design matrix so that highly collinear columns of the matrix do not hinder the posterior sampling.  The parameters are transformed back to the original scale before returning results to R.   Design matrix columns re centered before running Stan, so Stan diagnostic output will have the intercept terms shifted but the results of \code{blrm} for intercepts are for the original uncentered data.  The only prior distributions for regression betas are normal with mean zero, and the vector of prior standard deviations is given in \code{priorsd}.  These priors are for the qr-projected design matrix elements, except that the very last element is not changed.  So if one has a single non-interactive linear or binary variable for which a skeptical prior is designed, put that variable last in the model.
 
-\code{blrm} also handles single-level hierarchical random effects models for the case when there are repeated measurements per subject which are reflected as random intercepts, and a different model that allows for AR(1) serial correlation within subject.  For both setups, a \code{cluster} term in the model signals the existence of subject-specific random effects, and an additional model term \code{aTime(time variable)} signals the use of the AR(1) within-subject model.  The \code{time} variable must be integer valued and there can be arbitrary gaps between measurements.  However if the maximum time exceeds 200 or so one can expect much longer computation time.  When \code{aTime()} is present, the cluster-specific random effects then become the random effect for a subject's \code{time=1} record.  When \code{aTime} is specified, the covariates must not change over records within subject (no time-dependent covariates), as only the covariate vector for the earliest time for a subject is used.
+The partial proportional odds model of Peterson and Harrell (1990) is implemented, and is invoked when the user specifies a second model formula as the \code{ppo} argument.  This formula has no left-hand-side variable, and has right-side variables that are a subset of those in \code{formula} specifying for which predictors the proportional odds assumption is relaxed.
+
+\code{blrm} also handles single-level hierarchical random effects models for the case when there are repeated measurements per subject which are reflected as random intercepts, and a different experimental model that allows for AR(1) serial correlation within subject.  For both setups, a \code{cluster} term in the model signals the existence of subject-specific random effects, and an additional model term \code{aTime(time variable)} signals the use of the AR(1) within-subject model.  The \code{time} variable must be integer valued and there can be arbitrary gaps between measurements.  However if the maximum time exceeds 200 or so one can expect much longer computation time.  When \code{aTime()} is present, the cluster-specific random effects then become the random effect for a subject's \code{time=1} record.  When \code{aTime} is specified, the covariates must not change over records within subject (no time-dependent covariates), as only the covariate vector for the earliest time for a subject is used.
+
+See \url{https://hbiostat.org/R/rms/blrm.html} for multiple examples with results.
 }
 \examples{
 \dontrun{

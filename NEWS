@@ -1,4 +1,4 @@
-Changes in version 6.0-0 (2020-05-06)
+Changes in version 6.0-0 (2020-05-11)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)
    * prModFit: changed default in catl function to center=FALSE
    * residuals.psm: added transformation of survival time when computing censored normalized residuals
@@ -23,6 +23,7 @@ Changes in version 6.0-0 (2020-05-06)
    * made dependent on survival >= 3.1-12
    * fixed bug related to changes in survival which no longer stores $y matrix as transformed; affects val.surv.s, calibrate.psm.s, validate.psm.s, psm.s.  Thanks: Aida Eslami <Aida.Eslami@fmed.ulaval.ca>
    * which.influence: fixed bug when model has more than one intercept (thanks: Yuwei Zhu)
+   * blrm: added partial proportional odds model
 
 Changes in version 5.1-4 (2019-11-16)
    * anova.rms: added which LaTeX packages are needed in help page

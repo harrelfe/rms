@@ -2,13 +2,20 @@
 ##'
 ##' Uses \code{rstan} with pre-compiled Stan code whose location is given by the user in \code{options(stancompiled='...')} to get posterior draws of parameters from a binary logistic or proportional odds semiparametric ordinal logistic model.  The Stan code internally using the qr decompositon on the design matrix so that highly collinear columns of the matrix do not hinder the posterior sampling.  The parameters are transformed back to the original scale before returning results to R.   Design matrix columns re centered before running Stan, so Stan diagnostic output will have the intercept terms shifted but the results of \code{blrm} for intercepts are for the original uncentered data.  The only prior distributions for regression betas are normal with mean zero, and the vector of prior standard deviations is given in \code{priorsd}.  These priors are for the qr-projected design matrix elements, except that the very last element is not changed.  So if one has a single non-interactive linear or binary variable for which a skeptical prior is designed, put that variable last in the model.
 ##'
-##' \code{blrm} also handles single-level hierarchical random effects models for the case when there are repeated measurements per subject which are reflected as random intercepts, and a different model that allows for AR(1) serial correlation within subject.  For both setups, a \code{cluster} term in the model signals the existence of subject-specific random effects, and an additional model term \code{aTime(time variable)} signals the use of the AR(1) within-subject model.  The \code{time} variable must be integer valued and there can be arbitrary gaps between measurements.  However if the maximum time exceeds 200 or so one can expect much longer computation time.  When \code{aTime()} is present, the cluster-specific random effects then become the random effect for a subject's \code{time=1} record.  When \code{aTime} is specified, the covariates must not change over records within subject (no time-dependent covariates), as only the covariate vector for the earliest time for a subject is used.
+##' The partial proportional odds model of Peterson and Harrell (1990) is implemented, and is invoked when the user specifies a second model formula as the \code{ppo} argument.  This formula has no left-hand-side variable, and has right-side variables that are a subset of those in \code{formula} specifying for which predictors the proportional odds assumption is relaxed.
+##' 
+##' \code{blrm} also handles single-level hierarchical random effects models for the case when there are repeated measurements per subject which are reflected as random intercepts, and a different experimental model that allows for AR(1) serial correlation within subject.  For both setups, a \code{cluster} term in the model signals the existence of subject-specific random effects, and an additional model term \code{aTime(time variable)} signals the use of the AR(1) within-subject model.  The \code{time} variable must be integer valued and there can be arbitrary gaps between measurements.  However if the maximum time exceeds 200 or so one can expect much longer computation time.  When \code{aTime()} is present, the cluster-specific random effects then become the random effect for a subject's \code{time=1} record.  When \code{aTime} is specified, the covariates must not change over records within subject (no time-dependent covariates), as only the covariate vector for the earliest time for a subject is used.
+##'
+##' See \url{https://hbiostat.org/R/rms/blrm.html} for multiple examples with results.
 ##' @title blrm
 ##' @param formula a R formula object that can use \code{rms} package enhancements such as the restricted interaction operator
+##' @param ppo formula specifying the model predictors for which proportional odds is not assumed
 ##' @param data a data frame
 ##' @param subset a logical vector or integer subscript vector specifying which subset of data whould be used
 ##' @param na.action default is \code{na.delete} to remove missings and report on them
 ##' @param priorsd vector of prior standard deviations.  If the vector is shorter than the number of model parameters, it will be repeated until the length equals the number of parametertimes.
+##' @param priorsdppo vector of prior standard deviations for non-proportional odds parameters.  As with \code{priorsd} the last element is the only one for which the SD corresponds to the original data scale.
+##' @param conc the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of the number of distinct Y values.
 ##' @param rsdmean the assumed mean of the prior distribution of the standard deviation of random effects.  An exponential prior distribution is assumed, and the rate for that distribution is the reciprocal of the mean.  The default is a mean of 1.0, which is reasonable for a unitless regression model scale such as log odds.
 ##' @param ar1sdmean the assumed mean of the prior distribution of the standard deviation of within-subject white noise.   The setup is the same as with \code{rsdmean}.
 ##' @param iter number of posterior samples per chain for [rstan::sampling] to run
@@ -19,8 +26,10 @@
 ##' @param y set to \code{FALSE} to not store the response variable in the fit
 ##' @param loo set to \code{FALSE} to not run \code{loo} and store its result as object \code{loo} in the returned object
 ##' @param method set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.  When random effects are present, \code{method} is automatically set to \code{'sampling'} as maximum likelihood estimates without marginalizing over the random effects do not make sense.
+##' @param inito intial value for optimization.  The default is the \code{rstan} default \code{'random'}.  Frequently specifying \code{init=0} will benefit when the number of distinct Y categories grows or when using \code{ppo} hence 0 is the default for that.
+##' @param inits initial value for sampling, defaults to \code{inito}
 ##' @param standata set to \code{TRUE} to return the Stan data list and not run the model
-##' @param ... passed to \code{rstan::sampling} or \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.
+##' @param ... passed to \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.
 ##' @return an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
 ##' @examples
 ##' \dontrun{
@@ -54,15 +63,20 @@
 ##' @author Frank Harrell and Ben Goodrich
 ##' @seealso \code{\link{print.blrm}}, \code{\link{blrmStats}}, \code{\link{stanDx}}, \code{\link{stanGet}}, \code{\link{coef.rmsb}}, \code{\link{vcov.rmsb}}, \code{\link{print.rmsb}}, \code{\link{coef.rmsb}}, [stanCompile]
 ##' @md
-blrm <- function(formula, data, subset, na.action=na.delete,
-								 priorsd=rep(100, p), rsdmean=1, ar1sdmean=1,
+blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
+								 priorsd=rep(100, p), priorsdppo=rep(100, pppo),
+                 conc=1./k, rsdmean=1, ar1sdmean=1,
 								 iter=2000, chains=4, refresh=0,
                  progress=if(refresh > 0) 'stan-progress.txt' else '',
 								 x=TRUE, y=TRUE, loo=TRUE,
                  method=c('both', 'sampling', 'optimizing'),
+                 inito=if(length(ppo)) 0 else 'random', inits=inito,
                  standata=FALSE,
                  ...) {
 
+  if(missing(data))   data <- environment(formula)
+  msubset <- missing(subset)
+  
 	call <- match.call()
   m <- match.call(expand.dots=FALSE)
   mc <- match(c("formula", "data", "subset", "na.action"), 
@@ -73,7 +87,6 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 
   m[[1]] <- as.name("model.frame")
   nact <- NULL
-  if(missing(data)) data <- NULL
 
   tform   <- terms(formula, specials=c('cluster', 'aTime'), data=data)
   yname   <- as.character(formula[2])
@@ -117,6 +130,36 @@ blrm <- function(formula, data, subset, na.action=na.delete,
   X <- X[, mmcolnames, drop=FALSE]
   colnames(X) <- atr$colnames
 
+  Z <- NULL
+
+  if(length(ppo)) {
+    m <- if(msubset) model.frame(ppo,
+                                 data      = data,
+                                 na.action = na.action,
+                                 drop.unused.levels=TRUE)
+         else
+           model.frame(ppo,
+                       data=data,
+                       subset=subset,
+                       na.action=na.action,
+                       drop.unused.levels=TRUE)
+
+    Z <- Design(m)
+  
+    zatrx       <- attributes(Z)
+    zsformula   <- atrx$sformula
+    zTerms      <- zatrx$terms
+    attr(zTerms, "formula") <- ppo
+    zatr        <- zatrx$Design
+    mmcolnames <- atr$mmcolnames
+
+    Z <- model.matrix(zTerms, Z)
+    alt <- attr(mmcolnames, 'alt')
+    if(! all(mmcolnames %in% colnames(Z)) && length(alt)) mmcolnames <- alt
+    Z <- Z[, mmcolnames, drop=FALSE]
+    colnames(Z) <- zatr$colnames
+}
+
   if(! length(time)) {
     Xs  <- scale(X, center=TRUE, scale=FALSE)
     ## scinfo <- attributes(Xs)[c('scaled:center', 'scaled:scale')]
@@ -124,14 +167,19 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     ## xsd    <- as.vector(scinfo[[2]])
     xbar   <- as.vector(attr(Xs, 'scaled:center'))
     ## if(any(xsd == 0)) stop('a variable is constant')
+    if(length(ppo)) {
+      Zs   <- scale(Z, center=TRUE, scale=FALSE)
+      zbar <- as.vector(attr(Zs, 'scaled:center'))
+      }
     }
 	
-	n <- nrow(X)
-	p <- ncol(X)
-	Y <- as.factor(Y)
+	n    <- nrow(X)
+	p    <- ncol(X)
+	Y    <- as.factor(Y)
 	ylev <- levels(Y)
 	yint <- as.integer(Y)
 	k    <- length(ylev)
+  pppo <- if(length(ppo)) ncol(Z) else 0
 
   ## Find intercept that is close to the median of y
   mediany <- quantile(yint, probs=.5, type=1L)
@@ -140,11 +188,13 @@ blrm <- function(formula, data, subset, na.action=na.delete,
   nrp <- length(ylev) - 1L
   if(nrp == 1) kmid <- 1
 
-	ass <- DesignAssign(atr, nrp, Terms)
+	ass     <- DesignAssign(atr, nrp, Terms)
+  
   priorsd <- rep(priorsd, length=p)
 	d <- list(X=if(! length(time)) Xs,
             y=if(! length(time)) yint,
-            N=n, p=p, k=k, sds=as.array(priorsd),
+            N=n, p=p, k=k, conc=conc,
+            sds=as.array(priorsd),
             rate = 1. / rsdmean)
   Nc <- 0
   if(length(cluster)) {
@@ -177,18 +227,29 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     Yint[cbind(cl, tim)] <- yint
     d$X <- Xs
     d$y <- Yint
-    }
-  if(standata) return(d)
+  }
+
+  if(length(ppo)) {
+    d$Z <- Zs
+    d$q <- ncol(Z)
+    priorsdppo <- rep(priorsdppo, length=pppo)
+    d$sdsppo   <- as.array(priorsdppo)
+  }
   
+  if(standata) return(d)
+
 	if(any(is.na(Xs)) | any(is.na(yint))) stop('program logic error')
   stanloc <- .Options$stancompiled
   if(! length(stanloc)) stop('options(stancompiled) not defined')
   
-  fitter <- if(length(cluster) == 0) 'lrmqr'
+  fitter <- if(length(ppo)) ifelse(length(cluster), 'lrmqrcppo', 'lrmqrppo')
+            else
+              if(length(cluster) == 0) 'lrmqr'
             else
               if(length(time)) 'lrmqrcar1'
             else
               'lrmqrc'
+
   file <- paste0(stanloc, '/', fitter, '.rds')
   if(! file.exists(file))
     stop('you did not run rms::stanCompile to compile Stan code')
@@ -196,24 +257,34 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 
   itfailed <- function(w) is.list(w) && length(w$fail) && w$fail
 
-  opt <- NULL
+  opt <- parm <- taus <- NULL
   if(method != 'sampling') {
-    otime <- system.time(
-      g <- rstan::optimizing(mod, data=d, ...))
+    otime <- system.time(g <- rstan::optimizing(mod, data=d, init=inito))
     if(g$return_code != 0)
       warning(paste('optimizing did not work; return code', g$return_code))
     parm <- g$par
     nam <- names(parm)
     th  <- nam[grep('theta\\[', nam)]
     al  <- nam[grep('alpha\\[', nam)]
-    be  <- nam[grep('beta\\[', nam)]
+    be  <- nam[grep('beta\\[',  nam)]
+    ta  <- nam[grep('tau\\[',   nam)]
     alphas <- parm[al]
     betas  <- parm[be]
     thetas <- parm[th]
+    taus   <- if(length(ppo)) matrix(parm[ta], nrow=pppo, ncol=k-2)
     names(alphas) <- if(nrp == 1) 'Intercept' else paste0('y>=', ylev[-1])
     alphas <- alphas - sum(betas * xbar)
+    if(length(ppo))
+      alphas[-1] <- alphas[-1] - matrix(zbar, ncol=pppo) %*% taus
     names(betas)  <- names(thetas) <- atr$colnames
-    opt <- list(coefficients=c(alphas, betas), theta=thetas,
+    if(length(ppo)) {
+      ro     <- as.integer(gsub('tau\\[(.*),.*',    '\\1', ta))  # y cutoff
+      co     <- as.integer(gsub('tau\\[.*,(.*)\\]', '\\1', ta))  # Z column
+      namtau <- paste0(colnames(Z)[ro], ':y>=', ylev[-(1:2)][co])
+      names(taus) <- namtau
+    }
+
+    opt <- list(coefficients=c(alphas, betas, taus), theta=thetas,
               sigmag=parm['sigmag'], deviance=-2 * g$value,
               return_code=g$return_code, hessian=g$hessian,
               executionTime=otime)
@@ -221,10 +292,18 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     }
 
   if(progress != '') sink(progress, append=TRUE)
+  init <- NULL
+  if(length(parm)) {
+    nam <- names(parm)
+    nam <- nam[c(grep('alpha', nam), grep('beta', nam), grep('omega', nam),
+                 grep('pi', nam), grep('tau', nam), grep('theta', nam))]
+    parm <- as.list(parm[nam])
+    init <- function() parm
+    }
  	g <- rstan::sampling(mod, pars='sigmaw', include=FALSE,
-                       data=d, iter=iter, chains=chains, refresh=refresh, ...)
+                       data=d, iter=iter, chains=chains, refresh=refresh,
+                       init=inits, ...)
   if(progress != '') sink()
-  ## g <- rstan::vb(mod, data=d)   # bombed
 	nam <- names(g)
 	al  <- nam[grep('alpha\\[', nam)]
 	be  <- nam[grep('beta\\[', nam)]
@@ -244,7 +323,29 @@ blrm <- function(formula, data, subset, na.action=na.delete,
     cle     <- draws[, ga, drop=FALSE]
     gammas  <- apply(cle, 2, median)      # posterior median per subject
   }
-  
+
+  tau <- ta <- tauInfo <- NULL
+  if(length(ppo)) {
+    ta     <- nam[grep('tau', nam)]
+    clparm <- c(clparm, ta)
+    ro     <- as.integer(gsub('tau\\[(.*),.*',    '\\1', ta))  # y cutoff
+    co     <- as.integer(gsub('tau\\[.*,(.*)\\]', '\\1', ta))  # Z column
+    xt     <- colnames(Z)[ro]
+    yt     <- ylev[-(1:2)][co]
+    namtau <- paste0(xt, ':y>=', yt)
+    taus   <- draws[, ta, drop=FALSE]
+    colnames(taus) <- namtau
+    tauInfo <- data.frame(intercept=1 + co, name=namtau, x=xt, y=yt)
+    ## Compute intercept correction due to centering Z matrix
+    ## Need taus as a 3-dim array for intercept correction for centering
+    mtaus      <- array(taus, dim=c(nrow(draws), pppo, k-2))
+    zalphacorr <- sweep(mtaus, 2, zbar, '*')
+    dim(zalphacorr) <- dim(zalphacorr)[-2]  # collapse to matrix
+#    zalphacorr <- matrix(zbar, ncol=pppo) %*% mtaus
+#          alphas[-1] <- alphas[-1] - matrix(zbar, ncol=pppo) %*% taus
+#    zalphacorr <- cbind(0, rowSums(sweep(mtaus, 2, zbar, '*'), dims=2))
+    }
+
   epsmed <- NULL
   if(length(time)) {
     omega   <- cbind(omega, rho=draws[, 'rho'])
@@ -274,10 +375,11 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 	# Back-scale to original data scale
 	alphacorr <- rowSums(sweep(betas, 2, xbar, '*')) # was xbar/xsd
 	alphas    <- sweep(alphas, 1, alphacorr, '-')
-	# betas     <- sweep(betas, 2, xsd, '/')
+  if(length(ppo)) alphas[, -1] <- alphas[, -1, drop=FALSE] - zalphacorr
 	colnames(alphas) <- if(nrp == 1) 'Intercept' else paste0('y>=', ylev[-1])
 	colnames(betas)  <- atr$colnames
-	draws            <- cbind(alphas, betas)
+
+	draws            <- cbind(alphas, betas, taus)
 
   param <- rbind(mean=colMeans(draws), median=apply(draws, 2, median))
   if(method != 'sampling') {
@@ -289,21 +391,24 @@ blrm <- function(formula, data, subset, na.action=na.delete,
   if(loo) {
     lootime <- system.time(
       Loo <- tryCatch(rstan::loo(g), error=function(...) list(fail=TRUE)))
-    if(itfailed(Loo))
+    if(itfailed(Loo)) {
       warning('loo failed; try running on loo(stanGet(fit object)) for more information')
-    }
+      Loo <- NULL
+      }
+  }
   
   freq <- table(Y, dnn=yname)
 
-	res <- list(call=call, 
+	res <- list(call=call, fitter=fitter,
 							draws=draws, omega=omega,
               gammas=gammas, eps=epsmed,
-              param=param, N=n, p=p, yname=yname, ylevels=ylev, freq=freq,
-						  alphas=al, betas=be,
+              param=param, priorsd=priorsd, priorsdppo=priorsdppo,
+              N=n, p=p, pppo=pppo, yname=yname, ylevels=ylev, freq=freq,
+						  alphas=al, betas=be, taus=ta, tauInfo=tauInfo,
 						  xbar=xbar, Design=atr, scale.pred=c('log odds', 'Odds Ratio'),
 							terms=Terms, assign=ass, na.action=atrx$na.action, fail=FALSE,
 							non.slopes=nrp, interceptRef=kmid, sformula=sformula,
-							x=if(x) X, y=if(y) Y, loo=Loo, lootime=lootime,
+							x=if(x) X, y=if(y) Y, z=if(x) Z, loo=Loo, lootime=lootime,
               clusterInfo=if(length(cluster))
                 list(cluster=if(x) cluster else NULL, n=Nc, name=clustername),
               timeInfo=if(length(time))
@@ -324,7 +429,8 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 ##' @param ns number of posterior draws to use in the calculations (default is 400)
 ##' @param prob HPD interval probability (default is 0.95)
 ##' @param pl set to \code{TRUE} to plot the posterior densities using base graphics
-##' @return list of class \code{'blrmStats'} whose most important element is \code{Stats}.  The indexes computed are defined below, with gp, B, EV, and vp computed using the intercept corresponding to the median value of Y.  See \url{http://fharrell.com/post/add-value} for more information.
+##' @param dist if \code{pl} is \code{TRUE} specifies whether to plot the density estimate (the default) or a histogram
+##' @return list of class \code{'blrmStats'} whose most important element is \code{Stats}.  The indexes computed are defined below, with gp, B, EV, and vp computed using the intercept corresponding to the median value of Y.  See \url{https://fharrell.com/post/addvalue} for more information.
 ##' \describe{
 ##'  \item{"Dxy"}{Somers' Dxy rank correlation between predicted and observed.  The concordance probability (c-index; AUROC in the binary Y case) may be obtained from the relationship Dxy=2(c-0.5).}
 ##'  \item{"g"}{Gini's mean difference: the average absolute difference over all pairs of linear predictor values}
@@ -341,25 +447,31 @@ blrm <- function(formula, data, subset, na.action=na.delete,
 ##'   blrmStats(f, pl=TRUE)   # print and plot
 ##' }
 ##' @author Frank Harrell
-blrmStats <- function(fit, ns=400, prob=0.95, pl=FALSE) {
-  X <- fit$x
-  y <- fit$y
+blrmStats <- function(fit, ns=400, prob=0.95, pl=FALSE,
+                      dist=c('density', 'hist')) {
+  dist <- match.arg(dist)
+  
+  f <- fit[c('x', 'y', 'z', 'non.slopes', 'interceptRef', 'pppo',
+             'draws', 'ylevels', 'tauInfo')]
+  X <- f$x
+  Z <- f$z
+  y <- f$y
   if(length(X) == 0 | length(y) == 0)
     stop('must have specified x=TRUE, y=TRUE to blrm')
   y <- as.integer(y) - 1
-  nrp    <- fit$non.slopes
-  kmid   <- fit$interceptRef  # intercept close to median
-  alphas <- fit$draws[, kmid]
-  ## Save betas as a matrix
-  s      <- fit$draws[, - (1 : nrp), drop=FALSE]  # omit intercepts
+  nrp    <- f$non.slopes
+  kmid   <- f$interceptRef  # intercept close to median
+  s      <- tauFetch(f, intercept=kmid, what='nontau')
+  pppo   <- f$pppo
+  if(pppo > 0) stau <-tauFetch(f, intercept=kmid, what='tau')
   ndraws <- nrow(s)
   ns     <- min(ndraws, ns)
   if(ns < ndraws) {
     j <- sample(1 : ndraws, ns, replace=FALSE)
     s <- s[j,, drop=FALSE]
-    alphas <- alphas[j]
+    if(pppo > 0) stau <- stau[j,, drop=FALSE]
     }
-  ylev  <- fit$ylevels
+  ylev  <- f$ylevels
   ybin  <- length(ylev) == 2
   stats <- matrix(NA, nrow=ns, ncol=8)
   colnames(stats) <- c('Dxy', 'C', 'g', 'gp', 'B', 'EV', 'v', 'vp')
@@ -377,10 +489,14 @@ blrmStats <- function(fit, ns=400, prob=0.95, pl=FALSE) {
   nobs <- length(y)
   is <- if((nobs <= 10000) || (length(ylev) == 2)) 1 : nobs else
               sample(1 : nobs, 10000, replace=FALSE)
+
   for(i in 1 : ns) {
-    beta  <- s[i, ]
-    alpha <- alphas[i]
-    lp   <- alpha + X %*% beta
+    beta  <- s[i,, drop=FALSE ]
+    lp    <- cbind(1, X) %*% t(beta)
+    if(pppo > 0) {
+      tau <- stau[i,, drop=FALSE]
+      lp  <- lp + Z %*% tau
+      }
     prb  <- plogis(lp)
     d    <- dxy(lp[is], y[is])
     C    <- (d + 1.) / 2.
@@ -389,7 +505,6 @@ blrmStats <- function(fit, ns=400, prob=0.95, pl=FALSE) {
             br2(prb), var(lp), var(prb))
     stats[i,] <- st
   }
-
   sbar  <- colMeans(stats)
   se    <- apply(stats, 2, sd)
   hpd   <- apply(stats, 2, HPDint, prob=prob)
@@ -404,8 +519,14 @@ blrmStats <- function(fit, ns=400, prob=0.95, pl=FALSE) {
   if(pl) {
     par(mfrow=c(4,2), mar=c(3, 2, 0.5, 0.5), mgp=c(1.75, .55, 0))
     for(w in setdiff(statnames, 'C')) {
-      den <- density(stats[, w])
-      plot(den, xlab=w, ylab='', type='l', main='')
+      p <- switch(dist,
+             density = {
+               den <- density(stats[, w])
+               plot(den, xlab=w, ylab='', type='l', main='') },
+             hist = {
+               den <- hist(stats[, w], probability=TRUE,
+                           nclass=100, xlab=w, ylab='', main='')
+               den$x <- den$breaks; den$y <- den$density } )
       ref <- c(sbar[w], hpd[1, w], hpd[2, w])
       abline(v=ref, col=gray(0.85))
       text(min(den$x), max(den$y), paste0('Symmetry:', round(sym[w], 2)),
@@ -506,7 +627,7 @@ print.blrm <- function(x, dec=4, coefs=TRUE, prob=0.95, ns=400,
     pm <- if(prType() == 'plain') '+/-' else
               markupSpecs[[prType()]][['plminus']]
     nlo <- rownames(lo)
-    lo <- paste0(round(lo[, 'Estimate'], 2), pm, round(lo[, 'SE'], 2))
+     lo <- paste0(round(lo[, 'Estimate'], 2), pm, round(lo[, 'SE'], 2))
     elpd_loo <- lo[1]; p_loo <- lo[2]; looic <- lo[3]
     }
   misc <- reListclean(Obs             = x$N,
@@ -644,4 +765,29 @@ predict.blrm <- function(object, ...,
   m <- drop(Peq %*% vals)
   names(m) <- rnam
   m
+}
+
+
+tauFetch <- function(fit, intercept, what=c('tau', 'nontau', 'both')) {
+  what   <- match.arg(what)
+  f      <- fit[c('tauInfo', 'draws', 'non.slopes')]
+  info   <- f$tauInfo
+  draws  <- f$draws
+  nd     <- nrow(draws)
+  cn     <- colnames(draws)
+  int    <- intercept
+  nints  <- f$non.slopes
+  if(int > nints) stop('intercept is too large')
+  ## Keep only the intercept of interest
+  cn     <- c(cn[intercept], cn[-(1 : nints)])
+  nontau <- setdiff(cn, info$name)
+  i      <- if(int == 1) '' else subset(info, intercept == int)$name
+  # Partial proportional odds parameters start with the 2nd intercept
+  switch(what,
+         tau    = if(i == '') matrix(0, nrow=nd, ncol=1)
+                  else draws[, i, drop=FALSE],
+         nontau = draws[, nontau, drop=FALSE],
+         both   = if(i == '') cbind(draws[, nontau, drop=FALSE], 0) else 
+                              draws[, c(nontau, i), drop=FALSE]
+        )
 }

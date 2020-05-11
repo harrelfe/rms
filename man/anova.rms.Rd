@@ -119,8 +119,8 @@ sums of squares, mean squares, and the Error SS and MS.
 	distribution, for use in relative explained variation from Bayesian
 	models}
 \item{ns}{number of random samples from the posterior draws to use for
-	REV credible intervals}
-\item{cint}{credible interval probability}
+	REV highest posterior density intervals}
+\item{cint}{HPD interval probability}
 \item{x}{for \code{print,plot,text} is the result of \code{anova}.
 }
 \item{which}{

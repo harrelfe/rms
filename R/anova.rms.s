@@ -29,8 +29,8 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     ## pev = partial explained variation = chisq/(chisq for full model)
     pev <- chisq / chisqT
     ## Overall pev is the pev at the posterior mean/median beta (last element)
-    ## Also compute credible interval.
-    ci <- quantile(pev[1 : (m - 1)], c(alp, 1. - alp))
+    ## Also compute HPD interval.
+    ci <- HPDint(pev[-m], cint)
     c(REV=pev[m], Lower=ci[1], Upper=ci[2], d.f.=length(test))
   }
   
@@ -49,8 +49,6 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   bayes <- length(draws) > 0
   chisqBayes <- NULL
 
-  alp <- (1. - cint) / 2.
-  
   if(bayes) {
     if(nrp > 0) draws <- draws[, -(1 : nrp), drop=FALSE]
 
@@ -72,7 +70,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     ## Compute variances of linear predictor without omitting variables
     chisqT <- eEV()
     m  <- length(chisqT)
-    ci <- quantile(chisqT[1 : (m - 1)], c(alp, 1. - alp))
+    ci <- HPDint(chisqT[-m], cint)
     chisqBayes <- c(chisqT[m], ci)
     names(chisqBayes) <- c('Central', 'Lower', 'Upper')
   }
@@ -629,7 +627,8 @@ latex.anova.rms <-
 
   if(length(bchi)) {
     bchi <- round(bchi, 1)
-    w <- paste0('Approximate total model Wald ', specs$chisq(add=''),
+    w <- paste0('Approximate total model Wald ',
+                specs$math(specs$chisq(add='')),
                ' used in denominators of REV:',
         bchi['Central'], ' [', bchi['Lower'], ', ',
         bchi['Upper'], '].')
@@ -737,7 +736,7 @@ plot.anova.rms <-
       p <- dotchartpl(an[, 'REV'], major=rownames(an),
                       lower=an[,'Lower'], upper=an[,'Upper'],
                       xlab=xlab,
-                      limitstracename='Credible Interval',
+                      limitstracename='HPD Interval',
                       width=width, height=height)
       return(p)
       }

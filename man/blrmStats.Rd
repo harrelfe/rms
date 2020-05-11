@@ -4,7 +4,7 @@
 \alias{blrmStats}
 \title{blrmStats}
 \usage{
-blrmStats(fit, ns = 400, prob = 0.95, pl = FALSE)
+blrmStats(fit, ns = 400, prob = 0.95, pl = FALSE, dist = c("density", "hist"))
 }
 \arguments{
 \item{fit}{an object produced by \code{blrm}}
@@ -14,6 +14,8 @@ blrmStats(fit, ns = 400, prob = 0.95, pl = FALSE)
 \item{prob}{HPD interval probability (default is 0.95)}
 
 \item{pl}{set to \code{TRUE} to plot the posterior densities using base graphics}
+
+\item{dist}{if \code{pl} is \code{TRUE} specifies whether to plot the density estimate (the default) or a histogram}
 }
 \value{
 list of class \code{'blrmStats'} whose most important element is \code{Stats}.  The indexes computed are defined below, with gp, B, EV, and vp computed using the intercept corresponding to the median value of Y.  See \url{https://fharrell.com/post/addvalue} for more information.

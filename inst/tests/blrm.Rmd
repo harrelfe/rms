@@ -235,6 +235,95 @@ For comparison here is a nomogram based on maximum likelihood estimates of param
 plot(nomogram(f, fun=plogis, funlabel='P(death)'))
 ```
 
+<a name="ppo"></a>
+
+# Partial Proportional Odds Model
+
+The proportional odds (PO) assumption is a parallelism assumption reflecting the belief that the effect of baseline variables on, say, $Y \geq 3$ is the same effect on $Y \geq 4$.  To relax that assumption, [Peterson and Harrell](https://www.jstor.org/stable/2347760) developed the partial proportional odds (PPO) model in 1990.  The `blrm` function accepts a second model formula in the argument named `ppo` that specifies the subset of predictors for which PO is not to be assumed but for which the model is effectively polytomous (multinomial).  Note that for frequentist modeling the R `VGAM` package handles the PPO model (as will be shown below).  `VGAM` is more flexible that what `blrm` can do in allowing for all sorts of model restrictions.
+
+Consider a $2\times 3$ table of proportions (2 treatment groups, 3 ordered outcome levels) where the treatment effect is not in PO.  We will fit a PO model and see how well it tries to reconstruct the 6 proportions, then fit a PPO model.  As of 2020-05-11 `blrm` has not implemented `predict`-type functions for PPO models, so you will se predictions done the long way (which does better show how PPO works).  Note: the `VGAM` `vgam` function parameterizes PPO effects by $y$-specific covariate effects  whereas `blrm` like Peterson and Harrell parameterize the model by estimating increments in log odds for the covariate effect for $y \geq y$ over and above the effect for $y \geq 2$ if $y$ has values 1, 2, ..., $k$.  Bayesian model specification is detailed [here](https://github.com/harrelfe/stan/blob/master/notes.md).
+
+Not shown here is that `blrm` also allows for random effects with PPO models to handle longitudinal data if a compound symmetry correlation pattern is reasonable.
+
+```{r ppo}
+p0 <- c(.4, .2, .4)
+p1 <- c(.3, .1, .6)
+m  <- 50             # observations per cell
+m0 <- p0 * m         # from proportions to frequencies
+m1 <- p1 * m
+x  <- c(rep(0, m), rep(1, m))
+y0 <- c(rep(1, m0[1]), rep(2, m0[2]), rep(3, m0[3]))
+y1 <- c(rep(1, m1[1]), rep(2, m1[2]), rep(3, m1[3]))
+y  <- c(y0, y1)
+table(x, y)
+```
+
+```{r ppo2,results='asis'}
+# A PO model cannot reproduce the original proportions
+f <- lrm(y ~ x)
+f
+```
+
+```{r ppo3}
+predict(f, data.frame(x=c(0, 1)), type='fitted.ind')
+require(VGAM)
+fv <- vgam(y ~ x, cumulative(reverse=TRUE, parallel=TRUE))
+coef(fv)
+predict(fv, data.frame(x=c(0, 1)), type='response')
+
+# Now fit a PPO model that will reproduce all cell proportions
+fvppo <- vgam(y ~ x, cumulative(reverse=TRUE, parallel=FALSE))
+coef(fvppo)
+predict(fvppo, data.frame(x=c(0, 1)), type='response')  # perfect recovery
+
+# Function to manually compute cell probablities
+pprop <- function(co, type, centered=FALSE) {
+  x <- if(centered) c(-0.5, 0.5) else 0:1
+  switch(type,
+         vgam = {
+				   pge2 <- plogis(co[1] + x * co[3])
+  				 peq3 <- plogis(co[2] + x * co[4])
+  				 rbind(c(1 - pge2[1], pge2[1] - peq3[1], peq3[1]),
+        	 c(1 - pge2[2], pge2[2] - peq3[2], peq3[2]))
+         },		 
+        blrm = {
+            pge2 <- plogis(co[1] + x * co[3])
+            peq3 <- plogis(co[2] + x * (co[3] + co[4]))
+            rbind(c(1 - pge2[1], pge2[1] - peq3[1], peq3[1]),
+                  c(1 - pge2[2], pge2[2] - peq3[2], peq3[2]))
+        } )
+}          
+
+co <- coef(vgam(y ~ x, cumulative(reverse=TRUE, parallel=FALSE)))
+pprop(co, type='vgam')
+```
+
+```{r ppo4}
+# Now try blrm
+# First mimic PO model by penalizing PPO term to nearly zero
+# Quickly get maximum likelihood estimates (posterior modes)
+b <- blrm(y ~ x, ~x, priorsd=1000, priorsdppo=0.001, method='opt')
+coef(b)
+pprop(coef(b), type='blrm')
+
+# Now really fit PPO model, at first only getting MLE
+# Do full posterior sampling
+b <- blrm(y ~ x, ~ x, priorsd=1000, priorsdppo=1000, method='opt')
+coef(b)   # also the posterior mode
+coef(b)[3] + coef(b)[4]
+
+fitIf(bppo <- blrm(y ~ x, ~ x, priorsd=1000, priorsdppo=1000))
+# take differences in last 2 coefficients to get our scheme
+# Check recovery of proportions, using posterior mode/mean/median
+pprop(coef(bppo, 'mode'),   type='blrm')
+pprop(coef(bppo, 'mean'),   type='blrm')
+pprop(coef(bppo, 'median'), type='blrm')
+```
+
+```{r ppo5,results='asis'}
+bppo
+```
+
 <a name="re"></a>
 
 # Longitudinal Data Examples: Random Effects
