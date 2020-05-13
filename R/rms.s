@@ -210,7 +210,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
         z <- c(z, attributes(xi))
       }
 
-      za <- z$assume.code
+      za    <- z$assume.code
       zname <- z$name
 
       fname.incl.dup <- c(fname.incl.dup, zname)
@@ -410,7 +410,9 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
       if(length(jia)) nmiss <- nmiss[-jia]
       jz <- which(names(nmiss) != '(weights)' &
                     ! grepl('offset\\(',  names(nmiss)) &
-                    names(nmiss) != '(offset)' )
+                    names(nmiss) != '(offset)' &
+                    ! grepl('cluster\\(', names(nmiss)) &
+                    ! grepl('aTime\\(',   names(nmiss)))
       if(response.pres) jz <- jz[jz > 1]
       names(nmiss)[jz] <- fname[asm != 9]
       attr(mf, 'na.action')$nmiss <- nmiss

@@ -78,14 +78,14 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   msubset <- missing(subset)
   
 	call <- match.call()
-  m <- match.call(expand.dots=FALSE)
-  mc <- match(c("formula", "data", "subset", "na.action"), 
-             names(m), 0)
-  m <- m[c(1, mc)]
-  m$na.action <- na.action
-  m$drop.unused.levels <- TRUE
+#  m <- match.call(expand.dots=FALSE)
+#  mc <- match(c("formula", "data", "subset", "na.action"), 
+#             names(m), 0)
+#  m <- m[c(1, mc)]
+#  m$na.action <- na.action
+#  m$drop.unused.levels <- TRUE
 
-  m[[1]] <- as.name("model.frame")
+#  m[[1]] <- as.name("model.frame")
   nact <- NULL
 
   tform   <- terms(formula, specials=c('cluster', 'aTime'), data=data)
@@ -104,7 +104,22 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
 
   method <- match.arg(method)
 
-  X <- Design(eval.parent(m))   # Design handles cluster()
+  m <- if(msubset) model.frame(formula,
+                               data       = data,
+                               na.action = na.action,
+                               drop.unused.levels=TRUE)
+       else
+         model.frame(formula,
+                     data=data,
+                     subset=subset,
+                     na.action=na.action,
+                     drop.unused.levels=TRUE)
+
+  omit <- attr(m, 'na.action')$omit
+
+  X <- Design(m)   # Design handles cluster()
+  
+#  X <- Design(eval.parent(m))   # Design handles cluster()
   cluster     <- attr(X, 'cluster')
   clustername <- attr(X, 'clustername')
   time        <- attr(X, 'time')
@@ -133,15 +148,16 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   Z <- NULL
 
   if(length(ppo)) {
+    if(length(omit)) data <- data[- omit, ]
     m <- if(msubset) model.frame(ppo,
                                  data      = data,
-                                 na.action = na.action,
+                                 na.action = na.fail,
                                  drop.unused.levels=TRUE)
          else
            model.frame(ppo,
                        data=data,
                        subset=subset,
-                       na.action=na.action,
+                       na.action=na.fail,
                        drop.unused.levels=TRUE)
 
     Z <- Design(m)
@@ -151,7 +167,7 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
     zTerms      <- zatrx$terms
     attr(zTerms, "formula") <- ppo
     zatr        <- zatrx$Design
-    mmcolnames <- atr$mmcolnames
+    mmcolnames  <- zatr$mmcolnames
 
     Z <- model.matrix(zTerms, Z)
     alt <- attr(mmcolnames, 'alt')
@@ -299,8 +315,9 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
                  grep('pi', nam), grep('tau', nam), grep('theta', nam))]
     parm <- as.list(parm[nam])
     init <- function() parm
-    }
- 	g <- rstan::sampling(mod, pars='sigmaw', include=FALSE,
+  }
+
+  g <- rstan::sampling(mod, pars='sigmaw', include=FALSE,
                        data=d, iter=iter, chains=chains, refresh=refresh,
                        init=inits, ...)
   if(progress != '') sink()
@@ -310,6 +327,7 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   ga  <- nam[grep('gamma\\[', nam)]
 
   draws  <- as.matrix(g)
+  ndraws <- nrow(draws)
 	alphas <- draws[, al, drop=FALSE]
 	betas  <- draws[, be, drop=FALSE]
 
@@ -338,9 +356,9 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
     tauInfo <- data.frame(intercept=1 + co, name=namtau, x=xt, y=yt)
     ## Compute intercept correction due to centering Z matrix
     ## Need taus as a 3-dim array for intercept correction for centering
-    mtaus      <- array(taus, dim=c(nrow(draws), pppo, k-2))
-    zalphacorr <- sweep(mtaus, 2, zbar, '*')
-    dim(zalphacorr) <- dim(zalphacorr)[-2]  # collapse to matrix
+    mtaus      <- array(taus, dim=c(ndraws, pppo, k-2))
+#    zalphacorr <- sweep(mtaus, 2, zbar, '*')
+#    dim(zalphacorr) <- dim(zalphacorr)[-2]  # collapse to matrix
 #    zalphacorr <- matrix(zbar, ncol=pppo) %*% mtaus
 #          alphas[-1] <- alphas[-1] - matrix(zbar, ncol=pppo) %*% taus
 #    zalphacorr <- cbind(0, rowSums(sweep(mtaus, 2, zbar, '*'), dims=2))
@@ -375,7 +393,13 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
 	# Back-scale to original data scale
 	alphacorr <- rowSums(sweep(betas, 2, xbar, '*')) # was xbar/xsd
 	alphas    <- sweep(alphas, 1, alphacorr, '-')
-  if(length(ppo)) alphas[, -1] <- alphas[, -1, drop=FALSE] - zalphacorr
+  if(length(ppo))
+    for(i in 1 : ndraws)
+      for(j in 3 : k)
+        alphas[i, j - 1] <- alphas[i, j - 1, drop=FALSE] -
+                            sum(mtaus[i, , j-2] * zbar)
+                    
+  #  alphas[, -1] <- alphas[, -1, drop=FALSE] - zalphacorr
 	colnames(alphas) <- if(nrp == 1) 'Intercept' else paste0('y>=', ylev[-1])
 	colnames(betas)  <- atr$colnames
 
@@ -462,7 +486,8 @@ blrmStats <- function(fit, ns=400, prob=0.95, pl=FALSE,
   nrp    <- f$non.slopes
   kmid   <- f$interceptRef  # intercept close to median
   s      <- tauFetch(f, intercept=kmid, what='nontau')
-  pppo   <- f$pppo
+  # old fit objects did not include pppo for non-PPO models:
+  pppo   <- if(! length(f$pppo)) 0 else f$pppo  
   if(pppo > 0) stau <-tauFetch(f, intercept=kmid, what='tau')
   ndraws <- nrow(s)
   ns     <- min(ndraws, ns)
@@ -495,7 +520,7 @@ blrmStats <- function(fit, ns=400, prob=0.95, pl=FALSE,
     lp    <- cbind(1, X) %*% t(beta)
     if(pppo > 0) {
       tau <- stau[i,, drop=FALSE]
-      lp  <- lp + Z %*% tau
+      lp  <- lp + Z %*% t(tau)
       }
     prb  <- plogis(lp)
     d    <- dxy(lp[is], y[is])
@@ -781,13 +806,14 @@ tauFetch <- function(fit, intercept, what=c('tau', 'nontau', 'both')) {
   ## Keep only the intercept of interest
   cn     <- c(cn[intercept], cn[-(1 : nints)])
   nontau <- setdiff(cn, info$name)
-  i      <- if(int == 1) '' else subset(info, intercept == int)$name
+  i      <- if(int > 1) subset(info, intercept == int)$name
   # Partial proportional odds parameters start with the 2nd intercept
   switch(what,
-         tau    = if(i == '') matrix(0, nrow=nd, ncol=1)
+         tau    = if(! length(i)) matrix(0, nrow=nd, ncol=1)
                   else draws[, i, drop=FALSE],
          nontau = draws[, nontau, drop=FALSE],
-         both   = if(i == '') cbind(draws[, nontau, drop=FALSE], 0) else 
+         both   = if(! length(i))
+                    cbind(draws[, nontau, drop=FALSE], 0) else 
                               draws[, c(nontau, i), drop=FALSE]
         )
 }
