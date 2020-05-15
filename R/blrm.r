@@ -24,7 +24,8 @@
 ##' @param progress see \code{refresh}.  Defaults to \code{''} if \code{refresh = 0}.  Note: If running interactively but not under RStudio, \code{rstan} will open a browser window for monitoring progress.
 ##' @param x set to \code{FALSE} to not store the design matrix in the fit.  \code{x=TRUE} is needed if running \code{blrmStats} for example.
 ##' @param y set to \code{FALSE} to not store the response variable in the fit
-##' @param loo set to \code{FALSE} to not run \code{loo} and store its result as object \code{loo} in the returned object
+##' @param loo set to \code{FALSE} to not run \code{loo} and store its result as object \code{loo} in the returned object.  \code{loo} defaults to \code{FALSE} if the sample size is greater than 1000, as \code{loo} requires the per-observation likelihood components, which creates a matrix N times the number of posterior draws.
+##' @param ppairs set to a file name to run \code{rstan::pairs} and store the resulting png plot there.  Set to \code{TRUE} instead to directly plot these diagnostics.  The default is not to run \code{pairs}.
 ##' @param method set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.  When random effects are present, \code{method} is automatically set to \code{'sampling'} as maximum likelihood estimates without marginalizing over the random effects do not make sense.
 ##' @param inito intial value for optimization.  The default is the \code{rstan} default \code{'random'}.  Frequently specifying \code{init=0} will benefit when the number of distinct Y categories grows or when using \code{ppo} hence 0 is the default for that.
 ##' @param inits initial value for sampling, defaults to \code{inito}
@@ -68,10 +69,10 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
                  conc=1./k, rsdmean=1, ar1sdmean=1,
 								 iter=2000, chains=4, refresh=0,
                  progress=if(refresh > 0) 'stan-progress.txt' else '',
-								 x=TRUE, y=TRUE, loo=TRUE,
+								 x=TRUE, y=TRUE, loo=n <= 1000, ppairs=NULL,
                  method=c('both', 'sampling', 'optimizing'),
                  inito=if(length(ppo)) 0 else 'random', inits=inito,
-                 standata=FALSE,
+                 standata=FALSE, debug=FALSE,
                  ...) {
 
   if(missing(data))   data <- environment(formula)
@@ -86,6 +87,11 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
 #  m$drop.unused.levels <- TRUE
 
 #  m[[1]] <- as.name("model.frame")
+
+  if(debug) debug <- function(...)
+    cat(..., format(Sys.time()), '\n', file='/tmp/debug.txt', append=TRUE)
+  else debug <- function(...) {}
+  
   nact <- NULL
 
   tform   <- terms(formula, specials=c('cluster', 'aTime'), data=data)
@@ -317,9 +323,14 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
     init <- function() parm
   }
 
-  g <- rstan::sampling(mod, pars='sigmaw', include=FALSE,
+  debug(1)
+  exclude <- c('sigmaw', 'gamma_raw', 'pi', 'OR')
+  if(! loo) exclude <- c(exclude, 'log_lik')
+  g <- rstan::sampling(mod, pars=exclude, include=FALSE,
                        data=d, iter=iter, chains=chains, refresh=refresh,
                        init=inits, ...)
+  debug(2)
+  
   if(progress != '') sink()
 	nam <- names(g)
 	al  <- nam[grep('alpha\\[', nam)]
@@ -342,6 +353,7 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
     gammas  <- apply(cle, 2, median)      # posterior median per subject
   }
 
+  debug(3)
   tau <- ta <- tauInfo <- NULL
   if(length(ppo)) {
     ta     <- nam[grep('tau', nam)]
@@ -364,6 +376,8 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
 #    zalphacorr <- cbind(0, rowSums(sweep(mtaus, 2, zbar, '*'), dims=2))
     }
 
+  debug(4)
+  
   epsmed <- NULL
   if(length(time)) {
     omega   <- cbind(omega, rho=draws[, 'rho'])
@@ -381,15 +395,23 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
       epsmed[i, j] <- median(eps[, ro==i & co==j])
     }
 
+  debug(5)
   diagnostics <-
-		tryCatch(rstan::summary(g, pars=c(al, be, clparm),
-                            probs=NULL)$summary[,c('n_eff', 'Rhat')],
+		tryCatch(rstan::summary(g, pars=c(al, be, clparm), probs=NULL),
              error=function(...) list(fail=TRUE))
   if(itfailed(diagnostics)) {
     warning('rstan::summary failed; see fit component diagnostics')
     diagnostics <- list(pars=c(al, be, clparm), failed=TRUE)
+  } else diagnostics <- diagnostics$summary[,c('n_eff', 'Rhat')]
+  
+  debug(6)
+  if(length(ppairs)) {
+    if(is.character(ppairs)) png(ppairs, width=1000, height=1000, pointsize=11)
+    pairs(g, pars=c(al, be, clparm))
+    if(is.character(ppairs)) dev.off()
     }
 
+  debug(7)
 	# Back-scale to original data scale
 	alphacorr <- rowSums(sweep(betas, 2, xbar, '*')) # was xbar/xsd
 	alphas    <- sweep(alphas, 1, alphacorr, '-')
@@ -405,6 +427,7 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
 
 	draws            <- cbind(alphas, betas, taus)
 
+  debug(8)
   param <- rbind(mean=colMeans(draws), median=apply(draws, 2, median))
   if(method != 'sampling') {
     param <- rbind(mode=opt$coefficients, param)
@@ -420,6 +443,8 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
       Loo <- NULL
       }
   }
+
+  debug(9)
   
   freq <- table(Y, dnn=yname)
 
@@ -792,7 +817,15 @@ predict.blrm <- function(object, ...,
   m
 }
 
-
+##' Fetch Partial Proportional Odds Parameters
+##'
+##' Fetches matrix of posterior draws for partial proportional odds parameters (taus) for a given intercept.  Can also form a matrix containing both regular parameters and taus, or for just non-taus.
+##' @title tauFetch
+##' @param fit an object created by \code{blrm}
+##' @param intercept integer specifying which intercept to fetch
+##' @param what specifies the result to return
+##' @return matrix with number of raws equal to the numnber of original draws
+##' @author Frank Harrell
 tauFetch <- function(fit, intercept, what=c('tau', 'nontau', 'both')) {
   what   <- match.arg(what)
   f      <- fit[c('tauInfo', 'draws', 'non.slopes')]

@@ -21,11 +21,13 @@ blrm(
   progress = if (refresh > 0) "stan-progress.txt" else "",
   x = TRUE,
   y = TRUE,
-  loo = TRUE,
+  loo = n <= 1000,
+  ppairs = NULL,
   method = c("both", "sampling", "optimizing"),
   inito = if (length(ppo)) 0 else "random",
   inits = inito,
   standata = FALSE,
+  debug = FALSE,
   ...
 )
 }
@@ -62,7 +64,9 @@ blrm(
 
 \item{y}{set to \code{FALSE} to not store the response variable in the fit}
 
-\item{loo}{set to \code{FALSE} to not run \code{loo} and store its result as object \code{loo} in the returned object}
+\item{loo}{set to \code{FALSE} to not run \code{loo} and store its result as object \code{loo} in the returned object.  \code{loo} defaults to \code{FALSE} if the sample size is greater than 1000, as \code{loo} requires the per-observation likelihood components, which creates a matrix N times the number of posterior draws.}
+
+\item{ppairs}{set to a file name to run \code{rstan::pairs} and store the resulting png plot there.  Set to \code{TRUE} instead to directly plot these diagnostics.  The default is not to run \code{pairs}.}
 
 \item{method}{set to \code{'optimizing'} to run the Stan optimizer and not do posterior sampling, \code{'both'} (the default) to run both the optimizer and posterior sampling, or \code{'sampling'} to run only the posterior sampling and not compute posterior modes. Running \code{optimizing} is a way to obtain maximum likelihood estimates and allows one to quickly study the effect of changing the prior distributions.  When \code{method='optimizing'} is used the result returned is not a standard \code{blrm} object but is instead the parameter estimates, -2 log likelihood, and optionally the Hession matrix (if you specify \code{hessian=TRUE} in ...).  When \code{method='both'} is used, \code{rstan::sampling} and \code{rstan::optimizing} are both run, and parameter estimates (posterior modes) from \code{optimizing} are stored in a matrix \code{param} in the fit object, which also contains the posterior means and medians, and other results from \code{optimizing} are stored in object \code{opt} in the \code{blrm} fit object.  When random effects are present, \code{method} is automatically set to \code{'sampling'} as maximum likelihood estimates without marginalizing over the random effects do not make sense.}
 

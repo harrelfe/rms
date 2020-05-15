@@ -20,7 +20,7 @@ an R function
 Function Generator for Posterior Probabilities of Assertions
 }
 \details{
-From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and a posterior density for that parameter is drawn.  \code{PostF} can also be used on objects created by \code{contrast.rms}
+From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and a posterior density for that parameter is drawn along with vertical lines for posterior mean, median, and 0.95 highest posterior density interval.  \code{PostF} can also be used on objects created by \code{contrast.rms}
 }
 \examples{
 \dontrun{

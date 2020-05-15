@@ -340,7 +340,7 @@ stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE,
 
 ##' Function Generator for Posterior Probabilities of Assertions
 ##'
-##' From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and a posterior density for that parameter is drawn.  \code{PostF} can also be used on objects created by \code{contrast.rms}
+##' From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and a posterior density for that parameter is drawn along with vertical lines for posterior mean, median, and 0.95 highest posterior density interval.  \code{PostF} can also be used on objects created by \code{contrast.rms}
 ##' @title PostF
 ##' @param fit a Bayesian fit or \code{contrast.rms} object
 ##' @param name specifies whether assertions will refer to shortened parameter names (the default) or original names.  Shorted names are of the form \code{a1, ..., ak} where \code{k} is the number of intercepts in the model, and \code{b1, ..., bp} where \code{p} is the number of non-intercepts.  When using original names that are not legal R variable names, you must enclose them in backticks.  For \code{contrast} objects, \code{name} is ignored and you must use contrast names.  The \code{cnames} argument to \code{contrast.rms} is handy for assigning your own names.
@@ -397,8 +397,14 @@ PostF <- function(fit, name=c('short', 'orig'), pr=FALSE) {
   f <- function(assert, draws) {
     w <- eval(substitute(assert), draws)
     if(length(unique(w)) < 3) return(mean(w))
+
+    hpd <- HPDint(w, 0.95)
+    de <- data.frame(est=c(mean(w), median(w), hpd),
+                     stat=c('Mean', 'Median', rep('HPD Interval', 2)))
     ggplot(data.frame(w), aes(x=w)) + geom_density() +
-      xlab(as.character(sys.call()[2])) + ylab('')
+         geom_vline(data=de, aes(xintercept=est, color=stat, alpha=I(0.4))) +
+         guides(color=guide_legend(title='')) +
+         xlab(as.character(sys.call()[2])) + ylab('')
     }
   # Convert draws to data frame so eval() will work
   formals(f) <- list(assert=NULL, draws=as.data.frame(draws))
@@ -464,7 +470,7 @@ fitIf <- function(w) {
     }
     assign(fitname, fit, envir=.GlobalEnv)
     return(invisible())    # note that w was never evaluated
-    }
+  }
   fit <- w   # evaluates w (runs the fit) and assigns in .GlobalEnv
   fitsmall <- fit
   fitsmall$rstan <- NULL
