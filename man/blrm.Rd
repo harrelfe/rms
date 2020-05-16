@@ -13,7 +13,9 @@ blrm(
   priorsd = rep(100, p),
   priorsdppo = rep(100, pppo),
   conc = 1/k,
-  rsdmean = 1,
+  psigma = 1,
+  rsdmean = if (psigma == 1) 0 else 1,
+  rsdsd = 1,
   ar1sdmean = 1,
   iter = 2000,
   chains = 4,
@@ -48,7 +50,11 @@ blrm(
 
 \item{conc}{the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of the number of distinct Y values.}
 
-\item{rsdmean}{the assumed mean of the prior distribution of the standard deviation of random effects.  An exponential prior distribution is assumed, and the rate for that distribution is the reciprocal of the mean.  The default is a mean of 1.0, which is reasonable for a unitless regression model scale such as log odds.}
+\item{psigma}{defaults to 1 for a half-t distribution with 4 d.f., location parameter \code{rsdmean} and scale parameter \code{rsdsd}}
+
+\item{rsdmean}{the assumed mean of the prior distribution of the standard deviation of random effects.  When \code{psigma=2} this is the mean of an exponential distribution and defaults to 1.  When \code{psigma=1} this is the mean of the half-t distribution and defaults to zero.}
+
+\item{rsdsd}{applies only to \code{psigma=1} and is the scale parameter for the half t distribution for the SD of random effects, defaulting to 1.}
 
 \item{ar1sdmean}{the assumed mean of the prior distribution of the standard deviation of within-subject white noise.   The setup is the same as with \code{rsdmean}.}
 

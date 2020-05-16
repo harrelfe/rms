@@ -279,7 +279,7 @@ plot.rmsb <- function(x, which=NULL, nrow=NULL, ncol=NULL, prob=0.95,
 ##' For an \code{rms} Bayesian fit object, uses by default the stored posterior draws to check convergence properties of posterior sampling.  If instead \code{rstan=TRUE}, calls the \code{rstan} \code{traceplot} function on the \code{rstan} object inside the \code{rmsb} object, to check properties of posterior sampling.  If \code{rstan=TRUE} and the \code{rstan} object has been removed and \code{previous=TRUE}, attempts to find an already existing plot created by a previous run of the \code{knitr} chunk, assuming it was the \code{plotno} numbered plot of the chunk.
 ##' @title stanDxplot
 ##' @param x an \code{rms} Bayesian fit object
-##' @param which names of parameters to plot, defaulting to all non-intercepts.  When \code{rstan=FALSE} these are the friendly \code{rms} names, otherwise they are the \code{rstan} parameter names.  If the model fit was run through \code{stackMI} for multiple imputation, the number of traces is multiplied by the number of imputations.
+##' @param which names of parameters to plot, defaulting to all non-intercepts.  When \code{rstan=FALSE} these are the friendly \code{rms} names, otherwise they are the \code{rstan} parameter names.  If the model fit was run through \code{stackMI} for multiple imputation, the number of traces is multiplied by the number of imputations.  Set to \code{'ALL'} to plot all parameters.
 ##' @param rstan set to \code{TRUE} to use \code{rstan::traceplot} on a (presumed) stored \code{rstan} object in \code{x}, otherwise only real iterations are plotted and parameter values are shown as points instead of lines, with chains separated
 ##' @param previous see details
 ##' @param plotno see details
@@ -292,6 +292,7 @@ stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE,
                        plotno=1, rev=FALSE, stripsize=8, ...) {
   if(! rstan) {
     draws <- x$draws
+    if(length(which) == 1 && which == 'ALL') which <- colnames(draws)
     if(! length(which)) {
       nrp <- x$non.slopes
       which <- if(nrp > 0) colnames(draws)[-(1 : nrp)] else colnames(draws)
@@ -609,3 +610,49 @@ if(method == 'ellipse') {
   else d
   }
 utils::globalVariables('Probability')     # why in the world needed?
+
+##' Stan Thin QR Decomposition
+##'
+##' Runs a matrix through the Stan thin QR decomposition as used in \code{rms} Bayesian fitting functions and returns the transformed matrix \code{Xqr} and the reverse transforming matrix \code{R}.  If columns of the input matrix \code{X} are centered the QR transformed matrix will be orthogonal.  This is helpful in understanding the transformation and in scaling prior distributions on the transformed scale.
+##' @title stanQr 
+##' @param X a numeric matrix
+##' @param center set to \code{FALSE} to not center columns of \code{X} first
+##' @return list with elements \code{Xqr, R}
+##' @examples
+##' \dontrun{
+##'   x <- 1 : 10
+##'   X <- cbind(x, x^2)
+##'   w <- stanQr(X)
+##'   w
+##'   Xqr <- w$Xqr
+##'   plot(X[, 1], Xqr[, 1])
+##'   plot(X[, 1], Xqr[, 2])
+##'   cov(X)
+##'   cov(Xqr)
+##' }
+##' @author Frank Harrell
+stanQr <- function(X, center=TRUE) {
+  p <- ncol(X)
+  N <- nrow(X)
+  if(center) X <- scale(X, center=TRUE, scale=FALSE)
+
+  d <- list(X=X, N=N, p=p)
+  stanloc <- .Options$stancompiled
+  if(! length(stanloc)) stop('options(stancompiled) not defined')
+  m <- readRDS(paste0(stanloc, '/qr.rds'))
+  z <- rstan::sampling(m, data=d, chains=1, iter=1, algorithm='Fixed_param')
+  z <- as.matrix(z)[,]
+  n <- names(z)
+  xqr <- n[grep('Xqr\\[',  n)]
+  ri  <- n[grep('Ri\\[',   n)]
+
+  ro <- as.integer(gsub('Xqr\\[(.*),.*',    '\\1', xqr))
+  co <- as.integer(gsub('Xqr\\[.*,(.*)\\]', '\\1', xqr))
+  Xqr <- matrix(NA, nrow=N, ncol=p)
+  Xqr[cbind(ro, co)] <- z[xqr]
+  ro <- as.integer(gsub('Ri\\[(.*),.*',    '\\1', ri))
+  co <- as.integer(gsub('Ri\\[.*,(.*)\\]', '\\1', ri))
+  R <- matrix(NA, nrow=p, ncol=p)
+  R[cbind(ro, co)] <- z[ri]
+  list(Xqr=Xqr, R=R)
+}

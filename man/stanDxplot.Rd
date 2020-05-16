@@ -18,7 +18,7 @@ stanDxplot(
 \arguments{
 \item{x}{an \code{rms} Bayesian fit object}
 
-\item{which}{names of parameters to plot, defaulting to all non-intercepts.  When \code{rstan=FALSE} these are the friendly \code{rms} names, otherwise they are the \code{rstan} parameter names.  If the model fit was run through \code{stackMI} for multiple imputation, the number of traces is multiplied by the number of imputations.}
+\item{which}{names of parameters to plot, defaulting to all non-intercepts.  When \code{rstan=FALSE} these are the friendly \code{rms} names, otherwise they are the \code{rstan} parameter names.  If the model fit was run through \code{stackMI} for multiple imputation, the number of traces is multiplied by the number of imputations.  Set to \code{'ALL'} to plot all parameters.}
 
 \item{rstan}{set to \code{TRUE} to use \code{rstan::traceplot} on a (presumed) stored \code{rstan} object in \code{x}, otherwise only real iterations are plotted and parameter values are shown as points instead of lines, with chains separated}
 

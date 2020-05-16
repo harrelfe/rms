@@ -16,7 +16,9 @@
 ##' @param priorsd vector of prior standard deviations.  If the vector is shorter than the number of model parameters, it will be repeated until the length equals the number of parametertimes.
 ##' @param priorsdppo vector of prior standard deviations for non-proportional odds parameters.  As with \code{priorsd} the last element is the only one for which the SD corresponds to the original data scale.
 ##' @param conc the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of the number of distinct Y values.
-##' @param rsdmean the assumed mean of the prior distribution of the standard deviation of random effects.  An exponential prior distribution is assumed, and the rate for that distribution is the reciprocal of the mean.  The default is a mean of 1.0, which is reasonable for a unitless regression model scale such as log odds.
+##' @param psigma defaults to 1 for a half-t distribution with 4 d.f., location parameter \code{rsdmean} and scale parameter \code{rsdsd}
+##' @param rsdmean the assumed mean of the prior distribution of the standard deviation of random effects.  When \code{psigma=2} this is the mean of an exponential distribution and defaults to 1.  When \code{psigma=1} this is the mean of the half-t distribution and defaults to zero.
+##' @param rsdsd applies only to \code{psigma=1} and is the scale parameter for the half t distribution for the SD of random effects, defaulting to 1.
 ##' @param ar1sdmean the assumed mean of the prior distribution of the standard deviation of within-subject white noise.   The setup is the same as with \code{rsdmean}.
 ##' @param iter number of posterior samples per chain for [rstan::sampling] to run
 ##' @param chains number of separate chains to run
@@ -66,7 +68,8 @@
 ##' @md
 blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
 								 priorsd=rep(100, p), priorsdppo=rep(100, pppo),
-                 conc=1./k, rsdmean=1, ar1sdmean=1,
+                 conc=1./k, psigma=1, rsdmean=if(psigma == 1) 0 else 1,
+                 rsdsd=1, ar1sdmean=1,
 								 iter=2000, chains=4, refresh=0,
                  progress=if(refresh > 0) 'stan-progress.txt' else '',
 								 x=TRUE, y=TRUE, loo=n <= 1000, ppairs=NULL,
@@ -216,10 +219,13 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
 	d <- list(X=if(! length(time)) Xs,
             y=if(! length(time)) yint,
             N=n, p=p, k=k, conc=conc,
-            sds=as.array(priorsd),
-            rate = 1. / rsdmean)
+            sds=as.array(priorsd))
+
   Nc <- 0
   if(length(cluster)) {
+    d$psigma  <- psigma
+    d$rsdmean <- rsdmean
+    d$rsdsd   <- rsdsd
     cl        <- as.integer(as.factor(cluster))
     Nc        <- max(cl, na.rm=TRUE)
     d$Nc      <- Nc
