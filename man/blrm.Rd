@@ -82,6 +82,8 @@ blrm(
 
 \item{standata}{set to \code{TRUE} to return the Stan data list and not run the model}
 
+\item{debug}{set to \code{TRUE} to output timing and progress information to /tmp/debug.txt}
+
 \item{...}{passed to \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.}
 }
 \value{

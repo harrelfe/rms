@@ -341,7 +341,7 @@ stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE,
 
 ##' Function Generator for Posterior Probabilities of Assertions
 ##'
-##' From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and a posterior density for that parameter is drawn along with vertical lines for posterior mean, median, and 0.95 highest posterior density interval.  \code{PostF} can also be used on objects created by \code{contrast.rms}
+##' From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and the vector of draws for that parameter is returned and can be passed to the \code{PostF} plot method.  \code{PostF} can also be used on objects created by \code{contrast.rms}
 ##' @title PostF
 ##' @param fit a Bayesian fit or \code{contrast.rms} object
 ##' @param name specifies whether assertions will refer to shortened parameter names (the default) or original names.  Shorted names are of the form \code{a1, ..., ak} where \code{k} is the number of intercepts in the model, and \code{b1, ..., bp} where \code{p} is the number of non-intercepts.  When using original names that are not legal R variable names, you must enclose them in backticks.  For \code{contrast} objects, \code{name} is ignored and you must use contrast names.  The \code{cnames} argument to \code{contrast.rms} is handy for assigning your own names.
@@ -359,8 +359,9 @@ stanDxplot <- function(x, which=NULL, rstan=FALSE, previous=TRUE,
 ##'   P(`sex=male` > 0)
 ##'   f <- blrm(y ~ sex + pol(age, 2))
 ##'   P <- PostF(f)
-##'   # Compute posterior density of the vertex of the quadratic age effect
-##'   P(-b2 / (2 * b3))
+##'   # Compute and plot posterior density of the vertex of the
+##'   # quadratic age effect
+##'   plot(P(-b2 / (2 * b3)))
 ##'
 ##'   # The following would be useful in age and sex interacted
 ##'   k <- contrast(f, list(age=c(30, 50), sex='male'),
@@ -395,22 +396,80 @@ PostF <- function(fit, name=c('short', 'orig'), pr=FALSE) {
       }
     colnames(draws) <- nam
     }
-  f <- function(assert, draws) {
+  f <- function(assert, label, draws) {
+    if(! length(label)) label <- as.character(sys.call()[2])
     w <- eval(substitute(assert), draws)
     if(length(unique(w)) < 3) return(mean(w))
-
-    hpd <- HPDint(w, 0.95)
-    de <- data.frame(est=c(mean(w), median(w), hpd),
-                     stat=c('Mean', 'Median', rep('HPD Interval', 2)))
-    ggplot(data.frame(w), aes(x=w)) + geom_density() +
-         geom_vline(data=de, aes(xintercept=est, color=stat, alpha=I(0.4))) +
-         guides(color=guide_legend(title='')) +
-         xlab(as.character(sys.call()[2])) + ylab('')
+    structure(w, class='PostF', label=label)
     }
+
   # Convert draws to data frame so eval() will work
-  formals(f) <- list(assert=NULL, draws=as.data.frame(draws))
+  formals(f) <- list(assert=NULL, label=NULL, draws=as.data.frame(draws))
   f
 }
+
+##' Plot Posterior Density of \code{PostF}
+##'
+##' Computes highest posterior density and posterior mean and median as vertical lines, and plots these on the density function.  You can transform the posterior draws while plotting.
+##' @title plot.PostF
+##' @param x result of running a function created by \code{PostF}
+##' @param ... other results created by such functions
+##' @param cint interval probability
+##' @param label x-axis label if not the expression originally evaluated.  When more than one result is plotted, \code{label} is a vector of character strings, one for each result.
+##' @param type when plotting more than one result specifies whether to make one plot distinguishing results by line type, or whether to make separate panels
+##' @param ltitle used of \code{type='linetype'} to specify name of legend for the line types
+##' @return \code{ggplot2} object
+##' @author Frank Harrell
+plot.PostF <- function(x, ..., cint=0.95, label=NULL,
+                       type=c('linetype', 'facet'), ltitle='') {
+  clab  <- paste(cint, 'HPD\nInterval')
+  type  <- match.arg(type)
+  d <- list(...)
+  if(! length(d)) {
+    if(! length(label)) label <- attr(x, 'label')
+    x     <- as.vector(x)
+    hpd   <- HPDint(x, cint)
+    de    <- data.frame(est=c(mean(x), median(x), hpd),
+                        stat=c('Mean', 'Median', rep(clab, 2)))
+    g <- ggplot(mapping=aes(x=x)) + geom_density() +
+      geom_vline(data=de, aes(xintercept=est, color=stat, alpha=I(0.4))) +
+      guides(color=guide_legend(title='')) +
+      xlab(label) + ylab('')
+    return(g)
+  }
+
+  d <- c(list(x), d)
+  if(! length(label)) label <- sapply(d, function(x) attr(x, 'label'))
+  if(length(label) != length(d)) stop('label has incorrect length')
+  parm <- rep(label, sapply(d, length))
+  X    <- unlist(d)
+  de   <- NULL
+  for(i in 1 : length(d)) {
+    x   <- as.vector(d[[i]])
+    hpd <- HPDint(x, cint)
+    w   <- data.frame(est=c(mean(x), median(x), hpd),
+                      stat=c('Mean', 'Median', rep(clab, 2)),
+                      parm=label[i])
+    de  <- rbind(de, w)
+  }
+  switch(type,
+         linetype = {
+           ggplot(mapping=aes(x=X, linetype=parm)) + geom_density() +
+             geom_vline(data=de, aes(xintercept=est, color=stat, alpha=I(0.4),
+                                     linetype=parm)) +
+             guides(color=guide_legend(title=''),
+                    linetype=guide_legend(title=ltitle)) +
+             xlab('') + ylab('')
+         },
+         facet = {
+           w <- data.frame(X, parm)
+           ggplot(w, mapping=aes(x=X)) + geom_density() + facet_wrap(~ parm) +
+             geom_vline(data=de, aes(xintercept=est, color=stat, alpha=I(0.4))) +
+             guides(color=guide_legend(title='')) +
+             xlab('') + ylab('')
+           })
+}
+
 
 ## Test this approach:
 #f <- function(assert, draws) eval(substitute(assert), draws)
@@ -611,48 +670,63 @@ if(method == 'ellipse') {
   }
 utils::globalVariables('Probability')     # why in the world needed?
 
-##' Stan Thin QR Decomposition
+##' QR Decomposition Preserving the Corner
 ##'
-##' Runs a matrix through the Stan thin QR decomposition as used in \code{rms} Bayesian fitting functions and returns the transformed matrix \code{Xqr} and the reverse transforming matrix \code{R}.  If columns of the input matrix \code{X} are centered the QR transformed matrix will be orthogonal.  This is helpful in understanding the transformation and in scaling prior distributions on the transformed scale.
-##' @title stanQr 
+##' Runs a matrix through the QR decomposition as used in \code{rms} Bayesian fitting functions and returns the transformed matrix \code{Xqr} and the forward and inverse transforming matrices \code{R, Rinv}.  If columns of the input matrix \code{X} are centered the QR transformed matrix will be orthogonal.  This is helpful in understanding the transformation and in scaling prior distributions on the transformed scale.  \code{cornerQr} leaves the last column of \code{X} alone (possibly after centering).
+##' @title cornerQr 
 ##' @param X a numeric matrix
 ##' @param center set to \code{FALSE} to not center columns of \code{X} first
-##' @return list with elements \code{Xqr, R}
+##' @return list with elements \code{Xqr, R, Rinv}
 ##' @examples
 ##' \dontrun{
 ##'   x <- 1 : 10
 ##'   X <- cbind(x, x^2)
-##'   w <- stanQr(X)
+##'   w <- cornerQr(X)
 ##'   w
+##'   with(w, Xqr %*% R)  # = scale(X, center=TRUE, scale=FALSE)
 ##'   Xqr <- w$Xqr
 ##'   plot(X[, 1], Xqr[, 1])
 ##'   plot(X[, 1], Xqr[, 2])
 ##'   cov(X)
 ##'   cov(Xqr)
 ##' }
-##' @author Frank Harrell
-stanQr <- function(X, center=TRUE) {
+##' @author Ben Goodrich
+cornerQr <- function(X, center=TRUE) {
   p <- ncol(X)
   N <- nrow(X)
   if(center) X <- scale(X, center=TRUE, scale=FALSE)
-
-  d <- list(X=X, N=N, p=p)
-  stanloc <- .Options$stancompiled
-  if(! length(stanloc)) stop('options(stancompiled) not defined')
-  m <- readRDS(paste0(stanloc, '/qr.rds'))
-  z <- rstan::sampling(m, data=d, chains=1, iter=1, algorithm='Fixed_param')
-  z <- as.matrix(z)[,]
-  n <- names(z)
-  xqr <- n[grep('Xqr\\[',  n)]
-  ri  <- n[grep('Ri\\[',   n)]
-
-  ro <- as.integer(gsub('Xqr\\[(.*),.*',    '\\1', xqr))
-  co <- as.integer(gsub('Xqr\\[.*,(.*)\\]', '\\1', xqr))
-  Xqr <- matrix(NA, nrow=N, ncol=p)
-  Xqr[cbind(ro, co)] <- z[xqr]
-  ro <- as.integer(gsub('Ri\\[(.*),.*',    '\\1', ri))
-  co <- as.integer(gsub('Ri\\[.*,(.*)\\]', '\\1', ri))
-  R <- matrix(NA, nrow=p, ncol=p)
-  R[cbind(ro, co)] <- z[ri]
-  list(Xqr=Xqr, R=R)
+  QR <- qr(X)
+  Q <- qr.Q(QR)
+  R <- qr.R(QR)
+  sgns <- sign(diag(R))
+  Q_ast <- sweep(Q, MARGIN = 2, STATS = sgns, FUN = `*`)
+  R_ast <- sweep(R, MARGIN = 1, STATS = sgns, FUN = `*`)
+  corner <- R_ast[p, p]
+  R_ast_inverse <- backsolve(R_ast, diag(p))
+  Q_ast <- Q_ast * corner
+  R_ast <- R_ast / corner
+  R_ast_inverse <- R_ast_inverse * corner
+  list(Xqr = Q_ast, R = R_ast, Rinv = R_ast_inverse)
 }
+
+## Code previously used with qr.stan
+#  d <- list(X=X, N=N, p=p)
+#  stanloc <- .Options$stancompiled
+#  if(! length(stanloc)) stop('options(stancompiled) not defined')
+#  m <- readRDS(paste0(stanloc, '/qr.rds'))
+#  z <- rstan::sampling(m, data=d, chains=1, iter=1, algorithm='Fixed_param')
+#  z <- as.matrix(z)[,]
+#  n <- names(z)
+#  xqr <- n[grep('Xqr\\[',  n)]
+# ri  <- n[grep('Ri\\[',   n)]
+#
+#  ro <- as.integer(gsub('Xqr\\[(.*),.*',    '\\1', xqr))
+#  co <- as.integer(gsub('Xqr\\[.*,(.*)\\]', '\\1', xqr))
+#  Xqr <- matrix(NA, nrow=N, ncol=p)
+#  Xqr[cbind(ro, co)] <- z[xqr]
+#  ro <- as.integer(gsub('Ri\\[(.*),.*',    '\\1', ri))
+#  co <- as.integer(gsub('Ri\\[.*,(.*)\\]', '\\1', ri))
+#  R <- matrix(NA, nrow=p, ncol=p)
+#  R[cbind(ro, co)] <- z[ri]
+#  list(Xqr=Xqr, R=R)
+

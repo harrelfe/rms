@@ -20,7 +20,7 @@ an R function
 Function Generator for Posterior Probabilities of Assertions
 }
 \details{
-From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and a posterior density for that parameter is drawn along with vertical lines for posterior mean, median, and 0.95 highest posterior density interval.  \code{PostF} can also be used on objects created by \code{contrast.rms}
+From a Bayesian fit object such as that from \code{blrm} generates an R function for evaluating the probability that an assertion is true.  The probability, within simulation error, is the proportion of times the assertion is true over the posterior draws.  If the assertion does not evaluate to a logical or 0/1 quantity, it is taken as a continuous derived parameter and the vector of draws for that parameter is returned and can be passed to the \code{PostF} plot method.  \code{PostF} can also be used on objects created by \code{contrast.rms}
 }
 \examples{
 \dontrun{
@@ -34,8 +34,9 @@ From a Bayesian fit object such as that from \code{blrm} generates an R function
   P(`sex=male` > 0)
   f <- blrm(y ~ sex + pol(age, 2))
   P <- PostF(f)
-  # Compute posterior density of the vertex of the quadratic age effect
-  P(-b2 / (2 * b3))
+  # Compute and plot posterior density of the vertex of the
+  # quadratic age effect
+  plot(P(-b2 / (2 * b3)))
 
   # The following would be useful in age and sex interacted
   k <- contrast(f, list(age=c(30, 50), sex='male'),

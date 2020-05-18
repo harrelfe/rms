@@ -32,6 +32,7 @@
 ##' @param inito intial value for optimization.  The default is the \code{rstan} default \code{'random'}.  Frequently specifying \code{init=0} will benefit when the number of distinct Y categories grows or when using \code{ppo} hence 0 is the default for that.
 ##' @param inits initial value for sampling, defaults to \code{inito}
 ##' @param standata set to \code{TRUE} to return the Stan data list and not run the model
+##' @param debug set to \code{TRUE} to output timing and progress information to /tmp/debug.txt
 ##' @param ... passed to \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.
 ##' @return an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
 ##' @examples
@@ -82,14 +83,6 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   msubset <- missing(subset)
   
 	call <- match.call()
-#  m <- match.call(expand.dots=FALSE)
-#  mc <- match(c("formula", "data", "subset", "na.action"), 
-#             names(m), 0)
-#  m <- m[c(1, mc)]
-#  m$na.action <- na.action
-#  m$drop.unused.levels <- TRUE
-
-#  m[[1]] <- as.name("model.frame")
 
   if(debug) debug <- function(...)
     cat(..., format(Sys.time()), '\n', file='/tmp/debug.txt', append=TRUE)
@@ -458,6 +451,7 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
 							draws=draws, omega=omega,
               gammas=gammas, eps=epsmed,
               param=param, priorsd=priorsd, priorsdppo=priorsdppo,
+              psigma=psigma, rsdmean=rsdmean, rsdsd=rsdsd, conc=conc,
               N=n, p=p, pppo=pppo, yname=yname, ylevels=ylev, freq=freq,
 						  alphas=al, betas=be, taus=ta, tauInfo=tauInfo,
 						  xbar=xbar, Design=atr, scale.pred=c('log odds', 'Odds Ratio'),
