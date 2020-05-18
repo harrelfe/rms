@@ -670,43 +670,60 @@ if(method == 'ellipse') {
   }
 utils::globalVariables('Probability')     # why in the world needed?
 
-##' QR Decomposition Preserving the Corner
+##' QR Decomposition Preserving Selected Columns
 ##'
-##' Runs a matrix through the QR decomposition as used in \code{rms} Bayesian fitting functions and returns the transformed matrix \code{Xqr} and the forward and inverse transforming matrices \code{R, Rinv}.  If columns of the input matrix \code{X} are centered the QR transformed matrix will be orthogonal.  This is helpful in understanding the transformation and in scaling prior distributions on the transformed scale.  \code{cornerQr} leaves the last column of \code{X} alone (possibly after centering).
-##' @title cornerQr 
+##' Runs a matrix through the QR decomposition and returns the transformed matrix and the forward and inverse transforming matrices \code{R, Rinv}.  If columns of the input matrix \code{X} are centered the QR transformed matrix will be orthogonal.  This is helpful in understanding the transformation and in scaling prior distributions on the transformed scale.  \code{not} can be specified to keep selected columns as-is.  \code{cornerQr} leaves the last column of \code{X} alone (possibly after centering).  When \code{not} is specified, the square transforming matrices have appropriate identity submatrices inserted so that recreation of original \code{X} is automatic.
+##' @title selectedQr 
 ##' @param X a numeric matrix
+##' @param not an integer vector specifying which columns of \code{X} are to be kept with their original values
+##' @param corner set to \code{FALSE} to not treat the last column specially.  You may not specify both \code{not} and \code{corner}.
 ##' @param center set to \code{FALSE} to not center columns of \code{X} first
-##' @return list with elements \code{Xqr, R, Rinv}
+##' @return list with elements \code{X, R, Rinv}
 ##' @examples
 ##' \dontrun{
 ##'   x <- 1 : 10
 ##'   X <- cbind(x, x^2)
-##'   w <- cornerQr(X)
+##'   w <- selectedQr(X)
 ##'   w
-##'   with(w, Xqr %*% R)  # = scale(X, center=TRUE, scale=FALSE)
-##'   Xqr <- w$Xqr
+##'   with(w, X %*% R)  # = scale(X, center=TRUE, scale=FALSE)
+##'   Xqr <- w$X
 ##'   plot(X[, 1], Xqr[, 1])
 ##'   plot(X[, 1], Xqr[, 2])
 ##'   cov(X)
 ##'   cov(Xqr)
+##'   X <- cbind(x, x^3, x^4, x^2)
+##'   w <- selectedQr(X, not=2:3)
+##'   with(w, X %*% R)
 ##' }
-##' @author Ben Goodrich
-cornerQr <- function(X, center=TRUE) {
-  p <- ncol(X)
-  N <- nrow(X)
+##' @author Ben Goodrich and Frank Harrell
+selectedQr <- function(X, not=NULL, corner=FALSE, center=TRUE) {
   if(center) X <- scale(X, center=TRUE, scale=FALSE)
-  QR <- qr(X)
-  Q <- qr.Q(QR)
-  R <- qr.R(QR)
-  sgns <- sign(diag(R))
-  Q_ast <- sweep(Q, MARGIN = 2, STATS = sgns, FUN = `*`)
+  if(length(not)) {
+    if(corner) stop('may not specify both not and corner=TRUE')
+    Xo <- X
+    X  <- Xo[, -not, drop=FALSE]
+    }
+  p     <- ncol(X)
+  QR    <- qr(X)
+  Q     <- qr.Q(QR)
+  R     <- qr.R(QR)
+  sgns  <- sign(diag(R))
+  X     <- sweep(Q, MARGIN = 2, STATS = sgns, FUN = `*`)
   R_ast <- sweep(R, MARGIN = 1, STATS = sgns, FUN = `*`)
-  corner <- R_ast[p, p]
+  cornr <- if(corner) R_ast[p, p] else 1.
   R_ast_inverse <- backsolve(R_ast, diag(p))
-  Q_ast <- Q_ast * corner
-  R_ast <- R_ast / corner
-  R_ast_inverse <- R_ast_inverse * corner
-  list(Xqr = Q_ast, R = R_ast, Rinv = R_ast_inverse)
+  X <- X * cornr
+  R_ast <- R_ast / cornr
+  R_ast_inverse <- R_ast_inverse * cornr
+
+  if(length(not)) {
+    Xo[, -not]       <- X
+    R <- Rinv        <- diag(p + length(not))
+    R[-not,    -not] <- R_ast
+    Rinv[-not, -not] <- R_ast_inverse
+    return(list(X=Xo, R=R, Rinv=Rinv))
+    }
+  list(X = X, R = R_ast, Rinv = R_ast_inverse)
 }
 
 ## Code previously used with qr.stan
