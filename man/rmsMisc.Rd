@@ -209,7 +209,7 @@ Newlevels(fit, \dots)
 \method{Newlabels}{rms}(fit, labels, \dots)
 \method{Newlevels}{rms}(fit, levels, \dots)
 
-prModFit(x, title, w, digits=4, coefs=TRUE,
+prModFit(x, title, w, digits=4, coefs=TRUE, footer=NULL,
          lines.page=40, long=TRUE, needspace, \dots)
 
 prStats(labels, w, lang=c("plain", "latex", "html"))
@@ -338,7 +338,9 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
 \item{coefs}{specify \code{coefs=FALSE} to suppress printing the table
   of model coefficients, standard errors, etc.  Specify \code{coefs=n}
   to print only the first \code{n} regression coefficients in the
-  model.}\
+  model.}
+\item{footer}{a character string to appear at the bottom of the
+	regression model output}
 \item{file}{name of file to which to write model output}
 \item{append}{specify \code{append=FALSE} when using \code{file} and you
 	want to start over instead of adding to an existing file.}

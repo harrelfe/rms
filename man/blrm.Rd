@@ -7,12 +7,13 @@
 blrm(
   formula,
   ppo = NULL,
+  keepsep = NULL,
   data,
   subset,
   na.action = na.delete,
   priorsd = rep(100, p),
   priorsdppo = rep(100, pppo),
-  conc = 1/k,
+  conc = 1/(0.8 + 0.35 * max(k, 3)),
   psigma = 1,
   rsdmean = if (psigma == 1) 0 else 1,
   rsdsd = 1,
@@ -38,6 +39,8 @@ blrm(
 
 \item{ppo}{formula specifying the model predictors for which proportional odds is not assumed}
 
+\item{keepsep}{a single character string containing a regular expression applied to design matrix column names, specifying which columns are not to be QR-orthonormalized, so that priors for those columns apply to the original parameters.  This is useful for treatment and treatment interaction terms.  For example \code{keepsep='treat'} will keep separate all design matrix columns containing \code{'treat'} in their names.  Some characters such as the caret used in polynomial regression terms will need to be escaped by a double backslash.}
+
 \item{data}{a data frame}
 
 \item{subset}{a logical vector or integer subscript vector specifying which subset of data whould be used}
@@ -48,7 +51,7 @@ blrm(
 
 \item{priorsdppo}{vector of prior standard deviations for non-proportional odds parameters.  As with \code{priorsd} the last element is the only one for which the SD corresponds to the original data scale.}
 
-\item{conc}{the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of the number of distinct Y values.}
+\item{conc}{the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of 0.8 + 0.35 max(k, 3) where k is the number of Y categories.}
 
 \item{psigma}{defaults to 1 for a half-t distribution with 4 d.f., location parameter \code{rsdmean} and scale parameter \code{rsdsd}}
 
@@ -87,7 +90,7 @@ blrm(
 \item{...}{passed to \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.}
 }
 \value{
-an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
+an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{beta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.  To learn about the scaling of orthogonalized QR design matrix columns, look at the \code{xqrsd} object in the returned object.  This is the vector of SDs for all the columns of the transformed matrix.  Those kept out by the \code{keepsep} argument will have their original SDs.
 }
 \description{
 Bayesian Binary and Ordinal Logistic Regression
@@ -114,8 +117,7 @@ See \url{https://hbiostat.org/R/rms/blrm.html} for multiple examples with result
   stanDx(f)           # print basic Stan diagnostics
   s <- stanGet(f)     # extract rstan object from fit
   plot(s, pars=f$betas)       # Stan posteriors for beta parameters
-  traceplot(s)        # Stan diagnostic plots by chain
-  traceplot(s, pars=f$betas)  # Same but only for beta parameters
+  stanDxplot(s)       # Stan diagnostic plots by chain
   blrmStats(f)        # more details about predictive accuracy measures
   ggplot(Predict(...))   # standard rms output
   summary(f, ...)     # invokes summary.rms

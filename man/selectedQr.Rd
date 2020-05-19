@@ -16,7 +16,7 @@ selectedQr(X, not = NULL, corner = FALSE, center = TRUE)
 \item{center}{set to \code{FALSE} to not center columns of \code{X} first}
 }
 \value{
-list with elements \code{X, R, Rinv}
+list with elements \code{X, R, Rinv, xbar} where \code{xbar} is the vector of means (vector of zeros if \code{center=FALSE})
 }
 \description{
 QR Decomposition Preserving Selected Columns

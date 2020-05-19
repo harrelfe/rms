@@ -682,16 +682,20 @@ rmsArgs <- function(.object, envir=parent.frame(2))
 ## General function to print model fit objects using latex, html, or regular
 ## print (the default)
 
-prModFit <- function(x, title, w, digits=4, coefs=TRUE,
+prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
                      lines.page=40, long=TRUE, needspace, ...) {
 
-  lang  <- prType()
-  specs <- markupSpecs[[lang]]
+  lang   <- prType()
+  specs  <- markupSpecs[[lang]]
+  transl <- switch(lang,
+                   latex = latexTranslate,
+                   html  = htmlTranslate,
+                   plain = function(x) x)
 
 #  cca  <- htmlSpecial('combiningcircumflexaccent')
   nbsp <- htmlSpecial('nbsp')
-  gt   <- htmlTranslate('>')
-  vbar <- htmlTranslate('|')
+  gt   <- transl('>')
+  vbar <- transl('|')
   chi2 <- specs$chisq()
   beta <- htmlGreek('beta')
   
@@ -811,7 +815,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
             U[, i] <- pad(formatNP(B[, i], dig, lang=lang))
           }
           pn <- switch(lang, plain='Pr(Beta>0)',
-                       html = paste0('Pr(', betan, htmlTranslate('>'), '0)'),
+                       html = paste0('Pr(', betan, transl('>'), '0)'),
                        latex = 'Pr$(\\beta>0)$')
           coltrans <- c(Mean     = paste('Mean', betan),
                         Median   = paste('Median', betan),
@@ -868,10 +872,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
         }
         if(lang %in% c('latex', 'html')) {
           R <- c(R, skipt(1))
-          rownames(U) <- if(lang == 'latex')
-                           latexTranslate(betanames)
-                         else
-                           htmlTranslate(betanames)
+          rownames(U) <- transl(betanames)
           
           if(is.numeric(coefs)) {
             U <- U[1:coefs,,drop=FALSE]
@@ -935,6 +936,9 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
       )
     }
   }
+  if(length(footer))
+    R <- c(R, paste0(specs$smallskip, transl(footer)))
+  
   R <- paste0(R, '\n')
   switch(lang,
          html  = htmltools::HTML(R),

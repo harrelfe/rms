@@ -10,12 +10,13 @@
 ##' @title blrm
 ##' @param formula a R formula object that can use \code{rms} package enhancements such as the restricted interaction operator
 ##' @param ppo formula specifying the model predictors for which proportional odds is not assumed
+##' @param keepsep a single character string containing a regular expression applied to design matrix column names, specifying which columns are not to be QR-orthonormalized, so that priors for those columns apply to the original parameters.  This is useful for treatment and treatment interaction terms.  For example \code{keepsep='treat'} will keep separate all design matrix columns containing \code{'treat'} in their names.  Some characters such as the caret used in polynomial regression terms will need to be escaped by a double backslash.
 ##' @param data a data frame
 ##' @param subset a logical vector or integer subscript vector specifying which subset of data whould be used
 ##' @param na.action default is \code{na.delete} to remove missings and report on them
 ##' @param priorsd vector of prior standard deviations.  If the vector is shorter than the number of model parameters, it will be repeated until the length equals the number of parametertimes.
 ##' @param priorsdppo vector of prior standard deviations for non-proportional odds parameters.  As with \code{priorsd} the last element is the only one for which the SD corresponds to the original data scale.
-##' @param conc the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of the number of distinct Y values.
+##' @param conc the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of 0.8 + 0.35 max(k, 3) where k is the number of Y categories.
 ##' @param psigma defaults to 1 for a half-t distribution with 4 d.f., location parameter \code{rsdmean} and scale parameter \code{rsdsd}
 ##' @param rsdmean the assumed mean of the prior distribution of the standard deviation of random effects.  When \code{psigma=2} this is the mean of an exponential distribution and defaults to 1.  When \code{psigma=1} this is the mean of the half-t distribution and defaults to zero.
 ##' @param rsdsd applies only to \code{psigma=1} and is the scale parameter for the half t distribution for the SD of random effects, defaulting to 1.
@@ -34,7 +35,7 @@
 ##' @param standata set to \code{TRUE} to return the Stan data list and not run the model
 ##' @param debug set to \code{TRUE} to output timing and progress information to /tmp/debug.txt
 ##' @param ... passed to \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.
-##' @return an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{theta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.
+##' @return an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{beta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.  To learn about the scaling of orthogonalized QR design matrix columns, look at the \code{xqrsd} object in the returned object.  This is the vector of SDs for all the columns of the transformed matrix.  Those kept out by the \code{keepsep} argument will have their original SDs.
 ##' @examples
 ##' \dontrun{
 ##'   options(stancompiled='~/R/stan')    # need this always
@@ -48,8 +49,7 @@
 ##'   stanDx(f)           # print basic Stan diagnostics
 ##'   s <- stanGet(f)     # extract rstan object from fit
 ##'   plot(s, pars=f$betas)       # Stan posteriors for beta parameters
-##'   traceplot(s)        # Stan diagnostic plots by chain
-##'   traceplot(s, pars=f$betas)  # Same but only for beta parameters
+##'   stanDxplot(s)       # Stan diagnostic plots by chain
 ##'   blrmStats(f)        # more details about predictive accuracy measures
 ##'   ggplot(Predict(...))   # standard rms output
 ##'   summary(f, ...)     # invokes summary.rms
@@ -67,9 +67,11 @@
 ##' @author Frank Harrell and Ben Goodrich
 ##' @seealso \code{\link{print.blrm}}, \code{\link{blrmStats}}, \code{\link{stanDx}}, \code{\link{stanGet}}, \code{\link{coef.rmsb}}, \code{\link{vcov.rmsb}}, \code{\link{print.rmsb}}, \code{\link{coef.rmsb}}, [stanCompile]
 ##' @md
-blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
+blrm <- function(formula, ppo=NULL, keepsep=NULL,
+                 data, subset, na.action=na.delete,
 								 priorsd=rep(100, p), priorsdppo=rep(100, pppo),
-                 conc=1./k, psigma=1, rsdmean=if(psigma == 1) 0 else 1,
+                 conc=1./(0.8 + 0.35 * max(k, 3)),
+                 psigma=1, rsdmean=if(psigma == 1) 0 else 1,
                  rsdsd=1, ar1sdmean=1,
 								 iter=2000, chains=4, refresh=0,
                  progress=if(refresh > 0) 'stan-progress.txt' else '',
@@ -83,10 +85,27 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   msubset <- missing(subset)
   
 	call <- match.call()
+  method <- match.arg(method)
 
   if(debug) debug <- function(...)
     cat(..., format(Sys.time()), '\n', file='/tmp/debug.txt', append=TRUE)
   else debug <- function(...) {}
+
+  ## Function to drop only the ith dimension of a 3-array when subscripting
+  ## that dimension to the jth element where j is a single integer
+  ## result is a matrix
+  ## Note: a[,,j, drop=TRUE] drops dimensions other than the 3rd
+  ## when they have only one element
+  dropadim <- function(a, i, j) {
+    n <- dimnames(a)
+    d <- dim(a)
+    b <- if(i == 1)      a[j,  ,  , drop=FALSE]
+         else if(i == 2) a[ , j,  , drop=FALSE]
+         else            a[,   , j, drop=FALSE]
+    d <- d[-i]
+    dn <- if(length(n)) n[-i]
+    matrix(as.vector(b), nrow=d[1], ncol=d[2], dimnames=dn)
+    }
   
   nact <- NULL
 
@@ -104,8 +123,6 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   
   requireNamespace('rstan', quietly=TRUE)
 
-  method <- match.arg(method)
-
   m <- if(msubset) model.frame(formula,
                                data       = data,
                                na.action = na.action,
@@ -121,7 +138,6 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
 
   X <- Design(m)   # Design handles cluster()
   
-#  X <- Design(eval.parent(m))   # Design handles cluster()
   cluster     <- attr(X, 'cluster')
   clustername <- attr(X, 'clustername')
   time        <- attr(X, 'time')
@@ -146,8 +162,12 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
   X <- X[, mmcolnames, drop=FALSE]
   colnames(X) <- atr$colnames
+  notransX <- if(length(keepsep)) grep(keepsep, atr$colnames)
+  if(length(keepsep) & ! length(notransX))
+    warning('keepsep did not apply to any column of X')
+  notransXn <- atr$colnames[notransX]
 
-  Z <- NULL
+  Z <- notransZn <- NULL
 
   if(length(ppo)) {
     if(length(omit)) data <- data[- omit, ]
@@ -176,18 +196,22 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
     if(! all(mmcolnames %in% colnames(Z)) && length(alt)) mmcolnames <- alt
     Z <- Z[, mmcolnames, drop=FALSE]
     colnames(Z) <- zatr$colnames
+    notransZ  <- if(length(keepsep)) grep(keepsep, zatr$colnames)
+    notransZn <- zatr$colnames[notransZ]
 }
 
   if(! length(time)) {
-    Xs  <- scale(X, center=TRUE, scale=FALSE)
-    ## scinfo <- attributes(Xs)[c('scaled:center', 'scaled:scale')]
-    ## xbar   <- as.vector(scinfo[[1]])
-    ## xsd    <- as.vector(scinfo[[2]])
-    xbar   <- as.vector(attr(Xs, 'scaled:center'))
-    ## if(any(xsd == 0)) stop('a variable is constant')
+    wqrX  <- selectedQr(X, center=TRUE, not=notransX)
+    Xs    <- wqrX$X
+    xbar  <- wqrX$xbar
+    xqrsd <- apply(Xs, 2, sd)
+    wqrX$X <- NULL
+
     if(length(ppo)) {
-      Zs   <- scale(Z, center=TRUE, scale=FALSE)
-      zbar <- as.vector(attr(Zs, 'scaled:center'))
+      wqrZ   <- selectedQr(Z, center=TRUE, not=notransZ)
+      Zs     <- wqrZ$X
+      zbar   <- wqrZ$xbar
+      wqrZ$X <- NULL
       }
     }
 	
@@ -236,10 +260,13 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
     d$ratew   <- 1. / ar1sdmean
 
     ## Reduce X matrix to first row (min time) per cluster
-    first <- tapply(1 : n, cl, function(i) i[which.min(tim[i])])
-    Xbase <- X[first,, drop=FALSE]
-    Xs    <- scale(Xbase, center=TRUE, scale=FALSE)
-    xbar  <- as.vector(attr(Xs, 'scaled:center'))
+    first  <- tapply(1 : n, cl, function(i) i[which.min(tim[i])])
+    Xbase  <- X[first,, drop=FALSE]
+    wqrX   <- selectedQr(Xbase, center=TRUE, not=notransX)
+    Xs     <- wqrX$X
+    xbar   <- wqrX$xbar
+    xqrsd <- apply(Xs, 2, sd)
+    wqrX$X <- NULL
 
     ## Create integer ordinal response a Nc x Nt matrix
     ## Initially population with zeros, which will remain for
@@ -263,13 +290,13 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   stanloc <- .Options$stancompiled
   if(! length(stanloc)) stop('options(stancompiled) not defined')
   
-  fitter <- if(length(ppo)) ifelse(length(cluster), 'lrmqrcppo', 'lrmqrppo')
+  fitter <- if(length(ppo)) ifelse(length(cluster), 'lrmcppo', 'lrmppo')
             else
-              if(length(cluster) == 0) 'lrmqr'
+              if(length(cluster) == 0) 'lrm'
             else
-              if(length(time)) 'lrmqrcar1'
+              if(length(time)) 'lrmcar1'
             else
-              'lrmqrc'
+              'lrmc'
 
   file <- paste0(stanloc, '/', fitter, '.rds')
   if(! file.exists(file))
@@ -285,30 +312,29 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
       warning(paste('optimizing did not work; return code', g$return_code))
     parm <- g$par
     nam <- names(parm)
-    th  <- nam[grep('theta\\[', nam)]
     al  <- nam[grep('alpha\\[', nam)]
     be  <- nam[grep('beta\\[',  nam)]
     ta  <- nam[grep('tau\\[',   nam)]
     alphas <- parm[al]
     betas  <- parm[be]
-    thetas <- parm[th]
-    taus   <- if(length(ppo)) matrix(parm[ta], nrow=pppo, ncol=k-2)
-    names(alphas) <- if(nrp == 1) 'Intercept' else paste0('y>=', ylev[-1])
+    betas <- matrix(betas, nrow=1) %*% t(wqrX$Rinv)
+    names(betas)  <- atr$colnames
     alphas <- alphas - sum(betas * xbar)
-    if(length(ppo))
-      alphas[-1] <- alphas[-1] - matrix(zbar, ncol=pppo) %*% taus
-    names(betas)  <- names(thetas) <- atr$colnames
     if(length(ppo)) {
+      taus  <- matrix(parm[ta], nrow=pppo, ncol=k-2)
+      taus  <- wqrZ$Rinv %*% taus
+      alphas[-1] <- alphas[-1] - matrix(zbar, ncol=pppo) %*% taus
       ro     <- as.integer(gsub('tau\\[(.*),.*',    '\\1', ta))  # y cutoff
       co     <- as.integer(gsub('tau\\[.*,(.*)\\]', '\\1', ta))  # Z column
       namtau <- paste0(colnames(Z)[ro], ':y>=', ylev[-(1:2)][co])
       names(taus) <- namtau
     }
+    names(alphas) <- if(nrp == 1) 'Intercept' else paste0('y>=', ylev[-1])
 
-    opt <- list(coefficients=c(alphas, betas, taus), theta=thetas,
-              sigmag=parm['sigmag'], deviance=-2 * g$value,
-              return_code=g$return_code, hessian=g$hessian,
-              executionTime=otime)
+    opt <- list(coefficients=c(alphas, betas, taus),
+                sigmag=parm['sigmag'], deviance=-2 * g$value,
+                return_code=g$return_code, hessian=g$hessian,
+                executionTime=otime)
     if(method == 'optimizing') return(opt)
     }
 
@@ -317,13 +343,13 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   if(length(parm)) {
     nam <- names(parm)
     nam <- nam[c(grep('alpha', nam), grep('beta', nam), grep('omega', nam),
-                 grep('pi', nam), grep('tau', nam), grep('theta', nam))]
+                 grep('pi', nam), grep('tau', nam))]  #, grep('theta', nam))]
     parm <- as.list(parm[nam])
     init <- function() parm
   }
 
   debug(1)
-  exclude <- c('sigmaw', 'gamma_raw', 'pi', 'OR')
+  exclude <- c('sigmaw', 'gamma_raw', 'pi')  #, 'OR')
   if(! loo) exclude <- c(exclude, 'log_lik')
   g <- rstan::sampling(mod, pars=exclude, include=FALSE,
                        data=d, iter=iter, chains=chains, refresh=refresh,
@@ -340,6 +366,7 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   ndraws <- nrow(draws)
 	alphas <- draws[, al, drop=FALSE]
 	betas  <- draws[, be, drop=FALSE]
+  betas  <- betas %*% t(wqrX$Rinv)
 
   omega   <- NULL      # non-intercepts, non-slopes
   clparm  <- character(0)
@@ -355,7 +382,7 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
   debug(3)
   tau <- ta <- tauInfo <- NULL
   if(length(ppo)) {
-    ta     <- nam[grep('tau', nam)]
+    ta     <- nam[grep('tau\\[', nam)]
     clparm <- c(clparm, ta)
     ro     <- as.integer(gsub('tau\\[(.*),.*',    '\\1', ta))  # y cutoff
     co     <- as.integer(gsub('tau\\[.*,(.*)\\]', '\\1', ta))  # Z column
@@ -363,11 +390,16 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
     yt     <- ylev[-(1:2)][co]
     namtau <- paste0(xt, ':y>=', yt)
     taus   <- draws[, ta, drop=FALSE]
-    colnames(taus) <- namtau
     tauInfo <- data.frame(intercept=1 + co, name=namtau, x=xt, y=yt)
-    ## Compute intercept correction due to centering Z matrix
     ## Need taus as a 3-dim array for intercept correction for centering
-    mtaus      <- array(taus, dim=c(ndraws, pppo, k-2))
+    ## Also helps with undoing the QR orthogonalization
+    mtaus      <- array(taus, dim=c(ndraws, pppo, k - 2))
+
+    for(j in 1 : (k - 2))
+      mtaus[, , j] <- dropadim(mtaus, 3, j) %*% t(wqrZ$Rinv)
+    taus <- matrix(as.vector(mtaus), nrow=ndraws, ncol=pppo * (k -2))
+    colnames(taus) <- namtau
+
 #    zalphacorr <- sweep(mtaus, 2, zbar, '*')
 #    dim(zalphacorr) <- dim(zalphacorr)[-2]  # collapse to matrix
 #    zalphacorr <- matrix(zbar, ncol=pppo) %*% mtaus
@@ -452,6 +484,7 @@ blrm <- function(formula, ppo=NULL, data, subset, na.action=na.delete,
               gammas=gammas, eps=epsmed,
               param=param, priorsd=priorsd, priorsdppo=priorsdppo,
               psigma=psigma, rsdmean=rsdmean, rsdsd=rsdsd, conc=conc,
+              notransX=notransXn, notransZ=notransZn, xqrsd=xqrsd,
               N=n, p=p, pppo=pppo, yname=yname, ylevels=ylev, freq=freq,
 						  alphas=al, betas=be, taus=ta, tauInfo=tauInfo,
 						  xbar=xbar, Design=atr, scale.pred=c('log odds', 'Odds Ratio'),
@@ -729,8 +762,12 @@ print.blrm <- function(x, dec=4, coefs=TRUE, prob=0.95, ns=400,
     z[[k]] <- list(type='coefmatrix',
                    list(bayes=print.rmsb(x, prob=prob, pr=FALSE)))
   }
-  
-  prModFit(x, title=title, z, digits=dec, coefs=coefs, ...)
+
+  footer <- if(length(x$notransX))
+              paste('The following parameters remained separate (where not orthogonalized) during model fitting so that prior distributions could be focused explicitly on them:',
+                    paste(x$notransX, collapse=', '))
+
+  prModFit(x, title=title, z, digits=dec, coefs=coefs, footer=footer, ...)
 }
 
 ## ??

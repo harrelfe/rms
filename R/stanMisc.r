@@ -678,7 +678,7 @@ utils::globalVariables('Probability')     # why in the world needed?
 ##' @param not an integer vector specifying which columns of \code{X} are to be kept with their original values
 ##' @param corner set to \code{FALSE} to not treat the last column specially.  You may not specify both \code{not} and \code{corner}.
 ##' @param center set to \code{FALSE} to not center columns of \code{X} first
-##' @return list with elements \code{X, R, Rinv}
+##' @return list with elements \code{X, R, Rinv, xbar} where \code{xbar} is the vector of means (vector of zeros if \code{center=FALSE})
 ##' @examples
 ##' \dontrun{
 ##'   x <- 1 : 10
@@ -697,9 +697,17 @@ utils::globalVariables('Probability')     # why in the world needed?
 ##' }
 ##' @author Ben Goodrich and Frank Harrell
 selectedQr <- function(X, not=NULL, corner=FALSE, center=TRUE) {
-  if(center) X <- scale(X, center=TRUE, scale=FALSE)
+  if(center) {
+    X    <- scale(X, center=TRUE, scale=FALSE)
+    xbar <- as.vector(attr(X, 'scaled:center'))
+  } else xbar <- rep(0., ncol(X))
+  
   if(length(not)) {
     if(corner) stop('may not specify both not and corner=TRUE')
+    p <- ncol(X)
+    # Handle the case where no variables are orthogonalized
+    if(length(not) == p)
+      return(list(X=X, R=diag(p), Rinv=diag(p), xbar=xbar))
     Xo <- X
     X  <- Xo[, -not, drop=FALSE]
     }
@@ -721,9 +729,9 @@ selectedQr <- function(X, not=NULL, corner=FALSE, center=TRUE) {
     R <- Rinv        <- diag(p + length(not))
     R[-not,    -not] <- R_ast
     Rinv[-not, -not] <- R_ast_inverse
-    return(list(X=Xo, R=R, Rinv=Rinv))
+    return(list(X=Xo, R=R, Rinv=Rinv, xbar=xbar))
     }
-  list(X = X, R = R_ast, Rinv = R_ast_inverse)
+  list(X = X, R = R_ast, Rinv = R_ast_inverse, xbar=xbar)
 }
 
 ## Code previously used with qr.stan
