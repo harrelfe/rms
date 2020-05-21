@@ -4,7 +4,7 @@
 \alias{print.rmsb}
 \title{print.rmsb}
 \usage{
-\method{print}{rmsb}(x, prob = 0.95, dec = 4, pr = TRUE, ...)
+\method{print}{rmsb}(x, prob = 0.95, dec = 4, intercepts = TRUE, pr = TRUE, ...)
 }
 \arguments{
 \item{x}{an object created by an \code{rms} Bayesian fitting function}
@@ -12,6 +12,8 @@
 \item{prob}{HPD interval coverage probability (default is 0.95)}
 
 \item{dec}{amount of rounding (digits to the right of the decimal)}
+
+\item{intercepts}{set to \code{FALSE} to not print intercepts}
 
 \item{pr}{set to \code{FALSE} to return an unrounded matrix and not print}
 

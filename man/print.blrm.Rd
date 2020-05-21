@@ -8,6 +8,7 @@
   x,
   dec = 4,
   coefs = TRUE,
+  intercepts = x$non.slopes < 10,
   prob = 0.95,
   ns = 400,
   title = "Bayesian Logistic Regression Model",
@@ -20,6 +21,8 @@
 \item{dec}{number of digits to print to the right of the decimal}
 
 \item{coefs}{specify \code{FALSE} to suppress printing parameter estimates, and in integer k to print only the first k}
+
+\item{intercepts}{set to \code{FALSE} to suppress printing intercepts.   Default is to print them unless there are more than 9.}
 
 \item{prob}{HPD interval probability for summary indexes}
 

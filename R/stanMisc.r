@@ -128,6 +128,7 @@ vcov.rmsb <- function(object, regcoef.only=TRUE,
 ##' @param x an object created by an \code{rms} Bayesian fitting function
 ##' @param prob HPD interval coverage probability (default is 0.95)
 ##' @param dec amount of rounding (digits to the right of the decimal)
+##' @param intercepts set to \code{FALSE} to not print intercepts
 ##' @param pr set to \code{FALSE} to return an unrounded matrix and not print
 ##' @param ... ignored
 ##' @return matrix (rounded if \code{pr=TRUE})
@@ -137,13 +138,18 @@ vcov.rmsb <- function(object, regcoef.only=TRUE,
 ##'   print.rmsb(f)
 ##' }
 ##' @author Frank Harrell
-print.rmsb <- function(x, prob=0.95, dec=4, pr=TRUE, ...) {
+print.rmsb <- function(x, prob=0.95, dec=4, intercepts=TRUE, pr=TRUE, ...) {
+  nrp   <- num.intercepts(x)
 	s     <- x$draws
   param <- t(x$param)
+  if(! intercepts && nrp > 0) {
+    s     <- s[,   -(1 : nrp),  drop=FALSE]
+    param <- param[-(1 : nrp),, drop=FALSE]
+    }
   means <- param[, 'mean']
   colnames(param) <- upFirst(colnames(param))
 
-	se <- sqrt(diag(var(s)))
+	se  <- sqrt(diag(var(s)))
 	hpd <- apply(s, 2, HPDint, prob=prob)
   P   <- apply(s, 2, function(u) mean(u > 0))
 	sym <- apply(s, 2, distSym)

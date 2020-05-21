@@ -701,6 +701,7 @@ print.blrmStats <- function(x, dec=3, ...) {
 ##' @param x object created by \code{blrm}
 ##' @param dec number of digits to print to the right of the decimal
 ##' @param coefs specify \code{FALSE} to suppress printing parameter estimates, and in integer k to print only the first k
+##' @param intercepts set to \code{FALSE} to suppress printing intercepts.   Default is to print them unless there are more than 9.
 ##' @param prob HPD interval probability for summary indexes
 ##' @param ns number of random samples of the posterior draws for use in computing HPD intervals for accuracy indexes
 ##' @param title title of output
@@ -713,14 +714,15 @@ print.blrmStats <- function(x, dec=3, ...) {
 ##'   print(f, posterior.summary='median')   # instead of post. means
 ##' }
 ##' @author Frank Harrell
-print.blrm <- function(x, dec=4, coefs=TRUE, prob=0.95, ns=400,
-                      title='Bayesian Logistic Regression Model', ...) {
+print.blrm <- function(x, dec=4, coefs=TRUE, intercepts=x$non.slopes < 10,
+                       prob=0.95, ns=400,
+                       title='Bayesian Logistic Regression Model', ...) {
   latex <- prType() == 'latex'
   
   z <- list()
   k <- 0
   
-  if(length(x$freq) > 3) {
+  if(length(x$freq) > 3 && length(x$freq) < 50) {
     k <- k + 1
     z[[k]] <- list(type='print', list(x$freq),
                    title='Frequencies of Responses')
@@ -799,7 +801,8 @@ print.blrm <- function(x, dec=4, coefs=TRUE, prob=0.95, ns=400,
   if(coefs) {
     k <- k + 1
     z[[k]] <- list(type='coefmatrix',
-                   list(bayes=print.rmsb(x, prob=prob, pr=FALSE)))
+                   list(bayes=print.rmsb(x, prob=prob, intercepts=intercepts,
+                                         pr=FALSE)))
   }
 
   footer <- if(length(x$notransX))
