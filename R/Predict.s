@@ -197,8 +197,10 @@ Predict <-
     bootdone <- FALSE
   }
   isMean <- ! missing(fun) && ! is.function(fun) && fun == 'mean'
-  if(isMean && ! bootdone)
-    stop('specifying fun="mean" does not make sense when not running bootcov (with coef.reps=TRUE)')
+  if(isMean && ! bootdone & conf.int > 0 & ! bayes)
+    stop('specifying fun="mean" with conf.int > 0 does not make sense when not running bootcov (with coef.reps=TRUE)')
+  if(isMean && inherits(fit, 'orm') && conf.int > 0)
+    stop("fun='mean' not implemented for orm models when confidence intervals are requested")
   
   if(! length(time)) {
     xx <- predictrms(fit, settings, kint=kint,
@@ -210,15 +212,17 @@ Predict <-
     if(length(xx) == 0L)
       stop("model has no covariables and survival not plotted")
     xb <- if(is.list(xx)) xx$linear.predictors else xx
-    if(bootdone) {
+    if(isMean) {
+      m <- Mean(fit)
+      xb <- m(xb)
+      }
+    if(bootdone && conf.int > 0) {
       X <- predictrms(fit, settings, kint=kint,
                       ref.zero=ref.zero, type='x',
                       posterior.summary=posterior.summary)
       pred <- t(matxv(X, boot.Coef,
                       kint=kint,  bmat=TRUE))
       if(isMean) {
-        m <- Mean(fit)
-        xb <- m(xb)
         for(k in 1L : nrow(pred))
           pred[k,] <- m(pred[k,], intercepts=boot.Coef[k, 1L : nrp])
       }
@@ -233,7 +237,12 @@ Predict <-
                       ref.zero=ref.zero, type='x',
                       posterior.summary=posterior.summary)
       pred <- t(matxv(X, draws, kint=kint,  bmat=TRUE))
-      lim  <- apply(pred, 2, HPDint, prob=conf.int)
+
+      if(isMean) {
+        for(k in 1L : nrow(pred))
+          pred[k,] <- m(pred[k,], intercepts=draws[k, 1L : nrp])
+      }
+      lim <- apply(pred, 2, HPDint, prob=conf.int)
       xx$lower <- lim[1L, ]
       xx$upper <- lim[2L, ]
       }

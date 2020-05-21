@@ -1,3 +1,6 @@
+doit <- FALSE
+if(doit) {
+
 require(rms)
 stanSet()
 set.seed(1)
@@ -107,3 +110,4 @@ summary(lm(1/bestconc ~ pol(gs, 2)))
 plot(gs, 1/bestconc)
 abline(lsfit(gs[gs > 2], 1/bestconc[gs > 2]))
 lm(1/bestconc ~ gs, subset=gs > 2)
+}

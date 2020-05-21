@@ -6,17 +6,17 @@ x1 <- rnorm(n)
 x2 <- rnorm(n)
 y  <- round(x1 + x2 + rnorm(n), .1)
 table(y)
+dd <- datadist(x1, x2); options(datadist='dd')
 f <- orm(y ~ x1 + x2)
 n <- data.frame(x1=c(-.5, .3), x2=.75)
 
 g <- blrm(y ~ x1 + x2)
 # Just keep the first 8 posterior draws to make later output smaller
-g$draws <- g$draws[1:8,]
+# g$draws <- g$draws[1:8,]
 stat <- 'median'
 predict(f, n)
 p <- predict(g, n, posterior.summary=stat)
 p
-attr(p, 'draws')
 predict(f, n, type='fitted')
 p <- predict(g, n, type='fitted', posterior.summary=stat)
 p
@@ -42,3 +42,15 @@ ep <- ExProb(f)
 ep(pf, y=.5)
 ep <- ExProb(g)
 ep(pg, y=.5)
+
+f <- update(f, x=TRUE, y=TRUE)
+
+a <- seq(-2, 2, by=1)
+Predict(f, x1=a)
+Predict(g, x1=a)
+
+Predict(f, x1=a, fun='mean', conf.int=0)
+Predict(g, x1=a, fun='mean')
+
+ggplot(Predict(f, x1, fun='mean', conf.int=0))
+ggplot(Predict(g, x1, fun='mean'))

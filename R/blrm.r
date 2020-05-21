@@ -963,9 +963,9 @@ predict.blrm <- function(object, ...,
 ##' @title print.predict.blrm
 ##' @param x result from \code{predict.blrm}
 ##' @param digits number of digits to round numeric results
-##' @return 
+##' @param ... ignored
 ##' @author Frank Harrell
-print.predict.blrm <- function(x, digits=3) {
+print.predict.blrm <- function(x, digits=3, ...) {
   numvar <- sapply(x, is.numeric)
   numvar <- names(numvar)[numvar]
   for(j in numvar) x[, j] <- round(x[, j], digits)

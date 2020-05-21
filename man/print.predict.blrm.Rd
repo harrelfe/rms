@@ -4,15 +4,14 @@
 \alias{print.predict.blrm}
 \title{print.predict.blrm}
 \usage{
-\method{print}{predict.blrm}(x, digits = 3)
+\method{print}{predict.blrm}(x, digits = 3, ...)
 }
 \arguments{
 \item{x}{result from \code{predict.blrm}}
 
 \item{digits}{number of digits to round numeric results}
-}
-\value{
 
+\item{...}{ignored}
 }
 \description{
 Print Predictions for \code{blrm}
