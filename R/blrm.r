@@ -16,7 +16,7 @@
 ##' @param na.action default is \code{na.delete} to remove missings and report on them
 ##' @param priorsd vector of prior standard deviations.  If the vector is shorter than the number of model parameters, it will be repeated until the length equals the number of parametertimes.
 ##' @param priorsdppo vector of prior standard deviations for non-proportional odds parameters.  As with \code{priorsd} the last element is the only one for which the SD corresponds to the original data scale.
-##' @param conc the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of 0.8 + 0.35 max(k, 3) where k is the number of Y categories.
+##' @param conc the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of 0.8 + 0.35 max(k, 3) where k is the number of Y categories.  If \code{method="optimizing"} the default is 1.  The defaults are chosen to make the posterior mode of the intercepts match the MLE if only optimizing, and if sampling to make the posterior mean intercepts more closely match the MLE.
 ##' @param psigma defaults to 1 for a half-t distribution with 4 d.f., location parameter \code{rsdmean} and scale parameter \code{rsdsd}
 ##' @param rsdmean the assumed mean of the prior distribution of the standard deviation of random effects.  When \code{psigma=2} this is the mean of an exponential distribution and defaults to 1.  When \code{psigma=1} this is the mean of the half-t distribution and defaults to zero.
 ##' @param rsdsd applies only to \code{psigma=1} and is the scale parameter for the half t distribution for the SD of random effects, defaulting to 1.
@@ -71,7 +71,7 @@
 blrm <- function(formula, ppo=NULL, keepsep=NULL,
                  data, subset, na.action=na.delete,
 								 priorsd=rep(100, p), priorsdppo=rep(100, pppo),
-                 conc=1./(0.8 + 0.35 * max(k, 3)),
+                 conc=if(method=='optimizing') 1. else 1./(0.8 + 0.35 * max(k, 3)),
                  psigma=1, rsdmean=if(psigma == 1) 0 else 1,
                  rsdsd=1, ar1sdmean=1,
 								 iter=2000, chains=4, refresh=0,
