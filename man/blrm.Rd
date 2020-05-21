@@ -30,6 +30,7 @@ blrm(
   inito = if (length(ppo)) 0 else "random",
   inits = inito,
   standata = FALSE,
+  file = NULL,
   debug = FALSE,
   ...
 )
@@ -84,6 +85,8 @@ blrm(
 \item{inits}{initial value for sampling, defaults to \code{inito}}
 
 \item{standata}{set to \code{TRUE} to return the Stan data list and not run the model}
+
+\item{file}{a file name for a \code{saveRDS}-created file containing or to contain the saved fit object.  If \code{file} is specified and the file does not exist, it will be created right before the fit object is returned, less the large \code{rstan} object.  If the file already exists, its stored \code{md5} hash string \code{datahash} fit object component is retrieved and compared to that of the current \code{rstan} inputs.  If the data to be sent to \code{rstan}, the priors, and all sampling and optimization options and stan code are identical, the previously stored fit object is immediately returned and no new calculatons are done.}
 
 \item{debug}{set to \code{TRUE} to output timing and progress information to /tmp/debug.txt}
 

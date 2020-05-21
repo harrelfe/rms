@@ -5,6 +5,7 @@
 \alias{lm.pfit}
 \alias{ols.influence}
 \alias{plotmathAnova}
+\alias{probabilityFamilies}
 \alias{prType}
 \alias{survreg.auxinfo}
 \alias{val.probg}

@@ -34,6 +34,7 @@
 ##' @param inits initial value for sampling, defaults to \code{inito}
 ##' @param standata set to \code{TRUE} to return the Stan data list and not run the model
 ##' @param debug set to \code{TRUE} to output timing and progress information to /tmp/debug.txt
+##' @param file a file name for a \code{saveRDS}-created file containing or to contain the saved fit object.  If \code{file} is specified and the file does not exist, it will be created right before the fit object is returned, less the large \code{rstan} object.  If the file already exists, its stored \code{md5} hash string \code{datahash} fit object component is retrieved and compared to that of the current \code{rstan} inputs.  If the data to be sent to \code{rstan}, the priors, and all sampling and optimization options and stan code are identical, the previously stored fit object is immediately returned and no new calculatons are done.
 ##' @param ... passed to \code{rstan:optimizing}.  The \code{seed} parameter is a popular example.
 ##' @return an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also contains \code{rstan} results under the name \code{rstan}.  In the \code{rstan} results, which are also used to produce diagnostics, the intercepts are shifted because of the centering of columns of the design matrix done by \code{blrm}.  With \code{method='optimizing'} a class-less list is return with these elements: \code{coefficients} (MLEs), \code{beta} (non-intercept parameters on the QR decomposition scale), \code{deviance} (-2 log likelihood), \code{return_code} (see \code{rstan::optimizing}), and, if you specified \code{hessian=TRUE} to \code{blrm}, the Hessian matrix.  To learn about the scaling of orthogonalized QR design matrix columns, look at the \code{xqrsd} object in the returned object.  This is the vector of SDs for all the columns of the transformed matrix.  Those kept out by the \code{keepsep} argument will have their original SDs.
 ##' @examples
@@ -78,7 +79,7 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
 								 x=TRUE, y=TRUE, loo=n <= 1000, ppairs=NULL,
                  method=c('both', 'sampling', 'optimizing'),
                  inito=if(length(ppo)) 0 else 'random', inits=inito,
-                 standata=FALSE, debug=FALSE,
+                 standata=FALSE, file=NULL, debug=FALSE,
                  ...) {
 
   if(missing(data))   data <- environment(formula)
@@ -86,6 +87,12 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
   
 	call <- match.call()
   method <- match.arg(method)
+
+  prevhash <- NULL
+  if(length(file) && file.exists(file)) {
+    prevfit  <- readRDS(file)
+    prevhash <- prevfit$datahash
+    }
 
   if(debug) debug <- function(...)
     cat(..., format(Sys.time()), '\n', file='/tmp/debug.txt', append=TRUE)
@@ -217,15 +224,35 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
 	
 	n    <- nrow(X)
 	p    <- ncol(X)
-	Y    <- as.factor(Y)
-	ylev <- levels(Y)
-	yint <- as.integer(Y)
-	k    <- length(ylev)
-  pppo <- if(length(ppo)) ncol(Z) else 0
 
-  ## Find intercept that is close to the median of y
-  mediany <- quantile(yint, probs=.5, type=1L)
-  kmid    <- max(1, which(1L : length(ylev) == mediany) - 1L)
+  ynumeric <- is.numeric(Y)
+  if(ynumeric) {
+    mediany <- quantile(Y, probs=.5, type=1L)
+    yu <- sort(unique(Y))
+    kmid <- max(1, which(yu == mediany) - 1L)
+  }
+  # For large n, as.factor is slow
+  # if(!is.factor(y)) y <- as.factor(y)
+  if(is.factor(Y)) {
+    ylev <- levels(Y)
+    Y    <- unclass(Y)    # integer
+  }
+  else {
+    ylev <- sort(unique(Y))
+    Y    <- match(Y, ylev)
+  }
+  if(! ynumeric) {
+    mediany <- quantile(Y, probs=.5, type=1L)
+    # Find intercept close to median Y
+    kmid    <- max(1, which(1L : length(ylev) == mediany) - 1L)
+  }
+
+  numy        <- tabulate(Y)
+  names(numy) <- ylev
+
+  k <- length(ylev)
+  
+  pppo <- if(length(ppo)) ncol(Z) else 0
 
   nrp <- length(ylev) - 1L
   if(nrp == 1) kmid <- 1
@@ -234,7 +261,7 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
   
   priorsd <- rep(priorsd, length=p)
 	d <- list(X=if(! length(time)) Xs,
-            y=if(! length(time)) yint,
+            y=if(! length(time)) Y,
             N=n, p=p, k=k, conc=conc,
             sds=as.array(priorsd))
 
@@ -257,7 +284,6 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
     Nt        <- max(tim)
     Ntobs     <- length(unique(tim))
     d$Nt      <- Nt
-    d$ratew   <- 1. / ar1sdmean
 
     ## Reduce X matrix to first row (min time) per cluster
     first  <- tapply(1 : n, cl, function(i) i[which.min(tim[i])])
@@ -272,7 +298,7 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
     ## Initially population with zeros, which will remain for
     ## missing assessments
     Yint <- matrix(0L, nrow=Nc, ncol=Nt)
-    Yint[cbind(cl, tim)] <- yint
+    Yint[cbind(cl, tim)] <- Y
     d$X <- Xs
     d$y <- Yint
   }
@@ -286,7 +312,7 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
   
   if(standata) return(d)
 
-	if(any(is.na(Xs)) | any(is.na(yint))) stop('program logic error')
+	if(any(is.na(Xs)) | any(is.na(Y))) stop('program logic error')
   stanloc <- .Options$stancompiled
   if(! length(stanloc)) stop('options(stancompiled) not defined')
   
@@ -298,14 +324,27 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
             else
               'lrmc'
 
-  file <- paste0(stanloc, '/', fitter, '.rds')
-  if(! file.exists(file))
-    stop('you did not run rms::stanCompile to compile Stan code')
-  mod <- readRDS(file)
 
+  
+  mfile <- paste0(stanloc, '/', fitter, '.rds')
+  if(! file.exists(mfile))
+    stop('you did not run rms::stanCompile to compile Stan code')
+  mod      <- readRDS(mfile)
+  stancode <- rstan::get_stancode(mod)
+
+  ## See if previous fit had identical inputs and Stan code
+  hashobj  <- list(d, inito, inits, iter, chains, loo, ppairs, method,
+                   stancode, ...)
+  datahash <- digest::digest(hashobj)
+  if(length(prevhash) && prevhash == datahash) return(prevfit)
+  
+  hashobj  <- NULL
+
+  
   itfailed <- function(w) is.list(w) && length(w$fail) && w$fail
 
   opt <- parm <- taus <- NULL
+
   if(method != 'sampling') {
     otime <- system.time(g <- rstan::optimizing(mod, data=d, init=inito))
     if(g$return_code != 0)
@@ -477,15 +516,13 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
 
   debug(9)
   
-  freq <- table(Y, dnn=yname)
-
-	res <- list(call=call, fitter=fitter,
+	res <- list(call=call, fitter=fitter, link='logistic',
 							draws=draws, omega=omega,
               gammas=gammas, eps=epsmed,
               param=param, priorsd=priorsd, priorsdppo=priorsdppo,
               psigma=psigma, rsdmean=rsdmean, rsdsd=rsdsd, conc=conc,
               notransX=notransXn, notransZ=notransZn, xqrsd=xqrsd,
-              N=n, p=p, pppo=pppo, yname=yname, ylevels=ylev, freq=freq,
+              N=n, p=p, pppo=pppo, yname=yname, yunique=ylev, freq=numy,
 						  alphas=al, betas=be, taus=ta, tauInfo=tauInfo,
 						  xbar=xbar, Design=atr, scale.pred=c('log odds', 'Odds Ratio'),
 							terms=Terms, assign=ass, na.action=atrx$na.action, fail=FALSE,
@@ -496,9 +533,11 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
               timeInfo=if(length(time))
                          list(time=if(x) time else NULL, n=Nt, nobs=Ntobs,
                               name=timename),
-							rstan=g, opt=opt, diagnostics=diagnostics,
-              iter=iter, chains=chains)
+							opt=opt, diagnostics=diagnostics,
+              iter=iter, chains=chains, stancode=stancode, datahash=datahash)
 	class(res) <- c('blrm', 'rmsb', 'rms')
+  if(length(file)) saveRDS(res, file)
+  res$rstan <- g
 	res
 }
 
@@ -534,7 +573,7 @@ blrmStats <- function(fit, ns=400, prob=0.95, pl=FALSE,
   dist <- match.arg(dist)
   
   f <- fit[c('x', 'y', 'z', 'non.slopes', 'interceptRef', 'pppo',
-             'draws', 'ylevels', 'tauInfo')]
+             'draws', 'yunique', 'tauInfo')]
   X <- f$x
   Z <- f$z
   y <- f$y
@@ -554,7 +593,7 @@ blrmStats <- function(fit, ns=400, prob=0.95, pl=FALSE,
     s <- s[j,, drop=FALSE]
     if(pppo > 0) stau <- stau[j,, drop=FALSE]
     }
-  ylev  <- f$ylevels
+  ylev  <- f$yunique
   ybin  <- length(ylev) == 2
   stats <- matrix(NA, nrow=ns, ncol=8)
   colnames(stats) <- c('Dxy', 'C', 'g', 'gp', 'B', 'EV', 'v', 'vp')
@@ -770,20 +809,18 @@ print.blrm <- function(x, dec=4, coefs=TRUE, prob=0.95, ns=400,
   prModFit(x, title=title, z, digits=dec, coefs=coefs, footer=footer, ...)
 }
 
-## ??
-## Code for mean below needs to be finished adapting to Bayes
-  
 ##' Make predictions from a \code{blrm} fit
 ##'
 ##' Predict method for \code{blrm} objects
 ##' @title predict.blrm
 ##' @param object,...,type,se.fit,codes see [predict.lrm] 
 ##' @param posterior.summary set to \code{'median'} or \code{'mode'} to use posterior median/mode instead of mean
-##' @return a data frame,  matrix, or vector
+##' @param cint probability for highest posterior density interval
+##' @return a data frame,  matrix, or vector with posterior summaries for the requested quantity, plus an attribute \code{'draws'} that has all the posterior draws for that quantity.  For \code{type='fitted'} and \code{type='fitted.ind'} this attribute is a 3-dimensional array representing draws x observations generating predictions x levels of Y.
 ##' @examples
 ##' \dontrun{
 ##'   f <- blrm(...)
-##'   predict(f, newdata, posterior.summary='median')
+##'   predict(f, newdata, type='...', posterior.summary='median')
 ##' }
 ##' @seealso [predict.lrm]
 ##' @author Frank Harrell
@@ -793,65 +830,325 @@ predict.blrm <- function(object, ...,
 		  "terms", "cterms", "ccterms", "adjto", "adjto.data.frame",
       "model.frame"),
 		se.fit=FALSE, codes=FALSE,
-    posterior.summary=c('mean', 'median', 'mode')) {
+    posterior.summary=c('mean', 'median'), cint=0.95) {
   
-  type           <- match.arg(type)
+  type              <- match.arg(type)
   posterior.summary <- match.arg(posterior.summary)
 
-  if(type %in% c('x', 'data.frame', 'terms', 'cterms', 'ccterms',
+  if(se.fit) warning('se.fit does not apply to Bayesian models')
+
+  if(object$pppo > 0 && (type %in% c('lp', 'mean', 'fitted', 'fitted.ind')))
+    stop('type not yet implemented for partial proportional odds models')
+
+  if(type %in% c('lp', 'x', 'data.frame', 'terms', 'cterms', 'ccterms',
                  'adjto', 'adjto.data.frame', 'model.frame'))
     return(predictrms(object,...,type=type,
                       posterior.summary=posterior.summary))
 
-  if(type != 'x') stop('types other than x not yet implemented')
-  X <- predictrms(object, ..., type='x', posterior.summary=posterior.summary)
-  lp <- X %*% object$draws
-  
-  xb <- predictrms(object, ..., type="lp", se.fit=FALSE,
-                   posterior.summary=posterior.summary)
-  rnam <- names(xb)
-  ns <- object$non.slopes
-  cnam <- names(object$coef[1:ns])
-  trans <- object$trans
-  ## If orm object get cumulative probability function used
-  cumprob <- if(length(trans)) trans$cumprob else plogis
-  if(se.fit)
-    warning('se.fit not supported with type="fitted" or type="mean"')
+  if(type %nin% c('mean', 'fitted', 'fitted.ind'))
+    stop('types other than mean, fitted, fitted.ind not yet implemented')
+
+  ns      <- object$non.slopes
+  tauinfo <- object$tauInfo
+
   if(ns == 1 & type == "mean")
     stop('type="mean" makes no sense with a binary response')
-  if(ns == 1) return(cumprob(xb))
-  intcept <- object$coef[1:ns]
-  interceptRef <- object$interceptRef
-  if(!length(interceptRef)) interceptRef <- 1
-  xb <- xb - intcept[interceptRef]
-  xb <- sapply(intcept, "+", xb)
-  P <- cumprob(xb)
-  nam <- names(object$freq)
-  if(is.matrix(P)) dimnames(P) <- list(rnam, cnam)
-  else names(P) <- names(object$coef[1:ns])
-  if(type=="fitted") return(P)
 
-  ##type="mean" or "fitted.ind"
-  vals <- names(object$freq)
-  P   <- matrix(P, ncol=ns)
-  Peq <- cbind(1, P) - cbind(P, 0)
-  if(type == "fitted.ind") {
-    ynam <- as.character(attr(object$terms, "formula")[2])
-    ynam <- paste(ynam, "=", vals, sep="")
-    dimnames(Peq) <- list(rnam, ynam)
-    return(drop(Peq))
+  draws   <- object$draws
+  ndraws  <- nrow(draws)
+  cn      <- colnames(draws)
+  ints    <- draws[, 1 : ns, drop=FALSE]
+  betanam <- setdiff(cn, c(cn[1:ns], tauinfo$name))
+  betas   <- draws[, betanam, drop=FALSE]
+  
+  X <- predictrms(object, ..., type='x', posterior.summary=posterior.summary)
+  rnam  <- rownames(X)
+  n     <- nrow(X)
+
+  ## Get cumulative probability function used
+  link  <- object$link
+  if(! length(link)) link <- 'logistic'
+  cumprob <- probabilityFamilies[[link]]$cumprob
+  
+  if(ns == 1) return(cumprob(ints + betas %*% t(X)))
+
+  cnam  <- cn[1:ns]
+  ylev  <- object$yunique
+  if(type == 'mean') {
+    if(codes) vals <- 1:length(ylev)
+    else {
+      vals <- as.numeric(ylev)
+      if(any(is.na(vals)))
+         stop('values of response levels must be numeric for type="mean" and codes=FALSE')
+    }
+  }
+
+  ynam <- paste(object$yname, "=", ylev, sep="")
+  PP   <- array(NA, dim=c(ndraws, n, ns),
+                dimnames=list(NULL, rnam, cnam))
+  PPeq <- array(NA, dim=c(ndraws, n, ns + 1),
+                dimnames=list(NULL, rnam, ynam))
+
+  M  <- matrix(NA, nrow=ndraws, ncol=n, dimnames=list(NULL, rnam))
+
+  for(i in 1 : ndraws) {
+    inti    <- ints[i,]
+    betai   <- betas[i,,drop=FALSE]
+    xb      <- betai %*% t(X)
+    xb      <- sapply(inti, "+", xb)  # n x ns matrix, col j adds intercept j
+    P       <- cumprob(xb)            # preserves matrix;  1 x nrow(X)
+    PP[i,,] <- P
+    if(type != 'fitted') {
+      Peq       <- cbind(1, P) - cbind(P, 0)
+      PPeq[i,,] <- Peq
+      if(type == 'mean') M[i, ] <- drop(Peq %*% vals)
+      }
+  }
+
+  ps <- switch(posterior.summary, mean=mean, median=median)
+  h <- function(x) {
+    s  <- ps(x)
+    ci <- HPDint(x, cint)
+    r  <- c(s, ci)
+    names(r)[1] <- posterior.summary
+    r
+    }
+
+  ## Function to summarize a 3-d array and transform the results
+  ## to a data frame with variables x (row names of predictions), y level,
+  ## mean/median, Lower, Upper
+  ## Input is ndraws x # predicton requests x # y categories (less 1 if cum.p.)
+  
+  s3 <- function(x) {
+    yl <- if(type == 'fitted') cnam else ynam
+    d <- expand.grid(y = yl, x = rnam, stat=NA, Lower=NA, Upper=NA,
+                     stringsAsFactors=FALSE)
+    for(i in 1 : nrow(d)) {
+      u <- h(x[, d$x[i], d$y[i]])
+      d$stat[i] <- u[1]
+      d$Lower[i] <- u['Lower']
+      d$Upper[i] <- u['Upper']
+    }
+    names(d)[3] <- upFirst(posterior.summary)
+    d
+  }
+
+  ## Similar for a 2-d array
+  s2 <- function(x) {
+    d <- expand.grid(x = rnam, stat=NA, Lower=NA, Upper=NA,
+                     stringsAsFactors=FALSE)
+    for(i in 1 : nrow(d)) {
+      u <- h(x[, d$x[i]])
+      d$stat[i]  <- u[1]
+      d$Lower[i] <- u['Lower']
+      d$Upper[i] <- u['Upper']
+    }
+    names(d)[2] <- upFirst(posterior.summary)
+    d
   }
   
-  ##type="mean"
-  if(codes) vals <- 1:length(object$freq)
-  else {
-    vals <- as.numeric(vals)
-    if(any(is.na(vals)))
-      stop('values of response levels must be numeric for type="mean" and codes=F')
+  
+  r <- switch(type,
+              fitted     =  structure(s3(PP), draws=PP),
+              fitted.ind =  structure(s3(PPeq), draws=PPeq),
+              mean       =  structure(s2(M), draws=M))
+
+  class(r) <- c('predict.blrm', class(r))
+  r
+}
+
+##' Print Predictions for \code{blrm}
+##'
+##' Prints the summary portion of the results of \code{predict.blrm}
+##' @title print.predict.blrm
+##' @param x result from \code{predict.blrm}
+##' @param digits number of digits to round numeric results
+##' @return 
+##' @author Frank Harrell
+print.predict.blrm <- function(x, digits=3) {
+  numvar <- sapply(x, is.numeric)
+  numvar <- names(numvar)[numvar]
+  for(j in numvar) x[, j] <- round(x[, j], digits)
+  print.data.frame(x)
+}
+
+
+##' Function Generator for Mean Y for \code{blrm}
+##'
+##' Creates a function to turn a posterior summarized linear predictor lp (e.g. using posterior mean of intercepts and slopes) computed at the reference intercept into e.g. an estimate of mean Y using the posterior mean of all the intercepts
+##' @title Mean.blrm
+##' @param object a \code{blrm} fit
+##' @param codes if \code{TRUE}, use the integer codes \eqn{1,2,\ldots,k} for the \eqn{k}-level response in computing the predicted mean response.
+##' @param posterior.summary defaults to posterior mean; may also specify \code{"median"}.  Must be consistent with the summary used when creating \code{lp}.
+##' @param ... ignored
+##' @return an R function
+##' @author Frank Harrell
+Mean.blrm <- function(object, codes=FALSE,
+                      posterior.summary=c('mean', 'median'), ...) {
+  posterior.summary <- match.arg(posterior.summary)
+  ns <- num.intercepts(object)
+  if(ns < 2)
+stop('using this function only makes sense for >2 ordered response categories')
+
+  ## Get cumulative probability function used
+  link  <- object$link
+  if(! length(link)) link <- 'logistic'
+  cumprob <- probabilityFamilies[[link]]$cumprob
+
+  ylev   <- object$yunique
+  if(codes) vals <- 1:length(ylev)
+    else {
+      vals <- as.numeric(ylev)
+      if(any(is.na(vals)))
+         stop('values of response levels must be numeric for type="mean" and codes=FALSE')
+    }
+
+  cof <- coef(object, stat=posterior.summary)
+  intercepts <- cof[1 : ns]
+    
+  f <- function(lp=numeric(0), intercepts=numeric(0), values=numeric(0),
+                  interceptRef=integer(0), cumprob=cumprob) {
+    ns <- length(intercepts)
+    lp <- lp - intercepts[interceptRef]
+    xb <- sapply(intercepts, '+', lp)
+    P  <- matrix(cumprob(xb), ncol=ns)
+    P  <- cbind(1, P) - cbind(P, 0)
+    m  <- drop(P %*% values)
+    names(m) <- names(lp)
+    m
   }
-  m <- drop(Peq %*% vals)
-  names(m) <- rnam
-  m
+ 
+  ir <- object$interceptRef
+  if(! length(ir)) ir <- 1
+  formals(f) <- list(lp=numeric(0), intercepts=intercepts,
+                     values=vals, interceptRef=ir, cumprob=cumprob)
+  f
+}
+
+##' Function Generator for Quantiles of Y for \code{blrm}
+##'
+##' Creates a function to turn a posterior summarized linear predictor lp (e.g. using posterior mean of intercepts and slopes) computed at the reference intercept into e.g. an estimate of a quantile of Y using the posterior mean of all the intercepts
+##' @title Quantile.blrm
+##' @param object a \code{blrm} fit
+##' @param codes if \code{TRUE}, use the integer codes \eqn{1,2,\ldots,k} for the \eqn{k}-level response in computing the quantile
+##' @param posterior.summary defaults to posterior mean; may also specify \code{"median"}.  Must be consistent with the summary used when creating \code{lp}.
+##' @param ... ignored
+##' @return an R function
+##' @author Frank Harrell
+Quantile.blrm <- function(object, codes=FALSE,
+                      posterior.summary=c('mean', 'median'), ...) {
+  posterior.summary <- match.arg(posterior.summary)
+  ns <- num.intercepts(object)
+  if(ns < 2)
+stop('using this function only makes sense for >2 ordered response categories')
+
+  ## Get cumulative probability function used
+  link  <- object$link
+  if(! length(link)) link <- 'logistic'
+  pfam <- probabilityFamilies[[link]]
+  cumprob <- pfam$cumprob
+  inverse <- pfam$inverse
+
+  ylev   <- object$yunique
+  if(codes) vals <- 1:length(ylev)
+    else {
+      vals <- as.numeric(ylev)
+      if(any(is.na(vals)))
+         stop('values of response levels must be numeric for type="mean" and codes=FALSE')
+    }
+
+  cof        <- coef(object, stat=posterior.summary)
+  intercepts <- cof[1 : ns]
+
+  f <- function(q=.5, lp=numeric(0), intercepts=numeric(0), values=numeric(0),
+                  interceptRef=integer(0), cumprob=NULL, inverse=NULL) {
+        ## Solve inverse(1 - q) = a + xb; inverse(1 - q) - xb = a
+        ## Shift intercepts to left one position because quantile
+        ## is such that Prob(Y <= y) = q whereas model is stated in
+        ## Prob(Y >= y)
+        lp <- lp - intercepts[interceptRef]
+        ## Interpolation on linear predictors scale:
+        ## z <- approx(c(intercepts, -1e100), values,
+        ##             xout=inverse(1 - q) - lp, rule=2)$y
+        ## Interpolation approximately on Y scale:
+        lpm <- mean(lp, na.rm=TRUE)
+        z <- approx(c(cumprob(intercepts + lpm), 0), values,
+                    xout=cumprob(inverse(1 - q) - lp + lpm), rule=2)$y
+        names(z) <- names(lp)
+        z
+      }
+    trans <- object$trans
+    formals(f) <- list(q=.5, lp=numeric(0), intercepts=intercepts,
+                       values=vals, interceptRef=object$interceptRef,
+                       cumprob=cumprob, inverse=inverse)
+    f
+}
+
+##' Function Generator for Exceedance Probabilities for \code{blrm}
+##'
+##' For a \code{blrm} object generates a function for computing the	estimates of the function Prob(Y>=y) given one or more values of thelinear predictor using the reference (median) intercept.  This function can optionally be evaluated at only a set of user-specified	\code{y} values, otherwise a right-step function is returned.  There is a plot method for plotting the step functions, and if more than one linear predictor was evaluated multiple step functions are drawn. \code{ExProb} is especially useful for \code{\link{nomogram}}.  The linear predictor argument is a posterior summarized linear predictor lp (e.g. using posterior mean of intercepts and slopes) computed at the reference intercept
+##' @title ExProb.blrm
+##' @param object a \code{blrm} fit
+##' @param codes if \code{TRUE}, use the integer codes \eqn{1,2,\ldots,k} for the \eqn{k}-level response in computing the quantile
+##' @param posterior.summary defaults to posterior mean; may also specify \code{"median"}.  Must be consistent with the summary used when creating \code{lp}.
+##' @param ... ignored
+##' @return an R function
+##' @author Frank Harrell
+ExProb.blrm <- function(object, codes=FALSE,
+                        posterior.summary=c('mean', 'median'), ...) {
+  posterior.summary <- match.arg(posterior.summary)
+  ns <- num.intercepts(object)
+  if(ns < 2)
+stop('using this function only makes sense for >2 ordered response categories')
+
+  ## Get cumulative probability function used
+  link  <- object$link
+  if(! length(link)) link <- 'logistic'
+  pfam <- probabilityFamilies[[link]]
+  cumprob <- pfam$cumprob
+  
+  ylev   <- object$yunique
+  if(codes) vals <- 1:length(ylev)
+    else {
+      vals <- as.numeric(ylev)
+      if(any(is.na(vals)))
+         stop('values of response levels must be numeric for type="mean" and codes=FALSE')
+    }
+
+  cof        <- coef(object, stat=posterior.summary)
+  intercepts <- cof[1 : ns]
+
+  f <- function(lp=numeric(0), y=NULL, intercepts=numeric(0),
+                values=numeric(0),
+                interceptRef=integer(0), cumprob=NULL, yname=NULL) {
+    lp <- lp - intercepts[interceptRef]
+    prob <- cumprob(sapply(c(1e30, intercepts), '+', lp))
+    dim(prob) <- c(length(lp), length(values))
+        
+    if(! length(y)) {
+      colnames(prob) <- paste('Prob(Y>=', values, ')', sep='')
+      return(structure(list(y=values, prob=prob, yname=yname),
+                       class='ExProb'))
+    }
+    p <- t(apply(prob, 1,
+                 function(probs) {
+                   pa <- approx(values, probs, xout=y,
+                                f=1, method='constant')$y
+                   pa[y < min(values)] <- 1.
+                   pa[y > max(values)] <- 0.
+                   pa
+                 } ) )
+    if(length(y) > 1) {
+      colnames(p) <- paste('Prob(Y>=', y, ')', sep='')
+      p <- list(y=y, prob=p)
+    }
+    structure(drop(p), class='ExProb')
+  }
+  trans <- object$trans
+  formals(f) <- list(lp=numeric(0), y=NULL, intercepts=intercepts,
+                     values=vals, interceptRef=object$interceptRef,
+                     cumprob=cumprob, yname=object$yname)
+  f
 }
 
 ##' Fetch Partial Proportional Odds Parameters

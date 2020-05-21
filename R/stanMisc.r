@@ -734,6 +734,8 @@ selectedQr <- function(X, not=NULL, corner=FALSE, center=TRUE) {
   list(X = X, R = R_ast, Rinv = R_ast_inverse, xbar=xbar)
 }
 
+utils::globalVariables('est')    # why is this possibly needed?
+
 ## Code previously used with qr.stan
 #  d <- list(X=X, N=N, p=p)
 #  stanloc <- .Options$stancompiled

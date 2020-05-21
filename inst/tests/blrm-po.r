@@ -1,4 +1,5 @@
 require(rms)
+stanSet()
 set.seed(1)
 n  <- 100
 x  <- rnorm(n)
@@ -16,9 +17,6 @@ cbind(lrm=coef(f), blrm=coef(b, 'mean'), 'cluster blrm'=coef(bc, 'mean'))
 
 d <- blrm(y ~ x + x2, priorsd=1000, standata=TRUE)
 saveRDS(d, '~/tmp/d.rds')
-
-
-stanSet()
 
 set.seed(1)
 n  <- 1000

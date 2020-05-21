@@ -174,7 +174,7 @@ predictrms <-
             }
             return(retlist)
           }
-      }   # end type='lp'
+      }   # end type='lp' with linear.predictors stored in fit
       else
         if(type=="x") return(structure(naresid(naa, fit$x),
              strata=if(length(stra <- fit$strata))

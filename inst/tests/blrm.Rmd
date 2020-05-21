@@ -20,7 +20,7 @@ description: "`blrm` Examples"
 1. capturing more sources of uncertainty.  For example, the `blrm` function automatically computes higheset posterior density intervals on a variety of statistical indexes such as the Brier score and AUROC ($c$-index).  Note: By default these intervals are computed using only 400 posterior draws to save time.  For a `blrm` fit object `f` you can specify how many samples to draw, to get more accurate intervals, by specifying for example `print(f, ns=2000)`.
 1. the ability to incorporate external information or beliefs about parameters using prior distributions
 
-`blrm` uses normal priors for the $\beta$ parameters, and the user may specify the standard deviation of these priors separately for each model parameters.  The default is $\sigma=100$ which is nearly flat.  When there are random effects, the analyst may specify the mean of the exponential distribution that serves as the prior for the standard deviation of the random effects, with the default mean being 1.0, a reasonable number for the logit scale.
+`blrm` uses normal priors for the $\beta$ parameters, and the user may specify the standard deviation of these priors separately for each model parameters.  The default is $\sigma=100$ which is nearly flat.  When there are random effects, the analyst may specify the mean of the exponential distribution that serves as the prior for the standard deviation of the random effects, with the default mean being 1.0, a reasonable number for the logit scale.  There is also an option to use a half-$t$ distribution for the SD of random effects.
 
 `blrm` uses [Stan](https://mc-stan.org) code written by Ben Goodrich of Columbia University.  To use `blrm` you must prepare by doing the following:
 
@@ -45,9 +45,15 @@ options(stancompiled='~/R/stan', prType='html')
 # stanCompile('~/R/stan')
 ```
 
-As the `rstan` component of `blrm` fit objects can be tens of megabytes in size. you'll see `rms` utility function `fitIf` used in the examples below.  `fitIf(fitname <- ...)` determines whether the fit has already been run by sensing the existence of a file named like `fitname.rds` in the current working directory, and quickly loads this object if so.  If an optional file named like `fitname-rstan.rds` is found, that file is also loaded and stored as the `rstan` component of the fit.  `fitIf` also stores a much smaller version of the object by creating `fitname.rds` after removing the large `rstan` component.  If `fitname.rds` doesn't already exist, the model fit is run and the entire result is returned to the user.  Also, a new `fitname.rds` is created without the large `rstan` object.  You lose the ability to run the `rms::stanDxplot(..., rstan=TRUE)` on restored objects (when `fitname-rstan.rds` did not exist), so the `stanDxplot` function tries to find an existing trace plot image file corresponding to the current R markdown chunk when the fit object no longer has the `rstan` component.  For most purposes this doesn't matter, because running \code{stanDxplot} using the defaults shows the needed non-burning samples which are always stored in fit objects.  Note that using the `knitr` `cache=TRUE` option does not work well as the cache files for this script were about a GB in size, and the system does not accurately recognize when a model fit hasn't changed and doesn't need to be run when `rstan` is involved.
+You'll see `file='...'` in the longer running of the `blrm` calls below.  If the file already exists and none of the data nor the options sent to `rstan` nor the underlying Stan code have changed from what were used to create the fit object stored in that file (as judged by their `md5` hash), that saved fit object is returned immediately without running the `rstan` code, often saving a great deal of execution time.  This works well with the workflow of long R markdown reports making it so that only portions of Bayesian analysis that have changed are run.  Note that using the `knitr` `cache=TRUE` option does not work well as the cache files for this script were about a GB in size, and the system does not accurately recognize when a model fit hasn't changed and doesn't need to be run when `rstan` is involved.
 
-The `blrm` AR(1) approach is experimental; see warnings in examples below.
+A restored fit object does not contain the `rstan` object, saving tens of megabytes of storage.  Standard Stan diagnostics are stored in the fit object separately, and it is assumed that if the user wanted to run `rstan::loo` `loo=TRUE` would have been specified to `blrm` so that `loo` is run and its (small) result stored in the `blrm` fit object.  If you want to run `pairs` to get more graphical diagnostics, intead of relying on the `rstan` object always being available, specify `pairs=TRUE` or `pairs='filename.png'` to `blrm` to graph the pair plots.  The latter is recommended, and one can put `knitr::include_graphics('filename'png')` in the R code chunk to render the graph in the report even if `blrm` was not re-run.
+
+When `file='filename.rds'` is specified to `blrm` and the file does not exist or analysis inputs have changed since the file was created, the `blrm` fit object will be saved in `saveRDS` `.rds` binary format in your current working directory at the completion of `blrm`'s work.  The `rstan` component is omitted from the saved file.
+
+The `rms` utility function `fitIf` is another way to efficiently manage Bayesian simulation workflow.  The `fitIf` approach runs the analysis only if the file doesn't already exist.  If it exists but the data or the model have changed, the `fitIf` approach is not intelligent enough to re-run the analysis (unlike the `file='...'` approach above).  Whether using `fitIf` or `file=`,  you lose the ability to run the `rms::stanDxplot(..., rstan=TRUE)` on restored objects, so the `stanDxplot` function tries to find an existing trace plot image file corresponding to the current R markdown chunk when the fit object no longer has the `rstan` component.  For most purposes this doesn't matter, because running \code{stanDxplot} using the defaults shows the needed non-burnin samples which are always stored in fit objects.
+
+The `blrm` AR(1) approach is experimental and is recommended only for statistical research at present; see warnings in examples below.
 
 # Example: 10-level Ordinal Outcome
 
@@ -66,7 +72,7 @@ f <- lrm(y ~ x1 + pol(x2, 2) + x3, eps=1e-7) # eps to check against rstan
 f
 ```
 
-Before getting posterior distributions of parameters, use `rstan` to just get maximum likelihood estimates and compare them with those from `lrm`.  Do this for increasingly flat priors for the $\beta$s.  The default prior SD for `blrm` is 100.  Running `method='optimizing'` is a quick way to study the effect of priors on the posterior modes for non-intercepts.  It is also a good way to get a sense of the scaling of parameters used in the actual calculations.  Except for the last parameter in the model, prior standard deviations apply to the QR orthonormalized version of the design matrix.  The magnitude of maximum (penalized) maximum likelihood estimates on the QR transformed scale ($\theta$s) can be compared to magnitudes of parameter estimates on the original scale by comparing the `blrm` returned object `coefficients` with the returned object `theta` when `method='optimizing'`.
+Before getting posterior distributions of parameters, use `rstan` to just get maximum likelihood estimates and compare them with those from `lrm`.  Do this for increasingly flat priors for the $\beta$s.  The default prior SD for `blrm` is 100.  Running `method='optimizing'` is a quick way to study the effect of priors on the posterior modes for non-intercepts when there are no random effects in the model.  It is also a way to get a sense of the scaling of parameters used in the actual calculations (but see a later section for how to show standard deviations of variables on the transformed scale given to Stan).  Except for variables listed in the `keepsep` argument to `blrm`, prior standard deviations apply to the QR orthonormalized version of the design matrix.
 
 ```{r stanmle}
 for(psd in c(0.25, 1, 10, 100, 10000)) {
@@ -78,11 +84,6 @@ for(psd in c(0.25, 1, 10, 100, 10000)) {
 # Compare with ordinary MLEs and deviance
 f$deviance
 coef(f)
-
-# For the last model fitted with blrm compare the point estimates on the
-# QR decomposition scale with those on the original scale
-g$theta
-g$coefficients[10:13]
 ```
 
 Fit the model with Dirichlet priors on intercepts and wide normal priors on the $\beta$s.  Show the model fit summary.  Note that the indexes of predictive discrimination/accuracy include 0.95 highest posterior density intervals.  In frequentist inference we pretend that quantities such as AUROC and $R^2$ are estimated without error, which is far from the case.
@@ -90,7 +91,7 @@ Fit the model with Dirichlet priors on intercepts and wide normal priors on the 
 In several places you will see an index named `Symmetry`.  This is a measure of the symmetry of a posterior distribution.  Values farther from 1.0 indicate asymmetry, which indicates that the use of standard errors and the use of a normal approximation for the posterior distribution are not justified.  The symmetry index is the ratio of the gap between the posterior mean and the 0.95 quantile of the posterior distribution to the gap between the 0.05 quantile and the mean.
 
 ```{r blrmsim,results='asis'}
-fitIf(bs <- blrm(y ~ x1 + pol(x2, 2) + x3))
+bs <- blrm(y ~ x1 + pol(x2, 2) + x3, file='bs.rds')
 bs
 ```
 
@@ -150,7 +151,7 @@ mean(bs$draws[, 'x2^2'] > 0, na.rm=TRUE)    # longhand calculation
 # Plot posterior distribution for the vertex of the quadratic x2 effect
 # This distribution should be wide because the relationship is linear
 # (true value of b3 is zero)
-P(-b2 / (2 * b3))
+plot(P(-b2 / (2 * b3)))
 ```
 
 ```{r postprobs2}
@@ -187,8 +188,8 @@ f
 # for comparison with the Bayesian HPD interval for Dxy
 htmlVerbatim(rcorr.cens(predict(f), support$hospdead))
 htmlVerbatim(Function(f))
-fitIf(bsup <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
-	    	  		 data=support))
+bsup <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
+    	  		 data=support, file='bsup.rds')
 bsup
 htmlVerbatim(Function(bsup))   # by default uses posterior mode parameter values
 # To add an intercept use e.g. Function(bsup, intercept=coef(g, 'mode')[5])
@@ -312,7 +313,7 @@ b <- blrm(y ~ x, ~ x, priorsd=1000, priorsdppo=1000, method='opt')
 coef(b)   # also the posterior mode
 coef(b)[3] + coef(b)[4]
 
-fitIf(bppo <- blrm(y ~ x, ~ x, priorsd=1000, priorsdppo=1000))
+bppo <- blrm(y ~ x, ~ x, priorsd=1000, priorsdppo=1000, file='bppo.rds')
 # take differences in last 2 coefficients to get our scheme
 # Check recovery of proportions, using posterior mode/mean/median
 pprop(coef(bppo, 'mode'),   type='blrm')
@@ -344,7 +345,8 @@ sqrt(diag(vcov(f)))
 Fit the same model using the Bayesian approach.
 
 ```{r mixorb, results='asis'}
-fitIf(bmixor <- blrm(imps79o ~ sqrt(Week) * TxDrug + cluster(id), data=d))
+bmixor <- blrm(imps79o ~ sqrt(Week) * TxDrug + cluster(id), data=d,
+               file='bmixor.rds')
 bmixor
 ```
 
@@ -374,14 +376,16 @@ g
 We first fit an inappropriate Bayesian model in which the random effects are omitted.
 
 ```{r bayesreo, results='asis'}
-fitIf(breo <- blrm(y ~ x))
+# Note: loo defaults to FALSE when n > 1000 as in this case
+# Need loo for compareBmods
+breo <- blrm(y ~ x, loo=TRUE, file='breo.rds')
 breo
 ```
 
 Now use a proper Bayesian random effects model.  The prior distribution for the standard deviation $\sigma_{\gamma}$ of the random effects ($\gamma$s) is assumed to be exponential, and we will use the default mean of this distribution of 1.0.
 
 ```{r bayesre, results='asis'}
-fitIf(bre <- blrm(y ~ x + cluster(id)))
+bre <- blrm(y ~ x + cluster(id), loo=TRUE, file='bre.rds')
 bre
 plot(bre)
 ```
@@ -392,7 +396,7 @@ Before delving more into the random effects model, let's compare this new model 
 compareBmods(breo, bre)
 ```
 
-Roughly speaking, of the two models, the one with random effects has a probability of 0.95 of being the correct one.  See `rstan::loo` and `loo::loo.array` for details.
+Roughly speaking, of the two models, the one with random effects has a probability of 0.94 of being the correct one.  See `rstan::loo` and `loo::loo.array` for details.
 
 Now let's get into more details from the random effects model fit.
 
@@ -415,7 +419,7 @@ id <- rep(1 : n, each = m)
 x  <- X[id]
 L <- x + re[id]   # actual logit
 y <- ifelse(runif(n * m) <= plogis(L), 1, 0)
-fitIf(breb <- blrm(y ~ x + cluster(id)))
+breb <- blrm(y ~ x + cluster(id), file='breb.rds')
 breb
 par(mfrow=c(2, 2))
 hist(breb$gammas, xlab='Estimated Random Effects', nclass=40, main='')
@@ -457,7 +461,7 @@ table(Tx, y)
 The first Bayesian proportional odds model fitted is the one that exactly matches the data generation model, as we have not yet imposed an absorbing state, so that outcomes with y < 5 can appear after a y=5 outcome for the subject.
 
 ```{r noabs,results='asis'}
-fitIf(bst <- blrm(y ~ Tx + cluster(id)))
+bst <- blrm(y ~ Tx + cluster(id), file='bst.rds')
 bst
 ```
 
@@ -482,7 +486,7 @@ table(u$y); table(d$y); table(z$y)
 ```
 
 ```{r absorb2, results='asis'}
-fitIf(bcf <- blrm(y ~ Tx + cluster(id), data=z))
+bcf <- blrm(y ~ Tx + cluster(id), data=z, file='bcf.rds')
 bcf
 hist(bcf$gammas, xlab='Estimated Random Effects', nclass=40, main='')
 ```
@@ -500,7 +504,7 @@ plot(t5, bcf$gammas, xlab='Time of y=5', ylab='Random Effect')
 What happens with time is added to this model?
 
 ```{r absorb3, results='asis'}
-fitIf(bcft <- blrm(y ~ Tx + time + cluster(id), data=z))
+bcft <- blrm(y ~ Tx + time + cluster(id), data=z, file='bcft.rds')
 bcft
 ```
 
@@ -517,14 +521,14 @@ Next we truncate patient records so that y=5 is not carried forward.
 
 ```{r nocarry,results='asis'}
 zt <- z[time <= first]
-fitIf(bnc <- blrm(y ~ Tx + cluster(id), data=zt))
+bnc <- blrm(y ~ Tx + cluster(id), data=zt, file='bnc.rds')
 bnc
 ```
 
 Finally, add time to the above model.
 
 ```{r nocarryt, results='asis'}
-fitIf(bnct <- blrm(y ~ Tx + time + cluster(id), data=zt))
+bnct <- blrm(y ~ Tx + time + cluster(id), data=zt, file='bnct.rds')
 bnct
 ```
 
@@ -556,7 +560,7 @@ Y  <- round(pmax(-2, pmin(3, 2 * X + re)))
 time <- rep(1 : m, n)
 x <- X[id]
 y <- Y[id]
-fitIf(bdup <- blrm(y ~ x + cluster(id) + aTime(time), refresh=50))
+bdup <- blrm(y ~ x + cluster(id) + aTime(time), refresh=50, file='bdup.rds')
 bdup
 ```
 
@@ -638,7 +642,7 @@ Ordinary logistic model ignoring the correlation pattern (`lrm(y ~ x)`) yields $
 Fit a Bayesian model that has random effects but ignores the additional within-subject serial correlation given the random effect.
 
 ```{r fitwrong,results='asis'}
-fitIf(bnoar1 <- blrm(y ~ x + cluster(id)))
+bnoar1 <- blrm(y ~ x + cluster(id), file='bnoar1.rds')
 bnoar1
 ```
 
@@ -648,7 +652,6 @@ Before running the AR(1) model let's look at the correlation matrix of `y` as `r
 
 ```{r looky}
 d <- blrm(y ~ x + cluster(id) + aTime(time), standata=TRUE)
-saveRDS(d, file='/tmp/d.rds')
 round(cor(d$y), 2)
 ```
 
@@ -657,7 +660,7 @@ The within-subject correlation pattern in the raw binary responses are damped in
 Now fit the combination random intercept/AR(1) Bayesian binary logistic model.
 
 ```{r fitar1}
-fitIf(bar1 <- blrm(y ~ x + cluster(id) + aTime(time)))
+bar1 <- blrm(y ~ x + cluster(id) + aTime(time), file='bar1.rds')
 ```
 
 First look at diagnostics.
@@ -712,9 +715,9 @@ Now fit the Bayesian random effects AR(1) model on the first 1000 subjects.  Cur
 
 ```{r srhsb,results='asis'}
 d <- subset(d, id <= 1000)
-fitIf(srhs <- blrm(srhs ~ aTime(t) + cluster(id) +
-                   sex + race + education + age, data=d,
-                   refresh=50))
+srhs <- blrm(srhs ~ aTime(t) + cluster(id) +
+             sex + race + education + age, data=d,
+             loo=TRUE, refresh=50, file='srhs.rds')
 srhs
 ```
 
@@ -749,7 +752,9 @@ d <- data.frame(x1,x2,x3,y, stringsAsFactors=TRUE)
 mi <- aregImpute(~ y + x1 + x2 + x3, nk=3, data=d, B=10, n.impute=5, pr=FALSE)
 mi
 
-fitIf(bmi <- stackMI(y ~ x1 + x2 + x3, blrm, mi, data=d, refresh=50))
+# Note: The following model will be re-run every time aregImpute runs
+# because imputations have randomness
+bmi <- stackMI(y ~ x1 + x2 + x3, blrm, mi, data=d, refresh=50, file='bmi.rds')
 stanDx(bmi)
 stanDxplot(bmi, which='x1=c', rev=TRUE, stripsize=5)
 ```
@@ -764,34 +769,23 @@ Computations done on the `bmi` object will automatically use the full stacked po
   
 # Scaling and Intepretation of Priors on $\beta$s
 
-`blrm` orthonormalizes the data design matrix to greatly improve posterior distribution sampling in the case of collinearities among predictors (especially among spline basis functions).    The very last parameter in the model is unchanged, but all proceeding parameters must have prior distributions specified with respect to the derived variables.  This is philosophically reasonable because if one has two collinear terms in a model, say terms as simple as $x$ and $x^2$, it is entirely unreasonable to specify independent priors for the corresponding pair of regression coefficients $\beta_1$ and $\beta_2$.  When $\beta_{1} \uparrow$, $\beta_{2} \downarrow$.  To understand at least the scaling part of the translation, we can compare the posterior draws for $\beta$ that pertain to the original $X$ scale with the posterior draws for $\theta$, the parameter values on the QR-decomposition transformed scale.  These $\theta$ values are stored in the `rstan` object that is part of the `blrm` fit object.  Here is an example where an ordinary cubic polynomial is fitted, first with `x` ranging from [-1,1] then [-10, 10].  A binary treatment variable is the last variable in the model, so it will be the only one that is not transformed.
+`blrm` orthonormalizes the data design matrix to greatly improve posterior distribution sampling in the case of collinearities among predictors (especially among spline basis functions).  Through the `keepsep` argument one can hold out selected columns of the design matrix from QR orthogonalization so that prior standard deviations will apply to known quantities.  When no columns are held out in this way, one can get a sense of the new QR scale on the translated columns by printing the standard deviations of the QR-transformed design matrix columns, which is stored in the `xqrsd` object in the fit object.  The following example compares this to the SDs from the original design matrix (which is stored in the `x` object in the fit).
 
-```{r qrtest,w=7,h=5.5}
-par(mfrow=c(2,4), oma=c(0,0,0,0), mar=c(4, 4, 0.5, 1))
+```{r qrscale}
 set.seed(1)
-n <- 200
-xunscaled <- (1 : n) / n    # runif(n, 0, 1)
-tx        <- rep(0:1, n/2)
-L         <- 4 * (xunscaled - 0.5) + 0.5 * tx
-y         <- ifelse(runif(n) <= plogis(L), 1, 0)
-for(k in c(1, 10)) {
-  x <- xunscaled * k
-  f <- blrm(y ~ pol(x, 3) + tx, iter=500)
-  s <- as.matrix(f$rstan)
-  th <- s[, paste0('theta[', 1:4, ']')]
-  be <- s[, paste0('beta[',  1:4, ']')]
-  plot(th[, 1], be[, 1], xlab=expression(theta[1]), ylab=expression(beta[1]))
-  plot(th[, 2], be[, 2], xlab=expression(theta[2]), ylab=expression(beta[2]))
-  plot(th[, 3], be[, 3], xlab=expression(theta[3]), ylab=expression(beta[3]))
-  plot(th[, 4], be[, 4], xlab=expression(theta[4]), ylab=expression(beta[4]))
-  abline(a=0, b=1, col=gray(0.7))
-}
+n  <- 200
+x  <- runif(n, 0, 10)
+tx <- rep(0:1, n/2)
+y  <- sample(0:1, n, TRUE)
+f  <- blrm(y ~ tx + pol(x, 3), iter=500)
+rbind(apply(f$x, 2, sd), f$xqrsd)
 ```
 
-# Speed of `blrm` For Large Numbers of Categories
+The `selectedQr` function can be used to recompute the transformed data matrix for further examination.  You'll see that when centering is used (as with `blrm`) the transformed columns are orthogonal.
 
-When there is a large number of intercepts in the model, the speed of `blrm` will decrease.  What about the speed of using `blrm` just to get (potentially penalized) maximul likelihood estimates?  Let's try fitting a progressively more continuous dependent variable.
+# Speed of `blrm` For Large Numbers of Y Levels
 
+When there is a large number of intercepts in the model, the speed of `blrm` will decrease.  What about the speed of using `blrm` just to get (potentially penalized) maximum likelihood estimates?  Let's try fitting a progressively more continuous dependent variable.  
 ```{r manyint}
 set.seed(1)
 n <- 1000
@@ -800,11 +794,12 @@ y <- x + rnorm(n)
 for(g in c(2, 4, 8, 16, 32, 64, 128, 256)) {
   cat('\n', g, 'distinct values of y\n')
   yg <- cut2(y, g=g)
-  print(system.time(f <- blrm(yg ~ x, method='optimizing')))
+  print(system.time(f <- blrm(yg ~ x, method='optimizing', conc=1)))
 }
 
 ```
-This is impressive.  For g=256 compare with the execution time of the Newton-Raphson method making optimum use of sparse matrices.  Also compare coefficients.
+This is impressive.  For g=256 compare with the execution time of the Newton-Raphson method making optimum use of sparse matrices.  Also compare coefficients.  The default Dirichlet distribution concentration parameter for the intercepts is selected to make the posterior means agree with maximum likelihood estimates, sacrificing some performance of posterior modes.  We used instead a concentration parameter of 1.0 for the Dirichlet prior distribution for intercepts, which seems to make optimization agree more with maximum likelihood estimates.
+
 
 ```{r morm}
 system.time(g <- orm(yg ~ x))
@@ -812,6 +807,7 @@ plot(coef(g), coef(f), xlab='Coefficients from orm',
      ylab='Coefficients from blrm')
 abline(a=0, b=1, col=gray(0.8))
 ```
+
 
 See how long it takes to do posterior sampling with `rstan` when there are 16, 64, or 128 levels of y.
 
