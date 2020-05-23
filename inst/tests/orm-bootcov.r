@@ -12,7 +12,7 @@ k <- c('y>=6', 'x1', 'x2')
 set.seed(1)
 gb <- bootcov(g, B=400, eps=.001)
 list(rownames(f$var), rownames(g$var), rownames(fb$var), rownames(gb$var))
-attributes(grobcb$var)
+attributes(gb$var)
 fb$var[k, k]
 gb$var[k, k]
 
