@@ -11,17 +11,19 @@ residuals.lrm <-
   dopl <- (is.logical(pl) && pl) || is.character(pl)
   ylabpr <- NULL   # y-axis label for partial residuals
 
-  k <- object$non.slopes
-  L <- object$linear.predictors
+  k     <- object$non.slopes
+  L     <- object$linear.predictors
   isorm <- inherits(object, 'orm')
 
   trans <- object$trans
   cumprob <- if(length(trans)) trans$cumprob else plogis
-  if(length(L)==0) stop('you did not use linear.predictors=TRUE for the fit')
+  deriv   <- if(length(trans)) trans$deriv   else function(x, f) f * (1 - f)
+  
+  if(length(L) == 0) stop('you did not use linear.predictors=TRUE for the fit')
 
   if(kint < 1 | kint > k) stop(paste('kint must be from 1-', k, sep=''))
 
-  cof <- object$coefficients
+  cof    <- object$coefficients
   ordone <- type %in% c('li.shepherd','partial','gof','score','score.binary')
   ## residuals explicitly handled for ordinal model
   if(ordone && !missing(kint)) 
@@ -29,7 +31,7 @@ residuals.lrm <-
 
   if(isorm) L <- L - cof[attr(L, 'intercepts')] + cof[1]
 
-  if(k > 1 && kint !=1 && !ordone) L <- L - cof[1] + cof[kint]
+  if(k > 1 && kint != 1 && ! ordone) L <- L - cof[1] + cof[kint]
   P <- cumprob(L)
   if(length(Y <- object$y) == 0) stop("you did not specify y=TRUE in the fit")
   rnam <- names(Y)
@@ -38,7 +40,7 @@ residuals.lrm <-
   lev  <- levels(Y)
   lev2 <- names(cof)[1:k]
   Y <- unclass(Y) - 1
-  if(!ordone && k > 1) Y <- Y >= kint
+  if(! ordone && k > 1) Y <- Y >= kint
   if(k > 1 && missing(kint) && !ordone)
     warning(paste('using first intercept and ',
                   lev2[kint],
@@ -133,31 +135,45 @@ residuals.lrm <-
   }
   
   if(type=="score") {
-    if(!length(X <- unclass(object$x)))
+    if(! length(X <- unclass(object$x)))
       stop("you did not specify x=TRUE for the fit")
-    if(isorm && object$family != 'logistic')
-      stop('score residuals not yet implemented for orm with non-logistic family')
     if(k == 1) return(naresid(naa, cbind(1, X) * (Y - P))) # only one intercept
-    z <- function(i, k, L, coef) cumprob(coef[pmin(pmax(i, 1), k)] + L)
+    # z <- function(i, k, L, coef)
+    #        cumprob(coef[pmin(pmax(i, 1), k)] + L)
     ## Mainly need the pmax - 0 subscript will drop element from vector
     ##  z$k <- k; z$L <- L-cof[1]; z$coef <- cof
-    formals(z) <- list(i=NA, k=k, L=L-cof[1], coef=cof)
+    # formals(z) <- list(i=NA, k=k, L=L-cof[1], coef=cof)
     ## set defaults in fctn def'n
     u <- matrix(NA, nrow=length(L), ncol=length(which),
                 dimnames=list(names(L), names(cof)[which]))
-    pq <- function(x) x * (1 - x)
     ## Compute probabilities of being in observed cells
-    pc <- ifelse(Y==0, 1 - z(1), ifelse(Y == k, z(k), z(Y) - z(Y + 1)) )
-    xname <- dimnames(X)[[2]]
-    yname <- as.character(formula(object))[2]
-    ii <- 0
+    # pc    <- ifelse(Y==0, 1 - z(1), ifelse(Y == k, z(k), z(Y) - z(Y + 1)) )
+    xname   <- dimnames(X)[[2]]
+    yname   <- as.character(formula(object))[2]
+    ints    <- c(1e100, cof[1 : k], -1e100)
+    L       <- L - cof[1]
+    Ly      <- L + ints[Y + 1]
+    Ly1     <- L + ints[Y + 2]
+    cumy    <- cumprob(Ly)
+    cumy1   <- cumprob(Ly1)
+    ## Compute probabilities of being in observed cells
+    # pc <- ifelse(Y==0, 1 - z(1), ifelse(Y == k, z(k), z(Y) - z(Y + 1)) )
+    pc      <- cumy - cumy1
+    derivy  <- deriv(Ly , cumy)
+    derivy1 <- deriv(Ly1, cumy1)
+
+    ii      <- 0
     for(i in which) {
       ii <- ii + 1
-      di  <- if(i <= k) ifelse(Y==0, if(i==1) 1 else 0, Y==i) else X[,i - k]
-      di1 <- if(i <= k) ifelse(Y==0 | Y==k, 0, (Y + 1) == i)  else X[,i - k]
-      ui  <- ifelse(Y == 0, -z(1) * di,
-                    ifelse(Y == k, (1 - z(k)) * di,
-                           (pq(z(Y)) * di - pq(z(Y + 1)) * di1) / pc ) )
+      di  <- if(i <= k) ifelse(Y == 0, i == 1, Y == i)           else X[, i - k]
+      di1 <- if(i <= k) ifelse(Y == k, 0, (Y + 1) == i) else X[, i - k]
+      # di  <- if(i <= k) ifelse(Y==0, if(i==1) 1 else 0, Y==i) else X[,i - k]
+      # di1 <- if(i <= k) ifelse(Y==0 | Y==k, 0, (Y + 1) == i)  else X[,i - k]
+      ui  <- (derivy * di - derivy1 * di1) / pc
+      # ui  <- ifelse(Y == 0, -z(1) * di,
+      #               ifelse(Y == k, (1 - z(k)) * di,
+      #               (deriv(L + ints[Y + 1L], z(Y)) * di -
+      #                deriv(L + ints[Y + 2L], z(Y + 1)) * di1) / pc ) )
       u[,ii] <- ui
       if(dopl && i > k) {
         if(pl=='boxplot') {

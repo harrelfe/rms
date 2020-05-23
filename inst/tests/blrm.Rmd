@@ -6,7 +6,7 @@ output:
   html_document:
     toc: no
     code_folding: show
-    theme: yeti
+theme: yeti
 description: "`blrm` Examples"
 ---
 
@@ -55,7 +55,9 @@ The `rms` utility function `fitIf` is another way to efficiently manage Bayesian
 
 The `blrm` AR(1) approach is experimental and is recommended only for statistical research at present; see warnings in examples below.
 
-# Example: 10-level Ordinal Outcome
+# Proportional Odds and Binary Logistic Regression
+
+## Example: 10-level Ordinal Outcome
 
 Simulate a dataset with three predictors and one 10-level ordinal outcome.  Run the frequentist proportional odds model then the Bayesian one.
 
@@ -171,8 +173,62 @@ bs$rstan <- NULL
 s2 <- format(object.size(bs), 'MB')
 cat('Before:', s1, '  After:', s2, '\n')
 ```
+## Bayesian Wilcoxon Test
 
-# Example Using the `support` Dataset with Restricted Cubic Splines
+Since the proportional odds ordinal (PO) logistic model is a generalization of Wilcoxon/Kruskal-Wallis tests one can use Bayesian proportional odds regression to get the Bayesian equivalent to the Wilcoxon test.  Even if not adjusting for covariates (impossible with the Wilcoxon test) there are advantages to putting this in a modeling framework as detailed in [Section 7.6](http://hbiostat.org/doc/bbr.pdf) of BBR.  A major advantage is estimationg ability.  One can estimate group-specific means, quantiles, and exceedance probabilities.  And Bayesian inference provides exact uncertainty intervals (highest posterior density intervals in what follows) for these.
+
+The PO model does not require there to be any ties among the Y values, so it handles continuous data very well (the `orm` function in the `rms` package efficiently handles many thousands of distinct Y levels requiring many thousands of intercepts in the model).  Let's re-analyze the calprotectin data in Section 7.3.1 of BBR to mimic the frequentist PO analysis in Section 7.6.
+
+```{r cpo,results='asis'}
+# Fecal Calprotectin: 2500 is above detection limit
+# When detection limits occur at a single value, the PO
+# model easily handles this in terms of estimating group
+# differences (but not for estimating the mean Y)
+calpro <- c(2500, 244, 2500, 726, 86, 2500, 61, 392, 2500, 114, 1226,
+            2500, 168, 910, 627, 2500, 781, 57, 483, 30, 925, 1027,
+            2500, 2500, 38, 18)
+
+# Endoscopy score: 1 = No/Mild, 2=Mod/Severe Disease
+# Would have been far better to code dose as 4 ordinal levels
+endo <- c(2, 1, 2, 2, 2, 1, 1, 2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 1, 2,
+          2, 2, 2, 2, 2, 1, 1)
+endo <- factor(endo, 1 : 2,
+               c("No or Mild Activity", "Moderate or Severe Activity"))
+
+dd <- datadist(endo, calpro); options(datadist='dd')
+bcalpro <- blrm(calpro ~ endo, method='sampling', file='bcalpro.rds')
+# Note: default method='both' but the optimizing part to get posterior modes did not work for this example
+print(bcalpro, intercepts=TRUE)
+summary(bcalpro)
+```
+
+One can see that the posterior probability of a positive group difference exceeds 0.99.
+
+Now compute the posterior mean estimate of the mean and median calprotectin levels for the unknown data generating process, stratified by group and compare with sample estimates.
+
+```{r bcalp}
+# Sample estimates
+tapply(calpro, endo, mean)
+tapply(calpro, endo, median)
+# Now compute estimates and 0.95 HPD intervals assuming PO
+# The first method is exact
+newdata <- data.frame(endo=levels(endo))
+predict(bcalpro, newdata, type='mean')
+# In the future type='quantile' will be added to predict
+# Compute posterior mean/median estimates a different way.
+# These are approximate as they compute the means and medians
+# using the posterior mean parameter values and compute the
+# Y mean/median on them instead of computing the Y mean/median on each
+# posterior draw and then getting the means of these nonlinearly-transformed
+# predicted values
+bar <- Mean(bcalpro)
+Predict(bcalpro, endo, fun=bar)
+quant <- Quantile(bcalpro)
+med <- function(lp) quant(lp=lp)
+Predict(bcalpro, endo, fun=med)
+```
+
+## Binary Regression with Restricted Cubic Splines
 <a name="support"></a>
 
 Turn to the `support` dataset and fit a binary logistic model to predict the probability of in-hospital death of critically ill adults.
@@ -428,7 +484,7 @@ plot(re, breb$gammas, xlab='Real', ylab='Estimated')
 abline(a=0, b=1)
 ```
 
-# Absorbing State in Mixed Effects Ordinal Regression
+## Absorbing State in Mixed Effects Ordinal Regression
 
 `blrm` is not designed to handle this situation but let's see how it performs.
 
@@ -536,7 +592,7 @@ The time effect is very weak, and adding it did not change the already-accurate 
 
 <a name="ar1"></a>
 
-# AR(1) Correlation Structure
+## AR(1) Correlation Structure
 
 Thanks to Stan code written by Ben Goodrich, `blrm` also implements a correlation struction that is more realistic for most problems.  Subject (cluster) random effects pertain to the first measurement for the subject, then subsequent measurements are correlated within cluster according to an `aTime` variable specified in the model.  The actual time values are not used in the analysis but the distinct values are converted to consecutive integers.  The within-cluster process is AR(1) for the random effects, and a separate within-cluster white noise variance $\sigma_w$ is incorporated.  This implies that the correlation of two measurements within a subject is higher when the measurements are closer together in time, the the correlation decaying exponentially as the time gap widens within cluster.
 
@@ -794,11 +850,11 @@ y <- x + rnorm(n)
 for(g in c(2, 4, 8, 16, 32, 64, 128, 256)) {
   cat('\n', g, 'distinct values of y\n')
   yg <- cut2(y, g=g)
-  print(system.time(f <- blrm(yg ~ x, method='optimizing', conc=1)))
+  print(system.time(f <- blrm(yg ~ x, method='optimizing')))
 }
 
 ```
-This is impressive.  For g=256 compare with the execution time of the Newton-Raphson method making optimum use of sparse matrices.  Also compare coefficients.  The default Dirichlet distribution concentration parameter for the intercepts is selected to make the posterior means agree with maximum likelihood estimates, sacrificing some performance of posterior modes.  We used instead a concentration parameter of 1.0 for the Dirichlet prior distribution for intercepts, which seems to make optimization agree more with maximum likelihood estimates.
+This is impressive.  For g=256 compare with the execution time of the Newton-Raphson method making optimum use of sparse matrices.  Also compare coefficients.  When sampling is done, the default Dirichlet distribution concentration parameter for the intercepts is selected to make the posterior means agree with maximum likelihood estimates, sacrificing some performance of posterior modes.  When `method='optimizing'`, instead a concentration parameter of 1.0 for the Dirichlet prior distribution for intercepts is used by default, which seems to make optimization agree more with maximum likelihood estimates.
 
 
 ```{r morm}
