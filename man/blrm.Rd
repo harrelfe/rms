@@ -13,7 +13,7 @@ blrm(
   na.action = na.delete,
   priorsd = rep(100, p),
   priorsdppo = rep(100, pppo),
-  conc = if (method == "optimizing") 1 else 1/(0.8 + 0.35 * max(k, 3)),
+  conc = 1/(0.8 + 0.35 * max(k, 3)),
   psigma = 1,
   rsdmean = if (psigma == 1) 0 else 1,
   rsdsd = 1,
@@ -52,7 +52,7 @@ blrm(
 
 \item{priorsdppo}{vector of prior standard deviations for non-proportional odds parameters.  As with \code{priorsd} the last element is the only one for which the SD corresponds to the original data scale.}
 
-\item{conc}{the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of 0.8 + 0.35 max(k, 3) where k is the number of Y categories.  If \code{method="optimizing"} the default is 1.  The defaults are chosen to make the posterior mode of the intercepts match the MLE if only optimizing, and if sampling to make the posterior mean intercepts more closely match the MLE.}
+\item{conc}{the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of 0.8 + 0.35 max(k, 3) where k is the number of Y categories.  The default is chosen to make the posterior mean of the intercepts more closely match the MLE.  For optimizing, the concentration parameter is always 1.0 to obtain results very close to the MLE for providing the posterior mode.}
 
 \item{psigma}{defaults to 1 for a half-t distribution with 4 d.f., location parameter \code{rsdmean} and scale parameter \code{rsdsd}}
 

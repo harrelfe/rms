@@ -5,7 +5,7 @@
 \title{Compile Stan Code}
 \usage{
 stanCompile(
-  mods = c("lrm", "lrmqr", "lrmqrc", "lrmqrcar1", "lrmqrppo", "lrmqrcppo"),
+  mods = c("lrm", "lrmc", "lrmppo", "lrmcppo", "lrmcar1"),
   repo = "https://raw.githubusercontent.com/harrelfe/stan/master"
 )
 }

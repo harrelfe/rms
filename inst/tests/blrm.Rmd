@@ -2,17 +2,22 @@
 title: "`rms::blrm` Examples"
 author: "Frank Harrell"
 date: "`r Sys.Date()`"
-output:
-  html_document:
-    toc: no
-    code_folding: show
-theme: yeti
 description: "`blrm` Examples"
+output:
+  rmdformats::readthedown:
+    thumbnails: false
+    lightbox: true
+    gallery: true
+    highlight: tango
+    use_bookdown: true
 ---
+
+<!-- Usage: knitrmd blrm
+            md2rmdreadthedown blrm    -->
 
 # Overview and Setup
 
-`blrm` is for Bayesian binary and ordinal proportional odds logistic regression.  It is the analog of `rms::lrm` and for ordinal responses is intended for outcomes with up to a few dozen ordinal levels.  The Bayesian approach has a number of advantage over traditional frequentist models, including
+`blrm` is for Bayesian binary and ordinal proportional odds logistic regression.  It is the analog of `rms::lrm` and for ordinal responses is intended for outcomes with up to a few hundred ordinal levels.  The Bayesian approach has a number of advantage over traditional frequentist models, including
 
 1. the use of exact calculations (to within simulation error) instead of large sample (e.g., normal theory) approximations to p-values and confidence intervals
 1. exact and more intuitive inference when random effects are included in the model
@@ -196,9 +201,9 @@ endo <- factor(endo, 1 : 2,
                c("No or Mild Activity", "Moderate or Severe Activity"))
 
 dd <- datadist(endo, calpro); options(datadist='dd')
-bcalpro <- blrm(calpro ~ endo, method='sampling', file='bcalpro.rds')
-# Note: default method='both' but the optimizing part to get posterior modes did not work for this example
+bcalpro <- blrm(calpro ~ endo, file='bcalpro.rds')
 print(bcalpro, intercepts=TRUE)
+# print.blrm defaults to not showing intercepts if more than 9 of them
 summary(bcalpro)
 ```
 
@@ -744,6 +749,7 @@ bar1
 The posterior mean $\beta$ and standard deviation of the posterior for $\beta$ look good.  The posterior median of $\sigma_\gamma$ is $\frac{1}{4}$ that used in simulating the data, and $\rho$ is $\frac{1}{7}$th.
 
 ## Example Real Data AR(1) Analysis
+
 The R [LMest package](https://www.jstatsoft.org/index.php/jss/article/view/v081i04/v81i04.pdf) comes with a dataset from the [Health and Retirement Study](http://hrsonline.isr.umich.edu) conducted at the University of Michigan.  The outcome is self-report health status on an ordinal 5-point scale.  Participants were interviewed approximately every two years for eight years.  The dataset is also analyzed in a [vignette for the R mvord package](https://cran.r-project.org/web/packages/mvord/vignettes/vignette_mvord2.html#example-4---a-longitudinal-model).  The dataset was retrieved from [here](https://github.com/cran/LMest/tree/master/data).  It has 56592 rows for 7074 individuals.
 
 ```{r srhsdata, results='asis'}
@@ -854,8 +860,7 @@ for(g in c(2, 4, 8, 16, 32, 64, 128, 256)) {
 }
 
 ```
-This is impressive.  For g=256 compare with the execution time of the Newton-Raphson method making optimum use of sparse matrices.  Also compare coefficients.  When sampling is done, the default Dirichlet distribution concentration parameter for the intercepts is selected to make the posterior means agree with maximum likelihood estimates, sacrificing some performance of posterior modes.  When `method='optimizing'`, instead a concentration parameter of 1.0 for the Dirichlet prior distribution for intercepts is used by default, which seems to make optimization agree more with maximum likelihood estimates.
-
+This is impressive.  For g=256 compare with the execution time of the Newton-Raphson method making optimum use of sparse matrices.  Also compare coefficients.  When sampling is done, the default Dirichlet distribution concentration parameter for the intercepts is selected to make the posterior means agree with maximum likelihood estimates, sacrificing some performance of posterior modes.  When `method='optimizing'`, instead a concentration parameter of 1.0 for the Dirichlet prior distribution for intercepts is always used, which seems to make optimization agree more with maximum likelihood estimates.  This optimization is used to get posterior modes when random effects are not present.
 
 ```{r morm}
 system.time(g <- orm(yg ~ x))

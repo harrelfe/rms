@@ -16,7 +16,7 @@
 ##' @param na.action default is \code{na.delete} to remove missings and report on them
 ##' @param priorsd vector of prior standard deviations.  If the vector is shorter than the number of model parameters, it will be repeated until the length equals the number of parametertimes.
 ##' @param priorsdppo vector of prior standard deviations for non-proportional odds parameters.  As with \code{priorsd} the last element is the only one for which the SD corresponds to the original data scale.
-##' @param conc the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of 0.8 + 0.35 max(k, 3) where k is the number of Y categories.  If \code{method="optimizing"} the default is 1.  The defaults are chosen to make the posterior mode of the intercepts match the MLE if only optimizing, and if sampling to make the posterior mean intercepts more closely match the MLE.
+##' @param conc the Dirichlet distribution concentration parameter for the prior distribution of cell probabilities at covariate means.  The default is the reciprocal of 0.8 + 0.35 max(k, 3) where k is the number of Y categories.  The default is chosen to make the posterior mean of the intercepts more closely match the MLE.  For optimizing, the concentration parameter is always 1.0 to obtain results very close to the MLE for providing the posterior mode.
 ##' @param psigma defaults to 1 for a half-t distribution with 4 d.f., location parameter \code{rsdmean} and scale parameter \code{rsdsd}
 ##' @param rsdmean the assumed mean of the prior distribution of the standard deviation of random effects.  When \code{psigma=2} this is the mean of an exponential distribution and defaults to 1.  When \code{psigma=1} this is the mean of the half-t distribution and defaults to zero.
 ##' @param rsdsd applies only to \code{psigma=1} and is the scale parameter for the half t distribution for the SD of random effects, defaulting to 1.
@@ -71,7 +71,7 @@
 blrm <- function(formula, ppo=NULL, keepsep=NULL,
                  data, subset, na.action=na.delete,
 								 priorsd=rep(100, p), priorsdppo=rep(100, pppo),
-                 conc=if(method=='optimizing') 1. else 1./(0.8 + 0.35 * max(k, 3)),
+                 conc=1./(0.8 + 0.35 * max(k, 3)),
                  psigma=1, rsdmean=if(psigma == 1) 0 else 1,
                  rsdsd=1, ar1sdmean=1,
 								 iter=2000, chains=4, refresh=0,
@@ -323,8 +323,6 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
               if(length(time)) 'lrmcar1'
             else
               'lrmc'
-
-
   
   mfile <- paste0(stanloc, '/', fitter, '.rds')
   if(! file.exists(mfile))
@@ -339,53 +337,64 @@ blrm <- function(formula, ppo=NULL, keepsep=NULL,
   if(length(prevhash) && prevhash == datahash) return(prevfit)
   
   hashobj  <- NULL
-
   
   itfailed <- function(w) is.list(w) && length(w$fail) && w$fail
 
   opt <- parm <- taus <- NULL
 
   if(method != 'sampling') {
+    # Temporarily make concentration parameter = 1.0
+    d$conc <- 1.0
+    
     otime <- system.time(g <- rstan::optimizing(mod, data=d, init=inito))
-    if(g$return_code != 0)
-      warning(paste('optimizing did not work; return code', g$return_code))
-    parm <- g$par
-    nam <- names(parm)
-    al  <- nam[grep('alpha\\[', nam)]
-    be  <- nam[grep('beta\\[',  nam)]
-    ta  <- nam[grep('tau\\[',   nam)]
-    alphas <- parm[al]
-    betas  <- parm[be]
-    betas <- matrix(betas, nrow=1) %*% t(wqrX$Rinv)
-    names(betas)  <- atr$colnames
-    alphas <- alphas - sum(betas * xbar)
-    if(length(ppo)) {
-      taus  <- matrix(parm[ta], nrow=pppo, ncol=k-2)
-      taus  <- wqrZ$Rinv %*% taus
-      alphas[-1] <- alphas[-1] - matrix(zbar, ncol=pppo) %*% taus
-      ro     <- as.integer(gsub('tau\\[(.*),.*',    '\\1', ta))  # y cutoff
-      co     <- as.integer(gsub('tau\\[.*,(.*)\\]', '\\1', ta))  # Z column
-      namtau <- paste0(colnames(Z)[ro], ':y>=', ylev[-(1:2)][co])
-      names(taus) <- namtau
-    }
-    names(alphas) <- if(nrp == 1) 'Intercept' else paste0('y>=', ylev[-1])
-
-    opt <- list(coefficients=c(alphas, betas, taus),
-                sigmag=parm['sigmag'], deviance=-2 * g$value,
-                return_code=g$return_code, hessian=g$hessian,
-                executionTime=otime)
+    d$conc <- conc   # restore
+    if(g$return_code != 0) {
+      warning(paste('Optimizing did not work; return code', g$return_code,
+                    '\nPosterior modes not computed'))
+      opt <- list(coefficients=NULL,
+                  sigmag=NA, deviance=NA,
+                  return_code=g$return_code, hessian=NULL,
+                  executionTime=otime)
+    } else {
+      parm <- g$par
+      nam <- names(parm)
+      al  <- nam[grep('alpha\\[', nam)]
+      be  <- nam[grep('beta\\[',  nam)]
+      ta  <- nam[grep('tau\\[',   nam)]
+      alphas <- parm[al]
+      betas  <- parm[be]
+      betas <- matrix(betas, nrow=1) %*% t(wqrX$Rinv)
+      names(betas)  <- atr$colnames
+      alphas <- alphas - sum(betas * xbar)
+      if(length(ppo)) {
+        taus  <- matrix(parm[ta], nrow=pppo, ncol=k-2)
+        taus  <- wqrZ$Rinv %*% taus
+        alphas[-1] <- alphas[-1] - matrix(zbar, ncol=pppo) %*% taus
+        ro     <- as.integer(gsub('tau\\[(.*),.*',    '\\1', ta))  # y cutoff
+        co     <- as.integer(gsub('tau\\[.*,(.*)\\]', '\\1', ta))  # Z column
+        namtau <- paste0(colnames(Z)[ro], ':y>=', ylev[-(1:2)][co])
+        names(taus) <- namtau
+      }
+      names(alphas) <- if(nrp == 1) 'Intercept' else paste0('y>=', ylev[-1])
+      
+      opt <- list(coefficients=c(alphas, betas, taus),
+                  sigmag=parm['sigmag'], deviance=-2 * g$value,
+                  return_code=g$return_code, hessian=g$hessian,
+                  executionTime=otime)
+      }
     if(method == 'optimizing') return(opt)
-    }
+  }
 
   if(progress != '') sink(progress, append=TRUE)
-  init <- NULL
-  if(length(parm)) {
-    nam <- names(parm)
-    nam <- nam[c(grep('alpha', nam), grep('beta', nam), grep('omega', nam),
-                 grep('pi', nam), grep('tau', nam))]  #, grep('theta', nam))]
-    parm <- as.list(parm[nam])
-    init <- function() parm
-  }
+  
+  #init <- NULL
+  # if(length(parm)) {
+  #   nam <- names(parm)
+  #   nam <- nam[c(grep('alpha', nam), grep('beta', nam), grep('omega', nam),
+  #                grep('pi', nam), grep('tau', nam))]  #, grep('theta', nam))]
+  #   parm <- as.list(parm[nam])
+  #   init <- function() parm
+  #}
 
   debug(1)
   exclude <- c('sigmaw', 'gamma_raw', 'pi')  #, 'OR')

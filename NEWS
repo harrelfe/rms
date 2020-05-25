@@ -1,4 +1,4 @@
-Changes in version 6.0-0 (2020-05-23)
+Changes in version 6.0-0 (2020-05-24)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)
    * prModFit: changed default in catl function to center=FALSE
    * residuals.psm: added transformation of survival time when computing censored normalized residuals
@@ -28,6 +28,7 @@ Changes in version 6.0-0 (2020-05-23)
    * predict.blrm: new function
    * Mean.blrm, Quantile.blrm, ExProb.blrm: new functions
    * residuals.lrm: implemented score residuals for all link functions using code from Yuqi Tian
+   * contrast.rms: added fun= for Bayesian models for getting posterior distributions of differences of nonlinearly transformed estimates; enhanceds plot.contrast.rms and print.contrast.rms to handle this
 
 Changes in version 5.1-4 (2019-11-16)
    * anova.rms: added which LaTeX packages are needed in help page

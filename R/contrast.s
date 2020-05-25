@@ -1,7 +1,7 @@
 contrast <- function(fit, ...) UseMethod("contrast")
 
 contrast.rms <-
-  function(fit, a, b, a2, b2, cnames=NULL,
+  function(fit, a, b, a2, b2, cnames=NULL, fun=NULL, funint=TRUE,
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'), usebootcoef=TRUE,
            boot.type=c('percentile','bca','basic'),
@@ -120,6 +120,39 @@ contrast.rms <-
       if(mb2 == 1) xb2 <- matrix(xb2, nrow=mm, ncol=ncol(xb2), byrow=TRUE)
     }
   }
+
+  if(bayes && length(fun) && inherits(fit, 'blrm')) {
+    if(! missing(a2)) stop('fun= is only implemented for blrm fits')
+    if(missing(b))    stop('b must be specified when fun= is given')
+
+    nd   <- nrow(draws)
+    nrp  <- num.intercepts(fit)
+    kint <- fit$interceptRef
+    pa   <- t(matxv(xa, draws, kint=kint,  bmat=TRUE))
+    pb   <- t(matxv(xb, draws, kint=kint,  bmat=TRUE))
+    if(length(cnames)) colnames(pa) <- colnames(pb) <- cnames
+    # If fun has an intercepts argument, the intecept vector must be
+    # updated for each draw
+    for(i in 1 : nd) {
+      pa[i, ] <- if(funint)
+                   fun(pa[i, ], intercepts=draws[i, 1L : nrp])
+                 else
+                   fun(pa[i, ])
+      pb[i, ] <- if(funint)
+                   fun(pb[i, ], intercepts=draws[i, 1L : nrp])
+                 else
+                   fun(pb[i, ])
+    }
+    if(! length(cnames))
+      cnames <- if(length(vary)) rep('', ncol(pa)) else
+                          as.character(1 : ncol(pa))
+    colnames(pa) <- colnames(pb) <- cnames
+
+    res <- list(esta=pa, estb=pb,
+                Xa=xa, Xb=xb, 
+                nvary=length(vary))
+    return(structure(res, class='contrast.rms'))
+    }
   
   X <- xa - xb
   if(! missing(a2)) X <- X - (xa2 - xb2)
@@ -215,8 +248,28 @@ contrast.rms <-
 }
 
 print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
-                               jointonly=FALSE, ...)
+                               jointonly=FALSE, prob=0.95, ...)
 {
+  # See if a result of fun= on a Bayesian fit
+  if('esta' %in% names(x)) {
+    esta <- x$esta
+    estb <- x$estb
+    f <- function(x) {
+      hpd <- HPDint(x, prob)
+      r <- c(mean(x), median(x), hpd)
+      names(r) <- c('Posterior Mean', 'Posterior Median',
+                    paste(c('Lower', 'Upper'), prob, 'HPD'))
+      r
+    }
+    cat('\nPosterior Summaries for First X Settings\n\n')
+    print(t(apply(esta, 2, f)))
+    cat('\nPosterior Summaries for Second X Settings\n\n')
+    print(t(apply(estb, 2, f)))
+    cat('\nPosterior Summaries of First - Second\n\n')
+    print(t(apply(esta - estb, 2, f)))
+    return(invisible())
+    }
+  
   edf <- x$df.residual
   sn <- if(length(edf)) 't' else 'Z'
   pn <- if(length(edf)) 'Pr(>|t|)' else 'Pr(>|z|)'
