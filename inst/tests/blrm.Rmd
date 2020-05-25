@@ -233,6 +233,15 @@ med <- function(lp) quant(lp=lp)
 Predict(bcalpro, endo, fun=med)
 ```
 
+But the `contrast` function in `rms` now allows one to get posterior distributions of differences in nonlinearly transformed parameters, as follows.
+
+```{r bcalp2}
+k <- contrast(bcalpro, list(endo=levels(endo)[1]),
+                       list(endo=levels(endo)[2]), fun=bar)
+k
+plot(k, which='diff')
+```
+
 ## Binary Regression with Restricted Cubic Splines
 <a name="support"></a>
 

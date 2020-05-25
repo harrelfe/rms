@@ -118,7 +118,10 @@ compare \code{list(treat="drug", age=c(20,30))} with
 \code{list(treat="placebo"), age=c(40,50))}
 }
 \item{fun}{a function to evaluate on the linear predictor for each of
-	\code{a} and \code{b}.  Applies only to Bayesian model fits.}
+	\code{a} and \code{b}.  Applies to Bayesian model fits.  Also, 
+a function to transform the contrast, SE, and lower and upper
+confidence limits before printing.  For example, specify \code{fun=exp} to
+anti-log them for logistic models.}
 \item{type}{
 set \code{type="average"} to average the individual contrasts (e.g., to
 obtain a Type II or III contrast).  Set \code{type="joint"} to jointly
@@ -167,11 +170,6 @@ interval probability for Bayesian analyses)
 \item{X}{
 set \code{X=TRUE} to  print design matrix used in computing the contrasts (or
 the average contrast)
-}
-\item{fun}{
-a function to transform the contrast, SE, and lower and upper
-confidence limits before printing.  For example, specify \code{fun=exp} to
-anti-log them for logistic models.
 }
 \item{funint}{set to \code{FALSE} if \code{fun} is not a function such
 	as the result of \code{Mean}, \code{Quantile}, or \code{ExProb} that

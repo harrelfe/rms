@@ -114,3 +114,5 @@ plot.contrast.rms <- function(x, bivar=FALSE,
          xlab('') + ylab('')
   g
 }
+
+utils::globalVariables(c('theta', 'what'))
