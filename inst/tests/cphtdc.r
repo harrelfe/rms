@@ -25,13 +25,14 @@ cox.zph(f, "rank")             # tests of PH
  
 
 # Now to the actual time-interaction
-library(Epi)
-lxs <- Lexis(entry = list(Timeband = Start),
-                 exit = list(Timeband = dt, Age = age + dt),
-                 exit.status = e,
-                 data = test)
-subset(lxs, lex.id %in% 1:3)
+if(! require(Epi)) quit(save='no')
 
+lxs <- Lexis(entry = list(Timeband = Start),
+             exit = list(Timeband = dt, Age = age + dt),
+             exit.status = e,
+             data = test)
+subset(lxs, lex.id %in% 1:3)
+  
 spl <- 
   splitLexis(lxs, 
              time.scale = "Timeband",
@@ -48,7 +49,7 @@ dd <- datadist(spl)
 #######################
 # Regular interaction #
 #######################
-coxph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex*Timeband,
+  coxph(Surv(time = Timeband, time2 = Stop, event = lex.Xst) ~ Age + sex*Timeband,
       data = spl)
 # Gives:
 # Call:
@@ -161,7 +162,7 @@ contrast(fit_cph,
 # Err. in gendata(list(coefficients = c(0.0420352254526414, -0.945650117874665,  : 
 #   factor(s) not in design: Timeband 
 
-Ok, thank you. I can get around the problem by manually generating an interaction variable - seems to work satisfactory:
+#Ok, thank you. I can get around the problem by manually generating an interaction variable - seems to work satisfactory:
 
 spl_alt <- 
   within(spl, {

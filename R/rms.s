@@ -392,7 +392,7 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
 
     attr(mmname, 'alt') <- if(! all(Altcolnam == mmname)) Altcolnam
     if(any(duplicated(mmname)))
-      stop(paste0('duplicated column name in for design matrix:',
+      stop(paste0('duplicated column name in design matrix:',
                  paste(mmname[duplicated(mmname)], collapse=' '),
                  '\nMost likely caused by a variable name concatenated to a factor level\nbeing the same is the name of another variable.'))
     atr <- list(name=fname, label=flabel, units=funits,

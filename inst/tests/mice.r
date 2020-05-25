@@ -1,5 +1,5 @@
+if(! require(mice)) quit(save='no')
 require(rms)
-require(mice)
 set.seed(1)
 n <- 50
 d <- data.frame(x1=runif(n), x2=sample(c('a','b','c'), n, TRUE),

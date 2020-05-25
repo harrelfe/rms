@@ -23,6 +23,7 @@ g <- blrm(y ~ x)
 M <- Mean(g)
 g
 k <- contrast(g, list(x=1), list(x=0), fun=M)
+k
 plot(k)
 
 # Y is too discrete for quantiles here but do the median anyway

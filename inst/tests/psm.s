@@ -1,3 +1,4 @@
+intr <- FALSE  # set to TRUE if running interactivel so xless will run
 require(survival)
 n <- 400
 set.seed(1)
@@ -28,9 +29,9 @@ v <- vcov(f, regcoef.only=FALSE)
 diag(vcov(h)) / diag(v)
 
 r <- residuals(f, type='matrix')[,'dg']
-xless(cbind(rg, r))
+if(intr) xless(cbind(rg, r))
 
-xless(residuals(f, type='score'))
+if(intr) xless(residuals(f, type='score'))
 fr <- robcov(f)
 diag(vcov(f)) / diag(vcov(fr))
 
