@@ -1,6 +1,6 @@
 Package: rms
 Version: 6.0-0
-Date: 2020-05-24
+Date: 2020-05-25
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
 Maintainer: Frank E Harrell Jr <f.harrell@vanderbilt.edu>
@@ -22,6 +22,6 @@ Description: Regression modeling, testing, estimation, validation,
 	squares for serially or spatially correlated observations, generalized
 	linear models, and quantile regression.  Bayesian methods are implemented for binary and ordinal logistic regression with or without random effects.
 License: GPL (>= 2)
-URL: http://biostat.mc.vanderbilt.edu/rms, https://github.com/harrelfe/rms, http://hbiostat.org/R/rms, https://www.nicholas-ollberding.com/post/an-introduction-to-the-harrell-verse-predictive-modeling-using-the-hmisc-and-rms-packages
+URL: https://hbiostat.org/R/rms, https://github.com/harrelfe/rms, http://hbiostat.org/doc/rms, https://www.nicholas-ollberding.com/post/an-introduction-to-the-harrell-verse-predictive-modeling-using-the-hmisc-and-rms-packages
 LazyLoad: yes
 RoxygenNote: 7.1.0
