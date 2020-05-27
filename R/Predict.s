@@ -62,7 +62,7 @@ Predict <-
     for(nam in nams) {
       i <- i + 1L
       m$name <- nam
-      lv     <- eval(m)
+      lv     <- eval(m,envir = parent.frame())
       j <- attr(lv, 'info')
       if(i == 1L) info <- j
       else {
