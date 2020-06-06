@@ -33,6 +33,12 @@ cph <- function(formula     = formula(data),
   mc     <- match(c("formula", "data", "subset", "weights", "na.action"), 
                   names(m), 0)
   m <- m[c(1, mc)]
+  
+  ## Handles dtrans in fit.mult.impute where weights variable is in
+  ## data frame returned by dtrans
+  if(! missing(weights) && m$weights == '..1')
+    m$weights <- as.name(as.character(substitute(weights)))
+
   m$na.action <- na.action
 
   m$drop.unused.levels <- TRUE
