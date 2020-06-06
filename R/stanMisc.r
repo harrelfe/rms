@@ -179,6 +179,7 @@ stanCompile <-
   options(auto_write = FALSE)
   stanloc <- .Options$stancompiled
   if(! length(stanloc)) stop('options(stancompiled=) not defined')
+  if(! file.exists(stanloc)) stop('The directory defined in options(stancompiled=), \"', stanloc, '\" does not exist. Hint: see ?dir.create')
 
   cat('Compiling', length(mods), 'programs to', stanloc, '\n')
   for(m in mods) {
