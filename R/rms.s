@@ -24,10 +24,18 @@
 #
 #
 
-
-Design <- function(mf, allow.offset=TRUE, intercept=1) {
+  
+Design <- function(mf, formula=NULL, specials=NULL,
+                   allow.offset=TRUE, intercept=1) {
   debug <- length(.Options$rmsdebug) && .Options$rmsdebug
-  Terms <- Terms.orig <- attr(mf, "terms")
+
+  if(length(formula)) {
+    Terms <- terms(formula, specials=specials, data=mf)
+    attr(mf, 'terms') <- Terms
+    }
+  else Terms <- attr(mf, 'terms')
+
+  Terms.orig  <- Terms
   Term.labels <- attr(Terms, 'term.labels')
   ## offsets are not included anywhere in terms even though they are
   ## in the model frame
@@ -134,6 +142,8 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   wts <- if(any(namx == '(weights)'))(1 : length(namx))[namx == '(weights)']
          else 0
 
+  if(debug) prn(llist(ioffset, response.pres, wts))
+  
   coluse <- setdiff(1 : ncol(mf), c(ioffset, 1 * response.pres, wts))
 
   inner.name <- if(length(Terms) > 0) unique(var.inner(Terms))
@@ -177,7 +187,10 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
 
   anyfactors <- length(coluse) > 0
   i1.noia <- 0
-  if(length(Term.labels) < length(coluse)) stop('program logic error tl')
+  if(length(Term.labels) < length(coluse))
+    stop(paste('program logic error tl\nTerm.labels:',
+               paste(Term.labels, collapse=', '), '\ncoluse:',
+               paste(coluse, collapse=', ')))
   it <- 0
   if(anyfactors) for(i in coluse) {
     if(i  != wts) {
@@ -435,4 +448,89 @@ Design <- function(mf, allow.offset=TRUE, intercept=1) {
   
   if(length(offs))    attr(mf, 'offset')  <- offs
   mf
+}
+
+modelData <- function(data=environment(formula), formula, formula2=NULL,
+                      weights=NULL, subset=NULL, na.action=na.delete,
+                      dotexpand=TRUE) {
+
+  ## Get a list of all variables in either formula
+  ## This is for innermost variables, e.g. Surv(a,b) will produce a,b
+  v1 <- all.vars(formula)
+  v2 <- all.vars(formula2)
+  V  <- unique(c(v1, v2))
+
+  edata <- is.environment(data)
+
+  rhsdot <- length(v1) == 2 && v1[2] == '.'
+  if(rhsdot && edata)
+    stop('may not specify ~ . in formula when data= is absent')
+
+  if(edata) {
+    env  <- data
+    data <- list()
+    for(v in V) {
+      xv <- env[[v]]
+      if(is.factor(xv)) xv <- xv[, drop=TRUE]
+      ## Note: Surv() has class 'Surv' without class 'matrix'
+      else if(inherits(xv, 'matrix') && ncol(xv) > 1)
+        class(xv) <- unique(c('rms', class(xv)))
+      data[[v]] <- xv
+    }
+    data <- as.data.frame(data)
+  }
+  ## Can't do else data[V] here as formula may have e.g. Surv(time,event)
+  ## and hasn't been evaluated yet, where data has time and event
+  if(length(weights)) data$`(weights)` <- weights
+
+  if(length(subset)) data <- data[subset, ]
+
+  ## Make sure that the second formula doesn't create any NAs on
+  ## observations that didn't already have an NA for variables in main formula
+  if(length(formula2)) {
+    i <- ! complete.cases(data[v1])
+    j <- ! complete.cases(data[v2])
+    if(any(j & ! i))
+      stop('A variable in the second formula was missing on an observation that was not missing on any variable in main formula')
+  }
+
+  noexpand <- rhsdot & ! dotexpand
+  if(noexpand) {   # no RHS variables to be used
+    predvars <- formula[[2]]
+    varnames <- deparse(predvars)
+    if(length(weights)) {
+      predvars[[2]] <- as.name('(weights)')
+      varnames <- c(varnames, '(weights)')
+    }
+  }
+  else {
+    Terms    <- terms(formula, data=data, specials=NULL)
+    vars     <- attr(Terms, 'variables')
+    predvars <- attr(Terms, 'predvars')
+    if( ! length(predvars)) predvars <- vars
+    if(length(weights))
+      predvars[[length(predvars) + 1]] <- as.name('(weights)')
+    deparse2 <- function(x)   # from stats
+      paste(deparse(x, width.cutoff = 500L, backtick = !is.symbol(x) && 
+                    is.language(x)), collapse = " ")
+    varnames    <- vapply(predvars, deparse2, " ")[-1L]
+    }
+  data        <- eval(predvars, data)
+    
+  if(is.matrix(data)) data <- data.frame(data)  # e.g. Surv() object
+  names(data) <- varnames
+  data        <- as.data.frame(data, check.names=FALSE)
+  data        <- na.action(data)
+  nac         <- attr(data, 'na.action')
+  attr(data, 'na.action') <- nac
+  data
+  }
+
+## Handle spline and other variables with rms class
+as.data.frame.rms <- function(x, row.names = NULL, optional = FALSE, ...) {
+  nrows <- NROW(x)
+  row.names <- if(optional) character(nrows) else as.character(1:nrows)
+  value <- list(x)
+  if(! optional) names(value) <- deparse(substitute(x))[[1]]
+  structure(value, row.names=row.names, class='data.frame')
 }

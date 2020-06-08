@@ -32,7 +32,7 @@ importFrom(graphics, abline, axis, boxplot, hist, legend,
            title, grconvertX, grconvertY)
 importFrom(methods, existsFunction, getFunction, new)
 importFrom(stats, .getXlevels, AIC, approx, as.formula,
-           asOneSidedFormula, coef, confint, contrasts, cor,
+           asOneSidedFormula, coef, complete.cases, confint, contrasts, cor,
            dcauchy, delete.response, density, deviance,
            dnorm, family, fitted, formula, gaussian,
            glm.control, glm.fit, is.empty.model, lm, lm.fit,
@@ -223,3 +223,4 @@ S3method(vcov, rms)
 S3method(vcov, rmsb)
 
 S3method("[", rms)
+S3method("as.data.frame", rms)

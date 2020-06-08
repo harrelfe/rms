@@ -17,7 +17,7 @@
   unless a restricted mean is explicitly requested.
 }
 \usage{
-cph(formula = formula(data), data=parent.frame(),
+cph(formula = formula(data), data=environment(formula),
     weights, subset, na.action=na.delete, 
     method=c("efron","breslow","exact","model.frame","model.matrix"), 
     singular.ok=FALSE, robust=FALSE,

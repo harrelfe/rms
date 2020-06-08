@@ -15,7 +15,8 @@ user previously running \code{options(prType="lang")} where
 \code{"html"}. 
 }
 \usage{
-lrm(formula, data, subset, na.action=na.delete, method="lrm.fit",
+lrm(formula, data=environment(formula),
+    subset, na.action=na.delete, method="lrm.fit",
     model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE, 
     penalty=0, penalty.matrix, tol=1e-7, 
     strata.penalty=0, var.penalty=c('simple','sandwich'),

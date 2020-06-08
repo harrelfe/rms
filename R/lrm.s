@@ -1,4 +1,5 @@
-lrm <- function(formula, data,subset, na.action=na.delete,
+lrm <- function(formula, data=environment(formula),
+                subset, na.action=na.delete,
                 method="lrm.fit", model=FALSE, x=FALSE, y=FALSE, 
                 linear.predictors=TRUE, se.fit=FALSE, 
                 penalty=0, penalty.matrix, tol=1e-7, strata.penalty=0,
@@ -7,30 +8,21 @@ lrm <- function(formula, data,subset, na.action=na.delete,
 {
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
-  m <- match.call(expand.dots=FALSE)
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
-             names(m), 0)
-  m <- m[c(1, mc)]
-  m$na.action <- na.action
-  m$drop.unused.levels <- TRUE
-  
-  m[[1]] <- as.name("model.frame")
-  nact <- NULL
-  if(missing(data)) data <- NULL
+
+  data <-
+    modelData(data, formula,
+              weights=if(! missing(weights)) eval(substitute(weights), data),
+              subset =if(! missing(subset )) eval(substitute(subset), data),
+              na.action=na.action)
 
   tform <- terms(formula, specials='strat', data=data)
   nstrata <- 1
-  if(!missing(data) || (
-						length(atl <- attr(tform,"term.labels")) && 
-						any(atl!=".")))	{ ##X's present
 
-    dul <- .Options$drop.unused.levels
-    if(!length(dul) || dul) {
-      on.exit(options(drop.unused.levels=dul))
-      options(drop.unused.levels=FALSE)
-    }
+	if(length(atl <- attr(tform, "term.labels")) && 
+						any(atl!="."))	{ ##X's present
 
-    X        <- Design(eval.parent(m))
+    X        <- Design(data, formula=formula, specials='strat')
+
     atrx     <- attributes(X)
     sformula <- atrx$sformula
     nact     <- atrx$na.action
@@ -41,13 +33,14 @@ lrm <- function(formula, data,subset, na.action=na.delete,
     mmcolnames <- atr$mmcolnames
 
     Y <- model.extract(X, 'response')
+
     offs <- atrx$offset
     if(!length(offs)) offs <- 0
     weights <- wt <- model.extract(X, 'weights')
     if(length(weights))
       warning('currently weights are ignored in model validation and bootstrapping lrm fits')
     if(model) m <- X
-    stra <- attr(tform,'specials')$strat
+    stra <- attr(tform, 'specials')$strat
     Strata <- NULL
     Terms.ns <- Terms
     if(length(stra)) {
@@ -58,6 +51,7 @@ lrm <- function(formula, data,subset, na.action=na.delete,
       Strata <- X[[stra]]
       nstrata <- length(levels(Strata))
     }
+    
     X <- model.matrix(Terms.ns, X)
     alt <- attr(mmcolnames, 'alt')
     if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
@@ -90,7 +84,9 @@ lrm <- function(formula, data,subset, na.action=na.delete,
       }
   }
   else {
-    X <- eval.parent(m)
+    # X <- eval.parent(m)
+    X <- Design(data, formula=formula, specials='strat')
+
     offs <- model.offset(X)
     if(! length(offs)) offs <- 0
     Y <- model.extract(X, 'response')
@@ -105,11 +101,11 @@ lrm <- function(formula, data,subset, na.action=na.delete,
 
   if(nstrata > 1) {
     if(scale) stop('scale=TRUE not implemented for stratified model')
-    f <- lrm.fit.strat(X,Y,Strata,offset=offs,
+    f <- lrm.fit.strat(X, Y, Strata, offset=offs,
                        penalty.matrix=penalty.matrix,
                        strata.penalty=strata.penalty,
                        tol=tol,
-                       weights=weights,normwt=normwt, ...)
+                       weights=weights, normwt=normwt, ...)
   }
   else {
     if(existsFunction(method)) {

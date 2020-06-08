@@ -92,7 +92,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   }
   
   nxin <- length(est)
-  
+
   if(!is.factor(y)) y <- as.factor(y)
   y <- unclass(y)   # in case is.factor
   ylevels <- levels(y)

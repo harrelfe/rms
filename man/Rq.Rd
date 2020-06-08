@@ -20,7 +20,8 @@ user previously running \code{options(prType="lang")} where
 be used of \code{options(prType='html')}.
 }
 \usage{
-Rq(formula, tau = 0.5, data, subset, weights, na.action=na.delete,
+Rq(formula, tau = 0.5, data=environment(formula),
+   subset, weights, na.action=na.delete,
    method = "br", model = FALSE, contrasts = NULL,
    se = "nid", hs = TRUE, x = FALSE, y = FALSE, ...)
 

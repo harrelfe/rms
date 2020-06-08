@@ -1,44 +1,34 @@
-psm <- function(formula=formula(data),
-                data=parent.frame(),
+psm <- function(formula,
+                data=environment(formula),
                 weights, subset, na.action=na.delete, dist='weibull', 
                 init=NULL,  scale=0,
                 control=survreg.control(),
                 parms=NULL, model=FALSE, x=FALSE, y=TRUE, time.inc, ...) {
   
   call <- match.call()
-  m <- match.call(expand.dots=FALSE)
+
   if(dist == 'extreme')
     warning('Unlike earlier versions of survreg, dist="extreme" does not fit\na Weibull distribution as it uses an identity link.  To fit the Weibull\ndistribution use the default for dist or specify dist="weibull".')
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
-              names(m), 0)
-  m <- m[c(1, mc)]
-  m$na.action <- na.action  ## FEH
-  m$drop.unused.levels <- TRUE
-  m[[1]] <- as.name("model.frame")
-  special <- c("strata", "cluster")
-  Terms <-
-    if(missing(data)) terms(formula, special)
-    else
-      terms(formula, special, data=data)
-  m$formula <- Terms
-  ## Start FEH
-  dul <- .Options$drop.unused.levels
-  if(!length(dul) || dul) {
-    on.exit(options(drop.unused.levels=dul))
-    options(drop.unused.levels=FALSE)
-  }
 
-  m <- Design(eval.parent(m))
-  atrx <- attributes(m)
+  ## Start FEH
+  m <-
+    modelData(data, formula,
+              subset  = if(! missing(subset )) eval(substitute(subset ), data),
+              weights = if(! missing(weights)) eval(substitute(weights), data),
+              na.action=na.action)
+
+  m <- Design(m, formula=formula, specials=c('strata', 'cluster'))
+
+  atrx     <- attributes(m)
   sformula <- atrx$sformula
-  nact <- atrx$na.action
-  Terms <- atrx$terms
-  atr   <- atrx$Design
+  nact     <- atrx$na.action
+  Terms    <- atrx$terms
+  atr      <- atrx$Design
   ## End FEH
   
   weights <- model.extract(m, 'weights')
-  Y <- model.extract(m, "response")
-  Ysave <- Y
+  Y       <- model.extract(m, "response")
+  Ysave   <- Y
   
   ## Start FEH
   atY <- attributes(Y)

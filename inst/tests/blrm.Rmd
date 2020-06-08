@@ -253,6 +253,7 @@ getHdata(support)
 dd <- datadist(support); options(datadist='dd')
 f <- lrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5),
 				 data=support, eps=1e-4, x=TRUE)
+htmlVerbatim(specs(f))
 f
 # Compute the apparent standard error of Dxy (not accounting for overfitting)
 # for comparison with the Bayesian HPD interval for Dxy
@@ -260,6 +261,7 @@ htmlVerbatim(rcorr.cens(predict(f), support$hospdead))
 htmlVerbatim(Function(f))
 bsup <- blrm(hospdead ~ dzgroup + rcs(crea, 5) + rcs(meanbp, 5), 
     	  		 data=support, file='bsup.rds')
+htmlVerbatim(specs(bsup))
 bsup
 htmlVerbatim(Function(bsup))   # by default uses posterior mode parameter values
 # To add an intercept use e.g. Function(bsup, intercept=coef(g, 'mode')[5])

@@ -1,24 +1,17 @@
-bj <- function(formula=formula(data), data,
+bj <- function(formula, data=environment(formula),
                subset, na.action=na.delete, 
                link="log",	control=NULL,
                method='fit', x=FALSE, y=FALSE, time.inc)
 {
   call <- match.call()
-  m <- match.call(expand.dots=FALSE)
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
-              names(m), 0)
-  m <- m[c(1, mc)]
-  m$na.action <- na.action
-  m$drop.unused.levels <- TRUE
-  m[[1]] <- as.name("model.frame")
-  dul <- .Options$drop.unused.levels
-  if(!length(dul) || dul)
-    {
-      on.exit(options(drop.unused.levels=dul))
-      options(drop.unused.levels=FALSE)
-    }
-  
-  X <- Design(eval.parent(m))
+
+  X <-
+    modelData(data, formula,
+              subset = if(! missing(subset)) eval(substitute(subset), data),
+              na.action=na.action)
+
+  X <- Design(X, formula=formula)
+
   if(method=='model.frame') return(X)
   atrx       <- attributes(X)
   nact       <- atrx$na.action

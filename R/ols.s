@@ -1,4 +1,5 @@
-ols <- function(formula, data, weights, subset, na.action=na.delete, 
+ols <- function(formula, data=environment(formula),
+                weights, subset, na.action=na.delete, 
                 method = "qr", model = FALSE, x = FALSE, y = FALSE,
                 se.fit=FALSE, linear.predictors=TRUE,
                 penalty=0, penalty.matrix, tol=1e-7, sigma=NULL,
@@ -6,28 +7,19 @@ ols <- function(formula, data, weights, subset, na.action=na.delete,
 {
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
-  m <- match.call(expand.dots = FALSE)
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
-              names(m), 0)
-  m <- m[c(1, mc)]
-  m$na.action <- na.action
-  m$drop.unused.levels <- TRUE
-  m[[1]] <- as.name("model.frame")
-  ##X's present)
-  w <- if(missing(data)) terms(formula) else terms(formula, data=data)
-  if(length(attr(w, "term.labels"))) {
-    ## R's model.frame.default gives wrong model frame if [.factor
-    ## removes unused factor levels
-    dul <- .Options$drop.unused.levels
-    if(!length(dul) || dul) {
-      on.exit(options(drop.unused.levels=dul))
-      options(drop.unused.levels=FALSE)
-    }
 
-    X      <- eval.parent(m)
-    X      <- Design(X)
+  # X's present
+  w <- terms(formula, data=data)
+  if(length(attr(w, "term.labels"))) {
+
+    X <-
+      modelData(data, formula,
+                subset  = if(! missing(subset)) eval(substitute(subset), data),
+                weights = if(! missing(weights)) eval(substitute(weights), data),
+                na.action=na.action)
+                        
+    X      <- Design(X, formula=formula)
     offset <- attr(X, 'offset')
-    options(drop.unused.levels=dul)
     atrx  <- attributes(X)
     sformula <- atrx$sformula
     atr   <- atrx$Design

@@ -1,6 +1,6 @@
 Glm <- 
-  function(formula, family = gaussian, data = list(), weights = NULL,
-           subset = NULL, na.action = na.delete, start = NULL, offset = NULL,
+  function(formula, family = gaussian, data = environment(formula),
+           weights, subset, na.action = na.delete, start = NULL, offset = NULL,
            control = glm.control(...), model = TRUE, method = "glm.fit",
            x = FALSE, y = TRUE, contrasts = NULL, ...)
 {
@@ -11,23 +11,17 @@ Glm <-
     print(family)
     stop("`family' not recognized")
   }
-  mt <- terms(formula, data = data)
-  if (missing(data)) data <- environment(formula)
-  mf <- match.call(expand.dots = FALSE)
-  mf$family <- mf$start <- mf$control <- mf$maxit <- NULL
-  mf$model <- mf$method <- mf$x <- mf$y <- mf$contrasts <- NULL
-  mf$... <- NULL
-  mf$drop.unused.levels <- TRUE
-  mf$na.action <- na.action
-  mf[[1]] <- as.name("model.frame")
 
-  dul <- .Options$drop.unused.levels
-  if(!length(dul) || dul) {
-    on.exit(options(drop.unused.levels=dul))
-    options(drop.unused.levels=FALSE)
-  }
+  mt <- terms(formula, dta=data)
   
-  mf <- Design(eval(mf, parent.frame()))
+  mf <-
+    modelData(data, formula,
+              subset  = if(! missing(subset )) eval(substitute(subset ), data),
+              weights = if(! missing(weights)) eval(substitute(weights), data),
+              na.action=na.action)
+
+  mf <- Design(mf, formula=formula)
+
   at <- attributes(mf)
   desatr <- at$Design
   attr(mf, 'Design') <- NULL

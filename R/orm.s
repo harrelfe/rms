@@ -1,4 +1,5 @@
-orm <- function(formula, data, subset, na.action=na.delete,
+orm <- function(formula, data=environment(formula),
+        subset, na.action=na.delete,
 				method="orm.fit", model=FALSE, x=FALSE, y=FALSE, 
 				linear.predictors=TRUE, se.fit=FALSE, 
 				penalty=0, penalty.matrix, tol=1e-7, eps=0.005,
@@ -8,36 +9,26 @@ orm <- function(formula, data, subset, na.action=na.delete,
   var.penalty <- match.arg(var.penalty)
   if(!missing(penalty) || !missing(penalty.matrix))
     stop('penalty not yet implemented')
-  m <- match.call(expand.dots=FALSE)
-  mc <- match(c("formula", "data", "subset", "na.action"), 
-             names(m), 0)
-  m <- m[c(1, mc)]
-  m$na.action <- na.action
-  m$drop.unused.levels <- TRUE
-  
-  m[[1]] <- as.name("model.frame")
   nact <- NULL
-  if(missing(data)) data <- NULL
 
   tform <- terms(formula, data=data)
-  if(!missing(data) || (
+  if(! missing(data) || (
 						length(atl <- attr(tform,"term.labels")) && 
 						any(atl!=".")))	{ ##X's present
+ 
+    X <-
+      modelData(data, formula,
+                subset = if(! missing(subset)) eval(substitute(subset), data),
+                na.action=na.action)
 
-    dul <- .Options$drop.unused.levels
-    if(!length(dul) || dul) {
-      on.exit(options(drop.unused.levels=dul))
-      options(drop.unused.levels=FALSE)
-    }
-
-    X <- Design(eval.parent(m))
-    atrx <- attributes(X)
+    X <- Design(X, formula=formula)
+    atrx     <- attributes(X)
     sformula <- atrx$sformula
-    nact <- atrx$na.action
-    if(method=="model.frame") return(X)
-    Terms <- atrx$terms
+    nact     <- atrx$na.action
+    if(method == "model.frame") return(X)
+    Terms    <- atrx$terms
     attr(Terms, "formula") <- formula
-    atr <- atrx$Design
+    atr        <- atrx$Design
     mmcolnames <- atr$mmcolnames
 
     Y <- model.extract(X, 'response')

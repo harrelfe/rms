@@ -1,5 +1,10 @@
-Changes in version 6.0-1 (2020-06-06)
+Changes in version 6.0-1 (2020-06-08)
    * cph: workaround for R bug where name of weights variable was set to ..1 when dtrans was used with fit.mult.impute and dtrans contained weights (thanks: Trevor Thompson)
+   * cph: changed as.name('model.frame') to quote(stats::model.frame)
+   * blrm: subset was not working; reworked data setup for the two formulas
+   * modelData: new service function that allows us to do away with model.frame and let Design() directly process the data frame; tiny change to Design()
+   * as.data.frame.rms: added so that modified Design will work
+   * lrm, Rq, psm, Glm, bj, orm, ols: changed to use modelData instead of model.frame
 
 Changes in version 6.0-0 (2020-06-04)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)

@@ -50,7 +50,7 @@
   allow missing data and expects a full design matrix as input.
 }
 \usage{
-bj(formula=formula(data), data, subset, na.action=na.delete,
+bj(formula, data=environment(formula), subset, na.action=na.delete,
    link="log", control, method='fit', x=FALSE, y=FALSE, 
    time.inc)
 

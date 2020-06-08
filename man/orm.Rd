@@ -40,7 +40,8 @@
 	second argument).
 }
 \usage{
-orm(formula, data, subset, na.action=na.delete, method="orm.fit",
+orm(formula, data=environment(formula),
+    subset, na.action=na.delete, method="orm.fit",
     model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE, 
     penalty=0, penalty.matrix, tol=1e-7, eps=0.005, 
     var.penalty=c('simple','sandwich'), scale=FALSE, \dots)
