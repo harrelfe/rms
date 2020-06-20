@@ -810,7 +810,7 @@ When possible, full joint Bayesian modeling of (possibly missing) covariates and
 
 Here is an example adapted from the `aregImpute` help file.
 
-```{r aregi,w=7,h=7}
+```{r aregi,w=7,h=7,cache=TRUE}
 set.seed(2)
 n <- 1000
 x1 <- factor(sample(c('a','b','c'), n, TRUE))
@@ -826,7 +826,7 @@ mi <- aregImpute(~ y + x1 + x2 + x3, nk=3, data=d, B=10, n.impute=5, pr=FALSE)
 mi
 
 # Note: The following model will be re-run every time aregImpute runs
-# because imputations have randomness
+# because imputations have randomness (unless cache=TRUE on previous chunk header)
 bmi <- stackMI(y ~ x1 + x2 + x3, blrm, mi, data=d, refresh=50, file='bmi.rds')
 stanDx(bmi)
 stanDxplot(bmi, which='x1=c', rev=TRUE, stripsize=5)

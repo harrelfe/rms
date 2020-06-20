@@ -454,6 +454,11 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
                       weights=NULL, subset=NULL, na.action=na.delete,
                       dotexpand=TRUE) {
 
+  ismat <- function(z) {
+    cl <- class(z)
+    ('matrix' %in% cl) && ('rms' %nin% cl) && ncol(z) > 1
+    }
+  
   ## Get a list of all variables in either formula
   ## This is for innermost variables, e.g. Surv(a,b) will produce a,b
   v1 <- all.vars(formula)
@@ -473,10 +478,16 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
       xv <- env[[v]]
       if(is.factor(xv)) xv <- xv[, drop=TRUE]
       ## Note: Surv() has class 'Surv' without class 'matrix'
-      else if(inherits(xv, 'matrix') && ncol(xv) > 1)
-        class(xv) <- unique(c('rms', class(xv)))
+      ## This keeps columns together by calling as.data.frame.rms
+      else if(ismat(xv)) class(xv) <- unique(c('rms', class(xv)))
       data[[v]] <- xv
     }
+    ## Any variables whose length is not equal to the maximum length over
+    ## all variables mentioned in the formulas remain in the original
+    ## environment and will be found in the later eval()
+    ## E.g. rcs(x, knots) where knots is a separate variable
+    n <- sapply(data, NROW)
+    if(diff(range(n)) != 0) data <- data[which(n == max(n))]
     data <- as.data.frame(data)
   }
   ## Can't do else data[V] here as formula may have e.g. Surv(time,event)
@@ -514,11 +525,30 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
       paste(deparse(x, width.cutoff = 500L, backtick = !is.symbol(x) && 
                     is.language(x)), collapse = " ")
     varnames    <- vapply(predvars, deparse2, " ")[-1L]
-    }
-  data        <- eval(predvars, data)
+  }
+  data        <- if(edata) eval(predvars, data, env) else eval(predvars, data)
     
   if(is.matrix(data)) data <- data.frame(data)  # e.g. Surv() object
   names(data) <- varnames
+
+  ## Any remaining matrices not of class 'rms' must be given class rms
+  ## so that as.data.frame will not split up their variables
+  ism <- sapply(data, ismat)
+  if(any(ism))
+    for(i in which(ism))
+      class(data[[i]]) <- unique(c('rms', class(data[[i]])))
+
+  ## If any variables are less than the maximum length, these must
+  ## have come from the parent environment and did not have subset applied
+  len <- sapply(data, NROW)
+  if(min(len) != max(len)) {
+    if(! length(subset))
+      stop('program logic error: variables vary in length but subset= was not given')
+    for(i in which(len > min(len))) {
+      x <- data[[i]]
+      data[[i]] <- if(is.matrix(x)) x[subset,,drop=FALSE] else x[subset]
+      }
+    }
   data        <- as.data.frame(data, check.names=FALSE)
   data        <- na.action(data)
   nac         <- attr(data, 'na.action')

@@ -8,7 +8,7 @@ blrm(
   formula,
   ppo = NULL,
   keepsep = NULL,
-  data,
+  data = environment(formula),
   subset,
   na.action = na.delete,
   priorsd = rep(100, p),
@@ -42,7 +42,7 @@ blrm(
 
 \item{keepsep}{a single character string containing a regular expression applied to design matrix column names, specifying which columns are not to be QR-orthonormalized, so that priors for those columns apply to the original parameters.  This is useful for treatment and treatment interaction terms.  For example \code{keepsep='treat'} will keep separate all design matrix columns containing \code{'treat'} in their names.  Some characters such as the caret used in polynomial regression terms will need to be escaped by a double backslash.}
 
-\item{data}{a data frame}
+\item{data}{a data frame; defaults to using objects from the calling environment}
 
 \item{subset}{a logical vector or integer subscript vector specifying which subset of data whould be used}
 
@@ -99,7 +99,7 @@ an \code{rms} fit object of class \code{blrm}, \code{rmsb}, \code{rms} that also
 Bayesian Binary and Ordinal Logistic Regression
 }
 \details{
-Uses \code{rstan} with pre-compiled Stan code whose location is given by the user in \code{options(stancompiled='...')} to get posterior draws of parameters from a binary logistic or proportional odds semiparametric ordinal logistic model.  The Stan code internally using the qr decompositon on the design matrix so that highly collinear columns of the matrix do not hinder the posterior sampling.  The parameters are transformed back to the original scale before returning results to R.   Design matrix columns re centered before running Stan, so Stan diagnostic output will have the intercept terms shifted but the results of \code{blrm} for intercepts are for the original uncentered data.  The only prior distributions for regression betas are normal with mean zero, and the vector of prior standard deviations is given in \code{priorsd}.  These priors are for the qr-projected design matrix elements, except that the very last element is not changed.  So if one has a single non-interactive linear or binary variable for which a skeptical prior is designed, put that variable last in the model.
+Uses \code{rstan} with pre-compiled Stan code whose location is given by the user in \code{options(stancompiled='...')} to get posterior draws of parameters from a binary logistic or proportional odds semiparametric ordinal logistic model.  The Stan code internally using the qr decompositon on the design matrix so that highly collinear columns of the matrix do not hinder the posterior sampling.  The parameters are transformed back to the original scale before returning results to R.   Design matrix columns are centered before running Stan, so Stan diagnostic output will have the intercept terms shifted but the results of \code{blrm} for intercepts are for the original uncentered data.  The only prior distributions for regression betas are normal with mean zero, and the vector of prior standard deviations is given in \code{priorsd}.  These priors are for the qr-projected design matrix elements, except that the very last element is not changed.  So if one has a single non-interactive linear or binary variable for which a skeptical prior is designed, put that variable last in the model.
 
 The partial proportional odds model of Peterson and Harrell (1990) is implemented, and is invoked when the user specifies a second model formula as the \code{ppo} argument.  This formula has no left-hand-side variable, and has right-side variables that are a subset of those in \code{formula} specifying for which predictors the proportional odds assumption is relaxed.
 

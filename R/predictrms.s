@@ -17,7 +17,10 @@ predictrms <-
   type              <- match.arg(type)
   conf.type         <- match.arg(conf.type)
   posterior.summary <- match.arg(posterior.summary)
-  
+
+  # Prevents structure(NULL, ...) below (now deprecated)
+  nulll <- function(z) if(is.null(z)) list() else z
+
   draws <- fit$draws
   bayes <- length(draws) > 0
   if(bayes) param <- fit$param
@@ -176,7 +179,7 @@ predictrms <-
           }
       }   # end type='lp' with linear.predictors stored in fit
       else
-        if(type=="x") return(structure(naresid(naa, fit$x),
+        if(type=="x") return(structure(nulll(naresid(naa, fit$x)),
              strata=if(length(stra <- fit$strata))
              naresid(naa, stra) else NULL))
       X <- fit[['x']]
@@ -307,7 +310,7 @@ predictrms <-
   if(type %in% c('adjto.data.frame', 'adjto')) return(Adjto(type))
   
   if(type=="x") return(
-       structure(naresid(naa, X),
+       structure(nulll(naresid(naa, X)),
                  strata=if(nstrata > 0)  naresid(naa, strata) else NULL,
                  na.action=if(expand.na) NULL else naa)
        )
@@ -366,7 +369,7 @@ predictrms <-
               else
                 xb - ycenter
       if(bayes) {lower <- lower - ycenter; upper <- upper - ycenter}
-      retlist <- structure(ww, 
+      retlist <- structure(nulll(ww), 
                            na.action=if(expand.na) NULL else naa)
       if(conf.int) {
         if(conf.type == 'simultaneous') {
@@ -446,7 +449,7 @@ predictrms <-
         fitted <- w
       }
     
-    fitted <- structure(naresid(naa, fitted),
+    fitted <- structure(nulll(naresid(naa, fitted)),
                         strata=if(nstrata==0) NULL else naresid(naa, strata))
     
     if(se.fit) {
