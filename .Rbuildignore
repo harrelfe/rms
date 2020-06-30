@@ -1,1 +1,3 @@
 /home/harrelfe/R/Hmisc/.Rbuildignore
+^.*\.Rproj$
+^\.Rproj\.user$
