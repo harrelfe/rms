@@ -33,7 +33,12 @@
   \itemize{
     \item Ordinary linear regression models
     \item Binary and ordinal logistic models (proportional odds
-      and continuation ratio models)
+      and continuation ratio models, probit, log-log, complementary
+  log-log including ordinal cumulative probability models for continuous
+  Y, efficiently handling thousands of distinct Y values using full
+  likelihood methods)
+	  \item Bayesian binary and ordinal regression models, partial
+  proportional odds model, and random effects
     \item Cox model
     \item Parametric survival models in the accelerated failure
       time class
@@ -246,8 +251,10 @@
     \bold{\code{ols}}         \tab Ordinary least squares linear model     \tab \code{lm}\cr
     \bold{\code{lrm}}         \tab Binary and ordinal logistic regression  \tab \code{glm}\cr
     \tab model                                   \tab \code{cr.setup}\cr
-    \bold{\code{orm}}         \tab Ordinal regression model                \tab \code{lrm}\cr
-    \bold{\code{psm}}         \tab Accelerated failure time parametric     \tab \code{survreg}\cr
+    \bold{\code{orm}}         \tab Ordinal regression model
+  \tab \code{lrm}\cr
+	\bold{\code{blrm}}        \tab Bayesian binary and ordinal regression \tab\ \cr
+  \bold{\code{psm}}         \tab Accelerated failure time parametric     \tab \code{survreg}\cr
     \tab survival model                          \tab \cr
     \bold{\code{cph}}         \tab Cox proportional hazards regression     \tab \code{coxph}\cr
 		\bold{\code{npsurv}}      \tab Nonparametric survival estimates \tab
@@ -524,17 +531,15 @@ demo(all, 'rms')
 
 \references{
   The primary resource for the rms package is
-  \emph{Regression Modeling Strategies} by
-  FE Harrell (Springer-Verlag, 2001) and the web page
-  \url{http://biostat.mc.vanderbilt.edu/rms}.  See also
+  \emph{Regression Modeling Strategies, second edition} by
+  FE Harrell (Springer-Verlag, 2015) and the web page
+  \url{https://hbiostat.org/R/rms}.  See also
   the Statistics in Medicine articles by Harrell \emph{et al} listed
   below for case studies of modeling and model validation using rms.
-  Also see the free book by Alzola and Harrell at
-  \url{http://biostat.mc.vanderbilt.edu}.
 
   Several datasets useful for multivariable modeling with
   rms are found at
-  \url{http://biostat.mc.vanderbilt.edu/DataSets}.
+  \url{http://hbiostat.org/data}.
 }
 
 \section{Published Applications of rms and Regression Splines}{
@@ -764,7 +769,7 @@ demo(all, 'rms')
   Harrell FE (2009): rms: S functions for
   biostatistical/epidemiologic modeling, testing,
   estimation, validation, graphics, and prediction.
-  Programs available from \url{http://biostat.mc.vanderbilt.edu/rms}.
+  Programs available from \url{https://hbiostat.org/R/rms}.
   Be sure to reference other packages used as well as 
   \R itself.
 }
@@ -772,10 +777,9 @@ demo(all, 'rms')
 \author{
   Frank E Harrell Jr\cr
   Professor of Biostatistics\cr
-  Chair, Department of Biostatistics\cr
   Vanderbilt University School of Medicine\cr
   Nashville, Tennessee\cr
-  \email{f.harrell@vanderbilt.edu}
+  \email{fh@fharrell.com}
 }
 \keyword{models}
 \concept{overview}

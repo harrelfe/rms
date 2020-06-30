@@ -51,6 +51,7 @@ Predict(x, ..., fun,
         np = 200, conf.int = 0.95,
         conf.type = c("mean", "individual","simultaneous"),
         usebootcoef=TRUE, boot.type=c("percentile","bca","basic"),
+        posterior.summary=c('mean', 'median', 'mode'),
         adj.zero = FALSE, ref.zero = FALSE,
         kint=NULL, time = NULL, loglog = FALSE, digits=4, name,
         factors=NULL, offset=NULL)
@@ -110,7 +111,8 @@ Predict(x, ..., fun,
 	or \code{NA}
   }
   \item{conf.int}{
-	confidence level.  Default is 0.95.  Specify \code{FALSE} to suppress.}
+	confidence level (highest posterior density interval probability for
+	Bayesian models).  Default is 0.95.  Specify \code{FALSE} to suppress.}
   \item{conf.type}{
 	type of confidence interval.  Default is \code{"mean"} which applies
 	to all models.  For models containing a residual variance (e.g,
@@ -125,7 +127,10 @@ Predict(x, ..., fun,
 	present}
   \item{boot.type}{set to \code{'bca'} to compute BCa confidence
 	limits or \code{'basic'} to use the basic bootstrap.  The default is
-	to compute percentile intervals} 
+	to compute percentile intervals}
+  \item{posterior.summary}{defaults to using the posterior mean of the
+		regression coefficients.  Specify \code{'mode'} or \code{'median'}
+		to instead use the other summaries.}
   \item{adj.zero}{
 	Set to \code{TRUE} to adjust all non-plotted variables to 0 (or
 	reference cell for categorical variables) and to omit intercept(s)

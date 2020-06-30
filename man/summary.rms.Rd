@@ -23,7 +23,9 @@ plots shaded confidence bars to display the results graphically.
 The longest confidence bar on each page is labeled with confidence levels
 (unless this bar has been ignored due to \code{clip}).  By default, the
 following confidence levels are all shown: .9, .95, and .99, using 
-blue of different transparencies.  The \code{html} method is for use
+blue of different transparencies.  The \code{plot} method currently
+ignores bootstrap and Bayesian highest posterior density intervals but approximates
+intervals based on standard errors.  The \code{html} method is for use
 with R Markdown using html.
 
 The \code{print} method will call the \code{latex} or \code{html} method
@@ -50,7 +52,8 @@ there are any.  \code{nbar} is not implemented for \code{plotly}.
 \method{summary}{rms}(object, \dots, est.all=TRUE, antilog,
 conf.int=.95, abbrev=FALSE, vnames=c("names","labels"),
 conf.type=c('individual','simultaneous'),
-usebootcoef=TRUE, boot.type=c("percentile","bca","basic"), verbose=FALSE)
+usebootcoef=TRUE, boot.type=c("percentile","bca","basic"),
+posterior.summary=c('mean', 'median', 'mode'), verbose=FALSE)
 
 \method{print}{summary.rms}(x, \dots, table.env=FALSE)
 
@@ -129,7 +132,9 @@ factor levels for categorical variables in the model.}
   coefficients), specify \code{usebootcoef=FALSE}.}
 \item{boot.type}{set to \code{'bca'} to compute BCa confidence
 	limits or to \code{'basic'} to use the basic bootstrap.  The default
-	is to compute percentile intervals.} 
+	is to compute percentile intervals.}
+\item{posterior.summary}{set to \code{'mode'} or \code{'median'} to use the posterior
+	mean/median instead of the mean for point estimates of contrasts}
 \item{verbose}{set to \code{TRUE} when \code{conf.type='simultaneous'}
   to get output describing scope of simultaneous adjustments}
 \item{x}{result of \code{summary}}

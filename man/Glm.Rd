@@ -14,8 +14,8 @@ user previously running \code{options(prType="lang")} where
 \code{"html"}. 
 }
 \usage{
-Glm(formula, family = gaussian, data = list(), weights = NULL, subset =
-NULL, na.action = na.delete, start = NULL, offset = NULL, control =
+Glm(formula, family = gaussian, data = environment(formula),
+weights, subset, na.action = na.delete, start = NULL, offset = NULL, control =
 glm.control(...), model = TRUE, method = "glm.fit", x = FALSE, y = TRUE,
 contrasts = NULL, \dots)
 

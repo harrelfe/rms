@@ -45,8 +45,8 @@
   \code{residuals.survreg}.
 }
 \usage{
-psm(formula=formula(data),
-    data=parent.frame(), weights,
+psm(formula,
+    data=environment(formula), weights,
     subset, na.action=na.delete, dist="weibull",
     init=NULL, scale=0, 
     control=survreg.control(),

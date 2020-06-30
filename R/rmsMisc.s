@@ -682,16 +682,20 @@ rmsArgs <- function(.object, envir=parent.frame(2))
 ## General function to print model fit objects using latex, html, or regular
 ## print (the default)
 
-prModFit <- function(x, title, w, digits=4, coefs=TRUE,
+prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
                      lines.page=40, long=TRUE, needspace, ...) {
 
-  lang  <- prType()
-  specs <- markupSpecs[[lang]]
+  lang   <- prType()
+  specs  <- markupSpecs[[lang]]
+  transl <- switch(lang,
+                   latex = latexTranslate,
+                   html  = htmlTranslate,
+                   plain = function(x) x)
 
 #  cca  <- htmlSpecial('combiningcircumflexaccent')
   nbsp <- htmlSpecial('nbsp')
-  gt   <- htmlTranslate('>')
-  vbar <- htmlTranslate('|')
+  gt   <- transl('>')
+  vbar <- transl('|')
   chi2 <- specs$chisq()
   beta <- htmlGreek('beta')
   
@@ -717,7 +721,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
   }
 
   catl  <- function(x, skip=1, bold=FALSE, verb=FALSE, pre=0,
-                    center=TRUE, indent=FALSE) {
+                    center=FALSE, indent=FALSE) {
     if(lang == 'latex') {
       if(verb)
         c('\\begin{verbatim}', skipt(pre),
@@ -793,18 +797,47 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
       R <- c(R, prStats(obj[[1]], obj[[2]], lang=lang))
     } else if(type == 'coefmatrix') {
       if(coefs) {
-        errordf <- obj$errordf
-        beta <- obj$coef
-        se   <- obj$se
-        Z    <- beta / se
-        P    <- if(length(errordf)) 2 * (1 - pt(abs(Z), errordf))
-                else
-                  1 - pchisq(Z ^ 2, 1)
         pad <- function(x)
           switch(lang, 
                  latex = paste0('~', x, '~'),
                  html  = paste0(nbsp, x),
                  plain  = x)
+        betan <- switch(lang,
+                        plain = 'Beta',
+                        html  = htmlGreek('beta'),
+                        latex = '$\\hat{\\beta}$')
+                        
+        B   <- obj$bayes
+        if(length(B)) {
+          U <- matrix('', nrow=nrow(B), ncol=ncol(B))
+          for(i in 1:ncol(B)) {
+            dig <- if(colnames(B)[i] == 'Symmetry') 2 else digits
+            U[, i] <- pad(formatNP(B[, i], dig, lang=lang))
+          }
+          pn <- switch(lang, plain='Pr(Beta>0)',
+                       html = paste0('Pr(', betan, transl('>'), '0)'),
+                       latex = 'Pr$(\\beta>0)$')
+          coltrans <- c(Mean     = paste('Mean', betan),
+                        Median   = paste('Median', betan),
+                        Mode     = paste('Mode', betan),
+                        SE       = 'S.E.',
+                        Lower    = 'Lower',
+                        Upper    = 'Upper',
+                        P        = pn,
+                        Symmetry = 'Symmetry')
+          colnames(U) <- coltrans[colnames(B)]
+          rownames(U) <- rownames(B)
+          betanames   <- rownames(B)
+        }
+        else  {
+        errordf <- obj$errordf
+        beta <- obj$coef
+        betanames <- names(beta)
+        se   <- obj$se
+        Z    <- beta / se
+        P    <- if(length(errordf)) 2 * (1 - pt(abs(Z), errordf))
+                else
+                  1 - pchisq(Z ^ 2, 1)
 
         U    <- cbind('Coef' =
                         pad(formatNP(beta, digits, lang=lang)),
@@ -830,18 +863,16 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
                                                 vbar, ')')),
                    plain = c('t',   'Pr(>|t|)') )
 
-        rownames(U) <- names(beta)
+        rownames(U) <- betanames
 
         if(length(obj$aux)) {
           U <- cbind(U, formatNP(obj$aux, digits, lang=lang))
           colnames(U)[ncol(U)] <- obj$auxname
         }
+        }
         if(lang %in% c('latex', 'html')) {
           R <- c(R, skipt(1))
-          rownames(U) <- if(lang == 'latex')
-                           latexTranslate(names(beta))
-                         else
-                           htmlTranslate(names(beta))
+          rownames(U) <- transl(betanames)
           
           if(is.numeric(coefs)) {
             U <- U[1:coefs,,drop=FALSE]
@@ -905,6 +936,9 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE,
       )
     }
   }
+  if(length(footer))
+    R <- c(R, paste0(specs$smallskip, transl(footer)))
+  
   R <- paste0(R, '\n')
   switch(lang,
          html  = htmltools::HTML(R),
@@ -1064,6 +1098,10 @@ for(i in 1:p) {
                        html  = paste0('Pr(', htmlTranslate('>'), chisq, ')')),
       'tau-a'      = c(latex = '$\\tau_{a}$',
                        html  = paste0(htmlGreek('tau'), '<sub>a</sub>')),
+      'sigma gamma'= c(latex = '$\\sigma_{\\gamma}$',
+                       html  = '&sigma;<sub>&gamma;</sub>'),
+      'sigma w'    = c(latex = '$\\sigma_{w}$',
+                       html  = '&sigma;<sub>w</sub>'),
       'gamma'      = c(latex = '$\\gamma$',
                        html  = htmlGreek('gamma')),
       'R2'         = c(latex = '$R^{2}$',

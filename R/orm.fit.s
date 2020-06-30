@@ -9,42 +9,8 @@ orm.fit <- function(x=NULL, y,
 
   ## Extreme value type I dist = Gumbel maximum = exp(-exp(-x)) = MASS:::pgumbel
   ## Gumbel minimum = 1 - exp(-exp(x))
-  families <-
-    list(logistic =
-         list(cumprob=function(x)    1 / (1 + exp(-x)),
-              inverse=function(x)    log(x / (1 - x)),
-              deriv  =function(x, f) f * (1 - f),
-              deriv2 =function(x, f, deriv) f * (1 - 3*f + 2*f*f) ),
-         probit =
-         list(cumprob=pnorm,
-              inverse=qnorm,
-              deriv  =function(x, ...)      dnorm(x),
-              deriv2 =function(x, f, deriv) - deriv * x),
-         loglog =
-         list(cumprob=function(x)      exp(-exp(-x)),
-              inverse=function(x)      -log(-log(x    )),
-              deriv  =function(x, ...) exp(-x - exp(-x)),
-              deriv2 =function(x, ...) ifelse(abs(x) > 200, 0,
-                exp(-x - exp(-x)) * (-1 + exp(-x)))),
-         cloglog =
-         list(cumprob=function(x)      1 - exp(-exp(x)),
-              inverse=function(x)      log(-log(1 - x)),
-              deriv  =function(x, ...) exp( x - exp( x)),
-              deriv2 =function(x, f, deriv) ifelse(abs(x) > 200, 0,
-                deriv * ( 1 - exp( x)))),
-         cauchit =
-         list(cumprob=pcauchy, inverse=qcauchy,
-              deriv  =function(x, ...) dcauchy(x),
-              deriv2 =function(x, ...) -2 * x * ((1 + x*x)^(-2)) / pi))
+  families <- probabilityFamilies
                      
-  ## Check:
-  ## P(x) = plogis(x); P'(x) = P(x) - P(x)^2
-  ## d <- function(x) plogis(x) - 3*plogis(x)^2 + 2*plogis(x)^3
-  ## x <- seq(-3, 3, length=150)
-  ## plot(x, d(x), type='l')
-  ## ad <- c(NA,diff(dlogis(x))/(x[2]-x[1]))
-  ## lines(x, ad, col='red')
-
   familiesDefined <- names(families)
   sfam  <- substitute(family)
   csfam <- as.character(sfam)
@@ -400,3 +366,43 @@ ormfit <- function(x, y, kint, nx, initial, offset, penmat=NULL,
   list(coef=coef, v=V, loglik=L, score=score, dmax=dmax,
        iter=iter, fail=FALSE, eps=eps)
 }
+
+
+## Extreme value type I dist = Gumbel maximum = exp(-exp(-x)) = MASS:::pgumbel
+## Gumbel minimum = 1 - exp(-exp(x))
+probabilityFamilies <-
+  list(logistic =
+         list(cumprob=plogis,
+              inverse=qlogis,
+              deriv  =function(x, f) f * (1 - f),
+              deriv2 =function(x, f, deriv) f * (1 - 3*f + 2*f*f) ),
+       probit =
+         list(cumprob=pnorm,
+              inverse=qnorm,
+              deriv  =function(x, ...)      dnorm(x),
+              deriv2 =function(x, f, deriv) - deriv * x),
+       loglog =
+         list(cumprob=function(x)      exp(-exp(-x)),
+              inverse=function(x)      -log(-log(x    )),
+              deriv  =function(x, ...) exp(-x - exp(-x)),
+              deriv2 =function(x, ...)
+                ifelse(abs(x) > 200, 0,
+                       exp(-x - exp(-x)) * (-1 + exp(-x)))),
+       cloglog =
+         list(cumprob=function(x)      1 - exp(-exp(x)),
+              inverse=function(x)      log(-log(1 - x)),
+              deriv  =function(x, ...) exp( x - exp( x)),
+              deriv2 =function(x, f, deriv)
+                ifelse(abs(x) > 200, 0, deriv * ( 1 - exp( x)))),
+       cauchit =
+         list(cumprob=pcauchy, inverse=qcauchy,
+              deriv  =function(x, ...) dcauchy(x),
+              deriv2 =function(x, ...) -2 * x * ((1 + x*x)^(-2)) / pi))
+
+## Check:
+## P(x) = plogis(x); P'(x) = P(x) - P(x)^2
+## d <- function(x) plogis(x) - 3*plogis(x)^2 + 2*plogis(x)^3
+## x <- seq(-3, 3, length=150)
+## plot(x, d(x), type='l')
+## ad <- c(NA,diff(dlogis(x))/(x[2]-x[1]))
+## lines(x, ad, col='red')

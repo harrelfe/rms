@@ -5,7 +5,8 @@ nomogram <-
            interact=NULL, kint=NULL,
            conf.int=FALSE, 
            conf.lp=c("representative", "all", "none"),
-           est.all=TRUE, abbrev=FALSE, minlength=4, maxscale=100, nint=10, 
+           est.all=TRUE, posterior.summary=c('mean', 'median', 'mode'),
+           abbrev=FALSE, minlength=4, maxscale=100, nint=10, 
            vnames=c("labels","names"),
            varname.label=TRUE, varname.label.sep="=",
            omit=NULL, verbose=FALSE)
@@ -13,6 +14,7 @@ nomogram <-
 
   conf.lp <- match.arg(conf.lp)
   vnames  <- match.arg(vnames)
+  posterior.summary <- match.arg(posterior.summary)
 
   Format <- function(x)
     { # like format but does individually
@@ -24,7 +26,11 @@ nomogram <-
   abb <- (is.logical(abbrev) && abbrev) || is.character(abbrev)
   if(is.logical(conf.int) && conf.int) conf.int <- c(.7,.9)
 
+  draws <- fit$draws
+  bayes <- length(draws) > 0
+  
   se <- any(conf.int > 0)
+  if(bayes) se <- FALSE
 
   nfun <- if(!length(fun)) 0 else if(is.list(fun)) length(fun) else 1
   if(nfun>1 && length(funlabel) == 1) funlabel <- rep(funlabel, nfun)
@@ -91,16 +97,19 @@ nomogram <-
   names(discrete) <- name
 
   ## Number of non-slopes:
-  nrp <- num.intercepts(fit, 'coef')
+  nrp <- if(bayes) num.intercepts(fit) else num.intercepts(fit, 'coef')
   ir <- fit$interceptRef
   if(!length(ir))   ir   <- 1
   if(!length(kint)) kint <- ir
+
+  coefs <- if(bayes) coef(fit, stat=posterior.summary) else fit$coefficients
   
-  Intercept <- if(nrp > 0) fit$coefficients[kint]
+  Intercept <- if(nrp > 0) coefs[kint]
   else 
     if(length(fit$center)) (- fit$center ) else 0
-  intercept.offset <- fit$coefficients[kint] - fit$coefficients[ir]
-
+  intercept.offset <- coefs[kint] - coefs[ir]
+  beta0 <- Intercept
+  
   settings <- list()
   for(i in which[assume[which] < 9]) {
     ni <- name[i]
@@ -350,8 +359,14 @@ nomogram <-
       xt <- xt[!is.na(xt)]
     }
   }
-  if(!length(lp.at)) {
-    xb <- fit$linear.predictors
+  if(! length(lp.at)) {
+    xb <- if(bayes) {
+      X <- fit[['x']]
+      if(! length(X))
+        stop('when lp.at is not specified you must specify x=TRUE in the fit')
+      jj <- if(nrp == 0) 1 : length(coefs) else (nrp + 1) : length(coefs)
+      beta0 + (X %*% coefs[jj])
+      } else fit$linear.predictors
     if(!length(xb)) xb <- fit$fitted.values
     if(!length(xb)) xb <- fit$fitted
     if(!length(xb))

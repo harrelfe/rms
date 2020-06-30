@@ -1,7 +1,7 @@
 ## This is a modification of the R survival package's coxph function
 ## written by Terry Therneau and ported to R by Thomas Lumley
 cph <- function(formula     = formula(data),
-                data        = parent.frame(),
+                data        = environment(formula),
                 weights,
                 subset,
                 na.action   = na.delete, 
@@ -29,15 +29,6 @@ cph <- function(formula     = formula(data),
 {
   method <- match.arg(method)
   call   <- match.call()
-  m      <- match.call(expand.dots=FALSE)
-  mc     <- match(c("formula", "data", "subset", "weights", "na.action"), 
-                  names(m), 0)
-  m <- m[c(1, mc)]
-  m$na.action <- na.action
-
-  m$drop.unused.levels <- TRUE
-  
-  m[[1]] <- as.name("model.frame")
 
   if (! inherits(formula,"formula")) {
     ## I allow a formula with no right hand side
@@ -50,7 +41,11 @@ cph <- function(formula     = formula(data),
     else stop("Invalid formula")
   }
 
-  m$formula <- formula
+  data <-
+    modelData(data, formula,
+              weights=if(! missing(weights)) eval(substitute(weights), data),
+              subset =if(! missing(subset )) eval(substitute(subset),  data),
+              na.action=na.action, dotexpand=FALSE)
 
   nstrata <- 0
   Strata <- NULL
@@ -58,16 +53,11 @@ cph <- function(formula     = formula(data),
   odb <- .Options$debug
   if(length(odb) && is.logical(odb) && odb) debug <- TRUE
 
-  if(! missing(data) ||
-     (length(z <- attr(terms(formula, allowDotAsName=TRUE), "term.labels")) > 0
-      && any(z !="."))) { #X's present
-    dul <- .Options$drop.unused.levels
-    if(! length(dul) || dul) {
-      on.exit(options(drop.unused.levels=dul))
-      options(drop.unused.levels=FALSE)
-    }
+  if(length(z <- attr(terms(formula, allowDotAsName=TRUE), "term.labels")) > 0
+     && any(z !=".")) { #X's present
 
-    X    <- Design(eval.parent(m))
+    X    <- Design(data, formula, specials=c('strat', 'strata'))
+    
     atrx       <- attributes(X)
     atr        <- atrx$Design
     nact       <- atrx$na.action
@@ -75,10 +65,8 @@ cph <- function(formula     = formula(data),
     mmcolnames <- atr$mmcolnames
     if(method == "model.frame") return(X)
 
-    Terms <- if(missing(data))
-      terms(sformula, specials=c("strat", "strata"))
-    else
-      terms(sformula, specials=c("strat", "strata"), data=data)
+    Terms <- terms(sformula, specials=c('strat', 'strata'), data=data)
+  
 
     asm   <- atr$assume.code
     name  <- atr$name
@@ -86,17 +74,6 @@ cph <- function(formula     = formula(data),
     specials <- attr(Terms, 'specials')
     if(length(specials$strata)) stop('cph supports strat(), not strata()')
     stra    <- specials$strat
-
-#    subTerms <- function (termobj, i) {
-#      ## [.terms from R 2.15.3 to make Terms.ns work properly (without
-#      ## having columns of X to drop for main effects of strat
-#      resp <- if (attr(termobj, "response")) termobj[[2L]] else NULL
-#      newformula <- attr(termobj, "term.labels")[i]
-#      if (length(newformula) == 0L) newformula <- "1"
-#      newformula <- reformulate(newformula, resp, attr(termobj, "intercept"))
-#      environment(newformula) <- environment(termobj)
-#      terms(newformula, specials = names(attr(termobj, "specials")))
-#    }
 
     cluster <- attr(X, 'cluster')
     if(length(cluster)) {
@@ -121,13 +98,11 @@ cph <- function(formula     = formula(data),
       }
       Strata <- interaction(as.data.frame(Strata), drop=TRUE)
     }
-      
     xpres <- length(asm) && any(asm != 8)
     Y <- model.extract(X, 'response')
     if(! inherits(Y, "Surv"))
       stop("response variable should be a Surv object")
     n <- nrow(Y)
-
     weights <- model.extract(X, 'weights')
     offset  <- attr(X, 'offset')
     ##  Cox ph fitter routines expect null if no offset
@@ -158,11 +133,14 @@ cph <- function(formula     = formula(data),
     nullmod <- FALSE
   }
   else {	## model with no right-hand side
-    X <- NULL
-    Terms <- terms(formula)
-    yy <- attr(terms(formula),"variables")[1]
-    Y <- eval(yy, data)
-    if(! inherits(Y,"Surv"))
+    X        <- NULL
+    Y        <- data[[1]]
+    sformula <- formula
+    mmcolnames <- ''
+    weights  <- if('(weights)' %in% names(data)) data[['(weights)']]
+    atr <- atrx  <- NULL
+    Terms    <- terms(formula, allowDotAsName=TRUE)
+    if(! inherits(Y, "Surv"))
       stop("response variable should be a Surv object")
     
     Y <- Y[! is.na(Y)]
@@ -171,7 +149,6 @@ cph <- function(formula     = formula(data),
     nullmod <- TRUE
     nact    <- NULL
   }
-
   ny <- ncol(Y)
   maxtime <- max(Y[, ny - 1])
 
@@ -211,13 +188,13 @@ cph <- function(formula     = formula(data),
         stop(paste ("Unknown method", method))
     
     if (missing(init)) init <- NULL
-    
+
     f <- fitter(X, Y,
                 strata=Strata, offset=offset,
                 weights=weights, init=init,
                 method=method, rownames=rnam,
                 control=coxph.control(eps=eps, toler.chol=tol,
-                  toler.inf=1, iter.max=iter.max))
+                                      toler.inf=1, iter.max=iter.max))
   }
   if (is.character(f)) {
     cat("Failure in cph:\n", f, "\n")
@@ -256,7 +233,7 @@ cph <- function(formula     = formula(data),
   
   nvar <- length(f$coefficients)
 
-  ev <- factor(Y[,ny], levels=0 : 1, labels=c("No Event", "Event"))
+  ev <- factor(Y[, ny], levels=0 : 1, labels=c("No Event", "Event"))
   n.table <- {
     if(! length(Strata)) table(ev, dnn='Status')
     else table(Strata, ev, dnn=c('Stratum', 'Status'))
@@ -304,10 +281,7 @@ cph <- function(formula     = formula(data),
       f$se.fit <- se.fit  	
     }
   }
-  if(model) f$model <- m
-  
- ####  if(nstrata > 0) f$strata <- levels(Strata)
-####  f$strata <- if(nstrata > 0) table(Strata)
+  if(model) f$model <- data
   
   if(is.character(surv) || surv) {
     if(length(Strata)) {

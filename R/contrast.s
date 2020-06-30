@@ -1,21 +1,34 @@
 contrast <- function(fit, ...) UseMethod("contrast")
 
 contrast.rms <-
-  function(fit, a, b, a2, b2, cnames=NULL,
+  function(fit, a, b, a2, b2, cnames=NULL, fun=NULL, funint=TRUE,
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'), usebootcoef=TRUE,
            boot.type=c('percentile','bca','basic'),
+           posterior.summary=c('mean', 'median', 'mode'),
            weights='equal', conf.int=0.95, tol=1e-7, expand=TRUE, ...)
 {
   type <- match.arg(type)
   conf.type <- match.arg(conf.type)
   boot.type <- match.arg(boot.type)
+  posterior.summary <- match.arg(posterior.summary)
+
+  draws <- fit$draws
+  bayes <- length(draws) > 0
+
+  if(bayes & (type == 'joint' || conf.type == 'simultaneous'))
+    stop('type=joint or conf.type=simultaneous not allowed for Bayesian models')
   
   zcrit <- if(length(idf <- fit$df.residual)) qt((1 + conf.int) / 2, idf) else
               qnorm((1 + conf.int) / 2)
   bcoef <- if(usebootcoef) fit$boot.Coef
 
-  betas <- coef(fit)
+  pmode <- function(x) {
+    dens <- density(x)
+    dens$x[which.max(dens$y)[1]]
+    }
+  
+  if(! bayes) betas <- coef(fit)
   fite  <- fit
   if(inherits(fit, 'orm')) {
     nrp <- 1
@@ -107,6 +120,39 @@ contrast.rms <-
       if(mb2 == 1) xb2 <- matrix(xb2, nrow=mm, ncol=ncol(xb2), byrow=TRUE)
     }
   }
+
+  if(bayes && length(fun) && inherits(fit, 'blrm')) {
+    if(! missing(a2)) stop('fun= is only implemented for blrm fits')
+    if(missing(b))    stop('b must be specified when fun= is given')
+
+    nd   <- nrow(draws)
+    nrp  <- num.intercepts(fit)
+    kint <- fit$interceptRef
+    pa   <- t(matxv(xa, draws, kint=kint,  bmat=TRUE))
+    pb   <- t(matxv(xb, draws, kint=kint,  bmat=TRUE))
+    if(length(cnames)) colnames(pa) <- colnames(pb) <- cnames
+    # If fun has an intercepts argument, the intecept vector must be
+    # updated for each draw
+    for(i in 1 : nd) {
+      pa[i, ] <- if(funint)
+                   fun(pa[i, ], intercepts=draws[i, 1L : nrp])
+                 else
+                   fun(pa[i, ])
+      pb[i, ] <- if(funint)
+                   fun(pb[i, ], intercepts=draws[i, 1L : nrp])
+                 else
+                   fun(pb[i, ])
+    }
+    if(! length(cnames))
+      cnames <- if(length(vary)) rep('', ncol(pa)) else
+                          as.character(1 : ncol(pa))
+    colnames(pa) <- colnames(pb) <- cnames
+
+    res <- list(esta=pa, estb=pb,
+                Xa=xa, Xb=xb, 
+                nvary=length(vary))
+    return(structure(res, class='contrast.rms'))
+    }
   
   X <- xa - xb
   if(! missing(a2)) X <- X - (xa2 - xb2)
@@ -124,6 +170,26 @@ contrast.rms <-
     X <- matrix(apply(weights*X, 2, sum) / sum(weights), nrow=1,
                 dimnames=list(NULL, dimnames(X)[[2]]))
 
+  cdraws <- NULL
+  
+  if(bayes) {
+    cdraws <- draws %*% t(X)
+    if(length(cnames)) colnames(cdraws) <- cnames
+    v      <- var(cdraws)
+    ndf    <- if(is.matrix(v)) nrow(v) else 1
+    ci     <- apply(cdraws, 2, HPDint, prob=conf.int)
+    lower  <- ci[1, ]
+    upper  <- ci[2, ]
+    PP     <- apply(cdraws, 2, function(u) mean(u > 0))
+    se     <- apply(cdraws, 2, sd)
+
+    est    <- switch(posterior.summary,
+                     mode   = apply(cdraws, 2, pmode),
+                     mean   = colMeans(cdraws),
+                     median = apply(cdraws, 2, median))
+    P <- Z <- NULL
+  }
+  else {
   est <- matxv(X, betas)
   v <- X %*% vcov(fit, regcoef.only=TRUE) %*% t(X)
   ndf <- if(is.matrix(v)) nrow(v) else 1
@@ -153,15 +219,18 @@ contrast.rms <-
     lower <- u[,'lwr']
     upper <- u[,'upr']
   }
-  
+  PP <- NULL; posterior.summary=''
+  }
   res <- list(Contrast=est, SE=se,
               Lower=lower, Upper=upper,
-              Z=Z, Pvalue=P, 
+              Z=Z, Pvalue=P, PP=PP,
               var=v, df.residual=idf,
               X=X, 
-              cnames=if(type=='average')NULL else cnames,
+              cnames=if(type=='average') NULL else cnames,
               nvary=length(vary),
-              conf.type=conf.type, conf.int=conf.int)
+              conf.type=conf.type, conf.int=conf.int,
+              posterior.summary=posterior.summary,
+              cdraws = cdraws)
   if(type != 'average') res <- c(vary, res)
   
   r <- qr(v, tol=tol)
@@ -179,18 +248,44 @@ contrast.rms <-
 }
 
 print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
-                               jointonly=FALSE, ...)
+                               jointonly=FALSE, prob=0.95, ...)
 {
+  # See if a result of fun= on a Bayesian fit
+  if('esta' %in% names(x)) {
+    esta <- x$esta
+    estb <- x$estb
+    f <- function(x) {
+      hpd <- HPDint(x, prob)
+      r <- c(mean(x), median(x), hpd)
+      names(r) <- c('Posterior Mean', 'Posterior Median',
+                    paste(c('Lower', 'Upper'), prob, 'HPD'))
+      r
+    }
+    cat('\nPosterior Summaries for First X Settings\n\n')
+    print(t(apply(esta, 2, f)))
+    cat('\nPosterior Summaries for Second X Settings\n\n')
+    print(t(apply(estb, 2, f)))
+    cat('\nPosterior Summaries of First - Second\n\n')
+    print(t(apply(esta - estb, 2, f)))
+    return(invisible())
+    }
+  
   edf <- x$df.residual
   sn <- if(length(edf)) 't' else 'Z'
   pn <- if(length(edf)) 'Pr(>|t|)' else 'Pr(>|z|)'
-  w <- x[1 : (x$nvary + 6)]
-  w$Z <- round(w$Z, 2)
-  w$Pvalue <- round(w$Pvalue, 4)
+  w <- x[1 : (x$nvary + 7)]
+  isn <- sapply(w, is.null)
+  w <- w[! isn]
+  
+  if(length(w$Z))      w$Z      <- round(w$Z, 2)
+  if(length(w$Pvalue)) w$Pvalue <- round(w$Pvalue, 4)
+  if(length(w$PP))     w$PP     <- round(w$PP, 4)
+  if(length(w$PP))     pn       <- 'Pr(Contrast>0)'
+  
   no <- names(w)
   no[no=='SE'] <- 'S.E.'
   no[no=='Z']  <- sn
-  no[no=='Pvalue'] <- pn
+  no[no %in% c('Pvalue', 'PP')] <- pn
   
   cnames <- x$cnames
   if(! length(cnames))
@@ -229,8 +324,14 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
     }
   }
   if(!jointonly && length(edf))cat('\nError d.f.=',edf,'\n')
-  cat('\nConfidence intervals are', x$conf.int, x$conf.type,
-      'intervals\n')
+  if(x$posterior.summary == '')
+    cat('\nConfidence intervals are', x$conf.int, x$conf.type,
+        'intervals\n')
+  else {
+    cat('\nIntervals are', x$conf.int, 'highest posterior density intervals\n')
+    cat('Contrast is the posterior', x$posterior.summary, '\n')
+    }
+    
   if(X) {
     cat('\nDesign Matrix for Contrasts\n\n')
     if(is.matrix(x$X)) dimnames(x$X) <- list(cnames, dimnames(x$X)[[2]])

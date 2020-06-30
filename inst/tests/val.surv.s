@@ -26,3 +26,30 @@ plot(vs)
 g <- survest(fit, vd, times=5)
 vs <- val.surv(fit, vd, S=with(vd, Surv(t,ev)), u=5, est.surv=g$surv)
 plot(vs)
+
+## From Aida Eslama <Aida.Eslami@fmed.ulaval.ca>
+
+d  <- read.csv("val.surv.data.txt", sep="")
+n = nrow(d)
+
+## Choix d'un modele avec le BIC
+
+f = survreg(Surv(TIMEDTH, DEATH) ~ CURSMOKE + SEX + BMI + log(AGE),
+                      dist = "weibull", data = d, y=TRUE)
+f$y[1:10]
+AIC(f, k = log(n)); #1586.518
+
+## Verification des hypotheses
+
+f = psm(Surv(TIMEDTH, DEATH) ~ CURSMOKE + SEX + BMI + log(AGE),
+                  dist = "weibull", data = d, x = TRUE, y = TRUE)
+f$y[1:10]
+
+f$coefficients
+std.resid = residuals(f, type = "censored.normalized")[,1];
+summary(std.resid)
+val.surv(f)
+
+cox.resid = -log(val.surv(f)$est.surv)
+summary(cox.resid)
+head(cox.resid, 20)

@@ -25,6 +25,12 @@ the latter case, you can specify \code{type="average"} and an optional
 The design contrast matrix computed by \code{contrast.rms} can be used
 by other functions.
 
+When the model was fitted by a Bayesian function such as \code{blrm},
+highest posterior density intervals for contrasts are computed instead, along with the
+posterior probability that the contrast is positive.
+\code{posterior.summary} specifies whether posterior mean/median/mode is
+to be used for contrast point estimates.
+
 \code{contrast.rms} also allows one to specify four settings to
 contrast, yielding contrasts that are double differences - the
 difference between the first two settings (\code{a} - \code{b}) and the
@@ -53,16 +59,29 @@ When more than one contrast is computed, the list created by
 \code{contrast.rms} is suitable for plotting (with error bars or bands)
 with \code{xYplot} or \code{Dotplot} (see the last example before the
 \code{type="joint"} examples).
+
+When \code{fit} is the result of a Bayesian model fit and \code{fun} is
+specified, \code{contrast.rms} operates altogether difficulty.  \code{a}
+and \code{b} must both be specified and \code{a2, b2} not specified.
+\code{fun} is evaluated on the \code{fun} transformed estimates
+separately on \code{a} and \code{b} and the subtraction is deferred.  So
+even in the absence of interactions, when \code{fun} is nonlinear, the
+settings of factors (predictors) will not cancel out and estimates of
+differences will be covariate-specific (unless there are no covariates
+in the model besides the one being varied to get from \code{a} to \code{b}).
 }
 \usage{
 contrast(fit, \dots)
-\method{contrast}{rms}(fit, a, b, a2, b2, cnames=NULL, 
+\method{contrast}{rms}(fit, a, b, a2, b2, cnames=NULL,
+         fun=NULL, funint=TRUE,
          type=c("individual", "average", "joint"),
          conf.type=c("individual","simultaneous"), usebootcoef=TRUE,
          boot.type=c("percentile","bca","basic"),
+         posterior.summary=c('mean', 'median', 'mode'),
          weights="equal", conf.int=0.95, tol=1e-7, expand=TRUE, \dots)
 
-\method{print}{contrast.rms}(x, X=FALSE, fun=function(u)u, jointonly=FALSE, \dots)
+\method{print}{contrast.rms}(x, X=FALSE,
+       fun=function(u)u, jointonly=FALSE, prob=0.95, \dots)
 }
 \arguments{
 \item{fit}{
@@ -98,6 +117,11 @@ be needed when you contrast "non-comparable" settings, e.g., you
 compare \code{list(treat="drug", age=c(20,30))} with
 \code{list(treat="placebo"), age=c(40,50))}
 }
+\item{fun}{a function to evaluate on the linear predictor for each of
+	\code{a} and \code{b}.  Applies to Bayesian model fits.  Also, 
+a function to transform the contrast, SE, and lower and upper
+confidence limits before printing.  For example, specify \code{fun=exp} to
+anti-log them for logistic models.}
 \item{type}{
 set \code{type="average"} to average the individual contrasts (e.g., to
 obtain a Type II or III contrast).  Set \code{type="joint"} to jointly
@@ -120,12 +144,19 @@ and no averaging.
   coefficients), specify \code{usebootcoef=FALSE}.}
 \item{boot.type}{set to \code{'bca'} to compute BCa confidence
 	limits or \code{'basic'} to use the basic bootstrap.  The default is
-	to compute percentile intervals} 
+	to compute percentile intervals}
+\item{posterior.summary}{By default the posterior mean is used.
+	Specify \code{posterior.summary='median'} to instead use the posterior
+	median and likewise \code{posterior.summary='mode'}.  Unlike other
+functions, \code{contrast.rms} does not default to \code{'mode'} because
+point estimates come from contrasts and not the original model
+coefficients point estimates.}
 \item{weights}{
 a numeric vector, used when \code{type="average"}, to obtain weighted contrasts
 }
 \item{conf.int}{
-confidence level for confidence intervals for the contrasts
+confidence level for confidence intervals for the contrasts (HPD
+interval probability for Bayesian analyses)
 }
 \item{tol}{tolerance for \code{qr} function for determining which
   contrasts are redundant, and for inverting the covariance matrix
@@ -140,13 +171,13 @@ confidence level for confidence intervals for the contrasts
 set \code{X=TRUE} to  print design matrix used in computing the contrasts (or
 the average contrast)
 }
-\item{fun}{
-a function to transform the contrast, SE, and lower and upper
-confidence limits before printing.  For example, specify \code{fun=exp} to
-anti-log them for logistic models.
-}
+\item{funint}{set to \code{FALSE} if \code{fun} is not a function such
+	as the result of \code{Mean}, \code{Quantile}, or \code{ExProb} that
+	contains an \code{intercepts} argument}
 \item{jointonly}{set to \code{FALSE} to omit printing of individual
   contrasts}
+\item{prob}{highest posterior density interval probability when the fit
+       was Bayesian and \code{fun} was specified to \code{contrast.rms}}
 }
 \value{
 a list of class \code{"contrast.rms"} containing the elements
@@ -277,6 +308,19 @@ contrast(fit, list(x1=1), list(x1=0))
 f <- ols(y ~ age + race + sex)
 contrast(f, list(age=50, sex='male', race=levels(race)),
          type='average', weights=table(race))
+
+# For a Bayesian model get the highest posterior interval for the
+# difference in two nonlinear functions of predicted values
+# Start with the mean from a proportional odds model
+g <- blrm(y ~ x)
+M <- Mean(g)
+contrast(g, list(x=1), list(x=0), fun=M)
+
+# For the median we have to make sure that contrast can pass the
+# per-posterior-draw vector of intercepts through
+qu <- Quantile(g)
+med <- function(lp, intercepts) qu(0.5, lp, intercepts=intercepts)
+contrast(g, list(x=1), list(x=0), fun=med)
 }
 
 

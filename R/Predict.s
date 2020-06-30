@@ -5,6 +5,7 @@ Predict <-
            conf.int=.95,
            conf.type=c('mean', 'individual', 'simultaneous'),
            usebootcoef=TRUE, boot.type=c('percentile', 'bca', 'basic'),
+           posterior.summary=c('mean', 'median', 'mode'),
            adj.zero=FALSE, ref.zero=FALSE,
            kint=NULL, time=NULL, loglog=FALSE, digits=4, name, factors=NULL,
            offset=NULL)
@@ -14,6 +15,11 @@ Predict <-
   type      <- match.arg(type)
   conf.type <- match.arg(conf.type)
   boot.type <- match.arg(boot.type)
+  posterior.summary <- match.arg(posterior.summary)
+  draws     <- x$draws
+  bayes     <- length(draws) > 0
+  if(bayes && conf.type == 'simultaneous')
+    stop('conf.type simultaneous does not work for Bayesian models')
   
   oldopt <- options('digits')
   options(digits=digits)
@@ -191,27 +197,32 @@ Predict <-
     bootdone <- FALSE
   }
   isMean <- ! missing(fun) && ! is.function(fun) && fun == 'mean'
-  if(isMean && ! bootdone)
-    stop('specifying fun="mean" does not make sense when not running bootcov (with coef.reps=TRUE)')
+  if(isMean && ! bootdone & conf.int > 0 & ! bayes)
+    stop('specifying fun="mean" with conf.int > 0 does not make sense when not running bootcov (with coef.reps=TRUE)')
+  if(isMean && inherits(fit, 'orm') && conf.int > 0)
+    stop("fun='mean' not implemented for orm models when confidence intervals are requested")
   
   if(! length(time)) {
     xx <- predictrms(fit, settings, kint=kint,
                      conf.int=conf.int, conf.type=conf.type,
-                     ref.zero=ref.zero)
+                     ref.zero=ref.zero, posterior.summary=posterior.summary)
     if(length(attr(xx, "strata")) && any(is.na(attr(xx, "strata"))))
       warning("Computed stratum NA.  Requested stratum may not\nexist or reference values may be illegal strata combination\n")
     
     if(length(xx) == 0L)
       stop("model has no covariables and survival not plotted")
     xb <- if(is.list(xx)) xx$linear.predictors else xx
-    if(bootdone) {
+    if(isMean) {
+      m <- Mean(fit)
+      xb <- m(xb)
+      }
+    if(bootdone && conf.int > 0) {
       X <- predictrms(fit, settings, kint=kint,
-                      ref.zero=ref.zero, type='x')
+                      ref.zero=ref.zero, type='x',
+                      posterior.summary=posterior.summary)
       pred <- t(matxv(X, boot.Coef,
                       kint=kint,  bmat=TRUE))
       if(isMean) {
-        m <- Mean(fit)
-        xb <- m(xb)
         for(k in 1L : nrow(pred))
           pred[k,] <- m(pred[k,], intercepts=boot.Coef[k, 1L : nrp])
       }
@@ -220,8 +231,22 @@ Predict <-
       if(! is.matrix(lim)) lim <- as.matrix(lim)
       xx$lower <- lim[1L, ]
       xx$upper <- lim[2L, ]
-    }
-  }
+    }    # end if(bootdone)
+    if(bayes) {
+      X <- predictrms(fit, settings, kint=kint,
+                      ref.zero=ref.zero, type='x',
+                      posterior.summary=posterior.summary)
+      pred <- t(matxv(X, draws, kint=kint,  bmat=TRUE))
+
+      if(isMean) {
+        for(k in 1L : nrow(pred))
+          pred[k,] <- m(pred[k,], intercepts=draws[k, 1L : nrp])
+      }
+      lim <- apply(pred, 2, HPDint, prob=conf.int)
+      xx$lower <- lim[1L, ]
+      xx$upper <- lim[2L, ]
+      }
+  }      # if(! length(time))
   else {   ## time specified
     if(bootdone)
       stop('time may not be specified if bootcov was used with coef.reps=TRUE')

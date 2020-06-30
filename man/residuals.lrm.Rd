@@ -52,9 +52,6 @@ specified \code{x=TRUE, y=TRUE}.  It then computes smoothed partial residual
 relationships (using \code{lowess} with \code{iter=0}) and plots them separately
 for each predictor, with residual plots from all model fits shown on the
 same plot for that predictor.
-
-Score residuals are not yet implemented for \code{orm} fits when
-\code{family} is not \code{"logistic"}.
 }
 \usage{
 \method{residuals}{lrm}(object, type=c("li.shepherd","ordinary",

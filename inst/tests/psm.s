@@ -1,3 +1,4 @@
+intr <- FALSE  # set to TRUE if running interactivel so xless will run
 require(survival)
 n <- 400
 set.seed(1)
@@ -28,10 +29,36 @@ v <- vcov(f, regcoef.only=FALSE)
 diag(vcov(h)) / diag(v)
 
 r <- residuals(f, type='matrix')[,'dg']
-xless(cbind(rg, r))
+if(intr) xless(cbind(rg, r))
 
-xless(residuals(f, type='score'))
+if(intr) xless(residuals(f, type='score'))
 fr <- robcov(f)
 diag(vcov(f)) / diag(vcov(fr))
 
 
+r <- residuals(f)
+g <- npsurv(r ~ sex)
+survplot(g)
+
+# Generate data where age is irrelevant but PH assumption for sex
+# is satisfied (Weibull fits but lognormal doesn't)
+set.seed(1)
+sex <- factor(sample(c('Female','Male'), n, TRUE))
+# Population hazard function:
+h <- .02*exp(0.5 + 1.6*(sex=='Female'))
+d.time <- -log(runif(n))/h
+cens <- 15*runif(n)
+death <- ifelse(d.time <= cens,1,0)
+d.time <- pmin(d.time, cens)
+table(death)
+
+par(mfrow=c(1,2))
+for(dist in c('lognormal', 'weibull')) {
+f <- psm(Surv(d.time, death) ~ sex,
+         dist=dist, x=TRUE, y=TRUE)
+r <- residuals(f, type='censored.normalized')
+g <- npsurv(r ~ sex)
+survplot(g)
+lines(r)
+title(dist)
+}

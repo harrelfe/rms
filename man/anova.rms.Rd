@@ -32,6 +32,15 @@ substitutes Greek/math symbols in column headings, uses boldface for
 \code{TOTAL} lines, and constructs a caption.  Then it passes the result
 to \code{latex.default} for conversion to LaTeX.
 
+For Bayesian models such as \code{blrm}, \code{anova} computes relative
+explained variation indexes (REV) based on approximate Wald statistics.
+This uses the variance-covariance matrix of all of the posterior draws,
+and the individual draws of betas, plus an overall summary from the
+posterior mode/mean/median beta.  Wald chi-squares assuming multivariate
+normality of betas are computed just as with frequentist models, and for
+each draw (or for the summary) the ratio of the partial Wald chi-square
+to the total Wald statistic for the model is computed as REV.
+
 The \code{print} method calls \code{latex} or \code{html} methods
 depending on \code{options(prType=)}, and output is to the console.  For
 \code{latex} a \code{table} environment is not used and an ordinary
@@ -42,7 +51,8 @@ depending on \code{options(prType=)}, and output is to the console.  For
 \usage{
 \method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9, 
       test=c('F','Chisq'), india=TRUE, indnl=TRUE, ss=TRUE,
-      vnames=c('names','labels'))
+      vnames=c('names','labels'),
+      posterior.summary=c('mean', 'median', 'mode'), ns=500, cint=0.95)
 
 \method{print}{anova.rms}(x,
       which=c('none','subscripts','names','dots'),
@@ -57,7 +67,7 @@ depending on \code{options(prType=)}, and output is to the console.  For
      pl=TRUE, trans=NULL, ntrans=40, height=NULL, width=NULL, \dots)
 
 \method{latex}{anova.rms}(object, title, dec.chisq=2,
-      dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, table.env=TRUE,
+      dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, dec.REV=3, table.env=TRUE,
       caption=NULL, \dots)
 
 \method{html}{anova.rms}(object, \dots)
@@ -104,6 +114,13 @@ sums of squares, mean squares, and the Error SS and MS.
 }
 \item{vnames}{set to \code{'labels'} to use variable labels rather than
   variable names in the output}
+\item{posterior.summary}{specifies whether the posterior mode/mean/median
+	beta are to be used as a measure of central tendence of the posterior
+	distribution, for use in relative explained variation from Bayesian
+	models}
+\item{ns}{number of random samples from the posterior draws to use for
+	REV highest posterior density intervals}
+\item{cint}{HPD interval probability}
 \item{x}{for \code{print,plot,text} is the result of \code{anova}.
 }
 \item{which}{
@@ -193,6 +210,7 @@ floating point)
 digits to the right for mean squares (default is \code{NA})
 }
 \item{dec.P}{digits to the right for \eqn{P}-values}
+\item{dec.REV}{digits to the right for REV}
 \item{table.env}{see \code{\link[Hmisc]{latex}}}
 \item{caption}{caption for table if \code{table.env} is \code{TRUE}.
   Default is constructed from the response variable.}

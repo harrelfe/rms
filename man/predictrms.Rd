@@ -17,9 +17,19 @@ predicted values from either the data used to fit the model (if
 a new dataset. Parameters such as knots and factor levels used in creating 
 the design matrix in the original fit are "remembered".
 See the \code{Function} function for another method for computing the
-linear predictors.
+linear predictors.  \code{predictrms} is an internal utility function
+that is for the other functions.
 }
 \usage{
+predictrms(fit, newdata=NULL,
+           type=c("lp", "x", "data.frame", "terms", "cterms", "ccterms",
+             "adjto", "adjto.data.frame", "model.frame"),
+           se.fit=FALSE, conf.int=FALSE,
+           conf.type=c('mean', 'individual', 'simultaneous'),
+           kint=NULL,
+           na.action=na.keep, expand.na=TRUE,
+           center.terms=type=="terms", ref.zero=FALSE,
+           posterior.summary=c('mean', 'median', 'mode'), ...)
 \method{predict}{bj}(object, newdata,
         type=c("lp", "x", "data.frame", "terms", "cterms", "ccterms",
                "adjto", "adjto.data.frame", "model.frame"), 
@@ -70,7 +80,7 @@ linear predictors.
         center.terms=type=="terms", \dots) # psm
 }
 \arguments{
-\item{object}{a fit object with an \code{rms} fitting function}
+\item{object,fit}{a fit object with an \code{rms} fitting function}
 \item{newdata}{
 An S data frame, list or a matrix specifying new data for which predictions
 are desired.  If \code{newdata} is a list, it is converted to a matrix first.
@@ -129,13 +139,18 @@ the new design matrix.
 Specify \code{conf.int} as a positive fraction to obtain upper and lower
 confidence intervals (e.g., \code{conf.int=0.95}).  The \eqn{t}-distribution is
 used in the calculation for \code{ols} fits.  Otherwise, the normal
-critical value is used.
+critical value is used.  For Bayesian models \code{conf.int} is the
+highest posterior density interval probability.
 }
 \item{conf.type}{
 specifies the type of confidence interval.  Default is for the mean.
 For \code{ols} fits there is the option of obtaining confidence limits for
 individual predicted values by specifying \code{conf.type="individual"}.
 }
+\item{posterior.summary}{when making predictions from a Bayesian model,
+        specifies whether you want the linear predictor to be computed
+        from the posterior mean of parameters (default) or the posterior
+        mode or median median}
 \item{kint}{
 a single integer specifying the number of the intercept to use in
 multiple-intercept models.  The default is 1 for \code{lrm} and the
@@ -160,6 +175,11 @@ object.
 set to \code{FALSE} to suppress subtracting adjust-to values from
 columns of the design matrix before computing terms with \code{type="terms"}.
 }
+\item{ref.zero}{Set to \code{TRUE} to subtract a constant from \eqn{X\beta}{X beta}
+        before plotting so that the reference value of the \code{x}-variable
+        yields \code{y=0}.  This is done before applying function \code{fun}.
+        This is especially useful for Cox models to make the hazard ratio be
+        1.0 at reference values, and the confidence interval have width zero.}
 \item{\dots}{ignored}
 }
 \details{

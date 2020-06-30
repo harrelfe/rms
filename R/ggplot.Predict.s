@@ -308,7 +308,8 @@ ggplot.Predict <-
                              direction='long', v.names='.xx.',
                              timevar='.Predictor.',
                              varying=rv, times=rv)
-            rdata$.Predictor. <- pmlabel[rdata$.Predictor.]
+            if(vnames == 'labels')
+              rdata$.Predictor. <- pmlabel[rdata$.Predictor.]
             form <- 'yhat ~ .xx. + .Predictor.'
             if(length(groups))
               form <- paste(form, '+', paste(groups, collapse='+'))

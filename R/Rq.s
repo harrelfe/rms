@@ -2,23 +2,24 @@
 ## Roger Koenker, Stephen Portnoy, Pin Tian Ng, Achim Zeileis,
 ## Philip Grosjean, Brian Ripley
 
-Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete, 
+Rq <- function (formula, tau = 0.5, data=environment(formula),
+                subset, weights, na.action=na.delete, 
                 method = "br", model = FALSE, contrasts = NULL,
                 se='nid', hs=TRUE, x=FALSE, y=FALSE, ...) 
 {
   call <- match.call()
-  mf <- match.call(expand.dots = FALSE)
-  m <- match(c("formula", "data", "subset", "weights", "na.action"), 
-             names(mf), 0)
-  mf <- mf[c(1, m)]
-  mf$drop.unused.levels <- TRUE
-  mf$na.action <- na.action
-  mf[[1]] <- as.name("model.frame")
-  mf <- Design(eval.parent(mf))
 
-  at <- attributes(mf)
+  mf <-
+    modelData(data, formula,
+              subset  = if(! missing(subset )) eval(substitute(subset ), data),
+              weights = if(! missing(weights)) eval(substitute(weights), data),
+              na.action=na.action)
+
+  mf <- Design(mf, formula=formula)
+
+  at       <- attributes(mf)
   sformula <- at$sformula
-  desatr <- at$Design
+  desatr   <- at$Design
   attr(mf,'Design') <- NULL
   if (method == "model.frame") return(mf)
   mt <- at$terms
@@ -62,7 +63,7 @@ Rq <- function (formula, tau = 0.5, data, subset, weights, na.action=na.delete,
                 Design    = desatr,
                 assign    = DesignAssign(desatr, 1, mt),
                 stats     = stats))
-  attr(fit, "na.message") <- attr(m, "na.message")
+#  attr(fit, "na.message") <- attr(m, "na.message")
   
   s <- quantreg::summary.rq(fit, covariance=TRUE, se=se, hs=hs)
   k <- s$coefficients

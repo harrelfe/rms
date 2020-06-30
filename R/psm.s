@@ -1,44 +1,34 @@
-psm <- function(formula=formula(data),
-                data=parent.frame(),
+psm <- function(formula,
+                data=environment(formula),
                 weights, subset, na.action=na.delete, dist='weibull', 
                 init=NULL,  scale=0,
                 control=survreg.control(),
                 parms=NULL, model=FALSE, x=FALSE, y=TRUE, time.inc, ...) {
   
   call <- match.call()
-  m <- match.call(expand.dots=FALSE)
-  if(dist=='extreme')
-    warning('Unlike earlier versions of survreg, dist="extreme" does not fit\na Weibull distribution as it uses an identity link.  To fit the Weibull\ndistribution use the default for dist or specify dist="weibull".')
-  mc <- match(c("formula", "data", "subset", "weights", "na.action"), 
-              names(m), 0)
-  m <- m[c(1, mc)]
-  m$na.action <- na.action  ## FEH
-  m$drop.unused.levels <- TRUE
-  m[[1]] <- as.name("model.frame")
-  special <- c("strata", "cluster")
-  Terms <-
-    if(missing(data)) terms(formula, special)
-    else
-      terms(formula, special, data=data)
-  m$formula <- Terms
-  ## Start FEH
-  dul <- .Options$drop.unused.levels
-  if(!length(dul) || dul) {
-    on.exit(options(drop.unused.levels=dul))
-    options(drop.unused.levels=FALSE)
-  }
 
-  m <- Design(eval.parent(m))
-  atrx <- attributes(m)
+  if(dist == 'extreme')
+    warning('Unlike earlier versions of survreg, dist="extreme" does not fit\na Weibull distribution as it uses an identity link.  To fit the Weibull\ndistribution use the default for dist or specify dist="weibull".')
+
+  ## Start FEH
+  m <-
+    modelData(data, formula,
+              subset  = if(! missing(subset )) eval(substitute(subset ), data),
+              weights = if(! missing(weights)) eval(substitute(weights), data),
+              na.action=na.action)
+
+  m <- Design(m, formula=formula, specials=c('strata', 'cluster'))
+
+  atrx     <- attributes(m)
   sformula <- atrx$sformula
-  nact <- atrx$na.action
-  Terms <- atrx$terms
-  atr   <- atrx$Design
+  nact     <- atrx$na.action
+  Terms    <- atrx$terms
+  atr      <- atrx$Design
   ## End FEH
   
   weights <- model.extract(m, 'weights')
-  Y <- model.extract(m, "response")
-  Ysave <- Y
+  Y       <- model.extract(m, "response")
+  Ysave   <- Y
   
   ## Start FEH
   atY <- attributes(Y)
@@ -71,7 +61,7 @@ psm <- function(formula=formula(data),
   if (length(strats)) {
     temp <- untangle.specials(Terms, 'strata', 1)
     dropx <- c(dropx, temp$terms)
-    if (length(temp$vars)==1) strata.keep <- m[[temp$vars]]
+    if (length(temp$vars) == 1) strata.keep <- m[[temp$vars]]
     else strata.keep <- strata(m[, temp$vars], shortlabel=TRUE)
     strata <- as.numeric(strata.keep)
     nstrata <- max(strata)
@@ -118,41 +108,41 @@ psm <- function(formula=formula(data),
   }	
   
   type <- attr(Y, "type")
-  if (type== 'counting') stop ("Invalid survival type")
+  if (type ==  'counting') stop ("Invalid survival type")
   
   logcorrect <- 0   #correction to the loglik due to transformations
   if (length(dlist$trans)) {
     tranfun <- dlist$trans
-    exactsurv <- Y[,ncol(Y)] ==1
+    exactsurv <- Y[,ncol(Y)]  == 1
     if (any(exactsurv))
       logcorrect <-
         ifelse(length(weights),
                sum(weights[exactsurv]*logb(dlist$dtrans(Y[exactsurv, 1]))),
                sum(logb(dlist$dtrans(Y[exactsurv, 1]))))
     
-    if (type=='interval') {
-      if (any(Y[,3]==3))
+    if (type == 'interval') {
+      if (any(Y[,3] == 3))
         Y <- cbind(tranfun(Y[,1:2]), Y[,3])
       else Y <- cbind(tranfun(Y[,1]), Y[,3])
     }
     else {
-      if (type=='left')
-        Y <- cbind(tranfun(Y[,1]), 2-Y[,2])
+      if (type == 'left')
+        Y <- cbind(tranfun(Y[, 1]), 2 - Y[, 2])
       else
-        Y <- cbind(tranfun(Y[,1]), Y[,2])
+        Y <- cbind(tranfun(Y[, 1]), Y[, 2])
     }
     if (!all(is.finite(Y))) 
       stop("Invalid survival times for this distribution")
   }
   else {
-    if (type=='left') Y[,2] <- 2- Y[,2]
+    if (type == 'left') Y[, 2] <- 2- Y[, 2]
     else
-      if (type=='interval' && all(Y[,3]<3)) Y <- Y[,c(1,3)]
+      if (type == 'interval' && all(Y[, 3] < 3)) Y <- Y[, c(1, 3)]
   }
   
-  if (!length(dlist$itrans)) itrans <- function(x) x
-  else
-    itrans <- dlist$itrans
+  ## if (!length(dlist$itrans)) itrans <- function(x) x
+  ## else
+  ##   itrans <- dlist$itrans
   
   if (length(dlist$scale)) {
     if (!missing(scale))
@@ -162,7 +152,7 @@ psm <- function(formula=formula(data),
   }
   if (length(dlist$dist)) dlist <- survreg.distributions[[dlist$dist]]
   
-  if (missing(control)) control <-survreg.control(...)
+  if (missing(control)) control <- survreg.control(...)
   
   if (scale < 0) stop("Invalid scale value")
   if (scale >0 && nstrata >1) 
@@ -201,10 +191,10 @@ psm <- function(formula=formula(data),
   if (is.character(fit))
     fit <- list(fail=fit)  #error message
   else {
-    if (scale==0) {
+    if (scale == 0) {
       nvar <- length(fit$coef) - nstrata
       fit$scale <- exp(fit$coef[-(1:nvar)])
-      if (nstrata==1) names(fit$scale) <- NULL
+      if (nstrata == 1) names(fit$scale) <- NULL
       else names(fit$scale) <- levels(strata.keep)
       fit$coefficients  <- fit$coefficients[1:nvar]
       fit$idf  <- 1 + nstrata
@@ -345,12 +335,12 @@ residuals.psm <-
   
   y <- object$y
   aty <- attributes(y)
-  if(length(y)==0) stop('did not use y=T with fit')
+  if(length(y) == 0) stop('did not use y=T with fit')
   ncy <- ncol(y)
   scale <- object$scale
   dist  <- object$dist
-  
-  r <- (y[, -ncy, drop=FALSE] - object$linear.predictors) / scale
+  trans <- survreg.distributions[[dist]]$trans
+  r <- (trans(y[, -ncy, drop=FALSE]) - object$linear.predictors) / scale
   label(r) <- 'Normalized Residual'
   ev <- y[, ncy]
   lab <- aty$inputAttributes$event$label

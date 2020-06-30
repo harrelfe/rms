@@ -40,7 +40,8 @@
 	second argument).
 }
 \usage{
-orm(formula, data, subset, na.action=na.delete, method="orm.fit",
+orm(formula, data=environment(formula),
+    subset, na.action=na.delete, method="orm.fit",
     model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE, 
     penalty=0, penalty.matrix, tol=1e-7, eps=0.005, 
     var.penalty=c('simple','sandwich'), scale=FALSE, \dots)
@@ -217,7 +218,7 @@ Verweij PJM, Van Houwelingen JC: Crossvalidation in survival analysis.
 Stat in Med 12:2305--2314, 1993.
 
 Harrell FE: Model uncertainty, penalization, and parsimony.  Available
-from http://biostat.mc.vanderbilt.edu/FHHandouts.
+from \url{http://hbiostat.org/talks/iscb98.pdf}.
 }
 \seealso{
 \code{\link{orm.fit}}, \code{\link{predict.orm}}, \code{\link[SparseM]{solve}},

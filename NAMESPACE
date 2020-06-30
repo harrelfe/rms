@@ -1,13 +1,16 @@
-export(annotateAnova,asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineRelatedPredictors,confplot,contrast,coxphFit,cph,cr.setup,datadist,dxy.cens,effective.df,ExProb,fastbw,formatNP,gendata,gIndex,Glm,Gls,groupkm,Hazard,hazard.ratio.plot,histdensity,"%ia%",ie.setup,interactions.containing,legend.nomabbrev,lm.pfit,lrm,lrm.fit,lrtest,lsp,matinv,matrx,Newlabels,Newlevels,nomogram,npsurv,ols,ols.influence,oos.loglik,orm,orm.fit,pantext,Penalty.matrix,Penalty.setup,pentrace,perimeter,perlcode,plotmathAnova,plot.lrm.partial,plot.xmean.ordinaly,pol,pphsm,predab.resample,Predict,psm,rcs,related.predictors,reListclean,robcov,Rq,sascode,scored,sensuc,setPb,show.influence,specs,strat,survreg.auxinfo,survdiffplot,survest,Survival,survplot,survplotp,univarLR,validate,val.prob,val.probg,val.surv,vif,which.influence)
+export(annotateAnova,asis,bj,bjplot,blrm,blrmStats,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineRelatedPredictors,compareBmods,confplot,contrast,coxphFit,cph,cr.setup,datadist,distSym,dxy.cens,effective.df,ExProb,fastbw,formatNP,gendata,gIndex,Glm,Gls,groupkm,Hazard,hazard.ratio.plot,histdensity,HPDint,"%ia%",ie.setup,interactions.containing,legend.nomabbrev,lm.pfit,lrm,lrm.fit,lrtest,lsp,matinv,matrx,Newlabels,Newlevels,nomogram,npsurv,ols,ols.influence,oos.loglik,orm,orm.fit,pantext,pdensityContour,Penalty.matrix,Penalty.setup,pentrace,perimeter,perlcode,plotmathAnova,plot.contrast.rms,plot.lrm.partial,plot.rmsb,plot.xmean.ordinaly,pol,PostF,pphsm,predab.resample,Predict,probabilityFamilies,psm,rcs,related.predictors,reListclean,robcov,Rq,sascode,scored,selectedQr,sensuc,setPb,show.influence,specs,stackMI,stanCompile,stanDx,stanDxplot,stanGet,strat,survreg.auxinfo,survdiffplot,survest,Survival,survplot,survplotp,univarLR,validate,val.prob,val.probg,val.surv,vif,which.influence)
 
 useDynLib(rms, .registration=TRUE, .fixes="F_")
 
 
 import(Hmisc)
 importFrom(survival, Surv, is.Surv, survConcordance.fit, coxph.fit, coxph.control, survfit, survfitcoxph.fit, survreg.fit, survreg.control, survpenal.fit, survfitKM, survreg.distributions, agreg.fit, agexact.fit, attrassign, untangle.specials)
-importFrom(stats, nobs)
 #importFrom(SparseM, solve, t, as.matrix)
 import(SparseM)
+
+importFrom(cluster, ellipsoidhull)
+importFrom(digest, digest)
+importFrom(MASS, kde2d, bandwidth.nrd, cov.mve)
 
 import(ggplot2)
 import(lattice)
@@ -22,25 +25,25 @@ import(multcomp)
 importFrom(htmlTable, htmlTable, txtRound)
 importFrom(htmltools, HTML)
 
-importFrom(grDevices, gray, grey, rgb)
+importFrom(grDevices, dev.off, gray, grey, png, rgb, contourLines)
 importFrom(graphics, abline, axis, boxplot, hist, legend,
-           lines, locator, mtext, par, plot, plot.new,
+           lines, locator, mtext, pairs, par, plot, plot.new,
            points, segments, strwidth, symbols, text,
            title, grconvertX, grconvertY)
 importFrom(methods, existsFunction, getFunction, new)
 importFrom(stats, .getXlevels, AIC, approx, as.formula,
-           asOneSidedFormula, coef, confint, contrasts, cor,
+           asOneSidedFormula, coef, complete.cases, confint, contrasts, cor,
            dcauchy, delete.response, density, deviance,
            dnorm, family, fitted, formula, gaussian,
            glm.control, glm.fit, is.empty.model, lm, lm.fit,
            lm.influence, lm.wfit, logLik, lowess, lsfit,
            make.link, median, model.extract, model.frame,
-           model.offset, model.weights, na.omit, naresid,
-           nlminb, optim, pcauchy, pchisq, pf, plogis,
+           model.offset, model.weights, na.fail, na.omit, naresid,
+           nlminb, nobs, optim, pcauchy, pchisq, pf, plogis,
            pnorm, predict, pt, qcauchy, qchisq, qlogis,
            qnorm, qqline, qqnorm, qt, quantile,
            reformulate, reshape, resid, residuals, runif,
-           supsmu, terms, uniroot, update, var, vcov)
+           sd, supsmu, terms, uniroot, update, var, vcov)
 importFrom(utils, capture.output, de, getS3method, getFromNamespace)
 
 
@@ -51,8 +54,11 @@ S3method(calibrate, cph)
 S3method(calibrate, default)
 S3method(calibrate, psm)
 
+S3method(coef, rmsb)
+
 S3method(contrast, rms)
 
+S3method(ExProb, blrm)
 S3method(ExProb, orm)
          
 S3method(Function, cph)
@@ -86,6 +92,7 @@ S3method(logLik, Gls)
 S3method(logLik, ols)
 S3method(logLik, rms)
 
+S3method(Mean,  blrm)
 S3method(Mean,  cph)
 S3method(Mean,  lrm)
 S3method(Mean,  orm)
@@ -99,12 +106,15 @@ S3method(nobs, rms)
 S3method(plot, anova.rms)
 S3method(plot, calibrate)
 S3method(plot, calibrate.default)
+S3method(plot, contrast.rms)
 S3method(plot, ExProb)
 S3method(plot, gIndex)
 S3method(plot, lrm.partial)
 S3method(plot, nomogram)
 S3method(plot, pentrace)
+S3method(plot, PostF)
 S3method(plot, Predict)
+S3method(plot, rmsb)
 S3method(plot, sensuc)
 S3method(plot, summary.rms)
 S3method(plot, validate.rpart)
@@ -118,6 +128,7 @@ S3method(plotp, Predict)
 S3method(ggplot, Predict)
 
 S3method(predict, bj)
+S3method(predict, blrm)
 S3method(predict, cph)
 S3method(predict, Glm)
 S3method(predict, Gls)
@@ -129,6 +140,8 @@ S3method(predict, Rq)
 
 S3method(print, anova.rms)
 S3method(print, bj)
+S3method(print, blrm)
+S3method(print, blrmStats)
 S3method(print, calibrate)
 S3method(print, contrast.rms)
 S3method(print, cph)
@@ -145,8 +158,10 @@ S3method(print, orm)
 S3method(print, pentrace)
 S3method(print, pphsm)
 S3method(print, Predict)
+S3method(print, predict.blrm)
 S3method(print, psm)
 S3method(print, Rq)
+S3method(print, rmsb)
 S3method(print, specs.rms)
 S3method(print, summary.rms)
 S3method(print, summary.survreg2)
@@ -156,6 +171,7 @@ S3method(print, validate.rpart)
 S3method(print, val.prob)
 S3method(print, val.survh)
 
+S3method(Quantile, blrm)
 S3method(Quantile, cph)
 S3method(Quantile, orm)
 S3method(Quantile, psm)
@@ -204,5 +220,7 @@ S3method(vcov, orm)
 S3method(vcov, pphsm)
 S3method(vcov, psm)
 S3method(vcov, rms)
+S3method(vcov, rmsb)
 
 S3method("[", rms)
+S3method("as.data.frame", rms)

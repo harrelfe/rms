@@ -21,6 +21,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                         conf.type=c('individual','simultaneous'),
                         usebootcoef=TRUE,
                         boot.type=c('percentile','bca','basic'),
+                        posterior.summary=c('mean', 'median', 'mode'),
                         verbose=FALSE)
 {	
   obj.name <- as.character(sys.call())[2]
@@ -35,6 +36,13 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                    bca = 'bootstrap BCa',
                    basic = 'basic bootstrap')
   ## if(conf.type == 'simultaneous') require(multcomp)
+  alp <- (1. - conf.int) / 2.
+  posterior.summary <- match.arg(posterior.summary)
+
+  draws <- object$draws
+  bayes <- length(draws) > 0
+  if(bayes && conf.type == 'simultaneous')
+    stop('conf.type simultaneous does not apply to Bayesian model fits')
   
   assume <- at$assume.code
   if(is.null(assume)) stop("fit does not have design information")
@@ -78,16 +86,21 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   length(V <- values[[name[i]]]) && is.character(V)
   
   stats <- lab <- NULL
-  lc <- length(object$coef)
+  beta <- if(bayes) coef(object, stat=posterior.summary)
+          else
+            object$coef
+  lc <- length(beta)
   ##Number of non-slopes:
-  nrp <- num.intercepts(object, 'coef')
+  nrp <- if(bayes) num.intercepts(object) else num.intercepts(object, 'coef')
   nrp1 <- nrp + 1
   ## Exclude non slopes
-  beta <- object$coef[nrp1 : lc]
+  j <- nrp1 : lc
+  beta <- beta[j]
+  if(bayes) draws <- draws[, j, drop=FALSE]
   var <- vcov(object, regcoef.only=TRUE, intercepts='none')
 
-  zcrit <- if(length(idf <- object$df.residual)) qt((1 + conf.int)/2, idf)
-   else qnorm((1 + conf.int) / 2)
+  zcrit <- if(length(idf <- object$df.residual)) qt(1. - alp, idf)
+   else qnorm(1. - alp)
   cll <- paste(signif(conf.int, 3))
   bcoef <- if(usebootcoef) object$boot.Coef
   if(length(bcoef)) bcoef <- bcoef[, nrp1 : lc, drop=FALSE]
@@ -161,6 +174,11 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
         low <- lim[1]
         up <- lim[2]
       }
+    } else if(bayes) {
+      best <- t(xd %*% t(draws))
+      lim  <- apply(best, 2, HPDint, prob=conf.int)
+      low  <- lim[1, ]
+      up   <- lim[2, ]
     } else {
       low <- xb - zcrit*se
       up  <- xb + zcrit*se
@@ -222,6 +240,11 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
             low <- lim[1]
             up  <- lim[2]
           }
+        } else if(bayes) {
+          best <- t(xd %*% t(draws))
+          lim  <- apply(best, 2, HPDint, prob=conf.int)
+          low  <- lim[1, ]
+          up   <- lim[2, ]
         } else {
           low <- xb - zcrit*se
           up  <- xb + zcrit*se
@@ -265,7 +288,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   }
   attr(stats, "adjust") <- adjust
   attr(stats, "conf.type") <-
-    if(length(bcoef)) blabel else 'z'
+    if(length(bcoef)) blabel else if(bayes) 'HPD' else 'z'
   
   stats
 }
@@ -289,6 +312,7 @@ print.summary.rms <- function(x, ..., table.env=FALSE)
               'Bootstrap nonparametric percentile confidence intervals',
               'bootstrap BCa' = 'Bootstrap BCa confidence intervals',
               'basic bootstrap' = 'Basic bootstrap confidence intervals',
+              HPD = 'Bayesian highest posterior density intervals',
               '')
            if(blab != '') cat('\n', blab, '\n', sep='')
            cat('\n')
@@ -363,6 +387,8 @@ html.summary.rms <- function(object, digits=4, dec=NULL,...) {
 }
 
 
+## plot is not using bootstrap percentile or Bayesian HPD
+## intervals but is using SE-based CLs
 
 # was q=c(.7, .8, .9, .95, .99)
 plot.summary.rms <-

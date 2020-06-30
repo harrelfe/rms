@@ -8,7 +8,7 @@ survplotp.npsurv <-
            levels.only=TRUE,
            loglog=FALSE, fun=function(y) y, aehaz=FALSE, times=NULL,
            logt=FALSE, pr=FALSE, ...) {
-    
+
     conf     <- match.arg(conf)
     conf.int <- fit$conf.int
     if(!length(conf.int) | conf == "none") conf.int <- 0
@@ -342,25 +342,25 @@ survplotp.npsurv <-
     }      
 
     
+    slevat <- ifelse(sleva == '', '', paste0(sleva, ': '))
     if(aehaz || length(times)) {
       un <- if(units == ' ' | units == '') ''
             else
               paste('/', tolower(units), sep='')
       haz <- round(nevents / totaltime, 4)
       txt <- paste(nevents, 'events')
-      if(aehaz) txt <- paste0(txt, '<br>', nbsp, nbsp, nbsp,
-                              htmlGreek('lambda'), '=', 
+      if(aehaz) txt <- paste0(txt, '<br>', htmlGreek('lambda'), '=', 
                               haz, un, sep='')
-      z <- paste(paste0(sleva, ':', txt), collapse='<br>')
+      z <- paste(paste0(slevat, txt), collapse='<br>')
       if(length(times)) {
         z2 <- paste0('<br>Cumulative<br>Incidence at<br>',
                      't=', paste(times, collapse=', '), ' ', units,
                      if(un !='') 's', '<br>',
-                     paste0(sleva, ':', cuminc, collapse='<br>'))
+                     paste0(slevat, cuminc, collapse='<br>'))
         z <- paste0(z, z2)
         }
     }
-    else z <- paste(paste0(sleva, ': ', nevents, ' events'), collapse='<br>')
+    else z <- paste(paste0(slevat, nevents, ' events'), collapse='<br>')
     
     ## Add empty trace just to add to bottom of legend.  Used to have x=~NA y=~NA
     ## but plotly update made that point ignored in every way

@@ -4,22 +4,80 @@
 anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9, 
                       test=c('F','Chisq'),
                       india=TRUE, indnl=TRUE, ss=TRUE,
-                      vnames=c('names', 'labels')) {
+                      vnames=c('names', 'labels'),
+                      posterior.summary=c('mean', 'median', 'mode'),
+                      ns=500, cint=0.95) {
 
-  ava <- function(idx, coef, cov, tol) {
+  ava <- function(idx) {
     chisq <- coef[idx] %*% solvet(cov[idx, idx], coef[idx], tol=tol)
     c(chisq, length(idx))
+  }
+
+  eEV <- function(test=integer()) {
+    coef  <- if(length(test)) draws[, test, drop=FALSE] else draws
+    co    <- if(length(test)) cov[test, test, drop=FALSE] else cov
+    m     <- nrow(coef)
+    chisq <- numeric(m)
+    for(i in 1 : m)
+      chisq[i] <- coef[i,, drop=FALSE] %*%
+        solvet(co, t(coef[i,, drop=FALSE]), tol=tol)
+    
+    if(! length(test)) return(chisq)   # Assumes stored in chisqT
+    
+    ## variance explained by a variable/set of variables is
+    ## approximated by the Wald chi-square
+    ## pev = partial explained variation = chisq/(chisq for full model)
+    pev <- chisq / chisqT
+    ## Overall pev is the pev at the posterior mean/median beta (last element)
+    ## Also compute HPD interval.
+    ci <- HPDint(pev[-m], cint)
+    c(REV=pev[m], Lower=ci[1], Upper=ci[2], d.f.=length(test))
   }
   
   obj.name <- as.character(sys.call())[2]
   itype <- 1	#Wald stats. Later sense score stats from object$est
   misstest <- missing(test)
-  test <- match.arg(test)
+  test   <- match.arg(test)
   vnames <- match.arg(vnames)
+  posterior.summary <- match.arg(posterior.summary)
   is.ols <- inherits(object,'ols')
+
+  nrp <- num.intercepts(object)
+  cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
+
+  draws <- object$draws
+  bayes <- length(draws) > 0
+  chisqBayes <- NULL
+
+  if(bayes) {
+    if(nrp > 0) draws <- draws[, -(1 : nrp), drop=FALSE]
+
+    betaSummary <- getParamCoef(object, posterior.summary)
+    if(nrp > 0) betaSummary <- betaSummary[-(1 : nrp)]
+
+    X <- object$x
+    if(! length(X)) stop('x=TRUE must have been specified to fit')
+    nc <- ncol(X)
+    ndraws <- nrow(draws)
+    ns     <- min(ndraws, ns)
+    if(ns < ndraws) {
+      j <- sample(1 : ndraws, ns, replace=FALSE)
+      draws <- draws[j,, drop=FALSE]
+    }
+
+    ## Augment draws with a last row with posterior central tendency
+    draws <- rbind(draws, posteriorSummary=betaSummary)
+    ## Compute variances of linear predictor without omitting variables
+    chisqT <- eEV()
+    m  <- length(chisqT)
+    ci <- HPDint(chisqT[-m], cint)
+    chisqBayes <- c(chisqT[m], ci)
+    names(chisqBayes) <- c('Central', 'Lower', 'Upper')
+  }
 
   if(misstest) test <- if(is.ols) 'F' else 'Chisq'
   if(!is.ols && test=='F') stop('F-test not allowed for this type of model')
+  if(bayes) test <- 'Chisq'
   
   if(!is.ols) ss <- FALSE
 
@@ -61,39 +119,47 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   }
   else 1 : f
 
-  if(length(object$est) && !length(object$u))
-    stop("est in fit indicates score statistics but no u in fit")
+  if(! bayes) {
+    if(length(object$est) && !length(object$u))
+      stop("est in fit indicates score statistics but no u in fit")
 
-  if(itype == 1) {
-    if(!length(object$coefficients))
-      stop("estimates not available for Wald statistics")
-    
-    coef <- object$coefficients
-    cik  <- attr(coef, 'intercepts')
+    if(itype == 1) {
+      if(!length(object$coefficients))
+        stop("estimates not available for Wald statistics")
+      
+      coef <- object$coefficients
+      cik  <- attr(coef, 'intercepts')
+    }
+    else {
+      if(!length(object$u))
+        stop("score statistics not available")
+      coef <- object$u
+    }
   }
+  
+cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
+
+  if(bayes) for(j in 1:length(assign))
+        assign[[j]] <- assign[[j]] - nrp
+ 
   else {
-    if(!length(object$u))
-      stop("score statistics not available")
-    coef <- object$u
-  }
-
-  cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
-  ## Omit row/col for scale parameters
-  ## Compute # intercepts nrpcoef to skip in testing
-  nrp     <- num.intercepts(object)
-  nrpcoef <- num.intercepts(object, 'coef')
-  if(nrpcoef > 0) {
-    coef <- coef[-(1 : nrpcoef)]
-    for(j in 1:length(assign))
-      assign[[j]] <- assign[[j]] - nrpcoef
-  }
+    ## Omit row/col for scale parameters
+    ## Compute # intercepts nrpcoef to skip in testing
+    nrpcoef <- num.intercepts(object, 'coef')
+    if(nrpcoef > 0) {
+      coef <- coef[-(1 : nrpcoef)]
+      for(j in 1:length(assign))
+        assign[[j]] <- assign[[j]] - nrpcoef
+    }
     
-  if(itype == 2 & nrp != 0)
-    stop("fit score statistics and x are incompatible")
-  
-  nc <- length(coef)
-  
+    if(itype == 2 & nrp != 0)
+      stop("fit score statistics and x are incompatible")
+    
+    nc <- length(coef)
+  }
 
+  dos <- if(bayes) eEV else ava
+  
   stats <- NULL
   lab   <- NULL
   W     <- vinfo <- list()
@@ -133,7 +199,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
           ni <- ni + !any(is.na(match(low.fact, ia[,k])))
 
       if(ni==0 | main.effect) {
-        w <- ava(main.index, coef, cov, tol=tol)
+        w <- dos(main.index)
         s <- s+1; W[[s]] <- main.index
         stats <- rbind(stats, w)
         lab <- c(lab, namelab[i])
@@ -174,7 +240,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
             
         idx <- c(main.index, ia.index)
         all.slopes[idx] <- TRUE
-        w <- ava(idx, coef, cov, tol=tol)
+        w <- dos(idx)
         s <- s + 1; W[[s]] <- idx
         stats <- rbind(stats, w)
         lab <- c(lab, paste(namelab[i], 
@@ -185,7 +251,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
         ## If factor i in >1 interaction, print summary
         ## Otherwise, will be printed later
         if(india && (j != 9 & ni > 1)) {
-          w <- ava(ia.index, coef, cov, tol=tol)
+          w <- dos(ia.index)
           s <- s + 1; W[[s]] <- ia.index
           stats <- rbind(stats, w)
           lab <- c(lab, " All Interactions")
@@ -195,10 +261,11 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
       if(any(nl) && any(!nl)) {
         ## Tests of adequacy of linear relationship
         idx <- c(main.index[nl], nonlin.ia.index)
+
         num.nonlin <- num.nonlin+1
         all.nonlin[idx] <- TRUE
         if(indnl) {
-          w <- ava(idx, coef, cov, tol=tol)
+          w <- dos(idx)
           s <- s + 1; W[[s]] <- idx
           stats <- rbind(stats,w)
           lab <- c(lab, if(!length(nonlin.ia.index))" Nonlinear"
@@ -230,7 +297,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
             num.nonlin <- num.nonlin+1
             all.nonlin[idx] <- TRUE
             if(indnl) {
-              w <- ava(idx, coef, cov, tol=tol)
+              w <- dos(idx)
               s <- s + 1
               W[[s]] <- idx
               stats  <- rbind(stats, w)
@@ -242,7 +309,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
             li <- length(idx)
             
             if(indnl && li > 0) {
-              w <- ava(idx, coef, cov, tol=tol)
+              w <- dos(idx)
               s <- s + 1
               W[[s]] <- idx
               stats <- rbind(stats,w)
@@ -254,7 +321,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
             idx <- main.index[nonlin.x]
             li <- length(idx)
             if(indnl && (li > 0 & any(nonlin.x != nonlin.xy))) {
-              w <- ava(idx, coef, cov, tol=tol)
+              w <- dos(idx)
               s <- s+1
               W[[s]] <- idx
               stats <- rbind(stats, w)
@@ -269,7 +336,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
             li <- length(idx)
             
             if(indnl && (li > 0 & any(nonlin.y != nonlin.xy))) {
-              w <- ava(idx, coef, cov, tol=tol)
+              w <- dos(idx)
               s <- s + 1
               W[[s]] <- idx
               stats <- rbind(stats,w)
@@ -293,7 +360,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   if(num.nonlin > 1 || (num.nonlin==1 & !indnl)) {
     idx <- (1:nc)[all.nonlin]
     li <- length(idx)
-    w <- ava(idx, coef, cov, tol=tol)
+    w <- dos(idx)
     s <- s + 1; W[[s]] <- idx
     stats <- rbind(stats, w)
     lab <- c(lab, "TOTAL NONLINEAR")
@@ -304,7 +371,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   if(num.ia > 1 || (num.ia==1 & !india)) {
     idx <- (1:nc)[all.ia]
     li <- length(idx)
-    w <- ava(idx,coef,cov,tol=tol)
+    w <- dos(idx)
     s <- s+1
     W[[s]] <- idx
     stats <- rbind(stats,w)
@@ -317,7 +384,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   if(num.nonlin>0 & num.ia>0) {
     idx <- (1:nc)[all.nonlin | all.ia]
     li <- length(idx)
-    w <- ava(idx, coef, cov, tol=tol)
+    w <- dos(idx)
     s <- s + 1
     W[[s]] <- idx
     stats <- rbind(stats,w)
@@ -327,42 +394,47 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
 
   ## Get total test for all factors listed
   idx <- (1:nc)[all.slopes | all.ia]
-  w <- ava(idx, coef, cov, tol=tol)
+  w <- dos(idx)
   s <- s + 1; W[[s]] <- idx
   stats <- rbind(stats,w)
   lab <- c(lab, "TOTAL")
   vinfo[[s]] <- list(type='global')
   
-  statnam <- c('Chi-Square','d.f.')
-  
-  if(is.ols) {
-    sigma2 <- object$stats['Sigma']^2
-    dfe    <- object$df.residual
-  }
-  
-  if(ss) {
-    stats <- cbind(stats[,2], stats[,1]*sigma2, stats[,1]*sigma2/stats[,2], 
-                   stats[,1])
-    statnam <- c('d.f.', 'Partial SS', 'MS', 'Chi-Square')
-    stats <- rbind(stats, Error=c(dfe, sigma2*dfe, sigma2, NA))
-    s <- s + 1; W[[s]] <- NA
-    lab <- c(lab, 'ERROR')
-    vinfo[[s]] <- list(type='error')
-  }
-  
-  j <- statnam == 'Chi-Square'
-  dfreg <- stats[,statnam=='d.f.']
-  
-  if(test=='F') {
-    stats[,j] <- stats[,j] / dfreg
-    statnam[j] <- 'F'
-    stats <- cbind(stats, P=1 - pf(stats[,j], dfreg, dfe))
-    attr(stats,'df.residual') <- dfe
-  }
-  else
-    stats <- cbind(stats,1 - pchisq(stats[,j], dfreg))
+statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
+           else
+             c('Chi-Square','d.f.')
 
-  statnam <- c(statnam, 'P')
+  if(! bayes) {
+    if(is.ols) {
+      sigma2 <- object$stats['Sigma']^2
+      dfe    <- object$df.residual
+    }
+    
+    if(ss) {
+      stats <- cbind(stats[,2], stats[,1]*sigma2, stats[,1]*sigma2/stats[,2], 
+                     stats[,1])
+      statnam <- c('d.f.', 'Partial SS', 'MS', 'Chi-Square')
+      stats <- rbind(stats, Error=c(dfe, sigma2*dfe, sigma2, NA))
+      s <- s + 1; W[[s]] <- NA
+      lab <- c(lab, 'ERROR')
+      vinfo[[s]] <- list(type='error')
+    }
+  
+    j <- statnam == 'Chi-Square'
+    dfreg <- stats[,statnam=='d.f.']
+    
+    if(test=='F') {
+      stats[,j] <- stats[,j] / dfreg
+      statnam[j] <- 'F'
+      stats <- cbind(stats, P=1 - pf(stats[,j], dfreg, dfe))
+      attr(stats,'df.residual') <- dfe
+    }
+    else
+      stats <- cbind(stats,1 - pchisq(stats[,j], dfreg))
+    
+    statnam <- c(statnam, 'P')
+  }
+  
   dimnames(stats) <- list(lab, statnam)
   attr(stats,'formula') <- formula(object)
   attr(stats,"obj.name") <- obj.name
@@ -370,9 +442,10 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   
   names(W) <- lab
   attr(stats,"which") <- W
-  attr(stats,"coef.names") <- names(coef)
+  if(! bayes) attr(stats,"coef.names") <- names(coef)
   attr(stats,"non.slopes") <- nrp
-  attr(stats,"vinfo") <- vinfo
+  attr(stats,"vinfo")      <- vinfo
+  attr(stats,"chisqBayes") <- chisqBayes
   
   if(issue.warn) 
     warning("tests of nonlinear interaction with respect to single component \nvariables ignore 3-way interactions")
@@ -389,9 +462,12 @@ print.anova.rms <- function(x, which=c('none','subscripts',
     return(latex.anova.rms(x, file='', table.env=table.env, ...))
 
   stats <- x
-  digits <- c('Chi-Square'=2, F=2, 'd.f.'=0, 'Partial SS'=15, MS=15, P=4)
+  digits <- c('Chi-Square'=2, F=2, 'd.f.'=0, 'Partial SS'=15, MS=15, P=4,
+              REV=3, Lower=3, Upper=3)
   cstats <- matrix('', nrow=nrow(stats), ncol=ncol(stats), 
                    dimnames=dimnames(stats))
+
+  bchi <- attr(stats, 'chisqBayes')
   
   which <- match.arg(which)
   
@@ -451,7 +527,11 @@ print.anova.rms <- function(x, which=c('none','subscripts',
   dimnames(cstats) <- list(rep("",nrow(stats)),
                            c("Factor    ",colnames(stats)))
 
-  heading <- paste("                ",
+  heading <- if(length(bchi))
+        paste('                  Relative Explained Variation        Response:',
+              as.character(attr(stats, "formula")[2]), sep = "")
+             else
+             paste("                ",
                    if(any(colnames(stats) == 'F')) "Analysis of Variance"
                    else "Wald Statistics",
                    "          Response: ", 
@@ -472,7 +552,13 @@ print.anova.rms <- function(x, which=c('none','subscripts',
   
   if(!any(sn=='MS') && length(dfe <- attr(stats,'df.residual'))) 
     cat('\nError d.f.:', dfe, '\n')
-  
+
+  if(length(bchi)) {
+    bchi <- round(bchi, 1)
+    cat('\nApproximate total model Wald total chi-square used in denominators of REV:\n',
+        bchi['Central'], ' [', bchi['Lower'], ', ',
+        bchi['Upper'], ']\n', sep='')
+    }
   invisible()
 }
 
@@ -480,7 +566,7 @@ latex.anova.rms <-
   function(object,
            title=paste('anova', attr(object, 'obj.name'), sep='.'),
            dec.chisq=2, dec.F=2, dec.ss=NA,
-           dec.ms=NA, dec.P=4, table.env=TRUE, caption=NULL, ...) {
+           dec.ms=NA, dec.P=4, dec.REV=3, table.env=TRUE, caption=NULL, ...) {
 
     lang <- prType()
     html <- lang == 'html'
@@ -514,7 +600,8 @@ latex.anova.rms <-
     attr(dstats, 'row.names') <- rowl
     
     digits <- c('Chi-Square'=dec.chisq, F=dec.F, 'd.f.'=0,
-                'Partial SS'=dec.ss, MS=dec.ms, P=dec.P)
+                'Partial SS'=dec.ss, MS=dec.ms, P=dec.P,
+                REV=dec.REV, Lower=dec.REV, Upper=dec.REV)
 
     dig <- digits[sn]
     sn[sn=='Chi-Square'] <- specs$chisq(add='')
@@ -524,9 +611,11 @@ latex.anova.rms <-
     resp <- as.character(attr(object, 'formula')[2])
     if(! html) resp <- latexTranslate(resp)
 
+    bchi <- attr(object, 'chisqBayes')
+    wl <- if(length(bchi)) 'Relative Explained Variation' else
+      if(any(sn == 'F')) 'Analysis of Variance' else 'Wald Statistics'
     if(! length(caption))
-      caption <- paste0(if(any(sn == 'F')) "Analysis of Variance"
-      else "Wald Statistics", " for ", specs$code(resp))
+      caption <- paste0(wl, " for ", specs$code(resp))
 
     i <- 0
     for(nn in names(dstats)) {
@@ -535,6 +624,17 @@ latex.anova.rms <-
                                lang   = lang,
                                pvalue = nn == math('P'))
     }
+
+  if(length(bchi)) {
+    bchi <- round(bchi, 1)
+    w <- paste0('Approximate total model Wald ',
+                specs$math(specs$chisq(add='')),
+               ' used in denominators of REV:',
+        bchi['Central'], ' [', bchi['Lower'], ', ',
+        bchi['Upper'], '].')
+    caption <- paste0(caption, '. ', w)
+    }
+
     if(html) {
       al <- rep('r', length(sn))
       w <- htmlTable::htmlTable(dstats, caption=caption,
@@ -569,6 +669,7 @@ plot.anova.rms <-
     what <- match.arg(what)
     sort <- match.arg(sort)
     isbase <- Hmisc::grType() == 'base'
+
 
     htmlSpecs <- markupSpecs$html
     schisq    <- htmlSpecs$chisq()
@@ -612,6 +713,33 @@ plot.anova.rms <-
     
     an <- x[k,, drop=FALSE]
     
+    if(! isbase && ! length(height))
+      height <- plotlyParm$heightDotchart(length(w))
+
+    if('REV' %in% colnames(x)) {    # Bayesian
+      xlab <- 'Relative Explained Variation'
+      i <- switch(sort,
+                  none       = 1 : nrow(an),
+                  descending = order(an[, 'REV'], decreasing=TRUE),
+                  ascending  = order(an[, 'REV']))
+      an <- an[i,, drop=FALSE]
+      rownames(an) <- sub('  (Factor+Higher Order Factors)', '',
+                          rownames(an), fixed=TRUE)
+
+      if(isbase) {
+        xlim <- range(an[, 1:3])
+        dotchart2(an[, 'REV'], xlab=xlab, pch=pch, xlim=xlim, ...)
+        dotchart2(an[, 'Lower'], pch=91, add=TRUE)
+        dotchart2(an[, 'Upper'], pch=93, add=TRUE)
+        return(invisible(an))
+      }
+      p <- dotchartpl(an[, 'REV'], major=rownames(an),
+                      lower=an[,'Lower'], upper=an[,'Upper'],
+                      xlab=xlab,
+                      limitstracename='HPD Interval',
+                      width=width, height=height)
+      return(p)
+      }
     
     if(what %in% c("partial R2", "remaining R2", "proportion R2")) {
       if("Partial SS" %nin% colnames(x))
@@ -622,10 +750,10 @@ plot.anova.rms <-
       pss <- an[, 'Partial SS']
       sst <- sse + ssr
     }
-    
+
     dof <- an[, 'd.f.']
     P   <- an[, 'P']
-
+    
     if(any(colnames(an) == 'F')) {
       chisq    <- an[, 'F'] * dof
       totchisq <- x['TOTAL', 'F'] * x['TOTAL', 'd.f.']
@@ -719,9 +847,6 @@ plot.anova.rms <-
 
       dc <- if(isbase) dotchart3 else dotchartp
 
-      if(! isbase && ! length(height))
-        height <- plotlyParm$heightDotchart(length(w))
-      
       if(length(trans)) {
         nan <- names(w)
         w <- pmax(0, w)

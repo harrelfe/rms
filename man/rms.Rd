@@ -1,6 +1,7 @@
 \name{rms}
 \alias{rms}
 \alias{Design}
+\alias{modelData}
 \title{rms Methods and Generic Functions}
 \description{
   This is a series of special transformation functions (\code{asis},
@@ -19,21 +20,21 @@ of each factor and pooled tests), plotting effects of variables in the
 model, estimating and graphing effects of variables that appear non-linearly in the
 model using e.g. inter-quartile-range hazard ratios, bootstrapping
 model fits, and constructing nomograms for obtaining predictions manually. 
-Behind the scene is the \code{Design} function, 
-called by a modified version of \code{model.frame.default} to
-store extra attributes. \code{Design()} is not intended to be
+Behind the scene is the \code{Design} function which
+stores extra attributes. \code{Design()} is not intended to be
 called by users.  
 \code{Design} causes detailed design attributes
 and descriptions of the distribution of predictors to be stored 
 in an attribute of the \code{terms} component called \code{Design}.
-In addition to \code{model.frame.default} being replaced by a modified
-version, \code{[.} and \code{[.factor} are replaced by versions which carry
-along the \code{label} attribute of a variable.  In this way, when an
-\code{na.action} function is called to subset out NAs, labels are still
-defined for variables in the model.
+
+\code{modelData} is a replacement for \code{model.frame.default} that is
+much streamlined and prepares data for \code{Design()}.
 }
 \usage{
-Design(mf, allow.offset=TRUE, intercept=1)
+modelData(data=environment(formula), formula, formula2=NULL,
+          weights, subset, na.action=na.delete, dotexpand=TRUE)
+
+Design(mf, formula=NULL, specials=NULL, allow.offset=TRUE, intercept=1)
 # not to be called by the user; called by fitting routines
 # dist <- datadist(x1,x2,sex,age,race,bp)   
 # or dist <- datadist(my.data.frame)
@@ -62,6 +63,21 @@ Design(mf, allow.offset=TRUE, intercept=1)
 # nomogram(f)
 }
 \arguments{
+	\item{data}{a data frame or calling environment}
+	\item{formula}{model formula}
+	\item{formula2}{an optional second model formula (see for example
+		\code{ppo} in \code{blrm})}
+	\item{weights}{a weight variable or expression}
+	\item{subset}{a subsetting expression evaluated in the calling frame
+		or \code{data}}
+	\item{na.action}{NA handling function, ideally one such as
+		\code{na.delete} that stores extra information about data omissions}
+	\item{specials}{a character vector specifying which function
+		evaluations appearing in \code{formula} are "special" in the
+		\code{model.frame} sense}
+	\item{dotexpand}{set to \code{FALSE} to prevent . on right hand side
+		of model formula from expanding into all variables in \code{data};
+		used for \code{cph}}
   \item{mf}{a model frame}
   \item{allow.offset}{set to \code{TRUE} if model fitter allows an
 	offset term}

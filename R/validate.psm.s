@@ -5,9 +5,9 @@ validate.psm <-
            dxy=TRUE, tol=1e-12, rel.tolerance=1e-5, maxiter=15, ...)
 {
 
-  xb <- fit$linear.predictors
-  ny <- dim(fit$y)
-  nevents <- sum(fit$y[,ny[2]])
+  xb      <- fit$linear.predictors
+  ny      <- dim(fit$y)
+  nevents <- sum(fit$y[, ny[2]])
 
   ##Note: fit$y already has been transformed by the link function by psm
 
@@ -24,15 +24,15 @@ validate.psm <-
       ##Assumes y is matrix with 1st col=time, 2nd=event indicator
       if(evalfit)
         {	#Fit was for training sample
-          lr <- 2*diff(fit$loglik)
-          ll0 <- -2*fit$loglik[1]
-          R2.max <- 1 - exp(-ll0/length(x))
-          R2 <- (1 - exp(-lr/length(x)))/R2.max
+          lr     <- 2 * diff(fit$loglik)
+          ll0    <- -2 * fit$loglik[1]
+          R2.max <- 1 - exp(-ll0 / length(x))
+          R2     <- (1 - exp(-lr / length(x))) / R2.max
           intercept <- 0
-          slope <- 1
-          D <- (lr - 1)/ll0
-          U <- -2 / ll0
-          gindex <- GiniMd(x)
+          slope     <- 1
+          D         <- (lr - 1) / ll0
+          U         <- -2 / ll0
+          gindex    <- GiniMd(x)
         }
       else
         {
@@ -40,12 +40,12 @@ validate.psm <-
                             parms=parms, tol=tol,
                             maxiter=maxiter, rel.tolerance=rel.tolerance)
           if(f$fail) stop("survreg.fit2 failed in distance")
-          lr <- 2 * diff(f$loglik)
-          ll0 <- -2 * f$loglik[1]
+          lr     <- 2 * diff(f$loglik)
+          ll0    <- -2 * f$loglik[1]
           R2.max <- 1 - exp(-ll0 / length(x))
           R2 <- (1 - exp(-lr / length(x))) / R2.max
           intercept <- f$coefficients[1]
-          slope <- f$coefficients[2]
+          slope     <- f$coefficients[2]
           D <- (lr - 1) / ll0
           init <- c(0, 1, if(length(f$scale)) log(f$scale) else NULL)
           f.frozen <- survreg.fit2(x, y,
@@ -53,10 +53,10 @@ validate.psm <-
                                    tol=tol, maxiter=0, init=init)
           if(f.frozen$fail)
             stop('survreg.fit2 failed for frozen coefficient re-fit')
-          ll0 <- -2 * f.frozen$loglik[1]
+          ll0       <- -2 * f.frozen$loglik[1]
           frozen.lr <- 2 * diff(f.frozen$loglik)
-          U <- (frozen.lr - lr) / ll0
-          gindex <- GiniMd(slope*x)
+          U         <- (frozen.lr - lr) / ll0
+          gindex    <- GiniMd(slope * x)
         }
 
       Q <- D - U
@@ -85,17 +85,22 @@ validate.psm <-
 survreg.fit2 <- function(x, y, iter=0, dist, parms=NULL, tol, maxiter=15, 
                          init=NULL, rel.tolerance=1e-5, fixed=NULL, ...)
 {
-  e <- y[,2]
-  if(sum(e) < 5)return(list(fail=TRUE))
-  x <- x	#Get around lazy evaluation creating complex expression
+  e <- y[, 2]
+  if(sum(e) < 5) return(list(fail=TRUE))
+  x     <- x	#Get around lazy evaluation creating complex expression
   dlist <- survreg.distributions[[dist]]
   logcorrect <- 0
-  if (length(dlist$trans)) {
-    exactsurv <- y[,ncol(y)] ==1
+  trans     <- dlist$trans
+  if (length(trans)) {
+    if(ncol(y) != 2) stop('only implemented for 2-column Surv object')
+    y[, 1] <- trans(y[, 1])
+    exactsurv <- y[, ncol(y)] == 1
     if(any(exactsurv)) {
-      ytrans <- if(length(dlist$itrans)) dlist$itrans(y[exactsurv,1]) else
-      y[exactsurv,1]
-      logcorrect <- sum(logb(dlist$dtrans(ytrans)))
+      ## survreg now stores y on original scale
+      ## ytrans <- if(length(dlist$itrans)) dlist$itrans(y[exactsurv,1]) else
+      ## y[exactsurv,1]
+      ytrans <- trans(y[exactsurv, 1])
+      logcorrect <- sum(logb(dlist$dtrans(y[exactsurv, 1])))
     }
   }
   if (length(dlist$dist)) dlist <- survreg.distributions[[dlist$dist]]
@@ -105,6 +110,7 @@ survreg.fit2 <- function(x, y, iter=0, dist, parms=NULL, tol, maxiter=15,
                 controlvals=survreg.control(maxiter=maxiter,
                   rel.tolerance=rel.tolerance),
                 offset=rep(0, length(e)), init=init)
+
   if(is.character(f)) { warning(f); return(list(fail=TRUE)) }
   f$fail <- FALSE
     

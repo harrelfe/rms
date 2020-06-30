@@ -25,13 +25,14 @@ Rprof(NULL)
 # s <- summaryRprof()
 
 
-require(proftools)
-tmp.dot <- tempfile()
-tmp.pdf <- tempfile()
-pd <- readProfileData()
-profileCallGraph2Dot(pd, filename = tmp.dot)
-system(sprintf("dot -Tpdf -o %s %s", tmp.pdf, tmp.dot))
-browseURL(sprintf("file://%s", tmp.pdf))
+if(require(proftools)) {
+  tmp.dot <- tempfile()
+  tmp.pdf <- tempfile()
+  pd <- readProfileData()
+  profileCallGraph2Dot(pd, filename = tmp.dot)
+  system(sprintf("dot -Tpdf -o %s %s", tmp.pdf, tmp.dot))
+  browseURL(sprintf("file://%s", tmp.pdf))
 
-unlink(tmp.dot)
-unlink(tmp.pdf)
+  unlink(tmp.dot)
+  unlink(tmp.pdf)
+}
