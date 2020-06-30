@@ -139,7 +139,7 @@ print.calibrate.default <- function(x, B=Inf, ...)
 
 plot.calibrate.default <-
   function(x, xlab, ylab, xlim, ylim, legend=TRUE, 
-           subtitles=TRUE, cex.subtitles=.75,
+           subtitles=TRUE, cex.subtitles=.75,cex.legend=1,
            riskdist=TRUE, scat1d.opts=list(nhistSpike=200), ...)
 {
   at <- attributes(x)
@@ -187,16 +187,16 @@ plot.calibrate.default <-
     if(riskdist) do.call('scat1d', c(list(x=predicted), scat1d.opts))
   }
   
-  lines(p, p.app, lty=3)
-  lines(p, p.cal, lty=1)
-  abline(a=0, b=1, lty=2)
+  lines(p, p.app, lty=3,lwd=1,col=3)
+  lines(p, p.cal, lty=1,lwd=1,col=2)
+  abline(a=0, b=1, lty=2,lwd=1)
   if(subtitles) title(sub=paste("B=", at$B, "repetitions,", at$method),
                       cex.sub=cex.subtitles, adj=0)
   if(!(is.logical(legend) && !legend)) {
     if(is.logical(legend)) legend <- list(x=xlim[1] + .55*diff(xlim),
                                           y=ylim[1] + .32*diff(ylim))
     legend(legend, c("Apparent", "Bias-corrected", "Ideal"),
-           lty=c(3,1,2), bty="n")
+           lty=c(3,1,2), bty="n",cex=cex.legend,col=3:1)
   }
   invisible(err)
 }
