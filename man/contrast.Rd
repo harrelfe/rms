@@ -72,7 +72,7 @@ in the model besides the one being varied to get from \code{a} to \code{b}).
 }
 \usage{
 contrast(fit, \dots)
-\method{contrast}{rms}(fit, a, b, a2, b2, cnames=NULL,
+\method{contrast}{rms}(fit, a, b, a2, b2, y=NULL, cnames=NULL,
          fun=NULL, funint=TRUE,
          type=c("individual", "average", "joint"),
          conf.type=c("individual","simultaneous"), usebootcoef=TRUE,
@@ -108,6 +108,15 @@ design matrix generated from \code{a} is analyzed alone.
 \item{a2}{an optional third list of settings of predictors}
 \item{b2}{an optional fourth list of settings of predictors.  Mandatory
 	if \code{a2} is given.}
+\item{y}{used of the fit is a constrained partial proportional odds
+       model fit, to specify the single value or vector of values
+       (corresponding to the multiple contrasts) of the response
+       variable to use in forming contrasts.  When there is
+       non-proportional odds, odds ratios will vary over levels of the
+       response variable.  When there are multiple contrasts and only
+       one value is given for \code{y}, that value will be propagated to
+       all contrasts.  To show the effect of non-proportional odds, let
+       \code{y} vary.}
 \item{cnames}{
 vector of character strings naming the contrasts when
 \code{type!="average"}.  Usually \code{cnames} is not necessary as

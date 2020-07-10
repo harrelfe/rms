@@ -1,7 +1,7 @@
 contrast <- function(fit, ...) UseMethod("contrast")
 
 contrast.rms <-
-  function(fit, a, b, a2, b2, cnames=NULL, fun=NULL, funint=TRUE,
+  function(fit, a, b, a2, b2, y=NULL, cnames=NULL, fun=NULL, funint=TRUE,
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'), usebootcoef=TRUE,
            boot.type=c('percentile','bca','basic'),
@@ -44,9 +44,32 @@ contrast.rms <-
                         percentile = 'bootstrap nonparametric percentile',
                         bca        = 'bootstrap BCa',
                         basic      = 'basic bootstrap')
+
+  partialpo <- inherits(fit, 'blrm') && fit$pppo > 0
+  if(partialpo & ! length(y))
+    stop('must specify y for partial prop. odds model')
+  cppo      <- fit$cppo
+  if(partialpo && ! length(cppo))
+    stop('only implemented for constrained partial PO models')
+  pred <- function(d) {
+    x <- predict(fit, d, type='x')
+    if(partialpo) {
+      z <- predict(fit, d, second=TRUE, type='x')
+      if(nrow(x) != nrow(z)) stop('program logic error in contrast pred function')
+      cppoy <- cppo(y)
+      if(nrow(z) == 1 && length(y) > 1) {
+        x <- x[rep(1, length(y)),, drop=FALSE]
+        z <- z[rep(1, length(y)),, drop=FALSE]
+        }
+      cppoy <- rep(cppoy, length=nrow(z))
+      for(i in 1 : nrow(z)) z[i, ] <- z[i, ] * cppoy[i]
+      x <- cbind(x, z)
+    }
+    x
+    }
   
   da <- do.call('gendata', list(fit, factors=a, expand=expand))
-  xa <- predict(fit, da, type='x')
+  xa <- pred(da)
   ma <- nrow(xa)
 
   if(missing(b)) {
@@ -54,17 +77,17 @@ contrast.rms <-
     db <- da
   } else {
     db <- do.call('gendata', list(fit, factors=b, expand=expand))
-    xb <- predict(fit, db, type='x')
+    xb <- pred(db)
   }
   mb <- nrow(xb)
 
   if(! missing(a2)) {
     if(missing(b) || missing(b2)) stop('b and b2 must be given if a2 is given')
     da2 <- do.call('gendata', list(fit, factors=a2, expand=expand))
-    xa2 <- predict(fit, da2, type='x')
+    xa2 <- pred(da2)
     ma2 <- nrow(xa2)
     db2 <- do.call('gendata', list(fit, factors=b2, expand=expand))
-    xb2 <- predict(fit, db2, type='x')
+    xb2 <- pred(db2)
     mb2 <- nrow(xb2)
   }
 
@@ -221,11 +244,13 @@ contrast.rms <-
   }
   PP <- NULL; posterior.summary=''
   }
+  if(type != 'average' && length(y))
+    cnames <- paste0(cnames, ' ', fit$yname, '=', y)
   res <- list(Contrast=est, SE=se,
               Lower=lower, Upper=upper,
               Z=Z, Pvalue=P, PP=PP,
               var=v, df.residual=idf,
-              X=X, 
+              X=X, y=y, yname=if(length(y)) fit$yname,
               cnames=if(type=='average') NULL else cnames,
               nvary=length(vary),
               conf.type=conf.type, conf.int=conf.int,
@@ -234,13 +259,13 @@ contrast.rms <-
   if(type != 'average') res <- c(vary, res)
   
   r <- qr(v, tol=tol)
-  nonred <- r$pivot[1:r$rank]   # non-redundant contrasts
-  redundant <- (1:length(est)) %nin% nonred
+  nonred <- r$pivot[1 : r$rank]   # non-redundant contrasts
+  redundant <- (1 : length(est)) %nin% nonred
   res$redundant <- redundant
   
   if(type=='joint') {
-    est <- est[!redundant]
-    v <- v[!redundant, !redundant, drop=FALSE]
+    est <- est[! redundant]
+    v <- v[! redundant, ! redundant, drop=FALSE]
     res$jointstat <- as.vector(est %*% solve(v, tol=tol) %*% est)
   }
   
@@ -293,6 +318,10 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
                           as.character(1 : length(x[[1]]))
   if(any(x$redundant)) cnames <- paste(ifelse(x$redundant, '*', ' '), cnames)
   w <- data.frame(w, row.names=paste(format(1:length(cnames)), cnames, sep=''))
+  if(length(x$y)) {
+    w$.y. <- x$y
+    names(w)[names(w) == '.y.'] <- x$yname
+    }
   w$Contrast <- fun(w$Contrast)
   if(! all(1:10 == fun(1:10))) w$SE <- rep(NA, length(w$SE))
   w$Lower    <- fun(w$Lower)

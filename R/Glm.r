@@ -1,3 +1,46 @@
+#' rms Version of glm
+#' 
+#' This function saves `rms` attributes with the fit object so that
+#' `anova.rms`, `Predict`, etc. can be used just as with `ols`
+#' and other fits.  No `validate` or `calibrate` methods exist for
+#' `Glm` though.
+#' 
+#' For the `print` method, format of output is controlled by the user
+#' previously running `options(prType="lang")` where `lang` is
+#' `"plain"` (the default), `"latex"`, or `"html"`.
+#' 
+#' 
+#' @aliases Glm
+#' @param
+#' formula,family,data,weights,subset,na.action,start,offset,control,model,method,x,y,contrasts
+#' see [stats::glm()]; for `print` `x` is the result of `Glm`
+#' @param ... ignored
+#' model coefficients, standard errors, etc.  Specify `coefs=n` to print
+#' only the first `n` regression coefficients in the model.
+#' @return a fit object like that produced by [stats::glm()] but with
+#' `rms` attributes and a `class` of `"rms"`, `"Glm"`,
+#' `"glm"`, and `"lm"`.  The `g` element of the fit object is
+#' the \eqn{g}-index.
+#' @seealso [stats::glm()],[Hmisc::GiniMd()], [prModFit()], [stats::residuals.glm]
+#' @keywords models regression
+#' @md
+#' @examples
+#' 
+#' ## Dobson (1990) Page 93: Randomized Controlled Trial :
+#' counts <- c(18,17,15,20,10,20,25,13,12)
+#' outcome <- gl(3,1,9)
+#' treatment <- gl(3,3)
+#' f <- glm(counts ~ outcome + treatment, family=poisson())
+#' f
+#' anova(f)
+#' summary(f)
+#' f <- Glm(counts ~ outcome + treatment, family=poisson())
+#' # could have had rcs( ) etc. if there were continuous predictors
+#' f
+#' anova(f)
+#' summary(f, outcome=c('1','2','3'), treatment=c('1','2','3'))
+#' 
+
 Glm <- 
   function(formula, family = gaussian, data = environment(formula),
            weights, subset, na.action = na.delete, start = NULL, offset = NULL,
@@ -86,7 +129,16 @@ Glm <-
   class(fit) <- c('Glm', 'rms', 'glm', 'lm')
   fit
 }
-
+##' Print a `Glm` Object
+##'
+##' Prints a `Glm` object, optionally in LaTeX or html
+##' @title print.glm
+##' @param x `Glm` object
+##' @param digits number of significant digits to print
+##' @param coefs specify `coefs=FALSE` to suppress printing the table of
+##' @param title a character string title to be passed to `prModFit`
+##' @param ... ignored
+##' @author Frank Harrell
 print.Glm <- function(x, digits=4, coefs=TRUE,
                       title='General Linear Model', ...)
 {

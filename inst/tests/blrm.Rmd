@@ -10,6 +10,9 @@ output:
     gallery: true
     highlight: tango
     use_bookdown: true
+bibliography: harrelfe.bib
+csl: apa-annotated-bibliography.csl
+link-citations: yes
 ---
 
 <!-- Usage: knitrmd blrm
@@ -17,38 +20,65 @@ output:
 
 # Overview and Setup
 
-`blrm` is for Bayesian binary and ordinal proportional odds logistic regression.  It is the analog of `rms::lrm` and for ordinal responses is intended for outcomes with up to a few hundred ordinal levels.  The Bayesian approach has a number of advantage over traditional frequentist models, including
+`blrm` is for Bayesian binary and ordinal proportional odds logistic regression and the @pet90par partial proportional odds model that relaxes the proportional odds assumption.  It is the analog and generalization of `rms::lrm` and for ordinal responses is intended for outcomes with up to a several hundred ordinal levels.  The Bayesian approach has a number of advantage over traditional frequentist models, including
 
 1. the use of exact calculations (to within simulation error) instead of large sample (e.g., normal theory) approximations to p-values and confidence intervals
 1. exact and more intuitive inference when random effects are included in the model
 1. the ability to make probability statements about parameters and combinations of parameters, which includes computations or the probabilities of assertions such as "the effect of $x_1$ exceeds 1.2  **and** the effect of $x_2$ exceeds 0.7"
 1. capturing more sources of uncertainty.  For example, the `blrm` function automatically computes highest posterior density intervals on a variety of statistical indexes such as the Brier score and AUROC ($c$-index).  Note: By default these intervals are computed using only 400 posterior draws to save time.  For a `blrm` fit object `f` you can specify how many samples to draw, to get more accurate intervals, by specifying for example `print(f, ns=2000)`.
 1. the ability to incorporate external information or beliefs about parameters using prior distributions
+1. by using [Stan](https://mc-stan.org) language to specify the likelihood components, one can not only do posterior distribution sampling but can quickly compute maximum likelihood estimates (Bayesian posterior modes)
 
-`blrm` uses normal priors for the $\beta$ parameters, and the user may specify the standard deviation of these priors separately for each model parameters.  The default is $\sigma=100$ which is nearly flat.  When there are random effects, the analyst may specify the mean of the exponential distribution that serves as the prior for the standard deviation of the random effects, with the default mean being 1.0, a reasonable number for the logit scale.  There is also an option to use a half-$t$ distribution for the SD of random effects.
+`blrm` uses normal priors for the $\beta$ parameters, and the user may specify the standard deviation of these priors separately for each model parameters.  The default is $\sigma=100$ which is nearly flat.  When there are random effects, the analyst may specify the mean of the exponential distribution that serves as the prior for the standard deviation of the random effects, with the default mean being 1.0, a reasonable number for the logit scale.  You can also use a half-$t$ distribution for the SD of random effects.
 
-`blrm` uses [Stan](https://mc-stan.org) code written by Ben Goodrich of Columbia University.  To use `blrm` you must prepare by doing the following:
+## Stan Setup and Compilation of Stan Code
+
+`blrm` uses Stan code written by Ben Goodrich of Columbia University and Frank Harrell.  To use `blrm` you must prepare by doing the following:
 
 1. Install the `rstan` package
-1. Run the following R commands to compile Stan code used by `rms` whenever one of the `.stan` files changes [here](https://github.com/harrelfe/stan)
-```
-require(rms)    # On my system: stancompiled='~/R/stan'
-options(stancompiled='whatever directory to hold compiled Stan code')
-stanCompile()
-```
-This will download and compile the `.stan` programs, and will abort if you did not install `rstan` first.  Each program takes about a minute to compile, and you **do not** need to do this step for each of your project directories.  Instead, store the compiled R objects centrally.
+1. Run one of the following two sets of R commands to compile Stan code used by `rms` whenever one of the `.stan` files changes [here](https://github.com/harrelfe/stan)
 
-It is recommended that you put something like `options(stancompiled='~/R/stan')` in your home directory's `.Rprofile` file.
+Either method of compiling Stan code downloads the Stan source code files from `Github`.  The first method is the safest, but works only if you are using `knitr` with R `markdown` or `LaTeX`.  It is safest because the second method uses the R `saveRDS` function to write compiled `rstan` code objects to disk, and the serialization required to externally store such strange objects is not failsafe.  The first method uses `knitr`'s caching capability to compile the code only once, and uses `stanCompile` function defaults to save all the compiled Stan models as a single R list, which is cached by `knitr`.  Note that the first code chunk for the first method is not cached.  In the second chunk note that the object `stanModels` must be named exactly that.
+
+<pre><code>```{r setup}
+require(rms)
+options(mc.cores = parallel::detectCores())   # use max # CPUs
+```</code></pre>
+<pre><code>```{r stancomp,cache=TRUE}
+stanModels <- stanCompile()
+```</code></pre>
+
+**Note**: Do not set `cache=TRUE` globally because code chunks that run Bayesian models require enormous cache files on disk, easily exceeding 1GB in size if you run several models.
+
+Method two stores compiled code centrally, so only needs to be run when the Stan source code changes.  The following code should be in a file all its own, not in you analysis script.
+
+```
+require(rms)      # On my system: stancompiled='~/R/stan'
+options(stancompiled='whatever directory to hold compiled Stan code')
+stanCompile(method='rds')
+```
+
+This will download and compile the `.stan` programs, and will abort if you did not install `rstan` first.  Each program takes about a minute to compile, and you **do not** need to do this step for each of your project directories for method two.  It is recommended that you put something like `options(stancompiled='~/R/stan')` in your home directory's `.Rprofile` file.
 
 ```{r setup}
 require(rms)
 knitrSet(lang='markdown', w=7, h=7, fig.path='png/')
+options(prType='html')     # for rms output: print, anova, summary, etc.
 options(mc.cores = parallel::detectCores())   # use max # CPUs
-options(stancompiled='~/R/stan', prType='html')
-# Run the following once to store compiled Stan code in a central
-# place for all projects
-# stanCompile('~/R/stan')
 ```
+
+```{r stancompile,cache=TRUE}
+stanModels <- stanCompile()
+```
+
+Before compiling any Stan code, make sure that your `~/.R/Makevars` file is properly set up.  For my Linux system this file contains the following:
+
+```
+CXX14FLAGS=-O3 -march=native -mtune=native -fPIC
+CXX14=g++
+```
+
+## Running Fits Only When Something Changes
 
 You'll see `file='...'` in the longer running of the `blrm` calls below.  If the file already exists and none of the data nor the options sent to `rstan` nor the underlying Stan code have changed from what were used to create the fit object stored in that file (as judged by their `md5` hash), that saved fit object is returned immediately without running the `rstan` code, often saving a great deal of execution time.  This works well with the workflow of long R markdown reports making it so that only portions of Bayesian analysis that have changed are run.  Note that using the `knitr` `cache=TRUE` option does not work well as the cache files for this script were about a GB in size, and the system does not accurately recognize when a model fit hasn't changed and doesn't need to be run when `rstan` is involved.
 
@@ -312,8 +342,15 @@ plot(nomogram(f, fun=plogis, funlabel='P(death)'))
 
 # Partial Proportional Odds Model
 
-The proportional odds (PO) assumption is a parallelism assumption reflecting the belief that the effect of baseline variables on, say, $Y \geq 3$ is the same effect on $Y \geq 4$.  To relax that assumption, [Peterson and Harrell](https://www.jstor.org/stable/2347760) developed the partial proportional odds (PPO) model in 1990.  The `blrm` function accepts a second model formula in the argument named `ppo` that specifies the subset of predictors for which PO is not to be assumed but for which the model is effectively polytomous (multinomial).  Note that for frequentist modeling the R `VGAM` package handles the PPO model (as will be shown below).  `VGAM` is more flexible that what `blrm` can do in allowing for all sorts of model restrictions.
+The proportional odds (PO) assumption is a parallelism assumption reflecting the belief that the effect of baseline variables on, say, $Y \geq 3$ is the same effect on $Y \geq 4$.  To relax that assumption, @pet90par developed the [partial proportional odds model](https://www.jstor.org/stable/2347760) (PPO) model.  The `blrm` function accepts a second model formula in the argument named `ppo` that specifies the subset of predictors for which PO is not to be assumed but for which the model is effectively polytomous (multinomial).  Note that for frequentist modeling the R `VGAM` package handles the PPO model (as will be shown below).  `VGAM` is more flexible than what `blrm` can do in allowing for all sorts of model restrictions.
 
+The presence of the second formula triggers fitting a PPO model.  The default is the unconstrained PPO model, which has $(k - 2) \times q$ extra parameter for $k$ category $Y$ and $q$ equal to the number of columns in the induced design matrix from the second formula.  This is normally too many parameters.  More typically, the _constrained PPO model_ (@pet90par Eq. 6) is used.  This model is fitted when a function is provided as the `cppo` argument.  Generalizing Peterson and Harrell Eq. 6 the `cppo` function can be a continuous function of $Y$ as well as being a discontinuous function such as an indicator variable that allows a category of $Y$ (typically the first or last) to have a special effect of selected covariates.  When $Y$ is continuous, `cppo` would typically be the continuous value of $Y$ or a monotonic function of it.  This induces a model that is akin to having a treatment $\times$ time interaction in a Cox proportional hazards model, or systematic heteroskedasticity in a linear model.  When Y is very skewed, it may be more reasonable to use something like `cppo = function(y) y^(1/3)`.  Note that `blrm` internally centers (by the mean) and scales (by the SD) the function value, so the user need not concern herself with location or scale of the PO-modification function.  Note also that post-fitting functions for estimation and prediction are not implemented for the unconstrained partial PO model.
+
+<a name="uppoex"></a>
+
+## Unconstrained Partial PO Model
+
+Let's look first at the unconstrained PPO model, which is more suitable for categorical Y with not too many categories.
 Consider a $2\times 3$ table of proportions (2 treatment groups, 3 ordered outcome levels) where the treatment effect is not in PO.  We will fit a PO model and see how well it tries to reconstruct the 6 proportions, then fit a PPO model.  As of 2020-05-11 `blrm` has not implemented `predict`-type functions for PPO models, so you will se predictions done the long way (which does better show how PPO works).  Note: the `VGAM` `vgam` function parameterizes PPO effects by $y$-specific covariate effects  whereas `blrm` like Peterson and Harrell parameterize the model by estimating increments in log odds for the covariate effect for $y \geq y$ over and above the effect for $y \geq 2$ if $y$ has values 1, 2, ..., $k$.  Bayesian model specification is detailed [here](https://github.com/harrelfe/stan/blob/master/notes.md).
 
 Not shown here is that `blrm` also allows for random effects with PPO models to handle longitudinal data if a compound symmetry correlation pattern is reasonable.
@@ -397,6 +434,70 @@ pprop(coef(bppo, 'median'), type='blrm')
 bppo
 ```
 
+<a name="cppoex"></a>
+
+## Constrained Partial PO Model
+
+Consider the same dataset analyzed above.  Specify a constrained PPO model that in this particular case is really unconstrained because it has a total of two parameters to handle the group effect, and there are only $k=3$ levels of Y.
+
+```{r cppo}
+# cppo function specifies that there is a special effect of x for y=3
+bcppo <- blrm(y ~ x, ~ x, cppo=function(y) y == 3, file='bcppo.rds')
+cppo <- bcppo$cppo    # automatically normalized to have mean 0 SD 1
+cppo
+b <- coef(bcppo, 'mode')
+rbind(Mode=b, Mean=coef(bcppo))
+# Compute the 4 cumulative probabilities using the posterior mode (MLE)
+# b[3] and b[4] are multiplied x (hence drop out of the x=0 row)
+L <- rbind('x=0' = c(b[1], b[2]),
+           'x=1' = c(b[1] + b[3] + cppo(2) * b[4], b[2] + b[3] + cppo(3) * b[4]))
+plogis(L) 
+```
+
+Now consider the severity of nausea data from @pet90par.
+
+```{r nausea}
+d0 <- data.frame(tx=0, y=c(rep(0, 43), rep(1, 39), rep(2, 13), rep(3, 22),
+                           rep(4, 15), rep(5, 29)))
+d1 <- data.frame(tx=1, y=c(rep(0, 7), rep(1, 7), rep(2, 3), rep(3, 12),
+                           rep(4, 15), rep(5, 14)))
+d <- rbind(d0, d1)
+d$tx <- factor(d$tx, 0:1, c('No cisplatin', 'cisplatin'))
+dd <- datadist(d); options(datadist='dd')
+with(d, table(tx, y))
+
+# Allow for a different effect of tx at y=5
+g <- function(y) y==5    # max(y)=5 and y is discrete
+# Check against maximum likelihood estimates in Peterson & Harrell
+f <- blrm(y ~ tx, ~ tx, cppo=g, data=d, method='opt')
+# Compute the treatment effect log(OR) for y=1, 2, 3, 4, 5
+h <- f$cppo     # normalized version of g (mean 0 SD 1)
+k <- coef(f)
+k
+k[6] + h(1:5) * k[7]   # matches paper
+
+# Now get posterior distributions of parameters
+fp <- blrm(y ~ tx, ~ tx, cppo=g, data=d, file='bnausea.rds')
+rbind(coef(f), coef(fp, 'mode'), coef(fp, 'mean'))
+k <- coef(fp)          # posterior means
+k[6] + h(1:5) * k[7]   # close to paper
+dat <- data.frame(tx=levels(d$tx))
+# Get posterior mean and 0.95 HPD intervals for treatment
+# effects at all levels of y
+contrast(fp, list(tx='cisplatin'), list(tx='No cisplatin'), y=1:5)
+Predict(fp, tx)
+```
+
+If the response variable is discrete and has character strings for the ordered factor levels, you can use these strings in the `cppo` function definition.  For example, suppose that Y was a `factor` variable with these levels: `"ok"`, `"in pain"`, `"stroke"`, or `"death"`.  To allow a treatment to a have a different effect for the last two levels while adjusting for a covariate `age` that is assumed to operate in proportional odds, one can code
+
+```
+f <- blrm(y ~ age + tx, ~ tx, cppo=function(y) y %in% c('stroke', 'death'))
+```
+
+There are special arguments to some of the `rms` functions for getting estimates or predictions for partial PO models.  For the `Predict` function you can specify `ycut` or `kint` to specify the response variable value such that the logit or probability of $Y\geq y$ is being estimated.  For `contrast` (full name `contrast.rms`) you can specify the argument `y` as a scalar or vector.  When it is a scalar, that value of the y cutoff is used for all contrasts.  When it is a vector, it is assume to either (1) have length equal to the number of contrasts being specified so that the appropriate value of `y` is used for each contrast, or (2) when only one contrast is requested, the contrast is repeated `length(y)` times to estimate the effect of varying `y`.  This was done in the last part of the example above.
+
+When the response variable is continuous, it is more flexible to specify `ycut` to `Predict` than to specify `kint`, because for `ycut` you can specify a value of Y that did not occur in the data (when the `cppo` function is continuous) to take into account the degree of non-proportional odds at that value.
+
 <a name="re"></a>
 
 # Longitudinal Data Examples: Random Effects
@@ -468,7 +569,7 @@ Before delving more into the random effects model, let's compare this new model 
 compareBmods(breo, bre)
 ```
 
-Roughly speaking, of the two models, the one with random effects has a probability of 0.94 of being the correct one.  See `rstan::loo` and `loo::loo.array` for details.
+Roughly speaking, of the two models, the one with random effects has a probability of 0.93 of being the correct one.  See `rstan::loo` and `loo::loo.array` for details.
 
 Now let's get into more details from the random effects model fit.
 
@@ -802,13 +903,72 @@ stanDx(srhs)
 stanDxplot(srhs)
 ```
 
+# Censored Data
+
+The `blrm` function handles left-, right-, and interval-censored ordinal categorical or continuous Y.  This opens up numerous possibilities, for example
+
+* one can analyze the usual right-censored time-to-event outcome but assuming, for example, prpoportional odds instead of proportional hazards
+* there can be more than one lower limit of detectability for a lab measurement
+* in a longitudinal study certain ranges of the outcome scale may not be assessed on certain days
+
+As an example of the third situation, suppose that Y is defined as follows:
+
+| Level of Y | Meaning |
+|------------|---------|
+| 0 | best quality of life |
+| 1 | very good QOL |
+| 2 | fair QOL |
+| 3 | poor QOL |
+| 4 | myocardial infarction |
+| 5 | stroke |
+| 6 | death |
+
+Suppose that Y were assessed weekly and that the clinical events of MI, stroke, or death are always known when they occur.  But suppose that QOL is only assessed once per month.  Instead of dealing with complex missing data methods, consider Y to be partially assessed by the use of left censoring.  On weeks of non-assessment of QOL consider Y to just be known to be < 4 when the participant is event-free.
+
+`blrm` uses the `Ocens` function ("ordinal censoring") to handle censored Y.  The notation is `Ocens(a, b)` where `a` is the lowest value that Y might be, and `b` is the highest value it might be for a certain observation.  If `a=b`, the observation is uncensored.  If in a given week a patient has a clinical event, that event overrides any level of QOL and will result in Y=5, for example, for stroke.  For a week for which a clinical event does not occur, we know that Y < 4.  When QOL is assessed, we know which of Y=0,1,2,3 pertains.  When QOL is not assessed, Y = `Ocens(0, 4)`.  It should be clear that if QOL were not assessed for any participant, the dependent variable is really a 4-level outcome (3 clinical outcomes, with Y=0 denoting that no bad outcome occurred for the participant).
+
+In full-likelihood models such as our extended PO model, censored data are easily handled.  One just has to compute the contribution to the log-likelihood for each observation from the information it provides.  An observation interval-censored with Y $\in [3,4]$ has a likelihood equal to the model's probability that Y is between 3 and 4 inclusive.  For a cumulative probability model this easily derived from $P(Y \geq 3) - P(Y > 4)$ which is a difference in expits.
+
+Here is an example where we simulate a dataset with a 6-level ordinal response variable with no censored values, and fit the PO model to it.  Then the dataset is duplicated and all the observations with y=1 or 2 are left censored at <= 2 (which is the same as interval censoring on [1,2]), all those with y=3 or 4 are interval censored in [3,4], and all those with y=5 or 6 are right censored at y >= 5.  The model is re-fitted to see if the posterior mean regression coefficients remain relatively unchanged.
+
+```{r cens}
+set.seed(1)
+n <- 500
+x <- rnorm(n)
+y <- as.integer(cut2(x + rnorm(n), g=6))
+f <- blrm(y ~ x, file='bnocens.rds')
+m <- length(x)
+y2 <- y[1 : m]
+a <- b <- y2
+# Left censor obs with y <= 2
+i <- y2 <= 2
+a[i] <- 1
+b[i] <- 2
+# Interval censor obs with y = 3 or 4
+i <- y2 == 3 | y2 == 4
+a[i] <- 3
+b[i] <- 4
+# Right censor obs with y = 5 or 6
+i <- y2 >= 5
+a[i] <- 5
+b[i] <- 6
+table(y2, paste0('[', a, ',', b, ']'))
+Y <- Ocens(c(y, a), c(y, b))
+x <- c(x, x[1 : m])
+g <- blrm(Y ~ x, file='bcens.rds')
+rbind('No cens:mode'=coef(f, 'mode'),
+      'No cens:mean'=coef(f, 'mean'),
+      'Cens:mode'   =coef(g, 'mode'),
+			'Cens:mean'   =coef(g, 'mean'))
+```
+
 # Multiple Imputation
 
 When possible, full joint Bayesian modeling of (possibly missing) covariates and the outcome variable should be used to get exact inference in the presence of missing covariate values.  Another good approach is to use multiple imputation with stacking of posterior draws after running the Bayesian model for each completed dataset.  When doing posterior inference on the stacked posterior draws the uncertainty from multiple imputation is fully taken into account, and so is the change in posterior distribution.   Frequentist inference requires complex adjustments, as multiple imputation alters the sampling distribution of model parameter estimates.  For example, regression coefficient estimates that have a normal distribution with complete data may have a $t$-like distribution after multiple imputation.
 
 `blrm` works with the `stackMI` function in the `rms` package to make posterior stacking easier.  It works with `Hmisc::aregImpute` and the `mice` package.  `stackMI` is the analog of the `Hmisc::fit.mult.impute` but is much simpler due to the use of the Bayesian paradigm.
 
-Here is an example adapted from the `aregImpute` help file.
+Here is an example adapted from the `aregImpute` help file.  `aregImpute` is cached so that the random seed-initiated multiple imputation process will not be re-run if not necessary.  That will allow the Stan code to not be run again until the underlying data changes or the code in the chunks changes.
 
 ```{r aregi,w=7,h=7,cache=TRUE}
 set.seed(2)

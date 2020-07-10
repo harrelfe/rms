@@ -96,7 +96,7 @@ Set to \code{FALSE} to suppress subtitling the graph with the list of
   Controls the range for plotting in the \eqn{z}-axis if there is
   one. Computed by default.
 }
-\item{scales}{see \code{\link[lattice]{wireframe}}
+\item{scales}{see \code{\link[lattice:cloud]{wireframe}}
 }
 \item{xlabrot}{rotation angle for the x-axis.  Default is 30 for
   \code{wireframe} and 0 otherwise.
@@ -157,7 +157,7 @@ f.harrell@vanderbilt.edu
 \seealso{
 \code{\link{datadist}}, \code{\link{Predict}},
 \code{\link{rms}}, \code{\link{rmsMisc}}, \code{\link[lattice]{levelplot}},
-       \code{\link[lattice]{contourplot}}, \code{\link[lattice]{wireframe}}
+       \code{\link[lattice]{contourplot}}, \code{\link[lattice:cloud]{wireframe}}
 }
 \examples{
 n <- 1000    # define sample size

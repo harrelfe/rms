@@ -684,7 +684,6 @@ rmsArgs <- function(.object, envir=parent.frame(2))
 
 prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
                      lines.page=40, long=TRUE, needspace, ...) {
-
   lang   <- prType()
   specs  <- markupSpecs[[lang]]
   transl <- switch(lang,
@@ -755,7 +754,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
     }
     else c(paste0(skipt(pre), x), skipt(skip))
   }
-  
+cat(6)  
   latexVector <- function(x, ...)
     latexTabular(t(x), helvetica=FALSE, ...)
   

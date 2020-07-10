@@ -31,3 +31,11 @@ d <- data.frame(x)
 rms:::modelData(d, formula= ~ rcs(x,k))
 d <- list(x=x, k=6)
 rms:::modelData(d, ~ rcs(x, k))
+
+b <- 1:8
+a <- c(1, 1, 2, 2, 3, 4, 7, 7)
+Ocens(a, b)
+d <- data.frame(a, b)
+x <- runif(8)
+m <- rms:::modelData(d, Ocens(a, b) ~ x, subset=1:4)
+attributes(m[[1]])

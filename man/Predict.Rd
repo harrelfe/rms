@@ -53,7 +53,7 @@ Predict(x, ..., fun,
         usebootcoef=TRUE, boot.type=c("percentile","bca","basic"),
         posterior.summary=c('mean', 'median', 'mode'),
         adj.zero = FALSE, ref.zero = FALSE,
-        kint=NULL, time = NULL, loglog = FALSE, digits=4, name,
+        kint=NULL, ycut=NULL, time = NULL, loglog = FALSE, digits=4, name,
         factors=NULL, offset=NULL)
 
 \method{print}{Predict}(x, \dots)
@@ -147,8 +147,18 @@ Predict(x, ..., fun,
 	This is only useful in a multiple intercept model such as the ordinal
 	logistic model. There to use to second of three intercepts, for example,
 	specify \code{kint=2}. The default is 1 for \code{lrm} and the middle
-	intercept corresponding to the median \code{y} for \code{orm}.
-  }
+	intercept corresponding to the median \code{y} for \code{orm} or
+	\code{blrm}.  You can specify \code{ycut} instead, and the intercept
+	corresponding to Y >= ycut will be used for \code{kint}.
+}
+  \item{ycut}{for an ordinal model specifies the Y cutoff to use in
+		evaluating departures from proportional odds, when the constrained
+		partial proportional odds model is used.  When omitted, \code{ycut}
+		is implied by \code{kint}.  The only time it is absolutely mandatory
+		to specify \code{ycut} is when computed an effect (e.g., odds ratio)
+		at a level of the response variable that did not occur in the data.
+		This would only occur when the \code{cppo} function given to
+		\code{blrm} is a continuous function.}
   \item{time}{
 	Specify a single time \code{u} to cause function \code{survest} to
 	be invoked to plot the probability of surviving until time \code{u}

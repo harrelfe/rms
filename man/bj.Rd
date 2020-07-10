@@ -240,7 +240,8 @@ hospital <- factor(sample(c('a','b'),200,TRUE))
 dd <- datadist(age, hospital)
 options(datadist="dd")
 
-f <- bj(Surv(ftime, stroke) ~ rcs(age,5) + hospital, x=TRUE, y=TRUE)
+# Prior to rms 6.0 and R 4.0 the following worked with 5 knots
+f <- bj(Surv(ftime, stroke) ~ rcs(age,3) + hospital, x=TRUE, y=TRUE)
 # add link="identity" to use a censored normal regression model instead
 # of a lognormal one
 anova(f)
@@ -249,7 +250,7 @@ validate(f, B=15)
 plot(Predict(f, age, hospital))
 # needs datadist since no explicit age,hosp.
 coef(f)               # look at regression coefficients
-coef(psm(Surv(ftime, stroke) ~ rcs(age,5) + hospital, dist='lognormal'))
+coef(psm(Surv(ftime, stroke) ~ rcs(age,3) + hospital, dist='lognormal'))
                       # compare with coefficients from likelihood-based
                       # log-normal regression model
                       # use dist='gau' not under R 

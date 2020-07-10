@@ -1,6 +1,6 @@
 Package: rms
 Version: 6.0-1
-Date: 2020-06-20
+Date: 2020-07-07
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <fh@fharrell.com>
 Maintainer: Frank E Harrell Jr <fh@fharrell.com>
@@ -24,4 +24,4 @@ Description: Regression modeling, testing, estimation, validation,
 License: GPL (>= 2)
 URL: https://hbiostat.org/R/rms, https://github.com/harrelfe/rms, http://hbiostat.org/doc/rms, https://www.nicholas-ollberding.com/post/an-introduction-to-the-harrell-verse-predictive-modeling-using-the-hmisc-and-rms-packages, https://thomaselove.github.io/432-notes/linear-regression-and-the-smartcle1-data.html
 LazyLoad: yes
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1

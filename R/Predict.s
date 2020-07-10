@@ -7,7 +7,8 @@ Predict <-
            usebootcoef=TRUE, boot.type=c('percentile', 'bca', 'basic'),
            posterior.summary=c('mean', 'median', 'mode'),
            adj.zero=FALSE, ref.zero=FALSE,
-           kint=NULL, time=NULL, loglog=FALSE, digits=4, name, factors=NULL,
+           kint=NULL, ycut=NULL, time=NULL,
+           loglog=FALSE, digits=4, name, factors=NULL,
            offset=NULL)
 {
 
@@ -24,6 +25,75 @@ Predict <-
   oldopt <- options('digits')
   options(digits=digits)
   on.exit(options(oldopt))
+
+  cl <- class(fit)
+  isblrm <- 'blrm' %in% cl
+  isorm  <- 'orm'  %in% cl
+  islrm  <- 'lrm'  %in% cl
+
+  Center <- 0.
+  if('cph' %in% cl) Center <- fit$center
+
+  kintgiven <- length(kint) > 0
+  if(! length(kint)) {
+    kint <- fit$interceptRef
+    if(! length(kint)) kint <- 1
+  }
+  
+  pppo <- fit$pppo
+  if(! isblrm) pppo <- 0
+  partialpo <- pppo > 0L
+  if(isblrm) cppo <- fit$cppo
+  if(partialpo && ! length(cppo))
+    stop('only implemented for constrained partial PO models')
+  ylevels   <- if(isblrm) fit$ylevels else fit$yunique
+  if(islrm || isorm || isblrm) {
+    if(kintgiven && ! length(ycut)) ycut <- ylevels[kint + 1]
+    if(length(ycut) && ! kintgiven)
+      kint <- if(all.is.numeric(ylevels)) which(ylevels == ycut) - 1
+              else max((1 : length(ylevels))[ylevels <= ycut]) - 1
+  }
+
+  coeff <- if(bayes) getParamCoef(fit, posterior.summary, what='both')
+           else
+             fit$coefficients
+  
+  Pred <- function(type='lp', betaonly=FALSE, tauonly=FALSE, sepxz=FALSE) {
+    ## betaonly=TRUE to get the non-tau part
+    ## sepxz=TRUE to get a list with lp and lptau (not mult by cppo)
+    ##
+    ## Even if type='lp' is requested, must compute lp after putting
+    ## together the entire design matrix when partial PO is in effect
+    ## This is to get HPD intervals
+    if(sepxz) {conf.int <- FALSE; type <- 'lp'}
+    ty <- if(partialpo && conf.int) 'x' else type
+    ci <- if(partialpo) FALSE else conf.int
+    if(! tauonly)
+      x <- predictrms(fit, settings, kint=kint,
+                      ref.zero=ref.zero,
+                      type=ty, conf.int=ci, conf.type=conf.type,
+                      posterior.summary=posterior.summary)
+    if(betaonly || ! partialpo) return(x)
+    z <- predictrms(fit, settings, kint=kint,
+                    ref.zero=ref.zero,
+                    type=ty, conf.int=FALSE,
+                    posterior.summary=posterior.summary, second=TRUE)
+    if(tauonly) return(z)
+    if(NROW(x) != NROW(z))
+      stop('program logic error in contrast pred function')
+    if(sepxz) return(list(lp=x, lptau=z))
+    if(type == 'x') return(cbind(x, cppo(ycut) * z))
+    if(! conf.int)  return(x + cppo(ycut) * z)
+
+    off <- if(length(ioff)) settings[[offsetVariableName]] else 0
+    x  <- cbind(x, cppo(ycut) * z)
+    xb <- matxv(x, coeff, kint=kint) - Center + off
+    xB <- matxv(x, draws, kint=kint, bmat=TRUE) + off
+    xB <- apply(xB, 1, HPDint, prob=conf.int)
+    lower <- xB[, 1]
+    upper <- xB[, 2]
+    list(linear.predictors=xb, lower=lower, upper=upper)
+    }
   
   dotlist <- if(length(factors)) factors else rmsArgs(substitute(list(...)))
   fname   <- if(missing(name)) '' else name
@@ -183,10 +253,6 @@ Predict <-
   ## Number of non-slopes
   nrp     <- num.intercepts(fit)
   nrpcoef <- num.intercepts(fit, 'coef')
-  if(! length(kint)) {
-    kint <- fit$interceptRef
-    if(! length(kint)) kint <- 1L
-  }
   if(nrp > 0L && (kint < 1L || kint > nrp))
     stop('illegal intercept number for kint')
 
@@ -199,13 +265,11 @@ Predict <-
   isMean <- ! missing(fun) && ! is.function(fun) && fun == 'mean'
   if(isMean && ! bootdone & conf.int > 0 & ! bayes)
     stop('specifying fun="mean" with conf.int > 0 does not make sense when not running bootcov (with coef.reps=TRUE)')
-  if(isMean && inherits(fit, 'orm') && conf.int > 0)
+  if(isMean && isorm && conf.int > 0)
     stop("fun='mean' not implemented for orm models when confidence intervals are requested")
   
   if(! length(time)) {
-    xx <- predictrms(fit, settings, kint=kint,
-                     conf.int=conf.int, conf.type=conf.type,
-                     ref.zero=ref.zero, posterior.summary=posterior.summary)
+    xx <- Pred()
     if(length(attr(xx, "strata")) && any(is.na(attr(xx, "strata"))))
       warning("Computed stratum NA.  Requested stratum may not\nexist or reference values may be illegal strata combination\n")
     
@@ -217,9 +281,7 @@ Predict <-
       xb <- m(xb)
       }
     if(bootdone && conf.int > 0) {
-      X <- predictrms(fit, settings, kint=kint,
-                      ref.zero=ref.zero, type='x',
-                      posterior.summary=posterior.summary)
+      X <- Pred(type='x')
       pred <- t(matxv(X, boot.Coef,
                       kint=kint,  bmat=TRUE))
       if(isMean) {
@@ -233,19 +295,26 @@ Predict <-
       xx$upper <- lim[2L, ]
     }    # end if(bootdone)
     if(bayes) {
-      X <- predictrms(fit, settings, kint=kint,
-                      ref.zero=ref.zero, type='x',
-                      posterior.summary=posterior.summary)
-      pred <- t(matxv(X, draws, kint=kint,  bmat=TRUE))
-
+      X <- Pred(type='x', betaonly=TRUE)
+      nc <- ncol(draws)
+      pred <- t(matxv(X, draws[, 1 : (nc - pppo), drop=FALSE],
+                      kint=kint, bmat=TRUE))
       if(isMean) {
+        if(pppo == 0)
+         for(k in 1L : nrow(pred))
+           pred[k,] <- m(pred[k,], intercepts=draws[k, 1L : nrp])
+      else {
+        Z <- Pred(type='x', tauonly=TRUE)
+        lptau <- matxv(Z, draws[, (nc - pppo + 1) : nc, drop=FALSE],
+                       bmat=TRUE)
         for(k in 1L : nrow(pred))
-          pred[k,] <- m(pred[k,], intercepts=draws[k, 1L : nrp])
+          pred[k,] <- m(pred[k,], lptau[k], intercepts=draws[k, 1L : nrp])
       }
-      lim <- apply(pred, 2, HPDint, prob=conf.int)
-      xx$lower <- lim[1L, ]
-      xx$upper <- lim[2L, ]
+        lim <- apply(pred, 2, HPDint, prob=conf.int)
+        xx$lower <- lim[1L, ]
+        xx$upper <- lim[2L, ]
       }
+    }
   }      # if(! length(time))
   else {   ## time specified
     if(bootdone)

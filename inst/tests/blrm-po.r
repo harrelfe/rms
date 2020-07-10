@@ -1,20 +1,21 @@
-require(rms)
-set.seed(1)
-x <- rnorm(800)
-y <- rnorm(800) + x
-stanSet()
-f <- orm(y ~ x)
-concs <- c(0.0001, 0.001, .005, .01, .02, 0.03, 0.04, .05, .07, .1)
-for(conc in concs) {
-g <- blrm(y ~ x, priorsd=10000, conc=conc)
-plot(coef(f), coef(g)); abline(a=0,b=1,col='red')
-d <- abs(coef(f) - coef(g))
-mad <- round(mean(d), 4)
-d90 <- round(quantile(d, 0.9), 4)
-title(paste(conc, mad, d90))
-}
-# Best of MAD 0.005    D90 0.01    default=0.0036 1/k=0.001
-
+if(FALSE) {
+  require(rms)
+  set.seed(1)
+  x <- rnorm(800)
+  y <- rnorm(800) + x
+  stanSet()
+  f <- orm(y ~ x)
+  concs <- c(0.0001, 0.001, .005, .01, .02, 0.03, 0.04, .05, .07, .1)
+  for(conc in concs) {
+    g <- blrm(y ~ x, priorsd=10000, conc=conc)
+    plot(coef(f), coef(g)); abline(a=0,b=1,col='red')
+    d <- abs(coef(f) - coef(g))
+    mad <- round(mean(d), 4)
+    d90 <- round(quantile(d, 0.9), 4)
+    title(paste(conc, mad, d90))
+  }
+  ## Best of MAD 0.005    D90 0.01    default=0.0036 1/k=0.001
+  }
 
 doit <- FALSE
 if(doit) {
