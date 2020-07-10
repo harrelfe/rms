@@ -3,7 +3,6 @@
 \alias{print.orm}
 \alias{Quantile.orm}
 \title{Ordinal Regression Model}
-
 \description{
 	Fits ordinal cumulative probability models for continuous or ordinal
 	response variables, efficiently allowing for a large number of
@@ -221,7 +220,7 @@ Harrell FE: Model uncertainty, penalization, and parsimony.  Available
 from \url{http://hbiostat.org/talks/iscb98.pdf}.
 }
 \seealso{
-\code{\link{orm.fit}}, \code{\link{predict.orm}}, \code{\link[SparseM]{solve}},
+\code{\link{orm.fit}}, \code{\link{predict.orm}}, \code{\link[SparseM:SparseM.solve]{solve}},
 \code{\link{rms.trans}}, \code{\link{rms}}, \code{\link[MASS]{polr}},
 \code{\link{latex.orm}},  \code{\link{vcov.orm}},
 \code{\link[Hmisc]{num.intercepts}},

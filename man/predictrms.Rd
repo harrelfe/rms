@@ -26,10 +26,10 @@ predictrms(fit, newdata=NULL,
              "adjto", "adjto.data.frame", "model.frame"),
            se.fit=FALSE, conf.int=FALSE,
            conf.type=c('mean', 'individual', 'simultaneous'),
-           kint=NULL,
-           na.action=na.keep, expand.na=TRUE,
+           kint=NULL, na.action=na.keep, expand.na=TRUE,
            center.terms=type=="terms", ref.zero=FALSE,
-           posterior.summary=c('mean', 'median', 'mode'), ...)
+           posterior.summary=c('mean', 'median', 'mode'),
+           second=FALSE, ...)
 \method{predict}{bj}(object, newdata,
         type=c("lp", "x", "data.frame", "terms", "cterms", "ccterms",
                "adjto", "adjto.data.frame", "model.frame"), 
@@ -151,11 +151,15 @@ individual predicted values by specifying \code{conf.type="individual"}.
         specifies whether you want the linear predictor to be computed
         from the posterior mean of parameters (default) or the posterior
         mode or median median}
-\item{kint}{
-a single integer specifying the number of the intercept to use in
-multiple-intercept models.  The default is 1 for \code{lrm} and the
-        reference median intercept for \code{orm}.
-}
+\item{second}{set to \code{TRUE} to use the model's second formula.  At
+        present this pertains only to a partial proportional odds model
+        fitted using the \code{blrm} function.  When \code{second=TRUE}
+        and \code{type='x'} the Z design matrix is returned (that goes
+        with the tau parameters in the partial PO model).  When
+        \code{type='lp'} is specified Z*tau is computed.  In neither case
+        is the result is multiplied by the by the \code{cppo} function.}
+\item{kint}{a single integer specifying the number of the intercept to use in
+multiple-intercept models.  The default is 1 for \code{lrm} and the reference median intercept for \code{orm} and \code{blrm}.  For a partial PO model, \code{kint} should correspond to the response variable value that will be used when dealing with \code{second=TRUE}.}
 \item{na.action}{
 Function to handle missing values in \code{newdata}.  For predictions
 "in data", the same \code{na.action} that was used during model fitting is

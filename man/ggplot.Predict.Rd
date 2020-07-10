@@ -194,7 +194,7 @@ current curve, \code{FALSE} otherwise.  See one of the latter examples.
 \item{addlayer}{a \code{ggplot2} expression consisting of one or more
   layers to add to the current plot}
 \item{histSpike.opts}{a list containing named elements that specifies
-  parameters to \code{\link{histSpikeg}} when \code{rdata} is given.  The
+  parameters to \code{\link[Hmisc:scat1d]{histSpikeg}} when \code{rdata} is given.  The
   \code{col} parameter is usually derived from other plotting
   information and not specified by the user.}
 \item{type}{a value (\code{"l","p","b"}) to override default choices
@@ -233,7 +233,7 @@ f.harrell@vanderbilt.edu
   \code{\link{datadist}}, \code{\link{predictrms}}, \code{\link{anova.rms}},
   \code{\link{contrast.rms}}, \code{\link{summary.rms}},
   \code{\link{rms}}, \code{\link{rmsMisc}}, \code{\link{plot.Predict}},
-  \code{\link[Hmisc]{labcurve}}, \code{\link[Hmisc]{histSpikeg}},
+  \code{\link[Hmisc]{labcurve}}, \code{\link[Hmisc:scat1d]{histSpikeg}},
   \code{\link[ggplot2]{ggplot}}, \code{\link[Hmisc]{Overview}}
 }
 \examples{

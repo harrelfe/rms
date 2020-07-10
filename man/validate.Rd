@@ -72,7 +72,7 @@ validate(fit, method="boot", B=40,
     parameters for each specific validate function, and parameters to
     pass to \code{predab.resample} (note especially the \code{group},
     \code{cluster}, amd \code{subset} parameters).  For \code{latex},
-	optional arguments to \code{\link[Hmisc]{latex.default}}.  Ignored for
+	optional arguments to \code{\link[Hmisc:latex]{latex.default}}.  Ignored for
 	\code{html.validate}.
     
     For \code{psm}, you can pass the \code{maxiter} parameter here (passed to 

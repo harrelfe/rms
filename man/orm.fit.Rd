@@ -132,7 +132,7 @@ f.harrell@vanderbilt.edu
 }
 \seealso{
 	\code{\link{orm}}, \code{\link{lrm}}, \code{\link{glm}},
-	\code{\link{gIndex}}, \code{\link[SparseM]{solve}}
+	\code{\link{gIndex}}, \code{\link[SparseM:SparseM.solve]{solve}}
 }
 \examples{
 #Fit an additive logistic model containing numeric predictors age, 

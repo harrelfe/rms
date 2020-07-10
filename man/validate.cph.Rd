@@ -128,7 +128,7 @@ dxy.cens(x, y, type=c('time','hazard'))
   \code{\link{fastbw}}, \code{\link{rms}}, \code{\link{rms.trans}},
   \code{\link{calibrate}}, \code{\link[Hmisc]{rcorr.cens}},
   \code{\link{cph}}, \code{\link[survival]{survival-internal}},
-  \code{\link{gIndex}}, \code{\link[survival]{survConcordance}}
+  \code{\link{gIndex}}, \code{\link[survival:survConcordance]{survConcordance}}
 }
 \examples{
 n <- 1000

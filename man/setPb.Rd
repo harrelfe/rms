@@ -40,7 +40,7 @@ setPb(n, type = c("Monte Carlo Simulation", "Bootstrap",
 \value{a function that should be called by the user once per iteration,
   specifying the iteration number as the sole argument}
 \author{Frank Harrell}
-\seealso{\code{\link[tcltk]{tkProgressBar}}, \code{\link[tcltk]{setTkProgressBar}}}
+\seealso{\code{\link[tcltk:tkProgressBar]{tkProgressBar}}, \code{\link[tcltk:tkProgressBar]{setTkProgressBar}}}
 \examples{
 \dontrun{
 options(showprogress=TRUE)   # same as ='tk'

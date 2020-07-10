@@ -80,7 +80,7 @@ variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm},
   separately by predictor.  Set to \code{'names'} to use variable names
   instead of labels for these small plots.}
 \item{histSpike.opts}{a list containing named elements that specifies
-  parameters to \code{\link{histSpikeg}} when \code{rdata} is given.  The
+  parameters to \code{\link[Hmisc:scat1d]{histSpikeg}} when \code{rdata} is given.  The
   \code{col} parameter is usually derived from other plotting
   information and not specified by the user.}
 \item{ncols}{number of columns of plots to use when plotting multiple

@@ -152,7 +152,7 @@ formatted values with "< 0.0001" (if \code{digits=4}).
 \code{latex.naprint.delete} will, if appropriate, use LaTeX to draw a
 dot chart of frequency of variable \code{NA}s related to model fits.
 \code{html.naprint.delete} does the same thing in the RStudio R markdown
-context, using \code{Hmisc::dotchartp} (which uses \code{plotly}) for
+context, using \code{Hmisc:dotchartp} (which uses \code{plotly}) for
 drawing any needed dot chart.
 
 \code{removeFormulaTerms} removes one or more terms from a model
@@ -225,7 +225,8 @@ formatNP(x, digits=NULL, pvalue=FALSE,
 
 removeFormulaTerms(form, which=NULL, delete.response=FALSE)
 
-getParamCoef(fit, posterior.summary=c('mean', 'median', 'mode'))
+getParamCoef(fit, posterior.summary=c('mean', 'median', 'mode'),
+             what=c('both', 'betas', 'taus'))
 }
 \arguments{
 \item{fit}{result of a fitting function}
@@ -363,7 +364,13 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
 	\code{"cluster"}.  By default no right-hand-side terms are removed.}
 \item{delete.response}{set to \code{TRUE} to remove the dependent
 	variable(s) from the formula}
-\item{posterior.summary}{type of Bayesian point estimate to use from coefficients}
+\item{posterior.summary}{type of Bayesian point estimate to use from
+coefficients}
+\item{what}{specifies which coefficients to include.  Default is all.
+             Specify \code{what="betas"} to include only intercepts and
+             betas if the model is a partial proportional odds model
+             (i.e.,, exclude the tau parameters).  Specify
+             \code{what="taus"} to include only the tau parameters.}
 \item{\dots}{other arguments.  For \code{reListclean} this contains the
   elements being extracted.  For \code{prModFit} this information is
   passed to the \code{Hmisc latexTabular} function when a block of
@@ -400,7 +407,7 @@ cell in which the parameter is by definition zero.
 \code{\link{summary.lm}}, \code{\link{summary.glm}},
 \code{\link{datadist}}, \code{\link{vif}}, \code{\link{bootcov}},
 \code{\link[Hmisc]{latex}}, \code{\link[Hmisc]{latexTabular}},
-\code{\link[Hmisc]{latexSN}}, \code{\link[Hmisc]{print.char.matrix}}
+\code{\link[Hmisc:latex]{latexSN}}, \code{\link[Hmisc]{print.char.matrix}}
 }
 \examples{
 \dontrun{

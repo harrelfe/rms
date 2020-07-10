@@ -42,7 +42,7 @@ digits=.Options$digits, size="", \dots) # psm fit
 a fit object created by a \code{rms} fitting function.
 }
 \item{title}{ignored}
-\item{file,append}{see \code{\link[Hmisc]{latex.default}}.  Defaults to
+\item{file,append}{see \code{\link[Hmisc:latex]{latex.default}}.  Defaults to
 	the console.  When usinghtml/markdown, \code{file} is ignored.}
 \item{surv}{
 if \code{surv=TRUE} was specified to \code{cph}, the underlying survival
