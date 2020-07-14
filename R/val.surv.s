@@ -3,7 +3,6 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
 {
   usehare <- ! missing(u)
   if(usehare) {
-    ## require(polspline) || stop('must have polspline installed')
     if(missing(fun)) {
       if(missing(fit))
         stop('must specify fit if u is specified and fun is not')
@@ -20,7 +19,7 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
   }
   else units <- attr(S, 'units')
   
-  if(! any(attr(S,'class')=='Surv')) stop('S must be a Surv object')
+  if('Surv' %nin% attr(S, 'class')) stop('S must be a Surv object')
   if(ncol(S) != 2) stop('S must be a right-censored Surv object')
   if(missing(est.surv))
     est.surv <- if(usehare) {
@@ -41,7 +40,7 @@ val.surv <- function(fit, newdata, S, est.surv, censor,
     S <- S[i,]
     curtail <- function(x) pmin(.9999, pmax(x, .0001))
     f <- polspline::hare(S[,1], S[,2], fun(curtail(est.surv)),
-              maxdim=maxdim, ...)
+                         maxdim=maxdim, ...)
     if(missing(pred)) {
       if(missing(lim))
         lim <-

@@ -41,11 +41,12 @@ cph <- function(formula     = formula(data),
     else stop("Invalid formula")
   }
 
+  callenv <- parent.frame()   # don't delay this evaluation
   data <-
     modelData(data, formula,
               weights=if(! missing(weights)) eval(substitute(weights), data),
               subset =if(! missing(subset )) eval(substitute(subset),  data),
-              na.action=na.action, dotexpand=FALSE)
+              na.action=na.action, dotexpand=FALSE, callenv=callenv)
 
   nstrata <- 0
   Strata <- NULL
@@ -57,7 +58,7 @@ cph <- function(formula     = formula(data),
      && any(z !=".")) { #X's present
 
     X    <- Design(data, formula, specials=c('strat', 'strata'))
-    
+
     atrx       <- attributes(X)
     atr        <- atrx$Design
     nact       <- atrx$na.action
@@ -117,7 +118,6 @@ cph <- function(formula     = formula(data),
       ## Handle special case where model was fitted using previous fit$x
       alt <- attr(mmcolnames, 'alt')
       if(debug) {
-        prn(sformula)
         print(cbind('colnames(X)'=colnames(X)[-1],
                     mmcolnames=mmcolnames,
                     'Design colnames'=atr$colnames,

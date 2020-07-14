@@ -38,12 +38,12 @@ lrm.fit <- function(x, y, offset=0, initial, est,
                     maxit=12, eps=.025, tol=1E-7, trace=FALSE,
                     penalty.matrix=NULL, weights=NULL, normwt=FALSE,
                     scale=FALSE)
-{	
+{
   cal <- match.call()
   opts <- double(12)
   opts[1:4] <- c(tol, eps, maxit, trace)
   len.penmat <- length(penalty.matrix)
-  
+
   n <- length(y)
   
   wtpres <- TRUE
@@ -93,7 +93,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   
   nxin <- length(est)
 
-  if(!is.factor(y)) y <- as.factor(y)
+  if(! is.factor(y)) y <- as.factor(y)
   y <- unclass(y)   # in case is.factor
   ylevels <- levels(y)
 
@@ -101,7 +101,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   opts[5] <- ofpres
   if(ofpres && length(offset) != n) stop("offset and y must have same length")
   storage.mode(offset) <- "double"
-  
+
   if(n < 3) stop("must have >=3 non-missing observations")
   kint <- as.integer(length(ylevels) - 1)
   ftable <- integer(5001 * (kint + 1))

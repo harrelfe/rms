@@ -54,7 +54,7 @@ Predict <-
               else max((1 : length(ylevels))[ylevels <= ycut]) - 1
   }
 
-  coeff <- if(bayes) getParamCoef(fit, posterior.summary, what='both')
+  coeff <- if(bayes) rmsb::getParamCoef(fit, posterior.summary, what='both')
            else
              fit$coefficients
   
@@ -89,7 +89,7 @@ Predict <-
     x  <- cbind(x, cppo(ycut) * z)
     xb <- matxv(x, coeff, kint=kint) - Center + off
     xB <- matxv(x, draws, kint=kint, bmat=TRUE) + off
-    xB <- apply(xB, 1, HPDint, prob=conf.int)
+    xB <- apply(xB, 1, rmsb::HPDint, prob=conf.int)
     lower <- xB[, 1]
     upper <- xB[, 2]
     list(linear.predictors=xb, lower=lower, upper=upper)
@@ -310,7 +310,7 @@ Predict <-
         for(k in 1L : nrow(pred))
           pred[k,] <- m(pred[k,], lptau[k], intercepts=draws[k, 1L : nrp])
       }
-        lim <- apply(pred, 2, HPDint, prob=conf.int)
+        lim <- apply(pred, 2, rmsb::HPDint, prob=conf.int)
         xx$lower <- lim[1L, ]
         xx$upper <- lim[2L, ]
       }

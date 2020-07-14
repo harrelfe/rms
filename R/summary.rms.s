@@ -176,7 +176,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
       }
     } else if(bayes) {
       best <- t(xd %*% t(draws))
-      lim  <- apply(best, 2, HPDint, prob=conf.int)
+      lim  <- apply(best, 2, rmsb::HPDint, prob=conf.int)
       low  <- lim[1, ]
       up   <- lim[2, ]
     } else {
@@ -242,7 +242,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
           }
         } else if(bayes) {
           best <- t(xd %*% t(draws))
-          lim  <- apply(best, 2, HPDint, prob=conf.int)
+          lim  <- apply(best, 2, rmsb::HPDint, prob=conf.int)
           low  <- lim[1, ]
           up   <- lim[2, ]
         } else {

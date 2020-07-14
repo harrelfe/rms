@@ -1,4 +1,4 @@
-Changes in version 6.0-1 (2020-06-20)
+Changes in version 6.0-1 (2020-07-14)
    * cph: workaround for R bug where name of weights variable was set to ..1 when dtrans was used with fit.mult.impute and dtrans contained weights (thanks: Trevor Thompson)
    * cph: changed as.name('model.frame') to quote(stats::model.frame)
    * blrm: subset was not working; reworked data setup for the two formulas
@@ -8,10 +8,10 @@ Changes in version 6.0-1 (2020-06-20)
    * predictrms: prevented structure(NULL, ...)
    * ggplot.Predict: fixed bug relating to histSpikeg and vnames
    * survplotp: removed blank levels and : in legend
-   * Ocens: new function to allow for censored observations for blrm
-   * blrm: added constrained partial proportional odds model and censoring
    * contrast: added y argument to allow y-specific odds ratios to be computed for a constrained partial prorportional odds model
-
+   * blrm: moved to new rmsb package
+   * Dropped Mean and Quantile since it is already in Hmisc
+   * Fixed bug in modelData when formula2 was not the same as formula
 
 Changes in version 6.0-0 (2020-06-04)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)

@@ -20,14 +20,6 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
 {
   call    <- match.call()
   cmethod <- match.arg(cmethod)
-  ## if(cmethod=='hare')
-  ##  {
-  ##    require('polspline') ||
-  ##    {
-  ##      cat('polspline package not installed.  Reverting to cmethod="KM"\n')
-  ##      cmethod <- 'KM'
-  ##    }
-  ##  }
 
   oldopt <- options('digits')
   options(digits=3)
@@ -61,7 +53,6 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
   distance <- function(x, y, strata, fit, iter, u, fit.orig, what="observed",
                        pred, orig.cuts, maxdim, ...) {
     ## Assumes y is matrix with 1st col=time, 2nd=event indicator
-
     if(sum(y[, 2]) < 5) return(NA)
     surv.by.strata <- fit$surv.summary[2, , 1]
     ##2 means to use estimate at first time past t=0 (i.e., at u)
@@ -84,7 +75,6 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
     }
     
     if(iter == 0 && pr) print(pred.obs)
-
     if(iter == 0) structure(dist, keepinfo=list(pred.obs=pred.obs)) else
     dist
   }
@@ -92,7 +82,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
   coxfit <- function(x, y, strata, u, iter=0, ...) {
     etime <- y[,1]
     e     <- y[,2]
-    
+
     if(sum(e) < 5) return(list(fail=TRUE))
     x <- x	#Get around lazy evaluation creating complex expression
     f <- if(length(x)) {
@@ -108,46 +98,27 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
     f
   }
 
-  b <- min(10, B)
-  overall.reps <- max(1, round(B / b))
-  ## Bug in S prevents>10 loops in predab.resample
-  if(pr) cat("\nAveraging ", overall.reps, " repetitions of B=", b, "\n\n")
-  rel  <- 0
-  opt  <- 0
-  nrel <- 0
-  B    <- 0
-
-  for(i in 1 : overall.reps) {
-    reliability <-
-      predab.resample(fit, method=method,
-                      fit=coxfit, measure=distance,
-                      pr=pr, B=b, bw=bw, rule=rule, type=type,  
-                      u=u, m=m, what=what, sls=sls, aics=aics,
-                      force=force, estimates=estimates,
-                      pred=pred, orig.cuts=cuts, tol=tol, maxdim=maxdim, ...)
-    kept     <- attr(reliability, 'kept') # TODO: accumulate over reps
-    keepinfo <- attr(reliability, 'keepinfo')
-    n    <- reliability[, "n"]
-    rel  <- rel  + n * reliability[, "index.corrected"]
-    opt  <- opt  + n * reliability[, "optimism"]
-    nrel <- nrel + n
-    B    <- B    + max(n)	
-  }
-
-  mean.corrected <- rel / nrel
-  mean.opt       <- opt / nrel
-  rel <- cbind(mean.optimism=mean.opt, mean.corrected=mean.corrected, n=nrel)
-  if(pr) {
-    cat("\nMean over ", overall.reps, " overall replications\n\n")
-    print(rel)
-  }
+  reliability <-
+    predab.resample(fit, method=method,
+                    fit=coxfit, measure=distance,
+                    pr=pr, B=B, bw=bw, rule=rule, type=type,  
+                    u=u, m=m, what=what, sls=sls, aics=aics,
+                    force=force, estimates=estimates,
+                    pred=pred, orig.cuts=cuts, tol=tol, maxdim=maxdim, ...)
+  kept     <- attr(reliability, 'kept')
+  keepinfo <- attr(reliability, 'keepinfo')
+  n    <- reliability[, "n"]
+  rel  <- reliability[, "index.corrected"]
+  opt  <- reliability[, "optimism"]
   
+  rel <- cbind(mean.optimism=opt, mean.corrected=rel, n=n)
+    
   e <- fit$y[, 2]
   pred.obs <- keepinfo$pred.obs
   if(cmethod == 'KM') {
     mean.predicted <- pred.obs[,"x"]
     KM             <- pred.obs[,"KM"]
-    obs.corrected  <- KM - mean.opt
+    obs.corrected  <- KM - opt
     
     structure(cbind(reliability[,c("index.orig","training","test"),
                                 drop=FALSE],
@@ -159,7 +130,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
               p=length(fit$coefficients), m=m, B=B, what=what, call=call)
   } else {
     calibrated            <- pred.obs$actualseq
-    calibrated.corrected  <- calibrated - mean.opt
+    calibrated.corrected  <- calibrated - opt
     
     structure(cbind(pred=pred,
                     reliability[, c("index.orig", "training", "test"),

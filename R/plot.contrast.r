@@ -1,18 +1,19 @@
 ##' Plot Bayesian Contrast Posterior Densities
 ##'
-##' If there are exactly two contrasts and \code{bivar=TRUE} plots an elliptical or kernal (based on \code{bivarmethod} posterior density contour with probability \code{prob}).  Otherwise plots a series of posterior densities of contrasts along with HPD intervals, posterior means, and medians.  When the result being plotted comes from \code{contrast} with \code{fun=} specified, both the two individual estimates and their difference are plotted.
+##' If there are exactly two contrasts and `bivar=TRUE` plots an elliptical or kernal (based on `bivarmethod` posterior density contour with probability `prob`).  Otherwise plots a series of posterior densities of contrasts along with HPD intervals, posterior means, and medians.  When the result being plotted comes from `contrast` with `fun=` specified, both the two individual estimates and their difference are plotted.
 ##' @title plot.contrast.rms
-##' @param x the result of \code{contrast.rms}
-##' @param bivar set to \code{TRUE} to plot 2-d posterior density contour
-##' @param bivarmethod see \code{pdensityCountour}
+##' @param x the result of `contrast.rms`
+##' @param bivar set to `TRUE` to plot 2-d posterior density contour
+##' @param bivarmethod see [rmsb::pdensityContour()]
 ##' @param prob posterior coverage probability for HPD interval or 2-d contour
-##' @param which applies when plotting the result of \code{contrast(..., fun=)}, defaulting to showing the posterior density of both estimates plus their difference.  Set to \code{"ind"} to only show the two individual densities or \code{"diff"} to only show the posterior density for the differences.
-##' @param nrow for \code{ggplot2::facet_wrap}
+##' @param which applies when plotting the result of `contrast(..., fun=)`, defaulting to showing the posterior density of both estimates plus their difference.  Set to `"ind"` to only show the two individual densities or `"diff"` to only show the posterior density for the differences.
+##' @param nrow for [ggplot2::facet_wrap()]
 ##' @param ncol likewise
 ##' 
 ##' @param ... unused
-##' @return \code{ggplot2} object
+##' @return `ggplot2` object
 ##' @author Frank Harrell
+##' @md
 plot.contrast.rms <- function(x, bivar=FALSE,
                               bivarmethod=c('ellipse', 'kernel'), prob=0.95,
                               which=c('both', 'diff', 'ind'),
@@ -32,7 +33,7 @@ plot.contrast.rms <- function(x, bivar=FALSE,
       cont   <- factor(rep(contr, each=nd), contr)
       d      <- data.frame(what, contr=cont, theta)
       f <- function(x) {
-        hpd <- HPDint(x, prob)
+        hpd <- rmsb::HPDint(x, prob)
         r <- c(mean(x), median(x), hpd)
         names(r) <- c('Mean', 'Median', 'Lower', 'Upper')
         r
@@ -82,13 +83,13 @@ plot.contrast.rms <- function(x, bivar=FALSE,
   colnames(cdraws) <- cn
   
   if(ncol(cdraws) == 2 && bivar) {
-    g <- pdensityContour(cdraws[, 1], cdraws[, 2], prob=prob, pl=TRUE,
+    g <- rmsb::pdensityContour(cdraws[, 1], cdraws[, 2], prob=prob, pl=TRUE,
                          method=bivarmethod)
     g <- g + xlab(cn[1]) +  ylab(cn[2])
     return(g)
   }
 
-  hpd   <- apply(cdraws, 2, HPDint, prob=prob)
+  hpd   <- apply(cdraws, 2, rmsb::HPDint, prob=prob)
   
   draws  <- as.vector(cdraws)
   which  <- colnames(cdraws)

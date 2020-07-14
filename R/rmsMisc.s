@@ -754,7 +754,6 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
     }
     else c(paste0(skipt(pre), x), skipt(skip))
   }
-cat(6)  
   latexVector <- function(x, ...)
     latexTabular(t(x), helvetica=FALSE, ...)
   
@@ -1333,4 +1332,3 @@ removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
   }
   as.formula(form)
 }
-

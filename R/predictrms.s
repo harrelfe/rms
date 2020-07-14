@@ -55,7 +55,7 @@ predictrms <-
 
   parms   <- at$parms
   name    <- at$name
-  coeff   <- if(bayes) getParamCoef(fit, posterior.summary,
+  coeff   <- if(bayes) rmsb::getParamCoef(fit, posterior.summary,
                                     what=if(second) 'taus' else 'betas')
              else
                fit$coefficients
@@ -327,7 +327,7 @@ predictrms <-
       names(xb) <- rnam
       if(bayes && conf.int) {
         xB <- matxv(X, draws, kint=kint, bmat=TRUE)
-        xB <- apply(xB, 1, HPDint, prob=conf.int)
+        xB <- apply(xB, 1, rmsb::HPDint, prob=conf.int)
         lower <- xB[1, ]
         upper <- xB[2, ]
         }

@@ -2,10 +2,10 @@
 
 if(require(haven)) {
   require(rms)
-  
+
   d <- read_dta("pakpahan.dta")
 
-  fit <- cph(Surv(data_dftime, data_demfu) ~ data_age, ties="breslow", data=d,
+  fit <- cph(Surv(data_dftime, data_demfu) ~ data_age, method="breslow", data=d,
              surv=TRUE, x=T, y=T, time.inc=1200)
   print(fit)
 

@@ -9,11 +9,13 @@ lrm <- function(formula, data=environment(formula),
   call <- match.call()
   var.penalty <- match.arg(var.penalty)
 
+  callenv <- parent.frame()   # don't delay this evaluation
+
   data <-
     modelData(data, formula,
               weights=if(! missing(weights)) eval(substitute(weights), data),
               subset =if(! missing(subset )) eval(substitute(subset), data),
-              na.action=na.action)
+              na.action=na.action, callenv=callenv)
 
   tform <- terms(formula, specials='strat', data=data)
   nstrata <- 1
@@ -33,7 +35,6 @@ lrm <- function(formula, data=environment(formula),
     mmcolnames <- atr$mmcolnames
 
     Y <- model.extract(X, 'response')
-
     offs <- atrx$offset
     if(!length(offs)) offs <- 0
     weights <- wt <- model.extract(X, 'weights')
@@ -98,6 +99,9 @@ lrm <- function(formula, data=environment(formula),
     }  ##Model: y~. without data= -> no predictors
   
   if(method == "model.matrix") return(X)
+
+  if(! is.factor(Y)) Y <- as.vector(Y)  # in case Y is a matrix
+
 
   if(nstrata > 1) {
     if(scale) stop('scale=TRUE not implemented for stratified model')

@@ -200,7 +200,7 @@ contrast.rms <-
     if(length(cnames)) colnames(cdraws) <- cnames
     v      <- var(cdraws)
     ndf    <- if(is.matrix(v)) nrow(v) else 1
-    ci     <- apply(cdraws, 2, HPDint, prob=conf.int)
+    ci     <- apply(cdraws, 2, rmsb::HPDint, prob=conf.int)
     lower  <- ci[1, ]
     upper  <- ci[2, ]
     PP     <- apply(cdraws, 2, function(u) mean(u > 0))
@@ -280,7 +280,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
     esta <- x$esta
     estb <- x$estb
     f <- function(x) {
-      hpd <- HPDint(x, prob)
+      hpd <- rmsb::HPDint(x, prob)
       r <- c(mean(x), median(x), hpd)
       names(r) <- c('Posterior Mean', 'Posterior Median',
                     paste(c('Lower', 'Upper'), prob, 'HPD'))

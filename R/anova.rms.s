@@ -30,7 +30,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     pev <- chisq / chisqT
     ## Overall pev is the pev at the posterior mean/median beta (last element)
     ## Also compute HPD interval.
-    ci <- HPDint(pev[-m], cint)
+    ci <- rmsb::HPDint(pev[-m], cint)
     c(REV=pev[m], Lower=ci[1], Upper=ci[2], d.f.=length(test))
   }
   
@@ -52,7 +52,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   if(bayes) {
     if(nrp > 0) draws <- draws[, -(1 : nrp), drop=FALSE]
 
-    betaSummary <- getParamCoef(object, posterior.summary)
+    betaSummary <- rmsb::getParamCoef(object, posterior.summary)
     if(nrp > 0) betaSummary <- betaSummary[-(1 : nrp)]
 
     X <- object$x
@@ -70,7 +70,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     ## Compute variances of linear predictor without omitting variables
     chisqT <- eEV()
     m  <- length(chisqT)
-    ci <- HPDint(chisqT[-m], cint)
+    ci <- rmsb::HPDint(chisqT[-m], cint)
     chisqBayes <- c(chisqT[m], ci)
     names(chisqBayes) <- c('Central', 'Lower', 'Upper')
   }
