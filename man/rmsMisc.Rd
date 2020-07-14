@@ -1,6 +1,7 @@
 \name{rmsMisc}
 \alias{rmsMisc}
 \alias{calibrate.rms}
+\alias{DesignAssign}
 \alias{vcov.rms}
 \alias{vcov.cph}
 \alias{vcov.Glm}
@@ -45,7 +46,6 @@
 \alias{latex.naprint.delete}
 \alias{html.naprint.delete}
 \alias{removeFormulaTerms}
-\alias{getParamCoef}
 \title{Miscellaneous Design Attributes and Utility Functions}
 \description{
 These functions are used internally to \code{anova.rms},
@@ -75,6 +75,9 @@ from both sources to fill in characteristics for variables that were not
 defined during the model fit.  \code{Getlimi} returns the summary
 for an individual model variable.  
 
+\code{Mean} is a generic function that creates an R function that
+calculates the expected value of the response variable given a fit from
+\code{rms} or \code{rmsb}.
 
 The \code{related.predictors} function
 returns a list containing variable numbers that are directly or
@@ -160,10 +163,8 @@ formula, using strictly character manipulation.  This handles problems
 such as \code{[.terms} removing \code{offset()} if you subset on
 anything.  The function can also be used to remove the dependent
 variable(s) from the formula.
-
-\code{getParamCoef} extracts Bayesian model point estimates, with an
-error message if the mode is requested and it was not computed for the fit
 }
+
 \usage{
 \method{vcov}{rms}(object, regcoef.only=TRUE, intercepts='all', \dots)
 \method{vcov}{cph}(object, regcoef.only=TRUE, \dots)
@@ -173,6 +174,10 @@ error message if the mode is requested and it was not computed for the fit
 \method{vcov}{ols}(object, regcoef.only=TRUE, \dots)
 \method{vcov}{orm}(object, regcoef.only=TRUE, intercepts='mid', \dots)
 \method{vcov}{psm}(object, regcoef.only=TRUE, \dots)
+
+# Given Design attributes and number of intercepts creates R
+# format assign list.  atr non.slopes Terms
+DesignAssign(atr, non.slopes, Terms)
 
 oos.loglik(fit, \dots)
 
@@ -224,9 +229,6 @@ formatNP(x, digits=NULL, pvalue=FALSE,
 \method{html}{naprint.delete}(object, \dots)
 
 removeFormulaTerms(form, which=NULL, delete.response=FALSE)
-
-getParamCoef(fit, posterior.summary=c('mean', 'median', 'mode'),
-             what=c('both', 'betas', 'taus'))
 }
 \arguments{
 \item{fit}{result of a fitting function}
@@ -303,7 +305,7 @@ a vector or list specifying penalty multipliers for types of model terms
 \item{k}{the multiplier of the degrees of freedom to be used in
   computing AIC.  The default is 2.}
 \item{x}{a result of \code{lrtest}, or the result of a high-level model
-  fitting function (for \code{prModFit}}
+  fitting function (for \code{prModFit})}
 \item{labels}{
 a character vector specifying new labels for variables in a fit.
 To give new labels for all variables, you can specify \code{labels} of the
@@ -322,7 +324,7 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
 }
 \item{title}{a single character string used to specify an overall title
   for the regression fit, which is printed first by \code{prModFit}.
-  Set to \code{""} to suppress the title}
+  Set to \code{""} to suppress the title.}
 \item{w}{For \code{prModFit}, a special list of lists, which each list
   element specifying information about a block of information to include
   in the \code{print.} output for a fit.  For \code{prStats}, \code{w}
@@ -364,13 +366,8 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
 	\code{"cluster"}.  By default no right-hand-side terms are removed.}
 \item{delete.response}{set to \code{TRUE} to remove the dependent
 	variable(s) from the formula}
-\item{posterior.summary}{type of Bayesian point estimate to use from
-coefficients}
-\item{what}{specifies which coefficients to include.  Default is all.
-             Specify \code{what="betas"} to include only intercepts and
-             betas if the model is a partial proportional odds model
-             (i.e.,, exclude the tau parameters).  Specify
-             \code{what="taus"} to include only the tau parameters.}
+\item{atr, non.slopes, Terms}{\code{Design} function attributes, number
+             of intercepts, and \code{terms} object}
 \item{\dots}{other arguments.  For \code{reListclean} this contains the
   elements being extracted.  For \code{prModFit} this information is
   passed to the \code{Hmisc latexTabular} function when a block of

@@ -20,13 +20,13 @@
 
 \item{bivar}{set to \code{TRUE} to plot 2-d posterior density contour}
 
-\item{bivarmethod}{see \code{pdensityCountour}}
+\item{bivarmethod}{see \code{\link[rmsb:pdensityContour]{rmsb::pdensityContour()}}}
 
 \item{prob}{posterior coverage probability for HPD interval or 2-d contour}
 
 \item{which}{applies when plotting the result of \code{contrast(..., fun=)}, defaulting to showing the posterior density of both estimates plus their difference.  Set to \code{"ind"} to only show the two individual densities or \code{"diff"} to only show the posterior density for the differences.}
 
-\item{nrow}{for \code{ggplot2::facet_wrap}}
+\item{nrow}{for \code{\link[ggplot2:facet_wrap]{ggplot2::facet_wrap()}}}
 
 \item{ncol}{likewise}
 
@@ -39,7 +39,7 @@
 Plot Bayesian Contrast Posterior Densities
 }
 \details{
-If there are exactly two contrasts and \code{bivar=TRUE} plots an elliptical or kernal (based on \code{bivarmethod} posterior density contour with probability \code{prob}).  Otherwise plots a series of posterior densities of contrasts along with HPD intervals, posterior means, and medians.  When the result being plotted comes from \code{contrast} with \code{fun=} specified, both the two individual estimates and their difference are plotted.
+If there are exactly two contrasts and \code{bivar=TRUE} plots an elliptical or kernal (based on \code{bivarmethod} posterior density contour with probability \code{prob}).  Otherwise plots a series of posterior densities of contrasts along with HPD intervals, posterior means, and medians.  When the result being plotted comes from \code{contrast} with \verb{fun=} specified, both the two individual estimates and their difference are plotted.
 }
 \author{
 Frank Harrell

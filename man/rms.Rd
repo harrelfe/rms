@@ -28,11 +28,15 @@ and descriptions of the distribution of predictors to be stored
 in an attribute of the \code{terms} component called \code{Design}.
 
 \code{modelData} is a replacement for \code{model.frame.default} that is
-much streamlined and prepares data for \code{Design()}.
+much streamlined and prepares data for \code{Design()}.  If a second
+formula is present, \code{modelData} ensures that missing data deletions
+are the same for both formulas, and produces a second model frame for
+\code{formula2} as the \code{data2} attribute of the main returned data frame.
 }
 \usage{
 modelData(data=environment(formula), formula, formula2=NULL,
-          weights, subset, na.action=na.delete, dotexpand=TRUE)
+          weights, subset, na.action=na.delete, dotexpand=TRUE,
+          callenv=parent.frame(n=2))
 
 Design(mf, formula=NULL, specials=NULL, allow.offset=TRUE, intercept=1)
 # not to be called by the user; called by fitting routines
@@ -78,6 +82,7 @@ Design(mf, formula=NULL, specials=NULL, allow.offset=TRUE, intercept=1)
 	\item{dotexpand}{set to \code{FALSE} to prevent . on right hand side
 		of model formula from expanding into all variables in \code{data};
 		used for \code{cph}}
+	\item{callenv}{the parent frame that called the fitting function}
   \item{mf}{a model frame}
   \item{allow.offset}{set to \code{TRUE} if model fitter allows an
 	offset term}

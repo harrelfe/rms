@@ -272,13 +272,15 @@ x <- rnorm(n)
 par(mfrow=c(2,3))
 for(j in 1:2) {     # 1: prop.odds   2: non-prop. odds
   if(j==1) 
-    L <- matrix(c(1.4,.4,-.1,-.5,-.9),nrow=n,ncol=5,byrow=TRUE) + x/2 else {
+    L <- matrix(c(1.4,.4,-.1,-.5,-.9),
+                nrow=n, ncol=5, byrow=TRUE) + x / 2
+    else {
 	  # Slopes and intercepts for cutoffs of 1:5 :
 	  slopes <- c(.7,.5,.3,.3,0)
 	  ints   <- c(2.5,1.2,0,-1.2,-2.5)
-      L <- matrix(ints,nrow=n,ncol=5,byrow=TRUE)+
-           matrix(slopes,nrow=n,ncol=5,byrow=TRUE)*x
-	}
+      L <- matrix(ints,   nrow=n, ncol=5, byrow=TRUE) +
+           matrix(slopes, nrow=n, ncol=5, byrow=TRUE) * x
+    }
   p <- plogis(L)
   # Cell probabilities
   p <- cbind(1-p[,1],p[,1]-p[,2],p[,2]-p[,3],p[,3]-p[,4],p[,4]-p[,5],p[,5])
@@ -288,7 +290,7 @@ for(j in 1:2) {     # 1: prop.odds   2: non-prop. odds
 
 
   f <- lrm(y ~ x, x=TRUE, y=TRUE)
-  for(cutoff in 1:5)print(lrm(y>=cutoff ~ x)$coef)
+  for(cutoff in 1:5) print(lrm(y >= cutoff ~ x)$coef)
 
 
   print(resid(f,'gof'))
