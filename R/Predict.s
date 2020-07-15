@@ -129,10 +129,11 @@ Predict <-
     i <- 0L
     info <- NULL # handles case where nams is empty, when no predictors
     ## For each predictor that "move" call Predict separately, and rbind results
+    callenv <- parent.frame()
     for(nam in nams) {
       i <- i + 1L
       m$name <- nam
-      lv     <- eval(m)
+      lv     <- eval(m, callenv)
       j <- attr(lv, 'info')
       if(i == 1L) info <- j
       else {

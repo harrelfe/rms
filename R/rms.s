@@ -492,6 +492,7 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
     ## environment and will be found in the later eval()
     ## E.g. rcs(x, knots) where knots is a separate variable
     n <- sapply(data, NROW)
+    if(! length(n)) stop('no data found')
     if(diff(range(n)) != 0) data <- data[which(n == max(n))]
     ## Watch out: if a variable in data has dimnames[[2]], as.data.frame
     ## uses that as the new variable name even if the variable already
