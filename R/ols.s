@@ -12,12 +12,13 @@ ols <- function(formula, data=environment(formula),
   w <- terms(formula, data=data)
   if(length(attr(w, "term.labels"))) {
 
-    callenv <- parent.frame()   # don't delay this evaluation
+    callenv <- parent.frame()   # don't delay these evaluations
+    weights <- if(! missing(weights)) eval(substitute(weights), data, callenv)
+    subset  <- if(! missing(subset )) eval(substitute(subset),  data, callenv)
 
     X <-
       modelData(data, formula,
-                subset  = if(! missing(subset)) eval(substitute(subset), data),
-                weights = if(! missing(weights)) eval(substitute(weights), data),
+                subset  = subset, weights=weights,
                 na.action=na.action, callenv=callenv)
                         
     X      <- Design(X, formula=formula)

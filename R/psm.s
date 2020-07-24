@@ -11,11 +11,13 @@ psm <- function(formula,
     warning('Unlike earlier versions of survreg, dist="extreme" does not fit\na Weibull distribution as it uses an identity link.  To fit the Weibull\ndistribution use the default for dist or specify dist="weibull".')
 
   ## Start FEH
-  callenv <- parent.frame()   # don't delay this evaluation
+  callenv <- parent.frame()   # don't delay these evaluations
+  weights <- if(! missing(weights)) eval(substitute(weights), data, callenv)
+  subset  <- if(! missing(subset )) eval(substitute(subset),  data, callenv)
+
   m <-
     modelData(data, formula,
-              subset  = if(! missing(subset )) eval(substitute(subset ), data),
-              weights = if(! missing(weights)) eval(substitute(weights), data),
+              subset  = subset, weights = weights,
               na.action=na.action, callenv=callenv)
 
   m <- Design(m, formula=formula, specials=c('strata', 'cluster'))

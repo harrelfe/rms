@@ -57,12 +57,13 @@ Glm <-
 
   mt <- terms(formula, dta=data)
 
-  callenv <- parent.frame()   # don't delay this evaluation
+  callenv <- parent.frame()   # don't delay these evaluations
+  weights <- if(! missing(weights)) eval(substitute(weights), data, callenv)
+  subset  <- if(! missing(subset )) eval(substitute(subset),  data, callenv)
 
   mf <-
     modelData(data, formula,
-              subset  = if(! missing(subset )) eval(substitute(subset ), data),
-              weights = if(! missing(weights)) eval(substitute(weights), data),
+              subset  = subset, weights=weights,
               na.action=na.action, callenv=callenv)
 
   mf <- Design(mf, formula=formula)

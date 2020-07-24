@@ -457,7 +457,6 @@ Design <- function(mf, formula=NULL, specials=NULL,
 modelData <- function(data=environment(formula), formula, formula2=NULL,
                       weights=NULL, subset=NULL, na.action=na.delete,
                       dotexpand=TRUE, callenv=parent.frame(n=2)) {
-
   ## calibrate.cph etc. uses a matrix, even if only one column
   ismat <- function(z) {
     cl <- class(z)
@@ -540,7 +539,7 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
     varnames <- vapply(predvars, deparse2, " ")[-1L]
     data <- if(edata) eval(predvars, data, env)
             else
-              eval(predvars, data, callenv)  ## ??parent.frame(n=3))
+              eval(predvars, data, callenv)
     if(is.matrix(data)) data <- data.frame(data)  # e.g. Surv() object
     names(data) <- varnames
 

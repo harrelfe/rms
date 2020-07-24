@@ -1,3 +1,6 @@
+Changes in version 6.0-2 (2020-07-24)
+   * stackMI: removed and moved to rmsb package
+
 Changes in version 6.0-1 (2020-07-15)
    * cph: workaround for R bug where name of weights variable was set to ..1 when dtrans was used with fit.mult.impute and dtrans contained weights (thanks: Trevor Thompson)
    * cph: changed as.name('model.frame') to quote(stats::model.frame)

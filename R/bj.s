@@ -5,10 +5,12 @@ bj <- function(formula, data=environment(formula),
 {
   call <- match.call()
 
-  callenv <- parent.frame()   # don't delay this evaluation
+  callenv <- parent.frame()   # don't delay these evaluations
+  subset  <- if(! missing(subset )) eval(substitute(subset),  data, callenv)
+
   X <-
     modelData(data, formula,
-              subset = if(! missing(subset)) eval(substitute(subset), data),
+              subset = subset,
               na.action=na.action, callenv=callenv)
 
   X <- Design(X, formula=formula)

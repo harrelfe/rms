@@ -16,10 +16,12 @@ orm <- function(formula, data=environment(formula),
 						length(atl <- attr(tform,"term.labels")) && 
 						any(atl!=".")))	{ ##X's present
 
-    callenv <- parent.frame()   # don't delay this evaluation
+    callenv <- parent.frame()   # don't delay these evaluations
+    subset  <- if(! missing(subset )) eval(substitute(subset),  data, callenv)
+
     X <-
       modelData(data, formula,
-                subset = if(! missing(subset)) eval(substitute(subset), data),
+                subset = subset,
                 na.action=na.action, callenv=callenv)
 
     X <- Design(X, formula=formula)

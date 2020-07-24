@@ -41,11 +41,13 @@ cph <- function(formula     = formula(data),
     else stop("Invalid formula")
   }
 
-  callenv <- parent.frame()   # don't delay this evaluation
+  callenv <- parent.frame()   # don't delay these evaluations
+  weights <- if(! missing(weights)) eval(substitute(weights), data, callenv)
+  subset  <- if(! missing(subset )) eval(substitute(subset),  data, callenv)
+
   data <-
     modelData(data, formula,
-              weights=if(! missing(weights)) eval(substitute(weights), data),
-              subset =if(! missing(subset )) eval(substitute(subset),  data),
+              weights=weights, subset=subset,
               na.action=na.action, dotexpand=FALSE, callenv=callenv)
 
   nstrata <- 0

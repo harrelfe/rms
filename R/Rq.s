@@ -9,11 +9,13 @@ Rq <- function (formula, tau = 0.5, data=environment(formula),
 {
   call <- match.call()
 
-  callenv <- parent.frame()   # don't delay this evaluation
+  callenv <- parent.frame()   # don't delay these evaluations
+  weights <- if(! missing(weights)) eval(substitute(weights), data, callenv)
+  subset  <- if(! missing(subset )) eval(substitute(subset),  data, callenv)
+
   mf <-
     modelData(data, formula,
-              subset  = if(! missing(subset )) eval(substitute(subset ), data),
-              weights = if(! missing(weights)) eval(substitute(weights), data),
+              subset  = subset, weights = weights,
               na.action=na.action, callenv=callenv)
 
   mf <- Design(mf, formula=formula)
