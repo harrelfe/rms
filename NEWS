@@ -1,5 +1,6 @@
-Changes in version 6.0-2 (2020-07-24)
+Changes in version 6.0-2 (2020-08-07)
    * stackMI: removed and moved to rmsb package
+   * Predict: changed name of first argument from x to object
 
 Changes in version 6.0-1 (2020-07-15)
    * cph: workaround for R bug where name of weights variable was set to ..1 when dtrans was used with fit.mult.impute and dtrans contained weights (thanks: Trevor Thompson)

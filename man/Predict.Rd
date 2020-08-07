@@ -46,7 +46,7 @@ predictions) confidence limits are computed.  See the
 \code{\link{predictrms}} function for details.
 }
 \usage{
-Predict(x, ..., fun,
+Predict(object, ..., fun,
         type = c("predictions", "model.frame", "x"),
         np = 200, conf.int = 0.95,
         conf.type = c("mean", "individual","simultaneous"),
@@ -61,7 +61,7 @@ Predict(x, ..., fun,
 \method{rbind}{Predict}(\dots, rename)
 }
 \arguments{
-  \item{x}{
+  \item{object}{
 	an \code{rms} fit object, or for \code{print} the result of \code{Predict}.
 	\code{options(datadist="d")} must have been specified (where
 	\code{d} was created by \code{datadist}), or 

@@ -1,5 +1,5 @@
 Predict <-
-  function(x, ...,
+  function(object, ...,
            fun, type=c("predictions","model.frame","x"),
            np=200,
            conf.int=.95,
@@ -11,13 +11,12 @@ Predict <-
            loglog=FALSE, digits=4, name, factors=NULL,
            offset=NULL)
 {
-
-  fit       <- x
+  fit       <- object
   type      <- match.arg(type)
   conf.type <- match.arg(conf.type)
   boot.type <- match.arg(boot.type)
   posterior.summary <- match.arg(posterior.summary)
-  draws     <- x$draws
+  draws     <- fit$draws
   bayes     <- length(draws) > 0
   if(bayes && conf.type == 'simultaneous')
     stop('conf.type simultaneous does not work for Bayesian models')
@@ -39,7 +38,7 @@ Predict <-
     kint <- fit$interceptRef
     if(! length(kint)) kint <- 1
   }
-  
+
   pppo <- fit$pppo
   if(! isblrm) pppo <- 0
   partialpo <- pppo > 0L
