@@ -216,7 +216,7 @@ current curve, \code{FALSE} otherwise.  See one of the latter examples.
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
   Fox J, Hong J (2009): Effect displays in R for multinomial and

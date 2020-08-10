@@ -301,7 +301,7 @@ cph(formula = formula(data), data=environment(formula),
 \author{
   Frank Harrell\cr
   Department of Biostatistics, Vanderbilt University\cr
-  \email{f.harrell@vanderbilt.edu}
+  \email{fh@fharrell.com}
 }
 \seealso{
   \code{\link[survival]{coxph}}, \code{\link[survival]{survival-internal}},

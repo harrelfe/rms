@@ -132,7 +132,7 @@ see above
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{lrm}}, \code{\link{glm}}, \code{\link{matinv}},

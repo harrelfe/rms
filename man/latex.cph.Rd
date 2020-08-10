@@ -76,7 +76,7 @@ object works with latex viewing and printing commands in Hmisc.
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{latexrms}}, \code{\link[Hmisc]{rcspline.restate}},

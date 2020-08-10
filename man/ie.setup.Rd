@@ -60,7 +60,7 @@ from the individual records created by \code{ie.setup}.
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{cph}}, \code{\link[survival]{coxph}},

@@ -169,7 +169,7 @@ that is created as a result of \code{censor} being present.  Set
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Cox DR, Snell EJ (1968):A general definition of residuals (with

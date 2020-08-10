@@ -211,7 +211,7 @@ It requires the \code{latex} function in Hmisc.
 Frank Harrell\cr
 Hui Nian\cr  
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{datadist}}, \code{\link{rms}}, \code{\link{rms.trans}},

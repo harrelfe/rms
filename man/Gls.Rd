@@ -113,7 +113,7 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
 	Saikat DebRoy,
 	Deepayan Sarkar,
 	R-core \email{R-core@R-project.org},
-  Frank Harrell \email{f.harrell@vanderbilt.edu},
+  Frank Harrell \email{fh@fharrell.com},
   Patrick Aboyoun
 } 
 \seealso{

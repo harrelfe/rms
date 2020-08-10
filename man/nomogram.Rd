@@ -393,7 +393,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
   Frank Harrell\cr
   Department of Biostatistics\cr
   Vanderbilt University\cr
-  \email{f.harrell@vanderbilt.edu}
+  \email{fh@fharrell.com}
 }
 \references{
   Banks J: Nomograms. Encylopedia of Statistical Sciences, Vol 6.

@@ -23,7 +23,7 @@ Department of Biostatistics
 \cr
 Vanderbilt University
 \cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Davis CE, Hyde JE, Bangdiwala SI, Nelson JJ: An example of dependencies 

@@ -95,7 +95,7 @@ Design(mf, formula=NULL, specials=NULL, allow.offset=TRUE, intercept=1)
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{rms.trans}}, \code{\link{rmsMisc}}, \code{\link{cph}}, \code{\link{lrm}}, \code{\link{ols}}, \code{\link{specs.rms}}, \code{\link{anova.rms}},

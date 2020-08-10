@@ -73,7 +73,7 @@ or \code{type="fitted.ind"}), a data frame, or a design matrix.  For
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Hannah M, Quigley P: Presentation of ordinal regression analysis on the

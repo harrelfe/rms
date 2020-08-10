@@ -172,7 +172,7 @@ contains a summary of results for all fits attempted.  When
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Gray RJ: Flexible methods for analyzing survival data using splines,

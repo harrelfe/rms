@@ -128,7 +128,7 @@ the intercept(s)-only model and the model with intercept(s) and predictors.
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 	\code{\link{orm}}, \code{\link{lrm}}, \code{\link{glm}},

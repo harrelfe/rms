@@ -196,7 +196,7 @@ returned result or for the correct covariance matrix computation).
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 	\code{\link{plot.Predict}}, \code{\link{ggplot.Predict}},

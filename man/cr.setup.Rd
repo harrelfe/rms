@@ -44,7 +44,7 @@ from the individual records created by \code{cr.setup}.
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Berridge DM, Whitehead J: Analysis of failure time data with ordinal

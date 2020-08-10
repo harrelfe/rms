@@ -142,7 +142,7 @@ diagonal of the matrix \eqn{X'X/(sse/n) \sigma^{2} (X'X + P)^{-1}}.
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{anova.rms}},

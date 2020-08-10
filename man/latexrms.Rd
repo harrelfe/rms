@@ -96,7 +96,7 @@ a fit object created by a fitting function in the \code{rms} series
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link[Hmisc]{latex}}, \code{\link[Hmisc]{rcspline.restate}},

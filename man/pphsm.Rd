@@ -33,7 +33,7 @@ a new fit object with transformed parameter estimates
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{psm}}, \code{\link{summary.rms}}, \code{\link{print.pphsm}}

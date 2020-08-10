@@ -152,7 +152,7 @@ specify \code{lowess.=TRUE} to \code{perimeter}.
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{datadist}}, \code{\link{Predict}},

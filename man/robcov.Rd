@@ -63,7 +63,7 @@ holding the name of the \code{cluster} variable and the number of clusters.
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Huber, PJ. Proc Fifth Berkeley Symposium Math Stat 1:221--33, 1967.

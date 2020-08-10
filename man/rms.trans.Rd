@@ -105,7 +105,7 @@ x1 \%ia\% x2
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link[Hmisc]{rcspline.eval}}, \code{\link[Hmisc]{rcspline.restate}}, \code{\link{rms}}, \code{\link{cph}}, \code{\link{lrm}}, \code{\link{ols}}, \code{\link{datadist}}

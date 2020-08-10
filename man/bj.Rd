@@ -195,7 +195,7 @@ bj.fit(x, y, control)
   Frank Harrell\cr
   Department of Biostatistics\cr
   Vanderbilt University\cr
-  \email{f.harrell@vanderbilt.edu}
+  \email{fh@fharrell.com}
 }
 \references{
   Buckley JJ, James IR. Linear regression with censored data. Biometrika 1979; 

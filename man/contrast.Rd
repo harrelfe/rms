@@ -206,7 +206,7 @@ used for compute confidence intervals.
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University School of Medicine\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
   \code{\link{Predict}}, \code{\link{gendata}}, \code{\link{bootcov}},

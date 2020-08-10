@@ -67,7 +67,7 @@ estimated jointly with beta.
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{psm}}, \code{\link[survival]{survreg}}, \code{\link{rms}}, \code{\link[survival]{survfit}}, \code{\link{predictrms}}, \code{\link{survplot}},

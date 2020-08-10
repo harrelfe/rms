@@ -225,7 +225,7 @@ the command \code{Key(\dots)} after printing the result of
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
   Fox J, Hong J (2009): Effect displays in R for multinomial and

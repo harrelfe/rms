@@ -236,7 +236,7 @@ The \code{latex} method requires LaTeX packages \code{relsize} and
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \section{Side Effects}{
 \code{print} prints, \code{latex} creates a

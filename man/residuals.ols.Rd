@@ -38,7 +38,7 @@ deleted by \code{ols} held by \code{NA}s
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{lm.influence}}, \code{\link{ols}},

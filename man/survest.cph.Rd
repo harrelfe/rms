@@ -111,7 +111,7 @@ probability at the ith value of \code{times} (or at the scalar value of \code{ti
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{cph}}, \code{\link{survfit.cph}}, \code{\link[survival]{survfit.coxph}}, \code{\link{predictrms}}, \code{\link{survplot}}

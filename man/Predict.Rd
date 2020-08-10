@@ -223,7 +223,7 @@ covariables.  Use \code{survest} or \code{survfit} for that purpose.
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 	\code{\link{plot.Predict}}, \code{\link{ggplot.Predict}},

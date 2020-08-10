@@ -72,7 +72,7 @@ All non-scalar argument values must have the same length.
 Frank Harrell, Jeremy Stephens, and Thomas Dupont\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{latexrms}}, \code{\link[Hmisc]{transcan}},

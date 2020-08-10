@@ -67,7 +67,7 @@ prints a summary, and optionally statistics for each re-fit
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{Rq}}, \code{\link{predab.resample}}, \code{\link{fastbw}},

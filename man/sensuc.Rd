@@ -186,7 +186,7 @@ Frank Harrell\cr
 Mark Conaway\cr
 Department of Biostatistics\cr
 Vanderbilt University School of Medicine\cr
-f.harrell@vanderbilt.edu, mconaway@virginia.edu
+fh@fharrell.com, mconaway@virginia.edu
 }
 \references{
 Rosenbaum, Paul R (1995): Observational Studies.  New York: Springer-Verlag.

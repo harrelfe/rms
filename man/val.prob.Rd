@@ -253,7 +253,7 @@ adjusting the sample size as needed.
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Harrell FE, Lee KL, Mark DB (1996): Multivariable prognostic models:

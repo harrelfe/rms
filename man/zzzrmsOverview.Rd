@@ -726,7 +726,7 @@ demo(all, 'rms')
 
 \section{Bug Reports}{
   The author is willing to help with problems.  Send
-  E-mail to \email{f.harrell@vanderbilt.edu}.  To report bugs,
+  E-mail to \email{fh@fharrell.com}.  To report bugs,
   please do the following:
 
   \enumerate{

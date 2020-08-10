@@ -224,7 +224,7 @@ vector of column numbers of \code{X} fitted (intercepts are not counted)
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Le Cessie S, Van Houwelingen JC: Ridge estimators in logistic regression.

@@ -33,7 +33,7 @@ a list containing information about the fit and the predictors as elements
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link{latexrms}}, \code{\link{datadist}}

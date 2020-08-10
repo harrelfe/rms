@@ -105,7 +105,7 @@ the coefficients are zero.
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Lawless, J. F. and Singhal, K. (1978): Efficient screening of nonnormal regression models.  Biometrics 34:318--327.

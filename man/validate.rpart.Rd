@@ -82,7 +82,7 @@ Department of Biostatistics
 \cr
 Vanderbilt University
 \cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link[rpart]{rpart}}, \code{\link[Hmisc]{somers2}},

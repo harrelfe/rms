@@ -171,7 +171,7 @@ for outliers, and measuring residual correlation.
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Landwehr, Pregibon, Shoemaker. JASA 79:61--83, 1984.

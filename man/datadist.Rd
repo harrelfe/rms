@@ -111,7 +111,7 @@ level, and \code{H} is the highest level.
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \seealso{
 \code{\link{rms}}, \code{\link{rms.trans}}, \code{\link[Hmisc]{describe}}, \code{\link{Predict}}, \code{\link{summary.rms}}

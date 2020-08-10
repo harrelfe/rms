@@ -87,7 +87,7 @@ fit are used during validation.
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Miller ME, Hui SL, Tierney WM (1991): Validation techniques for

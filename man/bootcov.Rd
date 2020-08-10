@@ -264,7 +264,7 @@ arguments are taken from the original fit.
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-\email{f.harrell@vanderbilt.edu}\cr
+\email{fh@fharrell.com}\cr
 
 Bill Pikounis\cr
 Biometrics Research Department\cr

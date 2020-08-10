@@ -68,7 +68,7 @@ plots
 Frank Harrell\cr
 Department of Biostatistics\cr
 Vanderbilt University\cr
-f.harrell@vanderbilt.edu
+fh@fharrell.com
 }
 \references{
 Harrell FE et al. (1998): Development of a clinical prediction model for
