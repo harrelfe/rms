@@ -49,7 +49,7 @@ activated.  Hovering over point estimates shows adjustment values if
 there are any.  \code{nbar} is not implemented for \code{plotly}.
 }
 \usage{
-\method{summary}{rms}(object, \dots, est.all=TRUE, antilog,
+\method{summary}{rms}(object, \dots, ycut=NULL, est.all=TRUE, antilog,
 conf.int=.95, abbrev=FALSE, vnames=c("names","labels"),
 conf.type=c('individual','simultaneous'),
 usebootcoef=TRUE, boot.type=c("percentile","bca","basic"),
@@ -99,6 +99,9 @@ factors, a single value specifies the reference cell and the adjustment
 Also represents other arguments to pass to \code{latex}, is ignored for
 \code{print} and \code{plot}.
 }
+\item{ycut}{must be specified if the fit is a partial proportional odds
+	model.  Specifies the single value of the response variable used to
+	estimate ycut-specific regression effects, e.g., odds ratios}
 \item{est.all}{
 Set to \code{FALSE} to only estimate effects of variables listed. Default is \code{TRUE}.
 }

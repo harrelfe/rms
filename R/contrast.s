@@ -1,16 +1,16 @@
 contrast <- function(fit, ...) UseMethod("contrast")
 
 contrast.rms <-
-  function(fit, a, b, a2, b2, y=NULL, cnames=NULL, fun=NULL, funint=TRUE,
+  function(fit, a, b, a2, b2, ycut=NULL, cnames=NULL, fun=NULL, funint=TRUE,
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'), usebootcoef=TRUE,
            boot.type=c('percentile','bca','basic'),
            posterior.summary=c('mean', 'median', 'mode'),
            weights='equal', conf.int=0.95, tol=1e-7, expand=TRUE, ...)
 {
-  type <- match.arg(type)
-  conf.type <- match.arg(conf.type)
-  boot.type <- match.arg(boot.type)
+  type              <- match.arg(type)
+  conf.type         <- match.arg(conf.type)
+  boot.type         <- match.arg(boot.type)
   posterior.summary <- match.arg(posterior.summary)
 
   draws <- fit$draws
@@ -46,38 +46,32 @@ contrast.rms <-
                         basic      = 'basic bootstrap')
 
   partialpo <- inherits(fit, 'blrm') && fit$pppo > 0
-  if(partialpo & ! length(y))
-    stop('must specify y for partial prop. odds model')
+  if(partialpo & ! length(ycut))
+    stop('must specify ycut for partial prop. odds model')
   cppo      <- fit$cppo
   if(partialpo && ! length(cppo))
     stop('only implemented for constrained partial PO models')
+  
   pred <- function(d) {
-    x <- predict(fit, d, type='x')
-    if(partialpo) {
-      z <- predict(fit, d, second=TRUE, type='x')
-      if(nrow(x) != nrow(z)) stop('program logic error in contrast pred function')
-      cppoy <- cppo(y)
-      if(nrow(z) == 1 && length(y) > 1) {
-        x <- x[rep(1, length(y)),, drop=FALSE]
-        z <- z[rep(1, length(y)),, drop=FALSE]
-        }
-      cppoy <- rep(cppoy, length=nrow(z))
-      for(i in 1 : nrow(z)) z[i, ] <- z[i, ] * cppoy[i]
-      x <- cbind(x, z)
-    }
-    x
+    ## predict.blrm duplicates rows of design matrix for partial PO models
+    ## if ycut has length > 1 and only one observation is being predicted
+    if(partialpo) predict(fit, d, type='x', ycut=ycut)
+         else
+           predict(fit, d, type='x')
     }
   
   da <- do.call('gendata', list(fit, factors=a, expand=expand))
   xa <- pred(da)
+  if(! missing(b)) {
+    db <- do.call('gendata', list(fit, factors=b, expand=expand))
+    xb <- pred(db)
+    }
+
   ma <- nrow(xa)
 
   if(missing(b)) {
-    xb <- 0*xa
+    xb <- 0 * xa
     db <- da
-  } else {
-    db <- do.call('gendata', list(fit, factors=b, expand=expand))
-    xb <- pred(db)
   }
   mb <- nrow(xb)
 
@@ -134,6 +128,7 @@ contrast.rms <-
 
   if(sum(mall > 1) > 1 && ! allsame(mall[mall > 1]))
     stop('lists of settings with more than one row must all have the same # rows')
+
   mm <- max(mall)
   if(mm > 1 && any(mall == 1)) {
     if(ma == 1) xa <- matrix(xa, nrow=mm, ncol=ncol(xa), byrow=TRUE)
@@ -147,25 +142,14 @@ contrast.rms <-
   if(bayes && length(fun) && inherits(fit, 'blrm')) {
     if(! missing(a2)) stop('fun= is only implemented for blrm fits')
     if(missing(b))    stop('b must be specified when fun= is given')
+    if(!missing(ycut)) stop('ycut not used with fun=')
 
-    nd   <- nrow(draws)
-    nrp  <- num.intercepts(fit)
-    kint <- fit$interceptRef
-    pa   <- t(matxv(xa, draws, kint=kint,  bmat=TRUE))
-    pb   <- t(matxv(xb, draws, kint=kint,  bmat=TRUE))
+    pa <- predict(fit, da, fun=fun, funint=funint, posterior.summary='all')
+    pb <- predict(fit, db, fun=fun, funint=funint, posterior.summary='all')
+
     if(length(cnames)) colnames(pa) <- colnames(pb) <- cnames
     # If fun has an intercepts argument, the intecept vector must be
     # updated for each draw
-    for(i in 1 : nd) {
-      pa[i, ] <- if(funint)
-                   fun(pa[i, ], intercepts=draws[i, 1L : nrp])
-                 else
-                   fun(pa[i, ])
-      pb[i, ] <- if(funint)
-                   fun(pb[i, ], intercepts=draws[i, 1L : nrp])
-                 else
-                   fun(pb[i, ])
-    }
     if(! length(cnames))
       cnames <- if(length(vary)) rep('', ncol(pa)) else
                           as.character(1 : ncol(pa))
@@ -175,7 +159,7 @@ contrast.rms <-
                 Xa=xa, Xb=xb, 
                 nvary=length(vary))
     return(structure(res, class='contrast.rms'))
-    }
+    }   # end if bayes & length(fun) ...
   
   X <- xa - xb
   if(! missing(a2)) X <- X - (xa2 - xb2)
@@ -194,7 +178,7 @@ contrast.rms <-
                 dimnames=list(NULL, dimnames(X)[[2]]))
 
   cdraws <- NULL
-  
+
   if(bayes) {
     cdraws <- draws %*% t(X)
     if(length(cnames)) colnames(cdraws) <- cnames
@@ -244,13 +228,13 @@ contrast.rms <-
   }
   PP <- NULL; posterior.summary=''
   }
-  if(type != 'average' && length(y))
-    cnames <- paste0(cnames, ' ', fit$yname, '=', y)
+  if(type != 'average' && length(ycut))
+    cnames <- paste0(cnames, ' ', fit$yname, '=', ycut)
   res <- list(Contrast=est, SE=se,
               Lower=lower, Upper=upper,
               Z=Z, Pvalue=P, PP=PP,
               var=v, df.residual=idf,
-              X=X, y=y, yname=if(length(y)) fit$yname,
+              X=X, ycut=ycut, yname=if(length(ycut)) fit$yname,
               cnames=if(type=='average') NULL else cnames,
               nvary=length(vary),
               conf.type=conf.type, conf.int=conf.int,

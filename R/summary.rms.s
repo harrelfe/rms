@@ -16,7 +16,8 @@
 # est.all is T to estimate effects for all factors, not just those listed
 # in ...
 
-summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
+summary.rms <- function(object, ..., ycut=NULL,
+                        est.all=TRUE, antilog, conf.int=.95,
                         abbrev=FALSE, vnames=c("names","labels"),
                         conf.type=c('individual','simultaneous'),
                         usebootcoef=TRUE,
@@ -33,8 +34,8 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   boot.type <- match.arg(boot.type)
   blabel <- switch(boot.type,
                    percentile = 'bootstrap nonparametric percentile',
-                   bca = 'bootstrap BCa',
-                   basic = 'basic bootstrap')
+                   bca        = 'bootstrap BCa',
+                   basic      = 'basic bootstrap')
   ## if(conf.type == 'simultaneous') require(multcomp)
   alp <- (1. - conf.int) / 2.
   posterior.summary <- match.arg(posterior.summary)
@@ -43,6 +44,16 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   bayes <- length(draws) > 0
   if(bayes && conf.type == 'simultaneous')
     stop('conf.type simultaneous does not apply to Bayesian model fits')
+
+  isblrm <- inherits(object, 'blrm')
+  partialpo <- isblrm && object$pppo > 0
+  if(partialpo & (length(ycut) != 1))
+    stop('must specify a single value of ycut for partial prop. odds model')
+  
+  pred <- function(d)
+    if(isblrm) predict(object, d, type='x', ycut=ycut)
+    else
+      predict(object, d, type='x')
   
   assume <- at$assume.code
   if(is.null(assume)) stop("fit does not have design information")
@@ -58,7 +69,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
   factors <- rmsArgs(substitute(list(...)))
   nf <- length(factors)
 
-  if(est.all) which <- (1:length(assume))[assume!=9]
+  if(est.all) which <- (1 : length(assume))[assume!=9]
   if(nf > 0) {
     jw <- charmatch(names(factors), name, 0)
     if(any(jw == 0)) stop(paste("factor name(s) not in the design:",
@@ -119,7 +130,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
       if(lz == 3) lims[!is.na(z), i] <- z[!is.na(z)]
     if(lz < 1 | lz > 3) stop("must specify 1,2, or 3 values for a factor")
   }
-  adj <- lims[2,, drop=FALSE]
+  adj  <- lims[2,, drop=FALSE]
   isna <- sapply(adj, is.na)
 
   if(any(isna))
@@ -148,7 +159,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
       i <- i + 1
       adj[[name[l]]][(2 * i - 1) : (2 * i)] <- lims[c(1, 3), name[l]]
     }
-    xx <- predictrms(object, newdata=adj, type="x")
+    xx <- pred(adj)
     xd <- matrix(xx[even,] - xx[odd,], nrow=m)
     xb <- xd %*% beta
     se <- drop((((xd %*% var) * xd) %*% rep(1, ncol(xd)))^.5)
@@ -192,14 +203,14 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
                            exp(xb), NA, exp(low), exp(up), 2))
       lab <- c(lab, rep(paste("", scale[2]), m))
       w <- integer(M)
-      w[odd] <- 1 : m
-      w[even]<- m + (1 : m)
-      stats <- stats[w,]
+      w[odd]  <- 1 : m
+      w[even] <- m + (1 : m)
+      stats   <- stats[w,]
       lab <- lab[w]
     }
   }
   
-  for(j in 1:length(xadj)) xadj[[j]] <- rep(xadj[[j]], 2)
+  for(j in 1 : length(xadj)) xadj[[j]] <- rep(xadj[[j]], 2)
   
   for(i in which[assume[which] == 5 | ucat[which]]) {
     ## All comparisons with reference category
@@ -214,7 +225,7 @@ summary.rms <- function(object, ..., est.all=TRUE, antilog, conf.int=.95,
         adj <- xadj
         adj[[name[i]]] <- c(iref, j)
         adj <- as.data.frame(adj)
-        xx <- predictrms(object, newdata=adj, type="x")
+        xx <- pred(adj)
         xd <- matrix(xx[2,] - xx[1,], nrow=1)
         xb <- xd %*% beta
         se <- sqrt((xd %*% var) %*% t(xd))

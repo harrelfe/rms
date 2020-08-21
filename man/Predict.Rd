@@ -46,11 +46,11 @@ predictions) confidence limits are computed.  See the
 \code{\link{predictrms}} function for details.
 }
 \usage{
-Predict(object, ..., fun,
+Predict(object, ..., fun=NULL, funint=TRUE,
         type = c("predictions", "model.frame", "x"),
         np = 200, conf.int = 0.95,
         conf.type = c("mean", "individual","simultaneous"),
-        usebootcoef=TRUE, boot.type=c("percentile","bca","basic"),
+        usebootcoef=TRUE, boot.type=c("percentile", "bca", "basic"),
         posterior.summary=c('mean', 'median', 'mode'),
         adj.zero = FALSE, ref.zero = FALSE,
         kint=NULL, ycut=NULL, time = NULL, loglog = FALSE, digits=4, name,
@@ -99,6 +99,9 @@ Predict(object, ..., fun,
 	will let the mean function be re-estimated for each bootstrap rep to
 	properly account for all sources of uncertainty in estimating the
 	mean response.}
+ \item{funint}{set to \code{FALSE} if \code{fun} is not a function such
+	as the result of \code{Mean}, \code{Quantile}, or \code{ExProb} that
+	contains an \code{intercepts} argument}
   \item{type}{
 	defaults to providing predictions.  Set to \code{"model.frame"} to
 	return a data frame of predictor settings used.  Set to \code{"x"}
@@ -190,6 +193,7 @@ Predict(object, ..., fun,
 		mandatory if the model included an offset term.  The variable name
 		must match the innermost variable name in the offset term.  The
 		single offset is added to all predicted values.}
+	\item{x}{an object created by \code{Predict}}
   \item{rename}{
 	If you are concatenating predictor sets using \code{rbind} and one
 	or more of the variables were renamed for one or more of the sets,

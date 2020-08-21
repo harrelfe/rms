@@ -417,7 +417,6 @@ scored <- function(...) {
 
 ## strat parms=value labels
 strat <- function(...) {
-
   cal <- sys.call()
   xx <- list(...)
   y <- xx[[1]]

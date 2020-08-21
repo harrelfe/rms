@@ -1,3 +1,6 @@
 src/*.o
 src/*.so
 
+.Rproj.user
+rms.Rproj
+.Rhistory

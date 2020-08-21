@@ -1,6 +1,6 @@
 Predict <-
   function(object, ...,
-           fun, type=c("predictions","model.frame","x"),
+           fun=NULL, funint=TRUE, type=c("predictions","model.frame","x"),
            np=200,
            conf.int=.95,
            conf.type=c('mean', 'individual', 'simultaneous'),
@@ -53,46 +53,23 @@ Predict <-
               else max((1 : length(ylevels))[ylevels <= ycut]) - 1
   }
 
-  coeff <- if(bayes) rmsb::getParamCoef(fit, posterior.summary, what='both')
-           else
-             fit$coefficients
-  
-  Pred <- function(type='lp', betaonly=FALSE, tauonly=FALSE, sepxz=FALSE) {
-    ## betaonly=TRUE to get the non-tau part
-    ## sepxz=TRUE to get a list with lp and lptau (not mult by cppo)
-    ##
-    ## Even if type='lp' is requested, must compute lp after putting
-    ## together the entire design matrix when partial PO is in effect
-    ## This is to get HPD intervals
-    if(sepxz) {conf.int <- FALSE; type <- 'lp'}
-    ty <- if(partialpo && conf.int) 'x' else type
-    ci <- if(partialpo) FALSE else conf.int
-    if(! tauonly)
-      x <- predictrms(fit, settings, kint=kint,
-                      ref.zero=ref.zero,
-                      type=ty, conf.int=ci, conf.type=conf.type,
-                      posterior.summary=posterior.summary)
-    if(betaonly || ! partialpo) return(x)
-    z <- predictrms(fit, settings, kint=kint,
-                    ref.zero=ref.zero,
-                    type=ty, conf.int=FALSE,
-                    posterior.summary=posterior.summary, second=TRUE)
-    if(tauonly) return(z)
-    if(NROW(x) != NROW(z))
-      stop('program logic error in contrast pred function')
-    if(sepxz) return(list(lp=x, lptau=z))
-    if(type == 'x') return(cbind(x, cppo(ycut) * z))
-    if(! conf.int)  return(x + cppo(ycut) * z)
-
-    off <- if(length(ioff)) settings[[offsetVariableName]] else 0
-    x  <- cbind(x, cppo(ycut) * z)
-    xb <- matxv(x, coeff, kint=kint) - Center + off
-    xB <- matxv(x, draws, kint=kint, bmat=TRUE) + off
-    xB <- apply(xB, 1, rmsb::HPDint, prob=conf.int)
-    lower <- xB[, 1]
-    upper <- xB[, 2]
-    list(linear.predictors=xb, lower=lower, upper=upper)
+  Pred <- function(type='lp') {
+    if(type == 'x') {
+      if(isblrm) predict(fit, settings, type='x', kint=kint, ycut=ycut,
+                         zcppo=FALSE)
+      else
+        predictrms(fit, settings, type='x')
     }
+    else {
+      if(isblrm) predict(fit, settings, type='lp',
+                       fun=fun, funint=funint,
+                       kint=kint, ycut=ycut,
+                       posterior.summary=posterior.summary, cint=conf.int)
+      else predictrms(fit, settings, kint=kint, 
+                      ref.zero=ref.zero,
+                      type='lp', conf.int=conf.int, conf.type=conf.type)
+    }
+  }
   
   dotlist <- if(length(factors)) factors else rmsArgs(substitute(list(...)))
   fname   <- if(missing(name)) '' else name
@@ -158,7 +135,7 @@ Predict <-
   scale  <- fit$scale.pred
   if(! length(scale)) scale <- "X * Beta"
 
-  if(missing(fun)) {
+  if(! length(fun)) {
     ylab <- scale[1]
     if(length(time))
       ylab <- ylabPlotmath <- ylabhtml <-
@@ -262,7 +239,7 @@ Predict <-
     warning('bootstrap estimates ignored when conf.type="simultaneous" or "individual"')
     bootdone <- FALSE
   }
-  isMean <- ! missing(fun) && ! is.function(fun) && fun == 'mean'
+  isMean <- length(fun) && ! is.function(fun) && fun == 'mean'
   if(isMean && ! bootdone & conf.int > 0 & ! bayes)
     stop('specifying fun="mean" with conf.int > 0 does not make sense when not running bootcov (with coef.reps=TRUE)')
   if(isMean && isorm && conf.int > 0)
@@ -294,41 +271,20 @@ Predict <-
       xx$lower <- lim[1L, ]
       xx$upper <- lim[2L, ]
     }    # end if(bootdone)
-    if(bayes) {
-      X <- Pred(type='x', betaonly=TRUE)
-      nc <- ncol(draws)
-      pred <- t(matxv(X, draws[, 1 : (nc - pppo), drop=FALSE],
-                      kint=kint, bmat=TRUE))
-      if(isMean) {
-        if(pppo == 0)
-         for(k in 1L : nrow(pred))
-           pred[k,] <- m(pred[k,], intercepts=draws[k, 1L : nrp])
-      else {
-        Z <- Pred(type='x', tauonly=TRUE)
-        lptau <- matxv(Z, draws[, (nc - pppo + 1) : nc, drop=FALSE],
-                       bmat=TRUE)
-        for(k in 1L : nrow(pred))
-          pred[k,] <- m(pred[k,], lptau[k], intercepts=draws[k, 1L : nrp])
-      }
-        lim <- apply(pred, 2, rmsb::HPDint, prob=conf.int)
-        xx$lower <- lim[1L, ]
-        xx$upper <- lim[2L, ]
-      }
-    }
-  }      # if(! length(time))
-  else {   ## time specified
+  }    # if(! length(time))
+  else {   # time specified
     if(bootdone)
       stop('time may not be specified if bootcov was used with coef.reps=TRUE')
     xx <- survest(fit, settings, times=time, loglog=loglog, 
                   conf.int=conf.int)
     xb <- as.vector(xx$surv)
-  }
+  }        # end time specified
   if(conf.int > 0) {
     lower <- as.vector(xx$lower)
     upper <- as.vector(xx$upper)
   }
   
-  if(! missing(fun) && is.function(fun)) {
+  if(! isblrm && length(fun) && is.function(fun)) {
     xb <- fun(xb)
     if(conf.int > 0) {
       lower <- fun(lower)

@@ -404,7 +404,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
   of a diagnostic or prognostic function.  Meth. Inform. Med. 17:127--129;
   1978.
 
-  Wikipedia: Nomogram, \url{http://en.wikipedia.org/wiki/Nomogram}.
+  Wikipedia: Nomogram, \url{https://en.wikipedia.org/wiki/Nomogram}.
 }
 \seealso{
   \code{\link{rms}}, \code{\link{plot.Predict}},

@@ -41,6 +41,15 @@ m <- modelData(d, rmsb::Ocens(a, b) ~ x, subset=1:4)
 attributes(m[[1]])
 
 
+x <- c(rep('a', 10), rep('b', 11), rep('c', 12))
+x <- factor(x, c('a', 'b', 'c', 'd'))
+table(x)
+y <- runif(length(x))
+d <- data.frame(x, y)
+m <- modelData(d, y ~ x)
+attributes(m$x)
+
+
 ## LCAextend package example like this failed
 g <- function() {
   d <- data.frame(x=runif(20), y=sample(0:1, 20,TRUE))

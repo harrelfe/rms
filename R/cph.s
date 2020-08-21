@@ -60,7 +60,6 @@ cph <- function(formula     = formula(data),
      && any(z !=".")) { #X's present
 
     X    <- Design(data, formula, specials=c('strat', 'strata'))
-
     atrx       <- attributes(X)
     atr        <- atrx$Design
     nact       <- atrx$na.action

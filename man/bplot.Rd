@@ -56,7 +56,7 @@ perimeter(x, y, xinc=diff(range(x))/10, n=10, lowess.=TRUE)
   Character string \eqn{z}-axis label for perspective (wireframe) plots.
   Default comes from \code{Predict}.  \code{zlab} will often be
   specified if \code{fun} was specified to \code{Predict}.
-  }
+}
 \item{adj.subtitle}{
 Set to \code{FALSE} to suppress subtitling the graph with the list of
        settings of non-graphed adjustment values. Default is \code{TRUE}

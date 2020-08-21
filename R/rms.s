@@ -483,7 +483,7 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
       if(is.factor(xv)) xv <- xv[, drop=TRUE]
       ## Note: Surv() has class 'Surv' without class 'matrix'
       ## This keeps columns together by calling as.data.frame.rms
-      else if(ismat(xv)) class(xv) <- unique(c('rms', class(xv)))
+      if(ismat(xv)) class(xv) <- unique(c('rms', class(xv)))
       data[[v]] <- xv
     }
     ## Any variables whose length is not equal to the maximum length over
@@ -498,7 +498,7 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
     ## had a name in the list.  This is why a 1-column matrix is kept
     ## as a matrix in the ismat function above
     data <- as.data.frame(data)
-  }
+  }   # end if(edata)
   ## Can't do else data[V] here as formula may have e.g. Surv(time,event)
   ## and hasn't been evaluated yet, where data has time and event
   if(length(weights)) data$`(weights)` <- weights
@@ -549,6 +549,24 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
     if(any(ism))
       for(i in which(ism))
         class(data[[i]]) <- unique(c('rms', class(data[[i]])))
+
+    ## Since subsetting was completed earlier, now drop unused factor levels
+    ## NOTE: strat() variables are also factors; don't drop their attributes
+    isf <- sapply(data, is.factor)
+    if(any(isf))
+      for(i in which(isf)) {
+        di <- data[[i]]
+        at <- attributes(di)
+        di <- di[, drop=TRUE]
+        if(length(at$assume.code) && at$assume.code == 8) {
+          at$levels   <- at$parms <- levels(di)
+          at$colnames <- paste0(at$name, '=', levels(di)[-1])
+          attributes(di) <- at[c('class', 'name', 'label', 'assume',
+                                 'assume.code', 'parms', 'nonlinear',
+                                 'colnames','levels')]
+          data[[i]] <- di
+        }
+      }
     
     ## If any variables are less than the maximum length, these must
     ## have come from the parent environment and did not have subset applied
