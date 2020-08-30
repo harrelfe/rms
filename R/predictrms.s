@@ -195,7 +195,11 @@ predictrms <-
     if(! length(X)) {
       if(! is.data.frame(newdata)) {
         if(is.list(newdata)) {
-          loc <- if(! length(names(newdata))) 1L : f else name[assume != 9L]
+          ## When second=TRUE the formula may not contain all the variables
+          ## in newdata
+          loc <- name[assume != 9L]
+          if(length(names(newdata))) newdata <- newdata[loc]
+          ## loc <- if(! length(names(newdata))) 1L : f else name[assume != 9L]
           new <- matrix(double(1L),
                         nrow=length(newdata[[1L]]),
                         ncol=length(newdata))
