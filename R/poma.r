@@ -7,7 +7,7 @@
 #' Strategy 3: Assess parallelism of link function transformed inverse CDFs curves for different XBeta levels (for response variables with >=10 unique levels)
 #'
 #' @param mod.orm Model fit of class `orm` or `lrm`. For `fit.mult.impute` objects, `poma` will refit model on a singly-imputed data-set
-#' @param cutvals Numeric vector; sequence of observed values to cut outcome
+#' @param cutval Numeric vector; sequence of observed values to cut outcome
 #'
 #' @author Yong Hao Pua <puayonghao@gmail.com>
 #'
@@ -21,12 +21,12 @@
 #' @examples
 #'
 #'## orm model (response variable has fewer than 10 unique levels)
-#'mod.orm <- orm(carb ~ cyl + hp , x=T, y=T, data = mtcars)
+#'mod.orm <- orm(carb ~ cyl + hp , x=TRUE, y=TRUE, data = mtcars)
 #'poma(mod.orm)
 #'
 #'
 #'## orm model (response variable has >=10 unique levels)
-#'mod.orm <- orm(mpg ~ cyl + hp , x=T, y=T, data = mtcars)
+#'mod.orm <- orm(mpg ~ cyl + hp , x=TRUE, y=TRUE, data = mtcars)
 #'poma(mod.orm)
 #'
 #'
@@ -83,10 +83,10 @@ poma <- function(mod.orm, cutval) {
     newformula <- paste(aa, bb)
     cat("Formula used with non-numeric DV:", newformula, "\n")
     cat("Cut-point for factor DV refers to the jth levels - not observed Y values \n")
-    mod.ols <- ols(as.formula(newformula) , x=T, y=T, data=eval(data))
+    mod.ols <- ols(as.formula(newformula) , x=TRUE, y=TRUE, data=eval(data))
     } else {
     cat("Cut-point for continuous DV refers to observed Y values \n")
-    mod.ols <-  ols(formula(mod.orm), x=T, y=T, data=eval(data))
+    mod.ols <-  ols(formula(mod.orm), x=TRUE, y=TRUE, data=eval(data))
     }
 
   combined_x <- fitted(mod.ols)
@@ -103,7 +103,7 @@ poma <- function(mod.orm, cutval) {
   }
 
 
-  ### Apply link functions to Prob of Binary Y (defined by cutvals)
+  ### Apply link functions to Prob of Binary Y (defined by cutval)
   ### Regress transformed outcome as a function of combined X. Check for constancy of slopes
   ### Codes taken from rms p368
   r <- NULL
@@ -119,7 +119,7 @@ poma <- function(mod.orm, cutval) {
 
   ### Graphical Assessment
   if(length(unique(mod.orm$y)) < 10) {
-    par(ask=T)
+    par(ask=TRUE)
     ## Generate Score residual plot for each predictor/terms
     ## Adjust par(mfrow) settings based on number of terms (codes are a little unwieldy)
     numpred <- dim(mod.orm$x)[[2]]
@@ -128,7 +128,7 @@ poma <- function(mod.orm, cutval) {
     else if (numpred >= 3) par(mfrow = c(2,2))
     else if (numpred >=2) par(mfrow = c(1,2))
     else par(mfrow = c(1,1))
-    resid(mod.orm, "score.binary", pl=T)
+    resid(mod.orm, "score.binary", pl=TRUE)
     par(ask=F)
     par(mfrow = c(1,1))
 

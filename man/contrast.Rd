@@ -61,9 +61,9 @@ with \code{xYplot} or \code{Dotplot} (see the last example before the
 \code{type="joint"} examples).
 
 When \code{fit} is the result of a Bayesian model fit and \code{fun} is
-specified, \code{contrast.rms} operates altogether difficulty.  \code{a}
+specified, \code{contrast.rms} operates altogether differently.  \code{a}
 and \code{b} must both be specified and \code{a2, b2} not specified.
-\code{fun} is evaluated on the \code{fun} transformed estimates
+\code{fun} is evaluated on the estimates
 separately on \code{a} and \code{b} and the subtraction is deferred.  So
 even in the absence of interactions, when \code{fun} is nonlinear, the
 settings of factors (predictors) will not cancel out and estimates of

@@ -215,7 +215,7 @@ Newlevels(fit, \dots)
 \method{Newlevels}{rms}(fit, levels, \dots)
 
 prModFit(x, title, w, digits=4, coefs=TRUE, footer=NULL,
-         lines.page=40, long=TRUE, needspace, \dots)
+         lines.page=40, long=TRUE, needspace, subtitle=NULL, \dots)
 
 prStats(labels, w, lang=c("plain", "latex", "html"))
 
@@ -356,6 +356,8 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   coefficient matrix, to avoid bad page splits.  This assumes the LaTeX
   needspace style is available.  Example:
   \code{needspace='6\\baselineskip'} or \code{needspace='1.5in'}.}
+\item{subtitle}{optional vector of character strings containing
+	subtitles that will appear under \code{title} but not bolded}
 \item{na.rm}{set to \code{FALSE} to keep \code{NA}s in the vector
   created by \code{reListclean}}
 \item{pvalue}{set to \code{TRUE} if you want values below 10 to the

@@ -285,11 +285,21 @@ Predict <-
   }
   
   if(! isblrm && length(fun) && is.function(fun)) {
-    xb <- fun(xb)
-    if(conf.int > 0) {
-      lower <- fun(lower)
-      upper <- fun(upper)
-    }	
+    ## If fun is for example the result of Mean.lrm or Quantile.orm
+    ## and confidence limits are requested, must use entire design matrix
+    ## to get variances.  Note that conf.int must also have been requested
+    ## when calling Mean/Quantile
+    xb <- if(conf.int > 0 && ('X' %in% names(formals(fun)))) {
+      X  <- Pred(type='x')
+      fun(xb, X=X)
+      } else fun(xb)
+    if(conf.int > 0 && length(lims <- attr(xb, 'limits'))) {
+      lower <- lims$lower
+      upper <- lims$upper
+      } else if(conf.int > 0) {
+        lower <- fun(lower)
+        upper <- fun(upper)
+      }	
   }
   
   settings$yhat   <- xb

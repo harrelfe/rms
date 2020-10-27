@@ -64,36 +64,57 @@ predict.orm <- function(object, ...,
   predict.lrm(object, ..., type=type, se.fit=se.fit, codes=codes)
 }
 
-Mean.lrm <- function(object, codes=FALSE, ...)
-  {
-    ns <- object$non.slopes
-    if(ns < 2)
-stop('using this function only makes sense for >2 ordered response categories')
-    if(codes) vals <- 1:length(object$freq)
-    else {
-      vals <- object$yunique
-      if(!length(vals)) vals <- names(object$freq)
-      vals <- as.numeric(vals)
-      if(any(is.na(vals)))
-        stop('values of response levels must be numeric for codes=FALSE')
-    }
-    f <- function(lp=numeric(0), intercepts=numeric(0), values=numeric(0),
-                  interceptRef=integer(0), cumprob=cumprob)
-      {
-        ns <- length(intercepts)
-        lp <- lp - intercepts[interceptRef]
-        xb <- sapply(intercepts, '+', lp)
-        P  <- matrix(cumprob(xb), ncol=ns)
-        P  <- cbind(1, P) - cbind(P, 0)
-        m  <- drop(P %*% values)
-        names(m) <- names(lp)
-        m
-      }
-    cumprob <- object$trans$cumprob
-    if(!length(cumprob)) cumprob <- plogis
-    ir <- object$interceptRef
-    if(!length(ir)) ir <- 1
-    formals(f) <- list(lp=numeric(0), intercepts=object$coef[1:ns],
-                       values=vals, interceptRef=ir, cumprob=cumprob)
-    f
+Mean.lrm <- function(object, codes=FALSE, conf.int=0, ...)
+{
+  ns <- object$non.slopes
+  if(ns < 2)
+    stop('using this function only makes sense for >2 ordered response categories')
+  if(codes) vals <- 1:length(object$freq)
+  else {
+    vals <- object$yunique
+    if(!length(vals)) vals <- names(object$freq)
+    vals <- as.numeric(vals)
+    if(any(is.na(vals)))
+      stop('values of response levels must be numeric for codes=FALSE')
   }
+  f <- function(lp=numeric(0), X=numeric(0),
+                intercepts=numeric(0), slopes=numeric(0),
+                info=numeric(0), values=numeric(0),
+                interceptRef=integer(0), trans=trans, conf.int=0)
+  {
+    ns <- length(intercepts)
+    lp <- if(length(lp)) lp - intercepts[interceptRef] else matxv(X, slopes) 
+    xb <- sapply(intercepts, '+', lp)
+    P  <- matrix(trans$cumprob(xb), ncol = ns)
+    P  <- cbind(1, P) - cbind(P, 0)
+    m  <- drop(P %*% values)
+    names(m) <- names(lp)
+    if(conf.int) {
+      lb <- matrix(sapply(intercepts, '+', lp), ncol = ns)
+      dmean.dalpha <- t(apply(trans$deriv(lb),
+                              1, FUN=function(x)
+                                x * (values[2:length(values)] - values[1:ns])))
+      dmean.dbeta  <- apply(dmean.dalpha, 1, sum) * X 
+      dmean.dtheta <- cbind(dmean.dalpha, dmean.dbeta) 
+      mean.var <- diag(dmean.dtheta %*% solve(info, t(dmean.dtheta)))
+      w <- qnorm((1 + conf.int) / 2) * sqrt(mean.var)   
+      attr(m, 'limits') <- list(lower = m - w, 
+                                upper = m + w)
+    }
+    m
+  }
+  ## Re-write first derivative so that it doesn't need the f argument
+  if(object$family=="logistic")
+    object$trans$deriv <- function(x) {p <- plogis(x); p * (1. - p)}
+  trans <- object$trans
+  if(! length(trans)) trans <- probabilityFamilies$logistic
+  ir <- object$interceptRef
+  if(!length(ir)) ir <- 1
+  formals(f) <- list(lp=numeric(0), X=numeric(0), 
+                     intercepts=object$coef[1 : ns],
+                     slopes=object$coef[- (1 : ns)],
+                     info=object$info.matrix,   
+                     values=vals, interceptRef=ir, trans=trans,
+                     conf.int=conf.int)
+  f 
+}

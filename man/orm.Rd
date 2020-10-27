@@ -36,7 +36,8 @@
 	first intercept).  It uses approximate linear interpolation on the
 	original response variable scale (the interpolation is exactly linear
 	of there is only one unique value of the linear predictor given as the
-	second argument).
+	second argument).  Optionally a normal approximation for a confidence
+	interval for quantiles will be computed using the delta method.
 }
 \usage{
 orm(formula, data=environment(formula),
@@ -48,7 +49,7 @@ orm(formula, data=environment(formula),
 \method{print}{orm}(x, digits=4, coefs=TRUE,
     intercepts=x$non.slopes < 10, title, \dots)
 
-\method{Quantile}{orm}(object, codes=FALSE, \dots)
+\method{Quantile}{orm}(object, codes=FALSE, conf.int=0, \dots)
 }
 \arguments{
 \item{formula}{
@@ -126,6 +127,8 @@ intercept is used.
 \item{object}{an object created by \code{orm}}
 \item{codes}{if \code{TRUE}, uses the integer codes \eqn{1,2,\ldots,k}
 	for the \eqn{k}-level response in computing the predicted quantile}
+\item{conf.int}{if nonzero, approximate delta-method confidence limits
+	are attached to estimated quantiles as the \code{limits} attribute}
 }
 \value{
 The returned fit object of \code{orm} contains the following components
@@ -196,7 +199,10 @@ the intercept(s)-only model and the model with intercept(s) and predictors.
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
-fh@fharrell.com
+fh@fharrell.com\cr
+For the \code{Quantile} function:\cr
+Qi Liu and Shengxin Tu\cr
+Department of Biostatistics, Vanderbilt University
 }
 \references{
 Sall J: A monotone regression smoother based on ordinal cumulative

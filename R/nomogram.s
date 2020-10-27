@@ -16,6 +16,9 @@ nomogram <-
   vnames  <- match.arg(vnames)
   posterior.summary <- match.arg(posterior.summary)
 
+  if(length(fit$pppo) && fit$pppo > 0)
+    stop('nomogram will not work for partial proportional odds models')
+
   Format <- function(x)
     { # like format but does individually
       f <- character(l <- length(x))

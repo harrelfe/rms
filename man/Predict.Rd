@@ -44,6 +44,12 @@ that predicted three different quantiles.
 If \code{conf.type="simultaneous"}, simultaneous (over all requested
 predictions) confidence limits are computed.  See the
 \code{\link{predictrms}} function for details.
+
+If \code{fun} is given, \code{conf.int} > 0,  the model is not a
+Bayesian model, and the bootstrap was not used, \code{fun} may return
+\code{limits} attribute when \code{fun} computed its own confidence
+limits.  These confidence limits will be functions of the design matrix,
+not just the linear predictor.
 }
 \usage{
 Predict(object, ..., fun=NULL, funint=TRUE,
@@ -98,7 +104,9 @@ Predict(object, ..., fun=NULL, funint=TRUE,
 	fit and you ran \code{bootcov} with \code{coef.reps=TRUE}.  This
 	will let the mean function be re-estimated for each bootstrap rep to
 	properly account for all sources of uncertainty in estimating the
-	mean response.}
+	mean response.  \code{fun} can be a general function and can compute
+	confidence limits (stored as a list in the \code{limits} attribute) of
+the transformed parameters such as means.}
  \item{funint}{set to \code{FALSE} if \code{fun} is not a function such
 	as the result of \code{Mean}, \code{Quantile}, or \code{ExProb} that
 	contains an \code{intercepts} argument}

@@ -683,7 +683,7 @@ rmsArgs <- function(.object, envir=parent.frame(2))
 ## print (the default)
 
 prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
-                     lines.page=40, long=TRUE, needspace, ...) {
+                     lines.page=40, long=TRUE, needspace, subtitle=NULL, ...) {
   lang   <- prType()
   specs  <- markupSpecs[[lang]]
   transl <- switch(lang,
@@ -767,7 +767,11 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
   if(! missing(needspace) && lang == 'latex')
     R <- paste0('\\Needspace{', needspace, '}')
 
-  if(title != '') R <- c(R, catl(title, pre=1, bold=TRUE))
+  lsub <- length(subtitle)
+  if(title != '') R <- c(R, catl(title, pre=1, bold=TRUE,
+                                 skip=if(lsub) 0 else 1))
+  if(lsub)
+    for(i in lsub) R <- c(R, catl(subtitle[i], bold=FALSE))
   
   if(long) {
     R <- c(R, bverb(), deparse(x$call), everb(), '')

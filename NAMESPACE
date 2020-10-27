@@ -32,10 +32,10 @@ importFrom(graphics, abline, axis, boxplot, hist, legend,
            title, grconvertX, grconvertY)
 importFrom(methods, existsFunction, getFunction, new)
 importFrom(stats, .getXlevels, AIC, approx, as.formula,
-           asOneSidedFormula, coef, complete.cases, confint, contrasts, cor,
+           asOneSidedFormula, binomial, coef, complete.cases, confint, contrasts, cor,
            dcauchy, delete.response, density, deviance,
            dnorm, family, fitted, formula, gaussian,
-           glm.control, glm.fit, is.empty.model, lm, lm.fit,
+           glm, glm.control, glm.fit, is.empty.model, lm, lm.fit,
            lm.influence, lm.wfit, logLik, lowess, lsfit,
            make.link, median, model.extract, model.frame,
            model.offset, model.weights, na.fail, na.omit, naresid,

@@ -9,7 +9,7 @@ poma(mod.orm, cutval)
 \arguments{
 \item{mod.orm}{Model fit of class `orm` or `lrm`. For `fit.mult.impute` objects, `poma` will refit model on a singly-imputed data-set}
 
-\item{cutvals}{Numeric vector; sequence of observed values to cut outcome}
+\item{cutval}{Numeric vector; sequence of observed values to cut outcome}
 }
 \description{
 Based on codes and strategies from Frank Harrell's canonical `Regression Modeling Strategies` text
@@ -22,12 +22,12 @@ Strategy 3: Assess parallelism of link function transformed inverse CDFs curves 
 \examples{
 
 ## orm model (response variable has fewer than 10 unique levels)
-mod.orm <- orm(carb ~ cyl + hp , x=T, y=T, data = mtcars)
+mod.orm <- orm(carb ~ cyl + hp , x=TRUE, y=TRUE, data = mtcars)
 poma(mod.orm)
 
 
 ## orm model (response variable has >=10 unique levels)
-mod.orm <- orm(mpg ~ cyl + hp , x=T, y=T, data = mtcars)
+mod.orm <- orm(mpg ~ cyl + hp , x=TRUE, y=TRUE, data = mtcars)
 poma(mod.orm)
 
 

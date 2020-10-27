@@ -1,10 +1,12 @@
-Changes in version 6.0-2 (2020-08-30)
+Changes in version 6.1-0 (2020-10-25)
    * stackMI: removed and moved to rmsb package
    * Predict: changed name of first argument from x to object
    * Changed email address
    * modelData: fixed dropping of unused factor levels
    * contrast,summary,Predict: changed interface with rmsb::blrm to use more of rmsb::predict.blrm and made summary.rms and contrast.rms handle contrained partial PO models and added ycut argument
    * poma: new function by Yong Hao Pua <puayonghao@gmail.com> for examining the proportional odds assumption
+   * Mean.lrm, Mean.orm, Quantile.orm: improved by Shengxin Tu to compute confidence limits using the delta method
+   * prModFit: added subtitle
 
 Changes in version 6.0-1 (2020-07-15)
    * cph: workaround for R bug where name of weights variable was set to ..1 when dtrans was used with fit.mult.impute and dtrans contained weights (thanks: Trevor Thompson)
