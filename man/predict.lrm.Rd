@@ -12,7 +12,13 @@ Computes a variety of types of predicted values for fits from
 observations.  The \code{Mean.lrm} and \code{Mean.orm} functions produce
 an R function to compute the predicted mean of a numeric ordered
 response variable given the linear predictor, which is assumed to use
-the first intercept in its computation. 
+the first intercept when it was computed.  The returned function has two
+optional arguments if confidence intervals are desired: \code{conf.int}
+and the design matrix \code{X}.  When this derived function is called
+with nonzero \code{conf.int}, an attribute named \code{limits} is attached
+	to the estimated mean.  This is a list with elements \code{lower} and
+	\code{upper} containing normal approximations for confidence limits
+	using the delta method.
 }
 \usage{
 \method{predict}{lrm}(object, \dots, type=c("lp", "fitted",
@@ -24,8 +30,8 @@ the first intercept in its computation.
             "terms", "cterms", "ccterms", "adjto","adjto.data.frame", 
             "model.frame"), se.fit=FALSE, codes=FALSE)
 
-\method{Mean}{lrm}(object, codes=FALSE, conf.int=0, \dots)
-\method{Mean}{orm}(object, codes=FALSE, conf.int=0, \dots)
+\method{Mean}{lrm}(object, codes=FALSE, \dots)
+\method{Mean}{orm}(object, codes=FALSE, \dots)
 }
 \arguments{
 \item{object}{a object created by \code{lrm} or \code{orm}}
@@ -60,10 +66,6 @@ if \code{TRUE}, \code{type="mean"}, \code{Mean.lrm}, and \code{Mean.orm}
 use the integer codes \eqn{1,2,\ldots,k} for the \eqn{k}-level response
 in computing the predicted mean response.
 }
-\item{conf.int}{if nonzero, an attribute named \code{limits} is attached
-	to the estimated mean.  This is a list with elements \code{lower} and
-	\code{upper} containing normal approximations for confidence limits
-	using the delta method.}
 }
 \value{
 a vector (\code{type="lp"} with \code{se.fit=FALSE}, or

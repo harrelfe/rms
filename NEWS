@@ -1,4 +1,4 @@
-Changes in version 6.1-0 (2020-11-05)
+Changes in version 6.1-0 (2020-11-28)
    * stackMI: removed and moved to rmsb package
    * Predict: changed name of first argument from x to object
    * Changed email address
@@ -8,6 +8,8 @@ Changes in version 6.1-0 (2020-11-05)
    * Mean.lrm, Mean.orm, Quantile.orm: improved by Shengxin Tu to compute confidence limits using the delta method
    * prModFit: added subtitle
    * lrm.fit.bare: new minimalistic lrm fitting function
+   * ExProb: new version from Shengxin Tu that implements confidence intervals using the delta method
+   * Quantile: improved further by Shengxin Tu to provide two methods for computing quantiles (matters most when there are many ties)
 
 Changes in version 6.0-1 (2020-07-15)
    * cph: workaround for R bug where name of weights variable was set to ..1 when dtrans was used with fit.mult.impute and dtrans contained weights (thanks: Trevor Thompson)

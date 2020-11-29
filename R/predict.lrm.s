@@ -64,7 +64,7 @@ predict.orm <- function(object, ...,
   predict.lrm(object, ..., type=type, se.fit=se.fit, codes=codes)
 }
 
-Mean.lrm <- function(object, codes=FALSE, conf.int=0, ...)
+Mean.lrm <- function(object, codes=FALSE, ...)
 {
   ns <- object$non.slopes
   if(ns < 2)
@@ -90,12 +90,13 @@ Mean.lrm <- function(object, codes=FALSE, conf.int=0, ...)
     m  <- drop(P %*% values)
     names(m) <- names(lp)
     if(conf.int) {
+      if(! length(X)) stop('must specify X if conf.int > 0')
       lb <- matrix(sapply(intercepts, '+', lp), ncol = ns)
       dmean.dalpha <- t(apply(trans$deriv(lb),
                               1, FUN=function(x)
                                 x * (values[2:length(values)] - values[1:ns])))
-      dmean.dbeta  <- apply(dmean.dalpha, 1, sum) * X 
-      dmean.dtheta <- cbind(dmean.dalpha, dmean.dbeta) 
+      dmean.dbeta  <- apply(dmean.dalpha, 1, sum) * X
+      dmean.dtheta <- cbind(dmean.dalpha, dmean.dbeta)
       mean.var <- diag(dmean.dtheta %*% solve(info, t(dmean.dtheta)))
       w <- qnorm((1 + conf.int) / 2) * sqrt(mean.var)   
       attr(m, 'limits') <- list(lower = m - w, 
@@ -103,11 +104,16 @@ Mean.lrm <- function(object, codes=FALSE, conf.int=0, ...)
     }
     m
   }
+  ## If lrm fit, add information that orm fits have
+  family <- object$family
+  trans  <- object$trans
+  if(! length(family)) {
+    family <- 'logistic'
+    trans  <- probabilityFamilies$logistic
+    }
   ## Re-write first derivative so that it doesn't need the f argument
-  if(object$family=="logistic")
-    object$trans$deriv <- function(x) {p <- plogis(x); p * (1. - p)}
-  trans <- object$trans
-  if(! length(trans)) trans <- probabilityFamilies$logistic
+  if(family == "logistic")
+    trans$deriv <- function(x) {p <- plogis(x); p * (1. - p)}
   ir <- object$interceptRef
   if(!length(ir)) ir <- 1
   formals(f) <- list(lp=numeric(0), X=numeric(0), 
@@ -115,6 +121,6 @@ Mean.lrm <- function(object, codes=FALSE, conf.int=0, ...)
                      slopes=object$coef[- (1 : ns)],
                      info=object$info.matrix,   
                      values=vals, interceptRef=ir, trans=trans,
-                     conf.int=conf.int)
+                     conf.int=0)
   f 
 }

@@ -10,10 +10,10 @@ Current Goals
 
 Web Sites
 =============
-* Overall: http://hbiostat.org/R/rms
-* Book: http://hbiostat.org/doc/rms
-* CRAN: http://cran.r-project.org/web/packages/rms
-* Changelog: https://github.com/harrelfe/rms/commits/master
+* Overall: http://hbiostat.org/R/rms/
+* Book: http://hbiostat.org/rms/
+* CRAN: http://cran.r-project.org/web/packages/rms/
+* Changelog: https://github.com/harrelfe/rms/commits/master/
 
 To Do
 =====

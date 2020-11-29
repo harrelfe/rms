@@ -289,10 +289,11 @@ Predict <-
     ## and confidence limits are requested, must use entire design matrix
     ## to get variances.  Note that conf.int must also have been requested
     ## when calling Mean/Quantile
-    xb <- if(conf.int > 0 && ('X' %in% names(formals(fun)))) {
-      X  <- Pred(type='x')
-      fun(xb, X=X)
-      } else fun(xb)
+    xb <- if(conf.int > 0 &&
+             all(c('X', 'conf.int') %in% names(formals(fun)))) {
+            X  <- Pred(type='x')
+            fun(xb, X=X, conf.int=conf.int)
+          } else fun(xb)
     if(conf.int > 0 && length(lims <- attr(xb, 'limits'))) {
       lower <- lims$lower
       upper <- lims$upper

@@ -29,7 +29,7 @@ max(abs(w))
 
 m <- Mean(g)
 formals(m) <- list(lp=NULL, intercepts=runif(30000), values=runif(30001),
-                   interceptRef=3, cumprob=function(x) 1 / (1 + exp(-x)))
+                   conf.int=0, interceptRef=3, cumprob=function(x) 1 / (1 + exp(-x)))
 system.time(m(1))
 system.time(m(1:100))
 system.time(m(1:1000))
@@ -89,7 +89,8 @@ qu <- Quantile(g)
 ## Prob Y <= j, j = 1, ... 10 = .1, .2, ..., 1
 ## .1 quantile = 1, .2 quantile = 2, ..., .9 quantile = 9
 formals(qu) <- list(q=.5, lp=0, intercepts=qlogis(seq(.9,.1,by=-.1)),
-                    values=1:10, interceptRef=1, cumprob=plogis, inverse=qlogis)
+                    values=1:10, interceptRef=1, cumprob=plogis, inverse=qlogis,
+                    conf.int=0, method='interpolated')
 for(a in c(.01, seq(0, 1, by=.05), .99))
   cat(a, qu(a, qlogis(.9)), '\n')
 

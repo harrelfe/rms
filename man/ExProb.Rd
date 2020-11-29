@@ -12,6 +12,13 @@
 	is a plot method for plotting the step functions, and if more than one
 	linear predictor was evaluated multiple step functions are drawn.
 	\code{ExProb} is especially useful for \code{\link{nomogram}}.
+	
+	Optionally a normal approximation for a confidence
+	interval for exceedance probabilities will be computed using the delta
+	method, if 
+	\code{conf.int > 0} is specified to the function generated from calling
+	\code{ExProb}.  In that case, a \code{"lims"} attribute is included
+	in the result computed by the derived cumulative probability function.
 }
 \usage{
 ExProb(object, \dots)
@@ -56,7 +63,7 @@ ExProb(object, \dots)
 	\code{ExProb} returns an R function.  Running the function returns an
   object of class \code{"ExProb"}.
 }
-\author{Frank Harrell}
+\author{Frank Harrell and Shengxin Tu}
 \seealso{\code{\link{orm}}, \code{\link{Quantile.orm}}}
 \examples{
 set.seed(1)
