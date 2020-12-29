@@ -769,7 +769,8 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
 
   lsub <- length(subtitle)
   if(title != '') R <- c(R, catl(title, pre=1, bold=TRUE,
-                                 skip=if(lsub) 0 else 1))
+                                 skip=1))
+  ## was skip=if(lsub) 0 else 1
   if(lsub)
     for(i in lsub) R <- c(R, catl(subtitle[i], bold=FALSE))
   
