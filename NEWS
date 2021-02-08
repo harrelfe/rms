@@ -1,3 +1,6 @@
+Changes in version 6.1-1 (2021-02-06)
+   * Design, Getlim: allowed datadist option to actually contain the datadist (used by Hmisc::estSeqMarkovOrd)
+
 Changes in version 6.1-0 (2020-11-28)
    * stackMI: removed and moved to rmsb package
    * Predict: changed name of first argument from x to object

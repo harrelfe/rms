@@ -176,11 +176,14 @@ Design <- function(mf, formula=NULL, specials=NULL,
 
   XDATADIST <- .Options$datadist
   if(length(XDATADIST)) {
-    if(! exists(XDATADIST))
-      stop(paste("dataset", XDATADIST,
-                 "not found for options(datadist=)"))
-    datadist <- eval(as.name(XDATADIST))
-    Limits <- datadist$limits
+    if(inherits(XDATADIST, 'datadist')) datadist <- XDATADIST
+       else {
+         if(! exists(XDATADIST))
+           stop(paste("dataset", XDATADIST,
+                      "not found for options(datadist=)"))
+         datadist <- eval(as.name(XDATADIST))
+         }
+    Limits   <- datadist$limits
     Limnames <- dimnames(Limits)[[2]]
   }
   
