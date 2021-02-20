@@ -1,3 +1,6 @@
+Changes in version 6.1-2 (2021-02-20)
+   * plotp.Predict: fixed bug when conf.int=FALSE was given to Predict()
+
 Changes in version 6.1-1 (2021-02-06)
    * Design, Getlim: allowed datadist option to actually contain the datadist (used by Hmisc::estSeqMarkovOrd)
 

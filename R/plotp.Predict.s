@@ -89,9 +89,12 @@ plotp.Predict <-
       dat <- data[data$.predictor. == v,, drop=FALSE]
       dat$.x. <- dat[[v]]
       xlab <- pmlabel[v]
-      ht   <- with(dat, paste0(v, '=', fm(.x.), '<br>',
-                               fm(yhat), ' [', fm(lower), ',',
-                               fm(upper), ']'))
+      ht   <- if(conf.int)
+                with(dat, paste0(v, '=', fm(.x.), '<br>',
+                                 fm(yhat), ' [', fm(lower), ',',
+                                 fm(upper), ']')) else
+                with(dat, paste0(v, '=', fm(.x.), '<br>', fm(yhat)))
+                                                    
 
       if(length(varying) != 2) {
         ht[1] <- paste0(ht[1], '<br>', adjto[v])
