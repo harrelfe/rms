@@ -190,8 +190,9 @@ plotp.Predict <-
     data$.g. <- data[[w]]
     }
   ht <- with(data, paste0(v, '=', fm(data$.x.), '<br>',
-                          fm(yhat), ' [', fm(lower), ', ',
-                          fm(upper), ']'))
+                          fm(yhat)))
+  if(conf.int) ht <- paste0(ht, ' [', fm(data$lower), ', ',
+                          fm(data$upper), ']')
   j <- which(data$.x. == min(data$.x.))
   ht[j] <- paste0(ht[j], '<br>', adjto)
   data$.ht. <- ht
@@ -201,9 +202,10 @@ plotp.Predict <-
     a <- plotly::add_lines(a, x=~.x., y=~yhat, color=I('black'),
                            text=~.ht., hoverinfo='text',
                            name='Estimate')
-    a <- plotly::add_ribbons(a, x=~.x., ymin=~lower, ymax=~upper,
-                             hoverinfo='none', name=cllab,
-                             color=I('lightgray'))
+    if(conf.int)
+      a <- plotly::add_ribbons(a, x=~.x., ymin=~lower, ymax=~upper,
+                               hoverinfo='none', name=cllab,
+                               color=I('lightgray'))
     if(length(rdata) && varying %in% names(rdata)) {
       form <- as.formula(paste('yhat ~', v))
       a <- histSpikeg(form, predictions=data, data=rdata,
@@ -212,8 +214,9 @@ plotp.Predict <-
   } else {  # superpositioning (grouping) variable also present
     a <- plotly::add_lines(a, x=~.x., y=~yhat, color=~.g.,
                            text=~.ht., hoverinfo='text')
-    a <- plotly::add_ribbons(a, x=~.x., ymin=~lower, ymax=~upper,
-                             color=~.g., hoverinfo='none')
+    if(conf.int)
+      a <- plotly::add_ribbons(a, x=~.x., ymin=~lower, ymax=~upper,
+                               color=~.g., hoverinfo='none')
     if(length(rdata) && all(varying %in% names(rdata))) {
       form <- as.formula(paste('yhat ~', v, '+', w))
       a <- histSpikeg(form, predictions=data, data=rdata,
