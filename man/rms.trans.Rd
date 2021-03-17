@@ -8,11 +8,13 @@
 \alias{scored}
 \alias{strat}
 \alias{matrx}
+\alias{gTrans}
 \alias{\%ia\%}
 \title{rms Special Transformation Functions}
 \description{
 This is a series of functions (\code{asis}, \code{pol}, \code{lsp},
-\code{rcs}, \code{catg}, \code{scored}, \code{strat}, \code{matrx}, and
+\code{rcs}, \code{catg}, \code{scored}, \code{strat}, \code{matrx},
+\code{gTrans}, and
 \code{\%ia\%}) that set up special attributes  (such as
 knots and nonlinear term indicators) that are carried through to fits
 (using for example \code{lrm},\code{cph}, \code{ols},
@@ -42,9 +44,28 @@ in the model.  \code{asis, catg, scored, matrx} are seldom invoked
 explicitly by the user (only to specify \code{label} or \code{name},
 usually).
 
+\code{gTrans} is a general multiple-parameter transformation function.
+It can be used to specify new polynomial bases, smooth relationships
+with a discontinuity at one or more values of \code{x}, grouped
+categorical variables, e.g., a categorical variable with 5 levels where
+you want to combine two of the levels to spend 3 degrees of freedom in
+all but see plots of predicted values where the two combined categories
+are kept separate but will have equal effect estimates.  The first
+argument to \code{gTrans} is a regular numeric, character, or factor
+variable.  All subsequent arguments are single-valued functions of this
+variable, and the variable they operate on must be named \code{x}.
+These arguments may be named \code{l} (for linear) or 
+\code{nl} (for nonlinear) if you wish to mark certain columns as
+representing linear or nonlinear effects for the purpose of tests of
+nonlinearity with \code{anova.rms}.  The default is to assume a column
+is a linear effect.  The \code{parms} attribute stored with a
+\code{gTrans} result is the set of expressions given in the second,
+third, ... arguments to \code{gTrans}, preceeded by an expression for
+the original predictor values.  
+
 In the list below, functions \code{asis} through \code{strat} can have
 arguments \code{x, parms, label, name} except that \code{parms} does not
-apply to \code{asis, matrx, strat}.
+apply to \code{asis, matrx, strat, gTrans}.
 }
 \usage{
 asis(\dots)
@@ -55,6 +76,7 @@ rcs(\dots)
 catg(\dots)
 scored(\dots)
 strat(\dots)
+gTrans(\dots)
 x1 \%ia\% x2
 }
 \arguments{
@@ -140,6 +162,17 @@ f3 <- lrm(y ~ rcs(x1) + rcs(x2) + x1 \%ia\% x2)
 # Use x1 \%ia\% x2 instead of x1:x2 because x1 \%ia\% x2 triggers
 # anova to pool x1*x2 term into x1 terms to test total effect
 # of x1
+#
+# Examples of gTrans
+#
+# Linear relationship with a discontinuity at zero:
+gTrans(x, nl=x == 0, l=x)   # mark the discontinuity as a nonlinear effect
+# Duplicate pol(x, 2):
+gTrans(x, l=x, nl=x ^ 2)
+# Linear spline with a knot at x=10 with the new slope taking effect
+# until x=20 and the spline turning flat at that point but with a
+# discontinuous vertical shift
+gTrans(x, l=x, nl=pmax(pmin(x, 20) - 10, 0), nl=x == 20)
 }
 }
 \keyword{models}

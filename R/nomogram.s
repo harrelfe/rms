@@ -46,8 +46,8 @@ nomogram <-
 
   at <- fit$Design
   assume <- at$assume.code
-  if(any(assume == 10))
-    warning("does not currently work with matrix factors in model")
+  if(any(assume >= 10))
+    warning("does not currently work with matrix or gTrans factors in model")
   name  <- at$name
   names(assume) <- name
   parms <- at$parms

@@ -207,12 +207,12 @@ lm.pfit <- function(X, Y, offset=NULL, penalty.matrix, tol=1e-7,
 
 predict.ols <- 
   function(object, newdata,
-           type=c("lp","x","data.frame","terms","cterms","ccterms","adjto",
-             "adjto.data.frame", "model.frame"),
+           type=c("lp", "x", "data.frame", "terms", "cterms", "ccterms",
+                  "adjto", "adjto.data.frame", "model.frame"),
            se.fit=FALSE, conf.int=FALSE,
-           conf.type=c('mean','individual','simultaneous'),
+           conf.type=c('mean', 'individual', 'simultaneous'),
            kint=1,
-           na.action=na.keep, expand.na=TRUE, center.terms=type=="terms", ...)
+           na.action=na.keep, expand.na=TRUE, center.terms=type == "terms", ...)
   {
     type <- match.arg(type)
     predictrms(object, newdata, type=type, se.fit=se.fit, conf.int=conf.int,
@@ -241,7 +241,7 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
   resid <- x$residuals
 
   n <- length(resid)
-  p <- length(x$coef)-(names(x$coef)[1] == "Intercept")
+  p <- length(x$coef) - (names(x$coef)[1] == "Intercept")
   if(length(stats)==0) cat("n=", n,"   p=", p, "\n\n", sep="")
   ndf <- stats['d.f.']
   df <- c(ndf, n - ndf - 1, ndf)

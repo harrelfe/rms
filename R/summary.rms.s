@@ -57,7 +57,7 @@ summary.rms <- function(object, ..., ycut=NULL,
   
   assume <- at$assume.code
   if(is.null(assume)) stop("fit does not have design information")
-  if(any(assume==10))
+  if(any(assume == 10))
     warning("summary.rms does not currently work with matrix factors in model")
   name  <- at$name
   parms <- at$parms
@@ -69,7 +69,7 @@ summary.rms <- function(object, ..., ycut=NULL,
   factors <- rmsArgs(substitute(list(...)))
   nf <- length(factors)
 
-  if(est.all) which <- (1 : length(assume))[assume!=9]
+  if(est.all) which <- (1 : length(assume))[assume != 9]
   if(nf > 0) {
     jw <- charmatch(names(factors), name, 0)
     if(any(jw == 0)) stop(paste("factor name(s) not in the design:",
@@ -101,8 +101,8 @@ summary.rms <- function(object, ..., ycut=NULL,
           else
             object$coef
   lc <- length(beta)
-  ##Number of non-slopes:
-  nrp <- if(bayes) num.intercepts(object) else num.intercepts(object, 'coef')
+  ## Number of non-slopes:
+  nrp  <- if(bayes) num.intercepts(object) else num.intercepts(object, 'coef')
   nrp1 <- nrp + 1
   ## Exclude non slopes
   j <- nrp1 : lc
@@ -136,7 +136,7 @@ summary.rms <- function(object, ..., ycut=NULL,
   if(any(isna))
     stop(paste("adjustment values not defined here or with datadist for",
                paste(name[assume != 9][isna], collapse=" ")))
-  k <- which[assume[which] %nin% c(8, 5, 10) & !ucat[which]]
+  k <- which[assume[which] %nin% c(8, 5, 10) & ! ucat[which]]
   m <- length(k)
   if(m) {
     isna <- is.na(lims[1, name[k], drop=FALSE] + lims[3, name[k], drop=FALSE])
@@ -159,8 +159,8 @@ summary.rms <- function(object, ..., ycut=NULL,
       i <- i + 1
       adj[[name[l]]][(2 * i - 1) : (2 * i)] <- lims[c(1, 3), name[l]]
     }
-    xx <- pred(adj)
-    xd <- matrix(xx[even,] - xx[odd,], nrow=m)
+     xx <- pred(adj)
+     xd <- matrix(xx[even,] - xx[odd,], nrow=m)
     xb <- xd %*% beta
     se <- drop((((xd %*% var) * xd) %*% rep(1, ncol(xd)))^.5)
     if(conf.type == 'simultaneous' && length(xb) > 1) {

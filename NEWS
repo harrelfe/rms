@@ -1,5 +1,8 @@
-Changes in version 6.1-2 (2021-02-20)
+Changes in version 6.2-0 (2021-03-17)
    * plotp.Predict: fixed bug when conf.int=FALSE was given to Predict()
+   * gTrans: new general transformation function; example: linear spline with discontinuities
+   * validate.cph: surrounded survival::survConcordance with suppressWarnings
+   * fixed how matrx predictors were being handled
 
 Changes in version 6.1-1 (2021-02-06)
    * Design, Getlim: allowed datadist option to actually contain the datadist (used by Hmisc::estSeqMarkovOrd)

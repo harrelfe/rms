@@ -171,7 +171,7 @@ Predict <-
     stop("cannot plot interaction terms")
 
   lim <- Getlim(at, allow.null=TRUE, need.all=FALSE)
-
+ 
   fnam   <- names(factors)
   nf     <- length(factors)
   xadjdf <- lim$limits[2L, , drop=FALSE]

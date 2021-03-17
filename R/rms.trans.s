@@ -12,6 +12,7 @@
 # 8	strat	stratification factor
 #10	matrx	matrix factor - used to keep groups of variables together
 #		as one factor
+#11 gTrans - general transformations
 #
 #	des.args generic function for retrieving arguments
 #	set.atr generic function to set attributes of sub design matrix
@@ -181,6 +182,7 @@ matrx <- function(...) {
   if(length(xd)) for(i in 1:nc)
     parms[i] <- median(xd[,i], na.rm=TRUE)
 
+  xd <- I(xd)
   attributes(xd) <- set.atr(xd, NULL, z, colname, "matrix", 10, parms,
                             rep(FALSE,nc))
   xd
@@ -415,6 +417,39 @@ scored <- function(...) {
   x
 }
 
+# General transformations - allows discontinuities, special spline
+# functions, etc.
+gTrans <- function(...) {
+
+  cal <- sys.call()
+  parms <- substitute(list(...))
+  xx <- list(...)[1]
+  z <- des.args(xx, TRUE, cal)
+  x <- xx[[1]]
+
+  suffix <- ''
+  nam  <- z$name
+  lp   <- length(parms) - 2  # 1 list() 1 for x
+  xd   <- matrix(double(1), nrow=length(x), ncol=lp)
+  name <- character(lp)
+  w    <- eval(parms, list(x=x))
+  type <- names(w)
+  type <- if(length(type)) type[- 1] else rep('', length(w) - 1)
+  type <- ifelse(type == '', 'l', type)
+  
+  for(j in 1 : lp) {
+    name[j] <- paste0(nam, suffix)
+    xd[, j] <- w[[j + 1]]    # skip first argument to gTrans
+    suffix  <- paste0(suffix, "'")
+  }
+
+  xd <- I(xd)
+  attributes(xd) <- set.atr(xd, x, z, name, "gTrans", 11,
+                            parms, type == 'nl')
+  xd
+}
+
+
 ## strat parms=value labels
 strat <- function(...) {
   cal <- sys.call()
@@ -471,7 +506,7 @@ gparms <- function(fit,...) {
 ## value.chk - if x=NA, returns list of possible values of factor i defined
 ##	in object f's attributes.  For continuous factors, returns n values
 ##	in default prediction range.  Use n=0 to return trio of effect
-##	limits.  Use n<0 to return pretty(plotting range,nint=-n).
+##	limits.  Use n < 0 to return pretty(plotting range, nint = - n).
 ##       If type.range="full" uses the full range instead of default plot rng.
 ## If x is not NA, checks that list to see that each value is allowable
 ##	for the factor type, and returns x
@@ -495,7 +530,7 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
     lim    <- if(type.range=="full") limits[6:7] else limits[4:5]
   }
 
-  if(as<5 | as==6) {
+  if(as < 5 | as == 6 | as == 11) {
       if(isna) {
         if(! length(values)) {
           if(n==0) x <- limits[1:3]
@@ -518,14 +553,14 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
                        paste(values,collapse=" ")))
         }	
       }
-    } else if(as==5|as==8) {
+    } else if(as == 5 | as == 8) {
       if(isna) x <- parms
       else {
         j <- match(x, parms, 0)  #match converts x to char if needed
-        if(any(j==0))
+        if(any(j == 0))
           stop(paste("illegal levels for categorical variable:",
-                     paste(x[j==0],collapse=" "),"\nPossible levels:",
-                     paste(parms,collapse=" ")))
+                     paste(x[j == 0], collapse=" "), "\nPossible levels:",
+                     paste(parms, collapse=" ")))
         x
       }
     }

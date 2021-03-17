@@ -5,7 +5,7 @@
 #	name	- name[i] = name of ith original variable in x
 #	label	- label[i] = label of ith original variable (=name if none)
 #	assume	- assume(original x)
-#	assume.code - coded version of assume (1-9, 9=added interaction)
+#	assume.code - coded version of assume (1-11, 9=added interaction)
 #	parms	- parms(original x)
 #		  for interaction effects parms[[i]] is a matrix with dim
 #		  3 x (1+# interaction terms).  First element in pair
@@ -75,14 +75,14 @@ Design <- function(mf, formula=NULL, specials=NULL,
       }
     else if(assume.code == 8)
       paste0(term.label, sub('.*=', '', rmst))
-    else if(assume.code == 10)
+    else if(assume.code >= 10)   # was == 10
       if(length(rmst) > 1) gsub('\\[', '', gsub('\\]', '', rmst)) else
              term.label
     else paste0(term.label, rmst)
     w <- gsub('>>',   '>=', w)
     w <- gsub('<<',   '<=', w)
     w <- gsub('@EQ@', '==', w)
-    alt <- if(assume.code == 10)
+    alt <- if(assume.code >= 10)   # was == 10
              if(length(rmst) > 1)
                paste0(term.label, rmstrans.names) else term.label
     else w
@@ -419,7 +419,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
                 colnames=name, mmcolnames=mmname,
                 assume=c("asis", "polynomial", "lspline", "rcspline",
                   "category", "","scored", "strata", "interaction",
-                  "matrix")[asm],
+                  "matrix", "gTrans")[asm],
                 assume.code=as.integer(asm), parms=parm, limits=limits,
                 values=values, nonlinear=nonlinear,
                 interactions=if(length(ia)) structure(ia, dimnames=NULL))

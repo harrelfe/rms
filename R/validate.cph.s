@@ -138,12 +138,12 @@ dxy.cens <- function(x, y, type=c('time','hazard')) {
     x <- x[! i]
     y <- y[! i,]
   }
-  k <- survConcordance.fit(y, x)
-  cindex <- (k[1] + k[3]/2)/sum(k[1:3])
+  k <- suppressWarnings(survConcordance.fit(y, x))
+  cindex <- (k[1] + k[3] / 2) / sum(k[1:3])
   cindex <- 1 - cindex  # survConcordance c=larger risk score, shorter T
   se     <- k[5] / (2 * sum(k[1 : 3]))
   dxy    <- 2 * (cindex - .5)
   se     <- 2 * se
-  if(negate) dxy <- -dxy
+  if(negate) dxy <- - dxy
   structure(c(dxy=dxy, se=se), names=c('Dxy','se'))
 }
