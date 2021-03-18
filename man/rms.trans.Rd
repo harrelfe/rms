@@ -63,7 +63,9 @@ the purpose of running \code{anova.rms}, add an integer vector attribute
 column numbers corresponding to nonlinear effects.  The default is to assume a column
 is a linear effect.  The \code{parms} attribute stored with a
 \code{gTrans} result a character vector version of the function, so as
-to not waste space carrying along any environment information.
+to not waste space carrying along any environment information.  See
+\url{https://hbiostat.org/R/rms/gtrans.html} for several examples of the
+use of \code{gTrans}.
 
 In the list below, functions \code{asis} through \code{gTrans} can have
 arguments \code{x, parms, label, name} except that \code{parms} does not
