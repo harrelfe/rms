@@ -84,12 +84,12 @@
 # This is used to get predicted values when the original fitting
 # function (e.g., rcs) derived parms of the transformation from the data.
 #
-des.args <- function(x,parms.allowed,call.args) {
+des.args <- function(x, parms.allowed, call.args) {
   nam <- names(x)
-  if(! length(nam)) nam <- rep("",5)
+  if(! length(nam)) nam <- rep("", 5)
   name <- nam[1]
   if(name=="") {
-    form <- formula(call("~",as.name("...y..."),call.args[[2]]))
+    form <- formula(call("~",as.name("...y..."), call.args[[2]]))
     name <- var.inner(form)
   }
   pa <- parms.allowed
@@ -98,7 +98,7 @@ des.args <- function(x,parms.allowed,call.args) {
 	k <- charmatch(arg.name,nm,0)	#k>0 : named arg found
     ## Added karg <= length(x) 9Apr02 for R; R doesn't return NULL
     ## like S+
-	if(k>0) x[[k]] else 
+	if(k > 0) x[[k]] else 
 	if(length(nm) < karg || nm[karg] != "") NULL else
      if(karg <= length(x)) x[[karg]] else NULL
   }
@@ -108,23 +108,23 @@ des.args <- function(x,parms.allowed,call.args) {
       stop(paste("parms not allowed for",as.character(call.args[1])))
   }
  
-  nm <- argu(x,5,"name",pa,nam)
+  nm <- argu(x, 5, "name", pa, nam)
   if(length(nm)) name <- nm
   if(length(.Options$Design.attr)) {
 	atr <- .Options$Design.attr
 	i <- charmatch(name, atr$name, 0)
 	if(! length(i))stop("program logic error for options(factor.number)")
 	parmi <- atr$parms[[name]]
-	return(list(name=atr$name[i],parms=parmi,label=atr$label[i],
+	return(list(name=atr$name[i], parms=parmi, label=atr$label[i],
                 units=atr$units[i]))		# added units 9Jun99
   }
 
-  label <- argu(x,3,"label",pa,nam)
+  label <- argu(x, 3, "label", pa, nam)
   atx <- attributes(x[[1]])  # 9Jun99
   if(! length(label)) label <- atx$label   # 9Jun99 attr(x[[1]],"label")
   if(! length(label)) label <- name
 
-  list(name=name,parms=parms,label=label,units=atx$units)  #9Jun99
+  list(name=name, parms=parms, label=label, units=atx$units)  #9Jun99
   
 }
 
@@ -363,7 +363,7 @@ scored <- function(...) {
 
   cal <- sys.call()
   xx  <- list(...)
-  z   <- des.args(xx,TRUE,cal)
+  z   <- des.args(xx, TRUE, cal)
   parms <- z$parms
   nam   <- z$name
   x <- xx[[1]]
@@ -422,30 +422,35 @@ scored <- function(...) {
 gTrans <- function(...) {
 
   cal <- sys.call()
-  parms <- substitute(list(...))
-  xx <- list(...)[1]
+  xx  <- list(...)
   z <- des.args(xx, TRUE, cal)
+  parms <- z$parms
+  if(is.character(parms)) parms <- eval(parse(text=parms))
+  nam   <- z$nam
   x <- xx[[1]]
-
   suffix <- ''
   nam  <- z$name
-  lp   <- length(parms) - 2  # 1 list() 1 for x
-  xd   <- matrix(double(1), nrow=length(x), ncol=lp)
-  name <- character(lp)
-  w    <- eval(parms, list(x=x))
-  type <- names(w)
-  type <- if(length(type)) type[- 1] else rep('', length(w) - 1)
-  type <- ifelse(type == '', 'l', type)
+  xd   <- as.matrix(parms(x))
+  nc   <- ncol(xd)
+  name <- rep('', nc)
+  if(length(colnames(xd))) name <- colnames(xd)
+  nonlin <- rep(FALSE, nc)
+  nonlin[attr(xd, 'nonlinear')] <- TRUE
   
-  for(j in 1 : lp) {
-    name[j] <- paste0(nam, suffix)
-    xd[, j] <- w[[j + 1]]    # skip first argument to gTrans
+  for(j in 1 : nc) {
+    if(name[j] == '') name[j] <- paste0(nam, suffix)
     suffix  <- paste0(suffix, "'")
   }
+  colnames(xd) <- name
+  # model.matrix will put TRUE after a term name if logical
+  # convert to 0/1
+  if(is.logical(xd)) xd <- 1 * xd
 
   xd <- I(xd)
+  # Store the function parms as character so environment won't
+  # be carried along (makes serialized .rds and other files large)
   attributes(xd) <- set.atr(xd, x, z, name, "gTrans", 11,
-                            parms, type == 'nl')
+                            deparse(parms), nonlin)
   xd
 }
 

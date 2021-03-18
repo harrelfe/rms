@@ -27,15 +27,16 @@ specs.rms <- function(fit, long=FALSE, ...)
   units    <- fit$units
   
   if(length(ass)) {
-      if(names(ass)[1] %in% c("(Intercept)", "Intercept")) ass[[1]] <- NULL
-      names(ass) <- name[assume != "strata"]
+    if(names(ass)[1] %in% c("(Intercept)", "Intercept"))
+      ass[[1]] <- NULL
+    names(ass) <- name[assume != "strata"]
   }
   f <- length(assume)
   d <- matrix("", nrow=f, ncol=3)
   d[,1] <- assume
   iint  <- 0
   jfact <- 0
-  trans <- rep("",f)
+  trans <- rep("", f)
 # Pick off inner transformation of variable. To complete, need to
 # evaluate h function
 # from <- c("asis","pol","lsp","rcs","catg","scored","strat","matrx","I")
@@ -95,7 +96,7 @@ specs.rms <- function(fit, long=FALSE, ...)
                 {
                   lab <- ""
                   if(assume[i] == 'gTrans')
-                    parmi <- as.character(parmi)[- (1:2)]
+                    parmi <- ''
                   for(z in parmi)
                     if(is.character(z)) lab <- paste(lab, z)
                     else

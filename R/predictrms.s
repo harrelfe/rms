@@ -132,14 +132,6 @@ predictrms <-
         else
           if(assume[i] == 10L)
             xi <- I(matrix(parms[[name[i]]], nrow=1)) #matrx col medians
-        else
-          if(FALSE && assume[i] == 11L) {  # not needed - evals on demand
-            ## evaluate all terms in gTrans at xi
-            lxi <- eval(parms, list(x=xi))  # is a list
-            xi <- matrix(0, nrow=1, ncol=length(lxi) - 1)
-            for(j in 2 : length(lxi)) xi[1, j - 1] <- lxi[[j]]
-            xi <- I(xi)
-            }
       adjto[[ii]] <- xi
     }
     names(adjto) <- name[non.ia]
@@ -244,15 +236,6 @@ predictrms <-
             }
             else xi <- I(matrix(xi, nrow=length(xi), ncol=ncols))
           }
-          else
-            if(FALSE && as == 11L) {  # not needed; evals on demand
-              ## evaluate all terms in gTrans at xi
-              lxi <- eval(parms[[name[i]]], list(x=xi))  # is a list
-              ncols <- length(lxi) - 1  # 1 for orig. x
-              xi <- matrix(double(1L), nrow=length(xi), ncol=ncols)
-              for(j in 1L : ncols) xi[, j] <- lxi[[j + 1]]
-              xi <- I(xi)
-            }
 
           ##	Duplicate single value for all parts of matrix
           k <- k + 1L
@@ -278,7 +261,8 @@ predictrms <-
             V   <- NULL
             if(asj %in% c(5L, 7L, 8L) | 
                (name[j] %in% names(Values) &&
-                length(V <- Values[[name[j]]]) && is.character(V))) {
+                asj != 11 && length(V <- Values[[name[j]]]) &&
+                is.character(V))) {
               if(length(Pa <- parms[[name[j]]])) V <- Pa
               newdata[,i] <- factor(w, V)
               ## Handles user specifying numeric values without quotes, that

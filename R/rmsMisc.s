@@ -14,7 +14,7 @@ DesignAssign <- function(atr, non.slopes, Terms) {
   j <- non.slopes + 1
   if(length(params)) for(i in 1 : length(ll)) {
     if(asc[i] == 8) next
-    assign[[ll[i]]] <- j : (j+params[i]-1)
+    assign[[ll[i]]] <- j : (j + params[i] - 1)
     j <- j + params[i]
   }
   assign

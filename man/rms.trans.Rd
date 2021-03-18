@@ -48,24 +48,26 @@ usually).
 It can be used to specify new polynomial bases, smooth relationships
 with a discontinuity at one or more values of \code{x}, grouped
 categorical variables, e.g., a categorical variable with 5 levels where
-you want to combine two of the levels to spend 3 degrees of freedom in
+you want to combine two of the levels to spend only 3 degrees of freedom in
 all but see plots of predicted values where the two combined categories
 are kept separate but will have equal effect estimates.  The first
 argument to \code{gTrans} is a regular numeric, character, or factor
-variable.  All subsequent arguments are single-valued functions of this
-variable, and the variable they operate on must be named \code{x}.
-These arguments may be named \code{l} (for linear) or 
-\code{nl} (for nonlinear) if you wish to mark certain columns as
-representing linear or nonlinear effects for the purpose of tests of
-nonlinearity with \code{anova.rms}.  The default is to assume a column
+variable.  The next argument is a function that transforms a vector into
+a matrix.  If the basis functions are to include a linear term it is up
+too the user to include the original \code{x} as one of the columns.
+Column names are assigned automaticall, but any column names specified
+by the user will override the default name.  If you want to signal which
+terms correspond to linear and which correspond to nonlinear effects for
+the purpose of running \code{anova.rms}, add an integer vector attribute
+\code{nonlinear} to the resulting matrix.  This vector specifies the
+column numbers corresponding to nonlinear effects.  The default is to assume a column
 is a linear effect.  The \code{parms} attribute stored with a
-\code{gTrans} result is the set of expressions given in the second,
-third, ... arguments to \code{gTrans}, preceeded by an expression for
-the original predictor values.  
+\code{gTrans} result a character vector version of the function, so as
+to not waste space carrying along any environment information.
 
-In the list below, functions \code{asis} through \code{strat} can have
+In the list below, functions \code{asis} through \code{gTrans} can have
 arguments \code{x, parms, label, name} except that \code{parms} does not
-apply to \code{asis, matrx, strat, gTrans}.
+apply to \code{asis, matrx, strat}.
 }
 \usage{
 asis(\dots)
@@ -166,13 +168,19 @@ f3 <- lrm(y ~ rcs(x1) + rcs(x2) + x1 \%ia\% x2)
 # Examples of gTrans
 #
 # Linear relationship with a discontinuity at zero:
-gTrans(x, nl=x == 0, l=x)   # mark the discontinuity as a nonlinear effect
+ldisc <- function(x) {z <- cbind(x == 0, x); attr(z, 'nonlinear') <- 1; z}
+gTrans(x, ldisc)
 # Duplicate pol(x, 2):
-gTrans(x, l=x, nl=x ^ 2)
+pol2 <- function(x) {z <- cbind(x, x^2); attr(z, 'nonlinear') <- 2; z}
+gTrans(x, pol2)
 # Linear spline with a knot at x=10 with the new slope taking effect
 # until x=20 and the spline turning flat at that point but with a
 # discontinuous vertical shift
-gTrans(x, l=x, nl=pmax(pmin(x, 20) - 10, 0), nl=x == 20)
+dspl <- function(x) {
+  z <- cbind(x, pmax(pmin(x, 20) - 10, 0), x > 20)
+  attr(z, 'nonlinear') <- 2:3
+  z }
+gTrans(x, dspl)
 }
 }
 \keyword{models}
