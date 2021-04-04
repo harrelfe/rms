@@ -129,9 +129,10 @@ des.args <- function(x, parms.allowed, call.args) {
 }
 
 ## Function to list all attributes of new sub-design matrix
-set.atr <- function(xd, x, z, colnames, assume, code, parms, nonlinear) {
+set.atr <- function(xd, x, z, colnames, assume, code, parms, nonlinear,
+                    tex=NULL) {
   ##Note: x argument isn't used
-  if(is.matrix(xd))
+  w <- if(is.matrix(xd))
     list(dim=dim(xd),dimnames=list(NULL,colnames),class="rms",
          name=z$name, label=z$label, assume=assume, assume.code=code,
          parms=parms, 
@@ -140,6 +141,8 @@ set.atr <- function(xd, x, z, colnames, assume, code, parms, nonlinear) {
             name=z$name, label=z$label, assume=assume, assume.code=code,
             parms=parms, 
             nonlinear=nonlinear,colnames=colnames,units=z$units)
+  if(length(tex)) w$tex <- tex
+  w
 }
 
 ## asis transformation - no transformation	
@@ -436,6 +439,9 @@ gTrans <- function(...) {
   if(length(colnames(xd))) name <- colnames(xd)
   nonlin <- rep(FALSE, nc)
   nonlin[attr(xd, 'nonlinear')] <- TRUE
+
+  tex <- attr(xd, 'tex')
+  if(length(tex)) tex <- deparse(tex)
   
   for(j in 1 : nc) {
     if(name[j] == '') name[j] <- paste0(nam, suffix)
@@ -450,7 +456,7 @@ gTrans <- function(...) {
   # Store the function parms as character so environment won't
   # be carried along (makes serialized .rds and other files large)
   attributes(xd) <- set.atr(xd, x, z, name, "gTrans", 11,
-                            deparse(parms), nonlin)
+                            deparse(parms), nonlin, tex)
   xd
 }
 
