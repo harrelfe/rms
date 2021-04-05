@@ -63,9 +63,7 @@ the purpose of running \code{anova.rms}, add an integer vector attribute
 column numbers corresponding to nonlinear effects.  The default is to assume a column
 is a linear effect.  The \code{parms} attribute stored with a
 \code{gTrans} result a character vector version of the function, so as
-to not waste space carrying along any environment information.  See
-\url{https://hbiostat.org/R/rms/gtrans.html} for several examples of the
-use of \code{gTrans}.
+to not waste space carrying along any environment information.  If you will be using the \code{latex} method for typesetting the fitted model, you must include a \code{tex} attribute also in the produced matrix.  This must be a function of a single character string argument (that will ultimately contain the name of the predictor in LaTeX notation) and must produce a vector of LaTeX character strings.  See \url{https://hbiostat.org/R/rms/gtrans.html} for several examples of the use of \code{gTrans} including the use of \code{nonlinear} and \code{tex}.
 
 In the list below, functions \code{asis} through \code{gTrans} can have
 arguments \code{x, parms, label, name} except that \code{parms} does not
@@ -178,9 +176,12 @@ gTrans(x, pol2)
 # Linear spline with a knot at x=10 with the new slope taking effect
 # until x=20 and the spline turning flat at that point but with a
 # discontinuous vertical shift
+# tex is only needed if you will be using latex(fit)
 dspl <- function(x) {
   z <- cbind(x, pmax(pmin(x, 20) - 10, 0), x > 20)
   attr(z, 'nonlinear') <- 2:3
+  attr(z, 'tex') <- function(x) sprintf(c('%s', '(\\min(%s, 20) - 10)_{+}',
+                                          '[%s > 20]'), x)
   z }
 gTrans(x, dspl)
 }

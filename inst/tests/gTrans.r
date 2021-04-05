@@ -80,3 +80,39 @@ ggplot(Predict(h), ylim=yl)
 gr <- function(x) cbind(bc=x %in% c('b','c'), d=x == 'd')
 h <- ols(y ~ gTrans(g, gr))
 ggplot(Predict(h, g))
+
+
+
+# Define a function that will be used by the latex method to customize typesetting of hrm model components
+# Argument x will contain the variable's base name (here x1 but in LaTeX notation x_{1} for the subscript)
+# tex works only in rms version 6.2-1 and higher
+texhrm <- function(x) sprintf(c('%s', '(%s - 0.5)_{+}',
+                                '\\sin(2\\pi \\frac{%s}{0.2})', '\\cos(2\\pi \\frac{%s}{0.2})'), x)
+hrm <- function(x) {
+  z <- cbind(x, slopeChange=pmax(x - 0.5, 0), sin=sin(2*pi*x/0.2), cos=cos(2*pi*x/0.2))
+  attr(z, 'nonlinear') <- 2:4
+  attr(z, 'tex')       <- texhrm
+  z
+}
+h <- ols(y ~ gTrans(x1, hrm))
+h
+latex(h)
+ggplot(Predict(h)) + geom_point(aes(x=x1, y=y), data=data.frame(x1, y))
+
+## Try the above with interaction
+
+h <- ols(y ~ gTrans(x1, hrm) * g)
+ggplot(Predict(h, x1, g, conf.int=FALSE))
+coef(h)
+latex(h)
+
+## Try with interaction with a continuous variable
+
+h <- ols(y ~ gTrans(x1, hrm) * pol(x2, 2))
+coef(h)
+latex(h)
+
+## Same but with restricted interaction
+h <- ols(y ~ gTrans(x1, hrm) + pol(x2, 2) + gTrans(x1, hrm) %ia% pol(x2, 2))
+coef(h)
+latex(h)
