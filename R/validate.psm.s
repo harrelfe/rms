@@ -4,7 +4,6 @@ validate.psm <-
            force=NULL, estimates=TRUE, pr=FALSE,
            dxy=TRUE, tol=1e-12, rel.tolerance=1e-5, maxiter=15, ...)
 {
-
   xb      <- fit$linear.predictors
   ny      <- dim(fit$y)
   nevents <- sum(fit$y[, ny[2]])
@@ -15,7 +14,6 @@ validate.psm <-
   scale   <- fit$scale
   parms   <- fit$parms
   ## inverse <- survreg.distributions[[dist]]$itrans
-
   
   distance <- function(x, y, fit, iter, evalfit=FALSE,
                        fit.orig, dxy=TRUE, dist,parms,
@@ -90,18 +88,13 @@ survreg.fit2 <- function(x, y, iter=0, dist, parms=NULL, tol, maxiter=15,
   x     <- x	#Get around lazy evaluation creating complex expression
   dlist <- survreg.distributions[[dist]]
   logcorrect <- 0
-  trans     <- dlist$trans
+  trans      <- dlist$trans
   if (length(trans)) {
     if(ncol(y) != 2) stop('only implemented for 2-column Surv object')
-    y[, 1] <- trans(y[, 1])
+    yuntrans  <- y[, 1]
+    y[, 1]    <- trans(yuntrans)
     exactsurv <- y[, ncol(y)] == 1
-    if(any(exactsurv)) {
-      ## survreg now stores y on original scale
-      ## ytrans <- if(length(dlist$itrans)) dlist$itrans(y[exactsurv,1]) else
-      ## y[exactsurv,1]
-      ytrans <- trans(y[exactsurv, 1])
-      logcorrect <- sum(logb(dlist$dtrans(y[exactsurv, 1])))
-    }
+    if(any(exactsurv)) logcorrect <- sum(logb(dlist$dtrans(yuntrans[exactsurv])))
   }
   if (length(dlist$dist)) dlist <- survreg.distributions[[dlist$dist]]
   
@@ -124,11 +117,5 @@ survreg.fit2 <- function(x, y, iter=0, dist, parms=NULL, tol, maxiter=15,
   }
   else f$scale <- scale
   f$loglik <- f$loglik + logcorrect
-  
-#	f$var <- solvet(f$imat, tol=tol)
-#	sd <- survreg.distributions[[dist]]
-#	f$deviance <- sum(sd$deviance(y,f$parms, f$deriv[,1]))
-#	f$null.deviance <- f$deviance + 2*(f$loglik[2] - f$ndev[2])
-#	f$loglik <- c(f$ndev[2], f$loglik[2])
   f
 }
