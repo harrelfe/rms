@@ -1,4 +1,4 @@
-Changes in version 6.2-1 (2021-04-10)
+Changes in version 6.2-1 (2021-06-06)
    * gTrans, Design, set.atr, latexrms: For latex(fit) to work when there is a gTrans() predictor
    * survreg.fit2: fixed bug in computing loglik transformation correction factor which ruined validate.psm R^2 and other loglik-related indexes (made them NaN)
 
@@ -7,7 +7,8 @@ Changes in version 6.2-0 (2021-03-17)
    * gTrans: new general transformation function; example: linear spline with discontinuities
    * validate.cph: surrounded survival::survConcordance with suppressWarnings
    * fixed how matrx predictors were being handled
-
+   * contrast.rms: added better ggplot2 examples for odds ratios
+	 
 Changes in version 6.1-1 (2021-02-06)
    * Design, Getlim: allowed datadist option to actually contain the datadist (used by Hmisc::estSeqMarkovOrd)
 
