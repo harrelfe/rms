@@ -359,6 +359,8 @@ xYplot(Cbind(Contrast, Lower, Upper) ~ age | sex, data=w,
 w <- as.data.frame(w[c('age','sex','Contrast','Lower','Upper')])
 ggplot(w, aes(x=age, y=Contrast)) + geom_point() + facet_grid(sex ~ .) +
    geom_errorbar(aes(ymin=Lower, ymax=Upper), width=0)
+ggplot(w, aes(x=age, y=Contrast)) + geom_line() + facet_grid(sex ~ .) +
+   geom_ribbon(aes(ymin=Lower, ymax=Upper), width=0, alpha=0.15, linetype=0)
 xYplot(Cbind(Contrast, Lower, Upper) ~ age, groups=sex, data=w,
        ylab='Drug - Placebo', method='alt bars')
 options(datadist=NULL)

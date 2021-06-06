@@ -515,6 +515,7 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
   if(length(formula2)) {
     i <- ! complete.cases(data[intersect(names(data), v1)])
     j <- ! complete.cases(data[intersect(names(data), v2)])
+    ## Check: longer object length not mult of shorter:  ???
     if(any(j & ! i))
       stop('A variable in the second formula was missing on an observation that was not missing on any variable in main formula')
   }
