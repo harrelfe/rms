@@ -65,13 +65,13 @@ predab.resample <-
 
   nac <- fit.orig$na.action
   
-  x <- as.matrix(fit.orig$x)
+  x <- as.matrix(fit.orig[['x']])
   n <- nrow(x)
   
   ## Remove model.matrix class for subset operations later
   attr(x,'class') <- NULL	
 
-  y <- fit.orig$y
+  y <- fit.orig[['y']]
   
   if(is.factor(y)) y <- unclass(y)
 

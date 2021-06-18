@@ -33,7 +33,8 @@ residuals.lrm <-
 
   if(k > 1 && kint != 1 && ! ordone) L <- L - cof[1] + cof[kint]
   P <- cumprob(L)
-  if(length(Y <- object$y) == 0) stop("you did not specify y=TRUE in the fit")
+  if(length(Y <- object[['y']]) == 0)
+     stop("you did not specify y=TRUE in the fit")
   rnam <- names(Y)
   cnam <- names(cof)
   if(!is.factor(Y)) Y <- factor(Y)
@@ -48,7 +49,7 @@ residuals.lrm <-
                   sep=''))
   
   if(type=="gof") {
-    if(length(X <- object$x)==0)
+    if(length(X <- object[['x']]) == 0)
       stop("you did not use x=TRUE in the fit")
     stats <- matrix(NA, nrow=k, ncol=5,
                     dimnames=list(if(k > 1) lev2,
@@ -113,7 +114,7 @@ residuals.lrm <-
   if(type=='score.binary') {
     if(k==1)  stop('score.binary only applies to ordinal models')
     if(!dopl) stop('score.binary only applies if you are plotting')
-    if(!length(X <- unclass(object$x)))
+    if(!length(X <- unclass(object[['x']])))
       stop('you did not specify x=TRUE for the fit')
     xname <- dimnames(X)[[2]]
     yname <- as.character(formula(object))[2]
@@ -135,7 +136,7 @@ residuals.lrm <-
   }
   
   if(type=="score") {
-    if(! length(X <- unclass(object$x)))
+    if(! length(X <- unclass(object[['x']])))
       stop("you did not specify x=TRUE for the fit")
     if(k == 1) return(naresid(naa, cbind(1, X) * (Y - P))) # only one intercept
     # z <- function(i, k, L, coef)
@@ -192,7 +193,7 @@ residuals.lrm <-
     return(if(dopl) invisible(naresid(naa, u)) else naresid(naa, u))
   }
   if(type == "li.shepherd") {
-    if(length(X <- object$x)==0)
+    if(length(X <- object[['x']]) == 0)
       stop("you did not use x=TRUE in the fit")
     N <- length(Y)
     px <- 1 - cumprob(outer(cof[1:k],
@@ -215,7 +216,7 @@ residuals.lrm <-
   }
   
   if(type=="partial") {
-    if(!length(X <- unclass(object$x)))
+    if(!length(X <- unclass(object[['x']])))
       stop("you did not specify x=TRUE in the fit")
     cof.int <- cof[1 : k]
     cof     <- cof[- (1 : k)]
@@ -315,7 +316,7 @@ residuals.lrm <-
 ##}
 
   if(type %in% c("dfbeta", "dfbetas", "dffit", "dffits", "hat", "lp1")) {
-    if(length(X <- unclass(object$x)) == 0)
+    if(length(X <- unclass(object[['x']])) == 0)
       stop("you did not specify x=TRUE for the fit")
     v <- P * (1 - P)
     g <- lm(L + (Y - P) / v ~ X, weights=v)
@@ -364,7 +365,7 @@ plot.lrm.partial <- function(..., labels, center=FALSE, ylim)
   nfit <- length(dotlist)
   if(missing(labels)) labels <- (as.character(sys.call())[-1])[1:nfit]
 
-  vname <- dimnames(dotlist[[1]]$x)[[2]]
+  vname <- dimnames(dotlist[[1]][['x']])[[2]]
   nv <- length(vname)
   if(nv==0) stop('you did not specify x=TRUE on the fit')
 
@@ -375,7 +376,7 @@ plot.lrm.partial <- function(..., labels, center=FALSE, ylim)
     curves <- vector('list',nfit)
     ymin <- 1e10; ymax <- -1e10
     for(j in 1:nfit) {
-      xx <- dotlist[[j]]$x[,vname[i]]
+      xx <- dotlist[[j]][['x']][,vname[i]]
       yy <- r[[j]][,vname[i]]
       if(center)yy <- yy - mean(yy)
       curves[[j]] <- lowess(xx, yy, iter=0)
