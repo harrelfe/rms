@@ -349,6 +349,10 @@ horizontally (\code{par(las=1)}), as a larger gap between the labels and
 the tick marks are needed.  You can set the axis-specific 2nd
 component of \code{mgp} using \code{mgp.axis.labels(c(xvalue,yvalue))}.
 }
+\references{
+Boers M (2004): Null bar and null zone are better than the error bar to
+compare group means in graphs.  J Clin Epi 57:712-715.
+}
 \seealso{
 \code{\link{datadist}}, \code{\link{rms}}, \code{\link{cph}},
 \code{\link{psm}}, \code{\link{survest}}, \code{\link{predictrms}},
@@ -431,6 +435,7 @@ survdiffplot(f)
 
 #Similar but show half-width of confidence intervals centered
 #at average of two survival estimates
+#See Boers (2004)
 survplot(f, conf='diffbands')
 
 options(datadist=NULL)

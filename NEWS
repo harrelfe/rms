@@ -1,4 +1,4 @@
-Changes in version 6.2-1 (2021-06-18)
+Changes in version 6.2-1 (2021-07-21)
    * gTrans, Design, set.atr, latexrms: For latex(fit) to work when there is a gTrans() predictor
    * survreg.fit2: fixed bug in computing loglik transformation correction factor which ruined validate.psm R^2 and other loglik-related indexes (made them NaN)
    * residuals.lrm, residuals.orm, predab.resample: fixed bug where x=TRUE in fit without y=TRUE may find another y object; thanks: Chun Li
