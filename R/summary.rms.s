@@ -563,7 +563,7 @@ plot.summary.rms <-
                        text = ~ hte,
                        type = 'scatter', mode='markers', hoverinfo='text',
                        name = 'Estimate',
-                       height = pp$heightDotchart(length(lb)))
+                       height = pp$heightDotchartb(lb))
 
   
   for(i in 1 : n) {
