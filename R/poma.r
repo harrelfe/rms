@@ -7,7 +7,7 @@
 #' Strategy 3: Assess parallelism of link function transformed inverse CDFs curves for different combined (XBeta) or specific predictor levels (for response variables with >=10 unique levels)
 #'
 #' @param mod.orm Model fit of class `orm`, `lrm`, or `blrm`. `poma` will fit an `orm` object from an `blrm` object. For `fit.mult.impute` objects, `poma` will refit model on a singly-imputed data-set
-#' @predvar An optional character vector for which link-transformed inverse ECDF curves are generated   
+#' @param predvar An optional character vector for which link-transformed inverse ECDF curves are generated   
 #' @param cutval Numeric vector; sequence of observed values to categorize outcome
 #'
 #' @author Yong Hao Pua <puayonghao@gmail.com>
