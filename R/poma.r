@@ -172,7 +172,7 @@ poma <- function(mod.orm, predvar=NULL,cutval) {
           legend.text=element_text(size=10), 
           legend.key.size=unit(3, 'mm'),
           axis.title.y = element_blank(),    
-          text = element_text(colour = d.gray),
+          text = element_text(colour = "#2E3F4F"),
           plot.title = element_text(face = "bold"),
           plot.caption = element_text(face = "italic"),
           panel.grid.major = element_line(colour = "#E7E9E9"),
