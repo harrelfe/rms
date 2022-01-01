@@ -49,6 +49,7 @@ poma <- function(mod.orm, predvar=NULL,cutval) {
     stop('rms object must be of class (b)lrm or orm', call. = FALSE)
   }
   
+  
   ## Get data and response variable
   ## if NAs in dataset, issue warnings and remove NAs 
   data = eval(mod.orm$call$data)[all.vars(mod.orm$sformula)]
@@ -63,6 +64,7 @@ poma <- function(mod.orm, predvar=NULL,cutval) {
   if(length(unique(mydv)) == 2L){
     stop("'poma` is not applicable to binary logistic models", call. = FALSE)
   }
+  
   
   ## ensure valid input values for `predvar`
   predvar_valid = mod.orm$Design$name  
@@ -93,12 +95,15 @@ poma <- function(mod.orm, predvar=NULL,cutval) {
   }
   
   ## Fit a (Frequentist) `orm` from a Bayesian `blrm` 
-  if(any(class(mod.orm) %in% Cs(blrm))) 
+  if(any(class(mod.orm) %in% Cs(blrm)))
     if(length(mod.orm$cppo))
       stop('poma not yet implemented for cppo models') else {
         cat("Fitting an `orm` model from a `blrm` model\n\n")
         mod.orm <-  orm(formula(mod.orm), x=TRUE, y=TRUE, data=eval(data))
       }
+  
+  ### Ensure mod.orm fit uses x=T and y=T 
+  if(length(mod.orm$y)==0||length(mod.orm$x)==0) stop("fit did not use x=TRUE,y=TRUE") 
   
   
   ### Convert DV into numeric vector when factor DV is supplied
@@ -106,19 +111,19 @@ poma <- function(mod.orm, predvar=NULL,cutval) {
   
   ### Compute combined predictor (X) values
   if(any(class(mydv) %in% "factor") ) {
-    aa <- paste0("as.numeric(", mod.orm$terms[[2]], ") ~")
-    rhs <- mod.orm$terms[[3]]
-    bb <- paste(deparse(rhs), collapse = "")
-    newformula <- paste(aa, bb)
-    cat("Formula used with non-numeric DV:", newformula, "\n")
-    cat("Cut-point for factor DV refers to the jth levels - not observed Y values \n")
+    newformula <-
+      do.call(substitute,list(as.numeric(dv) ~ rhs,
+                              setNames(list(mod.orm$terms[[2]], mod.orm$terms[[3]]),c("dv", "rhs"))
+      ))
+    cat("Formula used with non-numeric DV:", format(newformula), "\n")
+    cat("\n \nCut-point for factor DV refers to the jth levels - not observed Y values \n")
     mod.ols <- ols(as.formula(newformula) , x=TRUE, y=TRUE, data=eval(data))
   } else {
-    cat("Cut-point for continuous DV refers to observed Y values \n")
+    cat("\n \nCut-point for continuous DV refers to observed Y values \n")
     mod.ols <-  ols(formula(mod.orm), x=TRUE, y=TRUE, data=eval(data))
   }
+  combined_x <- round(fitted(mod.ols),4) ## shouldn't have needed round()
   
-  combined_x <- fitted(mod.ols) 
   
   
   ### Set cutpoint values for Y
@@ -136,29 +141,38 @@ poma <- function(mod.orm, predvar=NULL,cutval) {
   ### Regress transformed outcome as a function of combined X. Check for constancy of slopes
   ### Codes taken from rms p368
   r <- NULL
+  ## get meaningful increment in combined_x
+  xscale <- if (length(unique(combined_x)) <= 4) diff(range(combined_x)) else IQR(combined_x)
+ 
   for (link in c("logit", "probit", "cloglog")) {
     for (k in cutval) {
-      co <- coef(suppressWarnings(glm(mod.ols$y < k ~ combined_x, data=eval(data), family=binomial (link))))
-      r <-  rbind(r, data.frame (link=link, cut.value=k, slope =round(co[2],3)))
+      co <- coef(suppressWarnings(
+        ## mod.ols$y needed with DV factor 
+        glm(mod.ols$y < k ~ combined_x, family=binomial (link))
+      ))
+      r <-  rbind(r, data.frame (link         = link, 
+                                 cut.value    = k, 
+                                 slope        = round(co[2],3),
+                                 slope_scaled = round(co[2]*xscale,3)
+      ))
     }
   }
+  
   cat("rms-368: glm cloglog on Prob[Y<j] is log-log on Prob{Y>=j} \n")
   print(r, row.names=FALSE)
   
   
   ### Graphical Assessment
+  numpred <- dim(mod.orm$x)[[2]]
+  
   if(length(unique(mod.orm$y)) < 10) {
-    par(ask=TRUE)
+    par(ask=FALSE)
     ## Generate Score residual plot for each predictor/terms
-    ## Adjust par(mfrow) settings based on number of terms (codes are a little unwieldy)
+    ## n2mfrow() to set par(mfrow) based on number of terms 
     numpred <- dim(mod.orm$x)[[2]]
-    if(numpred >= 9 )    par(mfrow = c(3,3))
-    else if (numpred >= 5) par(mfrow = c(2,3))
-    else if (numpred >= 3) par(mfrow = c(2,2))
-    else if (numpred >=2) par(mfrow = c(1,2))
-    else par(mfrow = c(1,1))
+    par(mfrow = rev(n2mfrow(numpred)))
     resid(mod.orm, "score.binary", pl=TRUE)
-    par(ask=F)
+    par(ask=FALSE)
     par(mfrow = c(1,1))
     
   } else 
@@ -172,7 +186,7 @@ poma <- function(mod.orm, predvar=NULL,cutval) {
           legend.text=element_text(size=10), 
           legend.key.size=unit(3, 'mm'),
           axis.title.y = element_blank(),    
-          text = element_text(colour = "#2E3F4F"),
+          text = element_text(colour = d.gray),
           plot.title = element_text(face = "bold"),
           plot.caption = element_text(face = "italic"),
           panel.grid.major = element_line(colour = "#E7E9E9"),
@@ -191,9 +205,9 @@ poma <- function(mod.orm, predvar=NULL,cutval) {
           cut2(ecdf_df$group_vector, g=2)  else 
             as.character(ecdf_df$group_vector)
       
-      ecdf_df_tmp <- ggplot(ecdf_df, aes(x = y, color=group_vector)) + stat_ecdf() 
+      ecdf_df_tmp <- ggplot(ecdf_df, aes(x = y, color=group_vector)) + stat_ecdf(geom = "step", pad = FALSE) 
       ecdf_df1 <- layer_data (ecdf_df_tmp)
-      ecdf_df1$logity = plogis(1-ecdf_df1$y)
+      ecdf_df1$logity = qlogis(1-ecdf_df1$y)
       ecdf_df1$qnormy = qnorm(1-ecdf_df1$y)
       ecdf_df1$group_vector = factor(ecdf_df1$group, 
                                      labels =if(is.factor(ecdf_df$group_vector))  
@@ -228,17 +242,18 @@ poma <- function(mod.orm, predvar=NULL,cutval) {
         f <-  substitute (fun)
         g <-  function (F) eval(f)
         
-        ## Number of groups (2 to 5) based on sample size
-        ecdfgroups = pmax(2, pmin(5, round( nrow(data)/20)))
+        ## Number of groups (2 or 3) based on sample size
+        ecdfgroups = pmax(2, pmin(3, round( nrow(data)/20)))
         
         
         
         z <-  Ecdf (~ mydv,
                     groups = 
-                      if(length(unique(round(combined_x))) == 2L) 
-                        cut2(combined_x, mean(combined_x)) else cut2(combined_x, g = ecdfgroups),
+                      if(length(unique(combined_x))==2L) 
+                        cut2(as.numeric(as.factor(combined_x)), 1.5 ) else 
+                          cut2(combined_x, g = ecdfgroups),
                     fun = function (F) g(1 - F),
-                    xlab = all.vars(mod.ols$sformula)[[1]],
+                    xlab = all.vars(mod.orm$sformula)[[1]],
                     ylab = as.expression (f) ,
                     xlim = c(quantile(mod.orm$y, 0.02, na.rm= TRUE), quantile(mod.orm$y, 0.98, na.rm= TRUE)),
                     label.curve= FALSE)
