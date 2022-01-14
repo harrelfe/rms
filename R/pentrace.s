@@ -4,7 +4,7 @@ pentrace <-
 					 which=c('aic.c', 'aic', 'bic'), target.df=NULL,
            fitter, pr=FALSE,
            tol=1e-7, keep.coef=FALSE, complex.more=TRUE,
-           verbose=FALSE, maxit=12, subset, noaddzero=FALSE)
+           verbose=FALSE, maxit=12, subset, noaddzero=FALSE, ...)
 {
   ## Need to check Strata for cph
 
@@ -191,7 +191,7 @@ pentrace <-
         a <- diag(sqrt(penfact))
         pm <- a %*% penalty.matrix %*% a
       }
-      f <- fitter(X, Y, penalty.matrix=pm, tol=tol, maxit=maxit)
+      f <- fitter(X, Y, penalty.matrix=pm, tol=tol, maxit=maxit, ...)
       if(length(f$fail) && f$fail) 
         stop('fitter failed.  Try changing maxit or tol')
     }
