@@ -126,7 +126,7 @@ variable for \code{ols}, \code{TRUE} or \code{log(TRUE)} for \code{psm},
 \item{colorscale}{a \code{ggplot2} discrete scale function,
   e.g. \code{function(...) scale_color_brewer(..., palette='Set1',
   type='qual')}.  The default is the colorblind-friendly palette
-  including black in \url{http://www.cookbook-r.com/Graphs/Colors_(ggplot2)}.
+  including black in \url{http://www.cookbook-r.com/Graphs/Colors_(ggplot2)}.  If you get an error "insufficient values in manual scale", which occurs when there are more than 8 groups, just specify \code{colorscale=function(...){}} to use default colors.
 }
 \item{colfill}{a single character string or number specifying the fill color
   to use for \code{geom_ribbon} for shaded confidence bands.  Alpha

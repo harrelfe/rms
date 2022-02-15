@@ -7,7 +7,7 @@
 \usage{
 \method{residuals}{ols}(object, 
       type=c("ordinary", "score", "dfbeta", "dfbetas", 
-             "dffit", "dffits", "hat", "hscore"), \dots)
+             "dffit", "dffits", "hat", "hscore", "influence.measures"), \dots)
 }
 \arguments{
 \item{object}{
@@ -18,15 +18,19 @@ specify \code{x=TRUE} to \code{ols}.
 type of residual desired.  \code{"ordinary"} refers to the usual residual.
 \code{"score"} is the matrix of score residuals (contributions to first
 derivative of log likelihood).
-\code{dfbeta} and \code{dfbetas} mean respectively the raw and normalized matrix 
-of changes in regression coefficients after
+\code{dfbeta} and \code{dfbetas} mean respectively the raw and normalized matrix of changes in regression coefficients after
 deleting in turn each observation.  The coefficients are normalized by their
 standard errors.  \code{hat} contains the leverages --- diagonals of the ``hat'' matrix.
 \code{dffit} and \code{dffits} contain respectively the difference and normalized
 difference in predicted values when each observation is omitted. 
 The S \code{lm.influence} function is used.  When \code{type="hscore"}, the
 ordinary residuals are divided by one minus the corresponding hat
-matrix diagonal element to make residuals have equal variance.
+matrix diagonal element to make residuals have equal variance.  When
+  \code{type="influence.measures"} the model is converted to an
+  \code{lm} model and \code{influence.measures(object)$infmat} is
+  returned.  This is a matrix with dfbetas for all predictors, dffit,
+  cov.r, Cook's d, and hat.  See the help file for
+  \code{influence.measures} for more details.
 }
 \item{\dots}{ignored}
 }
@@ -53,6 +57,7 @@ y <- x1 + x2 + rnorm(100)
 f <- ols(y ~ x1 + x2, x=TRUE, y=TRUE)
 resid(f, "dfbetas")
 which.influence(f)
+i <- resid(f, 'influence.measures') # dfbeta, dffit, etc.
 }
 \keyword{models}
 \keyword{regression}

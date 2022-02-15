@@ -1,11 +1,16 @@
 residuals.ols <-
   function(object, 
            type=c("ordinary","score","dfbeta","dfbetas","dffit","dffits","hat",
-             "hscore"), ...)
+             "hscore","influence.measures"), ...)
 {
 
   type <- match.arg(type)
   naa <- object$na.action
+
+  if(type == 'influence.measures') {
+    class(object) <- 'lm'
+    return(influence.measures(object)$infmat)
+    }
   
   if(type=="ordinary") return(naresid(naa, object$residuals))
   
