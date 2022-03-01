@@ -12,7 +12,7 @@
 #'
 #' @import rms
 #'#' @export
-#'#' @seealso [nnet::mulinom()], [lrm()], [Hmisc::propsPO()]
+#'#' @seealso [nnet::mulinom()], [VGAM::vglm()], [lrm()], [Hmisc::propsPO()]
 #'#' @keywords category models regression
 #' @md
 #'
@@ -63,7 +63,7 @@ impactPO <- function(formula, nonppo, newdata, ...) {
   a <- predict(f, newdata, type='fitted.ind')
 
   if(model == 'multinomial') {
-    g <- multinom(formula, ..., trace=FALSE)
+    g <- nnet::multinom(formula, ..., trace=FALSE)
     b <- predict(g, newdata, 'probs')
     aic <- AIC(g)
   } else {
@@ -86,6 +86,7 @@ impactPO <- function(formula, nonppo, newdata, ...) {
 
   z <- reshape(w, direction='long', varying=list(nam),
                times=nam, v.names='Probability', timevar='y')
+  z$method <- factor(z$method, c('PO', model))
 
   k <- coef(g)
   r <- data.frame(method   = c('PO', model),
