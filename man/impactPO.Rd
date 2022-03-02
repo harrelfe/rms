@@ -25,7 +25,7 @@ impactPO(
 \item{...}{other parameters to pass to \code{lrm} and \code{multinom} such as \verb{data=}.}
 }
 \value{
-an \code{impactPO} object which is a list with elements \code{estimates} and \code{stats}.  \code{data} is a data frame containing the variables and values in \code{newdata} in a tall and thin format with additional variable \code{method} ("PO", "multinomial", "PPO"), \code{y} (current level of the dependent variable), and \code{Probability} (predicted cell probability for covariate values and value of \code{y} in the current row).
+an \code{impactPO} object which is a list with elements \code{estimates} and \code{stats}.  \code{data} is a data frame containing the variables and values in \code{newdata} in a tall and thin format with additional variable \code{method} ("PO", "multinomial", "PPO"), \code{y} (current level of the dependent variable), and \code{Probability} (predicted cell probability for covariate values and value of \code{y} in the current row).  \code{stats} is a data frame containing \code{Deviance} the model deviance, \code{d.f.} the total number of parameters counting intercepts, \code{AIC}, \code{p} the number of regression coefficients, \verb{LR chi^2} the likelihood ratio chi-square statistic for testing the predictors, \code{LR - p} a chance-corrected LR chi-square, \code{R2} the Nagelkerke pseudo R-squared, and \verb{R2 adj} a chance-corrected pseudo R-squared using \code{LR - p}.
 }
 \description{
 Impact of Proportional Odds Assumpton
@@ -39,11 +39,12 @@ age <- rnorm(500, 50, 10)
 sex <- sample(c('female', 'male'), 500, TRUE)
 y   <- sample(0:4, 500, TRUE)
 d   <- expand.grid(age=50, sex=c('female', 'male'))
-w   <- impactPO(y ~ age + sex, newdata=d)
+w   <- impactPO(y ~ age + sex, nonpo = ~ sex, newdata=d)
 w
 # Note that PO model is a better model than multinomial (lower AIC)
 # since multinomial model's improvement in fit is low in comparison
-# with number of additional parameters estimated
+# with number of additional parameters estimated.  Same for PO model
+# in comparison with partial PO model.
 
 # Reverse levels of y so stacked bars have higher y located higher
 revo <- function(z) {
@@ -55,16 +56,14 @@ ggplot(w$estimates, aes(x=method, y=Probability, fill=revo(y))) +
   facet_wrap(~ sex) + geom_col() +
   xlab('') + guides(fill=guide_legend(title=''))
 
+# Now vary 2 predictors
+
 d <- expand.grid(sex=c('female', 'male'), age=c(40, 60))
-w <- impactPO(y ~ age + sex, newdata=d)
+w <- impactPO(y ~ age + sex, nonpo = ~ sex, newdata=d)
 w
 ggplot(w$estimates, aes(x=method, y=Probability, fill=revo(y))) +
   facet_grid(age ~ sex) + geom_col() +
  xlab('') + guides(fill=guide_legend(title=''))
-
-Relax PO assumption only for sex and also show multinomial estimates
-w <- impactPO(y ~ age + sex, nonpo = ~ sex, newdata=d)
-# use relax='ppo' to omit the multinomial model 
 }
 }
 \author{
