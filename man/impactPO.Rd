@@ -3,25 +3,33 @@
 \name{impactPO}
 \alias{impactPO}
 \title{Impact of Proportional Odds Assumpton
-Checks the impact of the proportional odds assumption by comparing predicted cell probabilities from a PO model with those from a multinomial or partial proportional odds logistic model.  For a given model formula, fits the model with both \code{lrm} and either \code{nnet::multinom} or \code{VGAM::vglm} and obtains predicted cell probabilities for both on the \code{newdata} data frame.}
+Checks the impact of the proportional odds assumption by comparing predicted cell probabilities from a PO model with those from a multinomial or partial proportional odds logistic model that relax assumptions.  For a given model formula, fits the model with both \code{lrm} and either \code{nnet::multinom} or \code{VGAM::vglm} or both, and obtains predicted cell probabilities for the PO and relaxed models on the \code{newdata} data frame.}
 \usage{
-impactPO(formula, nonpo, newdata, ...)
+impactPO(
+  formula,
+  relax = if (missing(nonpo)) "multinomial" else "both",
+  nonpo,
+  newdata,
+  ...
+)
 }
 \arguments{
 \item{formula}{a model formula.  To work properly with \code{multinom} or \code{vglm} the terms should have completely specified knot locations if a spline function is being used.}
 
-\item{nonpo}{a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  Specifying \code{nonpo} results in the alternative (relaxed) fit being a partial PO model fitted with \code{VGAM::vglm}.  If \code{nonpo} is omitted, the multimonial model is fitted and PO is not assumed for any variables.}
+\item{relax}{defaults to \code{"both"} if \code{nonpo} is given, resulting in fitting two relaxed models.  Set \code{relax} to \code{"multinomial"} or \code{"ppo"} to fit only one relaxed model.  The multinomial model does not assume PO for any predictor.}
+
+\item{nonpo}{a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  Specifying \code{nonpo} results in a relaxed fit that is a partial PO model fitted with \code{VGAM::vglm}.}
 
 \item{newdata}{a data frame or data table with one row per covariate setting for which predictions are to be made}
 
 \item{...}{other parameters to pass to \code{lrm} and \code{multinom} such as \verb{data=}.}
 }
 \value{
-an \code{impactPO} object which is a list with elements \code{estimates} and \code{stats}.  \code{data} is a data frame containing the variables and values in \code{newdata} in a tall and thin format with additional variable \code{method} ("PO", "multinomial", or "PPO"), \code{y} (current level of the dependent variable), and \code{Probability} (predicted cell probability for covariate values and value of \code{y} in the current row).
+an \code{impactPO} object which is a list with elements \code{estimates} and \code{stats}.  \code{data} is a data frame containing the variables and values in \code{newdata} in a tall and thin format with additional variable \code{method} ("PO", "multinomial", "PPO"), \code{y} (current level of the dependent variable), and \code{Probability} (predicted cell probability for covariate values and value of \code{y} in the current row).
 }
 \description{
 Impact of Proportional Odds Assumpton
-Checks the impact of the proportional odds assumption by comparing predicted cell probabilities from a PO model with those from a multinomial or partial proportional odds logistic model.  For a given model formula, fits the model with both \code{lrm} and either \code{nnet::multinom} or \code{VGAM::vglm} and obtains predicted cell probabilities for both on the \code{newdata} data frame.
+Checks the impact of the proportional odds assumption by comparing predicted cell probabilities from a PO model with those from a multinomial or partial proportional odds logistic model that relax assumptions.  For a given model formula, fits the model with both \code{lrm} and either \code{nnet::multinom} or \code{VGAM::vglm} or both, and obtains predicted cell probabilities for the PO and relaxed models on the \code{newdata} data frame.
 }
 \examples{
 
@@ -54,8 +62,9 @@ ggplot(w$estimates, aes(x=method, y=Probability, fill=revo(y))) +
   facet_grid(age ~ sex) + geom_col() +
  xlab('') + guides(fill=guide_legend(title=''))
 
-Relax PO assumption only for sex
+Relax PO assumption only for sex and also show multinomial estimates
 w <- impactPO(y ~ age + sex, nonpo = ~ sex, newdata=d)
+# use relax='ppo' to omit the multinomial model 
 }
 }
 \author{
