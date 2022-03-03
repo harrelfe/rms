@@ -7,7 +7,7 @@
 #' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  Specifying `nonpo` results in a relaxed fit that is a partial PO model fitted with `VGAM::vglm`.  
 #' @param newdata a data frame or data table with one row per covariate setting for which predictions are to be made
 #' @param ... other parameters to pass to `lrm` and `multinom` such as `data=`.
-#' @return an `impactPO` object which is a list with elements `estimates` and `stats`.  `data` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `R2` the Nagelkerke pseudo R-squared, and `R2 adj` a chance-corrected pseudo R-squared using `LR - p`.
+#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, and `mad`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `R2` the Nagelkerke pseudo R-squared, and `R2 adj` a chance-corrected pseudo R-squared using `LR - p`.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model.
 #'
 #' @author Frank Harrell <fh@fharrell.com>
 #'
@@ -95,12 +95,15 @@ impactPO <- function(formula,
     }
   stats <- st('PO', f)
 
+  mad <- NULL
   if(relax != 'multinomial') {
     ppo  <- formula(paste('FALSE ~', as.character(nonpo)[-1]))
     g <- VGAM::vglm(formula, VGAM::cumulative(parallel=ppo, reverse=TRUE), ...)
     b <- VGAM::predict(g, newdata, type='response')
     if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
     colnames(b) <- nam
+    md <- apply(abs(b - a), 1, mean)
+    mad <- rbind(mad, cbind(method='PPO', newdata, `Mean |difference|`=md))
     A <- rbind(A, cbind(method='PPO', newdata, b))
     stats <- rbind(stats, st('PPO', g))
     }
@@ -110,6 +113,8 @@ impactPO <- function(formula,
     b <- predict(g, newdata, 'probs')
     if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
     colnames(b) <- nam
+    md  <- apply(abs(b - a), 1, mean)
+    mad <- rbind(mad, cbind(method='multinomial', newdata, `Mean |difference|`=md))
     A <- rbind(A, cbind(method='multinomial', newdata, b))
     stats <- rbind(stats, st('multinomial', g))
   }
@@ -120,5 +125,5 @@ impactPO <- function(formula,
    c('PO', c('PPO', 'multinomial')[c(relax != 'multinomial', relax != 'PPO')]))
 
   rownames(stats) <- NULL
-  list(estimates=z, stats=stats)
+  list(estimates=z, stats=stats, mad=mad)
 }
