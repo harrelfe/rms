@@ -7,15 +7,17 @@
 #' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  Specifying `nonpo` results in a relaxed fit that is a partial PO model fitted with `VGAM::vglm`.  
 #' @param newdata a data frame or data table with one row per covariate setting for which predictions are to be made
 #' @param ... other parameters to pass to `lrm` and `multinom` such as `data=`.
-#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, and `mad`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  Pr(>chi^2)` the P-value for this test, `Cox-Snell R2`, `Cox-Snell R2 adj` (ad hoc adjusted version of Cox-Snell R2), `McFadden R2`, `McFadded R2 adj`, `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model. 
+#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, and `mad`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  Pr(>chi^2)` the P-value for this test, `Cox-Snell R2`, `Cox-Snell R2 adj` (adjusted version of Cox-Snell R2 that is very similar to the way adjusted R2 is computed in the linear model, resulting in the regression d.f. being subtracted from the likelihood ratio chi-square statistic), `McFadden R2`, `McFadden R2 adj` (an AIC-like adjustment proposed by McFadden without full justification), `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model. 
 #'
 #' @author Frank Harrell <fh@fharrell.com>
 #' @export
 #'
 #' @import rms
-#'#' @export
-#'#' @seealso [nnet::mulinom()], [VGAM::vglm()], [lrm()], [Hmisc::propsPO()]
-#'#' @keywords category models regression
+#' @export
+#' @seealso [nnet::multinom()], [VGAM::vglm()], [lrm()], [Hmisc::propsPO()]
+#' @keywords category models regression
+#' @references
+#' [Adjusted R-square note](https://hbiostat.org/bib/r2.html)
 #' @md
 #'
 #' @examples
