@@ -7,7 +7,7 @@
 #' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  Specifying `nonpo` results in a relaxed fit that is a partial PO model fitted with `VGAM::vglm`.  
 #' @param newdata a data frame or data table with one row per covariate setting for which predictions are to be made
 #' @param ... other parameters to pass to `lrm` and `multinom` such as `data=`.
-#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, and `mad`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  Pr(>chi^2)` the P-value for this test, `Cox-Snell R2`, `Cox-Snell R2 adj` (adjusted version of Cox-Snell R2 that is very similar to the way adjusted R2 is computed in the linear model, resulting in the regression d.f. being subtracted from the likelihood ratio chi-square statistic), `McFadden R2`, `McFadden R2 adj` (an AIC-like adjustment proposed by McFadden without full justification), `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model. 
+#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, and `mad`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "Multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  Pr(>chi^2)` the P-value for this test, `Cox-Snell R2`, `Cox-Snell R2 adj` (adjusted version of Cox-Snell R2 that is very similar to the way adjusted R2 is computed in the linear model, resulting in the regression d.f. being subtracted from the likelihood ratio chi-square statistic), `McFadden R2`, `McFadden R2 adj` (an AIC-like adjustment proposed by McFadden without full justification), `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model. 
 #'
 #' @author Frank Harrell <fh@fharrell.com>
 #' @export
@@ -128,15 +128,15 @@ impactPO <- function(formula,
     if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
     colnames(b) <- nam
     md  <- apply(abs(b - probsPO), 1, mean)
-    mad <- rbind(mad, cbind(method='multinomial', newdata, `Mean |difference|`=md))
-     A <- rbind(A, cbind(method='multinomial', newdata, b))
-    stats <- rbind(stats, st('multinomial', g, b))
+    mad <- rbind(mad, cbind(method='Multinomial', newdata, `Mean |difference|`=md))
+     A <- rbind(A, cbind(method='Multinomial', newdata, b))
+    stats <- rbind(stats, st('Multinomial', g, b))
   }
 
   z <- reshape(A, direction='long', varying=list(nam),
                times=nam, v.names='Probability', timevar='y')
   z$method <- factor(z$method,
-   c('PO', c('PPO', 'multinomial')[c(relax != 'multinomial', relax != 'PPO')]))
+   c('PO', c('PPO', 'Multinomial')[c(relax != 'multinomial', relax != 'PPO')]))
 
   rownames(stats) <- NULL
                                     
@@ -149,26 +149,30 @@ impactPO <- function(formula,
 ##'
 ##' Prints statistical summaries and optionally predicted values computed by `impactPO`, transposing statistical summaries for easy reading
 ##' @param x an object created by `impactPO`
-##' @param estimates set to `FALSE` to suppess printing estimated category probabilities
+##' @param estimates set to `FALSE` to suppess printing estimated category probabilities.  Defaults to `TRUE` when the number of rows < 16.
 ##' @param ... ignored
 ##' @author Frank Harrell
 ##' @method print impactPO
 ##' @export
 ##' @md
-print.impactPO <- function(x, estimates=TRUE, ...) {
+print.impactPO <- function(x, estimates=nrow(x$estimates) < 16, ...) {
   stats <- x$stats
   fstats <- stats
   integercol <- c('p', 'd.f.', '  d.f.')
-  r2col <- c('  Pr(>chi^2)', 'Mean |difference| from PO',
+  r2col <- c('Mean |difference| from PO',
              names(stats)[grep('R2', names(stats))])
-  z <- function(x, digits=0) {
-    y <- format(if(digits == 0) x else round(x, digits))
+  z <- function(x, digits=0, pval=FALSE) {
+    y <- if(pval) ifelse(x < 0.0001, '<0.0001', format(round(x, 4)))
+    else format(if(digits == 0) x else round(x, digits))
     y[is.na(x)] <- ''
     y
     }
-  for(j in integercol) fstats[[j]] <- z(fstats[[j]])
-  for(j in r2col) fstats[[j]] <- z(fstats[[j]], 3)
-  for(j in setdiff(names(fstats), c('method', integercol, r2col)))
+  pvn <- '  Pr(>chi^2)'
+  for(j in integercol) fstats[[j]]   <- z(fstats[[j]])
+  for(j in r2col)      fstats[[j]]   <- z(fstats[[j]], 3)
+                       fstats[[pvn]] <- z(fstats[[pvn]], pval=TRUE)
+  for(j in setdiff(names(fstats),
+                   c('method', integercol, r2col, pvn)))
     fstats[[j]] <- z(fstats[[j]], 2)
   fstats <- t(fstats)
   colnames(fstats) <- fstats[1, ]

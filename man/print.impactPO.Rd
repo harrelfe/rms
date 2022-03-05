@@ -4,12 +4,12 @@
 \alias{print.impactPO}
 \title{Print Result from impactPO}
 \usage{
-\method{print}{impactPO}(x, estimates = TRUE, ...)
+\method{print}{impactPO}(x, estimates = nrow(x$estimates) < 16, ...)
 }
 \arguments{
 \item{x}{an object created by \code{impactPO}}
 
-\item{estimates}{set to \code{FALSE} to suppess printing estimated category probabilities}
+\item{estimates}{set to \code{FALSE} to suppess printing estimated category probabilities.  Defaults to \code{TRUE} when the number of rows < 16.}
 
 \item{...}{ignored}
 }
