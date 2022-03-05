@@ -184,6 +184,11 @@ print.impactPO <- function(x, estimates=nrow(x$estimates) < 16, ...) {
     est$Probability <- round(est$Probability, 4)
     cat('\n')
     print(est)
-    }
+  }
+
+  cat('\nCovariate combination-specific mean |difference| in predicted probabilities\n\n')
+  x$mad$`Mean |difference|` <- round(x$mad$`Mean |difference|`, 3)
+  print(x$mad)
+
   invisible()
 }
