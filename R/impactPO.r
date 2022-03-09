@@ -6,8 +6,10 @@
 #' @param relax defaults to `"both"` if `nonpo` is given, resulting in fitting two relaxed models.  Set `relax` to `"multinomial"` or `"ppo"` to fit only one relaxed model.  The multinomial model does not assume PO for any predictor.
 #' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  Specifying `nonpo` results in a relaxed fit that is a partial PO model fitted with `VGAM::vglm`.  
 #' @param newdata a data frame or data table with one row per covariate setting for which predictions are to be made
-#' @param ... other parameters to pass to `lrm` and `multinom` such as `data=`.
-#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, and `mad`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "Multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  Pr(>chi^2)` the P-value for this test, `Cox-Snell R2`, `Cox-Snell R2 adj` (adjusted version of Cox-Snell R2 that is very similar to the way adjusted R2 is computed in the linear model, resulting in the regression d.f. being subtracted from the likelihood ratio chi-square statistic), `McFadden R2`, `McFadden R2 adj` (an AIC-like adjustment proposed by McFadden without full justification), `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model. 
+#' @param data data frame containing variables to fit; default is the frame in which `formula` is found
+#' @param B number of bootstrap resamples to do to get confidence intervals for differences in predicted probabilities for relaxed methods vs. PO model fits.  Default is not to run the bootstrap.
+#' @param ... other parameters to pass to `lrm` and `multinom`
+#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, `mad`, `newdata`, `nboot`, and `boot`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "Multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  Pr(>chi^2)` the P-value for this test, `Cox-Snell R2`, `Cox-Snell R2 adj` (adjusted version of Cox-Snell R2 that is very similar to the way adjusted R2 is computed in the linear model, resulting in the regression d.f. being subtracted from the likelihood ratio chi-square statistic), `McFadden R2`, `McFadden R2 adj` (an AIC-like adjustment proposed by McFadden without full justification), `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model.  `nboot` is the number of successful bootstrap repetitions, and `boot` is a 4-way array with dimensions represented by the `nboot` resamples, the number of rows in `newdata`, the number of outcome levels, and elements for `PPO` and `multinomial`. 
 #'
 #' @author Frank Harrell <fh@fharrell.com>
 #' @export
@@ -57,16 +59,18 @@
 
 impactPO <- function(formula,
                      relax=if(missing(nonpo)) 'multinomial' else 'both',
-                     nonpo, newdata, ...) {
+                     nonpo, newdata, data=environment(formula), B=0, ...) {
 
-  if(relax != 'multinomial' && missing(nonpo))
+  do.mn  <- relax != 'ppo'
+  do.ppo <- relax != 'multinomial'
+  if(do.ppo && missing(nonpo))
     stop('must specify nonpo when relax is not "multinomial"')
-  if(relax != 'ppo') if(! requireNamespace('nnet', quietly=TRUE))
+  if(do.mn) if(! requireNamespace('nnet', quietly=TRUE))
                        stop("This function requires the 'nnet' package")
-  if(relax != 'multinomial') if(! requireNamespace('VGAM', quietly=TRUE))
+  if(do.ppo) if(! requireNamespace('VGAM', quietly=TRUE))
                        stop("This function requires the 'VGAM' package")
   
-  f <- lrm(formula, ...)
+  f <- lrm(formula, data=data, ...)
   a <- predict(f, newdata, type='fitted.ind')
   nam <- names(f$freq)
   if(nrow(newdata) == 1) a <- matrix(a, nrow=1)
@@ -110,37 +114,81 @@ impactPO <- function(formula,
 
   mad <- NULL
   
-  if(relax != 'multinomial') {
+  if(do.ppo) {
     ppo  <- formula(paste('FALSE ~', as.character(nonpo)[-1]))
-    g <- VGAM::vglm(formula, VGAM::cumulative(parallel=ppo, reverse=TRUE), ...)
+    g <- VGAM::vglm(formula, VGAM::cumulative(parallel=ppo, reverse=TRUE),
+                    data=data, ...)
     b <- VGAM::predict(g, newdata, type='response')
     if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
     colnames(b) <- nam
+    probsPPO <- b
     md  <- apply(abs(b - probsPO), 1, mean)
     mad <- rbind(mad, cbind(method='PPO', newdata, `Mean |difference|`=md))
     A <- rbind(A, cbind(method='PPO', newdata, b))
     stats <- rbind(stats, st('PPO', g, b))
     }
 
-  if(relax != 'ppo') {
-    g <- nnet::multinom(formula, ..., trace=FALSE)
+  if(do.mn) {
+    g <- nnet::multinom(formula, data=data, ..., trace=FALSE)
     b <- predict(g, newdata, 'probs')
     if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
     colnames(b) <- nam
+    probsM      <- b
     md  <- apply(abs(b - probsPO), 1, mean)
     mad <- rbind(mad, cbind(method='Multinomial', newdata, `Mean |difference|`=md))
-     A <- rbind(A, cbind(method='Multinomial', newdata, b))
+    A <- rbind(A, cbind(method='Multinomial', newdata, b))
     stats <- rbind(stats, st('Multinomial', g, b))
   }
 
   z <- reshape(A, direction='long', varying=list(nam),
                times=nam, v.names='Probability', timevar='y')
   z$method <- factor(z$method,
-   c('PO', c('PPO', 'Multinomial')[c(relax != 'multinomial', relax != 'PPO')]))
+   c('PO', c('PPO', 'Multinomial')[c(do.ppo, do.mn)]))
 
   rownames(stats) <- NULL
+
+  nboot <- 0
+  boot  <- array(NA, c(B, nrow(newdata), length(nam), do.ppo + do.mn),
+                 dimnames=list(NULL, NULL, nam,
+                               c('PPO', 'Multinomial')[c(do.ppo, do.mn)]))
+  if(B > 0) {
+    for(i in 1 : B) {
+      j   <- sample(nrow(data), nrow(data), replace=TRUE)
+      dat <- data[j, ]
+
+      f <- lrm(formula, data=dat, ...)
+      # If a Y category was not selected in this bootstrap sample,
+      # go to the next sample
+      if(length(names(f$freq)) != length(nam)) next
+      a <- predict(f, newdata, type='fitted.ind')
+      if(nrow(newdata) == 1) a <- matrix(a, nrow=1)
+      colnames(a) <- nam
+
+      if(do.ppo) {
+        g <- VGAM::vglm(formula, VGAM::cumulative(parallel=ppo, reverse=TRUE),
+                    data=dat, ...)
+        b <- VGAM::predict(g, newdata, type='response')
+        if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
+        colnames(b) <- nam
+        pppo <- b
+        }
+
+      if(do.mn) {
+        g <- nnet::multinom(formula, data=dat, ..., trace=FALSE)
+        b <- predict(g, newdata, 'probs')
+        if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
+        colnames(b) <- nam
+        pmn <- b
+      }
+      nboot <- nboot + 1
+      if(do.ppo) boot[nboot, , , 'PPO']         <- a - pppo
+      if(do.mn)  boot[nboot, , , 'Multinomial'] <- a - pmn
+    }
+    if(nboot < B) boot <- boot[1 : nboot, , , , drop=FALSE]
+    }
                                     
-  structure(list(estimates=z, stats=stats, mad=mad),
+  structure(list(estimates=z, stats=stats, mad=mad, newdata=newdata,
+                 nboot=nboot, boot=if(B > 0) boot),
             class='impactPO')
 }
 
@@ -189,6 +237,25 @@ print.impactPO <- function(x, estimates=nrow(x$estimates) < 16, ...) {
   cat('\nCovariate combination-specific mean |difference| in predicted probabilities\n\n')
   x$mad$`Mean |difference|` <- round(x$mad$`Mean |difference|`, 3)
   print(x$mad)
+
+  if(x$nboot > 0) {
+    boot <- x$boot
+    cat('\nBootstrap 0.95 confidence intervals for differences in model predicted\nprobabilities based on', x$nboot, 'bootstraps\n\n')
+    nd <- nrow(x$newdata)
+    cl <- function(x) {
+      qu <- unname(quantile(x, c(0.025, 0.975)))
+      c(Lower=qu[1], Upper=qu[2]) }
+    for(i in 1 : nd) {
+      cat('\n')
+      print(x$newdata[i, ])
+      b <- boot[, i, , , drop=TRUE]
+      b <- round(apply(b, 2:3, cl), 3)
+      for(model in dimnames(b)[[3]]) {
+        cat('\n', model, '\n\n', sep='')
+        print(b[, , model])
+        }
+      }
+    }
 
   invisible()
 }
