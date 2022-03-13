@@ -25,7 +25,7 @@ impactPO(
 
 \item{data}{data frame containing variables to fit; default is the frame in which \code{formula} is found}
 
-\item{B}{number of bootstrap resamples to do to get confidence intervals for differences in predicted probabilities for relaxed methods vs. PO model fits.  Default is not to run the bootstrap.}
+\item{B}{number of bootstrap resamples to do to get confidence intervals for differences in predicted probabilities for relaxed methods vs. PO model fits.  Default is not to run the bootstrap.  When running the bootstrap make sure that all model variables are explicitly in \verb{data=} so that selection of random subsets of data will call along the correct rows for all predictors.}
 
 \item{...}{other parameters to pass to \code{lrm} and \code{multinom}}
 }

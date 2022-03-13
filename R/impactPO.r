@@ -7,7 +7,7 @@
 #' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  Specifying `nonpo` results in a relaxed fit that is a partial PO model fitted with `VGAM::vglm`.  
 #' @param newdata a data frame or data table with one row per covariate setting for which predictions are to be made
 #' @param data data frame containing variables to fit; default is the frame in which `formula` is found
-#' @param B number of bootstrap resamples to do to get confidence intervals for differences in predicted probabilities for relaxed methods vs. PO model fits.  Default is not to run the bootstrap.
+#' @param B number of bootstrap resamples to do to get confidence intervals for differences in predicted probabilities for relaxed methods vs. PO model fits.  Default is not to run the bootstrap.  When running the bootstrap make sure that all model variables are explicitly in `data=` so that selection of random subsets of data will call along the correct rows for all predictors.
 #' @param ... other parameters to pass to `lrm` and `multinom`
 #' @return an `impactPO` object which is a list with elements `estimates`, `stats`, `mad`, `newdata`, `nboot`, and `boot`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "Multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  Pr(>chi^2)` the P-value for this test, `Cox-Snell R2`, `Cox-Snell R2 adj` (adjusted version of Cox-Snell R2 that is very similar to the way adjusted R2 is computed in the linear model, resulting in the regression d.f. being subtracted from the likelihood ratio chi-square statistic), `McFadden R2`, `McFadden R2 adj` (an AIC-like adjustment proposed by McFadden without full justification), `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model.  `nboot` is the number of successful bootstrap repetitions, and `boot` is a 4-way array with dimensions represented by the `nboot` resamples, the number of rows in `newdata`, the number of outcome levels, and elements for `PPO` and `multinomial`. 
 #'
@@ -118,6 +118,7 @@ impactPO <- function(formula,
     ppo  <- formula(paste('FALSE ~', as.character(nonpo)[-1]))
     g <- VGAM::vglm(formula, VGAM::cumulative(parallel=ppo, reverse=TRUE),
                     data=data, ...)
+    vglmcoef <- coef(g)   # save to jump start bootstrap estimates
     b <- VGAM::predict(g, newdata, type='response')
     if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
     colnames(b) <- nam
@@ -157,6 +158,7 @@ impactPO <- function(formula,
       dat <- data[j, ]
 
       f <- lrm(formula, data=dat, ...)
+      if(length(f$fail) && f$fail) next
       # If a Y category was not selected in this bootstrap sample,
       # go to the next sample
       if(length(names(f$freq)) != length(nam)) next
@@ -164,9 +166,12 @@ impactPO <- function(formula,
       if(nrow(newdata) == 1) a <- matrix(a, nrow=1)
       colnames(a) <- nam
 
-      if(do.ppo) {
-        g <- VGAM::vglm(formula, VGAM::cumulative(parallel=ppo, reverse=TRUE),
-                    data=dat, ...)
+ if(do.ppo) {
+        g <- try(VGAM::vglm(formula,
+                            VGAM::cumulative(parallel=ppo, reverse=TRUE),
+                            data=dat, coefstart=vglmcoef, ...),
+                 silent=TRUE)
+        if(inherits(g, 'try-error')) next
         b <- VGAM::predict(g, newdata, type='response')
         if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
         colnames(b) <- nam
@@ -174,7 +179,8 @@ impactPO <- function(formula,
         }
 
       if(do.mn) {
-        g <- nnet::multinom(formula, data=dat, ..., trace=FALSE)
+        g <- try(nnet::multinom(formula, data=dat, ..., trace=FALSE))
+        if(inherits(g, 'try-error')) next
         b <- predict(g, newdata, 'probs')
         if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
         colnames(b) <- nam
@@ -251,7 +257,7 @@ print.impactPO <- function(x, estimates=nrow(x$estimates) < 16, ...) {
       b <- boot[, i, , , drop=TRUE]
       b <- round(apply(b, 2:3, cl), 3)
       for(model in dimnames(b)[[3]]) {
-        cat('\n', model, '\n\n', sep='')
+        cat('\nPO - ', model, ' probability estimates\n\n', sep='')
         print(b[, , model])
         }
       }
