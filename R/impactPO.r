@@ -9,14 +9,14 @@
 #' @param data data frame containing variables to fit; default is the frame in which `formula` is found
 #' @param B number of bootstrap resamples to do to get confidence intervals for differences in predicted probabilities for relaxed methods vs. PO model fits.  Default is not to run the bootstrap.  When running the bootstrap make sure that all model variables are explicitly in `data=` so that selection of random subsets of data will call along the correct rows for all predictors.
 #' @param ... other parameters to pass to `lrm` and `multinom`
-#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, `mad`, `newdata`, `nboot`, and `boot`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "Multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  Pr(>chi^2)` the P-value for this test, `Cox-Snell R2`, `Cox-Snell R2 adj` (adjusted version of Cox-Snell R2 that is very similar to the way adjusted R2 is computed in the linear model, resulting in the regression d.f. being subtracted from the likelihood ratio chi-square statistic), `McFadden R2`, `McFadden R2 adj` (an AIC-like adjustment proposed by McFadden without full justification), `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model.  `nboot` is the number of successful bootstrap repetitions, and `boot` is a 4-way array with dimensions represented by the `nboot` resamples, the number of rows in `newdata`, the number of outcome levels, and elements for `PPO` and `multinomial`. 
+#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, `mad`, `newdata`, `nboot`, and `boot`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "Multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  Pr(>chi^2)` the P-value for this test, `MCS R2` the Maddala-Cox-Snell R2 using the effective sample size, `MCS R2 adj` (`MCS R2` adjusted for estimating `p` regression coefficients by subtracting `p` from `LR`), `McFadden R2`, `McFadden R2 adj` (an AIC-like adjustment proposed by McFadden without full justification), `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model.  `nboot` is the number of successful bootstrap repetitions, and `boot` is a 4-way array with dimensions represented by the `nboot` resamples, the number of rows in `newdata`, the number of outcome levels, and elements for `PPO` and `multinomial`.  For the modifications of the Maddala-Cox-Snell indexes see `Hmisc::R2Measures`.
 #'
 #' @author Frank Harrell <fh@fharrell.com>
 #' @export
 #'
 #' @import rms
 #' @export
-#' @seealso [nnet::multinom()], [VGAM::vglm()], [lrm()], [Hmisc::propsPO()]
+#' @seealso [nnet::multinom()], [VGAM::vglm()], [lrm()], [Hmisc::propsPO()], [Hmisc::R2Measures()]
 #' @keywords category models regression
 #' @references
 #' [Adjusted R-square note](https://hbiostat.org/bib/r2.html)
@@ -72,7 +72,8 @@ impactPO <- function(formula,
   
   f <- lrm(formula, data=data, ...)
   a <- predict(f, newdata, type='fitted.ind')
-  nam <- names(f$freq)
+  ytable <- f$freq
+  nam <- names(ytable)
   if(nrow(newdata) == 1) a <- matrix(a, nrow=1)
   colnames(a) <- nam
   probsPO     <- a
@@ -90,8 +91,9 @@ impactPO <- function(formula,
     dev <- dev[length(dev)]
     aic <- dev + 2 * df
     LR  <- dev0 - dev
-    r2    <- 1. - exp(- LR / n)
-    r2adj <- 1. - exp(- max(0., LR - p) / n)
+    r2m <- R2Measures(LR, p, n, ytable)
+    r2    <- r2m[3]
+    r2adj <- r2m[4]
     mpo   <- method == 'PO'
     data.frame(method     = method,
                Deviance   = dev,
@@ -103,8 +105,8 @@ impactPO <- function(formula,
                `LR chi^2 test for PO` = if(mpo) NA else devPO - dev,
                `  d.f.`    = if(mpo) NA else p - dfPO,
                `  Pr(>chi^2)` = if(mpo) NA else 1. - pchisq(devPO - dev, p - dfPO),
-               `Cox-Snell R2`     = r2,
-               `Cox-Snell R2 adj` = r2adj,
+               `MCS R2`     = r2,
+               `MCS R2 adj` = r2adj,
                `McFadden R2`      = 1. - dev / dev0,
                `McFadden R2 adj`  = 1. - (dev + 2 * p) / dev0,
                `Mean |difference| from PO` = if(mpo) NA else mean(abs(probs - probsPO)),
