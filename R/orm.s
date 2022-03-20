@@ -230,8 +230,14 @@ print.orm <- function(x, digits=4, coefs=TRUE,
                    'Score chi2' = stats['Score'],
                    'Pr(> chi2)' = stats['Score P'],
                    Penalty      = penaltyFactor)
-  disc <- reListclean(R2=stats['R2'], g=stats['g'], gr=stats['gr'],
-                   '|Pr(Y>=median)-0.5|'=stats['pdm'])
+  newr2 <- grepl('R2\\(', names(stats))
+  disc <- reListclean(R2=stats['R2'],
+                      R2m=if(any(newr2)) stats[newr2],
+                      g=stats['g'],
+                      gr=stats['gr'],
+                      '|Pr(Y>=median)-0.5|'=stats['pdm'])
+  if(any(newr2)) names(disc)[names(disc) == 'R2m'] <- names(stats[newr2])
+  
   discr <-reListclean(rho=stats['rho'])
   
   headings <- c('',

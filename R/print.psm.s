@@ -20,9 +20,14 @@ print.psm <- function(x, correlation = FALSE, digits=4,
   lr <- reListclean('LR chi2'     = stats['Model L.R.'],
                     'd.f.'        = stats['d.f.'],
                     'Pr(> chi2)'  = stats['P'])
-  disc <- reListclean(R2=stats['R2'], Dxy=stats['Dxy'],
-                      g=stats['g'],   gr=stats['gr'])
+  newr2 <- grepl('R2\\(', names(stats))
 
+  disc <- reListclean(R2  = stats['R2'],
+                      R2m = if(any(newr2)) stats[newr2],
+                      Dxy = stats['Dxy'],
+                      g   = stats['g'],
+                      gr  = stats['gr'])
+  if(any(newr2)) names(disc)[names(disc) == 'R2m'] <- names(stats[newr2])
   headings <- c('',
                 'Model Likelihood\nRatio Test',
                 'Discrimination\nIndexes')

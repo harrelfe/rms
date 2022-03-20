@@ -1024,7 +1024,7 @@ html.naprint.delete <- function(object, ...) {
 ## scientific notation)
 
 prStats <- function(labels, w, lang=c('plain', 'latex', 'html')) {
-
+  
   lang  <- match.arg(lang)
   lorh  <- lang != 'plain'
   specs <- markupSpecs[[lang]]
@@ -1146,17 +1146,26 @@ for(i in 1:p) {
       j <- k %in% rownames(trans)
       if(any(j)) k[j] <- trans[k[j], lang]
       j <- ! j
-      if(any(j))
-        k[j] <- switch(lang,
+      if(any(j)) {
+        ## Handle R2(p,n) notation for R2Measures adjusted R2
+        if(any(grepl('R2\\(', k[j])))
+          k[j] <- switch(lang,
+                         plain = k[j],
+                         latex = sub('R2\\((.*)\\)', '$R^{2}_{\\1}$', k[j]),
+                         html  = sub('R2\\((.*)\\)',
+                                     paste0('<i>R</i>',
+                                            specs$subsup('\\1', '2')),k[j]))
+        else
+          k[j] <- switch(lang,
                        plain = k[j],
                        latex = latexTranslate(k[j], greek=TRUE),
                        html  = htmlTranslate (k[j], greek=TRUE) )
+        }
 
       z[1 : length(k), i] <- paste0(k, fil, w[[i]])
     }
     
     al <- paste0('|', paste(rep('c|', p), collapse=''))
-    
     if(lang == 'latex')
       w <- latexTabular(z, headings=labels, align=al, halign=al,
                         translate=FALSE, hline=2, center=TRUE)

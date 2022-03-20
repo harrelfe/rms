@@ -1,4 +1,4 @@
-Changes in version 6.2-1 (2021-02-27)
+Changes in version 6.3-0 (2021-03-20)
    * gTrans, Design, set.atr, latexrms: For latex(fit) to work when there is a gTrans() predictor
    * survreg.fit2: fixed bug in computing loglik transformation correction factor which ruined validate.psm R^2 and other loglik-related indexes (made them NaN)
    * residuals.lrm, residuals.orm, predab.resample: fixed bug where x=TRUE in fit without y=TRUE may find another y object; thanks: Chun Li
@@ -6,6 +6,7 @@ Changes in version 6.2-1 (2021-02-27)
    * residuals.ols: added type='influence.measures'
    * added nnet to suggests
    * added impactPO function
+   * added new adjusted Maddala-Cox-Snell adjusted R2 using new Hmisc function R2Measures; affects prModFit, orm, lrm, psm, cph
 
 Changes in version 6.2-0 (2021-03-17)
    * plotp.Predict: fixed bug when conf.int=FALSE was given to Predict()

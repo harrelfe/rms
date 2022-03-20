@@ -1,10 +1,10 @@
 Package: rms
-Version: 6.2-1
-Date: 2022-02-27
+Version: 6.3-0
+Date: 2022-03-20
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <fh@fharrell.com>
 Maintainer: Frank E Harrell Jr <fh@fharrell.com>
-Depends: R (>= 3.5.0), Hmisc (>= 4.3-0), survival (>= 3.1-12), lattice, ggplot2 (>= 2.2), SparseM
+Depends: R (>= 3.5.0), Hmisc (>= 4.7-0), survival (>= 3.1-12), lattice, ggplot2 (>= 2.2), SparseM
 Imports: methods, quantreg, rpart, nlme (>= 3.1-123), polspline, multcomp, htmlTable (>= 1.11.0), htmltools, MASS, cluster, digest
 Suggests: boot, tcltk, plotly (>= 4.5.6), knitr, mice, rmsb, nnet
 Description: Regression modeling, testing, estimation, validation,

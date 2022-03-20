@@ -263,9 +263,12 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
                       'd.f.'       = round(stats['d.f.'], 3),
                       'Pr(> chi2)' = stats['P'],
                       Penalty      = penaltyFactor)
+  newr2 <- grepl('R2\\(', names(stats))
   disc <- reListclean(R2           = stats['R2'],
+                      R2m          = if(any(newr2)) stats[newr2],
                       g            = stats['g'], gr=stats['gr'],
                       gp           = stats['gp'], Brier=stats['Brier'])
+  if(any(newr2)) names(disc)[names(disc) == 'R2m'] <- names(stats[newr2])
   discr <-reListclean(C       = stats['C'],
                       Dxy     = stats['Dxy'],
                       gamma   = stats['Gamma'],

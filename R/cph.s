@@ -244,14 +244,16 @@ cph <- function(formula     = formula(data),
   if(xpres) {
     logtest <- -2 * (f$loglik[1] - f$loglik[2])
     R2.max  <-  1 - exp(2 * f$loglik[1] / n)
-    R2 <- (1 - exp(- logtest / n)) / R2.max
-    P  <- 1 - pchisq(logtest,nvar)
+    R2  <- (1 - exp(- logtest / n)) / R2.max
+    r2m <- R2Measures(logtest, nvar, n, nevent)[4]
+    P   <- 1 - pchisq(logtest,nvar)
     gindex <- GiniMd(f$linear.predictors)
     dxy <- dxy.cens(f$linear.predictors, Y, type='hazard')['Dxy']
     stats <- c(n, nevent, logtest, nvar, P, f$score, 
-               1-pchisq(f$score,nvar), R2, dxy, gindex, exp(gindex))
+               1-pchisq(f$score,nvar), R2, r2m, dxy, gindex, exp(gindex))
     names(stats) <- c("Obs", "Events", "Model L.R.", "d.f.", "P", 
-                      "Score", "Score P", "R2", "Dxy", "g", "gr")
+                      "Score", "Score P", "R2", "R2m", "Dxy", "g", "gr")
+    names(stats)[names(stats) == 'R2m'] <- names(r2m)
   }
   else {
     stats <- c(n, nevent)
@@ -600,10 +602,14 @@ print.cph <- function(x, digits=4, table=TRUE, conf.int=FALSE,
                      'Pr(> chi2)'  = stats['P'],
                      'Score chi2'  = stats['Score'],
                      'Pr(> chi2)'  = stats['Score P'])
-    disc <- reListclean(R2 = stats['R2'],
-                     Dxy = stats['Dxy'],
-                     g  = stats['g'],
-                     gr = stats['gr'])
+    newr2 <- grepl('R2\\(', names(stats))
+    disc <- reListclean(R2  = stats['R2'],
+                        R2m = if(any(newr2)) stats[newr2],
+                        Dxy = stats['Dxy'],
+                        g  = stats['g'],
+                        gr = stats['gr'])
+    if(any(newr2)) names(disc)[names(disc) == 'R2m'] <- names(stats[newr2])
+                                                              
     k <- k + 1
     headings <- c('', 'Model Tests', 'Discrimination\nIndexes')
     data     <- list(misc,

@@ -33,6 +33,7 @@
 #    1-17-03 :made all versions use weights, double precision for x,y
 #    5-13-10 :change B to use middle intercept; added g-index
 #    8-17-14 :added scale
+#    3-20-22 :new adjusted R^2
 
 lrm.fit <- function(x, y, offset=0, initial, est,
                     maxit=12, eps=.025, tol=1E-7, trace=FALSE,
@@ -103,7 +104,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   storage.mode(offset) <- "double"
 
   if(n < 3) stop("must have >=3 non-missing observations")
-  kint <- as.integer(length(ylevels) - 1)
+  kint   <- as.integer(length(ylevels) - 1)
   ftable <- integer(5001 * (kint + 1))
   levels(y) <- ylevels
   numy <- table(y)
@@ -260,6 +261,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   r2     <- 1 - exp(- model.lr / sumwt)
   r2.max <- 1 - exp(- llnull   / sumwt)
   r2     <- r2 / r2.max
+  r2m    <- R2Measures(model.lr, model.df, sumwt, sumwty)[4]
   kmid <- floor((kint + 1) / 2)
   lpmid <- lp - kof[1] + kof[kmid] 
   prob <- plogis(lpmid)
@@ -270,18 +272,18 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   gp <- GiniMd(prob)
   stats <- c(n, max(abs(z$u[elements])), model.lr, model.df,
              model.p, z$opts[8], z$opts[9],
-             z$opts[10], z$opts[11], r2, B, g, exp(g), gp)
+             z$opts[10], z$opts[11], r2, r2m, B, g, exp(g), gp)
   
   nam <- c("Obs", "Max Deriv",
            "Model L.R.", "d.f.", "P", "C", "Dxy",
-           "Gamma", "Tau-a", "R2", "Brier", "g", "gr", "gp")
+           "Gamma", "Tau-a", "R2", "R2m", "Brier", "g", "gr", "gp")
   
   if(nxin != nx) {
     stats <- c(stats, resid.chi2, resid.df,
                1 - pchisq(resid.chi2, resid.df))
     nam <- c(nam, "Residual Score", "d.f.", "P")
   }
-  names(stats) <- nam
+  names(stats) <- ifelse(nam == 'R2m', names(r2m), nam)
   
   if(wtpres) stats <- c(stats, 'Sum of Weights'=sumwt)
   

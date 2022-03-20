@@ -21,7 +21,11 @@
   \code{Quantile.psm}, and \code{Mean.psm} create S functions that
   evaluate the hazard, survival, quantile, and mean (expected value)
   functions analytically, as functions of time or probabilities and the
-  linear predictor values.
+  linear predictor values.  The Nagelkerke R^2 and and adjusted
+  Maddala-Cox-Snell R^2 are computed.  For the latter the notation is
+  R2(p,m) where p is the number of regression coefficients being
+  adjusted for and m is the effective sample size (number of uncensored
+  observations).  See \code{\link[Hmisc]{R2Measures}} for more information.
 
 	For the \code{print} method, format of output is controlled by the
 	user previously running \code{options(prType="lang")} where
@@ -221,7 +225,8 @@ lwd=3, \dots)
   \code{\link[Hmisc]{na.delete}},
   \code{\link[Hmisc]{na.detail.response}}, \code{\link{datadist}},
   \code{\link{latex.psm}}, \code{\link{GiniMd}}, \code{\link{prModFit}},
-	\code{\link{ggplot.Predict}}, \code{\link{plot.Predict}}
+	\code{\link{ggplot.Predict}}, \code{\link{plot.Predict}},
+	\code{\link[Hmisc]{R2Measures}}
 }
 \examples{
 n <- 400
