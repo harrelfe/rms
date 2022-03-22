@@ -22,8 +22,8 @@ lrm(formula, data=environment(formula),
     strata.penalty=0, var.penalty=c('simple','sandwich'),
     weights, normwt, scale=FALSE, \dots)
 
-\method{print}{lrm}(x, digits=4, strata.coefs=FALSE,
-    coefs=TRUE, title='Logistic Regression Model', \dots)
+\method{print}{lrm}(x, digits=4, r2=c(0,2,4), strata.coefs=FALSE,
+    coefs=TRUE, pg=FALSE, title='Logistic Regression Model', \dots)
 }
 \arguments{
 \item{formula}{
@@ -147,12 +147,21 @@ variances estimates that are too low.
 \item{\dots}{arguments that are passed to \code{lrm.fit}, or from
     \code{print}, to \code{\link{prModFit}}}
 \item{digits}{number of significant digits to use}
+\item{r2}{vector of integers specifying which R^2 measures to print,
+		with 0 for Nagelkerke R^2 and 1:4 corresponding to the 4 measures
+		computed by \code{\link[Hmisc]{R2Measures}}.  Default is to print
+		Nagelkerke (labeled R2) and second and fourth \code{R2Measures}
+		which are the measures adjusted for the number of predictors, first
+		for the raw sample size then for the effective sample size, which
+		here is from the formula for the approximate variance of a log odds
+    ratio in a proportional odds model.}
 \item{strata.coefs}{set to \code{TRUE} to print the (experimental)
   strata coefficients}
 \item{coefs}{specify \code{coefs=FALSE} to suppress printing the table
   of model coefficients, standard errors, etc.  Specify \code{coefs=n}
   to print only the first \code{n} regression coefficients in the
   model.}
+\item{pg}{set to \code{TRUE} to print g-indexes}
 \item{title}{a character string title to be passed to \code{prModFit}}
 }
 \value{

@@ -183,8 +183,8 @@ lrm <- function(formula, data=environment(formula),
   f
 }
 
-print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
-                      title='Logistic Regression Model', ...) {
+print.lrm <- function(x, digits=4, r2=c(0,2,4), strata.coefs=FALSE, coefs=TRUE,
+                      pg=FALSE, title='Logistic Regression Model', ...) {
 
   latex <- prType() == 'latex'
   
@@ -264,11 +264,13 @@ print.lrm <- function(x, digits=4, strata.coefs=FALSE, coefs=TRUE,
                       'Pr(> chi2)' = stats['P'],
                       Penalty      = penaltyFactor)
   newr2 <- grepl('R2\\(', names(stats))
-  disc <- reListclean(R2           = stats['R2'],
-                      R2m          = if(any(newr2)) stats[newr2],
-                      g            = stats['g'], gr=stats['gr'],
-                      gp           = stats['gp'], Brier=stats['Brier'])
-  if(any(newr2)) names(disc)[names(disc) == 'R2m'] <- names(stats[newr2])
+  disc <- reListclean(R2        = if(0 %in% r2)  stats['R2'],
+                      namesFrom = if(any(newr2)) stats[newr2][setdiff(r2, 0)],
+                      g         = if(pg) stats['g'],
+                      gr        = if(pg) stats['gr'],
+                      gp        = if(pg) stats['gp'],
+                      Brier     = stats['Brier'])
+
   discr <-reListclean(C       = stats['C'],
                       Dxy     = stats['Dxy'],
                       gamma   = stats['Gamma'],

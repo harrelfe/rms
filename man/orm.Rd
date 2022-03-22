@@ -51,7 +51,7 @@ orm(formula, data=environment(formula),
     penalty=0, penalty.matrix, tol=1e-7, eps=0.005, 
     var.penalty=c('simple','sandwich'), scale=FALSE, \dots)
 
-\method{print}{orm}(x, digits=4, coefs=TRUE,
+\method{print}{orm}(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
     intercepts=x$non.slopes < 10, title, \dots)
 
 \method{Quantile}{orm}(object, codes=FALSE, \dots)
@@ -120,6 +120,15 @@ intercept is used.
     \code{print}, to \code{\link{prModFit}}.  Ignored for
 		\code{Quantile}.  One of the most important arguments is \code{family}.}
 \item{digits}{number of significant digits to use}
+\item{r2}{vector of integers specifying which R^2 measures to print,
+		with 0 for Nagelkerke R^2 and 1:4 corresponding to the 4 measures
+		computed by \code{\link[Hmisc]{R2Measures}}.  Default is to print
+		Nagelkerke (labeled R2) and second and fourth \code{R2Measures}
+		which are the measures adjusted for the number of predictors, first
+		for the raw sample size then for the effective sample size, which
+		here is from the formula for the approximate variance of a log odds
+    ratio in a proportional odds model.}
+\item{pg}{set to \code{TRUE} to print g-indexes}
 \item{coefs}{specify \code{coefs=FALSE} to suppress printing the table
   of model coefficients, standard errors, etc.  Specify \code{coefs=n}
   to print only the first \code{n} regression coefficients in the
@@ -148,7 +157,8 @@ derivative of log likelihood, model likelihood ratio
 \eqn{\chi^2}{chi-square}, d.f.,  \eqn{P}-value, score \eqn{\chi^2}
 statistic (if no initial values given), \eqn{P}-value, Spearman's
 \eqn{\rho} rank correlation between the linear predictor and \code{Y},
-the Nagelkerke \eqn{R^2} index, the \eqn{g}-index, \eqn{gr} (the
+the Nagelkerke \eqn{R^2} index, \eqn{R^2} indexes computed by
+\code{\link[Hmisc]{R2Measures}}, the \eqn{g}-index, \eqn{gr} (the
 \eqn{g}-index on the odds ratio scale), and \eqn{pdm} (the mean absolute
 difference between 0.5 and the predicted probability that \eqn{Y\geq}
 the marginal median).

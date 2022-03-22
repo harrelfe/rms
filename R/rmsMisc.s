@@ -1143,25 +1143,22 @@ for(i in 1:p) {
     
     for(i in 1 : p) {
       k <- names(w[[i]])
-      j <- k %in% rownames(trans)
-      if(any(j)) k[j] <- trans[k[j], lang]
-      j <- ! j
-      if(any(j)) {
-        ## Handle R2(p,n) notation for R2Measures adjusted R2
-        if(any(grepl('R2\\(', k[j])))
-          k[j] <- switch(lang,
-                         plain = k[j],
-                         latex = sub('R2\\((.*)\\)', '$R^{2}_{\\1}$', k[j]),
-                         html  = sub('R2\\((.*)\\)',
-                                     paste0('<i>R</i>',
-                                            specs$subsup('\\1', '2')),k[j]))
+      for(j in 1 : length(k)) {
+        u <- k[j]
+        k[j] <- if(u %in% rownames(trans)) trans[u, lang]
+        else if(grepl('R2\\(', u))   # handle R2(p,n) from R2Measures
+          switch(lang,
+                 plain = u,
+                 latex = sub('R2\\((.*)\\)', '$R^{2}_{\\1}$', u),
+                 html  = sub('R2\\((.*)\\)',
+                             paste0('<i>R</i>',
+                                    specs$subsup('\\1', '2')),u))
         else
-          k[j] <- switch(lang,
-                       plain = k[j],
-                       latex = latexTranslate(k[j], greek=TRUE),
-                       html  = htmlTranslate (k[j], greek=TRUE) )
-        }
-
+          switch(lang,
+                 plain = u,
+                 latex = latexTranslate(u, greek=TRUE),
+                 html  = htmlTranslate (u, greek=TRUE) )
+      }
       z[1 : length(k), i] <- paste0(k, fil, w[[i]])
     }
     
@@ -1204,10 +1201,16 @@ for(i in 1:p) {
 
 ## reListclean is used in conjunction with pstats
 ## Example:
-# x <- c(a=1, b=2)
-# c(A=x[1], B=x[2])
-# reListclean(A=x[1], B=x[2])
-# reListclean(A=x['a'], B=x['b'], C=x['c'])
+## x <- c(a=1, b=2)
+## c(A=x[1], B=x[2])
+## reListclean(A=x[1], B=x[2])
+## reListclean(A=x['a'], B=x['b'], C=x['c'])
+## reListclean(A=x[1], B=c(x1=x[1], x2=x[2]))
+## The last form causes B to be expanded into to two list elements
+## named x1 and x2 and the name B is ignored
+## reListclean(A=x[1], namesFrom=z) where z is only a 1 element vector will
+## still override namesFrom (literally) with names(z) if 
+
 #reListclean <- function(..., na.rm=TRUE) {
 #  d <- list(...)
 #  d <- d[sapply(d, function(x) ! is.null(x))]
@@ -1217,10 +1220,26 @@ for(i in 1:p) {
 #}
 reListclean <- function(..., na.rm=TRUE) {
   d <- list(...)
-  g <- if(na.rm) function(x) length(x) > 0 && ! is.na(x)
+  g <- if(na.rm) function(x) length(x) > 0 && ! all(is.na(x))
        else
          function(x) length(x) > 0
-  d[sapply(d, g)]
+  w <- d[sapply(d, g)]
+  r <- list()
+  nam <- names(w)
+  i   <- 0
+  nm  <- character(0)
+  for(u in w) {
+    i <- i + 1
+    for(j in 1 : length(u)) {
+      if(is.na(u[j])) next
+      r <- c(r, u[j])
+      nm <- c(nm, if(nam[i] != 'namesFrom' & length(u) == 1) nam[i] else {
+            if(! length(names(u))) stop('vector element does not have names')
+            names(u)[j] })
+    }
+  }
+  names(r) <- nm
+  r
 }
 
 

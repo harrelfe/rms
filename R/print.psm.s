@@ -1,5 +1,5 @@
-print.psm <- function(x, correlation = FALSE, digits=4,
-                      coefs=TRUE, title, ...)
+print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
+                      coefs=TRUE, pg=FALSE, title, ...)
 {
   k <- 0
   z <- list()
@@ -20,14 +20,16 @@ print.psm <- function(x, correlation = FALSE, digits=4,
   lr <- reListclean('LR chi2'     = stats['Model L.R.'],
                     'd.f.'        = stats['d.f.'],
                     'Pr(> chi2)'  = stats['P'])
-  newr2 <- grepl('R2\\(', names(stats))
+  newr2 <- grep('R2\\(', names(stats))
+  nnr   <- length(newr2)
+  if(nnr %nin% c(0, 4)) stop('MCS R^2 did not compute 4 indexes')
 
-  disc <- reListclean(R2  = stats['R2'],
-                      R2m = if(any(newr2)) stats[newr2],
-                      Dxy = stats['Dxy'],
-                      g   = stats['g'],
-                      gr  = stats['gr'])
-  if(any(newr2)) names(disc)[names(disc) == 'R2m'] <- names(stats[newr2])
+  disc <- reListclean(R2        = if(0 %in% r2) stats['R2'],
+                      namesFrom = if(nnr > 0) stats[newr2][setdiff(r2, 0)],
+                      Dxy       = stats['Dxy'],
+                      g         = if(pg) stats['g'],
+                      gr        = if(pg) stats['gr'])
+
   headings <- c('',
                 'Model Likelihood\nRatio Test',
                 'Discrimination\nIndexes')

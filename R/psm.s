@@ -244,8 +244,8 @@ psm <- function(formula,
   df <- length(fit$coef) - 1
   P  <- if(df == 0) NA else 1. - pchisq(logtest, df)
   gindex <- GiniMd(fit$linear.predictors)
-  r2m <- R2Measures(logtest, df, Nn, nnn[2])[4]
-  Dxy <- if(type %in% c('right', 'left'))
+  r2m    <- R2Measures(logtest, df, Nn, nnn[2])
+  Dxy    <- if(type %in% c('right', 'left'))
            dxy.cens(fit$linear.predictors, Y)['Dxy']
   else {
     warning('Dxy not computed since right or left censoring not in effect')
@@ -253,8 +253,8 @@ psm <- function(formula,
   }
   stats <- c(nnn, logtest, df, P, R2, r2m, Dxy, gindex, exp(gindex))
   names(stats) <- c("Obs", "Events", "Model L.R.", "d.f.", "P",
-                    "R2", "R2m", "Dxy", "g", "gr")
-  names(stats)[names(stats) == 'R2m'] <- names(r2m)
+                    "R2", names(r2m), "Dxy", "g", "gr")
+
   if(length(weights)) stats <- c(stats, 'Sum of Weights'=sum(weights))
   fit <- c(fit, list(stats=stats, weights=weights,
                      maxtime=maxtime, units=time.units,

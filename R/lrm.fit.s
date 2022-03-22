@@ -261,7 +261,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   r2     <- 1 - exp(- model.lr / sumwt)
   r2.max <- 1 - exp(- llnull   / sumwt)
   r2     <- r2 / r2.max
-  r2m    <- R2Measures(model.lr, model.df, sumwt, sumwty)[4]
+  r2m    <- R2Measures(model.lr, model.df, sumwt, sumwty)
   kmid <- floor((kint + 1) / 2)
   lpmid <- lp - kof[1] + kof[kmid] 
   prob <- plogis(lpmid)
@@ -276,7 +276,7 @@ lrm.fit <- function(x, y, offset=0, initial, est,
   
   nam <- c("Obs", "Max Deriv",
            "Model L.R.", "d.f.", "P", "C", "Dxy",
-           "Gamma", "Tau-a", "R2", "R2m", "Brier", "g", "gr", "gp")
+           "Gamma", "Tau-a", "R2", names(r2m), "Brier", "g", "gr", "gp")
   
   if(nxin != nx) {
     stats <- c(stats, resid.chi2, resid.df,

@@ -57,8 +57,8 @@ psm(formula,
     parms=NULL, 
     model=FALSE, x=FALSE, y=TRUE, time.inc, \dots)
 
-\method{print}{psm}(x, correlation=FALSE, digits=4, coefs=TRUE,
-title, \dots) 
+\method{print}{psm}(x, correlation=FALSE, digits=4, r2=c(0,2,4), coefs=TRUE,
+pg=FALSE, title, \dots) 
 
 Hazard(object, \dots)
 \method{Hazard}{psm}(object, \dots)   # for psm fit
@@ -126,11 +126,20 @@ lwd=3, \dots)
   }
   \item{correlation}{set to \code{TRUE} to print the correlation matrix
     for parameter estimates}
-  \item{digits}{number of places to print to the right of the decimal point}
+  \item{digits}{number of places to print to the right of the decimal
+		point}
+	\item{r2}{vector of integers specifying which R^2 measures to print,
+		with 0 for Nagelkerke R^2 and 1:4 corresponding to the 4 measures
+		computed by \code{\link[Hmisc]{R2Measures}}.  Default is to print
+		Nagelkerke (labeled R2) and second and fourth \code{R2Measures}
+		which are the measures adjusted for the number of predictors, first
+		for the raw sample size then for the effective sample size, which
+		here is the number of uncensored observations.}
   \item{coefs}{specify \code{coefs=FALSE} to suppress printing the table
 	of model coefficients, standard errors, etc.  Specify \code{coefs=n}
 	to print only the first \code{n} regression coefficients in the
 	model.}
+  \item{pg}{set to \code{TRUE} to print g-indexes}
   \item{title}{a character string title to be passed to \code{prModFit}}
   \item{\dots}{
     other arguments to fitting routines, or to pass to \code{survplot} from
@@ -245,6 +254,7 @@ d.time <- pmin(d.time, cens)
 f <- psm(Surv(d.time,death) ~ sex*pol(age,2), 
          dist='lognormal')
 # Log-normal model is a bad fit for proportional hazards data
+print(f, r2=0:4, pg=TRUE)
 
 anova(f)
 fastbw(f)  # if deletes sex while keeping age*sex ignore the result

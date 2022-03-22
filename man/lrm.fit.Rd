@@ -88,7 +88,8 @@ P-value,
 Goodman-Kruskal \eqn{\gamma}{gamma}, and Kendall's \eqn{\tau_a}{tau-a}
 rank correlations 
 between predicted probabilities and observed response, the
-Nagelkerke \eqn{R^2} index, the Brier probability score with
+Nagelkerke \eqn{R^2} index, 4 indexes computed by
+\code{\link[Hmisc]{R2Measures}}, the Brier probability score with
 respect to computing the probability that \eqn{y >} the mid level less
 one, the \eqn{g}-index, \eqn{gr} (the \eqn{g}-index on the odds ratio
 scale), and \eqn{gp} (the \eqn{g}-index on the probability scale using
