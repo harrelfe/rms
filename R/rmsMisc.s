@@ -942,7 +942,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
     }
   }
   if(length(footer))
-    R <- c(R, paste0(specs$smallskip, transl(footer)))
+    R <- c(R, paste(specs$smallskip, transl(footer)))
   
   R <- paste0(R, '\n')
   switch(lang,
