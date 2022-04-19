@@ -49,7 +49,7 @@ depending on \code{options(prType=)}, and output is to the console.  For
 \code{html.anova.rms} just calls \code{latex.anova.rms}.
 }
 \usage{
-\method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9, 
+\method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9,
       test=c('F','Chisq'), india=TRUE, indnl=TRUE, ss=TRUE,
       vnames=c('names','labels'),
       posterior.summary=c('mean', 'median', 'mode'), ns=500, cint=0.95)
@@ -58,10 +58,10 @@ depending on \code{options(prType=)}, and output is to the console.  For
       which=c('none','subscripts','names','dots'),
       table.env=FALSE, \dots)
 
-\method{plot}{anova.rms}(x, 
+\method{plot}{anova.rms}(x,
      what=c("chisqminusdf","chisq","aic","P","partial R2","remaining R2",
-            "proportion R2", "proportion chisq"), 
-     xlab=NULL, pch=16, 
+            "proportion R2", "proportion chisq"),
+     xlab=NULL, pch=16,
      rm.totals=TRUE, rm.ia=FALSE, rm.other=NULL, newnames,
      sort=c("descending","ascending","none"), margin=c('chisq','P'),
      pl=TRUE, trans=NULL, ntrans=40, height=NULL, width=NULL, \dots)
@@ -86,7 +86,7 @@ of all factors listed. Names may be abbreviated.  For example, specify
 \code{anova(fit,age,cholesterol)} to get a Wald statistic for testing the joint
 importance of age, cholesterol, and any factor interacting with them.
 
-Can be optional graphical parameters to send to 
+Can be optional graphical parameters to send to
 \code{dotchart2}, or other parameters to send to \code{latex.default}.
 Ignored for \code{print}.
 
@@ -135,7 +135,7 @@ tested and blanks for those just being adjusted for.
 }
 \item{what}{
 what type of statistic to plot.  The default is the Wald
-\eqn{\chi^2}{chi-square} 
+\eqn{\chi^2}{chi-square}
 statistic for each factor (adding in the effect of higher-ordered
 factors containing that factor) minus its degrees of freedom.  The
 R2 choices for \code{what} only apply to \code{ols} models.
@@ -169,7 +169,7 @@ a list of substitute predictor names to use, after omitting any.
 	\code{"proportion R2"}, and \code{"proportion chisq"}.
 	Default is to not draw any statistics in the margin.  When
 	\code{plotly} is in effect, margin values are instead displayed as
-	hover text.} 
+	hover text.}
 \item{pl}{
 set to \code{FALSE} to suppress plotting.  This is useful when you only wish to
 analyze the vector of statistics returned.
@@ -192,7 +192,7 @@ minimum of 400 and 100 + 25 times the number of test statistics displayed.}
 title to pass to \code{latex}, default is name of fit object passed to
 \code{anova} prefixed with \code{"anova."}.  For Windows, the default is
 \code{"ano"} followed by the first 5 letters of the name of the fit
-object. 
+object.
 }
 \item{dec.chisq}{
 number of places to the right of the decimal place for typesetting
@@ -216,7 +216,7 @@ digits to the right for mean squares (default is \code{NA})
   Default is constructed from the response variable.}
 }
 \value{
-\code{anova.rms} returns a matrix of class \code{anova.rms} containing factors 
+\code{anova.rms} returns a matrix of class \code{anova.rms} containing factors
 as rows and \eqn{\chi^2}{chi-square}, d.f., and \eqn{P}-values as
 columns (or d.f., partial \eqn{SS, MS, F, P}).  An attribute
 \code{vinfo} provides list of variables involved in each row and the
@@ -247,7 +247,7 @@ file with a name of the form \code{"title.tex"} (see the \code{title} argument a
 \code{\link{rms.trans}}, \code{\link{summary.rms}}, \code{\link{plot.Predict}},
 \code{\link{ggplot.Predict}}, \code{\link[Hmisc]{solvet}},
 \code{\link{locator}},
-\code{\link[Hmisc]{dotchart2}}, \code{\link[Hmisc]{latex}},  
+\code{\link[Hmisc]{dotchart2}}, \code{\link[Hmisc]{latex}},
 \code{\link[Hmisc]{xYplot}}, \code{\link{anova.lm}},
 \code{\link{contrast.rms}}, \code{\link{pantext}}
 }
@@ -293,9 +293,9 @@ dd <- datadist(treat, num.diseases, age, cholesterol)
 options(datadist='dd')
 p <- Predict(g, age, treat="b")
 s <- anova(g)
-# Usually omit fontfamily to default to 'Courier'
-# It's specified here to make R pass its package-building checks
-plot(p, addpanel=pantext(s, 28, 1.9,  fontfamily='Helvetica'))
+tx <- paste(capture.output(s), collapse='\n')
+ggplot(p) + annotate('text', x=27, y=3.2, family='courier', label=tx,
+                      hjust=0, vjust=1, size=2)
 
 plot(s, margin=c('chisq', 'proportion chisq'))
 # new plot - dot chart of chisq-d.f. with 2 other stats in right margin
@@ -324,19 +324,19 @@ print(an, 'dots')
 
 
 an <- anova(f, test='Chisq', ss=FALSE)
-plot(0:1)                        # make some plot
-tab <- pantext(an, 1.2, .6, lattice=FALSE, fontfamily='Helvetica')
+# plot(0:1)                        # make some plot
+# tab <- pantext(an, 1.2, .6, lattice=FALSE, fontfamily='Helvetica')
 # create function to write table; usually omit fontfamily
-tab()                            # execute it; could do tab(cex=.65)
+# tab()                            # execute it; could do tab(cex=.65)
 plot(an)                         # new plot - dot chart of chisq-d.f.
 # Specify plot(an, trans=sqrt) to use a square root scale for this plot
 # latex(an)                      # nice printout - creates anova.f.tex
 
 
 ## Example to save partial R^2 for all predictors, along with overall
-## R^2, from two separate fits, and to combine them with a lattice plot
+## R^2, from two separate fits, and to combine them with ggplot2
 
-require(lattice)
+require(ggplot2)
 set.seed(1)
 n <- 100
 x1 <- runif(n)
@@ -354,19 +354,19 @@ for(g in c('a','b')) {
                     partialR2=unname(a))
     A <- rbind(A, d)
   }
-dotplot(Variable ~ partialR2 | group, data=A,
-        xlab=ex <- expression(partial~R^2))
-dotplot(group ~ partialR2 | Variable, data=A, xlab=ex)
-dotplot(Variable ~ partialR2, groups=group, data=A, xlab=ex,
-        auto.key=list(corner=c(.5,.5)))
+ggplot(A, aes(x=partialR2, y=Variable)) + geom_point() +
+       facet_wrap(~ group) + xlab(ex <- expression(partial~R^2)) +
+       scale_y_discrete(limits=rev)
+ggplot(A, aes(x=partialR2, y=Variable, color=group)) + geom_point() +
+       xlab(ex <- expression(partial~R^2)) +
+       scale_y_discrete(limits=rev)
 
-
-# Suppose that a researcher wants to make a big deal about a variable 
+# Suppose that a researcher wants to make a big deal about a variable
 # because it has the highest adjusted chi-square.  We use the
 # bootstrap to derive 0.95 confidence intervals for the ranks of all
 # the effects in the model.  We use the plot method for anova, with
 # pl=FALSE to suppress actual plotting of chi-square - d.f. for each
-# bootstrap repetition.  
+# bootstrap repetition.
 # It is important to tell plot.anova.rms not to sort the results, or
 # every bootstrap replication would have ranks of 1,2,3,... for the stats.
 
@@ -393,7 +393,10 @@ for(i in 1:B) {
   }
 lim <- t(apply(ranks, 2, quantile, probs=c(.025,.975)))
 predictor <- factor(names(Rank), names(Rank))
-Dotplot(predictor ~ Cbind(Rank, lim), pch=3, xlab='Rank') 
+w <- data.frame(predictor, Rank, lower=lim[,1], upper=lim[,2])
+ggplot(w, aes(x=predictor, y=Rank)) + geom_point() + coord_flip() +
+  scale_y_continuous(breaks=1:12) +
+  geom_errorbar(aes(ymin=lim[,1], ymax=lim[,2]), width=0)
 }
 \keyword{models}
 \keyword{regression}
