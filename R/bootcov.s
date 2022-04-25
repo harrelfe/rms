@@ -1,6 +1,6 @@
 bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE, 
                     loglik=FALSE, pr=FALSE, maxit=15, eps=.0001,
-                    group=NULL, stat=NULL) {
+                    group=NULL, stat=NULL, seed=sample(10000, 1)) {
 
   coxcph <- inherits(fit,'coxph') || inherits(fit,'cph')
 
@@ -204,8 +204,6 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
 
   anyinf <- FALSE
 
-  if(!exists('.Random.seed')) runif(1)
-  seed <- .Random.seed
   if(missing(cluster)) {
     clusterInfo <- NULL
     nc <- n

@@ -81,7 +81,8 @@ A comprehensive example demonstrates the use of all of the functions.
 \usage{
 bootcov(fit, cluster, B=200, fitter, 
         coef.reps=TRUE, loglik=FALSE,
-        pr=FALSE, maxit=15, eps=0.0001, group=NULL, stat=NULL)
+        pr=FALSE, maxit=15, eps=0.0001, group=NULL, stat=NULL,
+        seed=sample(10000, 1))
 
 
 bootplot(obj, which=1 : ncol(Coef), X,
@@ -165,7 +166,9 @@ You may specify both \code{group} and \code{cluster}.
   element produced by the fitting function to save over the bootstrap
   repetitions.  The vector of saved statistics will be in the
   \code{boot.stats} part of the list returned by \code{bootcov}.
-  }
+}
+\item{seed}{random number seed for \code{set.seed}, defaults to a random
+	integer between 1 and 10000; user should specify a constant for reproducibility}
 \item{which}{
 one or more integers specifying which regression coefficients to
 plot for \code{bootplot}
@@ -298,7 +301,7 @@ x <- exp(rnorm(200))
 logit <- 1 + x/2
 y <- ifelse(runif(200) <= plogis(logit), 1, 0)
 f <- lrm(y ~ pol(x,2), x=TRUE, y=TRUE)
-g <- bootcov(f, B=50, pr=TRUE)
+g <- bootcov(f, B=50, pr=TRUE, seed=3)
 anova(g)    # using bootstrap covariance estimates
 fastbw(g)   # using bootstrap covariance estimates
 beta <- g$boot.Coef[,1]
@@ -330,7 +333,7 @@ sex <- sexes[id]
 # In truth, observations within subject are independent:
 y   <- ifelse(runif(300) <= prob[id], 1, 0)
 f <- lrm(y ~ lsp(age,50)*sex, x=TRUE, y=TRUE)
-g <- bootcov(f, id, B=50)  # usually do B=200 or more
+g <- bootcov(f, id, B=50, seed=3)  # usually do B=200 or more
 diag(g$var)/diag(f$var)
 # add ,group=w to re-sample from within each level of w
 anova(g)            # cluster-adjusted Wald statistics
@@ -340,7 +343,7 @@ plot(Predict(g, age=30:70, sex='female'))  # cluster-adjusted confidence bands
 
 # Get design effects based on inflation of the variances when compared
 # with bootstrap estimates which ignore clustering
-g2 <- bootcov(f, B=50)
+g2 <- bootcov(f, B=50, seed=3)
 diag(g$var)/diag(g2$var)
 
 
@@ -366,7 +369,7 @@ y   <- ifelse(runif(n)<=plogis(L), 1, 0)
 
 
 f <- lrm(y ~ sex*pol(age,2), x=TRUE, y=TRUE)
-b <- bootcov(f, B=50, loglik=TRUE, pr=TRUE)   # better: B=500
+b <- bootcov(f, B=50, loglik=TRUE, pr=TRUE, seed=3)   # better: B=500
 
 
 par(mfrow=c(2,3))
@@ -476,7 +479,7 @@ vertex
 # x in [0,1], i.e., original fit is the constrained MLE
 
 
-g <- bootcov(f, B=50, coef.reps=TRUE, loglik=TRUE)
+g <- bootcov(f, B=50, coef.reps=TRUE, loglik=TRUE, seed=3)
 bootcoef <- g$boot.Coef    # 100x3 matrix
 vertex <- -bootcoef[,2]/(2*bootcoef[,3])
 table(cut2(vertex, c(0,1)))
@@ -505,10 +508,8 @@ x2 <- rnorm(100)
 y <- sample(0:1, 100, TRUE)
 f <- lrm(y ~ x1, x=TRUE, y=TRUE)
 g <- lrm(y ~ x1 + x2, x=TRUE, y=TRUE)
-set.seed(3)
-f <- bootcov(f, stat='C')
-set.seed(3)
-g <- bootcov(g, stat='C')
+f <- bootcov(f, stat='C', seed=4)
+g <- bootcov(g, stat='C', seed=4)
 dif <- g$boot.stats - f$boot.stats
 hist(dif)
 quantile(dif, c(.025,.25,.5,.75,.975))

@@ -294,8 +294,8 @@ options(datadist='dd')
 p <- Predict(g, age, treat="b")
 s <- anova(g)
 tx <- paste(capture.output(s), collapse='\n')
-ggplot(p) + annotate('text', x=27, y=3.2, family='courier', label=tx,
-                      hjust=0, vjust=1, size=2)
+ggplot(p) + annotate('text', x=27, y=3.2, family='mono', label=tx,
+                      hjust=0, vjust=1, size=1.5)
 
 plot(s, margin=c('chisq', 'proportion chisq'))
 # new plot - dot chart of chisq-d.f. with 2 other stats in right margin
