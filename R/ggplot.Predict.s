@@ -489,9 +489,10 @@ ggplot.Predict <-
       }
       xa <- if(conf.int) c(zz$.xx., zz$.xx., zz$.xx.) else zz$.xx.
       ya <- if(conf.int) c(zz$.yhat, zz$lower, zz$upper) else zz$.yhat
-      g  <- c(g,
-              sprintf("tanova(w, xa, ya, %s, %s, flip=FALSE)",
-                      deparse(xlim.), deparse(ylim.)))   ## was flip=flipped
+      if(length(anova))
+        g  <- c(g,
+                sprintf("tanova(w, xa, ya, %s, %s, flip=FALSE)",
+                        deparse(xlim.), deparse(ylim.)))   ## was flip=flipped
       
       if(! maddlayer) g <- c(g, addlayer)
       if(conf.int) {
@@ -625,8 +626,9 @@ res <- if(jplot == 1) plrend(Plt[[1]])
        else
          range(pretty(xv))
 
-    g <- c(g, sprintf("tanova(xn, xa, ya, %s, %s, flip=FALSE)",
-                      deparse(xlim.), deparse(ylim.)))  # was flip=flipped
+    if(length(anova))
+      g <- c(g, sprintf("tanova(xn, xa, ya, %s, %s, flip=FALSE)",
+                        deparse(xlim.), deparse(ylim.)))  # was flip=flipped
                     
     if(! is.factor(xv) && length(rdata) && xn %in% names(rdata)) {
       form <- paste('yhat', xn, sep='~')
