@@ -68,7 +68,7 @@ depending on \code{options(prType=)}, and output is to the console.  For
 
 \method{latex}{anova.rms}(object, title, dec.chisq=2,
       dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, dec.REV=3, table.env=TRUE,
-      caption=NULL, \dots)
+      caption=NULL, fontsize=1, \dots)
 
 \method{html}{anova.rms}(object, \dots)
 }
@@ -214,6 +214,7 @@ digits to the right for mean squares (default is \code{NA})
 \item{table.env}{see \code{\link[Hmisc]{latex}}}
 \item{caption}{caption for table if \code{table.env} is \code{TRUE}.
   Default is constructed from the response variable.}
+\item{fontsize}{font size for html output; default is 1 for \code{1em}}
 }
 \value{
 \code{anova.rms} returns a matrix of class \code{anova.rms} containing factors

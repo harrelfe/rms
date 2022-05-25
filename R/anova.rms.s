@@ -566,7 +566,8 @@ latex.anova.rms <-
   function(object,
            title=paste('anova', attr(object, 'obj.name'), sep='.'),
            dec.chisq=2, dec.F=2, dec.ss=NA,
-           dec.ms=NA, dec.P=4, dec.REV=3, table.env=TRUE, caption=NULL, ...) {
+           dec.ms=NA, dec.P=4, dec.REV=3, table.env=TRUE, caption=NULL,
+           fontsize=1, ...) {
 
     lang <- prType()
     html <- lang == 'html'
@@ -637,10 +638,13 @@ latex.anova.rms <-
 
     if(html) {
       al <- rep('r', length(sn))
+      fshead <- rep(paste0('font-size:', fontsize, 'em;'), ncol(dstats))
+      fscell <- rep('padding-left:2ex;',                   ncol(dstats))
       w <- htmlTable::htmlTable(dstats, caption=caption,
-                               css.cell=rep('padding-left:3ex;', ncol(dstats)),
-                               align=al, align.header=al,
-                               rowlabel='', escape.html=FALSE)
+                                css.table=fshead,
+                                css.cell =fscell,
+                                align=al, align.header=al,
+                                rowlabel='', escape.html=FALSE)
       htmltools::HTML(as.character(paste0(w, '\n')))
       }
     else

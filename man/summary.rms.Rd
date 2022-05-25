@@ -66,7 +66,8 @@ posterior.summary=c('mean', 'median', 'mode'), verbose=FALSE)
     cex.main=1, clip=c(-1e30,1e30), main,
     col=rgb(red=.1,green=.1,blue=.8,alpha=c(.1,.4,.7)),
     col.points=rgb(red=.1,green=.1,blue=.8,alpha=1), pch=17,
-    lwd=if(length(q) == 1) 3 else 2 : (length(q) + 1), digits=4, \dots)
+    lwd=if(length(q) == 1) 3 else 2 : (length(q) + 1), digits=4,
+    declim=4, \dots)
 }
 \arguments{
 \item{object}{
@@ -152,6 +153,8 @@ factor levels for categorical variables in the model.}
 	the decimal point of \code{dec} is given.  \code{digits} is also the
 	number of significant digits to format numeric hover text and labels
 	for \code{plotly}.}
+\item{declim}{number of digits to the right of the decimal point to
+	which to round confidence limits for labeling axes}
 \item{at}{
 vector of coordinates at which to put tick mark labels on the main axis.  If
 \code{log=TRUE}, \code{at} should be in anti-log units.
