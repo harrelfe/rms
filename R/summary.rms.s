@@ -557,12 +557,16 @@ plot.summary.rms <-
   feffect <- fun(effect)
   hte     <- format(feffect, digits=digits)
   if(adjust != '') hte <- paste(hte, adjust, sep='<br>')
+
+  height <- pp$heightDotchartb(lb)
+  auto   <- .Options$plotlyauto
+  if(length(auto) && auto) height <- NULL
   
   p <- plotly::plot_ly(x=~ feffect, y=~ lb,
                        text = ~ hte,
                        type = 'scatter', mode='markers', hoverinfo='text',
                        name = 'Estimate',
-                       height = pp$heightDotchartb(lb))
+                       height = height)
 
   
   for(i in 1 : n) {

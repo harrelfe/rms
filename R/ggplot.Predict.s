@@ -27,6 +27,8 @@ ggplot.Predict <-
   lhw <- length(height) + length(width)
   if(isbase && lhw)
     warning('height and width ignored for non-plotly graphics')
+  auto <- .Options$plotlyauto
+  if(! isbase && length(auto) && auto) height <- width <- NULL
 
   plrend <- if(isbase) function(obj, ...) obj
             else

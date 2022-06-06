@@ -8,6 +8,10 @@ plotp.Predict <-
                                side=1, nint=100),
            ncols=3, width=800, ...)
 {
+  auto <- .Options$plotlyauto
+  auto <- length(auto) && auto
+  if(auto) width <- NULL
+  
   varypred <- ('.set.'       %in%  names(data)) &&
               ('.predictor.' %nin% names(data))
   if(varypred) {
@@ -83,6 +87,7 @@ plotp.Predict <-
     ncont <- 0
     cont  <- list()
     height <- 400 * ceiling(length(vcon) / ncols)
+    if(auto) height <- NULL
 
     for(v in vcon) {
       ncont <- ncont + 1
