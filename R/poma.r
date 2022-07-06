@@ -142,13 +142,19 @@ poma <- function(mod.orm, cutval) {
 
       ## Number of groups (2 to 5) based on sample size
       ecdfgroups = pmax(2, pmin(5, round( dim(mod.orm$x)[[1]]/20)))
+      
+      y = mod.orm$y
+      # Coerce to numeric if needed
+      if (is.factor(y)) {
+        y = as.numeric(levels(y))[y]
+      }
 
       z <-  Ecdf (~ mod.ols$y,
                   groups = cut2(combined_x, g = ecdfgroups),
                   fun = function (F) g(1 - F),
                   xlab = all.vars(mod.ols$sformula)[[1]],
                   ylab = as.expression (f) ,
-                  xlim = c(quantile(mod.orm$y, 0.10, na.rm= TRUE), quantile(mod.orm$y, 0.85, na.rm= TRUE)),
+                  xlim = c(quantile(y, 0.10, na.rm= TRUE), quantile(y, 0.85, na.rm= TRUE)),
                   label.curve= FALSE)
       print (z, split =c(col , row , 2, 1) , more = row < 2 | col < 2)
     }
