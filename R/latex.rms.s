@@ -7,9 +7,8 @@ latexrms <-
 {
   html <- prType() == 'html'
   ## Break character for non-math mode:
-  latexmathbreak <- .Options$latexmathbreak
-  brchar <- if(length(latexmathbreak)) latexmathbreak else '\\\\'
-  
+  brchar <- if(html) '<br>' else '\\\\'
+ 
   f    <- object	
   at   <- f$Design
   name <- at$name
@@ -592,6 +591,8 @@ latexrms <-
   if(cur != "") tex <- c(tex, cur)
 
   if(inline) {
+    tex <- paste(tex, collapse='\\\\')
+    tex <- c('$$\\begin{array}{l}', tex, '\\end{array}$$')
     if(before != '') tex <- c(before, tex)
     if(size != '')   tex <- c(paste0('{\\', size), tex)
     if(after  != '') tex <- c(tex, after)
