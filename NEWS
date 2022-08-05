@@ -1,8 +1,11 @@
-Changes in version 6.3-1 (2022-05-25)
+Changes in version 6.3-1 (2022-08-02)
    * bootcov: added seed argument; need to change old uses to use this; affects usage of the boot package
    * html. and latex.anova.rms: added fontsize argument
    * plot.summary.rms: added declim argument
    * ggplot.Predict, plotp.Predict, plot.summary.rms: override plotly height and width if options(plotlyauto=TRUE) is set
+   * html.validate: fixed call to htmlTable to not add special css as was getting an html error
+   * latexrms: use double backslash as math mode line break character even if html is into effect, unless options(htmlmathbreak=) is given in which case its value will be used
+   * latex.lrm, latex.orm: changed to used standard LaTeX probability notation
 
 Changes in version 6.3-0 (2022-04-12)
    * gTrans, Design, set.atr, latexrms: For latex(fit) to work when there is a gTrans() predictor

@@ -18,12 +18,12 @@ latex.lrm <-
       w <- '\\['
       
       j <- if(lev[2]=="TRUE") "" else paste("=",lev[2],sep="")
-      if(nrp==1) w <- paste(w,"{\\rm Prob}\\{",Y, j,
-           "\\} = \\frac{1}{1+\\exp(-X\\beta)}", sep="")
+      if(nrp==1) w <- paste(w,"\\Pr(",Y, j,
+           ") = \\frac{1}{1+\\exp(-X\\beta)}", sep="")
 
       else
-        w <- paste(w,"{\\rm Prob}\\{", Y, 
-                   "\\geq j\\} = \\frac{1}{1+\\exp(-\\alpha_{j}-X\\beta)}",
+        w <- paste(w,"\\Pr(", Y, 
+                   "\\geq j) = \\frac{1}{1+\\exp(-\\alpha_{j}-X\\beta)}",
                    sep="")
 
       w <- paste(w, ", {\\rm \\ \\ where} \\\\ \\]", sep="")
@@ -96,8 +96,8 @@ latex.orm <-
                      
       w <- '\\['
       
-      w <- paste(w, "{\\rm Prob}\\{", Y, 
-                   "\\geq y | X\\} = ", dist, sep='')
+      w <- paste(w, "\\Pr(", Y, 
+                   "\\geq y | X) = ", dist, sep='')
 
       w <- paste(w, ", {\\rm \\ \\ where} \\\\ \\]", sep="")
 

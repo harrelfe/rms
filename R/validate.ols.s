@@ -223,19 +223,26 @@ html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...) {
                   'rho','pdm'),
               c('$D_{xy}$','$R^{2}$','$E_{\\max}$','$D$','$U$',
                 '$Q$','$B$','$g$','$g_{p}$','$g_{r}$','$\\rho$',
-                '$|\\overline{\\mathrm{Pr}(Y\\geq Y_{0.5})-\\frac{1}{2}}|$'))
+                '$|\\overline{\\Pr(Y\\geq Y_{0.5})-\\frac{1}{2}}|$'))
   
   dimnames(x) <- list(rn, cn)
   cdec <- ifelse(cn == '$n$', 0, digits)
   ## Bug in htmlTable::txtRound for vector digits
   z <- unclass(x)
   for(i in 1 : length(cdec)) z[, i] <- round(z[, i], cdec[i])
+
+  if(FALSE) {
   cat(htmlTable::htmlTable(z, rowlabel='Index', caption=caption,
                            css.cell = c('', rep('padding-left:3ex;',
                                                 ncol(z) - 1)),
                            escape.html=FALSE),
                                         sep='\n')
   cat('<p style="padding-top:2em;">\n')
+  }
+
+  cat(htmlTable::htmlTable(z, rowlabel='Index', caption=caption,
+                           escape.html=FALSE), sep='\n')
+  
                          
   if(length(kept) && B > 0) {
     varin <- ifelse(kept, htmlSpecial('mediumsmallwhitecircle'), ' ')
@@ -243,17 +250,27 @@ html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...) {
     varin <- varin[1:min(nrow(varin), B),, drop=FALSE]
     cap <- 'Factors Retained in Backwards Elimination'
     if(nr > B) cap <- c(cap, paste('First', B, 'Resamples'))
+    if(FALSE) {
     cat(htmlTable::htmlTable(varin, caption=cap, rnames=FALSE,
                              css.cell = c('', rep('padding-left:3ex;',
                                                   ncol(varin) - 1)),
                              escape.html=FALSE),
         sep='\n')
+    }
+    cat(htmlTable::htmlTable(varin, caption=cap, rnames=FALSE,
+                             escape.html=FALSE), sep='\n')
 
     cap <- 'Frequencies of Numbers of Factors Retained'
     nkept <- apply(kept, 1, sum)
     tkept <- t(as.matrix(table(nkept)))
+    if(FALSE) {
     cat(htmlTable::htmlTable(tkept, caption=cap, rnames=FALSE,
                              css.cell = c('', rep('padding-left:3ex;', length(nkept) - 1)),
                              escape.html=FALSE))
+    }
+
+    cat(htmlTable::htmlTable(tkept, caption=cap, rnames=FALSE,
+                             escape.html=FALSE), sep='\n')
+    
     }
   }
