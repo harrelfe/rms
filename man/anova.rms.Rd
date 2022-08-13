@@ -160,7 +160,8 @@ a list of other predictor names to omit from the chart
 \item{newnames}{
 a list of substitute predictor names to use, after omitting any.
 }
-\item{sort}{default is to sort bars in descending order of the summary statistic
+\item{sort}{default is to sort bars in descending order of the summary statistic. 
+Available options: 'ascending', 'descending', 'none'. 
 }
 \item{margin}{set to a vector of character strings to write text for
 	selected statistics in the right margin of the dot chart.  The
