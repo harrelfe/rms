@@ -984,7 +984,7 @@ html.naprint.delete <- function(object, ...) {
   lg <- length(g <- object$nmiss)
   R <- character(0)
   if(lg) {
-    R <- "Frequencies of Missing Values Due to Each Variable"
+    R <- c("", "<br>", "Frequencies of Missing Values Due to Each Variable", "<br>", "")
     
     if(sum(g > 0) < 4)
       R <- c(R, '<pre>', capture.output(print(g)), '</pre>')

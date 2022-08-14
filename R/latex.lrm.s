@@ -11,11 +11,11 @@ latex.lrm <-
   
   if(missing(which) & !inline)
     {
-      Y <- paste("{\\rm ",as.character(attr(f$terms,"formula")[2]),"}",sep="")
+      Y <- paste("\\text{",as.character(attr(f$terms,"formula")[2]),"}",sep="")
       lev <- names(f$freq)
       nrp <- f$non.slopes
       
-      w <- '\\['
+      w <- '$$'
       
       j <- if(lev[2]=="TRUE") "" else paste("=",lev[2],sep="")
       if(nrp==1) w <- paste(w,"\\Pr(",Y, j,
@@ -26,7 +26,7 @@ latex.lrm <-
                    "\\geq j) = \\frac{1}{1+\\exp(-\\alpha_{j}-X\\beta)}",
                    sep="")
 
-      w <- paste(w, ", {\\rm \\ \\ where} \\\\ \\]", sep="")
+      w <- paste(w, ", \\text{~~where} \\\\ $$", sep="")
 
       if(length(caption)) {
         if(md) w <- c(paste('<div align=center><strong>', caption,
@@ -79,7 +79,7 @@ latex.orm <-
   
   if(missing(which) & !inline)
     {
-      Y <- paste("{\\rm ",as.character(attr(f$terms,"formula")[2]),"}",sep="")
+      Y <- paste("\\text{",as.character(attr(f$terms,"formula")[2]),"}",sep="")
       lev <- names(f$freq)
       nrp <- f$non.slopes
 
@@ -94,12 +94,12 @@ latex.orm <-
                loglog   = paste('\\exp(-\\exp(', zm, '))', sep=''),
                cloglog  = paste('1 - \\exp(-\\exp(', z, ')', sep=''))
                      
-      w <- '\\['
+      w <- '$$'
       
       w <- paste(w, "\\Pr(", Y, 
                    "\\geq y | X) = ", dist, sep='')
 
-      w <- paste(w, ", {\\rm \\ \\ where} \\\\ \\]", sep="")
+      w <- paste(w, "\\text{~~where} \\\\ $$", sep="")
 
       if(length(caption)) {
         if(md) w <- c(paste('<div align=center><strong>', caption,
