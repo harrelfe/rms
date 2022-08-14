@@ -256,11 +256,11 @@ print.impactPO <- function(x, estimates=nrow(x$estimates) < 16, ...) {
     for(i in 1 : nd) {
       cat('\n')
       print(x$newdata[i, ])
-      b <- boot[, i, , , drop=TRUE]
-      b <- round(apply(b, 2:3, cl), 3)
-      for(model in dimnames(b)[[3]]) {
+      b <- boot[, i, , , drop=FALSE]
+      b <- round(apply(b, 2 : 4, cl), 3)
+      for(model in dimnames(b)[[4]]) {
         cat('\nPO - ', model, ' probability estimates\n\n', sep='')
-        print(b[, , model])
+        print(b[, , , model])
         }
       }
     }
