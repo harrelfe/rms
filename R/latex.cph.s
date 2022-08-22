@@ -27,42 +27,40 @@ latex.cph <-
     {
       if(length(strata)==0)
         {
-          w <- c(w,paste("\\[{\\rm Prob}\\{T\\geq t\\} = S_{0}(t)^{{\\textstyle e}^{X\\beta}}, {\\rm \\ \\ where} \\\\ \\]",sep=""))
+          w <- c(w,paste("$$\\Pr(T\\geq t) = S_{0}(t)^{\\text{e}^{X\\beta}}$,~~ \\text{where}$$",sep=""))
         }
       else
         {
           sname <- atr$name[atr$assume.code==8]
           strata.sub <- letters[8+(1:length(sname))]
-          s <- paste("{\\rm ",sname,"}=",strata.sub,sep="")
+          s <- paste("\\text{",sname,"}=",strata.sub,sep="")
           s <- paste(s, collapse=",")
-          w <- c(w,paste("\\[{\\rm Prob}\\{T\\geq t\\ |\\ ",s,"\\}=S_{",
+          w <- c(w,paste("$$\\Pr(T\\geq t~|~",s,")=S_{",
                          paste(strata.sub,collapse=""),
-                         "}(t)^{{\\textstyle e}^{X\\beta}}, {\\rm \\ \\ where} \\\\ \\]", sep=""))
+                         "}(t)^{\\text{e}^{X\\beta}},~~\\text{where}$$", sep=""))
         }
     }
   if(!length(which)) which <- 1:length(atr$name)
   if(missing(varnames)) varnames <- atr$name[atr$assume.code!=9]
-  if(! md) cat(w, sep=if(length(w))"\n" else "", file=file, append=append)
+  cat(w, sep=if(length(w))"\n" else "", file=file, append=append)
 
-  Z <- latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
-                columns=columns, 
-                before=before, after=after,
-                prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
-                intercept=Intercept, inline=inline,
-                pretrans=pretrans, digits=digits, size=size)
-  if(md) Z <- c(paste0(w, '\n'), as.character(z))
+  latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
+           columns=columns, 
+           before=before, after=after,
+           prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
+           intercept=Intercept, inline=inline,
+           pretrans=pretrans, digits=digits, size=size)
 
-  if(inline)
-    return(if(md) htmltools::HTML(Z) else Z)
+  if(inline) return(invisible())
   
   ss <- f$surv.summary
   if(surv && length(ss)) {
-    fs <- levels(f$strata)   # was f$strata
+    fs <- levels(f$strata)
     nstrat <- 0; if(length(fs)) nstrat <- length(fs)
     times <- as.numeric(dimnames(ss)[[1]])
     maxtime <- f$maxtime
-    if(max(times)>=maxtime) maxt <- FALSE
-    if(nstrat==0) {
+    if(max(times) >= maxtime) maxt <- FALSE
+    if(nstrat == 0) {
       s <- matrix(ss[, , 1], ncol=1)
       if(maxt) {
         s <- cbind(s, f$surv[L <- length(f$surv)])
@@ -73,7 +71,7 @@ latex.cph <-
         z <- htmlTable::txtRound(s, digits=dec)
         z <- htmlTable::htmlTable(z, rowlabel='$t$', escape.html=FALSE,
                                   css.cell='min-width: 9em;')
-        Z <- c(Z, as.character(z))
+        print(z)
       }
       else
         latex(s, file=file, append=TRUE, rowlabel="$t$",
@@ -99,10 +97,10 @@ latex.cph <-
                           paste("$S_{", n, "}(t)$", sep=""))
       if(md) {
         z <- htmlTable::txtRound(s, digits=dec)
-        Z <- c(Z, as.character(
-                    htmlTable::htmlTable(z, rowlabel='$t$',
-                                         escape.html=FALSE,
-                                         css.cell='min-width: 9em;')))
+        z <- htmlTable::htmlTable(z, rowlabel='$t$',
+                                  escape.html=FALSE,
+                                  css.cell='min-width: 9em;')
+        print(z)
       }
       else
         latex(s, file=file, append=TRUE,
@@ -110,5 +108,4 @@ latex.cph <-
               dec=dec, table.env=FALSE)
     }
   }
-  if(md) htmltools::HTML(Z)
 }

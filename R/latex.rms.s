@@ -80,15 +80,15 @@ latexrms <-
   tl  <- sedit(tl, from, to)
   tl <- sedit(tl, varnames, vnames, wild.literal=TRUE)
   ltl <- nchar(tl)
-  tl <- paste0("\\mathrm{", tl, "}")
+  tl <- paste0("\\text{", tl, "}")
   if(anytr)
     {
       TLi <- sedit(TLi, from, to)
       TLi <- sedit(TLi, varnames, vnames, wild.literal=TRUE)
-      TLi <- ifelse(TLi == "", "", paste0("\\mathrm{", TLi, "}"))
+      TLi <- ifelse(TLi == "", "", paste0("\\text{", TLi, "}"))
     }
   
-  varnames <- paste0("\\mathrm{", vnames, "}")
+  varnames <- paste0("\\text{", vnames, "}")
   
   Two.Way <- function(prm, Nam, nam.coef, lNam, cof, coef, f,
                       columns, lcof, varnames,
@@ -274,11 +274,11 @@ latexrms <-
   
   if(! inline)
     {
-      tex <- "\\begin{eqnarray*}"
+      tex <- "\\begin{array}"   # was eqnarray*
       if(size != '') tex <- c(tex, paste0('\\', size))
       if(length(prefix))
         tex <- c(tex,
-                 if(html) paste0(prefix, '= & & \\\\') else
+#                 if(html) paste0(prefix, '= & & \\\\') else
                  paste0("\\lefteqn{", prefix, "=}\\\\"))
     } else tex <- NULL
   
@@ -309,12 +309,12 @@ latexrms <-
           z <- substring(prm, 1, 1) == "["
           u <- ! z & ass == 7
           prm <- sedit(prm, c(' ','&','%'), c('\\ ','\\&','\\%'))
-          prm <- ifelse(z | u, prm, paste0("\\mathrm{", prm, "}"))
+          prm <- ifelse(z | u, prm, paste0("\\text{", prm, "}"))
           prm <- ifelse(z, paste(nam, "\\in ", prm), prm)
           prm <- ifelse(u, paste(nam, "=", prm), prm)
           lprm <- lprm + (z | u) * (lnam[i] + 1)
           prm <- paste0("[", prm, "]")
-          anyivar <- TRUE
+          if(ass != 8) anyivar <- TRUE
         }
       if(ass != 8)
         {
@@ -536,7 +536,7 @@ latexrms <-
                q <- ""
                m <- 0
                lnam <- nchar(nam)
-               nam <- paste0("\\mathrm{", nam, "}")
+               nam <- paste0("\\text{", nam, "}")
                Nam[[i]] <- nam; lNam[[i]] <- lnam
                for(j in 1 : length(prm))
                  {
@@ -597,54 +597,54 @@ latexrms <-
     if(size != '')   tex <- c(paste0('{\\', size), tex)
     if(after  != '') tex <- c(tex, after)
     if(size != '')   tex <- c(tex, '}')
-    if(html) return(htmltools::HTML(paste0(tex, '\n')))
-    cat(tex, sep="\n", file=file, append=append)
+#    if(html) return(htmltools::HTML(paste0(tex, '\n')))
+    if(html) return(tex)
+#      cat(tex, sep="\n", file=file, append=append)
+#      return(invisible())
+#      }
     return(structure(list(file=file,style=NULL), class='latex'))
   }
   
-  tex <- c(tex, "\\end{eqnarray*}")
+  tex <- c(tex, "\\end{array}")  # was eqnarray*
 
   tex <- ifelse(tex == paste0(prefix, '= & & \\\\') |
                 substring(tex,1,1) == "\\", tex,
                 paste(before, tex, "\\\\"))
   
   if(anyivar | anyplus) {
-    s <- if(length(which) == p) "and " else "where "
+    # s <- if(length(which) == p) "and " else "where "
+    s <- ''
     if(anyivar)
-      s <- paste0(s, "\\([c]=1\\) if subject is in group \\(c\\), 0 otherwise")
-    ## Had trouble with Rmarkdown recognizing math mode with $...$
-    if(anyivar && anyplus) s <- paste0(s, '; ')
+      s <- paste0(s, "$$[c]=1~\\text{if subject is in group}~c,~0~\\text{otherwise}$$")
+    # if(anyivar && anyplus) s <- paste0(s, '; ')
     if(anyplus)
-      s <- paste0(s, "\\((x)_{+}=x\\) if \\(x > 0\\), 0 otherwise", brchar)
+      s <- paste0(s, "$$(x)_{+}=x~\\text{if}~x > 0,~0~\\text{otherwise}$$")
     tex <- c(tex, s)
   }
   
   if(anytr & pretrans) {
     i <- TLi != ""
-    if(sum(i) == 1) tr <- paste0("\\(", varnames[i],
-                                 "\\) is pre--transformed as \\(",
-                                 TLi[i], "\\).")
+    if(sum(i) == 1) tr <- paste0("$", varnames[i],
+                                 "$ is pre--transformed as $",
+                                 TLi[i], "$.")
     else {
       tr <- if(html) {
-              z <- cbind(Variable=paste0('\\(', varnames, '\\)'),
-                         Transformation=paste0('\\(', TLi, '\\)'))
+              z <- cbind(Variable=paste0('$', varnames, '$'),
+                         Transformation=paste0('$', TLi, '$'))
               as.character(htmlTable::htmlTable(z, caption='Pre-transformations',
                                                 css.cell='min-width: 9em;',
                                                 align='|l|l|',
                                                 align.header='|c|c|',
                                                 escape.html=FALSE))
-#                           sep='\n')
             }
             else
               c("\\vspace{0.5ex}\\begin{center}{\\bf Pre--Transformations}\\\\",
                 "\\vspace{1.5ex}\\begin{tabular}{|l|l|} \\hline",
                 "\\multicolumn{1}{|c|}{Variable} & \\multicolumn{1}{c|}{Transformation} \\\\ \\hline",
-                paste0("\\(",varnames[i],"\\) & \\(",TLi[i],"\\) \\\\"),
+                paste0("$",varnames[i],"$ & $",TLi[i],"$ \\\\"),
                 "\\hline", "\\end{tabular}\\end{center}")
     }
     tex <- c(tex, tr)
   }
-  if(html) return(htmltools::HTML(paste0(tex, '\n')))
-  cat(tex, sep="\n", file=file, append=append)
-  structure(list(file=file, style=NULL), class='latex')
+  cat(tex, sep='\n', file=file, append=append)
 }

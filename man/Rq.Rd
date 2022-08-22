@@ -28,8 +28,7 @@ Rq(formula, tau = 0.5, data=environment(formula),
 \method{print}{Rq}(x, digits=4, coefs=TRUE, title, \dots)
 
 \method{latex}{Rq}(object,
-           file = paste(first.word(deparse(substitute(object))),
-             ".tex", sep = ""), append=FALSE,
+           file = '', append=FALSE,
            which, varnames, columns=65, inline=FALSE, caption=NULL, ...)
 
 \method{predict}{Rq}(object, \dots, kint=1, se.fit=FALSE)

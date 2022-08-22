@@ -22,23 +22,20 @@ latex.pphsm <-
 
   if(!whichThere & !inline)
     {
-      dist <- paste("\\exp\\{-t^{",format(1/sc, digits=digits),
-                    "} \\exp(X\\hat{\\beta})\\}")
-      w <- c(w,paste("\\[{\\rm Prob}\\{T\\geq t\\} = ",dist,
-                     "{\\rm \\ \\ where} \\\\ \\]",sep=""))
+      dist <- paste("\\exp(-t^{", format(1 / sc, digits=digits),
+                    "} \\exp(X\\hat{\\beta}))")
+      w <- c(w,paste("$$\\Prob(T\\geq t) = ", dist,
+                     "~\\text{where}~~$$",sep=""))
     }				
   if(!whichThere) which <- 1:length(at$name)
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
-  if(! md)
-    cat(w, file=file, sep=if(length(w))"\n" else "", append=append)
-  z <- latexrms(object, file=file, append=TRUE, which=which, varnames=varnames, 
-                columns=columns, 
-                before=before, after=after,
-                prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
-                inline=inline,pretrans=pretrans, digits=digits,
-                size=size)
-  if(md) htmltools::HTML(c(paste0(w, '\n'), as.character(z)))
-  else z
+  cat(w, file=file, sep=if(length(w))"\n" else "", append=append)
+  latexrms(object, file=file, append=TRUE, which=which, varnames=varnames, 
+           columns=columns, 
+           before=before, after=after,
+           prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
+           inline=inline,pretrans=pretrans, digits=digits,
+           size=size)
 }
 
 

@@ -172,8 +172,7 @@ print.Rq <- function(x, digits=4, coefs=TRUE, title, ...)
 
 latex.Rq <-
   function(object,
-           file = paste(first.word(deparse(substitute(object))),
-             ".tex", sep = ""), append=FALSE,
+           file = '', append=FALSE,
            which, varnames, columns=65, inline=FALSE, caption=NULL, ...)
 {
   html <- prType() == 'html'
@@ -191,9 +190,9 @@ latex.Rq <-
          }
     if (missing(which) & !inline)
       {
-        Y <- paste("{\\rm ", as.character(formula(f))[2], 
+        Y <- paste("\\text{", as.character(formula(f))[2], 
                    "}", sep = "")
-        w <- c(w, paste("\\[", Y, "_{", tau, "} = X\\beta, {\\rm \\ \\ where} \\\\ \\]", 
+        w <- c(w, paste("$$", Y, "_{", tau, "} = X\\beta,~\\text{where}$$", 
                         sep = ""))
       }
     if(missing(which)) which <- 1:length(at$name)

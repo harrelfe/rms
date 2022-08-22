@@ -20,25 +20,22 @@ latex.ols <-
   
   if(missing(which) & !inline)
     {
-      Y <- paste("{\\rm ",as.character(attr(f$terms,"formula")[2]),"}",sep="")
+      Y <- paste("\\text{",as.character(attr(f$terms,"formula")[2]), "}",
+                 sep="")
       
-      w <- c(w, paste("\\[{\\rm E(",Y,
-                      "}) = X\\beta, {\\rm \\ \\ where} \\\\ \\]", sep=""))
+      w <- c(w, paste("$$\\text{E}(", Y,
+                      ") = X\\beta,~~\\text{where}$$", sep=""))
     }
   at <- f$Design
   
   if(missing(which)) which <- 1:length(at$name)
   
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
-  if(! md)
-    cat(w, file=file, sep=if(length(w)) "\n" else "", append=append)
-  z <- latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
-                columns=columns, 
-                before=before, after=after, prefix="X\\hat{\\beta}",
-                inline=inline, 
-                pretrans=pretrans, digits=digits, size=size)
-  if(md) htmltools::HTML(c(paste0(w, '\n'), as.character(z)))
-  else z
+  cat(w, file=file, sep=if(length(w)) "\n" else "", append=append)
+  latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
+           columns=columns, 
+           before=before, after=after, prefix="X\\hat{\\beta}",
+           inline=inline, 
+           pretrans=pretrans, digits=digits, size=size)
 }
-
 
