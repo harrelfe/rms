@@ -1,4 +1,4 @@
-Changes in version 6.3-1 (2022-08-22)
+Changes in version 6.4-0 (2022-10-02)
    * bootcov: added seed argument; need to change old uses to use this; affects usage of the boot package
    * html. and latex.anova.rms: added fontsize argument
    * plot.summary.rms: added declim argument
@@ -12,6 +12,7 @@ Changes in version 6.3-1 (2022-08-22)
    * latex.cph: use standard probability notation and $$
    * latexrms: changed from eqnarray* to array, changed math notation back to $ for spline and indicator notation
    * all latex methods: changed to output markup as we go, $$ for display math
+   * residuals.Glm: new function, adds type='score' for use with robcov
 
 Changes in version 6.3-0 (2022-04-12)
    * gTrans, Design, set.atr, latexrms: For latex(fit) to work when there is a gTrans() predictor

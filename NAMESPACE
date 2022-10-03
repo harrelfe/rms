@@ -169,6 +169,7 @@ S3method(rbind, Predict)
 
 S3method(residuals, bj)
 S3method(residuals, cph)
+S3method(residuals, Glm)
 S3method(residuals, lrm)
 S3method(residuals, ols)
 S3method(residuals, orm)

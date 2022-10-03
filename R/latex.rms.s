@@ -274,7 +274,7 @@ latexrms <-
   
   if(! inline)
     {
-      tex <- "\\begin{array}"   # was eqnarray*
+      tex <- '\\begin{array}'   # was eqnarray*
       if(size != '') tex <- c(tex, paste0('\\', size))
       if(length(prefix))
         tex <- c(tex,
@@ -592,8 +592,8 @@ latexrms <-
 
   if(inline) {
     tex <- paste(tex, collapse='\\\\')
-    tex <- c('$$\\begin{array}{l}', tex, '\\end{array}$$')
-    if(before != '') tex <- c(before, tex)
+    tex <- c('\\begin{array}{l}', tex, '\\end{array}')
+    if(before != '') tex <- c(before, '', tex)
     if(size != '')   tex <- c(paste0('{\\', size), tex)
     if(after  != '') tex <- c(tex, after)
     if(size != '')   tex <- c(tex, '}')
@@ -605,7 +605,7 @@ latexrms <-
     return(structure(list(file=file,style=NULL), class='latex'))
   }
   
-  tex <- c(tex, "\\end{array}")  # was eqnarray*
+  tex <- c(tex, '\\end{array}')  # was eqnarray*
 
   tex <- ifelse(tex == paste0(prefix, '= & & \\\\') |
                 substring(tex,1,1) == "\\", tex,

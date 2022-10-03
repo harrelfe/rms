@@ -201,7 +201,19 @@ vcov.Glm <- function(object, regcoef.only=TRUE, intercepts='all', ...) {
 #  s$cov.unscaled * s$dispersion
 #}
 
-# residuals.Glm <- function(object, ...) residuals.glm(object, ...)
+residuals.Glm <- function(object, type, ...) {
+  if(type == 'score') {
+    if(! length(object[['x']])) stop('did not specify x=TRUE in fit')
+    X <- cbind(Intercept=1, object$x)
+    # Code modified from sandwich::estfun.glm
+    w <- object$weights
+    r <- object$residuals * w   # "working residuals"
+    dispersion <- if(substring(object$family$family, 1, 17) %in%
+      c('poisson', 'binomial', 'Negative Binomial')) 1 else sum(r ^2, na.rm=TRUE) / sum(w, na.rm=TRUE)
+    return(r * X / dispersion)
+  }
+  residuals.glm(object, type=type, ...)
+}
 
 predict.Glm <- 
   function(object, newdata,
