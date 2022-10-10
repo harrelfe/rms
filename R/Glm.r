@@ -11,12 +11,9 @@
 #' 
 #' 
 #' @aliases Glm
-#' @param
-#' formula,family,data,weights,subset,na.action,start,offset,control,model,method,x,y,contrasts
+#' @param formula,family,data,weights,subset,na.action,start,offset,control,model,method,x,y,contrasts
 #' see [stats::glm()]; for `print` `x` is the result of `Glm`
 #' @param ... ignored
-#' model coefficients, standard errors, etc.  Specify `coefs=n` to print
-#' only the first `n` regression coefficients in the model.
 #' @return a fit object like that produced by [stats::glm()] but with
 #' `rms` attributes and a `class` of `"rms"`, `"Glm"`,
 #' `"glm"`, and `"lm"`.  The `g` element of the fit object is
@@ -139,6 +136,8 @@ Glm <-
 ##' @param x `Glm` object
 ##' @param digits number of significant digits to print
 ##' @param coefs specify `coefs=FALSE` to suppress printing the table of
+##' model coefficients, standard errors, etc.  Specify `coefs=n` to print
+##' only the first `n` regression coefficients in the model.
 ##' @param title a character string title to be passed to `prModFit`
 ##' @param ... ignored
 ##' @author Frank Harrell
@@ -201,6 +200,15 @@ vcov.Glm <- function(object, regcoef.only=TRUE, intercepts='all', ...) {
 #  s$cov.unscaled * s$dispersion
 #}
 
+##' Residuals for `Glm`
+##'
+##' This function mainly passes through to `residuals.glm` but for `type='score'` computes the matrix of score residuals using code modified from `sandwich::estfun.glm`.
+##' @title residuals.Glm
+##' @param object  a fit object produced by `Glm`
+##' @param type either `'score'` or a `type` accepted by `residuals.glm`
+##' @param ... ignored
+##' @return a vector or matrix
+##' @author Frank Harrell
 residuals.Glm <- function(object, type, ...) {
   if(type == 'score') {
     if(! length(object[['x']])) stop('did not specify x=TRUE in fit')

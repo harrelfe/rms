@@ -36,13 +36,13 @@ importFrom(stats, .getXlevels, AIC, approx, as.formula,
            dcauchy, delete.response, density, deviance,
            dnorm, family, fitted, formula, gaussian,
            glm, glm.control, glm.fit, influence.measures, is.empty.model, lm, lm.fit,
-           lm.influence, lm.wfit, logLik, lowess, lsfit,
+           lm.influence, lm.wfit, logLik, lowess, lsfit, makepredictcall,
            make.link, median, model.extract, model.frame,
            model.offset, model.weights, na.fail, na.omit, naresid,
            nlminb, nobs, optim, pcauchy, pchisq, pf, plogis,
            pnorm, predict, pt, qcauchy, qchisq, qlogis,
            qnorm, qqline, qqnorm, qt, quantile,
-           reformulate, reshape, resid, residuals, runif,
+           reformulate, reshape, resid, residuals, residuals.glm, runif,
            sd, supsmu, terms, uniroot, update, var, vcov)
 importFrom(utils, capture.output, de, getS3method, getFromNamespace)
 

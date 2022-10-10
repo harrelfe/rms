@@ -1,4 +1,4 @@
-makepredictcall.rms <- function(var, call)
+if(FALSE) makepredictcall.rms <- function(var, call)
   {
     # rms transformation functions using parms information/argument
     funs <- c('rcs', 'pol', 'lsp', 'catg', 'scored', 'strat', 'gTrans')

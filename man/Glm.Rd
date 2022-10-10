@@ -2,7 +2,6 @@
 % Please edit documentation in R/Glm.r
 \name{Glm}
 \alias{Glm}
-\alias{residuals.Glm}
 \title{rms Version of glm}
 \usage{
 Glm(
@@ -22,19 +21,17 @@ Glm(
   contrasts = NULL,
   ...
 )
-residuals(object, type, ...)
 }
 \arguments{
 \item{formula, family, data, weights, subset, na.action, start, offset, control, model, method, x, y, contrasts}{see \code{\link[stats:glm]{stats::glm()}}; for \code{print} \code{x} is the result of \code{Glm}}
-\item{object}{an object produced by \code{Glm}}
-\item{type}{specify \code{"score"} to get the matrix of score residuals.  See \code{\link[stats::glm]{stats::glm()}} for others.}
-\item{...}{ignored except for \code{residuals}}
+
+\item{...}{ignored}
 }
 \value{
 a fit object like that produced by \code{\link[stats:glm]{stats::glm()}} but with
 \code{rms} attributes and a \code{class} of \code{"rms"}, \code{"Glm"},
 \code{"glm"}, and \code{"lm"}.  The \code{g} element of the fit object is
-the \eqn{g}-index.  For \code{residuals} returns a vector or matrix depending on \code{type}.
+the \eqn{g}-index.
 }
 \description{
 This function saves \code{rms} attributes with the fit object so that

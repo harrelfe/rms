@@ -11,7 +11,9 @@
 
 \item{digits}{number of significant digits to print}
 
-\item{coefs}{specify `coefs=FALSE` to suppress printing the table of}
+\item{coefs}{specify `coefs=FALSE` to suppress printing the table of
+model coefficients, standard errors, etc.  Specify `coefs=n` to print
+only the first `n` regression coefficients in the model.}
 
 \item{title}{a character string title to be passed to `prModFit`}
 
