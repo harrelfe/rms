@@ -89,6 +89,8 @@ S3method(logLik, Gls)
 S3method(logLik, ols)
 S3method(logLik, rms)
 
+S3method(makepredictcall, rms)
+
 S3method(Mean,  cph)
 S3method(Mean,  lrm)
 S3method(Mean,  orm)

@@ -10,6 +10,7 @@
 \alias{matrx}
 \alias{gTrans}
 \alias{\%ia\%}
+\alias{makepredictcall.rms}
 \title{rms Special Transformation Functions}
 \description{
 This is a series of functions (\code{asis}, \code{pol}, \code{lsp},
@@ -63,7 +64,19 @@ the purpose of running \code{anova.rms}, add an integer vector attribute
 column numbers corresponding to nonlinear effects.  The default is to assume a column
 is a linear effect.  The \code{parms} attribute stored with a
 \code{gTrans} result a character vector version of the function, so as
-to not waste space carrying along any environment information.  If you will be using the \code{latex} method for typesetting the fitted model, you must include a \code{tex} attribute also in the produced matrix.  This must be a function of a single character string argument (that will ultimately contain the name of the predictor in LaTeX notation) and must produce a vector of LaTeX character strings.  See \url{https://hbiostat.org/R/rms/gtrans.html} for several examples of the use of \code{gTrans} including the use of \code{nonlinear} and \code{tex}.
+to not waste space carrying along any environment information.  If you
+will be using the \code{latex} method for typesetting the fitted model,
+you must include a \code{tex} attribute also in the produced matrix.
+This must be a function of a single character string argument (that will
+ultimately contain the name of the predictor in LaTeX notation) and must
+produce a vector of LaTeX character strings.  See
+\url{https://hbiostat.org/R/rms/gtrans.html} for several examples of the
+use of \code{gTrans} including the use of \code{nonlinear} and
+\code{tex}.
+
+A \code{makepredictcall} method is defined so that usage of the
+transformation functions outside of \code{rms} fitting functions will
+work for getting predicted values.  Thanks to Therry Therneau for the code.
 
 In the list below, functions \code{asis} through \code{gTrans} can have
 arguments \code{x, parms, label, name} except that \code{parms} does not
@@ -80,6 +93,7 @@ scored(\dots)
 strat(\dots)
 gTrans(\dots)
 x1 \%ia\% x2
+\method{makepredictcall}{rms}(var, call)
 }
 \arguments{
   \item{\dots}{
@@ -125,6 +139,8 @@ x1 \%ia\% x2
 }
 \item{x1,x2}{two continuous variables for which to form a
   non-doubly-nonlinear interaction}
+\item{var}{a model term passed from a (usually non-\code{rms}) function}
+\item{call}{call object for a model term}
 }
 \author{
 Frank Harrell\cr
@@ -132,7 +148,10 @@ Department of Biostatistics, Vanderbilt University\cr
 fh@fharrell.com
 }
 \seealso{
-\code{\link[Hmisc]{rcspline.eval}}, \code{\link[Hmisc]{rcspline.restate}}, \code{\link{rms}}, \code{\link{cph}}, \code{\link{lrm}}, \code{\link{ols}}, \code{\link{datadist}}
+\code{\link[Hmisc]{rcspline.eval}},
+\code{\link[Hmisc]{rcspline.restate}}, \code{\link{rms}},
+\code{\link{cph}}, \code{\link{lrm}}, \code{\link{ols}},
+\code{\link{datadist}}, \code{\link[stats]{makepredictcall}}
 }
 \examples{
 \dontrun{

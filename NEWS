@@ -1,4 +1,4 @@
-Changes in version 6.4-0 (2022-10-02)
+Changes in version 6.4-0 (2022-10-10)
    * bootcov: added seed argument; need to change old uses to use this; affects usage of the boot package
    * html. and latex.anova.rms: added fontsize argument
    * plot.summary.rms: added declim argument
@@ -13,6 +13,7 @@ Changes in version 6.4-0 (2022-10-02)
    * latexrms: changed from eqnarray* to array, changed math notation back to $ for spline and indicator notation
    * all latex methods: changed to output markup as we go, $$ for display math
    * residuals.Glm: new function, adds type='score' for use with robcov
+   * makepredictcall.rms: new function that makes rms transformation functions like rcs, lsp, gTrans give proper predicted values when non-rms fitting functions are used and standard predict methods are implemented for thos functions.  Thanks: Terry Therneau
 
 Changes in version 6.3-0 (2022-04-12)
    * gTrans, Design, set.atr, latexrms: For latex(fit) to work when there is a gTrans() predictor

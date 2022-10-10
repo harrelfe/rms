@@ -14,6 +14,9 @@
 #		as one factor
 #11 gTrans - general transformations
 #
+# A makepredictcall method is defined so that the transformation
+# functions may be used outside of rms fitting functions.
+#
 #	des.args generic function for retrieving arguments
 #	set.atr generic function to set attributes of sub design matrix
 #	options sets default options
@@ -718,4 +721,21 @@ value.chk <- function(f, i, x, n, limval, type.range="plot")
   attr(x, "colnames") <- name
   attr(x, "class") <- "rms"
   x
+}
+
+
+## Thanks to Terry Therneau for code for the following
+
+makepredictcall.rms <- function(var, call) {
+  # rms transformation functions using parms information/argument
+  funs <- c('rcs', 'pol', 'lsp', 'catg', 'scored', 'strat', 'gTrans')
+  for(f in funs) {
+    if(as.character(call)[1L] == f ||
+      (is.call(call) && identical(eval(call[[1L]]), get(f)))) {
+      call <- call[1L:2L]
+      call["parms"] <- attributes(var)["parms"]
+      break
+      }
+    }
+  call
 }
