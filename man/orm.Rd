@@ -347,6 +347,30 @@ fa <- Rq(exp(y) ~ rcs(x1,5), tau=.8)
 r <- rbind(qr    = Predict(f, conf.int=FALSE),
            logqr = Predict(fa, conf.int=FALSE, fun=log))
 plot(r, groups='.set.')
+
+# Make a plot of Pr(Y >= y) vs. a continuous covariate for 3 levels
+# of y and also against a binary covariate
+set.seed(1)
+n <- 1000
+age <- rnorm(n, 50, 15)
+sex <- sample(c('m', 'f'), 1000, TRUE)
+Y   <- runif(n)
+dd  <- datadist(age, sex); options(datadist='dd')
+f <- orm(Y ~ age + sex)
+# Use ExProb function to derive an R function to compute
+# P(Y >= y | X)
+ex  <- ExProb(f)
+ex1 <- function(x) ex(x, y=0.25)
+ex2 <- function(x) ex(x, y=0.5)
+ex3 <- function(x) ex(x, y=0.75)
+p1  <- Predict(f, age, sex, fun=ex1)
+p2  <- Predict(f, age, sex, fun=ex2)
+p3  <- Predict(f, age, sex, fun=ex3)
+p   <- rbind('P(Y >= 0.25)' = p1,
+             'P(Y >= 0.5)'  = p2,
+             'P(Y >= 0.75)' = p3)
+ggplot(p)
+
 options(datadist=NULL)
 \dontrun{
 ## Simulate power and type I error for orm logistic and probit regression
