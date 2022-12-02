@@ -371,6 +371,18 @@ p   <- rbind('P(Y >= 0.25)' = p1,
              'P(Y >= 0.75)' = p3)
 ggplot(p)
 
+# Make plot with two curves (by sex) with y on the x-axis, and
+# estimated P(Y >= y | sex, age=median) on the y-axis
+ys <- seq(min(Y), max(Y), length=100)
+g <- function(sx) as.vector(ex(y=ys, Predict(f, sex=sx)$yhat)$prob)
+
+d  <- rbind(data.frame(sex='m', y=ys, p=g('m')),
+            data.frame(sex='f', y=ys, p=g('f')))
+ggplot(d, aes(x=y, y=p, color=sex)) + geom_line() +
+  ylab(expression(P(Y >= y))) +
+  guides(color=guide_legend(title='Sex')) +
+  theme(legend.position='bottom')
+
 options(datadist=NULL)
 \dontrun{
 ## Simulate power and type I error for orm logistic and probit regression
