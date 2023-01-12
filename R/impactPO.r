@@ -155,6 +155,7 @@ impactPO <- function(formula,
                  dimnames=list(NULL, NULL, nam,
                                c('PPO', 'Multinomial')[c(do.ppo, do.mn)]))
   if(B > 0) {
+    if(! is.data.frame(data)) data <- model.frame(formula, data=data)
     for(i in 1 : B) {
       j   <- sample(nrow(data), nrow(data), replace=TRUE)
       dat <- data[j, ]

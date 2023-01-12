@@ -1,4 +1,4 @@
-Changes in version 6.4-0 (2022-11-20)
+Changes in version 6.4-0 (2023-01-12)
    * bootcov: added seed argument; need to change old uses to use this; affects usage of the boot package
    * html. and latex.anova.rms: added fontsize argument
    * plot.summary.rms: added declim argument
@@ -15,6 +15,7 @@ Changes in version 6.4-0 (2022-11-20)
    * residuals.Glm: new function, adds type='score' for use with robcov
    * makepredictcall.rms: new function that makes rms transformation functions like rcs, lsp, gTrans give proper predicted values when non-rms fitting functions are used and standard predict methods are implemented for thos functions.  Thanks: Terry Therneau
    * orm: new example in help file for plotting different exceedance probabilities from a fit
+   * impactPO: fixed for case where bootstrap is requested, by changing data to data frame if an environment
 
 Changes in version 6.3-0 (2022-04-12)
    * gTrans, Design, set.atr, latexrms: For latex(fit) to work when there is a gTrans() predictor

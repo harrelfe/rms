@@ -28,3 +28,7 @@ w
 ggplot(w$estimates, aes(x=method, y=Probability, fill=revo(y))) +
   facet_grid(age ~ sex) + geom_col() +
   xlab('') + guides(fill=guide_legend(title=''))
+
+# From Yonghao Pua 2023-01-01
+
+impactPO(y ~ age + sex, newdata = d, B = 100)
