@@ -272,7 +272,7 @@ Vanderbilt University\cr
 Bill Pikounis\cr
 Biometrics Research Department\cr
 Merck Research Laboratories\cr
-\url{http://billpikounis.com/wpb/}
+\url{https://billpikounis.com/wpb/}
 }
 \references{
 Feng Z, McLerran D, Grizzle J (1996): A comparison of statistical methods for
