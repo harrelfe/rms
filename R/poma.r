@@ -33,9 +33,10 @@
 #'poma(mod.orm)
 #'
 #'
-#'d <- expand.grid(hp=c(90, 180), vs = c(0, 1))
-# mod.orm <- orm(cyl ~ vs + hp , x = TRUE, y = TRUE, data = mtcars)
-# poma(mod.orm, newdata = d)
+#'## runs rms::impactPO when its args are supplied
+#'d <- expand.grid(hp = c(90, 180), vs = c(0, 1))
+#'mod.orm <- orm(cyl ~ vs + hp , x = TRUE, y = TRUE, data = mtcars)
+#'poma(mod.orm, newdata = d)
 #'
 #'
 #'## orm model (response variable has >=10 unique levels)
