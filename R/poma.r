@@ -34,6 +34,7 @@
 #'
 #'
 #'## runs rms::impactPO when its args are supplied
+#'## More examples: (https://yhpua.github.io/poma/)
 #'d <- expand.grid(hp = c(90, 180), vs = c(0, 1))
 #'mod.orm <- orm(cyl ~ vs + hp , x = TRUE, y = TRUE, data = mtcars)
 #'poma(mod.orm, newdata = d)
