@@ -24,7 +24,7 @@ latex.psm <-
       dist <- f$dist
       w <- c(w, paste("$$\\Pr(T\\geq t) = ",
                       survreg.auxinfo[[dist]]$latex(f$scale),
-                      "~\\text{where}$$",sep=""))
+                      "~\\mathrm{where}$$",sep=""))
     }
   atr <- f$Design
 

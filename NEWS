@@ -1,3 +1,6 @@
+Changes in version 6.4-1 (2023-01-20)
+   * latex methods: changed \text to \mathrm; was getting a mathjax syntax error in Quarto
+
 Changes in version 6.4-0 (2023-01-12)
    * bootcov: added seed argument; need to change old uses to use this; affects usage of the boot package
    * html. and latex.anova.rms: added fontsize argument

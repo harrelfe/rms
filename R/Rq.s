@@ -190,9 +190,9 @@ latex.Rq <-
          }
     if (missing(which) & !inline)
       {
-        Y <- paste("\\text{", as.character(formula(f))[2], 
+        Y <- paste("\\mathrm{", as.character(formula(f))[2], 
                    "}", sep = "")
-        w <- c(w, paste("$$", Y, "_{", tau, "} = X\\beta,~\\text{where}$$", 
+        w <- c(w, paste("$$", Y, "_{", tau, "} = X\\beta,~\\mathrm{where}$$", 
                         sep = ""))
       }
     if(missing(which)) which <- 1:length(at$name)

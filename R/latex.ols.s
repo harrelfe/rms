@@ -20,11 +20,11 @@ latex.ols <-
   
   if(missing(which) & !inline)
     {
-      Y <- paste("\\text{",as.character(attr(f$terms,"formula")[2]), "}",
+      Y <- paste("\\mathrm{",as.character(attr(f$terms,"formula")[2]), "}",
                  sep="")
       
-      w <- c(w, paste("$$\\text{E}(", Y,
-                      ") = X\\beta,~~\\text{where}$$", sep=""))
+      w <- c(w, paste("$$\\mathrm{E}(", Y,
+                      ") = X\\beta,~~\\mathrm{where}$$", sep=""))
     }
   at <- f$Design
   

@@ -27,17 +27,17 @@ latex.cph <-
     {
       if(length(strata)==0)
         {
-          w <- c(w,paste("$$\\Pr(T\\geq t) = S_{0}(t)^{\\text{e}^{X\\beta}}$,~~ \\text{where}$$",sep=""))
+          w <- c(w,paste("$$\\Pr(T\\geq t) = S_{0}(t)^{\\mathrm{e}^{X\\beta}}$,~~ \\mathrm{where}$$",sep=""))
         }
       else
         {
           sname <- atr$name[atr$assume.code==8]
           strata.sub <- letters[8+(1:length(sname))]
-          s <- paste("\\text{",sname,"}=",strata.sub,sep="")
+          s <- paste("\\mathrm{",sname,"}=",strata.sub,sep="")
           s <- paste(s, collapse=",")
           w <- c(w,paste("$$\\Pr(T\\geq t~|~",s,")=S_{",
                          paste(strata.sub,collapse=""),
-                         "}(t)^{\\text{e}^{X\\beta}},~~\\text{where}$$", sep=""))
+                         "}(t)^{\\mathrm{e}^{X\\beta}},~~\\mathrm{where}$$", sep=""))
         }
     }
   if(!length(which)) which <- 1:length(atr$name)

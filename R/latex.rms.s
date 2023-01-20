@@ -80,15 +80,15 @@ latexrms <-
   tl  <- sedit(tl, from, to)
   tl <- sedit(tl, varnames, vnames, wild.literal=TRUE)
   ltl <- nchar(tl)
-  tl <- paste0("\\text{", tl, "}")
+  tl <- paste0("\\mathrm{", tl, "}")
   if(anytr)
     {
       TLi <- sedit(TLi, from, to)
       TLi <- sedit(TLi, varnames, vnames, wild.literal=TRUE)
-      TLi <- ifelse(TLi == "", "", paste0("\\text{", TLi, "}"))
+      TLi <- ifelse(TLi == "", "", paste0("\\mathrm{", TLi, "}"))
     }
   
-  varnames <- paste0("\\text{", vnames, "}")
+  varnames <- paste0("\\mathrm{", vnames, "}")
   
   Two.Way <- function(prm, Nam, nam.coef, lNam, cof, coef, f,
                       columns, lcof, varnames,
@@ -309,7 +309,7 @@ latexrms <-
           z <- substring(prm, 1, 1) == "["
           u <- ! z & ass == 7
           prm <- sedit(prm, c(' ','&','%'), c('\\ ','\\&','\\%'))
-          prm <- ifelse(z | u, prm, paste0("\\text{", prm, "}"))
+          prm <- ifelse(z | u, prm, paste0("\\mathrm{", prm, "}"))
           prm <- ifelse(z, paste(nam, "\\in ", prm), prm)
           prm <- ifelse(u, paste(nam, "=", prm), prm)
           lprm <- lprm + (z | u) * (lnam[i] + 1)
@@ -536,7 +536,7 @@ latexrms <-
                q <- ""
                m <- 0
                lnam <- nchar(nam)
-               nam <- paste0("\\text{", nam, "}")
+               nam <- paste0("\\mathrm{", nam, "}")
                Nam[[i]] <- nam; lNam[[i]] <- lnam
                for(j in 1 : length(prm))
                  {
@@ -615,10 +615,10 @@ latexrms <-
     # s <- if(length(which) == p) "and " else "where "
     s <- ''
     if(anyivar)
-      s <- paste0(s, "$$[c]=1~\\text{if subject is in group}~c,~0~\\text{otherwise}$$")
+      s <- paste0(s, "$$[c]=1~\\mathrm{if~subject~is~in~group}~c,~0~\\mathrm{otherwise}$$")
     # if(anyivar && anyplus) s <- paste0(s, '; ')
     if(anyplus)
-      s <- paste0(s, "$$(x)_{+}=x~\\text{if}~x > 0,~0~\\text{otherwise}$$")
+      s <- paste0(s, "$$(x)_{+}=x~\\mathrm{if}~x > 0,~0~\\mathrm{otherwise}$$")
     tex <- c(tex, s)
   }
   

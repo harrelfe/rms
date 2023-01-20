@@ -11,7 +11,7 @@ latex.lrm <-
   
   if(missing(which) & !inline)
     {
-      Y <- paste("\\text{", as.character(attr(f$terms,"formula")[2]),
+      Y <- paste("\\mathrm{", as.character(attr(f$terms,"formula")[2]),
                  "}", sep="")
       lev <- names(f$freq)
       nrp <- f$non.slopes
@@ -27,7 +27,7 @@ latex.lrm <-
                    "\\geq j) = \\frac{1}{1+\\exp(-\\alpha_{j}-X\\beta)}",
                    sep="")
 
-      w <- paste(w, ", \\text{~~where} \\\\ $$", sep="")
+      w <- paste(w, ", \\mathrm{~~where} \\\\ $$", sep="")
 
       if(length(caption)) {
         if(md) w <- c(paste('<div align=center><strong>', caption,
@@ -77,7 +77,7 @@ latex.orm <-
   
   if(missing(which) & !inline)
     {
-      Y <- paste("\\text{", as.character(attr(f$terms,"formula")[2]),
+      Y <- paste("\\mathrm{", as.character(attr(f$terms,"formula")[2]),
                  "}", sep="")
       lev <- names(f$freq)
       nrp <- f$non.slopes
@@ -98,7 +98,7 @@ latex.orm <-
       w <- paste(w, "\\Pr(", Y, 
                    "\\geq y | X) = ", dist, sep='')
 
-      w <- paste(w, "\\text{~~where}$$", sep="")
+      w <- paste(w, "\\mathrm{~~where}$$", sep="")
 
       if(length(caption)) {
         if(md) w <- c(paste('<div align=center><strong>', caption,
@@ -114,7 +114,7 @@ latex.orm <-
           w <- c(w,"\\begin{array}")
           cof <- format(f$coef[1:nrp], digits=digits)
           for(i in 1:nrp)
-            w <- c(w, paste("\\hat{\\alpha}_{\\text{",
+            w <- c(w, paste("\\hat{\\alpha}_{\\mathrm{",
                             lev[i+1], "}} &=&", cof[i], "\\\\", sep=""))
           w <- c(w, "\\end{array}", sep="")
       }

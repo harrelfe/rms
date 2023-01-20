@@ -25,7 +25,7 @@ latex.pphsm <-
       dist <- paste("\\exp(-t^{", format(1 / sc, digits=digits),
                     "} \\exp(X\\hat{\\beta}))")
       w <- c(w,paste("$$\\Prob(T\\geq t) = ", dist,
-                     "~\\text{where}~~$$",sep=""))
+                     "~\\mathrm{where}~~$$",sep=""))
     }				
   if(!whichThere) which <- 1:length(at$name)
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
