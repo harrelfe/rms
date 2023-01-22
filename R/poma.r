@@ -2,12 +2,16 @@
 #'
 #' Based on codes and strategies from Frank Harrell's canonical `Regression Modeling Strategies` text
 #'
-#' Strategy 1: Apply different link functions to Prob of Binary Ys (defined by cutval). Regress transformed outcome on combined X and assess constancy of slopes (betas) across cut-points \cr
-#' Strategy 2: Generate score residual plot for each predictor (for response variable with <10 unique levels) \cr
-#' Strategy 3: Assess parallelism of link function transformed inverse CDFs curves for different XBeta levels (for response variables with >=10 unique levels)
+#' Strategy 1: Compare PO model fit with models that relax the PO assumption (for discrete response variable) \cr
+#' Strategy 2: Apply different link functions to Prob of Binary Ys (defined by cutval). Regress transformed outcome on combined X and assess constancy of slopes (betas) across cut-points \cr
+#' Strategy 3: Generate score residual plot for each predictor (for response variable with <10 unique levels) \cr
+#' Strategy 4: Assess parallelism of link function transformed inverse CDFs curves for different XBeta levels (for response variables with >=10 unique levels)
 #'
 #' @param mod.orm Model fit of class `orm` or `lrm`. For `fit.mult.impute` objects, `poma` will refit model on a singly-imputed data-set
+#'
 #' @param cutval Numeric vector; sequence of observed values to cut outcome
+#'
+#' @param ... parameters to pass to `impactPO` function such as `newdata`, `nonpo`, and `B`.
 #'
 #' @author Yong Hao Pua <puayonghao@gmail.com>
 #'
@@ -16,13 +20,24 @@
 #' @export
 #'
 #' @seealso Harrell FE. *Regression Modeling Strategies: with applications to linear models,
-#' logistic and ordinal regression, and survival analysis.* New York: Springer Science, LLC, 2015.
+#' logistic and ordinal regression, and survival analysis.* New York: Springer Science, LLC, 2015. \cr
+#' Harrell FE. Statistical Thinking - Assessing the Proportional Odds Assumption and Its Impact. https://www.fharrell.com/post/impactpo/. Published March 9, 2022. Accessed January 13, 2023.
+#' [rms::impactPO()] \cr
+#'
 #'
 #' @examples
 #'
+#'\dontrun{
 #'## orm model (response variable has fewer than 10 unique levels)
-#'mod.orm <- orm(carb ~ cyl + hp , x=TRUE, y=TRUE, data = mtcars)
+#'mod.orm <- orm(carb ~ cyl + hp , x = TRUE, y = TRUE, data = mtcars)
 #'poma(mod.orm)
+#'
+#'
+#'## runs rms::impactPO when its args are supplied
+#'## More examples: (https://yhpua.github.io/poma/)
+#'d <- expand.grid(hp = c(90, 180), vs = c(0, 1))
+#'mod.orm <- orm(cyl ~ vs + hp , x = TRUE, y = TRUE, data = mtcars)
+#'poma(mod.orm, newdata = d)
 #'
 #'
 #'## orm model (response variable has >=10 unique levels)
@@ -37,15 +52,16 @@
 #' im <- aregImpute(~ cyl + wt + mpg + am, data = dat)
 #' aa <- fit.mult.impute(mpg ~ cyl + wt , xtrans = im, data = dat, fitter = orm)
 #' poma(aa)
+#' }
 
 
-
-poma <- function(mod.orm, cutval) {
+poma <- function(mod.orm, cutval, ...) {
 
   ### Ensure that lrm and orm objects are supplied
   if(!any(class(mod.orm) %in% Cs(lrm, orm))) {
     stop('rms object must be of class lrm or orm', call. = FALSE)
   }
+
 
   ## (Re-)create mod.orm from a singly-imputed dataset
   if(any(class(mod.orm) %in% Cs(fit.mult.impute) )) {
@@ -61,8 +77,14 @@ poma <- function(mod.orm, cutval) {
     imputed_df <- get(mydata)
     imputed_df[names(imputed)] <- imputed
     # recreate model
-    mod.orm <- eval(parse(text = sprintf(" %s(%s, x = T, y = T, data = imputed_df)", myfitter, myformula)))
+    # mod.orm <- eval(parse(text = sprintf(" %s(%s, x = T, y = T, data = imputed_df)", myfitter, myformula)))
+    mod.orm <- do.call (myfitter, list (formula = as.formula(myformula), data = imputed_df, x = TRUE, y = TRUE))
+
   }
+
+  ### Ensure mod.orm fit uses x = T and y = T
+  if(length(mod.orm$y) == 0 || length(mod.orm$x) == 0)
+    stop("fit did not use x = TRUE, y = TRUE")
 
 
   ## Generate dataset with no missing values
@@ -75,18 +97,56 @@ poma <- function(mod.orm, cutval) {
   mydv <-   eval (data) [ , all.vars(mod.orm$sformula)[1] ]
   cat("Unique values of Y:", unique(sort(mydv)), "\n")
 
+
+  ### impactPO() for discrete Y
+  dots <- list(...)
+  impactPO_argnames  <- names(formals(impactPO))
+  impactPO_args_sub  <- impactPO_argnames[impactPO_argnames %nin% c("formula", "data", "...")]
+
+  # User desires to use rms::impactPO
+  # Ensure discrete Y (with no low-prevalence levels) is supplied
+  if( any(names(dots) %in% impactPO_args_sub ) )  {
+     if (any(mod.orm$freq < 5)) {
+         cat('to use rms::impactPO, please supply discrete Y with at least 5 obs at each level \n')
+       } else {
+
+        impactPO_args_dots    <- dots [names(dots) %in% impactPO_args_sub]
+        impactPO_args_default <- list(formula = mod.orm$sformula, data = data)  ## default args
+        impactPO_args         <- modifyList(impactPO_args_default, impactPO_args_dots)
+
+        w <- do.call("impactPO", impactPO_args)
+        cat(" ##-------------------##\n",
+            "## impactPO \n",
+            "##-------------------##\n")
+        print (w)
+        cat ("\n\n\n")
+        cat(" ##-------------------##\n",
+            "## Constancy of slopes \n",
+            "##-------------------##\n")
+       }
+
+  } else {
+    # Direct users to rms::impactPO() for models fitted on discrete Y
+      if (all(mod.orm$freq > 5)) {
+        cat('Please use rms::impactPO for a more rigorous assessment of the PO assumption (https://www.fharrell.com/post/impactpo/)  \n\n')
+      }
+
+
+    }
+
+
   ### Compute combined predictor (X) values
   if(any(class(mydv) %in% "factor") ) {
     aa <- paste0("as.numeric(", mod.orm$terms[[2]], ") ~")
     rhs <- mod.orm$terms[[3]]
     bb <- paste(deparse(rhs), collapse = "")
     newformula <- paste(aa, bb)
-    cat("Formula used with non-numeric DV:", newformula, "\n")
-    cat("Cut-point for factor DV refers to the jth levels - not observed Y values \n")
-    mod.ols <- ols(as.formula(newformula) , x=TRUE, y=TRUE, data=eval(data))
+    cat("\n\n\n Formula used with non-numeric DV:", newformula, "\n")
+    cat("\n Cut-point for factor DV refers to the jth levels - not observed Y values \n")
+    mod.ols <- ols(as.formula(newformula) , x = TRUE, y = TRUE, data = eval(data))
     } else {
     cat("Cut-point for continuous DV refers to observed Y values \n")
-    mod.ols <-  ols(formula(mod.orm), x=TRUE, y=TRUE, data=eval(data))
+    mod.ols <-  ols(formula(mod.orm), x = TRUE, y = TRUE, data = eval(data))
     }
 
   combined_x <- fitted(mod.ols)
@@ -109,8 +169,10 @@ poma <- function(mod.orm, cutval) {
   r <- NULL
   for (link in c("logit", "probit", "cloglog")) {
     for (k in cutval) {
-      co <- coef(glm(mod.ols$y < k ~ combined_x, data=eval(data), family=binomial (link)))
-      r <-  rbind(r, data.frame (link=link, cut.value=k, slope =round(co[2],2)))
+      co <- coef(suppressWarnings(
+        glm(mod.ols$y < k ~ combined_x, family = binomial(link))
+        ))
+      r <-  rbind(r, data.frame (link=link, cut.value = k, slope = round(co[2],2)))
     }
   }
   cat("rms-368: glm cloglog on Prob[Y<j] is log-log on Prob{Y>=j} \n")
@@ -118,19 +180,18 @@ poma <- function(mod.orm, cutval) {
 
 
   ### Graphical Assessment
+  numpred <- dim(mod.orm$x)[[2]]
+
   if(length(unique(mod.orm$y)) < 10) {
     par(ask=TRUE)
     ## Generate Score residual plot for each predictor/terms
-    ## Adjust par(mfrow) settings based on number of terms (codes are a little unwieldy)
+    ## n2mfrow() to control par(mfrow) setting
     numpred <- dim(mod.orm$x)[[2]]
-    if(numpred >= 9 )    par(mfrow = c(3,3))
-    else if (numpred >= 5) par(mfrow = c(2,3))
-    else if (numpred >= 3) par(mfrow = c(2,2))
-    else if (numpred >=2) par(mfrow = c(1,2))
-    else par(mfrow = c(1,1))
+    par(mfrow = rev(grDevices::n2mfrow(numpred)))
     resid(mod.orm, "score.binary", pl=TRUE)
     par(ask=F)
     par(mfrow = c(1,1))
+
 
   } else {
 
@@ -142,7 +203,7 @@ poma <- function(mod.orm, cutval) {
 
       ## Number of groups (2 to 5) based on sample size
       ecdfgroups = pmax(2, pmin(5, round( dim(mod.orm$x)[[1]]/20)))
-      
+
       y = mod.orm$y
       # Coerce to numeric if needed
       if (is.factor(y)) {
@@ -154,19 +215,17 @@ poma <- function(mod.orm, cutval) {
                   fun = function (F) g(1 - F),
                   xlab = all.vars(mod.ols$sformula)[[1]],
                   ylab = as.expression (f) ,
-                  xlim = c(quantile(y, 0.10, na.rm= TRUE), quantile(y, 0.85, na.rm= TRUE)),
-                  label.curve= FALSE)
-      print (z, split =c(col , row , 2, 1) , more = row < 2 | col < 2)
+                  xlim = c(quantile(y, 0.10, na.rm = TRUE), quantile(y, 0.85, na.rm = TRUE)),
+                  label.curve = FALSE)
+      print (z, split = c(col, row, 2, 2) , more = row < 2 | col < 2)
     }
 
     p (fun = log (F/(1-F)), 1, 1)
-    p( fun = -log ( -log (F)), 1, 2)
+    p (fun = qnorm(F), 1, 2)
+    p (fun = log (-log (1-F)), 2, 1)
+    p( fun = -log (-log (F)), 2, 2)
   }
 
 
 }
-
-
-
-
 
