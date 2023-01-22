@@ -1,5 +1,7 @@
-Changes in version 6.4-1 (2023-01-20)
+Changes in version 6.4-1 (2023-01-22)
    * latex methods: changed \text to \mathrm; was getting a mathjax syntax error in Quarto
+   * residuals.ols: added type="studentized"
+   * poma: merged https://github.com/harrelfe/rms/pull/123 with thanks to Yonghao Pua
 
 Changes in version 6.4-0 (2023-01-12)
    * bootcov: added seed argument; need to change old uses to use this; affects usage of the boot package

@@ -1,7 +1,7 @@
 residuals.ols <-
   function(object, 
            type=c("ordinary","score","dfbeta","dfbetas","dffit","dffits","hat",
-             "hscore","influence.measures"), ...)
+             "hscore","influence.measures", "studentized"), ...)
 {
 
   type <- match.arg(type)
@@ -14,22 +14,22 @@ residuals.ols <-
   
   if(type=="ordinary") return(naresid(naa, object$residuals))
   
-  if(!length(object$x))stop("did not specify x=TRUE in fit")
+  if(!length(object[['x']]))stop("did not specify x=TRUE in fit")
 
   X <- cbind(Intercept=1, object$x)
   if(type=="score") return(naresid(naa, X * object$residuals))
   
   infl <- ols.influence(object)
+
+  if(type == 'studentized') r <- infl$studres
   
   if(type=="hscore") return(naresid(naa, X *
        (object$residuals / (1 - infl$hat))))
   
-  if(type=="dfbeta" | type=="dfbetas")
-    {
+  if(type=="dfbeta" | type=="dfbetas") {
       r <- t(coef(object) - t(coef(infl)))
       if(type=="dfbetas") r <- sweep(r, 2, diag(object$var)^.5, "/")
-    }
-  else
+    } else
     if(type=="dffit") r <- (infl$hat * object$residuals)/(1 - infl$hat)
     else
       if(type=="dffits") r <- (infl$hat^.5)*object$residuals /
@@ -94,12 +94,16 @@ ols.influence <- function(lm, x)
   }
   h <- as.vector((Q^2 %*% array(1, c(p, 1))))
   h.res <- (1 - h)
-  z <- e/h.res
+  z <- e / h.res
   v1 <- e^2
   z <- t(Q * z)
   v.res <- sum(v1)
-  v1 <- (v.res - v1/h.res)/(n - p - 1)
+  v1 <- (v.res - v1 / h.res) / (n - p - 1)
   ## BKW (2.8)
   dbeta <- backsolve(R, z)
-  list(coefficients = t(beta - dbeta), sigma = sqrt(v1), hat = h)
+  # See MASS::lmwork
+  stddev  <- sqrt(sum(e^2) / lm$df.residual)
+  sr      <- e / (sqrt(1. - h) * stddev)
+  studres <- sr / sqrt((n - p - sr^2) / (n - p - 1))
+  list(coefficients = t(beta - dbeta), sigma = sqrt(v1), hat = h, studres=studres)
 }

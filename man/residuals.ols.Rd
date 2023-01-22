@@ -7,7 +7,7 @@
 \usage{
 \method{residuals}{ols}(object, 
       type=c("ordinary", "score", "dfbeta", "dfbetas", 
-             "dffit", "dffits", "hat", "hscore", "influence.measures"), \dots)
+             "dffit", "dffits", "hat", "hscore", "influence.measures", "studentized"), \dots)
 }
 \arguments{
 \item{object}{
@@ -29,8 +29,8 @@ matrix diagonal element to make residuals have equal variance.  When
   \code{type="influence.measures"} the model is converted to an
   \code{lm} model and \code{influence.measures(object)$infmat} is
   returned.  This is a matrix with dfbetas for all predictors, dffit,
-  cov.r, Cook's d, and hat.  See the help file for
-  \code{influence.measures} for more details.
+  cov.r, Cook's d, and hat.  For \code{type="studentized"} studentized leave-out-one residuals are computed.
+  See the help file for \code{influence.measures} for more details.
 }
 \item{\dots}{ignored}
 }
