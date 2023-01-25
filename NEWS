@@ -1,3 +1,7 @@
+Changes in version 6.4-2 (2023-01-25)
+   * modelData: preserved row.names so that fitted values, residuals will have them
+   * 
+
 Changes in version 6.4-1 (2023-01-22)
    * latex methods: changed \text to \mathrm; was getting a mathjax syntax error in Quarto
    * residuals.ols: added type="studentized"

@@ -27,6 +27,7 @@
   
 Design <- function(mf, formula=NULL, specials=NULL,
                    allow.offset=TRUE, intercept=1) {
+
   debug <- length(.Options$rmsdebug) && .Options$rmsdebug
   if(debug) {
     cat('--------------------------------------------------\n')
@@ -288,7 +289,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
           if(length(parms)) parm[[zname]] <- parms
         }
       }
-      nrows <- if(is.matrix(xi))nrow(xi) else length(xi)
+      nrows <- if(is.matrix(xi)) nrow(xi) else length(xi)
     }
   }
   
@@ -462,6 +463,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
 modelData <- function(data=environment(formula), formula, formula2=NULL,
                       weights=NULL, subset=NULL, na.action=na.delete,
                       dotexpand=TRUE, callenv=parent.frame(n=2)) {
+
   ## calibrate.cph etc. uses a matrix, even if only one column
   ismat <- function(z) {
     cl <- class(z)
@@ -543,9 +545,11 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
         predvars[[length(predvars) + 1]] <- as.name('(weights)')
     }
     varnames <- vapply(predvars, deparse2, " ")[-1L]
+    rnames <- rownames(data)     # 2023-01-25
     data <- if(edata) eval(predvars, data, env)
             else
               eval(predvars, data, callenv)
+
     if(is.matrix(data)) data <- data.frame(data)  # e.g. Surv() object
     names(data) <- varnames
 
@@ -573,7 +577,7 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
           data[[i]] <- di
         }
       }
-    
+
     ## If any variables are less than the maximum length, these must
     ## have come from the parent environment and did not have subset applied
     len <- sapply(data, NROW)
@@ -587,7 +591,8 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
       len <- sapply(data, NROW)
       if(min(len) != max(len)) stop('program logic error in variable lengths')
     }
-    data        <- as.data.frame(data, check.names=FALSE)
+    # row.names added 2023-01-25
+    data        <- as.data.frame(data, check.names=FALSE, row.names=rnames)
     data        <- na.action(data)
     nac         <- attr(data, 'na.action')
     attr(data, 'na.action') <- nac

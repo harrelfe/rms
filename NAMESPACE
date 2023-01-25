@@ -44,7 +44,7 @@ importFrom(stats, .getXlevels, AIC, approx, as.formula,
            qnorm, qqline, qqnorm, qt, quantile,
            reformulate, reshape, resid, residuals, residuals.glm, runif,
            sd, supsmu, terms, uniroot, update, var, vcov)
-importFrom(utils, capture.output, de, getS3method, getFromNamespace)
+importFrom(utils, capture.output, de, getS3method, getFromNamespace, modifyList)
 
 
 S3method(AIC, rms)

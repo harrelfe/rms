@@ -4,26 +4,37 @@
 \alias{poma}
 \title{Examine proportional odds and parallelism assumptions of `orm` and `lrm` model fits.}
 \usage{
-poma(mod.orm, cutval)
+poma(mod.orm, cutval, ...)
 }
 \arguments{
 \item{mod.orm}{Model fit of class `orm` or `lrm`. For `fit.mult.impute` objects, `poma` will refit model on a singly-imputed data-set}
 
 \item{cutval}{Numeric vector; sequence of observed values to cut outcome}
+
+\item{...}{parameters to pass to `impactPO` function such as `newdata`, `nonpo`, and `B`.}
 }
 \description{
 Based on codes and strategies from Frank Harrell's canonical `Regression Modeling Strategies` text
 }
 \details{
-Strategy 1: Apply different link functions to Prob of Binary Ys (defined by cutval). Regress transformed outcome on combined X and assess constancy of slopes (betas) across cut-points \cr
-Strategy 2: Generate score residual plot for each predictor (for response variable with <10 unique levels) \cr
-Strategy 3: Assess parallelism of link function transformed inverse CDFs curves for different XBeta levels (for response variables with >=10 unique levels)
+Strategy 1: Compare PO model fit with models that relax the PO assumption (for discrete response variable) \cr
+Strategy 2: Apply different link functions to Prob of Binary Ys (defined by cutval). Regress transformed outcome on combined X and assess constancy of slopes (betas) across cut-points \cr
+Strategy 3: Generate score residual plot for each predictor (for response variable with <10 unique levels) \cr
+Strategy 4: Assess parallelism of link function transformed inverse CDFs curves for different XBeta levels (for response variables with >=10 unique levels)
 }
 \examples{
 
+\dontrun{
 ## orm model (response variable has fewer than 10 unique levels)
-mod.orm <- orm(carb ~ cyl + hp , x=TRUE, y=TRUE, data = mtcars)
+mod.orm <- orm(carb ~ cyl + hp , x = TRUE, y = TRUE, data = mtcars)
 poma(mod.orm)
+
+
+## runs rms::impactPO when its args are supplied
+## More examples: (https://yhpua.github.io/poma/)
+d <- expand.grid(hp = c(90, 180), vs = c(0, 1))
+mod.orm <- orm(cyl ~ vs + hp , x = TRUE, y = TRUE, data = mtcars)
+poma(mod.orm, newdata = d)
 
 
 ## orm model (response variable has >=10 unique levels)
@@ -39,9 +50,12 @@ im <- aregImpute(~ cyl + wt + mpg + am, data = dat)
 aa <- fit.mult.impute(mpg ~ cyl + wt , xtrans = im, data = dat, fitter = orm)
 poma(aa)
 }
+}
 \seealso{
 Harrell FE. *Regression Modeling Strategies: with applications to linear models,
-logistic and ordinal regression, and survival analysis.* New York: Springer Science, LLC, 2015.
+logistic and ordinal regression, and survival analysis.* New York: Springer Science, LLC, 2015. \cr
+Harrell FE. Statistical Thinking - Assessing the Proportional Odds Assumption and Its Impact. https://www.fharrell.com/post/impactpo/. Published March 9, 2022. Accessed January 13, 2023.
+[rms::impactPO()] \cr
 }
 \author{
 Yong Hao Pua <puayonghao@gmail.com>

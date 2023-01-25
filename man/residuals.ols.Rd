@@ -7,7 +7,8 @@
 \usage{
 \method{residuals}{ols}(object, 
       type=c("ordinary", "score", "dfbeta", "dfbetas", 
-             "dffit", "dffits", "hat", "hscore", "influence.measures", "studentized"), \dots)
+             "dffit", "dffits", "hat", "hscore", "influence.measures",
+             "studentized"), \dots)
 }
 \arguments{
 \item{object}{
