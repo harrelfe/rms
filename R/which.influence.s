@@ -7,7 +7,7 @@ which.influence <- function(fit, cutoff=.2)
   stats <- stats[rnam,, drop=FALSE]   ##delete rows added back due to NAs
   d <- dimnames(stats)[[1]]
   if(length(d)) rnam <- d
-  
+
   at <- fit$Design
   
   w      <- list()
@@ -54,7 +54,7 @@ which.influence <- function(fit, cutoff=.2)
           w[[k]] <- ww
           namw   <- c(namw, at$name[i])
         }
-     }
+    }
   if(length(w)) names(w) <- namw
   
   w

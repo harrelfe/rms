@@ -105,5 +105,9 @@ ols.influence <- function(lm, x)
   stddev  <- sqrt(sum(e^2) / lm$df.residual)
   sr      <- e / (sqrt(1. - h) * stddev)
   studres <- sr / sqrt((n - p - sr^2) / (n - p - 1))
-  list(coefficients = t(beta - dbeta), sigma = sqrt(v1), hat = h, studres=studres)
+  co <- t(beta - dbeta)
+  rnam <- names(e)
+  dimnames(co) <- list(names(e), names(beta))
+  names(h) <- rnam
+  list(coefficients = co, sigma = sqrt(v1), hat = h, studres=studres)
 }
