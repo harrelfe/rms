@@ -42,9 +42,11 @@ each draw (or for the summary) the ratio of the partial Wald chi-square
 to the total Wald statistic for the model is computed as REV.
 
 The \code{print} method calls \code{latex} or \code{html} methods
-depending on \code{options(prType=)}, and output is to the console.  For
+depending on \code{options(prType=)}.  For
 \code{latex} a \code{table} environment is not used and an ordinary
-\code{tabular} is produced.
+\code{tabular} is produced.  When using html with Quarto or RMarkdown,
+  \code{results='asis'} need not be written in the chunk header.
+
 
 \code{html.anova.rms} just calls \code{latex.anova.rms}.
 }

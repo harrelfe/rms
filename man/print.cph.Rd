@@ -8,7 +8,8 @@ frequencies, parameter estimates, standard errors, z-statistics, numbers
 of missing values, etc.
 Format of output is controlled by the user previously running
 \code{options(prType="lang")} where \code{lang} is \code{"plain"} (the default),
-\code{"latex"}, or \code{"html"}.
+\code{"latex"}, or \code{"html"}.  This does not require \code{results='asis'}
+in \code{knitr} chunk headers.
 }
 \usage{
 \method{print}{cph}(x, digits=4, r2=c(0,2,4), table=TRUE, conf.int=FALSE, 
@@ -44,4 +45,3 @@ set to \code{FALSE} to suppress event frequency statistics
 \code{\link[survival]{coxph}}, \code{\link{prModFit}}
 }
 \keyword{print}
-

@@ -31,12 +31,15 @@ latex.psm <-
   if(whichNot) which <- 1:length(atr$name)
   if(missing(varnames)) varnames <- atr$name[atr$assume.code!=9]
 
-  cat(w, sep=if(length(w)) "\n" else "", file=file, append=append)
-  latexrms(f, file=file, append=TRUE, which=which,
+  # cat(w, sep=if(length(w)) "\n" else "", file=file, append=append)
+  z <- latexrms(f, file=file, append=TRUE, which=which,
            varnames=varnames, columns=columns, 
            before=before, after=after,
            prefix=if(whichNot)"X\\hat{\\beta}" else NULL, 
            inline=inline,pretrans=pretrans, digits=digits,
            size=size)
+  z <- paste(z, collapse='\n')
+  if(file == '' && prType() != 'plain') return(rendHTML(z))
+  cat(z, file=file, append=append)
+  invisible()
 }
-

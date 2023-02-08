@@ -43,7 +43,7 @@ a fit object created by a \code{rms} fitting function.
 }
 \item{title}{ignored}
 \item{file,append}{see \code{\link[Hmisc:latex]{latex.default}}.  Defaults to
-	the console.  When usinghtml/markdown, \code{file} is ignored.}
+	the console.  When using html/markdown, \code{file} is ignored.}
 \item{surv}{
 if \code{surv=TRUE} was specified to \code{cph}, the underlying survival
 probabilities from \code{object$surv.summary} will be placed in a table
@@ -71,7 +71,11 @@ last entry in \code{object$surv.summary}, underlying survival estimates at
 }
 \value{
 the name of the created file, with class \code{c("latex","file")}.  This
-object works with latex viewing and printing commands in Hmisc.
+object works with latex viewing and printing commands in Hmisc.  If
+\code{file=''} and \code{options(prType=x} is in effect, where \code{x}
+is \code{"html", "markdown"} or \code{"md"}, the result is run through
+\code{knitr::asis_output} so that it will be rendered correctly no
+matter which options are in effect in the chunk header.
 }
 \author{
 Frank Harrell\cr
@@ -91,7 +95,7 @@ w <- latex(f, file='f.tex')  #Interprets fitted model and makes table of S0(t)
 w              #displays image, if viewer installed and file given above
 latex(f)   # send LaTeX code to the console for knitr
 options(prType='html')
-latex(f)       # for use with knitr and R Markdown using MathJax
+latex(f)       # for use with knitr and R Markdown/Quarto using MathJax
 }
 }
 \keyword{regression}

@@ -7,7 +7,13 @@
 \description{
   The \code{validate} function when used on an object created by one of the
   \code{rms} series does resampling validation of a 
-  regression model, with or without backward step-down variable deletion.
+  regression model, with or without backward step-down variable
+	deletion.
+	The \code{print} method will call the \code{latex} or \code{html} method
+if \code{options(prType=)} is set to \code{"latex"} or \code{"html"}.
+For \code{"latex"} printing through \code{print()}, the LaTeX table
+environment is turned off.  When using html with Quarto or RMarkdown,
+  \code{results='asis'} need not be written in the chunk header.
 }
 \usage{
 # fit <- fitting.function(formula=response ~ terms, x=TRUE, y=TRUE)

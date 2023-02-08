@@ -944,11 +944,10 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
   if(length(footer))
     R <- c(R, paste(specs$smallskip, transl(footer)))
   
-  R <- paste0(R, '\n')
   switch(lang,
-         html  = htmltools::HTML(R),
-         latex = cat(R),
-         plain = cat(R))
+         html  = rendHTML(R),
+         latex = cat(R, sep='\n'),
+         plain = cat(R, sep='\n'))
 }
 
 latex.naprint.delete <- function(object, file='', append=TRUE, ...) {
@@ -991,11 +990,11 @@ html.naprint.delete <- function(object, ...) {
     else {
       maxlen <- max(nchar(names(g)))
       print(dotchartp(g, names(g), auxdata=g, auxtitle='N',
-                      showlegend = FALSE,
-                      sort   = 'descending',
-                      xlab   = 'Missing',
-                      width  = min(550, 300 + 20 * maxlen),
-                      height = plotlyParm$heightDotchart(lg)))
+                showlegend = FALSE,
+                sort   = 'descending',
+                xlab   = 'Missing',
+                width  = min(550, 300 + 20 * maxlen),
+                height = plotlyParm$heightDotchart(lg)) ) 
     }
   }
   

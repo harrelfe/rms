@@ -53,12 +53,15 @@ latex.lrm <-
 
   if(missing(which))    which    <- 1:length(at$name)
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
-  cat(w, file=file, append=append, sep=if(length(w))"\n" else "")
-  latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
+  # cat(w, file=file, append=append, sep=if(length(w))"\n" else "")
+  z <- latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
            before=before, after=after, prefix="X\\hat{\\beta}",
            inline=inline, pretrans=pretrans, digits=digits,
            size=size)
+  if(file == '' && prType() != 'plain') return(rendHTML(z))
+  cat(z, file=file, append=append, sep='\n')
+  invisible()
 }
 
 
@@ -124,10 +127,13 @@ latex.orm <-
 
   if(missing(which)) which <- 1:length(at$name)
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
-  cat(w, file=file, append=append, sep=if(length(w))"\n" else "")
+  # cat(w, file=file, append=append, sep=if(length(w))"\n" else "")
+  z <- 
   latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
            before=before, after=after, prefix="X\\hat{\\beta}",
            inline=inline, pretrans=pretrans, digits=digits,
            size=size)
+  if(file == '' && prType() != 'plain') return(rendHTML(z))
+  cat(z, file=file, append=append, sep='\n')
 }

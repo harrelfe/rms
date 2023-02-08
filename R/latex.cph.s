@@ -42,16 +42,17 @@ latex.cph <-
     }
   if(!length(which)) which <- 1:length(atr$name)
   if(missing(varnames)) varnames <- atr$name[atr$assume.code!=9]
-  cat(w, sep=if(length(w))"\n" else "", file=file, append=append)
+  # cat(w, sep=if(length(w))"\n" else "", file=file, append=append)
 
+  w <- c(w, 
   latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
            before=before, after=after,
            prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
            intercept=Intercept, inline=inline,
-           pretrans=pretrans, digits=digits, size=size)
+           pretrans=pretrans, digits=digits, size=size) )
 
-  if(inline) return(invisible())
+  if(inline) return(paste(w, collapse='\n'))
   
   ss <- f$surv.summary
   if(surv && length(ss)) {
@@ -71,7 +72,8 @@ latex.cph <-
         z <- htmlTable::txtRound(s, digits=dec)
         z <- htmlTable::htmlTable(z, rowlabel='$t$', escape.html=FALSE,
                                   css.cell='min-width: 9em;')
-        print(z)
+        # print(z)
+        w <- c(w, z)
       }
       else
         latex(s, file=file, append=TRUE, rowlabel="$t$",
@@ -100,7 +102,8 @@ latex.cph <-
         z <- htmlTable::htmlTable(z, rowlabel='$t$',
                                   escape.html=FALSE,
                                   css.cell='min-width: 9em;')
-        print(z)
+        # print(z)
+        w <- c(w, z)
       }
       else
         latex(s, file=file, append=TRUE,
@@ -108,4 +111,10 @@ latex.cph <-
               dec=dec, table.env=FALSE)
     }
   }
+
+  w <- paste(w, collapse='\n')
+  if(file == '' && prType() != 'plain') return(rendHTML(z))
+  else
+    cat(z, file=file, append=append)
+  invisible()
 }

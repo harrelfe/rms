@@ -388,13 +388,13 @@ html.summary.rms <- function(object, digits=4, dec=NULL,...) {
   cstats <- as.data.frame(cstats)
   attr(cstats,"row.names") <- rowl
   names(cstats)[3] <- "&Delta;"
-  
-  htmltools::HTML(paste0(
+
+  rendHTML(
     htmlTable::htmlTable(cstats, caption=caption,
                          ## css.cell = 'min-width: 6em;',
                          css.cell=c('', rep('padding-left:4ex;', ncol(cstats))),
                          rowlabel='', align='r', align.header='r',
-                         escape.html=FALSE)))
+                         escape.html=FALSE) )
 }
 
 

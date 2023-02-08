@@ -645,7 +645,7 @@ latex.anova.rms <-
                                 css.cell =fscell,
                                 align=al, align.header=al,
                                 rowlabel='', escape.html=FALSE)
-      htmltools::HTML(as.character(paste0(w, '\n')))
+      rendHTML(w)
       }
     else
       latex(dstats, title=title,

@@ -198,9 +198,13 @@ latex.Rq <-
     if(missing(which)) which <- 1:length(at$name)
     if(missing(varnames)) varnames <- at$name
     
-    cat(w, file = file, sep = if (length(w)) "\n"  else "", append = append)
-    latexrms(f, file=file, append=TRUE, which=which, inline=inline,
-             varnames=varnames, columns=columns, caption, ...)
+    # cat(w, file = file, sep = if (length(w)) "\n"  else "", append = append)
+    z <- latexrms(f, file=file, append=TRUE, which=which, inline=inline,
+                  varnames=varnames, columns=columns, caption, ...)
+  z <- paste(z, collapse='\n')
+  if(file == '' && prType() != 'plain') return(rendHTML(z))
+  cat(z, file=file, append=append)
+  invisible()
   }
 
 predict.Rq <- function(object, ..., kint=1, se.fit=FALSE)

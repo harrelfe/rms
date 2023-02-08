@@ -105,7 +105,11 @@ validate.ols <- function(fit, method="boot",
 }
 
 print.validate <- function(x, digits=4, B=Inf, ...)
-  {
+{
+
+  if(prType() == 'html')
+    return(html.validate(x, digits=digits, B=B, ...))
+  
     kept <- attr(x, 'kept'); attr(x, 'kept') <- NULL
     print(round(unclass(x), digits), ...)
     if(length(kept) && B > 0) {
@@ -138,10 +142,10 @@ latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
                     'index.corrected', 'n'),
               c('Original\nSample', 'Training\nSample',
                 'Test\nSample', 'Optimism', 'Corrected\nIndex',
-                '$n$'))
+                'Successful\nResamples'))
     rn <- rownames(x)
-    rn <- chg(rn, c('Dxy','R2','Emax','D','U','Q','B','g','gp','gr','rho','pdm'),
-              c('$D_{xy}$','$R^{2}$','$E_{\\max}$','$D$','$U$',
+    rn <- chg(rn, c('Dxy','R2','R-square','Emax','D','U','Q','B','g','gp','gr','rho','pdm'),
+              c('$D_{xy}$','$R^{2}$','$R^{2}$', '$E_{\\max}$','$D$','$U$',
                 '$Q$','$B$','$g$','$g_{p}$','$g_{r}$','$\\rho$',
                 '$|\\overline{\\mathrm{Pr}(Y\\geq Y_{0.5})-\\frac{1}{2}}|$'))
     dimnames(x) <- list(rn, cn)
@@ -149,7 +153,7 @@ latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
     cat('\\begin{center}\\', size, '\n', sep='', file=file, append=append)
     if(length(caption) && !table.env)
       cat(caption, '\n\n', sep='', file=file, append=TRUE)
-    cdec <- ifelse(cn == '$n$', 0, digits)
+    cdec <- ifelse(cn == 'Successful\nResamples', 0, digits)
     latex(unclass(x), cdec=cdec, rowlabel='Index',
           title=title, caption=if(table.env) caption,
           table.env=table.env, file=file, append=TRUE,
@@ -217,31 +221,26 @@ html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...) {
                   'index.corrected', 'n'),
             c('Original<br>Sample', 'Training<br>Sample',
               'Test<br>Sample', 'Optimism', 'Corrected<br>Index',
-              '$n$'))
+              'Successful<br>Resamples'))
   rn <- rownames(x)
-  rn <- chg(rn, c('Dxy','R2','Emax','D','U','Q','B','g','gp','gr',
+  rn <- chg(rn, c('Dxy','R2','R-square','Emax','D','U','Q','B','g','gp','gr',
                   'rho','pdm'),
-              c('$D_{xy}$','$R^{2}$','$E_{\\max}$','$D$','$U$',
-                '$Q$','$B$','$g$','$g_{p}$','$g_{r}$','$\\rho$',
-                '$|\\overline{\\Pr(Y\\geq Y_{0.5})-\\frac{1}{2}}|$'))
+            c('<i>D<sub>xy</sub></i>',
+              '<i>R<sup>2</sup></i>','<i>R<sup>2</sup></li>',
+              '<i>E<sub>max</sub></i>','<i>D</i>','<i>U</i>',
+              '<i>Q</i>','<i>B</i>','<i>g</i>','<i>g<sub>p</sub></i>',
+              '<i>g<sub>r</sub></i>','<i>&rho;</i>',
+                'Mean |Pr(Y&ge;Y<sub>0.5</sub>)-0.5|'))
   
   dimnames(x) <- list(rn, cn)
-  cdec <- ifelse(cn == '$n$', 0, digits)
+  cdec <- ifelse(cn == 'Successful\nResamples', 0, digits)
   ## Bug in htmlTable::txtRound for vector digits
   z <- unclass(x)
   for(i in 1 : length(cdec)) z[, i] <- round(z[, i], cdec[i])
 
-  if(FALSE) {
-  cat(htmlTable::htmlTable(z, rowlabel='Index', caption=caption,
-                           css.cell = c('', rep('padding-left:3ex;',
-                                                ncol(z) - 1)),
-                           escape.html=FALSE),
-                                        sep='\n')
-  cat('<p style="padding-top:2em;">\n')
-  }
-
-  cat(htmlTable::htmlTable(z, rowlabel='Index', caption=caption,
-                           escape.html=FALSE), sep='\n')
+R <- as.character(
+  htmlTable::htmlTable(z, rowlabel='Index', caption=caption,
+                           escape.html=FALSE) )
   
                          
   if(length(kept) && B > 0) {
@@ -250,27 +249,17 @@ html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...) {
     varin <- varin[1:min(nrow(varin), B),, drop=FALSE]
     cap <- 'Factors Retained in Backwards Elimination'
     if(nr > B) cap <- c(cap, paste('First', B, 'Resamples'))
-    if(FALSE) {
-    cat(htmlTable::htmlTable(varin, caption=cap, rnames=FALSE,
-                             css.cell = c('', rep('padding-left:3ex;',
-                                                  ncol(varin) - 1)),
-                             escape.html=FALSE),
-        sep='\n')
-    }
-    cat(htmlTable::htmlTable(varin, caption=cap, rnames=FALSE,
-                             escape.html=FALSE), sep='\n')
+    R <- c(R, as.character(
+                htmlTable::htmlTable(varin, caption=cap, rnames=FALSE,
+                             escape.html=FALSE)))
 
     cap <- 'Frequencies of Numbers of Factors Retained'
     nkept <- apply(kept, 1, sum)
     tkept <- t(as.matrix(table(nkept)))
-    if(FALSE) {
-    cat(htmlTable::htmlTable(tkept, caption=cap, rnames=FALSE,
-                             css.cell = c('', rep('padding-left:3ex;', length(nkept) - 1)),
-                             escape.html=FALSE))
-    }
 
-    cat(htmlTable::htmlTable(tkept, caption=cap, rnames=FALSE,
-                             escape.html=FALSE), sep='\n')
-    
-    }
+    R <- c(R, as.character(
+               htmlTable::htmlTable(tkept, caption=cap, rnames=FALSE,
+                                     escape.html=FALSE) ))
   }
+rendHTML(R)
+}

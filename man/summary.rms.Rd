@@ -31,7 +31,8 @@ with R Markdown using html.
 The \code{print} method will call the \code{latex} or \code{html} method
 if \code{options(prType=)} is set to \code{"latex"} or \code{"html"}.
 For \code{"latex"} printing through \code{print()}, the LaTeX table
-environment is turned off.
+environment is turned off.  When using html with Quarto or RMarkdown,
+  \code{results='asis'} need not be written in the chunk header.
 
 If \code{usebootcoef=TRUE} and the fit was run through \code{bootcov},
 the confidence intervals are bootstrap nonparametric percentile

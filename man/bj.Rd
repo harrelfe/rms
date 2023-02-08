@@ -24,7 +24,8 @@
 	For the \code{print} method, format of output is controlled by the
 	user previously running \code{options(prType="lang")} where
 	\code{lang} is \code{"plain"} (the default), \code{"latex"}, or
-	\code{"html"}. 
+	\code{"html"}.  When using html with Quarto or RMarkdown,
+  \code{results='asis'} need not be written in the chunk header.
 
   The \code{residuals.bj} function exists mainly to compute 
   residuals and to censor them (i.e., return them as

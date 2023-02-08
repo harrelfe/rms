@@ -29,13 +29,17 @@ latex.pphsm <-
     }				
   if(!whichThere) which <- 1:length(at$name)
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
-  cat(w, file=file, sep=if(length(w))"\n" else "", append=append)
-  latexrms(object, file=file, append=TRUE, which=which, varnames=varnames, 
+  # cat(w, file=file, sep=if(length(w))"\n" else "", append=append)
+  z <- latexrms(object, file=file, append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
            before=before, after=after,
            prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
            inline=inline,pretrans=pretrans, digits=digits,
            size=size)
+  z <- paste(z, collapse='\n')
+  if(file == '' && prType() != 'plain') return(rendHTML(z))
+  cat(z, file=file, append=append)
+  invisible()
 }
 
 

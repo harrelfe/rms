@@ -91,8 +91,14 @@ a fit object created by a fitting function in the \code{rms} series
 \item{size}{a LaTeX font size to use for the output, without the slash.
 	Default is current size.}
 }
-\value{a file name of class \code{"latex"}, or if \code{options(prType='html')},
-	nothing (output direct to console)}
+\value{\code{latexrms} returns a character vector if \code{file=''},
+	otherwise writes the output to \code{file}.  For particular model
+	fits, the \code{latex} method returns the result of running
+	\code{knitr::asis_output} on the LaTeX or HTML code if \code{file=''},
+	\code{options(prType)} was set but not to \code{'plain'}, and if
+	\code{knitr} is currently running.  This causes correct output to be
+	rendered whether or not \code{results='asis'} appeared in the R
+	Markdown or Quarto chunk header.}
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
