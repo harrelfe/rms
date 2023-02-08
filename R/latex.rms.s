@@ -646,5 +646,6 @@ latexrms <-
     }
     tex <- c(tex, tr)
   }
+  if(file == '') return(tex)
   cat(tex, sep='\n', file=file, append=append)
 }
