@@ -4,6 +4,7 @@ Changes in version 6.5-0 (2023-02-06)
    * latexrms: changed to return a character vector if file != ''
 	 * latex.*: changed to use knitr::asis_output if options(prType=x} is in effect where x is not 'plain', and if file is not ''.  This will result in correct rendering in documents no matter which chunk options are in effect, i.e., you no longer need results='asis' in a chunk header to get the LaTeX math form of fitted models.
    * print.*: likewise for printing model fits, anova, summary, validate
+   * latex.anova.rms: added which= for html and LaTeX
 
 Changes in version 6.4-1 (2023-01-22)
    * latex methods: changed \text to \mathrm; was getting a mathjax syntax error in Quarto

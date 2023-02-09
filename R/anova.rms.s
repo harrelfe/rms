@@ -457,9 +457,8 @@ print.anova.rms <- function(x, which=c('none','subscripts',
                                        'names','dots'),
                             table.env=FALSE, 
                             ...) {
-  lang <- prType()
-  if(lang != 'plain')
-    return(latex.anova.rms(x, file='', table.env=table.env, ...))
+  which <- match.arg(which)
+  lang  <- prType()
 
   stats <- x
   digits <- c('Chi-Square'=2, F=2, 'd.f.'=0, 'Partial SS'=15, MS=15, P=4,
@@ -469,9 +468,9 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 
   bchi <- attr(stats, 'chisqBayes')
   
-  which <- match.arg(which)
   
   do.which <- which!='none' && length(W <- attr(stats,'which'))
+  params <- NULL
   
   if(do.which) {
     if(which=='subscripts')
@@ -508,12 +507,21 @@ print.anova.rms <- function(x, which=c('none','subscripts',
                        dots={
                          dots <- rep(' ',length(coef.names))
                          dots[z] <- '.'
-                         paste(dots,collapse='')
+                         paste(dots, collapse='')
                        })
       }
     }
-  }
+    params <- w
+    if(lang == 'html') {
+      params <- gsub(' ', '&nbsp;', params)
+      params <- gsub('\\.', '●', params)
+      }
+  }   # end do.which
 
+  if(lang != 'plain')
+    return(latex.anova.rms(x, file='', table.env=table.env,
+                           params=params, ...))
+  
   sn <- colnames(cstats)
   
   for(j in 1:ncol(cstats))
@@ -564,11 +572,14 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 
 latex.anova.rms <-
   function(object,
-           title=paste('anova', attr(object, 'obj.name'), sep='.'),
+            title=paste('anova', attr(object, 'obj.name'), sep='.'),
            dec.chisq=2, dec.F=2, dec.ss=NA,
            dec.ms=NA, dec.P=4, dec.REV=3, table.env=TRUE, caption=NULL,
-           fontsize=1, ...) {
+           fontsize=1, params=NULL, ...) {
 
+    ## params is only used if called from print.anova.rms
+    ## It is not meant to be provided by the user in a latex. call
+    
     lang <- prType()
     html <- lang == 'html'
     
@@ -634,6 +645,11 @@ latex.anova.rms <-
         bchi['Central'], ' [', bchi['Lower'], ', ',
         bchi['Upper'], '].')
     caption <- paste0(caption, '. ', w)
+  }
+
+    if(length(params)) {
+      dstats$Tested <- params
+      sn <- c(sn, 'Tested')
     }
 
     if(html) {
@@ -647,13 +663,15 @@ latex.anova.rms <-
                                 rowlabel='', escape.html=FALSE)
       rendHTML(w)
       }
-    else
-      latex(dstats, title=title,
-            caption    = if(table.env) caption else NULL,
-            insert.top = if(length(caption) && ! table.env)
-                           paste0('\\Needspace{2in}\n', caption),
-            rowlabel="", col.just=rep('r',length(sn)), table.env=table.env, ...)
+    else {
+        latex(dstats, title=title,
+              caption    = if(table.env) caption else NULL,
+              insert.top = if(length(caption) && ! table.env)
+                             paste0('\\Needspace{2in}\n', caption),
+              rowlabel="", col.just=rep('r',length(sn)), table.env=table.env, ...)
+      }
   }
+
 
 html.anova.rms <-
   function(object, ...) latex.anova.rms(object, ...)
