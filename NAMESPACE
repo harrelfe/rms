@@ -9,6 +9,7 @@ importFrom(survival, Surv, is.Surv, survConcordance.fit, coxph.fit, coxph.contro
 import(SparseM)
 
 importFrom(cluster, ellipsoidhull)
+importFrom(colorspace, rainbow_hcl)
 importFrom(digest, digest)
 importFrom(MASS, kde2d, bandwidth.nrd, cov.mve)
 

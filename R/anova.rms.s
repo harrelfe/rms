@@ -512,9 +512,10 @@ print.anova.rms <- function(x, which=c('none','subscripts',
       }
     }
     params <- w
-    if(lang == 'html') {
-      params <- gsub(' ', '&nbsp;', params)
-      params <- gsub('\\.', '●', params)
+    if(lang == 'html' && which == 'dots') {
+      params <- gsub(' ',   '&nbsp;', params)     # non-breaking space
+      params <- gsub('\\.', '\u2022', params)     # bullet
+      params <- paste0('<tt>', params, '</tt>')   # monospace
       }
   }   # end do.which
 
