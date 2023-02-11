@@ -237,4 +237,10 @@ predict.Glm <-
                kint, na.action, expand.na, center.terms, ...)
   }
 
-latex.Glm <- function(...) latexrms(...)
+latex.Glm <- function(..., file='') {
+  z <- latexrms(..., file=file)
+  if(file == '') rendHTML(z, html=FALSE)
+  invisible()
+}
+
+  

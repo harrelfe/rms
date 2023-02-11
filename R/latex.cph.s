@@ -8,7 +8,8 @@ latex.cph <-
            caption=NULL, digits=.Options$digits, size='', ...)
 {
   md <- prType() %in% c('html', 'md', 'markdown')
-
+  filegiven <- file != ''
+  if(! filegiven && (inline || md)) file <- tempfile()
   f <- object
   whichThere <- length(which)
   
@@ -23,36 +24,35 @@ latex.cph <-
          else
            paste('\\begin{center} \\bf',caption,'\\end{center}')
          }
-  if(!length(which) & !inline)
+  if(! length(which) & !inline)
     {
       if(length(strata)==0)
         {
-          w <- c(w,paste("$$\\Pr(T\\geq t) = S_{0}(t)^{\\mathrm{e}^{X\\beta}}$,~~ \\mathrm{where}$$",sep=""))
+          w <- c(w,paste("$$\\Pr(T\\geq t~|~X) = S_{0}(t)^{\\mathrm{e}^{X\\beta}}$,~~ \\mathrm{where}$$",sep=""))
         }
       else
         {
           sname <- atr$name[atr$assume.code==8]
-          strata.sub <- letters[8+(1:length(sname))]
+          strata.sub <- letters[8 + (1 : length(sname))]
           s <- paste("\\mathrm{",sname,"}=",strata.sub,sep="")
           s <- paste(s, collapse=",")
-          w <- c(w,paste("$$\\Pr(T\\geq t~|~",s,")=S_{",
+          w <- c(w,paste("$$\\Pr(T\\geq t~|~X,",s,")=S_{",
                          paste(strata.sub,collapse=""),
                          "}(t)^{\\mathrm{e}^{X\\beta}},~~\\mathrm{where}$$", sep=""))
         }
     }
   if(!length(which)) which <- 1:length(atr$name)
   if(missing(varnames)) varnames <- atr$name[atr$assume.code!=9]
-  # cat(w, sep=if(length(w))"\n" else "", file=file, append=append)
+  cat(w, sep=if(length(w))"\n" else "", file=file, append=append)
 
-  w <- c(w, 
   latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
            before=before, after=after,
            prefix=if(!whichThere)"X\\hat{\\beta}" else NULL, 
            intercept=Intercept, inline=inline,
-           pretrans=pretrans, digits=digits, size=size) )
+           pretrans=pretrans, digits=digits, size=size)
 
-  if(inline) return(paste(w, collapse='\n'))
+  if(inline) return(readLines(file))
   
   ss <- f$surv.summary
   if(surv && length(ss)) {
@@ -72,13 +72,13 @@ latex.cph <-
         z <- htmlTable::txtRound(s, digits=dec)
         z <- htmlTable::htmlTable(z, rowlabel='$t$', escape.html=FALSE,
                                   css.cell='min-width: 9em;')
-        # print(z)
         w <- c(w, z)
       }
-      else
+      else {
         latex(s, file=file, append=TRUE, rowlabel="$t$",
               rowlabel.just="r",
               dec=dec, table.env=FALSE)
+        }
     } else {
           
       ## Change . to ,blank
@@ -102,8 +102,7 @@ latex.cph <-
         z <- htmlTable::htmlTable(z, rowlabel='$t$',
                                   escape.html=FALSE,
                                   css.cell='min-width: 9em;')
-        # print(z)
-        w <- c(w, z)
+        cat(z, file=file, append=TRUE)
       }
       else
         latex(s, file=file, append=TRUE,
@@ -111,10 +110,7 @@ latex.cph <-
               dec=dec, table.env=FALSE)
     }
   }
-
-  w <- paste(w, collapse='\n')
-  if(file == '' && prType() != 'plain') return(rendHTML(z))
-  else
-    cat(z, file=file, append=append)
+  cat('\n', file=file, append=TRUE)
+  if(md && ! filegiven) rendHTML(readLines(file), html=FALSE)
   invisible()
 }

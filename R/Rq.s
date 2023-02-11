@@ -176,7 +176,7 @@ latex.Rq <-
            which, varnames, columns=65, inline=FALSE, caption=NULL, ...)
 {
   html <- prType() == 'html'
-  if(html) file <- ''
+  ## if(html) file <- ''
   
   f   <- object
   tau <- f$tau
@@ -198,12 +198,11 @@ latex.Rq <-
     if(missing(which)) which <- 1:length(at$name)
     if(missing(varnames)) varnames <- at$name
     
-    # cat(w, file = file, sep = if (length(w)) "\n"  else "", append = append)
-    z <- latexrms(f, file=file, append=TRUE, which=which, inline=inline,
-                  varnames=varnames, columns=columns, caption, ...)
-  z <- paste(z, collapse='\n')
-  if(file == '' && prType() != 'plain') return(rendHTML(z))
-  cat(z, file=file, append=append)
+  if(file != '') cat(w, file = file, sep = if (length(w)) "\n"  else "",
+                     append = append)
+  z <- c(w, latexrms(f, file=file, append=TRUE, which=which, inline=inline,
+                  varnames=varnames, columns=columns, caption, ...) )
+  if(file == '') return(rendHTML(z, html=FALSE))
   invisible()
   }
 

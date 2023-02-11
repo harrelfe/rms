@@ -437,10 +437,8 @@ bj.fit2 <- function(x, y, iter=0, maxiter=15,
 }
   
 latex.bj <- function(..., file='') {
-  z <- paste(latexrms(...), collapse='\n')
-  if(file == '' && prType() != 'plain'  &&
-     length(getOption('knitr.in.progress'))) return(knitr::asis_output(z))
-  cat(z, file=file, append=append)
+  z <- latexrms(..., file=file)
+  if(file == '') rendHTML(z, html=FALSE)
   invisible()
 }
 

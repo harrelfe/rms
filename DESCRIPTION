@@ -1,6 +1,6 @@
 Package: rms
-Version: 6.5-0
-Date: 2023-02-09
+Version: 6.5-1
+Date: 2023-02-11
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <fh@fharrell.com>
 Maintainer: Frank E Harrell Jr <fh@fharrell.com>

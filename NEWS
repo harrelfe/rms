@@ -1,3 +1,6 @@
+Changes in version 6.5-1 (2023-02-11)
+   * latex.* for model fits: fixed case for file not blank, fixed bugs in latex.cph
+
 Changes in version 6.5-0 (2023-02-06)
    * modelData: preserved row.names so that fitted values, residuals will have them
    * ols.influence: added row names back to dfbetas (makes which.influence work)
