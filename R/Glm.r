@@ -237,9 +237,11 @@ predict.Glm <-
                kint, na.action, expand.na, center.terms, ...)
   }
 
-latex.Glm <- function(..., file='') {
-  z <- latexrms(..., file=file)
-  if(file == '') rendHTML(z, html=FALSE)
+latex.Glm <- function(..., file='', append=FALSE, inline=FALSE) {
+  z <- latexrms(..., inline=inline)
+  if(inline) return(z)
+  if(file == '' && prType() != 'plain') return(rendHTML(z, html=FALSE))
+  cat(z, file=file, append=append, sep='\n')
   invisible()
 }
 

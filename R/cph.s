@@ -297,7 +297,7 @@ cph <- function(formula     = formula(data),
     timepts <- seq(0, maxtime, by=time.inc)
     s.sum <- array(double(1),
                    c(length(timepts), nstr, 3),
-                   list(format(timepts), paste("Stratum", 1 : nstr),
+                   list(t=format(timepts), paste("Stratum", 1 : nstr),
                         c("Survival", "n.risk", "std.err")))
     g <- list(n=sum(f$n),
               coefficients=f$coefficients,

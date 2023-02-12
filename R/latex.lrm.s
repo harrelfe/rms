@@ -46,27 +46,30 @@ latex.lrm <-
         w <- c(w,"\\end{array}",sep="")
       }
     }
-  else
-    w <- NULL
+  else w <- NULL
   
   if(missing(which) | missing(varnames)) at <- f$Design
 
   if(missing(which))    which    <- 1:length(at$name)
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
-  # cat(w, file=file, append=append, sep=if(length(w))"\n" else "")
-  z <- latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
+
+  z <- latexrms(f, file='', which=which, varnames=varnames, 
            columns=columns, 
            before=before, after=after, prefix="X\\hat{\\beta}",
            inline=inline, pretrans=pretrans, digits=digits,
            size=size)
-  if(file == '' && prType() != 'plain') return(rendHTML(z))
-  cat(z, file=file, append=append, sep='\n')
-  invisible()
+  if(inline) return(z)
+  w <- c(w, z)
+  if(file != '' || prType() == 'plain') {
+    cat(w, file=file, append=append, sep='\n')
+    return(invisible())
+    }
+  rendHTML(w, html=FALSE)
 }
 
 
 latex.orm <-
-  function(object, title, 
+  function(objecte, title, 
            file='',
            append=FALSE, which, varnames, columns=65, inline=FALSE, 
            before=if(inline)"" else "& &", after="",
@@ -127,13 +130,15 @@ latex.orm <-
 
   if(missing(which)) which <- 1:length(at$name)
   if(missing(varnames)) varnames <- at$name[at$assume.code!=9]
-  # cat(w, file=file, append=append, sep=if(length(w))"\n" else "")
   z <- 
-  latexrms(f, file=file, append=TRUE, which=which, varnames=varnames, 
+  latexrms(f, file='', append=TRUE, which=which, varnames=varnames, 
            columns=columns, 
            before=before, after=after, prefix="X\\hat{\\beta}",
            inline=inline, pretrans=pretrans, digits=digits,
            size=size)
-  if(file == '' && prType() != 'plain') return(rendHTML(z))
-  cat(z, file=file, append=append, sep='\n')
+  if(inline) return(z)
+  w <- c(w, z)
+  if(file == '' && prType() != 'plain') return(rendHTML(w))
+  cat(w, file=file, append=append, sep='\n')
+  invisible()
 }

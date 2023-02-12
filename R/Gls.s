@@ -393,10 +393,10 @@ predict.Gls <-
   }
     
 
-latex.Gls <- function(..., file='') {
-  z <- paste(latexrms(...), collapse='\n')
-  if(file == '' && prType() != 'plain'  &&
-     length(getOption('knitr.in.progress'))) return(knitr::asis_output(z))
-  cat(z, file=file, append=append)
+latex.Gls <- function(..., file='', inline=FALSE, append=FALSE) {
+  z <- latexrms(..., inline=inline)
+  if(inline) return(z)
+  if(file == '' && prType() != 'plain') return(rendHTML(z, html=FALSE))
+  cat(z, file=file, append=append, sep='\n')
   invisible()
 }

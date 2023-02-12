@@ -436,9 +436,11 @@ bj.fit2 <- function(x, y, iter=0, maxiter=15,
   f
 }
   
-latex.bj <- function(..., file='') {
-  z <- latexrms(..., file=file)
-  if(file == '') rendHTML(z, html=FALSE)
+latex.bj <- function(..., inline=FALSE, file='', append=FALSE) {
+  z <- latexrms(..., inline=inline)
+  if(inline) return(z)
+  if(file == '' && prType() != 'plain') return(rendHTML(z, html=FALSE))
+  cat(z, file=file, append=append, sep='\n')
   invisible()
 }
 

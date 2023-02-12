@@ -33,13 +33,15 @@ latex.psm <-
 
   if(file != '') cat(w, sep=if(length(w)) "\n" else "",
                      file=file, append=append)
-  z <- c(w,
-         latexrms(f, file=file, append=TRUE, which=which,
+  ltx <- latexrms(f, append=TRUE, which=which,
                   varnames=varnames, columns=columns, 
                   before=before, after=after,
                   prefix=if(whichNot)"X\\hat{\\beta}" else NULL, 
                   inline=inline,pretrans=pretrans, digits=digits,
-                  size=size) )
-  if(file == '') rendHTML(z, html=FALSE)
+                  size=size)
+  if(inline) return(ltx)
+  z <- c(w, ltx)
+  if(file == '' && prType() != 'plain') return(rendHTML(z, html=FALSE))
+  cat(z, file=file, append=append, sep='\n')
   invisible()
 }

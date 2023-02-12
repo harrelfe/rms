@@ -248,7 +248,7 @@ R <- as.character(
     nr <- nrow(varin)
     varin <- varin[1:min(nrow(varin), B),, drop=FALSE]
     cap <- 'Factors Retained in Backwards Elimination'
-    if(nr > B) cap <- c(cap, paste('First', B, 'Resamples'))
+    if(nr > B) cap <- paste0(cap, '<br>First ', B, ' Resamples')
     R <- c(R, as.character(
                 htmlTable::htmlTable(varin, caption=cap, rnames=FALSE,
                              escape.html=FALSE)))
