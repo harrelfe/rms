@@ -24,7 +24,7 @@ latex.pphsm <-
     {
       dist <- paste("\\exp(-t^{", format(1 / sc, digits=digits),
                     "} \\exp(X\\hat{\\beta}))")
-      w <- c(w,paste("$$\\Prob(T\\geq t) = ", dist,
+      w <- c(w,paste("$$\\Pr(T\\geq t) = ", dist,
                      "~\\mathrm{where}~~$$",sep=""))
     }				
   if(!whichThere) which <- 1:length(at$name)
