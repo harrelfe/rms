@@ -69,7 +69,7 @@ latex.lrm <-
 
 
 latex.orm <-
-  function(objecte, title, 
+  function(object, title, 
            file='',
            append=FALSE, which, varnames, columns=65, inline=FALSE, 
            before=if(inline)"" else "& &", after="",

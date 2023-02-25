@@ -598,7 +598,7 @@ latexrms <-
     if(after  != '') tex <- c(tex, after)
     if(size != '')   tex <- c(tex, '}')
     if(file == '') return(tex)
-    cat(tex, sep='\n', file=file, append=append_)
+    cat(tex, sep='\n', file=file, append=append)
     return(invisible())
   }
   

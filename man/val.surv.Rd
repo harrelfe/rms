@@ -216,7 +216,7 @@ S <- Surv(t, ev)
 # In addition, use groupkm to show that grouping predictions into
 # intervals and computing Kaplan-Meier estimates is not as accurate.
 
-if('polspline' \%in\% row.names(installed.packages())) {
+if(requireNamespace('polspline')) {
   s1 <- exp(-h*1)
   w <- val.surv(est.surv=s1, S=S, u=1,
                 fun=function(p)log(-log(p)))
