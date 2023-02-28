@@ -10,6 +10,7 @@ impactPO(
   nonpo,
   newdata,
   data = environment(formula),
+  minfreq = 15,
   B = 0,
   ...
 )
@@ -25,6 +26,8 @@ impactPO(
 
 \item{data}{data frame containing variables to fit; default is the frame in which \code{formula} is found}
 
+\item{minfreq}{minimum sample size to allow for the least frequent category of the dependent variable.  If the observed minimum frequency is less than this, the \code{\link[=combine.levels]{combine.levels()}} function will be called to combine enough consecutive levels so that this minimum frequency is achieved.}
+
 \item{B}{number of bootstrap resamples to do to get confidence intervals for differences in predicted probabilities for relaxed methods vs. PO model fits.  Default is not to run the bootstrap.  When running the bootstrap make sure that all model variables are explicitly in \verb{data=} so that selection of random subsets of data will call along the correct rows for all predictors.}
 
 \item{...}{other parameters to pass to \code{lrm} and \code{multinom}}
@@ -34,6 +37,9 @@ an \code{impactPO} object which is a list with elements \code{estimates}, \code{
 }
 \description{
 Checks the impact of the proportional odds assumption by comparing predicted cell probabilities from a PO model with those from a multinomial or partial proportional odds logistic model that relax assumptions.  For a given model formula, fits the model with both \code{lrm} and either \code{nnet::multinom} or \code{VGAM::vglm} or both, and obtains predicted cell probabilities for the PO and relaxed models on the \code{newdata} data frame.  A \code{print} method formats the output.
+}
+\details{
+Since partial proportional odds models and especially multinomial logistic models can have many parameters, it is not feasible to use this model comparison approach when the number of levels of the dependent variable Y is large.  By default, the function will use \code{\link[=combine.levels]{combine.levels()}} to combine consecutive levels if the lowest frequency category of Y has fewer than \code{minfreq} observations.
 }
 \examples{
 
@@ -74,7 +80,7 @@ ggplot(w$estimates, aes(x=method, y=Probability, fill=revo(y))) +
 \href{https://hbiostat.org/bib/r2.html}{Adjusted R-square note}
 }
 \seealso{
-\code{\link[nnet:multinom]{nnet::multinom()}}, \code{\link[VGAM:vglm]{VGAM::vglm()}}, \code{\link[=lrm]{lrm()}}, \code{\link[Hmisc:popower]{Hmisc::propsPO()}}, \code{\link[Hmisc:R2Measures]{Hmisc::R2Measures()}}
+\code{\link[nnet:multinom]{nnet::multinom()}}, \code{\link[VGAM:vglm]{VGAM::vglm()}}, \code{\link[=lrm]{lrm()}}, \code{\link[Hmisc:popower]{Hmisc::propsPO()}}, \code{\link[Hmisc:R2Measures]{Hmisc::R2Measures()}}, \code{\link[Hmisc:combine.levels]{Hmisc::combine.levels()}}
 }
 \author{
 Frank Harrell \href{mailto:fh@fharrell.com}{fh@fharrell.com}

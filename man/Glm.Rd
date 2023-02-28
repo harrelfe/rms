@@ -42,8 +42,7 @@ and other fits.  No \code{validate} or \code{calibrate} methods exist for
 \details{
 For the \code{print} method, format of output is controlled by the user
 previously running \code{options(prType="lang")} where \code{lang} is
-\code{"plain"} (the default), \code{"latex"}, or \code{"html"}.  When
-using html with Quarto or RMarkdown, \code{results='asis'} need not be written in the chunk header.
+\code{"plain"} (the default), \code{"latex"}, or \code{"html"}.
 }
 \examples{
 
