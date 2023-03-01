@@ -84,7 +84,7 @@ plot.calibrate <-
     ## constraining to be in [0,1]; d = std.error of cum hazard * z value
     ciupper <- function(surv, d) ifelse(surv==0, 0, pmin(1, surv*exp(d)))
     cilower <- function(surv, d) ifelse(surv==0, 0, surv*exp(-d))
-    
+
     errbar(pred, cal, cilower(cal, 1.959964*se), ciupper(cal, 1.959964*se),
            xlab=xlab, ylab=ylab, type="b", add=add, ...)
   }

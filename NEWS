@@ -1,8 +1,9 @@
-Changes in version 6.5-1 (2023-02-28)
+Changes in version 6.6-0 (2023-03-01)
    * latex.* for model fits: fixed case for file not blank, fixed bugs in latex.cph
    * Import knitr::kable and kableExtra::kable_styling and used these in latex.cph so that math notation can appear in html tables of survival probabilities
    * val.surv.Rd, calibrate.Rd: changed installed.packages to requireNamespace for speed
    * impactPO: automatically call new Hmisc::combine.levels to combine adjacent levels of Y until minimum Y-level frequency >= minfreq
+   * processMI: new function to process Hmisc::fit.mult.impute objects, especially for averaging model validations over multiple imputations
 
 Changes in version 6.5-0 (2023-02-06)
    * modelData: preserved row.names so that fitted values, residuals will have them

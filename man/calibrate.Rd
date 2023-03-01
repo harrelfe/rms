@@ -217,7 +217,8 @@ fh@fharrell.com
   \code{\link{validate}}, \code{\link{predab.resample}},
   \code{\link{groupkm}}, \code{\link[Hmisc]{errbar}},
   \code{\link[Hmisc]{scat1d}}, \code{\link{cph}}, \code{\link{psm}},
-  \code{\link{lowess}}
+  \code{\link{lowess}},\code{\link[Hmisc]{fit.mult.impute}},
+	\code{\link{processMI}}
 }
 \examples{
 set.seed(1)
