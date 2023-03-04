@@ -1,6 +1,7 @@
 ## Compare SE of log survival probability from survest and survfit
 
 require(rms)
+require(survival)
 set.seed(123)
 n <- 200
 age <- rnorm(n, 50, 10)

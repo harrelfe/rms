@@ -185,6 +185,7 @@ options(datadist='ddist')
 fit <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
                x=TRUE, y=TRUE)
 p <- Predict(fit, age, cholesterol, sex, np=50) # vary sex last
+require(lattice)
 bplot(p)                 # image plot for age, cholesterol with color
                          # coming from yhat; use default ranges for
                          # both continuous predictors; two panels (for sex)

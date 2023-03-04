@@ -2,6 +2,7 @@
 
 if(require(haven)) {
   require(rms)
+  require(survival)
 
   d <- read_dta("pakpahan.dta")
 

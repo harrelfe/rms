@@ -148,6 +148,7 @@ fh@fharrell.com
 # See examples for validate.cph, validate.lrm, validate.ols
 # Example of validating a parametric survival model:
 
+require(survival)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)

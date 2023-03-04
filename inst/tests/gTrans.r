@@ -1,4 +1,5 @@
 require(rms)
+require(ggplot2)
 n <- 40
 set.seed(1)
 y  <- runif(n)

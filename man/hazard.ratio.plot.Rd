@@ -92,6 +92,7 @@ fh@fharrell.com
 \code{\link[survival]{coxph}}, \code{\link[survival]{Surv}}
 }
 \examples{
+require(survival)
 n <- 500
 set.seed(1)
 age <- 50 + 12*rnorm(n)

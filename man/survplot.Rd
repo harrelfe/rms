@@ -365,6 +365,7 @@ compare group means in graphs.  J Clin Epi 57:712-715.
 \examples{
 # Simulate data from a population model in which the log hazard
 # function is linear in age and there is no age x sex interaction
+require(survival)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)

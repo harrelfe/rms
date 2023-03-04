@@ -5,6 +5,9 @@ bplot <-
            zlim=range(yhat, na.rm=TRUE),
            scales=list(arrows=FALSE), xlabrot, ylabrot, zlabrot=90, ...)
 {
+  if(! requireNamespace('lattice', quietly=TRUE))
+    stop('lattice package not installed')
+  
   lfunname <- deparse(substitute(lfun))
   if(missing(xlabrot))
     xlabrot <- switch(lfunname,

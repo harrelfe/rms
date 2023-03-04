@@ -121,6 +121,7 @@ fh@fharrell.com
 # function is linear in age and there is no age x sex interaction
 # Proportional hazards holds for both variables but we
 # unnecessarily stratify on sex to see what happens
+require(survival)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)

@@ -126,6 +126,7 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
 }
 \examples{
 \dontrun{
+require(ggplot2)
 ns  <- 20  # no. subjects
 nt  <- 10  # no. time points/subject
 B   <- 10  # no. bootstrap resamples

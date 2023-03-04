@@ -1,5 +1,6 @@
 # From IM Nolte <i.m.nolte@umcg.nl>
 require(rms)
+require(survival)
 set.seed(1)
 n <- 1000
 v    <- rbinom(n, 2, 0.2)

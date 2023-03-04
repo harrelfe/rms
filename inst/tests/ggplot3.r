@@ -1,5 +1,6 @@
 # Test anova= in ggplot
 require(rms)
+require(ggplot2)
 set.seed(1)
 x1 <- runif(100)
 x2 <- runif(100)

@@ -1,4 +1,5 @@
 require(rms)
+require(ggplot2)
 set.seed(1)
 age <- rnorm(500, 50, 10)
 sex <- sample(c('female', 'male'), 500, TRUE)

@@ -245,6 +245,7 @@ dat <- expand.grid(treat=levels(treat),sex=levels(sex),
 dat <- cbind(dat, predict(fit, dat, se.fit=TRUE))
 # This is much easier with Predict
 # xYplot in Hmisc extends xyplot to allow error bars
+
 xYplot(Cbind(linear.predictors,linear.predictors-1.96*se.fit,
              linear.predictors+1.96*se.fit) ~ cholesterol | sex*age,
        groups=treat, data=dat, type='b')
@@ -287,7 +288,7 @@ combos <- gendata(fit, age=seq(10,100,by=10), cholesterol=c(170,200,230),
 #treat, sex not specified -> set to mode
 #can also used expand.grid
 
-
+require(lattice)
 combos$pred <- predict(fit, combos)
 xyplot(pred ~ age | cholesterol*blood.pressure, data=combos, type='l')
 xYplot(pred ~ age | cholesterol, groups=blood.pressure, data=combos, type='l')

@@ -277,6 +277,7 @@ Presentation on UVa Web page, 1998.
 #and females.  As an intermediate step, predict mean cholesterol from
 #age using a proportional odds ordinal logistic model
 #
+require(ggplot2)
 n <- 1000    # define sample size
 set.seed(17) # so can reproduce the results
 age            <- rnorm(n, 50, 10)

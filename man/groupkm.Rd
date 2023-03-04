@@ -69,6 +69,7 @@ estimate), \code{std.err} (standard error of -log \code{KM})
 \code{\link[Hmisc]{units}}
 }
 \examples{
+require(survival)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)

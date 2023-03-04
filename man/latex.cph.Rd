@@ -88,6 +88,7 @@ fh@fharrell.com
 }
 \examples{
 \dontrun{
+require(survival)
 units(ftime) <- "Day"
 f <- cph(Surv(ftime, death) ~ rcs(age)+sex, surv=TRUE, time.inc=60)
 w <- latex(f, file='f.tex')  #Interprets fitted model and makes table of S0(t)

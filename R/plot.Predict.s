@@ -11,6 +11,8 @@ plot.Predict <-
   isbase <- TRUE   ## plotly does not apply for lattice graphics
   if(! isbase && length(anova))
     stop('anova not yet implemented for grType plotly')
+  if(isbase) if(! requireNamespace('lattice', quietly=TRUE))
+               stop('lattice package not installed')
   
   if(varypred) {
     x$.predictor. <- x$.set.

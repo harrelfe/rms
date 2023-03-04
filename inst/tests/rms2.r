@@ -18,7 +18,6 @@ w <- cbind(orig          = predict(fit1),
 round(w[, -1] - w[, 1], 3)
 
 # From oscar0936330161@gmail.com Oscar Chang
-require(rms)
 set.seed(8787)
 n <- 1000
 x1 <- factor(sample(c(0, 1), n, replace = T), ordered=TRUE)

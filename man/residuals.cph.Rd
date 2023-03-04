@@ -69,7 +69,7 @@ based on weighted residuals", unpublished manuscript, Feb 1993.
 # Get unadjusted relationships for several variables
 # Pick one variable that's not missing too much, for fit
 
-
+require(survival)
 n <- 1000    # define sample size
 set.seed(17) # so can reproduce the results
 age            <- rnorm(n, 50, 10)

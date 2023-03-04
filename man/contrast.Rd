@@ -213,6 +213,7 @@ fh@fharrell.com
   \code{\link{summary.rms}}, \code{\link{anova.rms}},
 }
 \examples{
+require(ggplot2)
 set.seed(1)
 age <- rnorm(200,40,12)
 sex <- factor(sample(c('female','male'),200,TRUE))
@@ -360,6 +361,7 @@ d     <- datadist(age, treat, sex); options(datadist='d')
 
 # show separate estimates by treatment and sex
 
+require(ggplot2)
 ggplot(Predict(f, age, treat, sex='female'))
 ggplot(Predict(f, age, treat, sex='male'))
 ages  <- seq(35,65,by=5); sexes <- c('female','male')

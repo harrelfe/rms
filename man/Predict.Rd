@@ -296,6 +296,7 @@ xYplot(Cbind(yhat,lower,upper) ~ age | sex, data=w,
 # Easier: feed w into plot.Predict, ggplot.Predict, plotp.Predict
 \dontrun{
 # Predictions form a parametric survival model
+require(survival)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)

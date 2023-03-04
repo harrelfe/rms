@@ -107,6 +107,8 @@ fh@fharrell.com
 \examples{
 \dontrun{
 require(rms)
+require(ggplot2)
+require(survival)
 dist <- datadist(data=2)     # can omit if not using summary, (gg)plot, survplot,
                              # or if specify all variable values to them. Can
                              # also  defer.  data=2: get distribution summaries

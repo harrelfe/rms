@@ -230,6 +230,7 @@ bj.fit(x, y, control)
   \code{\link{prModFit}}, \code{\link{dxy.cens}}
 }
 \examples{
+require(survival)
 suppressWarnings(RNGversion("3.5.0"))
 set.seed(1)
 ftime  <- 10*rexp(200)

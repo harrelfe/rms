@@ -1,4 +1,5 @@
 require(rms)
+require(survival)
 set.seed(1)
 n <- 1000
 cvd <- data.frame(id    = sample(1 : 100, n, TRUE),

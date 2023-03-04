@@ -2,6 +2,7 @@
 ## at the median of the single predictor
 
 require(rms)
+require(survival)
 set.seed(1)
 a <- 1 : 100
 dd <- datadist(a); options(datadist='dd')

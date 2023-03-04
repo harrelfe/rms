@@ -4,14 +4,15 @@
 ##' @title processMI
 ##' @param object a fit object created by [Hmisc::fit.mult.impute()]
 ##' @param ... ignored
-##' @return an object that resembles something created by a single fit without multiple imputatin
+##' @return an object that resembles something created by a single fit without multiple imputation
+##' @seealso [processMI.fit.mult.impute()]
 ##' @author Frank Harrell
 ##' @md
 processMI <- function(object, ...) UseMethod("processMI")
 
 ##' Process Special Multiple Imputation Output From `fit.mult.impute`
 ##'
-##' Processes a `funresults` object stored in a fit object created by `fit.mult.impute` when its `fun` argument was used.  These objects are typically named `validate` or `calibrate` and represent bootstrap or cross-validations run separately for each imputation.
+##' Processes a `funresults` object stored in a fit object created by `fit.mult.impute` when its `fun` argument was used.  These objects are typically named `validate` or `calibrate` and represent bootstrap or cross-validations run separately for each imputation.  See [this](https://hbiostat.org/rmsc/validate.html#sec-val-mival) for a case study.
 ##' @title processMI.fit.mult.impute
 ##' @param object a fit object created by `fit.mult.impute`
 ##' @param which specifies which component of the extra output should be processed
@@ -19,6 +20,7 @@ processMI <- function(object, ...) UseMethod("processMI")
 ##' @param nind set to a positive integer to use base graphics to plot a matrix of graphs, one each for the first `nind` imputations, and the overall average calibration curve at the end
 ##' @param ... ignored
 ##' @return an object like a `validate` or `calibrate` result obtained when no multiple imputation was done.  This object is suitable for `print` and `plot` methods for these kinds of resampling validation objects.
+##' @seealso [Hmisc::fit.mult.impute()]
 ##' @md
 ##' @author Frank Harrell
 processMI.fit.mult.impute <-
@@ -64,7 +66,7 @@ processMI.fit.mult.impute <-
                              color=factor(imputation))) +
             geom_line(alpha=0.3) + xlab('Predicted') +
             ylab('Estimated Actual, Overfitting-Corrected') +
-            guides(color=guide_legend(title='Imputation'))
+            guides(color=FALSE)
           print(g)
           }
         ## Find range of predicted values over all imputations
@@ -112,3 +114,4 @@ processMI.fit.mult.impute <-
     }
   }
 
+utils::globalVariables(c('predicted', 'corrected', 'imputation'))

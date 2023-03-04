@@ -1,4 +1,5 @@
 require(rms)
+require(survival)
 y <- 1 : 100
 units(y) <- 'year'
 S <- Surv(y)

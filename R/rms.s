@@ -28,7 +28,7 @@
 Design <- function(mf, formula=NULL, specials=NULL,
                    allow.offset=TRUE, intercept=1) {
 
-  debug <- length(.Options$rmsdebug) && .Options$rmsdebug
+  debug <- getOption('rmsdebug', FALSE)
   if(debug) {
     cat('--------------------------------------------------\n')
     prn(list(names(mf), formula, specials))

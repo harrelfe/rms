@@ -227,6 +227,7 @@ abline(a=co[1], b=co[2], col='gray70')
 
 ## Compare coefficients with those from partial likelihood (Cox model)
 orm(y ~ pol(x1,2), family=loglog)
+require(survival)
 cph(Surv(y) ~ pol(x1,2))
 
 

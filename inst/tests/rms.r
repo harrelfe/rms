@@ -1,4 +1,6 @@
 require(rms)
+require(survival)
+
 set.seed(1)
 n <- 20
 x <- as.matrix(1:n)

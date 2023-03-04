@@ -252,6 +252,7 @@ from \url{http://hbiostat.org/talks/iscb98.pdf}.
 \code{\link{Mean.orm}}, \code{\link{gIndex}}, \code{\link{prModFit}}
 }
 \examples{
+require(ggplot2)
 set.seed(1)
 n <- 100
 y <- round(runif(n), 2)

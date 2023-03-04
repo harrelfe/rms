@@ -1,10 +1,12 @@
 ## Check that the median is NA when there is lots of censoring
 require(rms)
+require(survival)
+require(ggplot2)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)
 label(age) <- "Age"
-sex <- factor(sample(c('Male','Female'), n, 
+sex <- factor(sample(c('Male','Female'), n,
                      rep=TRUE, prob=c(.6, .4)))
 cens <- 15*runif(n)
 h <- .02*exp(.04*(age-50)+.8*(sex=='Female'))

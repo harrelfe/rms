@@ -1,5 +1,6 @@
 # From Max Gordon
 require(rms)
+require(survival)
 # Same simulated data set as used in the cph-example
 n <- 1000
 set.seed(731)

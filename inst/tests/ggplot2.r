@@ -1,6 +1,9 @@
 ## This runs all of the examples in the help file for ggplot2.Predict,
 ## removing \dontrun{} and not commenting out commands
 require(rms)
+require(ggplot2)
+require(survival)
+
 n <- 500     # define sample size
 set.seed(17) # so can reproduce the results
 age            <- rnorm(n, 50, 10)
@@ -125,7 +128,7 @@ n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)
 label(age) <- "Age"
-sex <- factor(sample(c('Male','Female'), n, 
+sex <- factor(sample(c('Male','Female'), n,
               rep=TRUE, prob=c(.6, .4)))
 cens <- 15*runif(n)
 h <- .02*exp(.04*(age-50)+.8*(sex=='Female'))
@@ -183,14 +186,14 @@ ggplot(p, ~ m, groups=FALSE, flipxdiscrete=FALSE)
 
 
 # Example from Yonghao Pua <puayonghao@gmail.com>
-n <- 500  
-set.seed(17)  
+n <- 500
+set.seed(17)
 age <- rnorm(n, 50, 10)
-# create an ordinal variable  
+# create an ordinal variable
 duration <- factor(sample(c('None', '10', '20', '30' ,'>30'), n,TRUE))
 duration <- factor(duration, levels(duration)[c(5, 1:4)])
 # arrange factor levels in ascending order
-levels(duration) # shows the correct order "None" "10"   "20"   "30"   ">30"  
+levels(duration) # shows the correct order "None" "10"   "20"   "30"   ">30"
 label(age) <- 'Age'
 label(duration) <- 'Duration'
 
@@ -233,7 +236,7 @@ colorscale <- function(...)
   scale_color_manual(...,
                      values=c("#000000", "#E69F00", "#56B4E9",
                               "#009E73","#F0E442", "#0072B2", "#D55E00", "#CC79A7"))
- 
+
 ggplot(as.data.frame(p), aes(x=cholesterol, y=yhat, color=eyecolor, linetype=sex)) +
   labs(x=expression(cholesterol), y="log odds",
        title="Adjusted to:age=50.2 ")  +

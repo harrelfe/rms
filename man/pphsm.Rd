@@ -39,6 +39,7 @@ fh@fharrell.com
 \code{\link{psm}}, \code{\link{summary.rms}}, \code{\link{print.pphsm}}
 }
 \examples{
+require(survival)
 set.seed(1)
 S <- Surv(runif(100))
 x <- runif(100)

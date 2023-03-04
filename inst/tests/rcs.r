@@ -3,6 +3,7 @@
 ## This fits a natural spline (linear tail restricted) using the truncated
 ## power basis.  Default knots are not used; instead specify 4 knots.
 require(rms)
+require(ggplot2)
 x <- 1:11
 y <- c(0.2,0.40, 0.6, 0.75, 0.88, 0.99, 1.1, 1.15, 1.16, 1.16, 1.16 )
 dd <- datadist(x); options(datadist='dd')

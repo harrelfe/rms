@@ -1,4 +1,5 @@
 require(rms)
+require(survival)
 set.seed(1)
 n  <- 400
 n1 <- 300; n2 <- 100

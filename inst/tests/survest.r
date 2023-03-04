@@ -1,5 +1,6 @@
 # Survival time with stratification.  Thanks: Cathy Jenkins
 require(rms)
+require(survival)
 Load(sampledf)
 S  <- with(sampledf, Surv(fu, death))
 dd <- datadist(sampledf); options(datadist='dd')

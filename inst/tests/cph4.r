@@ -1,4 +1,5 @@
 require(rms)
+require(survival)
 options(debug=TRUE)
 set.seed(1)
 n  <- 100

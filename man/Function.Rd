@@ -101,6 +101,7 @@ options(datadist=NULL)
 
 
 \dontrun{
+require(survival)
 # Make self-contained functions for computing survival probabilities
 # using a log-normal regression
 f <- psm(Surv(d.time, death) ~ rcs(age,4)*sex, dist='gaussian')

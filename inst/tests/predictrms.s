@@ -5,6 +5,7 @@
 ## means instead of "adjust to" values for cph
 
 require(rms)
+require(survival)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)
@@ -69,7 +70,7 @@ y <- x1 + x2 + .5*(x3 == 'b') + 1*(x3 == 'c') + resid
 f <- ols(y ~ pol(x1, 2) + x2 + x3)
 f
 w <- data.frame(x1=100.4, x2=4.5, x3='c')
-predict(f, w, conf.int=.95) 
+predict(f, w, conf.int=.95)
 predict(f, w, type='adjto')
 c(median(x1), median(x1)^2, median(x2))
 k <- coef(f)

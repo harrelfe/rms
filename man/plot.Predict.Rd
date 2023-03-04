@@ -350,6 +350,7 @@ xYplot(Cbind(yhat, lower, upper) ~ age, groups=.set.,
 }
 
 # Plots for a parametric survival model
+require(survival)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)

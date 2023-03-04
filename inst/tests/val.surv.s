@@ -1,4 +1,5 @@
 require(rms)
+require(survival)
 set.seed(123)              # so can reproduce results
 n <- 2500
 age <- 50 + 12*rnorm(n)

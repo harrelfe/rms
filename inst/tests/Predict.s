@@ -1,4 +1,5 @@
 require(rms)
+require(ggplot2)
 x1 <- runif(50)
 x2 <- sample(c('a','b'), 50, TRUE)
 y <- x1 + (x2=='b') + runif(50)

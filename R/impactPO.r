@@ -46,6 +46,7 @@
 #'   factor(z, levels=rev(levels(as.factor(z))))
 #' }
 #'
+#' require(ggplot2)
 #' ggplot(w$estimates, aes(x=method, y=Probability, fill=revo(y))) +
 #'   facet_wrap(~ sex) + geom_col() +
 #'   xlab('') + guides(fill=guide_legend(title=''))

@@ -238,6 +238,7 @@ lwd=3, \dots)
 	\code{\link[Hmisc]{R2Measures}}
 }
 \examples{
+require(survival)
 n <- 400
 set.seed(1)
 age <- rnorm(n, 50, 12)

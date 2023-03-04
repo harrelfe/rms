@@ -1,4 +1,6 @@
 require(rms)
+require(survival)
+
 for (i in unique(pbcseq$id)) {
   if (i == 1) {
   l <- length(pbcseq$id[pbcseq$id==i])

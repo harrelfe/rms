@@ -15,6 +15,7 @@ if(FALSE) makepredictcall.rms <- function(var, call)
 }
 
 require(rms)
+require(survival)
 x <- 1:10
 set.seed(1)
 y <- Surv(runif(10))

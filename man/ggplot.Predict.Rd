@@ -237,6 +237,7 @@ fh@fharrell.com
   \code{\link[ggplot2]{ggplot}}, \code{\link[Hmisc]{Overview}}
 }
 \examples{
+require(ggplot2)
 n <- 350     # define sample size
 set.seed(17) # so can reproduce the results
 age            <- rnorm(n, 50, 10)
@@ -362,6 +363,7 @@ e <- ifelse(t<=cens,1,0)
 t <- pmin(t, cens)
 units(t) <- "Year"
 ddist <- datadist(age, sex)
+require(survival)
 Srv <- Surv(t,e)
 
 # Fit log-normal survival model and plot median survival time vs. age

@@ -12,13 +12,16 @@ processMI(object, ...)
 \item{...}{ignored}
 }
 \value{
-an object that resembles something created by a single fit without multiple imputatin
+an object that resembles something created by a single fit without multiple imputation
 }
 \description{
 Process Special Multiple Imputation Output
 }
 \details{
 Processes lists that have one element per imputation
+}
+\seealso{
+\code{\link[=processMI.fit.mult.impute]{processMI.fit.mult.impute()}}
 }
 \author{
 Frank Harrell

@@ -1,6 +1,7 @@
 ## From John.Stickley@bch.nhs.uk
 
 require(rms)
+require(survival)
 
 test_data <-
 structure(

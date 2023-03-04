@@ -1,12 +1,20 @@
-export(annotateAnova,asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineRelatedPredictors,confplot,contrast,coxphFit,cph,cr.setup,datadist,Design,DesignAssign,dxy.cens,effective.df,ExProb,fastbw,formatNP,gendata,gIndex,Glm,Gls,groupkm,gTrans,Hazard,hazard.ratio.plot,histdensity,"%ia%",ie.setup,impactPO,interactions.containing,legend.nomabbrev,lm.pfit,lrm,lrm.fit,lrm.fit.bare,lrtest,lsp,matinv,matrx,modelData,Newlabels,Newlevels,nomogram,npsurv,ols,ols.influence,oos.loglik,orm,orm.fit,pantext,Penalty.matrix,Penalty.setup,pentrace,perimeter,perlcode,plotmathAnova,plot.contrast.rms,plot.lrm.partial,plot.xmean.ordinaly,pol,poma,pphsm,predab.resample,Predict,predictrms,prModFit,probabilityFamilies,processMI,psm,rcs,related.predictors,reListclean,robcov,Rq,sascode,scored,sensuc,setPb,show.influence,specs,strat,survreg.auxinfo,survdiffplot,survest,Survival,survplot,survplotp,univarLR,validate,val.prob,val.probg,val.surv,vif,which.influence)
+export(annotateAnova,asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineRelatedPredictors,confplot,contrast,coxphFit,cph,cr.setup,datadist,Design,DesignAssign,dxy.cens,effective.df,ExProb,fastbw,formatNP,gendata,ggplot,gIndex,Glm,Gls,groupkm,gTrans,Hazard,hazard.ratio.plot,histdensity,"%ia%",ie.setup,impactPO,interactions.containing,legend.nomabbrev,lm.pfit,lrm,lrm.fit,lrm.fit.bare,lrtest,lsp,matinv,matrx,modelData,Newlabels,Newlevels,nomogram,npsurv,ols,ols.influence,oos.loglik,orm,orm.fit,pantext,Penalty.matrix,Penalty.setup,pentrace,perimeter,perlcode,plotmathAnova,plot.contrast.rms,plot.lrm.partial,plot.xmean.ordinaly,pol,poma,pphsm,predab.resample,Predict,predictrms,prModFit,probabilityFamilies,processMI,psm,rcs,related.predictors,reListclean,robcov,Rq,sascode,scored,sensuc,setPb,show.influence,specs,strat,Surv,survreg.auxinfo,survdiffplot,survest,Survival,survplot,survplotp,univarLR,validate,val.prob,val.probg,val.surv,vif,which.influence)
 
 useDynLib(rms, .registration=TRUE, .fixes="F_")
 
-
 import(Hmisc)
 importFrom(survival, Surv, is.Surv, survConcordance.fit, coxph.fit, coxph.control, survfit, survfitcoxph.fit, survreg.fit, survreg.control, survpenal.fit, survfitKM, survreg.distributions, agreg.fit, agexact.fit, attrassign, untangle.specials)
-#importFrom(SparseM, solve, t, as.matrix)
-import(SparseM)
+importFrom(SparseM, solve, t, as.matrix)
+#import(SparseM)
+
+importFrom(ggplot2, ggplot, guides,  geom_point, geom_text, geom_col,
+           xlab, ylab, labs, geom_tile, geom_segment, scale_size, aes,
+           facet_wrap, facet_grid, scale_color_manual, scale_shape_manual,
+           ggplotGrob, coord_flip, element_blank, element_text, geom_path,
+           geom_smooth, guide_legend, layer, layer_scales, scale_color_gradientn,
+           scale_fill_brewer, scale_size_continuous, scale_size_manual,
+           scale_x_continuous, scale_y_continuous, theme, unit, xlim, ylim,
+           annotate)
 
 importFrom(cluster, ellipsoidhull)
 importFrom(colorspace, rainbow_hcl)
@@ -15,7 +23,6 @@ importFrom(grDevices, n2mfrow)
 importFrom(MASS, kde2d, bandwidth.nrd, cov.mve)
 
 import(ggplot2)
-import(lattice)
 #import(gridExtra)  # DOES NOT WORK UNLESS IN Depends IN DESCRIPTION
 #importFrom(gridExtra, arrangeGrob)
 importFrom(quantreg, rq.wfit, rq.fit, summary.rq)
@@ -33,7 +40,7 @@ importFrom(grDevices, dev.off, gray, grey, png, rgb, contourLines)
 importFrom(graphics, abline, axis, boxplot, hist, legend,
            lines, locator, mtext, pairs, par, plot, plot.new,
            points, segments, strwidth, symbols, text,
-           title, grconvertX, grconvertY)
+           title, grconvertX, grconvertY, image)
 importFrom(methods, existsFunction, getFunction, new)
 importFrom(stats, .getXlevels, AIC, approx, as.formula,
            asOneSidedFormula, binomial, coef, complete.cases, confint, contrasts, cor,
@@ -42,6 +49,7 @@ importFrom(stats, .getXlevels, AIC, approx, as.formula,
            glm, glm.control, glm.fit, influence.measures, is.empty.model, lm, lm.fit,
            lm.influence, lm.wfit, logLik, lowess, lsfit, makepredictcall,
            make.link, median, model.extract, model.frame,
+           model.matrix, model.response,
            model.offset, model.weights, na.fail, na.omit, naresid,
            nlminb, nobs, optim, pcauchy, pchisq, pf, plogis,
            pnorm, predict, pt, qcauchy, qchisq, qlogis,

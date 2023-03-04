@@ -221,6 +221,7 @@ fh@fharrell.com
 	\code{\link{processMI}}
 }
 \examples{
+require(survival)
 set.seed(1)
 n <- 200
 d.time <- rexp(n)

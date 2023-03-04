@@ -1,6 +1,7 @@
 ## From Vikki
 
 require(rms)
+require(survival)
 
 n <- 1000 
 set.seed(110222) 

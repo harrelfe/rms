@@ -195,6 +195,7 @@ prediction scores.  Stat in Med 28:377--388.
 }
 \examples{
 # Generate failure times from an exponential distribution
+require(survival)
 set.seed(123)              # so can reproduce results
 n <- 1000
 age <- 50 + 12*rnorm(n)

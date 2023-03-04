@@ -256,6 +256,7 @@ file with a name of the form \code{"title.tex"} (see the \code{title} argument a
 \code{\link{contrast.rms}}, \code{\link{pantext}}
 }
 \examples{
+require(ggplot2)
 n <- 1000    # define sample size
 set.seed(17) # so can reproduce the results
 treat <- factor(sample(c('a','b','c'), n,TRUE))

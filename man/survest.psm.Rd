@@ -75,6 +75,7 @@ fh@fharrell.com
 }
 \examples{
 # Simulate data from a proportional hazards population model
+require(survival)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)

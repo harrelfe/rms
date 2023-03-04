@@ -943,7 +943,10 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
   }
   if(length(footer))
     R <- c(R, paste(specs$smallskip, transl(footer)))
-  
+
+  if(getOption('rmsdebug', FALSE))
+    cat(R, sep='\n', append=TRUE, file='/tmp/rmsdebug.txt')
+
   switch(lang,
          html  = rendHTML(R),
          latex = cat(R, sep='\n'),

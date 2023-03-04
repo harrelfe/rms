@@ -30,7 +30,10 @@ an object like a \code{validate} or \code{calibrate} result obtained when no mul
 Process Special Multiple Imputation Output From \code{fit.mult.impute}
 }
 \details{
-Processes a \code{funresults} object stored in a fit object created by \code{fit.mult.impute} when its \code{fun} argument was used.  These objects are typically named \code{validate} or \code{calibrate} and represent bootstrap or cross-validations run separately for each imputation.
+Processes a \code{funresults} object stored in a fit object created by \code{fit.mult.impute} when its \code{fun} argument was used.  These objects are typically named \code{validate} or \code{calibrate} and represent bootstrap or cross-validations run separately for each imputation.  See \href{https://hbiostat.org/rmsc/validate.html#sec-val-mival}{this} for a case study.
+}
+\seealso{
+\code{\link[Hmisc:transcan]{Hmisc::fit.mult.impute()}}
 }
 \author{
 Frank Harrell

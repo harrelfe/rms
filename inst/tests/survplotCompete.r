@@ -1,4 +1,5 @@
 require(rms)
+require(survival)
 #
 # Time to progression/death for patients with monoclonal gammopathy
 # Competing risk curves (cumulative incidence)
@@ -28,7 +29,7 @@ sex <- as.character(g$strata)
 n <- length(times)
 nrisk <- matrix(0, nrow=length(times), ncol=2)
 colnames(nrisk) <- c('female', 'male')
-for(sx in c('female', 'male')) 
+for(sx in c('female', 'male'))
   for(i in 1 : n) nrisk[i, sx] <- sum(fu >= times[i] - 1e-7 & m$sex == sx)
 nrisk
 

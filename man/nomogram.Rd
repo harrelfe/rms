@@ -446,6 +446,7 @@ nom <- nomogram(g, interact=list(age=c(20,40,60)),
                 conf.int=c(.7,.9,.95))
 plot(nom, col.conf=c(1,.5,.2), naxes=7)
 
+require(survival)
 w <- upData(d,
             cens = 15 * runif(n),
             h = .02 * exp(.04 * (age - 50) + .8 * (sex == 'Female')),

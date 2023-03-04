@@ -1,5 +1,6 @@
 ## From John Woodill: https://github.com/harrelfe/rms/issues/19
 require(rms)
+require(ggplot2)
 dd = data.frame(x1 = 2 + (runif(200) * 6), x12 = 100 + (runif(200) * 6))
 dd$y1 = rep(c(1.2, 1.4), each = 100) * dd$x1 + (runif(200) / 5)
 

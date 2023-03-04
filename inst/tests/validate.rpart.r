@@ -1,5 +1,7 @@
 require(rms)
 require(rpart)
+require(survival)
+
 n <- 100
 set.seed(1)
 x1 <- runif(n)

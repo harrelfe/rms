@@ -1,5 +1,6 @@
 # From Rob Kushler <kushler@oakland.edu>
 require(rms)
+require(survival)
 require(MASS)
 data(VA)  # use VA lung cancer data in MASS package for examples
 

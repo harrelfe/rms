@@ -131,6 +131,7 @@ dxy.cens(x, y, type=c('time','hazard'))
   \code{\link{gIndex}}, \code{\link[survival:survConcordance]{survConcordance}}
 }
 \examples{
+require(survival)
 n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)

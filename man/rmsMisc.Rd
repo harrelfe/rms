@@ -163,6 +163,7 @@ formula, using strictly character manipulation.  This handles problems
 such as \code{[.terms} removing \code{offset()} if you subset on
 anything.  The function can also be used to remove the dependent
 variable(s) from the formula.
+
 }
 
 \usage{
@@ -229,7 +230,9 @@ formatNP(x, digits=NULL, pvalue=FALSE,
 \method{html}{naprint.delete}(object, \dots)
 
 removeFormulaTerms(form, which=NULL, delete.response=FALSE)
+
 }
+
 \arguments{
 \item{fit}{result of a fitting function}
 \item{object}{result of a fitting function}
@@ -406,7 +409,8 @@ cell in which the parameter is by definition zero.
 \code{\link{summary.lm}}, \code{\link{summary.glm}},
 \code{\link{datadist}}, \code{\link{vif}}, \code{\link{bootcov}},
 \code{\link[Hmisc]{latex}}, \code{\link[Hmisc]{latexTabular}},
-\code{\link[Hmisc:latex]{latexSN}}, \code{\link[Hmisc]{print.char.matrix}}
+\code{\link[Hmisc:latex]{latexSN}},
+\code{\link[Hmisc]{print.char.matrix}},
 }
 \examples{
 \dontrun{

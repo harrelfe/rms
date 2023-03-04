@@ -231,7 +231,7 @@ plot(g)
 
 # Fit a Cox model and check sensitivity to an unmeasured confounder
 
-
+# require(survival)
 # f <- cph(Surv(d.time,death) ~ treatment + pol(age,2)*sex, x=TRUE, y=TRUE)
 # sensuc(f, event=function(y) y[,2] & y[,1] < 365.25 )
 # Event = failed, with event time before 1 year

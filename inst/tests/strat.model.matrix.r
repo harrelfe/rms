@@ -1,4 +1,5 @@
 require(rms)
+require(survival)
 d <- expand.grid(a=c('a1','a2'), b=c('b1','b2'))
 d$y <- Surv(c(1,3,2,4))
 f <- y ~ a * strat(b)

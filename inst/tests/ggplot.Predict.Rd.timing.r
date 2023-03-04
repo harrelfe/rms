@@ -1,4 +1,5 @@
 require(rms)
+require(ggplot2)
 tt <- function() {
   dp <- function(...) {
     pdf('/tmp/z.pdf')
