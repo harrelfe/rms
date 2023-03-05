@@ -1,17 +1,16 @@
-npsurv <- function(formula, data, subset, na.action, ...)
-{
-  M <- match.call()
-  m <- M
-  m[[1]] <- as.name('model.frame')
-  m[names(m) %nin% c('', 'formula', 'data', 'subset', 'na.action')] <- NULL
-  g <- eval(m, sys.parent())
-  Y <- model.extract(g, 'response')
+npsurv <- function(formula, data=environment(formula), subset,
+                   weights, na.action=na.delete, ...) {
 
-  m <- M
-  m[[1]] <- as.name('survfit')
-  m$formula <- formula
-  f <- eval(m, sys.parent())
+  callenv <- parent.frame()
+  w <- list(formula=formula, data=data, na.action=na.action)
+  if(! missing(weights)) w$weights <- eval(substitute(weights), data, callenv)
+  if(! missing(subset )) w$subset  <- eval(substitute(subset),  data, callenv)
+
+  g <- do.call('model.frame', w)
+  f <- do.call('survfit', w)
+
   f$maxtime     <- max(f$time)
+  Y             <- g[[1]]
   f$units       <- units(Y)
   f$time.label  <- label(Y, type='time')
   f$event.label <- label(Y, type='event')

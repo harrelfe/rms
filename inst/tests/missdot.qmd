@@ -1,0 +1,20 @@
+---
+title: "Missing Value Dotchart Test"
+author: "Frank Harrell"
+format: html
+---
+
+```{r}
+require(rms)
+options(prType='html')
+set.seed(1)
+n <- 200
+g <- function(x) ifelse(runif(n) < 0.2, NA, rnorm(n))
+d <- data.frame(x1=g(), x2=g(), x3=g(), x4=g(), x5=g(), x6=g(), y=rnorm(n))
+dd <- datadist(d); options(datadist='dd')
+f <- ols(y ~ x1 + x2 + x3 + x4 + x5 + x6, data=d)
+f
+# n <- f$na.action$nmiss
+# n <- n[order(-n)]
+# dotchart3(n, names(n), auxdata=n, main='This is It')
+```

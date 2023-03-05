@@ -7,6 +7,7 @@ Changes in version 6.6-0 (2023-03-03)
    * Removed package dependencies except for Hmisc
    * Exported survival::Surv function so users will not have to load the survival package just to access Surv; likewise for ggplot so it's easy to do ggplot(Predict(fit))
    * html.print.nadelete: added newline after <pre> to hopefully fix Quarto rendering
+   * npsurv: re-wrote to recognize that survfit is imported, not attached
 
 Changes in version 6.5-0 (2023-02-06)
    * modelData: preserved row.names so that fitted values, residuals will have them
@@ -15,6 +16,7 @@ Changes in version 6.5-0 (2023-02-06)
 	 * latex.*: changed to use knitr::asis_output if options(prType=x} is in effect where x is not 'plain', and if file is not ''.  This will result in correct rendering in documents no matter which chunk options are in effect, i.e., you no longer need results='asis' in a chunk header to get the LaTeX math form of fitted models.
    * print.*: likewise for printing model fits, anova, summary, validate
    * latex.anova.rms: added which= for html and LaTeX
+   * html.na.print.delete: changed from using plotly to using Hmisc::dotchart3 converted to base64 image so that will render correctly in Quarto reports
 
 Changes in version 6.4-1 (2023-01-22)
    * latex methods: changed \text to \mathrm; was getting a mathjax syntax error in Quarto

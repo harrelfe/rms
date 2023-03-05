@@ -14,7 +14,8 @@ For competing risks the second argument for \code{Surv} should be the
 event state variable, and it should be a factor variable with the first
 factor level denoting right-censored observations.
 }
-\usage{npsurv(formula, data, subset, na.action, \dots)}
+\usage{npsurv(formula, data=environment(formula),
+              subset, weights, na.action=na.delete, \dots)}
 \arguments{
   \item{formula}{
     a formula object, which must have a \code{Surv} object as the
@@ -23,7 +24,7 @@ factor level denoting right-censored observations.
     One of the terms may be a \code{strata} object.
     For a single survival curve the right hand side should be \code{~ 1}.
   }
-	\item{data,subset,na.action}{see \code{\link[survival]{survfit.formula}}}
+	\item{data,subset,weights,na.action}{see \code{\link[survival]{survfit.formula}}}
   \item{\dots}{see \code{\link[survival]{survfit.formula}}}
 }
 \value{
