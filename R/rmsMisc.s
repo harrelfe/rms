@@ -994,7 +994,7 @@ html.naprint.delete <- function(object, ...) {
       maxlen <- max(nchar(names(g)))
       g  <- g[order(g)]
       fi <- tempfile(fileext='.png')
-      png(fi, width=400, height=30 + length(g) * 28)
+      png(fi, width=400, height=30 + length(g) * 24)
       opar <- par(mar=c(4,4,2,3), mgp=c(3-.75,1-.5,0))
       on.exit(par(opar))
       dotchart3(g, names(g), auxdata=g,

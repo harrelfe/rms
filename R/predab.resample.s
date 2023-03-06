@@ -146,7 +146,7 @@ predab.resample <-
   if(bw) {
     if(fit.orig$fail) return()
 
-    cat("\n		Backwards Step-down - Original Model\n")
+    if(prmodsel) cat("\n		Backwards Step-down - Original Model\n")
     fbw <- fastbw(fit.orig, rule=rule, type=type, sls=sls, aics=aics,
                   eps=tol, force=force)
 
