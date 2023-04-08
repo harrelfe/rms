@@ -1,4 +1,4 @@
-Changes in version 6.6-0 (2023-03-06)
+Changes in version 6.6-0 (2023-04-08)
    * latex.* for model fits: fixed case for file not blank, fixed bugs in latex.cph
    * Import knitr::kable and kableExtra::kable_styling and used these in latex.cph so that math notation can appear in html tables of survival probabilities
    * val.surv.Rd, calibrate.Rd: changed installed.packages to requireNamespace for speed
@@ -9,6 +9,8 @@ Changes in version 6.6-0 (2023-03-06)
    * npsurv: re-wrote to recognize that survfit is imported, not attached
    * html.na.print.delete: changed from using plotly to using Hmisc::dotchart3 converted to base64 image so that will render correctly in Quarto reports
    * predab.resample: respected prmodelsel in not printing title
+   * residuals.lrm, orm: Chun Li greatly improved calculation speed for Li-Shepherd residuals
+   * fixed bug in Hmisc::dotchartp that made plot.anova.rms not work with changes in R in handling of matrix[NULL,]
 
 Changes in version 6.5-0 (2023-02-06)
    * modelData: preserved row.names so that fitted values, residuals will have them

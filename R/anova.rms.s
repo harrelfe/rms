@@ -869,7 +869,6 @@ plot.anova.rms <-
       if(length(auxtitle) && isbase) auxtitle <- parse(text = auxtitle)
 
       dc <- if(isbase) dotchart3 else dotchartp
-
       if(length(trans)) {
         nan <- names(w)
         w <- pmax(0, w)

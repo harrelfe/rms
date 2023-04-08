@@ -195,13 +195,24 @@ residuals.lrm <-
   if(type == "li.shepherd") {
     if(length(X <- object[['x']]) == 0)
       stop("you did not use x=TRUE in the fit")
-    N <- length(Y)
-    px <- 1 - cumprob(outer(cof[1:k],
-                           as.vector(X %*% cof[- (1:k)]), "+"))
-    low.x = rbind(0, px)[cbind(Y + 1L, 1:N)]
-    hi.x  = 1 - rbind(px, 1)[cbind(Y + 1L, 1:N)]
-    return(low.x - hi.x)
+    Xbeta <- as.vector(X %*% cof[- (1:k)])
+    cofflank <- c(NA, cof, NA)
+    cumprob1 <- 1 - as.vector(cumprob(cofflank[Y + 1L] + Xbeta))
+    cumprob1[Y==0] <- 0
+    cumprob2 <- 1 - as.vector(cumprob(cofflank[Y + 2L] + Xbeta))
+    cumprob2[Y==k] <- 1
+    return(cumprob1 + cumprob2 - 1)
   }
+#  if(type == "li.shepherd") {
+#    if(length(X <- object[['x']]) == 0)
+#      stop("you did not use x=TRUE in the fit")
+#    N <- length(Y)
+#    px <- 1 - cumprob(outer(cof[1:k],
+#                           as.vector(X %*% cof[- (1:k)]), "+"))
+#    low.x = rbind(0, px)[cbind(Y + 1L, 1:N)]
+#    hi.x  = 1 - rbind(px, 1)[cbind(Y + 1L, 1:N)]
+#    return(low.x - hi.x)
+#  }
   
   if(type=="pearson") return(naresid(naa, (Y - P) / sqrt(P * (1 - P))))
   
