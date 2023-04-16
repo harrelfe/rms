@@ -34,7 +34,6 @@ import(multcomp)
 importFrom(htmlTable, htmlTable, txtRound)
 importFrom(htmltools, HTML)
 importFrom(knitr, kable)
-importFrom(kableExtra, kable_styling)
 
 importFrom(grDevices, dev.off, gray, grey, png, rgb, contourLines)
 importFrom(graphics, abline, axis, boxplot, hist, legend,
