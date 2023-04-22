@@ -1,5 +1,6 @@
-Changes in version 6.x-y (2023-xx-yy)
-   * kableExtra has been moved from Imports: to Suggests: and is used conditionally
+Changes in version 6.7-0 (2023-04-22)
+   * kableExtra has been moved from Imports: to Suggests: and is used conditionally (Thanks: Dirk Eddelbuettel)
+  * added full likelihood ratio tests in anova() for the commonly used rms models
 
 Changes in version 6.6-0 (2023-04-08)
    * latex.* for model fits: fixed case for file not blank, fixed bugs in latex.cph
