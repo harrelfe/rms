@@ -2,16 +2,20 @@
 #question is involved in any interaction.
 
 anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9, 
-                      test=c('F','Chisq'),
+                      test=c('F', 'Chisq', 'LR'),
                       india=TRUE, indnl=TRUE, ss=TRUE,
                       vnames=c('names', 'labels'),
                       posterior.summary=c('mean', 'median', 'mode'),
                       ns=500, cint=0.95) {
 
-  ava <- function(idx) {
-    chisq <- coef[idx] %*% solvet(cov[idx, idx], coef[idx], tol=tol)
-    c(chisq, length(idx))
-  }
+  misstest <- missing(test)
+  test     <- match.arg(test)
+
+  ava <- if(test == 'LR') function(idx) LRchunktest(object, idx)
+            else function(idx) {
+              chisq <- coef[idx] %*% solvet(cov[idx, idx], coef[idx], tol=tol)
+              c(chisq, length(idx))
+            }
 
   eEV <- function(test=integer()) {
     coef  <- if(length(test)) draws[, test, drop=FALSE] else draws
@@ -35,9 +39,6 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   }
   
   obj.name <- as.character(sys.call())[2]
-  itype <- 1	#Wald stats. Later sense score stats from object$est
-  misstest <- missing(test)
-  test   <- match.arg(test)
   vnames <- match.arg(vnames)
   posterior.summary <- match.arg(posterior.summary)
   is.ols <- inherits(object,'ols')
@@ -55,7 +56,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     betaSummary <- rmsb::getParamCoef(object, posterior.summary)
     if(nrp > 0) betaSummary <- betaSummary[-(1 : nrp)]
 
-    X <- object$x
+    X <- object[['x']]
     if(! length(X)) stop('x=TRUE must have been specified to fit')
     nc <- ncol(X)
     ndraws <- nrow(draws)
@@ -76,10 +77,10 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   }
 
   if(misstest) test <- if(is.ols) 'F' else 'Chisq'
-  if(!is.ols && test=='F') stop('F-test not allowed for this type of model')
+  if(! is.ols && test=='F') stop('F-test not allowed for this type of model')
   if(bayes) test <- 'Chisq'
-  
-  if(!is.ols) ss <- FALSE
+
+  if(! is.ols) ss <- FALSE
 
   at     <- object$Design
   assign <- object$assign
@@ -123,18 +124,17 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
     if(length(object$est) && !length(object$u))
       stop("est in fit indicates score statistics but no u in fit")
 
-    if(itype == 1) {
-      if(!length(object$coefficients))
+    if(test != 'LR' && ! length(object$coefficients))
         stop("estimates not available for Wald statistics")
       
-      coef <- object$coefficients
-      cik  <- attr(coef, 'intercepts')
-    }
-    else {
-      if(!length(object$u))
-        stop("score statistics not available")
-      coef <- object$u
-    }
+    coef <- object$coefficients
+    cik  <- attr(coef, 'intercepts')
+#    }
+#    else {
+#      if(!length(object$u))
+#        stop("score statistics not available")
+#      coef <- object$u
+#    }
   }
   
 cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
@@ -151,9 +151,6 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
       for(j in 1:length(assign))
         assign[[j]] <- assign[[j]] - nrpcoef
     }
-    
-    if(itype == 2 & nrp != 0)
-      stop("fit score statistics and x are incompatible")
     
     nc <- length(coef)
   }
@@ -267,7 +264,7 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
         if(indnl) {
           w <- dos(idx)
           s <- s + 1; W[[s]] <- idx
-          stats <- rbind(stats,w)
+          stats <- rbind(stats, w)
           lab <- c(lab, if(!length(nonlin.ia.index))" Nonlinear"
           else " Nonlinear (Factor+Higher Order Factors)")
           vinfo[[s]] <- list(name=name[low.fact],
@@ -374,14 +371,14 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
     w <- dos(idx)
     s <- s+1
     W[[s]] <- idx
-    stats <- rbind(stats,w)
+    stats <- rbind(stats, w)
     lab <- c(lab, "TOTAL INTERACTION")
     vinfo[[s]] <- list(type='total interaction')
   }
 
   ## If >0 test of adequacy and >0 test of interaction, print pooled test of
   ## all nonlinear and interaction terms
-  if(num.nonlin>0 & num.ia>0) {
+  if(num.nonlin > 0 & num.ia > 0) {
     idx <- (1:nc)[all.nonlin | all.ia]
     li <- length(idx)
     w <- dos(idx)
@@ -394,9 +391,9 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
 
   ## Get total test for all factors listed
   idx <- (1:nc)[all.slopes | all.ia]
-  w <- dos(idx)
-  s <- s + 1; W[[s]] <- idx
-  stats <- rbind(stats,w)
+  w   <- dos(idx)
+  s   <- s + 1;  W[[s]] <- idx
+  stats <- rbind(stats, w)
   lab <- c(lab, "TOTAL")
   vinfo[[s]] <- list(type='global')
   
@@ -421,9 +418,9 @@ statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
     }
   
     j <- statnam == 'Chi-Square'
-    dfreg <- stats[,statnam=='d.f.']
+    dfreg <- stats[, statnam=='d.f.']
     
-    if(test=='F') {
+    if(test == 'F') {
       stats[,j] <- stats[,j] / dfreg
       statnam[j] <- 'F'
       stats <- cbind(stats, P=1 - pf(stats[,j], dfreg, dfe))
@@ -434,14 +431,15 @@ statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
     
     statnam <- c(statnam, 'P')
   }
-  
+
   dimnames(stats) <- list(lab, statnam)
   attr(stats,'formula') <- formula(object)
   attr(stats,"obj.name") <- obj.name
   attr(stats,"class") <- c("anova.rms","matrix")
   
   names(W) <- lab
-  attr(stats,"which") <- W
+  attr(stats, 'which') <- W
+  attr(stats, 'test')  <- test
   if(! bayes) attr(stats,"coef.names") <- names(coef)
   attr(stats,"non.slopes") <- nrp
   attr(stats,"vinfo")      <- vinfo
@@ -468,7 +466,11 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 
   bchi <- attr(stats, 'chisqBayes')
   
-  
+  test <- attr(stats, 'test')
+  if(! length(test)) test <- 'Chisq'   # for legacy fit objects
+  if(test == 'LR')    test <- 'Likelihood Ratio'
+  if(test == 'Chisq') test <- 'Wald'
+
   do.which <- which!='none' && length(W <- attr(stats,'which'))
   params <- NULL
   
@@ -542,7 +544,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
              else
              paste("                ",
                    if(any(colnames(stats) == 'F')) "Analysis of Variance"
-                   else "Wald Statistics",
+                   else paste(test, "Statistics"),
                    "          Response: ", 
                    as.character(attr(stats, "formula")[2]), sep = "")
   
@@ -624,9 +626,14 @@ latex.anova.rms <-
     resp <- as.character(attr(object, 'formula')[2])
     if(! html) resp <- latexTranslate(resp)
 
+    test <- attr(stats, 'test')
+    if(! length(test))  test <- 'Chisq'   # for legacy fit objects
+    if(test == 'LR')    test <- 'Likelihood Ratio'
+    if(test == 'Chisq') test <- 'Wald'
+
     bchi <- attr(object, 'chisqBayes')
     wl <- if(length(bchi)) 'Relative Explained Variation' else
-      if(any(sn == 'F')) 'Analysis of Variance' else 'Wald Statistics'
+      if(any(sn == 'F')) 'Analysis of Variance' else paste(test, 'Statistics')
     if(! length(caption))
       caption <- paste0(wl, " for ", specs$code(resp))
 
