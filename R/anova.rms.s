@@ -575,7 +575,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 
 latex.anova.rms <-
   function(object,
-            title=paste('anova', attr(object, 'obj.name'), sep='.'),
+           title=paste('anova', attr(object, 'obj.name'), sep='.'),
            dec.chisq=2, dec.F=2, dec.ss=NA,
            dec.ms=NA, dec.P=4, dec.REV=3, table.env=TRUE, caption=NULL,
            fontsize=1, params=NULL, ...) {
@@ -626,7 +626,7 @@ latex.anova.rms <-
     resp <- as.character(attr(object, 'formula')[2])
     if(! html) resp <- latexTranslate(resp)
 
-    test <- attr(stats, 'test')
+    test <- attr(object, 'test')
     if(! length(test))  test <- 'Chisq'   # for legacy fit objects
     if(test == 'LR')    test <- 'Likelihood Ratio'
     if(test == 'Chisq') test <- 'Wald'
