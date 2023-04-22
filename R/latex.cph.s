@@ -51,10 +51,16 @@ latex.cph <-
   htmlTab <- function(s) {
     s <- cbind('$t$'= as.numeric(rownames(s)), s)
     for(j in 1 : ncol(s)) s[, j] <- round(s[, j], dec)
-    as.character(
-      knitr::kable(s, format='html',
-                   align='r', row.names=FALSE) |>
-      kableExtra::kable_styling(full_width=FALSE)   )
+    if (requireNamespace("kableExtra", quietly=TRUE)) {
+      as.character(
+        knitr::kable(s, format='html',
+                     align='r', row.names=FALSE) |>
+        kableExtra::kable_styling(full_width=FALSE)   )
+    } else {
+      as.character(
+        knitr::kable(s, format='html',
+                     align='r', row.names=FALSE) )
+    }
   }
   
   ss <- f$surv.summary

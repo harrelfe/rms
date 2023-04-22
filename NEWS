@@ -1,3 +1,6 @@
+Changes in version 6.x-y (2023-xx-yy)
+   * kableExtra has been moved from Imports: to Suggests: and is used conditionally
+
 Changes in version 6.6-0 (2023-04-08)
    * latex.* for model fits: fixed case for file not blank, fixed bugs in latex.cph
    * Import knitr::kable and kableExtra::kable_styling and used these in latex.cph so that math notation can appear in html tables of survival probabilities
