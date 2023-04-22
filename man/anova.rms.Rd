@@ -25,6 +25,9 @@ omitted.  This applies to matrix predictors produced by e.g.
 
 For \code{lrm, orm, cph, psm} and \code{Glm} fits, the better likelihood
 ratio chi-square tests may be obtained by specifying \code{test='LR'}.
+Fits must use \code{x=TRUE, y=TRUE} to run LR tests.  The tests are run
+fairly efficiently by subsetting the design matrix rather than
+recreating it.
 
 \code{print.anova.rms} is the printing
 method.  \code{plot.anova.rms} draws dot charts depicting the importance
@@ -109,7 +112,10 @@ factor.
 singularity criterion for use in matrix inversion
 }
 \item{test}{
-For an \code{ols} fit, set \code{test="Chisq"} to use Wald \eqn{\chi^2} tests rather than F-tests.
+For an \code{ols} fit, set \code{test="Chisq"} to use Wald \eqn{\chi^2}
+tests rather than F-tests.  For \code{lrm, orm, cph, psm} and \code{Glm}
+fits set \code{test='LR'} to get likelihood ratio \eqn{\chi^2} tests.
+This requires specifying \code{x=TRUE, y=TRUE} when fitting the model.
 }
 \item{india}{set to \code{FALSE} to exclude individual tests of
   interaction from the table}

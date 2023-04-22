@@ -1,6 +1,3 @@
-Changes in version 6.7-0 (2023-04-22)
-   * added full likelihood ratio tests in anova() for the commonly used rms models
-
 Changes in version 6.6-0 (2023-04-08)
    * latex.* for model fits: fixed case for file not blank, fixed bugs in latex.cph
    * Import knitr::kable and kableExtra::kable_styling and used these in latex.cph so that math notation can appear in html tables of survival probabilities
