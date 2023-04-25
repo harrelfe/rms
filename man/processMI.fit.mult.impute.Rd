@@ -6,7 +6,7 @@
 \usage{
 \method{processMI}{fit.mult.impute}(
   object,
-  which = c("validate", "calibrate"),
+  which = c("validate", "calibrate", "anova"),
   plotall = TRUE,
   nind = 0,
   ...
@@ -24,13 +24,15 @@
 \item{...}{ignored}
 }
 \value{
-an object like a \code{validate} or \code{calibrate} result obtained when no multiple imputation was done.  This object is suitable for \code{print} and \code{plot} methods for these kinds of resampling validation objects.
+an object like a \code{validate}, \code{calibrate}, or \code{anova} result obtained when no multiple imputation was done.  This object is suitable for \code{print} and \code{plot} methods for these kinds of objects.
 }
 \description{
 Process Special Multiple Imputation Output From \code{fit.mult.impute}
 }
 \details{
 Processes a \code{funresults} object stored in a fit object created by \code{fit.mult.impute} when its \code{fun} argument was used.  These objects are typically named \code{validate} or \code{calibrate} and represent bootstrap or cross-validations run separately for each imputation.  See \href{https://hbiostat.org/rmsc/validate.html#sec-val-mival}{this} for a case study.
+
+For \code{which='anova'} assumes that the \code{fun} given to \code{fit.mult.impute} runs \code{anova(fit, test='LR')} to get likelihood ratio tests, and that \code{method='stack'} was specified also so that a final \code{anova} was run on the stacked combination of all completed datasets.  The method of \href{https://hbiostat.org/rmsc/missing.html#sec-missing-lrt}{Chan and Meng (2022)} is used to obtain overall likelihood ratio tests, with each line of the \code{anova} table getting a customized adjustment based on the amount of missing information pertaining to the variables tested in that line.  The resulting statistics are chi-square and not $F$ statistics as used by Chan and Meng.  This will matter when the estimated denominator degrees of freedom for a variable is small (e.g., less than 50).  These d.f. are reported so that user can take appropriate cautions such as increasing \code{n.impute} for \code{aregImpute}.
 }
 \seealso{
 \code{\link[Hmisc:transcan]{Hmisc::fit.mult.impute()}}

@@ -600,20 +600,20 @@ print.cph <- function(x, digits=4, r2=c(0,2,4), table=TRUE, conf.int=FALSE,
                      'd.f.'        = stats['d.f.'],
                      'Pr(> chi2)'  = stats['P'],
                      'Score chi2'  = stats['Score'],
-                     'Pr(> chi2)'  = stats['Score P'])
+                     'Pr(> chi2)'  = stats['Score P'],
+                     dec=c(2,NA,4,2,4))
     newr2 <- grepl('R2\\(', names(stats))
     disc <- reListclean(R2        = if(0 %in% r2) stats['R2'],
                         namesFrom = if(any(newr2))
                                       stats[newr2][setdiff(r2,0)],
                         Dxy = stats['Dxy'],
                         g  = if(pg) stats['g'],
-                        gr = if(pg) stats['gr'])
+                        gr = if(pg) stats['gr'],
+                        dec=3)
                                                               
     k <- k + 1
     headings <- c('', 'Model Tests', 'Discrimination\nIndexes')
-    data     <- list(misc,
-                     c(lr,   c(2,NA,4,2,4)),
-                     c(disc, 3))
+    data     <- list(misc, lr, disc)
     z[[k]] <- list(type='stats', list(headings=headings, data=data))
     
     beta <- x$coef

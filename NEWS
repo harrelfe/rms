@@ -1,6 +1,9 @@
-Changes in version 6.7-0 (2023-04-22)
+Changes in version 6.7-0 (2023-04-25)
    * kableExtra has been moved from Imports: to Suggests: and is used conditionally (Thanks: Dirk Eddelbuettel)
-  * added full likelihood ratio tests in anova() for the commonly used rms models
+   * added full likelihood ratio tests in anova() for the commonly used rms models
+   * reListclean: added dec attribute to better handle decimal places in case of removal of NULL or NA elements being printed; changed all model print methods accordingly
+   * print.ols: get n from stats, require stats to be non-empty (done for fit.mult.impute with stacking)
+   * LRupdate: new function to update LR test-related stats after processMI is run
 
 Changes in version 6.6-0 (2023-04-08)
    * latex.* for model fits: fixed case for file not blank, fixed bugs in latex.cph

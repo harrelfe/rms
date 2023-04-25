@@ -293,19 +293,20 @@ print.Gls <- function(x, digits=4, coefs=TRUE,
   misc <- reListclean(Obs=dd$N,
                    Clusters=if(length(x$groups)) length(unique(x$groups)) else
                     dd$N,
-                   g=x$g)
+                   g=x$g,
+                   dec=c(NA, NA, 3L))
   
   llike <- reListclean(ll=x$logLik,
                     'Model d.f.' = dd$p - 1L,
                     sigma  = x$sigma,
-                    'd.f.' = errordf)
+                    'd.f.' = errordf,
+                    dec=c(2L,NA,digits,NA))
   names(llike)[1L] <- ltype
   k <- k + 1L
   z[[k]] <- list(type='stats',
                  list(
                       headings = c('', ''),
-                      data     = list(c(misc, c(NA,NA,3L)),
-                                      c(llike, c(2L,NA,digits,NA)))))
+                      data     = list(misc, llike)))
 
   if(any(names(x)=='var') && length(x$var))
     {

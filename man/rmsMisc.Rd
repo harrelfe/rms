@@ -142,7 +142,9 @@ code.  The LaTeX longtable and epic packages must be in effect to use LaTeX.
 ignoring the previous names and not concatenating them as \R does.  It
 also removes \code{NULL} elements and (by default) elements that are
 \code{NA}, as when an 
-optional named element is fetched that doesn't exist.
+optional named element is fetched that doesn't exist.  It has an
+argument \code{dec} whose elements are correspondingly removed, then
+\code{dec} is appended to the result vector.
 
 \code{formatNP} is a function to format a vector of numerics.  If
 \code{digits} is specified, \code{formatNP} will make sure that the
@@ -220,7 +222,7 @@ prModFit(x, title, w, digits=4, coefs=TRUE, footer=NULL,
 
 prStats(labels, w, lang=c("plain", "latex", "html"))
 
-reListclean(\dots, na.rm=TRUE)
+reListclean(\dots, dec=NULL, na.rm=TRUE)
 
 formatNP(x, digits=NULL, pvalue=FALSE,
          lang=c("plain", "latex", "html"))
@@ -361,6 +363,7 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   \code{needspace='6\\baselineskip'} or \code{needspace='1.5in'}.}
 \item{subtitle}{optional vector of character strings containing
 	subtitles that will appear under \code{title} but not bolded}
+\item{dec}{vector of decimal places used for rounding}
 \item{na.rm}{set to \code{FALSE} to keep \code{NA}s in the vector
   created by \code{reListclean}}
 \item{pvalue}{set to \code{TRUE} if you want values below 10 to the

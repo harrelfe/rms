@@ -31,9 +31,6 @@ f <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)) + country,
 
 
 p <- Predict(f, cholesterol, sex)
-source('~/R/Hmisc/R/histSpikeg.s')
-source('~/R/rms/R/plotp.Predict.s')
-source('~/R/Hmisc/R/scat1d.s')
 # plotp(p, rdata=d, ylim=c(-1,2))
 
 i <- attr(p, 'info')
@@ -62,7 +59,6 @@ a <- add_lines(a, data=p, x=~cholesterol, y=~yhat, color=~sex,
                text=~ht, hoverinfo='text')
 a <- add_ribbons(a, data=p, x=~cholesterol, ymin=~lower, ymax=~upper,
                  color=~sex, hoverinfo='none')
-source('~/R/Hmisc/R/histSpikeg.s')
 a <- histSpikeg(yhat ~ cholesterol + sex, predictions=p,
                 data=d, plotly=a, ylim=c(-1, 2))
 layout(a, xaxis=list(title=chl),
@@ -86,7 +82,6 @@ a <- add_lines(a, x=~age, y=~yhat, text=~ht, color=I('black'), hoverinfo='text',
                name='yhat', legendgroup='yhat')
 a <- add_ribbons(a, x=~age, ymin=~lower, ymax=~upper, color=I('lightgray'),
                  hoverinfo='none', name=cllab, legendgroup=cllab)
-source('~/R/Hmisc/R/histSpikeg.s')
 a <- histSpikeg(yhat ~ age, data=d, predictions=r, ylim=ylim, plotly=a)
 #aa <- histSpikep(a, x=d$age, y=approx(r$age, r$yhat, xout=d$age)$y, z=1)
 ex <- function(x, delta=0) {

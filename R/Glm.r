@@ -119,13 +119,19 @@ Glm <-
   if (model) fit$model <- mf
   if (x)  fit$x <- X[, -1, drop=FALSE]
   if (!y) fit$y <- NULL
+  dof  <- fit$rank - (names(coef(fit))[1]=='Intercept')
+  lr   <- fit$null.deviance - fit$deviance
+  pval <- 1 - pchisq(lr, dof)
   fit <- c(fit, list(call = call, formula = formula, sformula=sformula,
                      terms = mt, data = data, offset = offset,
                      control = control, method = method,
                      contrasts = attr(X, "contrasts"), xlevels = xlev,
                      Design=desatr, na.action=nact,
                      assign=DesignAssign(desatr,1,mt),
-                     g=GiniMd(fit$linear.predictors)))
+                     stats=c('d.f.'       = dof,
+                             'Model L.R.' = lr,
+                             P            = pval,
+                             g             =GiniMd(fit$linear.predictors))))
   class(fit) <- c('Glm', 'rms', 'glm', 'lm')
   fit
 }
@@ -154,22 +160,19 @@ print.Glm <- function(x, digits=4, coefs=TRUE,
     }
 
   cof <- coef(x)
-  lr <- x$null.deviance - x$deviance
-  dof <- x$rank - (names(cof)[1]=='Intercept')
-  pval <- 1 - pchisq(lr, dof)
+  stats <- x$stats
 
   ci <- x$clusterInfo
-  misc <- reListclean(Obs=length(x$residuals),
-                   'Residual d.f.'=x$df.residual,
-                   'Cluster on'=ci$name,
-                   Clusters=ci$n,
-                   g = x$g)
-  lr   <- reListclean('LR chi2'     = lr,
-                   'd.f.'        = dof,
-                   'Pr(> chi2)' = pval)
+  misc <- reListclean(Obs             = length(x$residuals),
+                      'Residual d.f.' = x$df.residual,
+                      'Cluster on'    = ci$name,
+                      Clusters        = ci$n,
+                      g               = stats['g'], dec=c(NA,NA,NA,NA,3))
+  lr   <- reListclean('LR chi2'       = stats['Model L.R.'],
+                      'd.f.'          = stats['d.f.'],
+                      'Pr(> chi2)'    = stats['P'], dec=c(2, NA, -4))
   headings <- c('', 'Model Likelihood\nRatio Test')
-  data <-  list(c(misc, c(NA,NA,NA,NA,3)),
-                c(lr,   c(2, NA,-4)))
+  data <- list(misc, lr)
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
   

@@ -147,10 +147,11 @@ print.Rq <- function(x, digits=4, coefs=TRUE, title, ...)
     misc <- reListclean(Obs=n, p=p, 'Residual d.f.'=errordf,
                      'Cluster on'=ci$name,
                      Clusters    =ci$n,
-                     'mean |Y-Yhat|'=mad)
+                     'mean |Y-Yhat|'=mad,
+                     dec = 3)
     disc <- reListclean(g=g)
     headings <- c('', 'Discrimination\nIndex')
-    data     <- list(misc, c(disc,3))
+    data     <- list(misc, disc)
     k <- k + 1
     z[[k]] <- list(type='stats', list(headings=headings, data=data))
 

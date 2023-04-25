@@ -262,25 +262,28 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), strata.coefs=FALSE, coefs=TRUE,
   lr   <- reListclean('LR chi2'    = stats['Model L.R.'],
                       'd.f.'       = round(stats['d.f.'], 3),
                       'Pr(> chi2)' = stats['P'],
-                      Penalty      = penaltyFactor)
+                      Penalty      = penaltyFactor,
+                      dec          = c(2,NA,-4,2))
   newr2 <- grepl('R2\\(', names(stats))
   disc <- reListclean(R2        = if(0 %in% r2)  stats['R2'],
                       namesFrom = if(any(newr2)) stats[newr2][setdiff(r2, 0)],
                       g         = if(pg) stats['g'],
                       gr        = if(pg) stats['gr'],
                       gp        = if(pg) stats['gp'],
-                      Brier     = stats['Brier'])
+                      Brier     = stats['Brier'],
+                      dec       = 3)
 
   discr <-reListclean(C       = stats['C'],
                       Dxy     = stats['Dxy'],
                       gamma   = stats['Gamma'],
-                      'tau-a' = stats['Tau-a'])
+                      'tau-a' = stats['Tau-a'],
+                      dec     = 3)
   
   headings <- c('','Model Likelihood\nRatio Test',
                    'Discrimination\nIndexes',
                    'Rank Discrim.\nIndexes')
   
-  data <- list(misc, c(lr, c(2,NA,-4,2)), c(disc,3), c(discr,3))
+  data <- list(misc, lr, disc, discr)
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
 

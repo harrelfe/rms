@@ -235,14 +235,16 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
   }
   
   stats <- x$stats
+  if(! length(stats)) stop('fit does not have stats')
 
   pen <- length(x$penalty.matrix) > 0
 
   resid <- x$residuals
 
-  n <- length(resid)
+  ## n <- length(resid)
+  n <- stats['n']
   p <- length(x$coef) - (names(x$coef)[1] == "Intercept")
-  if(length(stats)==0) cat("n=", n,"   p=", p, "\n\n", sep="")
+  if(length(stats) == 0) cat("n=", n,"   p=", p, "\n\n", sep="")
   ndf <- stats['d.f.']
   df <- c(ndf, n - ndf - 1, ndf)
   r2 <- stats['R2']
@@ -256,15 +258,18 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
                      sigma=sigma,
                      'd.f.'=df[2],
                      'Cluster on'=ci$name,
-                     Clusters=ci$n)
+                     Clusters=ci$n,
+                     dec = c(NA,digits,NA,NA,NA))
     lr   <- reListclean('LR chi2'     = lrchisq,
                      'd.f.'        = ndf,
-                     'Pr(> chi2)' = 1 - pchisq(lrchisq, ndf))
-    disc <- reListclean(R2=r2, 'R2 adj'=rsqa, g=stats['g'])
+                     'Pr(> chi2)' = 1 - pchisq(lrchisq, ndf),
+                     dec = c(2,NA,4))
+    disc <- reListclean(R2=r2, 'R2 adj'=rsqa, g=stats['g'],
+                        dec=3)
     headings <- c('',
                   'Model Likelihood\nRatio Test',
                   'Discrimination\nIndexes')
-    data <- list(c(misc, c(NA,digits,NA,NA,NA)), c(lr, c(2,NA,4)), c(disc,3))
+    data <- list(misc, lr, disc)
     k <- k + 1
     z[[k]] <- list(type='stats', list(headings=headings, data=data))
   }

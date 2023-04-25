@@ -324,12 +324,13 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE,
                      'Clusters'   = ci$n)
   dfstat <- reListclean('Regression d.f.' = stats['d.f.'],
                      sigma=stats['sigma'],
-                     'd.f.'=stats['error d.f.'])
-  disc <- reListclean(g = stats['g'], gr = stats['gr'])
+                     'd.f.'=stats['error d.f.'],
+                     dec=c(NA, digits, NA))
+  disc <- reListclean(g = stats['g'], gr = stats['gr'], dec=3)
   k <- k + 1
   z[[k]] <- list(type='stats',
                  list(headings=c('', '', 'Discrimination\nIndexes'),
-                      data=list(misc, c(dfstat,c(NA,digits,NA)), c(disc, 3))))
+                      data=list(misc, dfstat, disc)))
   
   cof <- x$coefficients
   se <- sqrt(diag(x$var))

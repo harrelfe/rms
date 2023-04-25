@@ -1037,7 +1037,6 @@ html.naprint.delete <- function(object, ...) {
 ## scientific notation)
 
 prStats <- function(labels, w, lang=c('plain', 'latex', 'html')) {
-  
   lang  <- match.arg(lang)
   lorh  <- lang != 'plain'
   specs <- markupSpecs[[lang]]
@@ -1223,6 +1222,9 @@ for(i in 1:p) {
 ## named x1 and x2 and the name B is ignored
 ## reListclean(A=x[1], namesFrom=z) where z is only a 1 element vector will
 ## still override namesFrom (literally) with names(z) if 
+## Update 2023-04-23: new argument dec which is appended to resulting
+## vector and has elements removed if elements are removed from main
+## information due to NA or NULL
 
 #reListclean <- function(..., na.rm=TRUE) {
 #  d <- list(...)
@@ -1231,12 +1233,16 @@ for(i in 1:p) {
 #  names(x) <- names(d)
 #  if(na.rm) x[! is.na(x)] else x
 #}
-reListclean <- function(..., na.rm=TRUE) {
+reListclean <- function(..., dec=NULL, na.rm=TRUE) {
   d <- list(...)
+  if(length(dec)) dec <- rep(dec, length=length(d))
   g <- if(na.rm) function(x) length(x) > 0 && ! all(is.na(x))
        else
          function(x) length(x) > 0
-  w <- d[sapply(d, g)]
+  keep <- which(sapply(d, g))
+  w    <- d[keep]
+  if(length(dec)) dec <- dec[keep]
+  
   r <- list()
   nam <- names(w)
   i   <- 0
@@ -1252,7 +1258,7 @@ reListclean <- function(..., na.rm=TRUE) {
     }
   }
   names(r) <- nm
-  r
+  c(r, dec)
 }
 
 

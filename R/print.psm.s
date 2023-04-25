@@ -16,10 +16,13 @@ print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
                         'Cluster on'     = ci$name,
                         Clusters         = ci$n,
                         'Sum of Weights' = stats['Sum of Weights'],
-                        sigma            = if(length(x$scale) == 1) x$scale)
+                        sigma            = if(length(x$scale) == 1) x$scale,
+                        dec              = c(NA, NA, NA, NA, NA, 4))
+
   lr <- reListclean('LR chi2'     = stats['Model L.R.'],
                     'd.f.'        = stats['d.f.'],
-                    'Pr(> chi2)'  = stats['P'])
+                    'Pr(> chi2)'  = stats['P'],
+                    dec           = c(2,NA,-4))
   newr2 <- grep('R2\\(', names(stats))
   nnr   <- length(newr2)
   if(nnr %nin% c(0, 4)) stop('MCS R^2 did not compute 4 indexes')
@@ -28,17 +31,14 @@ print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
                       namesFrom = if(nnr > 0) stats[newr2][setdiff(r2, 0)],
                       Dxy       = stats['Dxy'],
                       g         = if(pg) stats['g'],
-                      gr        = if(pg) stats['gr'])
+                      gr        = if(pg) stats['gr'],
+                      dec       = 3)
 
   headings <- c('',
                 'Model Likelihood\nRatio Test',
                 'Discrimination\nIndexes')
-  digcounts <- c(NA, NA, NA,
-                 if(length(ci$name)) NA,
-                 if(length(ci$n))    NA,
-                 if(length(x$scale) == 1) 4)
 
-  data <- list(c(counts, digcounts), c(lr, c(2,NA,-4)), c(disc, 3))
+  data <- list(counts, lr, disc)
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
 

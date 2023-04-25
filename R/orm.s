@@ -213,12 +213,16 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
 
   maxd <- stats['Max Deriv']
   ci <- x$clusterInfo
+  frq <- if(length(x$freq) < 4) {
+    x$freq
+    }
+           
   misc <- reListclean(Obs           = stats['Obs'],
-                   'Distinct Y'    = stats['Distinct Y'],
-                   'Cluster on'  = ci$name,
-                   Clusters      = ci$n,
-                   'Median Y'    = stats['Median Y'],
-                   'max |deriv|' = maxd)
+                      'Distinct Y'    = stats['Distinct Y'],
+                      'Cluster on'  = ci$name,
+                      Clusters      = ci$n,
+                      'Median Y'    = stats['Median Y'],
+                      'max |deriv|' = maxd)
   if(length(x$freq) < 4) {
     names(x$freq) <- paste(if(prType() == 'latex') '~~' else ' ',
                            names(x$freq), sep='')
@@ -229,22 +233,24 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
                    'Pr(> chi2)' = stats['P'],
                    'Score chi2' = stats['Score'],
                    'Pr(> chi2)' = stats['Score P'],
-                   Penalty      = penaltyFactor)
+                   Penalty      = penaltyFactor,
+                   dec          = c(2,NA,-4,2,-4,2))
   newr2 <- grepl('R2\\(', names(stats))
   disc <- reListclean(R2=if(0 %in% r2) stats['R2'],
                       namesFrom = if(any(newr2)) stats[newr2][setdiff(r2, 0)],
                       g         = if(pg) stats['g'],
                       gr        = if(pg) stats['gr'],
-                      '|Pr(Y>=median)-0.5|' = stats['pdm'])
+                      '|Pr(Y>=median)-0.5|' = stats['pdm'],
+                      dec       = 3)
   if(any(newr2)) names(disc)[names(disc) == 'R2m'] <- names(stats[newr2])
   
-  discr <-reListclean(rho=stats['rho'])
+  discr <-reListclean(rho=stats['rho'], dec=3)
   
   headings <- c('',
                 'Model Likelihood\nRatio Test',
                 'Discrimination\n Indexes',
                 'Rank Discrim.\nIndexes')
-  data <- list(misc, c(lr, c(2,NA,-4,2,-4,2)), c(disc,3), c(discr,3))
+  data <- list(misc, lr, disc, discr)
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
 

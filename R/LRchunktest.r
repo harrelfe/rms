@@ -1,13 +1,15 @@
 LRchunktest <- function(object, i) {
   k   <- class(object)[1]
+  fmi <- k == 'fit.mult.impute'
+  if(fmi) k <- class(object)[2]
+  
   X   <- object[['x']]
   y   <- object[['y']]
   if(! length(X) || ! length(y))
     stop('you must specify x=TRUE, y=TRUE in the fit to enable LR tests')
   
-  if(length(i) == ncol(X)) {
-    chisq <- if(k == 'Glm') object$null.deviance - object$deviance
-    else object$stats['Model L.R.']
+  if(length(i) == ncol(X)) {   # overall test used Model L.R.
+    chisq <- object$stats['Model L.R.'] # and dealt with mult imputations
     return(c(chisq=chisq, df=ncol(X)))
   }
   
@@ -44,5 +46,8 @@ LRchunktest <- function(object, i) {
          },
          stop('for LR tests, fit must be from lrm, orm, cph, psm, Glm')
          )
-  c(chisq=dev - devf, df=length(i))
+  chisq <- dev - devf
+  if(fmi && length(object$fmimethod) && object$fmimethod != 'ordinary')
+    chisq <- chisq / object$n.impute
+  c(chisq=chisq, df=length(i))
   }
