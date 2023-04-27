@@ -9,6 +9,7 @@
   which = c("validate", "calibrate", "anova"),
   plotall = TRUE,
   nind = 0,
+  prmi = TRUE,
   ...
 )
 }
@@ -20,6 +21,8 @@
 \item{plotall}{set to \code{FALSE} when \code{which='calibrate'} to suppress having \code{ggplot} render a graph showing calibration curves produced separately for all the imputations}
 
 \item{nind}{set to a positive integer to use base graphics to plot a matrix of graphs, one each for the first \code{nind} imputations, and the overall average calibration curve at the end}
+
+\item{prmi}{set to \code{FALSE} to not print imputation corrections for \code{anova}}
 
 \item{...}{ignored}
 }

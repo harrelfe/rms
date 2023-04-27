@@ -20,6 +20,7 @@ processMI <- function(object, ...) UseMethod("processMI")
 ##' @param which specifies which component of the extra output should be processed
 ##' @param plotall set to `FALSE` when `which='calibrate'` to suppress having `ggplot` render a graph showing calibration curves produced separately for all the imputations
 ##' @param nind set to a positive integer to use base graphics to plot a matrix of graphs, one each for the first `nind` imputations, and the overall average calibration curve at the end
+##' @param prmi set to `FALSE` to not print imputation corrections for `anova`
 ##' @param ... ignored
 ##' @return an object like a `validate`, `calibrate`, or `anova` result obtained when no multiple imputation was done.  This object is suitable for `print` and `plot` methods for these kinds of objects.
 ##' @seealso [Hmisc::fit.mult.impute()]
@@ -27,7 +28,7 @@ processMI <- function(object, ...) UseMethod("processMI")
 ##' @author Frank Harrell
 processMI.fit.mult.impute <-
   function(object, which=c('validate', 'calibrate', 'anova'),
-           plotall=TRUE, nind=0, ...) {
+           plotall=TRUE, nind=0, prmi=TRUE, ...) {
     which <- match.arg(which)
 
     r <- lapply(object$funresults,
@@ -135,21 +136,73 @@ processMI.fit.mult.impute <-
       fhat <- rhat / (1. + rhat)
       df2  <- df * (M - 1) / fhat / fhat
       dfact <- 1. / (1. + rhat)
-      w <- data.frame(Test = rownames(A),
-                      'Missing Information' = round(fhat,  3),
-                      'Denom d.f.'          = round(df2,   1),
-                      'Chisq Discount'      = round(dfact, 3),
-                      check.names=FALSE)
-      # if(prType() == 'html') {
-      #   names(w) <- c('Missing<br>Information<br>Fraction',
-      #                 'Denominator<br>d.f.', '$\\chi^{2}$ Discount')
-      #   rendHTML(kable(w))
-      #   }
-      print(w, row.names=FALSE); cat('\n')
+      mi.info <- data.frame(Test = rownames(A),
+                            'Missing Information' = fhat,
+                            'Denominator d.f.'    = df2,
+                            'Chi-Square Discount' = dfact,
+                            check.names=FALSE)
+      attr(A, 'mi.info') <- mi.info
       A[, 'Chi-Square'] <- dfact * LRT
       A[, 'P']          <- pchisq(dfact * LRT, df, lower.tail=FALSE)
+
       A
-      }
+    }
   }
+
+##' Print Information About Impact of Imputation
+##'
+##' For the results of `processMI.fit.mult.impute` prints or writes html (the latter if `options(prType='html')` is in effect) summarizing various correction factors related to missing data multiple imputation.
+##' @title prmiInfo
+##' @param x an object created by `processMI(..., 'anova')`
+##' @return nothing 
+##' @author Frank Harrell
+##' @md
+##' @examples
+##' \dontrun{
+##' a <- aregImpute(...)
+##' f <- fit.mult.impute(...)
+##' v <- processMI(f, 'anova')
+##' prmiInfo(v)
+##' }
+prmiInfo <- function(x) {
+  m <- attr(x, 'mi.info')
+  if(! length(m)) stop('object does not have mi.info attributes')
+  
+  for(j in 2:4) m[, j] <- format(round(m[, j], c(NA,3,1,3)[j]))
+  if(prType() == 'html') {
+    specs <- markupSpecs$html
+    rowl <- m$Test
+    if('MS' %in% names(m)) rowl[rowl=='TOTAL'] <- 'REGRESSION'
+    bold  <- specs$bold
+    math  <- specs$math
+    
+    ## Translate interaction symbol (*) to times symbol
+    rowl <- gsub('*', specs$times, rowl, fixed=TRUE)
+  
+    ## Put TOTAL rows in boldface
+    rowl <- ifelse(substring(rowl, 1, 5) %in% c("REGRE", "ERROR", "TOTAL"),
+                   bold(rowl), rowl)
+    rowl <- ifelse(substring(rowl, 1, 1) == " ",
+                 paste0(specs$lspace, specs$italics(substring(rowl,2)), sep=""),
+                 rowl) # preserve leading blank
+    m$Test <- rowl
+    
+    names(m) <- c('Test', 'Missing<br>Information<br>Fraction',
+                  'Denominator<br>d.f.',
+                  paste(specs$chisq(add=''), 'Discount'))
+    fshead <- rep('font-size:1em;',    4)
+    fscell <- rep('padding-left:2ex;', 4)
+    al     <- c('l', 'r', 'r', 'r')
+    w <- htmlTable::htmlTable(m, caption='Imputation penalties',
+                              css.table=fshead,
+                              css.cell =fscell,
+                              align=al,
+                              align.header=al,
+                              escape.html=FALSE, rnames=FALSE)
+    rendHTML(w)
+    } else {cat('\n'); print(m); cat('\n')}
+
+  }
+
 
 utils::globalVariables(c('predicted', 'corrected', 'imputation'))

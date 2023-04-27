@@ -453,7 +453,7 @@ statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
 
 print.anova.rms <- function(x, which=c('none','subscripts',
                                        'names','dots'),
-                            table.env=FALSE, 
+                            table.env=FALSE, prmi=TRUE,
                             ...) {
   which <- match.arg(which)
   lang  <- prType()
@@ -523,7 +523,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 
   if(lang != 'plain')
     return(latex.anova.rms(x, file='', table.env=table.env,
-                           params=params, ...))
+                           prmi=prmi, params=params, ...))
   
   sn <- colnames(cstats)
   
@@ -554,7 +554,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
   
   if(do.which) cstats <- cbind(cstats, Tested=w)
   
-  print(cstats,quote=FALSE)
+  print(cstats, quote=FALSE)
   
   if(do.which && which!='names') {
     cat('\nSubscripts correspond to:\n')
@@ -569,7 +569,16 @@ print.anova.rms <- function(x, which=c('none','subscripts',
     cat('\nApproximate total model Wald total chi-square used in denominators of REV:\n',
         bchi['Central'], ' [', bchi['Lower'], ', ',
         bchi['Upper'], ']\n', sep='')
-    }
+  }
+  
+  if(prmi) {
+    ## See if processMI(..., 'anova') produced x
+    m <- attr(stats, 'mi.info')
+    if(length(m)) {
+      for(j in 2:4) m[, j] <- round(m[, j], c(NA,3,1,3)[j])
+      cat('\n'); print(m); cat('\n')
+      }
+  }
   invisible()
 }
 
@@ -577,7 +586,8 @@ latex.anova.rms <-
   function(object,
            title=paste('anova', attr(object, 'obj.name'), sep='.'),
            dec.chisq=2, dec.F=2, dec.ss=NA,
-           dec.ms=NA, dec.P=4, dec.REV=3, table.env=TRUE, caption=NULL,
+           dec.ms=NA, dec.P=4, dec.REV=3, prmi=TRUE,
+           table.env=TRUE, caption=NULL,
            fontsize=1, params=NULL, ...) {
 
     ## params is only used if called from print.anova.rms
@@ -596,13 +606,12 @@ latex.anova.rms <-
     bold  <- specs$bold
     math  <- specs$math
     
-    
     ## Translate interaction symbol (*) to times symbol
     ## rowl <- gsub('\\*', specs$times, rowl)   # changed * to $times$
     rowl <- gsub('*', specs$times, rowl, fixed=TRUE)
   
     ## Put TOTAL rows in boldface
-    rowl <- ifelse(substring(rowl, 1, 5) %in% c("REGRE", "ERROR"),
+    rowl <- ifelse(substring(rowl, 1, 5) %in% c("REGRE", "ERROR", "TOTAL"),
                    bold(rowl), rowl)
 
     rowl <- ifelse(substring(rowl, 1, 1) == " ",
@@ -670,7 +679,7 @@ latex.anova.rms <-
                                 align=al, align.header=al,
                                 rowlabel='', escape.html=FALSE)
       rendHTML(w)
-      }
+    }
     else {
         latex(dstats, title=title,
               caption    = if(table.env) caption else NULL,
