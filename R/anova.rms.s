@@ -453,7 +453,7 @@ statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
 
 print.anova.rms <- function(x, which=c('none','subscripts',
                                        'names','dots'),
-                            table.env=FALSE, prmi=TRUE,
+                            table.env=FALSE,
                             ...) {
   which <- match.arg(which)
   lang  <- prType()
@@ -523,7 +523,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 
   if(lang != 'plain')
     return(latex.anova.rms(x, file='', table.env=table.env,
-                           prmi=prmi, params=params, ...))
+                           params=params, ...))
   
   sn <- colnames(cstats)
   
@@ -571,14 +571,6 @@ print.anova.rms <- function(x, which=c('none','subscripts',
         bchi['Upper'], ']\n', sep='')
   }
   
-  if(prmi) {
-    ## See if processMI(..., 'anova') produced x
-    m <- attr(stats, 'mi.info')
-    if(length(m)) {
-      for(j in 2:4) m[, j] <- round(m[, j], c(NA,3,1,3)[j])
-      cat('\n'); print(m); cat('\n')
-      }
-  }
   invisible()
 }
 
@@ -586,7 +578,7 @@ latex.anova.rms <-
   function(object,
            title=paste('anova', attr(object, 'obj.name'), sep='.'),
            dec.chisq=2, dec.F=2, dec.ss=NA,
-           dec.ms=NA, dec.P=4, dec.REV=3, prmi=TRUE,
+           dec.ms=NA, dec.P=4, dec.REV=3,
            table.env=TRUE, caption=NULL,
            fontsize=1, params=NULL, ...) {
 
@@ -753,7 +745,7 @@ plot.anova.rms <-
     an <- x[k,, drop=FALSE]
     
     if(! isbase && ! length(height))
-      height <- plotlyParm$heightDotchart(length(w))
+      height <- plotlyParm$heightDotchart(nrow(an))
 
     if('REV' %in% colnames(x)) {    # Bayesian
       xlab <- 'Relative Explained Variation'

@@ -20,7 +20,7 @@ Update Model LR Statistics After Multiple Imputation
 \details{
 For fits from \verb{orm, lrm, orm, cph, psm} that were created using \code{fit.mult.impute} with \code{lrt=TRUE} or equivalent options and for which \code{anova} was obtained using \code{processMI(fit, 'anova')} to compute imputation-adjusted LR statistics.  \code{LRupdate} uses the last line of the \code{anova} result (containing the overall model LR chi-square) to update \verb{Model L.R.} in the fit \code{stats} component, and to adjust any of the new R-square measures in \code{stats}.
 
-For models using Nagelkerke's R-squared, these are set to \code{NA} as they would need to be recomputed with a new intercept-only log-likelihood, which is not computed by \code{anova}.
+For models using Nagelkerke's R-squared, these are set to \code{NA} as they would need to be recomputed with a new intercept-only log-likelihood, which is not computed by \code{anova}.  For \code{ols} models, R-squared is left alone as it is sample-size-independent and \code{print.ols} prints the correct adjusted R-squared due to \code{fit.mult.impute} correcting the residual d.f. in stacked fits.
 }
 \examples{
 \dontrun{

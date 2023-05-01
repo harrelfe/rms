@@ -41,9 +41,8 @@ substitutes Greek/math symbols in column headings, uses boldface for
 to \code{latex.default} for conversion to LaTeX.
 
 When the anova table was converted to account for missing data
-imputation by \code{processMI}, the \code{print} method by default
-prints information related to imputation adjustments.  This can be
-omitted using the \code{prmi} argument.??
+imputation by \code{processMI}, a separate function \code{prmiInfo} can
+be used to print information related to imputation adjustments.
 
 For Bayesian models such as \code{blrm}, \code{anova} computes relative
 explained variation indexes (REV) based on approximate Wald statistics.
@@ -70,7 +69,7 @@ depending on \code{options(prType=)}.  For
 
 \method{print}{anova.rms}(x,
       which=c('none','subscripts','names','dots'),
-      prmi=TRUE, table.env=FALSE, \dots)
+      table.env=FALSE, \dots)
 
 \method{plot}{anova.rms}(x,
      what=c("chisqminusdf","chisq","aic","P","partial R2","remaining R2",
@@ -82,7 +81,7 @@ depending on \code{options(prType=)}.  For
 
 \method{latex}{anova.rms}(object, title, dec.chisq=2,
       dec.F=2, dec.ss=NA, dec.ms=NA, dec.P=4, dec.REV=3,
-      prmi=TRUE, table.env=TRUE,
+      table.env=TRUE,
       caption=NULL, fontsize=1, params, \dots)
 
 \method{html}{anova.rms}(object, \dots)
@@ -152,8 +151,6 @@ the first non-intercept term).  \code{which="names"} prints the names of
 the terms being tested, and \code{which="dots"} prints dots for terms being
 tested and blanks for those just being adjusted for.
 }
-\item{prmi}{set to \code{FALSE} to suppress printing of missing data
-	adjustments computed by \code{processMI}}
 \item{what}{
 what type of statistic to plot.  The default is the \eqn{\chi^2}{chi-square}
 statistic for each factor (adding in the effect of higher-ordered
@@ -266,6 +263,7 @@ fh@fharrell.com
 file with a name of the form \code{"title.tex"} (see the \code{title} argument above).
 }
 \seealso{
+\code{\link{prmiInfo}},
 \code{\link{rms}}, \code{\link{rmsMisc}}, \code{\link{lrtest}},
 \code{\link{rms.trans}}, \code{\link{summary.rms}}, \code{\link{plot.Predict}},
 \code{\link{ggplot.Predict}}, \code{\link[Hmisc]{solvet}},

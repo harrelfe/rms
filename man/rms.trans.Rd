@@ -199,8 +199,8 @@ gTrans(x, pol2)
 dspl <- function(x) {
   z <- cbind(x, pmax(pmin(x, 20) - 10, 0), x > 20)
   attr(z, 'nonlinear') <- 2:3
-  attr(z, 'tex') <- function(x) sprintf(c('%s', '(\\min(%s, 20) - 10)_{+}',
-                                          '[%s > 20]'), x)
+  attr(z, 'tex') <- function(x) sprintf(c('\%s', '(\\min(\%s, 20) - 10)_{+}',
+                                          '[\%s > 20]'), x)
   z }
 gTrans(x, dspl)
 }
