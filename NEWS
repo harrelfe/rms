@@ -1,4 +1,4 @@
-Changes in version 6.7-0 (2023-05-01))
+Changes in version 6.7-0 (2023-05-05)
    * kableExtra has been moved from Imports: to Suggests: and is used conditionally (Thanks: Dirk Eddelbuettel)
    * added full likelihood ratio tests in anova() for the commonly used rms models
    * reListclean: added dec attribute to better handle decimal places in case of removal of NULL or NA elements being printed; changed all model print methods accordingly
