@@ -112,6 +112,12 @@ S3method(Newlevels, rms)
 
 S3method(nobs, rms)
 
+S3method(oos.loglik, ols)
+S3method(oos.loglik, lrm)
+S3method(oos.loglik, cph)
+S3method(oos.loglik, psm)
+S3method(oos.loglik, Glm)
+
 S3method(plot, anova.rms)
 S3method(plot, calibrate)
 S3method(plot, calibrate.default)
