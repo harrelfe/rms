@@ -1,3 +1,7 @@
+Changes in version 6.7-1 (2023-07-28)
+   * rcs, pol: use getOption for default nknots, issue message if default is used
+   * prModfit: fixed rowlabel problem with htmlTable
+
 Changes in version 6.7-0 (2023-05-08)
    * kableExtra has been moved from Imports: to Suggests: and is used conditionally (Thanks: Dirk Eddelbuettel)
    * added full likelihood ratio tests in anova() for the commonly used rms models

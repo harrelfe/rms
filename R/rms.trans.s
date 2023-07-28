@@ -98,17 +98,17 @@ des.args <- function(x, parms.allowed, call.args) {
   pa <- parms.allowed
   argu <- function(x,karg, arg.name, parms.all, nm)	{
 	if(! parms.all) karg <- karg-1
-	k <- charmatch(arg.name,nm,0)	#k>0 : named arg found
+	k <- charmatch(arg.name, nm, 0)	#k>0 : named arg found
     ## Added karg <= length(x) 9Apr02 for R; R doesn't return NULL
     ## like S+
 	if(k > 0) x[[k]] else 
 	if(length(nm) < karg || nm[karg] != "") NULL else
      if(karg <= length(x)) x[[karg]] else NULL
   }
-  if(parms.allowed) parms <- argu(x,2,"parms",pa,nam) else {
+  if(parms.allowed) parms <- argu(x, 2, "parms", pa, nam) else {
 	parms <- NULL
-	if(charmatch("parms",nam,0)>0)
-      stop(paste("parms not allowed for",as.character(call.args[1])))
+	if(charmatch("parms", nam, 0) > 0)
+      stop(paste("parms not allowed for", as.character(call.args[1])))
   }
  
   nm <- argu(x, 5, "name", pa, nam)
@@ -199,21 +199,17 @@ pol <- function(...) {
 
   cal <- sys.call()
   xx <- list(...)
-  z <- des.args(xx,TRUE,cal)
+  z <- des.args(xx, TRUE, cal)
   x <- xx[[1]]
   if(! is.numeric(x)) {
     stop(paste(z$name,"is not numeric"))
   }
-  poly.degree <- .Options$poly.degree
-  if(! length(poly.degree)) {
-    poly.degree <- 2
-  }
+  poly.degree <- getOption('poly.degree', 2)
+  if(! length(z$parms)) message('polynomial degree for pol defaulting to ',
+                                poly.degree)
+  else poly.degree <- z$parms
 
-  if(length(z$parms)) {
-    poly.degree <- z$parms
-  }
-
-  if(poly.degree<2){
+  if(poly.degree < 2){
     stop("order for polynomial must be 2,3,...")
   }
 
@@ -239,7 +235,7 @@ lsp <- function(...) {
 
   cal <- sys.call()
   xx <- list(...)
-  z <- des.args(xx,TRUE,cal)
+  z <- des.args(xx, TRUE, cal)
   x <- xx[[1]]
   if(! is.numeric(x)) {
     stop(paste(z$name,"is not numeric"))
@@ -276,11 +272,13 @@ rcs <- function(...) {
   x   <- xx[[1]]
   if(! is.numeric(x)) stop(paste(z$name, "is not numeric"))
 
-  nknots <- .Options$nknots
-  if(! length(nknots)) nknots <- 5
+  nknots <- getOption('nknots', 5)
 
   parms <- z$parms
-  if(! length(parms)) parms <- nknots
+  if(! length(parms)) {
+    message('number of knots in rcs defaulting to ', nknots)
+    parms <- nknots
+    }
 
   if(length(parms)==1) {
     nknots <- parms
@@ -324,7 +322,7 @@ rcs <- function(...) {
 catg <- function(...) {
   cal <- sys.call()
   xx <- list(...)
-  z <- des.args(xx,TRUE,cal)
+  z <- des.args(xx, TRUE, cal)
   nam <- z$name
   y <- xx[[1]]
   parms <- z$parms
@@ -469,7 +467,7 @@ strat <- function(...) {
   cal <- sys.call()
   xx <- list(...)
   y <- xx[[1]]
-  z <- des.args(xx,TRUE,cal)
+  z <- des.args(xx, TRUE, cal)
   parms <- z$parms
   if(! length(parms)) parms <- levels(y)
   if(! length(parms)) {

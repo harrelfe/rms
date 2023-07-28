@@ -905,7 +905,8 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
                         htmlTable::htmlTable(U,
                                              css.cell = 'min-width: 7em;',
                                              align=al, align.header=al,
-                                             rowlabel='', escape.html=FALSE)))
+                                             # rowlabel='',
+                                             escape.html=FALSE)))
             }
         } else {
           if(is.numeric(coefs)) {
