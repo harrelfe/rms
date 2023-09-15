@@ -1,6 +1,7 @@
-Changes in version 6.7-1 (2023-07-28)
+Changes in version 6.7-1 (2023-09-09)
    * rcs, pol: use getOption for default nknots, issue message if default is used
-   * prModfit: fixed rowlabel problem with htmlTable
+   * prModfit: fixed rowlabel problem with htmlTable, changed html output to include <p> in text when not centering, added quote=FALSE to type='print' output
+   * Xcontrast: compute design matrices from incomplete model fit objects and predictor settings, used for rmsb::blrm pcontrast argument
 
 Changes in version 6.7-0 (2023-05-08)
    * kableExtra has been moved from Imports: to Suggests: and is used conditionally (Thanks: Dirk Eddelbuettel)

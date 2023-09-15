@@ -237,7 +237,7 @@ Verweij PJM, Van Houwelingen JC: Crossvalidation in survival analysis.
 Stat in Med 12:2305--2314, 1993.
 
 Harrell FE: Model uncertainty, penalization, and parsimony.  Available
-from \url{http://hbiostat.org/talks/iscb98.pdf}.
+from \url{https://hbiostat.org/talks/iscb98.pdf}.
 }
 \seealso{
 \code{\link{orm.fit}}, \code{\link{predict.orm}}, \code{\link[SparseM:SparseM.solve]{solve}},

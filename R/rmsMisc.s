@@ -747,11 +747,11 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
           '</pre>')
       else
         c(skipt(pre),
-          paste0(if(center) '<div align=center>',
+          paste0(if(center) '<div align=center>' else '<p>',
                  if(bold) '<strong>',
                  x,
                  if(bold) '</strong>',
-                 if(center) '</div>'),
+                 if(center) '</div>' else '</p>'),
           skipt(skip))
     }
     else c(paste0(skipt(pre), x), skipt(skip))
@@ -774,7 +774,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
                                  skip=1))
   ## was skip=if(lsub) 0 else 1
   if(lsub)
-    for(i in lsub) R <- c(R, catl(subtitle[i], bold=FALSE))
+    for(i in lsub) R <- c(R, catl(subtitle[i], bold=FALSE, pre=1))
   
   if(long) {
     R <- c(R, bverb(), deparse(x$call), everb(), '')
@@ -934,7 +934,9 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
                                         c(obj, list(file=''))))
              else
                if(type == 'print')
-                 c(bverb(), capture.output(do.call(type, obj)), everb())
+                 c(bverb(),
+                   capture.output(do.call(type,
+                                          c(obj, list(quote=FALSE)))), everb())
              else
                do.call(type, obj),
              ## unlike do.call, eval(call(...)) dispatches on class of ...

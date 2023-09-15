@@ -74,11 +74,8 @@ of the fit.
 \item{linear.predictors}{
 set to \code{FALSE} to cause predicted values not to be stored
 }
-\item{penalty}{
-}
-\item{penalty.matrix}{
-see \code{lrm}
-}
+\item{penalty}{see \code{lrm}}
+\item{penalty.matrix}{see \code{lrm}}
 \item{tol}{tolerance for information matrix singularity}
 \item{sigma}{
 If \code{sigma} is given, it is taken as the actual root mean squared error parameter for the model.  Otherwise \code{sigma} is estimated from the data using the usual formulas (except for penalized models).  It is often convenient to specify

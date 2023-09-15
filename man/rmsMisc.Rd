@@ -258,9 +258,7 @@ removeFormulaTerms(form, which=NULL, delete.response=FALSE)
 \item{pred}{
 index of a predictor variable (main effect)
 }
-\item{fit1}{
-}
-\item{fit2}{
+\item{fit1,fit2}{
 fit objects from \code{lrm,ols,psm,cph} etc.  It doesn't matter which
 fit object is the sub-model.
 }

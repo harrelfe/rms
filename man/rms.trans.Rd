@@ -70,7 +70,7 @@ you must include a \code{tex} attribute also in the produced matrix.
 This must be a function of a single character string argument (that will
 ultimately contain the name of the predictor in LaTeX notation) and must
 produce a vector of LaTeX character strings.  See
-\url{https://hbiostat.org/R/rms/gtrans.html} for several examples of the
+\url{https://hbiostat.org/R/examples/gTrans/gTrans.html} for several examples of the
 use of \code{gTrans} including the use of \code{nonlinear} and
 \code{tex}.
 

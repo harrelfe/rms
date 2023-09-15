@@ -154,9 +154,7 @@ Set to the default (\code{"l"}) to plot the trend line only, \code{"b"}
 to plot both individual subjects ratios and trend lines, or
 \code{"p"} to plot only points. 
 }
-\item{xlim}{
-}
-\item{ylim}{
+\item{xlim,ylim}{
 axis limits for \code{plot.val.surv} when the \code{censor} variable was used.
 }
 \item{datadensity}{

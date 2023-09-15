@@ -112,7 +112,8 @@ contrast.rms <-
       eq <- all(as.character(da[[w]]) == as.character(db[[w]]))
       if(! missing(a2))
         eq <- eq & all(as.character(da[[w]]) == as.character(da2[[w]])) &
-          all(as.character(da[[2]]) == as.character(db2[[w]]))
+          all(as.character(db[[w]]) == as.character(db2[[w]]))
+      ## was da[[2]] 2023-09-07
       if(eq) k <- c(k, j)
     }
     if(length(k)) vary <- da[k]
