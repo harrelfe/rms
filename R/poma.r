@@ -10,6 +10,8 @@
 #' @param mod.orm Model fit of class `orm` or `lrm`. For `fit.mult.impute` objects, `poma` will refit model on a singly-imputed data-set
 #'
 #' @param cutval Numeric vector; sequence of observed values to cut outcome
+#' 
+#' @param minfreq Numeric vector; an `impactPO` argument which specifies the minimum sample size to allow for the least frequent category of the dependent variable.
 #'
 #' @param ... parameters to pass to `impactPO` function such as `newdata`, `nonpo`, and `B`.
 #'
@@ -55,7 +57,7 @@
 #' }
 
 
-poma <- function(mod.orm, cutval, ...) {
+poma <- function(mod.orm, cutval, minfreq = 15, ...) {
 
   ### Ensure that lrm and orm objects are supplied
   if(!any(class(mod.orm) %in% Cs(lrm, orm))) {
@@ -106,12 +108,12 @@ poma <- function(mod.orm, cutval, ...) {
   # User desires to use rms::impactPO
   # Ensure discrete Y (with no low-prevalence levels) is supplied
   if( any(names(dots) %in% impactPO_args_sub ) )  {
-     if (any(mod.orm$freq < 5)) {
-         cat('to use rms::impactPO, please supply discrete Y with at least 5 obs at each level \n')
+     if (any(mod.orm$freq < 15 )  & minfreq >= 15 ) {
+         cat('To use rms::impactPO, please supply discrete Y with at least 15 obs at each level \n or set a lower `minfreq` value\n', sep = "")
        } else {
 
         impactPO_args_dots    <- dots [names(dots) %in% impactPO_args_sub]
-        impactPO_args_default <- list(formula = mod.orm$sformula, data = data)  ## default args
+        impactPO_args_default <- list(formula = mod.orm$sformula, data = data, minfreq = minfreq)  ## default args
         impactPO_args         <- modifyList(impactPO_args_default, impactPO_args_dots)
 
         w <- do.call("impactPO", impactPO_args)
@@ -127,7 +129,7 @@ poma <- function(mod.orm, cutval, ...) {
 
   } else {
     # Direct users to rms::impactPO() for models fitted on discrete Y
-      if (all(mod.orm$freq > 5)) {
+      if (all(mod.orm$freq >= 15 )) {
         cat('Please use rms::impactPO for a more rigorous assessment of the PO assumption (https://www.fharrell.com/post/impactpo/)  \n\n')
       }
 
@@ -229,3 +231,4 @@ poma <- function(mod.orm, cutval, ...) {
 
 }
 
+ 
