@@ -2,7 +2,7 @@
 ##'
 ##' Computes measures of relative explained variation for each predictor in an `rms` or `rmsb` model fit `object`.  This is similar to `plot(anova(fit), what='proportion R2')`.  For an `ols` model the result is exactly that.  Uncertainty intervals are computed if the model fit is from `rmsb` or was run through [bootcov()] with `coef.reps=TRUE`.  The results may be printed, and there is also a `plot` method.
 ##'
-##' When `object` is not an `ols` fit, the linear predictor from the fit in `object` is predicted from the original predictors, resulting in a linear model with $R^{2}=1.0$.  The partial $R^2$ for each predictor from a new `ols` fit is the relative explained variation.  The process is repeated when bootstrap coefficients repetitions or posterior draws are present, to get uncertainty intervals.  So relative explained variation is the proportion of variation in the initial model's predicted values (on the linear predictor scale) that is due to each predictor.
+##' When `object` is not an `ols` fit, the linear predictor from the fit in `object` is predicted from the original predictors, resulting in a linear model with \eqn{R^{2}=1.0}.  The partial \eqn{R^2} for each predictor from a new `ols` fit is the relative explained variation.  The process is repeated when bootstrap coefficients repetitions or posterior draws are present, to get uncertainty intervals.  So relative explained variation is the proportion of variation in the initial model's predicted values (on the linear predictor scale) that is due to each predictor.
 ##'
 ##' Nonlinear and interaction terms are pooled with main linear effect of predictors, so relative explained variation for a predictor measures its total impact on predicted values, either as main effects or effect modifiers (interaction components).
 ##' @title rexVar
@@ -38,6 +38,7 @@
 ##' h <- blrm(y ~ pol(x1,2) * pol(x2, 2) + x3, data=d)
 ##' rexVar(h, data=d)
 ##' }
+##' options(datadist=NULL)
 
 rexVar <- function(object, data, ns=500, cint=0.95) {
   rex <- function(olsfit) {

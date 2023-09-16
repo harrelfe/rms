@@ -1,5 +1,6 @@
 Changes in version 6.8-0 (2023-09-15)
    * rexVar: new function for general measures of relative explained variation for each predictor in an rms or rmsb model fit
+   * poma: added minfreq argument thanks to Yonghao Pua
 
 Changes in version 6.7-1 (2023-09-09)
    * rcs, pol: use getOption for default nknots, issue message if default is used

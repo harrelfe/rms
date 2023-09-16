@@ -4,12 +4,14 @@
 \alias{poma}
 \title{Examine proportional odds and parallelism assumptions of `orm` and `lrm` model fits.}
 \usage{
-poma(mod.orm, cutval, ...)
+poma(mod.orm, cutval, minfreq = 15, ...)
 }
 \arguments{
 \item{mod.orm}{Model fit of class `orm` or `lrm`. For `fit.mult.impute` objects, `poma` will refit model on a singly-imputed data-set}
 
 \item{cutval}{Numeric vector; sequence of observed values to cut outcome}
+
+\item{minfreq}{Numeric vector; an `impactPO` argument which specifies the minimum sample size to allow for the least frequent category of the dependent variable.}
 
 \item{...}{parameters to pass to `impactPO` function such as `newdata`, `nonpo`, and `B`.}
 }
