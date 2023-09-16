@@ -37,12 +37,14 @@ x3 <- rnorm(n)
 y  <- x1 + x2 + rnorm(n) / 2.
 d <- data.frame(x1, x2, x3, y)
 dd <- datadist(d); options(datadist='dd')
-f  <- ols(y ~ pol(x1, 2) * pol(x2, 2) + x3, data=d)
+f  <- ols(y ~ pol(x1, 2) * pol(x2, 2) + x3,
+          data=d, x=TRUE, y=TRUE)
 plot(anova(f), what='proportion R2', pl=FALSE)
 rexVar(f)
 g <- bootcov(f, B=20, coef.reps=TRUE)
 rexVar(g, data=d)
-f <- orm(y ~ pol(x1,2) * pol(x2, 2) + x3, data=d, x=TRUE, y=TRUE)
+f <- orm(y ~ pol(x1,2) * pol(x2, 2) + x3,
+         data=d, x=TRUE, y=TRUE)
 rexVar(f, data=d)
 g <- bootcov(f, B=20, coef.reps=TRUE)
 rexVar(g, data=d)

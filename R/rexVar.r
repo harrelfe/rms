@@ -22,12 +22,14 @@
 ##' y  <- x1 + x2 + rnorm(n) / 2.
 ##' d <- data.frame(x1, x2, x3, y)
 ##' dd <- datadist(d); options(datadist='dd')
-##' f  <- ols(y ~ pol(x1, 2) * pol(x2, 2) + x3, data=d)
+##' f  <- ols(y ~ pol(x1, 2) * pol(x2, 2) + x3,
+##'           data=d, x=TRUE, y=TRUE)
 ##' plot(anova(f), what='proportion R2', pl=FALSE)
 ##' rexVar(f)
 ##' g <- bootcov(f, B=20, coef.reps=TRUE)
 ##' rexVar(g, data=d)
-##' f <- orm(y ~ pol(x1,2) * pol(x2, 2) + x3, data=d, x=TRUE, y=TRUE)
+##' f <- orm(y ~ pol(x1,2) * pol(x2, 2) + x3,
+##'          data=d, x=TRUE, y=TRUE)
 ##' rexVar(f, data=d)
 ##' g <- bootcov(f, B=20, coef.reps=TRUE)
 ##' rexVar(g, data=d)
@@ -52,7 +54,8 @@ rexVar <- function(object, data, ns=500, cint=0.95) {
     rn <- rownames(a)
     rm <- c(rm, rn[substring(rn, 2, 10) == "Nonlinear"])
     pss <- a[rn %nin% rm, 'Partial SS']
-    names(pss) <- sub(' (Factor+Higher Order Factors)', '', names(pss), fixed=TRUE)
+    names(pss) <- sub(' (Factor+Higher Order Factors)', '', names(pss),
+                      fixed=TRUE)
     pss / ssr
     }
     
@@ -108,10 +111,12 @@ rexVar <- function(object, data, ns=500, cint=0.95) {
 ##' @param x a vector or matrix created by `rexVar`
 ##' @param title character string which can be set to `NULL` or `''` to suppress
 ##' @param digits passed to [round()]
+##' @param ... unused
 ##' @return invisible
 ##' @author Frank Harrell
 ##' @md
-print.rexVar <- function(x, title='Relative Explained Variation', digits=3) {
+print.rexVar <- function(x, title='Relative Explained Variation',
+                         digits=3, ...) {
   if(length(title) && title != '')
     cat('\nRelative Explained Variation\n\n')
   attr(x, 'drawtype') <- NULL

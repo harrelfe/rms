@@ -4,7 +4,7 @@
 \alias{print.rexVar}
 \title{print.rexVar}
 \usage{
-\method{print}{rexVar}(x, title = "Relative Explained Variation", digits = 3)
+\method{print}{rexVar}(x, title = "Relative Explained Variation", digits = 3, ...)
 }
 \arguments{
 \item{x}{a vector or matrix created by \code{rexVar}}
@@ -12,6 +12,8 @@
 \item{title}{character string which can be set to \code{NULL} or \code{''} to suppress}
 
 \item{digits}{passed to \code{\link[=round]{round()}}}
+
+\item{...}{unused}
 }
 \value{
 invisible
