@@ -69,8 +69,8 @@ rexVar <- function(object, data, ns=500, cint=0.95) {
   if(inherits(object, 'ols') && ! length(draws))
     return(structure(rex(object), class='rexVar'))
 
-  .lp.  <- predict(object)
-  if(is.list(.lp.)) .lp. <- .lp.$linear.predictors  # for blrm fits
+  .lp.  <- if(inherits(object, 'blrm')) predict(object, cint=FALSE)
+  else predict(object)
   form  <- formula(object)
   form  <- update(form, .lp. ~ .)   # replace dependent variable with .lp.
   data$.lp. <- .lp.
