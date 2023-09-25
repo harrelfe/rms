@@ -70,7 +70,7 @@ derivative at each iteration.
   sample sizes where for example spline or polynomial component
   variables create scaling problems leading to loss of precision when
   accumulating sums of squares and crossproducts.}
-\item{y.precision}{When \quote{y} is numeric, values may need to be rounded
+\item{y.precision}{When \sQuote{y} is numeric, values may need to be rounded
 to avoid unpredictable behavior with floating-point numbers. Default is to
 7 decimal places.}
 }
