@@ -57,7 +57,9 @@ rexVar <- function(object, data, ns=500, cint=0.95) {
     pss <- a[rn %nin% rm, 'Partial SS']
     names(pss) <- sub(' (Factor+Higher Order Factors)', '', names(pss),
                       fixed=TRUE)
-    pss / ssr
+    r <- pss / ssr
+    names(r) <- trimws(names(r))
+    r
     }
     
   draws <- object$draws
