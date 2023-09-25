@@ -48,12 +48,15 @@ orm.fit <- function(x=NULL, y,
       }
     }
 
-
+  y_new <- NULL
   ynumeric <- is.numeric(y)
   if(ynumeric) {
-    mediany <- quantile(y, probs=.5, type=1L)
-    yu <- sort(unique(y))
-    kmid <- max(1, which(yu == mediany) - 1L)
+	y_rnd <- round(y / tol)
+	mediany <- quantile(y_rnd, probs = 0.5, type = 1L)
+	yu <- sort(unique(y_rnd))
+	kmid <- max(1, which(yu == mediany) - 1L)
+	mediany <- mediany * tol
+	y_new <- match(y_rnd, yu)
   }
   # For large n, as.factor is slow
   # if(!is.factor(y)) y <- as.factor(y)
@@ -62,8 +65,13 @@ orm.fit <- function(x=NULL, y,
     y       <- unclass(y)
   }
   else {
-    ylevels <- sort(unique(y))
-    y       <- match(y, ylevels)
+	if(!is.null(y_new)) {
+		ylevels <- yu * tol
+		y       <- y_new
+	} else {
+		ylevels <- sort(unique(y))
+		y       <- match(y, ylevels)
+	}
   }
   if(! ynumeric) {
     mediany <- quantile(y, probs=.5, type=1L)
