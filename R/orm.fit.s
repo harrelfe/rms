@@ -51,6 +51,7 @@ orm.fit <- function(x=NULL, y,
   y_new <- NULL
   ynumeric <- is.numeric(y)
   if(ynumeric) {
+    mediany <- quantile(y, probs = 0.5, type = 1L)
     # need y.precision if any decimal places
 	needPrecision <- any(y %% 1 != 0)
     if(needPrecision) {
@@ -58,24 +59,20 @@ orm.fit <- function(x=NULL, y,
         # this is better than `round(y, y.precision)`
 	    y_rnd <- round(y * 10^y.precision)
 	    # median of "y"
-	    mediany <- quantile(y_rnd, probs = 0.5, type = 1L)
+	    mediany_rnd <- quantile(y_rnd, probs = 0.5, type = 1L)
         # unique values of "y"
 	    yu <- sort(unique(y_rnd))
+	    # convert whole number back to decimal
+		ylevels <- yu * 10^-y.precision
         # map "y" values from 1:n for `n` unique value
 	    y_new <- match(y_rnd, yu)
+    	# find the midpoint
+        kmid <- max(1, which(yu == mediany_rnd) - 1L)
 	} else {
-	    mediany <- quantile(y, probs = 0.5, type = 1L)
 	    yu <- sort(unique(y))
 		ylevels <- yu
-        # map "y" values from 1:n for `n` unique value
 	    y_new <- match(y, yu)
-	}
-	# find the midpoint
-	kmid <- max(1, which(yu == mediany) - 1L)
-    if(needPrecision) {
-	    # convert whole number back to decimal
-	    mediany <- mediany * 10^-y.precision
-		ylevels <- yu * 10^-y.precision
+	    kmid <- max(1, which(yu == mediany) - 1L)
 	}
   }
   # For large n, as.factor is slow
