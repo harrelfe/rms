@@ -50,30 +50,32 @@ orm.fit <- function(x=NULL, y,
 
   y_new <- NULL
   ynumeric <- is.numeric(y)
+  # changed from 1 to 7 (traditional median)
+  median_type <- 7L
   if(ynumeric) {
-    mediany <- quantile(y, probs = 0.5, type = 1L)
+    # median of "y"
+    mediany <- quantile(y, probs = 0.5, type = median_type)
     # need y.precision if any decimal places
-	needPrecision <- any(y %% 1 != 0)
+    needPrecision <- any(y %% 1 != 0)
     if(needPrecision) {
-        # when determining unique values of "y", round to avoid unpredictable behavior
-        # this is better than `round(y, y.precision)`
-	    y_rnd <- round(y * 10^y.precision)
-	    # median of "y"
-	    mediany_rnd <- quantile(y_rnd, probs = 0.5, type = 1L)
-        # unique values of "y"
-	    yu <- sort(unique(y_rnd))
-	    # convert whole number back to decimal
-		ylevels <- yu * 10^-y.precision
-        # map "y" values from 1:n for `n` unique value
-	    y_new <- match(y_rnd, yu)
-    	# find the midpoint
-        kmid <- max(1, which(yu == mediany_rnd) - 1L)
-	} else {
-	    yu <- sort(unique(y))
-		ylevels <- yu
-	    y_new <- match(y, yu)
-	    kmid <- max(1, which(yu == mediany) - 1L)
-	}
+      # when determining unique values of "y", round to avoid unpredictable behavior
+      # this is better than `round(y, y.precision)`
+      y_rnd <- round(y * 10^y.precision)
+      mediany_rnd <- round(mediany * 10^y.precision)
+      # unique values of "y"
+      yu <- sort(unique(y_rnd))
+      # convert whole number back to decimal
+      ylevels <- yu * 10^-y.precision
+      # map "y" values from 1:n for `n` unique value
+      y_new <- match(y_rnd, yu)
+      # find the midpoint
+      kmid <- max(1, which.min(abs(yu - mediany_rnd)) - 1L)
+    } else {
+      yu      <- sort(unique(y))
+      ylevels <- yu
+      y_new   <- match(y, yu)
+      kmid    <- max(1, which.min(abs(yu - mediany)) - 1L)
+    }
   }
   # For large n, as.factor is slow
   # if(!is.factor(y)) y <- as.factor(y)
@@ -82,18 +84,19 @@ orm.fit <- function(x=NULL, y,
     y       <- unclass(y)
   }
   else {
-	if(!is.null(y_new)) {
-	    # work already done if "y_new" is set
-		y       <- y_new
-	} else {
-        # if not done, map "y" values from 1:n for `n` unique value
-		ylevels <- sort(unique(y))
-		y       <- match(y, ylevels)
-	}
+    if(!is.null(y_new)) {
+      # work already done if "y_new" is set
+      y       <- y_new
+    } else {
+      # if not done, map "y" values from 1:n for `n` unique value
+      ylevels <- sort(unique(y))
+      y       <- match(y, ylevels)
+    }
   }
   if(! ynumeric) {
-    mediany <- quantile(y, probs=.5, type=1L)
-    kmid    <- max(1, which(1L : length(ylevels) == mediany) - 1L)
+    yu      <- sort(unique(y))
+    mediany <- quantile(y, probs = 0.5, type = median_type)
+    kmid    <- max(1, which.min(abs(yu - mediany)) - 1L)
   }
 
   kint <- length(ylevels) - 1L
