@@ -48,16 +48,22 @@ orm.fit <- function(x=NULL, y,
       }
     }
 
+  # changed from 1 to 7 (traditional median) in Oct '23
+  median_type <- 7L
+  # four scenarios for "y"
+  # 1. y is numeric and contains decimals
+  # 2. y is numeric and does not contain decimals
+  # 3. y is factor/categorical
+  # 4. y is something else (character)
   y_new <- NULL
   ynumeric <- is.numeric(y)
-  # changed from 1 to 7 (traditional median)
-  median_type <- 7L
   if(ynumeric) {
     # median of "y"
     mediany <- quantile(y, probs = 0.5, type = median_type)
     # need y.precision if any decimal places
     needPrecision <- any(y %% 1 != 0)
     if(needPrecision) {
+      ## scenario #1
       # when determining unique values of "y", round to avoid unpredictable behavior
       # this is better than `round(y, y.precision)`
       y_rnd <- round(y * 10^y.precision)
@@ -71,6 +77,7 @@ orm.fit <- function(x=NULL, y,
       # find the midpoint
       kmid <- max(1, which.min(abs(yu - mediany_rnd)) - 1L)
     } else {
+      ## scenario #2
       yu      <- sort(unique(y))
       ylevels <- yu
       y_new   <- match(y, yu)
@@ -80,6 +87,7 @@ orm.fit <- function(x=NULL, y,
   # For large n, as.factor is slow
   # if(!is.factor(y)) y <- as.factor(y)
   if(is.factor(y)) {
+    ## scenario #3
     ylevels <- levels(y)
     y       <- unclass(y)
   }
@@ -88,6 +96,7 @@ orm.fit <- function(x=NULL, y,
       # work already done if "y_new" is set
       y       <- y_new
     } else {
+      ## scenario #4
       # if not done, map "y" values from 1:n for `n` unique value
       ylevels <- sort(unique(y))
       y       <- match(y, ylevels)
