@@ -71,8 +71,8 @@ derivative at each iteration.
   variables create scaling problems leading to loss of precision when
   accumulating sums of squares and crossproducts.}
 \item{y.precision}{When \sQuote{y} is numeric, values may need to be rounded
-to avoid unpredictable behavior with floating-point numbers. Default is to
-7 decimal places.}
+to avoid unpredictable behavior with \code{unique()} with floating-point
+numbers. Default is to 7 decimal places.}
 }
 
 \value{
