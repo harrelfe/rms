@@ -1,4 +1,4 @@
-Changes in version 6.8-0 (2023-10-13)
+Changes in version 6.8-0 (2023-12-27)
    * rexVar: new function for general measures of relative explained variation for each predictor in an rms or rmsb model fit
    * poma: added minfreq argument thanks to Yonghao Pua
    * orm.fit:  Non-downward-compatible change but one that makes results more likely to be identical across different hardware platforms by rounding numeric Y-values that are not integers after multiplying by 10^7 (the 7 can be modified by the new y.precision argument).  Thanks to Cole Beck, Cathy Jenkins, and Shawn Garbett.  See https://github.com/harrelfe/rms/pull/133 and https://hbiostat.org/R/rms/unique-float.html

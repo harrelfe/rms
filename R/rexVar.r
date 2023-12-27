@@ -90,7 +90,7 @@ rexVar <- function(object, data, ns=500, cint=0.95) {
   for(i in 1 : ns) {
     ## matxv drops excess coefficients representing intercepts not
     ## used in X
-    .lp. <- matxv(X, draws[i, , drop=FALSE])
+    .lp. <- matxv(X, draws[i, , drop=TRUE])
     g <- lm.fit.qr.bare(X, as.vector(.lp.),
                         tolerance=1e-13, intercept=TRUE, xpxi=TRUE)
     ## Trick to update original ols model fit; speeds up over
