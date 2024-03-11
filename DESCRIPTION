@@ -1,6 +1,6 @@
 Package: rms
 Version: 6.8-0
-Date: 2023-12-27
+Date: 2024-03-11
 Title: Regression Modeling Strategies
 Author: Frank E Harrell Jr <fh@fharrell.com>
 Maintainer: Frank E Harrell Jr <fh@fharrell.com>
@@ -24,4 +24,4 @@ Description: Regression modeling, testing, estimation, validation,
 License: GPL (>= 2)
 URL: https://hbiostat.org/R/rms/, https://github.com/harrelfe/rms
 LazyLoad: yes
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1

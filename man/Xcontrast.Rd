@@ -12,7 +12,8 @@ Xcontrast(
   b2 = NULL,
   ycut = NULL,
   weights = "equal",
-  expand = TRUE
+  expand = TRUE,
+  Zmatrix = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ Xcontrast(
 \item{weights}{see [rms::contrast.rms()]}
 
 \item{expand}{see [rms::contrast.rms()]}
+
+\item{Zmatrix}{set to `FALSE` for a partial PO model in which you do not want to include the Z matrix in the returned contrast matrix}
 }
 \value{
 numeric matrix
