@@ -11,7 +11,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9,
   misstest <- missing(test)
   test     <- match.arg(test)
 
-  ava <- if(test == 'LR') function(idx) LRchunktest(object, idx)
+  ava <- if(test == 'LR') function(idx) LRchunktest(object, idx, tol=tol)
             else function(idx) {
               chisq <- coef[idx] %*% solvet(cov[idx, idx], coef[idx], tol=tol)
               c(chisq, length(idx))
