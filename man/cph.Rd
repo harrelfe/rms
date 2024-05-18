@@ -318,7 +318,7 @@ cph(formula = formula(data), data=environment(formula),
   \code{\link[Hmisc]{na.detail.response}},  \code{\link{print.cph}},
   \code{\link{latex.cph}}, \code{\link{vif}}, \code{\link{ie.setup}},
   \code{\link{GiniMd}}, \code{\link{dxy.cens}},
-  \code{\link[survival:survConcordance]{survConcordance}}
+  \code{\link[survival:concordancefit]{concordance}}
 }
 \examples{
 # Simulate data from a population model in which the log hazard

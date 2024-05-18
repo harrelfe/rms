@@ -3,7 +3,7 @@ export(annotateAnova,asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph
 useDynLib(rms, .registration=TRUE, .fixes="F_")
 
 import(Hmisc)
-importFrom(survival, Surv, is.Surv, survConcordance.fit, coxph.fit, coxph.control, survfit, survfit.formula, survfitKM, survfitcoxph.fit, survreg.fit, survreg.control, survpenal.fit, survreg.distributions, agreg.fit, agexact.fit, attrassign, untangle.specials)
+importFrom(survival, Surv, is.Surv, concordancefit, coxph.fit, coxph.control, survfit, survfit.formula, survfitKM, survfitcoxph.fit, survreg.fit, survreg.control, survpenal.fit, survreg.distributions, agreg.fit, agexact.fit, attrassign, untangle.specials)
 importFrom(SparseM, solve, t, as.matrix)
 #import(SparseM)
 

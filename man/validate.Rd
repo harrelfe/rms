@@ -142,7 +142,7 @@ fh@fharrell.com
 \code{\link{validate.lrm}}, \code{\link{validate.rpart}}, 
 \code{\link{predab.resample}}, \code{\link{fastbw}}, \code{\link{rms}},
 \code{\link{rms.trans}}, \code{\link{calibrate}},
-\code{\link{dxy.cens}}, \code{\link[survival]{survConcordance}}
+\code{\link{dxy.cens}}, \code{\link[survival]{concordancefit}}
 }
 \examples{
 # See examples for validate.cph, validate.lrm, validate.ols

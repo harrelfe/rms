@@ -4,3 +4,6 @@ src/*.so
 .Rproj.user
 rms.Rproj
 .Rhistory
+.DS_Store
+publish
+

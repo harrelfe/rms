@@ -9,7 +9,7 @@
   fitted with \code{cph} or \code{psm}.  Also included is a small
   function \code{dxy.cens} that retrieves \eqn{D_{xy}}{Dxy} and its
   standard error from the \code{survival} package's
-  \code{survConcordance.fit} function.  This allows for incredibly fast
+  \code{concordancefit} function.  This allows for incredibly fast
   computation of \eqn{D_{xy}}{Dxy} or the c-index even for hundreds of
   thousands of observations.  \code{dxy.cens} negates \eqn{D_{xy}}{Dxy}
   if log relative hazard is being predicted.  If \code{y} is a
@@ -73,8 +73,8 @@ dxy.cens(x, y, type=c('time','hazard'))
   \item{dxy}{
     set to \code{TRUE} to validate Somers' \eqn{D_{xy}}{Dxy}  using
     \code{dxy.cens}, which is fast until n > 500,000.  Uses the
-        \code{survival} package's \code{survConcordance.fit} service
-        function for \code{survConcordance}.
+        \code{survival} package's \code{concordancefit} service
+        function for \code{concordance}.
   }
   \item{u}{
     must be specified if the model has any stratification factors and
@@ -128,7 +128,7 @@ dxy.cens(x, y, type=c('time','hazard'))
   \code{\link{fastbw}}, \code{\link{rms}}, \code{\link{rms.trans}},
   \code{\link{calibrate}}, \code{\link[Hmisc]{rcorr.cens}},
   \code{\link{cph}}, \code{\link[survival]{survival-internal}},
-  \code{\link{gIndex}}, \code{\link[survival:survConcordance]{survConcordance}}
+  \code{\link{gIndex}}, \code{\link[survival:concordancefit]{concordancefit}}
 }
 \examples{
 require(survival)

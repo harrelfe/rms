@@ -1,5 +1,6 @@
-Changes in version 6.8-1 (2024-03-15)
+Changes in version 6.8-1 (2024-05-18)
    * anova(test='LR'): passed tol to LRchunktest for lrm, orm
+   * replaced uses of survival::survConcordance with concordancefit
 
 Changes in version 6.8-0 (2024-03-11)
    * rexVar: new function for general measures of relative explained variation for each predictor in an rms or rmsb model fit

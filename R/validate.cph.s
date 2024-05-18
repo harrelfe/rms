@@ -135,13 +135,13 @@ dxy.cens <- function(x, y, type=c('time','hazard')) {
    }
   i <- is.na(x) | is.na(y)
   if(any(i)) {
-    x <- x[! i]
+    x <- x[! i ]
     y <- y[! i,]
   }
-  k <- suppressWarnings(survConcordance.fit(y, x))
-  cindex <- (k[1] + k[3] / 2) / sum(k[1:3])
-  cindex <- 1 - cindex  # survConcordance c=larger risk score, shorter T
-  se     <- k[5] / (2 * sum(k[1 : 3]))
+  # Higher risk score = lower T so use reverse=TRUE
+  k <- suppressWarnings(concordancefit(y, x, reverse=TRUE))
+  cindex <- k$concordance
+  se     <- sqrt(k$var)
   dxy    <- 2 * (cindex - .5)
   se     <- 2 * se
   if(negate) dxy <- - dxy
