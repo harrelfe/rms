@@ -1373,8 +1373,9 @@ setPb <- function(n, type=c('Monte Carlo Simulation','Bootstrap',
 ## strictly character manipulation.  This handles problems such as
 ## [.terms removing offset() if you subset on anything
 ## For each character string in which, terms like string(...) are removed.
+## drop.terms will not remove offset()
 
-removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
+if(FALSE) removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
   if('offset' %in% which) {
     form <- formula(terms(form)[TRUE])
     which <- setdiff(which, 'offset')
@@ -1388,4 +1389,21 @@ removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
     form <- gsub(pattern, '', form)
   }
   as.formula(form)
+}
+
+## Version of removeFormulaTerms that uses the terms() and drop.terms()s Functions
+
+removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
+  # drop.terms will not remove offsets.  Trick it by renaming offset() terms .off.
+  if('offset' %in% which) {
+    form <- format(form)
+    which[which == 'offset'] <- '.off.'
+    form <- as.formula(gsub('offset(', '.off.(', form, fixed=TRUE))
+  }
+
+  te <- terms(form, specials=which)
+  s  <- unlist(attr(te, 'specials'))
+  ypresent <- attr(te, 'response')
+  te <- drop.terms(te, s - ypresent, keep.response= ! delete.response)
+  as.formula(te)
 }
