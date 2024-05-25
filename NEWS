@@ -1,7 +1,7 @@
 Changes in version 6.8-1 (2024-05-25)
    * anova(test='LR'): passed tol to LRchunktest for lrm, orm
    * replaced uses of survival::survConcordance with concordancefit
-   * removeFormulaTerms for some reason quit removing offset() terms when called by Predict; wrote new version of removeFormulaTerms
+   * removeFormulaTerms for some reason quit removing offset() terms when called by Predict/predictrms; wrote new version of removeFormulaTerms
 
 Changes in version 6.8-0 (2024-03-11)
    * rexVar: new function for general measures of relative explained variation for each predictor in an rms or rmsb model fit

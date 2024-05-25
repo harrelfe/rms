@@ -1402,8 +1402,9 @@ removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
   }
 
   te <- terms(form, specials=which)
-  s  <- unlist(attr(te, 'specials'))
+  s  <- unlist(attr(te, 'specials'))  # LHS present -> 1 added to s
   ypresent <- attr(te, 'response')
+  # drop.terms counts only RHS terms
   te <- drop.terms(te, s - ypresent, keep.response= ! delete.response)
-  as.formula(te)
+  formula(te)   # don't allow other attributes to be there
 }

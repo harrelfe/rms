@@ -79,7 +79,7 @@ predictrms <-
   on.exit({options(contrasts=oldopts$contrasts)
            options(Design.attr=NULL)})
 
-  ## Formula without response variable any offsets:
+  ## Formula without response variable and any offsets:
   formulano <- if(second) fit$zsformula
                  else
                    removeFormulaTerms(fit$sformula, which='offset',
