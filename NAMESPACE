@@ -43,7 +43,7 @@ importFrom(graphics, abline, axis, boxplot, hist, legend,
 importFrom(methods, existsFunction, getFunction, new)
 importFrom(stats, .getXlevels, AIC, anova, approx, as.formula,
            asOneSidedFormula, binomial, coef, complete.cases, confint, contrasts, cor,
-           dcauchy, delete.response, density, deviance,
+           dcauchy, delete.response, drop.terms, density, deviance,
            dnorm, family, fitted, formula, gaussian,
            glm, glm.control, glm.fit, influence.measures, is.empty.model, lm, lm.fit,
            lm.influence, lm.wfit, logLik, lowess, lsfit, makepredictcall,
