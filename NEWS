@@ -1,3 +1,6 @@
+Changes in version 6.8-2 (2024-08-11)
+   * added dependency on the latest version of R at the time
+
 Changes in version 6.8-1 (2024-05-25)
    * anova(test='LR'): passed tol to LRchunktest for lrm, orm
    * replaced uses of survival::survConcordance with concordancefit
