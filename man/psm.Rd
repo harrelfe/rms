@@ -226,14 +226,14 @@ lwd=3, \dots)
   \email{fh@fharrell.com}
 }
 \seealso{
-  \code{\link{rms}}, \code{\link{survreg}},
-  \code{\link{residuals.survreg}}, \code{\link{survreg.object}},  
-  \code{\link{survreg.distributions}},
+  \code{\link{rms}}, \code{\link[survival]{survreg}},
+  \code{\link[survival]{residuals.survreg}}, \code{\link[survival]{survreg.object}},  
+  \code{\link[survival]{survreg.distributions}},
   \code{\link{pphsm}}, \code{\link{survplot}}, \code{\link{survest}},
   \code{\link[survival]{Surv}}, 
   \code{\link[Hmisc]{na.delete}},
   \code{\link[Hmisc]{na.detail.response}}, \code{\link{datadist}},
-  \code{\link{latex.psm}}, \code{\link{GiniMd}}, \code{\link{prModFit}},
+  \code{\link{latex.psm}}, \code{\link[Hmisc]{GiniMd}}, \code{\link{prModFit}},
 	\code{\link{ggplot.Predict}}, \code{\link{plot.Predict}},
 	\code{\link[Hmisc]{R2Measures}}
 }

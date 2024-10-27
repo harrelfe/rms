@@ -317,7 +317,7 @@ cph(formula = formula(data), data=environment(formula),
   \code{\link[Hmisc]{na.delete}},
   \code{\link[Hmisc]{na.detail.response}},  \code{\link{print.cph}},
   \code{\link{latex.cph}}, \code{\link{vif}}, \code{\link{ie.setup}},
-  \code{\link{GiniMd}}, \code{\link{dxy.cens}},
+  \code{\link[Hmisc]{GiniMd}}, \code{\link{dxy.cens}},
   \code{\link[survival:concordancefit]{concordance}}
 }
 \examples{

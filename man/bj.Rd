@@ -222,11 +222,11 @@ bj.fit(x, y, control)
   Jin Z, Lin DY, Ying Z. On least-squares regression with censored data.  Biometrika 2006; 93:147--161.
 }
 \seealso{
-  \code{\link{rms}}, \code{\link{psm}}, \code{\link{survreg}},
+  \code{\link{rms}}, \code{\link{psm}}, \code{\link[survival]{survreg}},
 	\code{\link{cph}}, \code{\link[survival]{Surv}}, 
   \code{\link[Hmisc]{na.delete}},
   \code{\link[Hmisc]{na.detail.response}}, \code{\link{datadist}},
-  \code{\link[Hmisc]{rcorr.cens}}, \code{\link{GiniMd}},
+  \code{\link[Hmisc]{rcorr.cens}}, \code{\link[Hmisc]{GiniMd}},
   \code{\link{prModFit}}, \code{\link{dxy.cens}}
 }
 \examples{

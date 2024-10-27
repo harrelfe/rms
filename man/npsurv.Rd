@@ -41,8 +41,8 @@ objects are \code{print}, \code{summary}, \code{plot},\code{lines}, and
 \code{\link{print}},
 \code{\link{plot}},
 \code{\link{lines}},
-\code{\link{coxph}},
-\code{\link{strata}},
+\code{\link[survival]{coxph}},
+\code{\link[survival]{strata}},
 \code{\link{survplot}}
 }
 \author{Thomas Lumley \email{tlumley@u.washington.edu} and Terry Therneau}

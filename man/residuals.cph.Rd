@@ -40,7 +40,7 @@ There will
 be one row of residuals for each row in the input data (without \code{collapse}).
 One column of score and Schoenfeld
 residuals will be returned for each column in the model.matrix.
-The scaled Schoenfeld residuals are used in the \code{cox.zph} function.
+The scaled Schoenfeld residuals are used in the \code{\link[survival]{cox.zph}} function.
 
 
 The score residuals are each individual's contribution to the score
@@ -58,7 +58,7 @@ P. Grambsch, T. Therneau. "Proportional hazards tests and diagnostics
 based on weighted residuals", unpublished manuscript, Feb 1993.
 }
 \seealso{
-\code{\link{cph}}, \code{\link[survival]{coxph}}, \code{\link[survival]{residuals.coxph}}, \code{\link{cox.zph}}, \code{\link{naresid}}
+\code{\link{cph}}, \code{\link[survival]{coxph}}, \code{\link[survival]{residuals.coxph}}, \code{\link[survival]{cox.zph}}, \code{\link{naresid}}
 }
 \examples{
 # fit <- cph(Surv(start, stop, event) ~ (age + surgery)* transplant, 

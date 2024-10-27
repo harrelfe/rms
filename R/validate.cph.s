@@ -138,8 +138,8 @@ dxy.cens <- function(x, y, type=c('time','hazard')) {
     x <- x[! i ]
     y <- y[! i,]
   }
-  # Higher risk score = lower T so use reverse=TRUE
-  k <- suppressWarnings(concordancefit(y, x, reverse=TRUE))
+  # Higher risk score = lower T so some would use reverse=TRUE
+  k <- suppressWarnings(concordancefit(y, x, reverse=FALSE))
   cindex <- k$concordance
   se     <- sqrt(k$var)
   dxy    <- 2 * (cindex - .5)

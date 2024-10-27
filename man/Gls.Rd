@@ -120,8 +120,8 @@ Gls(model, data, correlation, weights, subset, method, na.action=na.omit,
 \seealso{
   \code{\link[nlme]{gls}}
   \code{\link[nlme]{glsControl}}, \code{\link[nlme]{glsObject}},
-  \code{\link{varFunc}}, \code{\link[nlme]{corClasses}},
-  \code{\link[nlme]{varClasses}}, \code{\link{GiniMd}},
+  \code{\link[nlme]{varFunc}}, \code{\link[nlme]{corClasses}},
+  \code{\link[nlme]{varClasses}}, \code{\link[Hmisc]{GiniMd}},
 	\code{\link{prModFit}}, \code{\link{logLik.Gls}}
 }
 \examples{

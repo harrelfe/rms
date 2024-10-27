@@ -358,7 +358,7 @@ compare group means in graphs.  J Clin Epi 57:712-715.
 \code{\link{psm}}, \code{\link{survest}}, \code{\link{predictrms}},
 \code{\link{plot.Predict}}, \code{\link{ggplot.Predict}},
 \code{\link[Hmisc]{units}}, \code{\link[Hmisc]{errbar}},  
-\code{\link{survfit}}, \code{\link[survival]{survreg.distributions}},
+\code{\link[survival]{survfit}}, \code{\link[survival]{survreg.distributions}},
 \code{\link[Hmisc]{labcurve}},
 \code{\link[Hmisc:mgp.axis]{mgp.axis}}, \code{\link{par}},
 }

@@ -1,5 +1,10 @@
-Changes in version 6.8-2 (2024-08-11)
+Changes in version 6.9-0 (2024-10-27)
+   * replaced Ratfor code for robcovf and ormuv with Fortran 2018 with lots of nice vectorization for ormuv thanks to ChatGPT
+   * added new test robcov4.r for robcov by comparing with sandwich package
+
+Changes in version 6.8-2 (2024-08-22)
    * added dependency on the latest version of R at the time
+   * fixed use of concordancefit to return to negative Dxy for Cox models (Thanks Svetlana Eden)
 
 Changes in version 6.8-1 (2024-05-25)
    * anova(test='LR'): passed tol to LRchunktest for lrm, orm

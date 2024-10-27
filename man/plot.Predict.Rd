@@ -165,7 +165,7 @@ default is 4 significant digits.
 \item{addpanel}{an additional panel function to call along with panel
   functions used for \code{xYplot} and \code{Dotplot} displays}
 \item{scat1d.opts}{a list containing named elements that specifies
-  parameters to \code{\link{scat1d}} when \code{data} is given.  The
+  parameters to \code{\link[Hmisc]{scat1d}} when \code{data} is given.  The
   \code{col} parameter is usually derived from other plotting
   information and not specified by the user.}
 \item{type}{a value (\code{"l","p","b"}) to override default choices

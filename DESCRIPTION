@@ -1,8 +1,11 @@
 Package: rms
-Version: 6.8-2
-Date: 2024-08-11
+Version: 6.9-0
+Date: 2024-10-27
 Title: Regression Modeling Strategies
-Author: Frank E Harrell Jr <fh@fharrell.com>
+Authors@R: person(given = c("Frank", "E"),
+                  family = "Harrell Jr",
+                  role = c("aut", "cre"),
+                  email = "fh@fharrell.com")
 Maintainer: Frank E Harrell Jr <fh@fharrell.com>
 Depends: R (>= 4.4.0), Hmisc (>= 5.1-0)
 Imports: methods, survival, quantreg, ggplot2, SparseM, rpart, nlme (>= 3.1-123), polspline, multcomp, htmlTable (>= 1.11.0), htmltools, MASS, cluster, digest, colorspace, knitr, grDevices
@@ -24,4 +27,4 @@ Description: Regression modeling, testing, estimation, validation,
 License: GPL (>= 2)
 URL: https://hbiostat.org/R/rms/, https://github.com/harrelfe/rms
 LazyLoad: yes
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
