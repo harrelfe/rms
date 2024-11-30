@@ -1,13 +1,13 @@
 Package: rms
 Version: 6.9-0
-Date: 2024-10-27
+Date: 2024-11-28
 Title: Regression Modeling Strategies
 Authors@R: person(given = c("Frank", "E"),
                   family = "Harrell Jr",
                   role = c("aut", "cre"),
                   email = "fh@fharrell.com")
 Maintainer: Frank E Harrell Jr <fh@fharrell.com>
-Depends: R (>= 4.4.0), Hmisc (>= 5.1-0)
+Depends: R (>= 4.4.0), Hmisc (>= 5.2-1)
 Imports: methods, survival, quantreg, ggplot2, SparseM, rpart, nlme (>= 3.1-123), polspline, multcomp, htmlTable (>= 1.11.0), htmltools, MASS, cluster, digest, colorspace, knitr, grDevices
 Suggests: boot, tcltk, plotly (>= 4.5.6), mice, rmsb, nnet, VGAM, lattice, kableExtra
 Description: Regression modeling, testing, estimation, validation,

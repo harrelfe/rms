@@ -14,12 +14,11 @@ L <- .4*(sex=='male') + .045*(age-50) +
 # Simulate binary y to have Prob(y=1) = 1/[1+exp(-L)]
 y <- ifelse(runif(n) < plogis(L), 1, 0)
 
-
 f <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
          x=TRUE, y=TRUE)
 p <- pentrace(f, seq(.2,1,by=.05))
 plot(p)
-p$diag      # may learn something about fractional effective d.f. 
+p$diag      # may learn something about fractional effective d.f.
 # for each original parameter
 update(f,penalty=.02)
 
@@ -30,3 +29,4 @@ pols <- pentrace(fols, seq(0,10,by=.5))
 plot(pols)
 pols$diag
 update(fols,penalty=10)
+

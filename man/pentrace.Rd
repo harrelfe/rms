@@ -31,9 +31,9 @@ the first two types of penalty factors are plotted, showing only the \eqn{AIC}.
 pentrace(fit, penalty, penalty.matrix, 
          method=c('grid','optimize'),
          which=c('aic.c','aic','bic'), target.df=NULL,
-         fitter, pr=FALSE, tol=1e-7,
-         keep.coef=FALSE, complex.more=TRUE, verbose=FALSE, maxit=12,
-         subset, noaddzero=FALSE)
+         fitter, pr=FALSE, tol=1e-13,
+         keep.coef=FALSE, complex.more=TRUE, verbose=FALSE, maxit=20,
+         subset, noaddzero=FALSE, ...)
 
 effective.df(fit, object)
 
@@ -150,7 +150,7 @@ d.f. plot is not re-drawn, but the AIC/BIC plot is added to.
 2-vector of y-axis limits for plots other than effective d.f.
 }
 \item{...}{
-other arguments passed to \code{plot}, \code{lines}, or \code{image}
+other arguments passed to \code{plot}, \code{lines}, or \code{image}, or to the fitter
 }}
 \value{
 a list of class \code{"pentrace"}

@@ -95,7 +95,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
   nm <- sum(! i)
   if(nm > 0) warning(paste(nm,
     "observations deleted from logistic calibration due to probs. of 0 or 1"))
-  f.fixed <- lrm.fit(logit[i], y[i], initial=c(0., 1.), maxit=1L)
+  f.fixed <- lrm.fit(logit[i], y[i], initial=c(0., 1.), maxit=1L, compstats=TRUE)
   f.recal <- lrm.fit(logit[i], y[i])
   stats <- f.fixed$stats
   n <- stats["Obs"]

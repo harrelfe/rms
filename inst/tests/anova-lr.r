@@ -8,6 +8,11 @@ x1 <- sample(0:1, n, TRUE)
 x2 <- sample(0:1, n, TRUE)
 L  <- 0.4 * x1 + 25 * x2
 y  <- ifelse(runif(n) <= plogis(L), 1, 0)
+# f <- glm.fit(cbind(x1, x2), y, family=binomial())
+# f <- glm(y ~ x1 + x2, family=binomial)
+# v <- - crossprod(qr.R(f$qr))   #Hessian
+# solve(-v, tol=1e-9)
+# f <- lrm(y ~ x1 + x2, compvar=FALSE)  # works
 f  <- lrm(y ~ x1 + x2, x=TRUE, y=TRUE)
 coef(f)
 
