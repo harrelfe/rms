@@ -84,7 +84,7 @@ func_robcov <- function(fit, cluster){
   
   # dyn.load("robcovf.so")
   W <- matrix(.Fortran("robcovf", n, p, nc, clus.start, clus.size, X, 
-                       double(p), double(p * p), w=double(p * p))$w, nrow=p)
+                       double(p), w=double(p * p))$w, nrow=p)
   
   ##The following has a small bug but comes close to reproducing what robcovf does
   # W <- tapply(X,list(cluster[row(X)],col(X)),sum)

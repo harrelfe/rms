@@ -184,7 +184,7 @@ pentrace <-
     if(i==1) Coef <- if(keep.coef) matrix(NA,ncol=length(fit$coef),nrow=np)
     else NULL
 
-    if(unpenalized) f <- fit
+   if(unpenalized) f <- fit
     else {
       if(length(penfact) == 1 || !islist) pm <- penfact * penalty.matrix
       else {

@@ -65,6 +65,3 @@ cs(g)
 
 g <- orm(y ~ x1 + x2, x=TRUE, y=TRUE, eps=0.001, family='cauchit')
 cs(g)
-
-
-

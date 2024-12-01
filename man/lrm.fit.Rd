@@ -25,7 +25,7 @@ lrm.fit(
   normwt = FALSE,
   transx = maxit > 1,
   compvar = TRUE,
-  compstats = maxit > 1,
+  compstats = TRUE,
   inclpen = TRUE,
   initglm = FALSE
 )
@@ -79,7 +79,7 @@ lrm.fit(
 
 \item{compvar}{set to \code{FALSE} to prevent the calculation of the variance-covariance matrix.}
 
-\item{compstats}{set to \code{FALSE} to prevent the calculation of the vector of model statistics (defaults to \code{FALSE} when \code{maxit=1})}
+\item{compstats}{set to \code{FALSE} to prevent the calculation of the vector of model statistics}
 
 \item{inclpen}{set to \code{FALSE} to not include the penalty matrix in the Hessian when the Hessian is being computed on transformed \code{x}, vs. adding the penalty after back-transforming.  This should not matter.}
 

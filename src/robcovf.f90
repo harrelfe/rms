@@ -7,9 +7,9 @@ SUBROUTINE robcovf(n, p, nc, start, len, u, s, w)
     IMPLICIT NONE
   
     ! Arguments
-    INTEGER, INTENT(IN) :: n, p, nc
-    INTEGER, INTENT(IN) :: start(nc), len(nc)
-    REAL(DP), INTENT(IN) :: u(n, p)
+    INTEGER, INTENT(IN)   :: n, p, nc
+    INTEGER, INTENT(IN)   :: start(nc), len(nc)
+    REAL(DP), INTENT(IN)  :: u(n, p)
     REAL(DP), INTENT(OUT) :: s(p), w(p, p)
   
     ! Local variables
@@ -19,22 +19,17 @@ SUBROUTINE robcovf(n, p, nc, start, len, u, s, w)
     w = 0.0_DP
   
     ! Loop over clusters
-    DO k = 1, nc
-      ! Initialize s and v to zero for each cluster
-    !  s = 0.0_DP
-    !  v = 0.0_DP
-  
-      ! Accumulate within-cluster sum of u into s
-      s = SUM(u(start(k):start(k) + len(k) - 1, :), DIM=1)  ! Vectorized accumulation
-  
+    do k = 1, nc
+        ! Accumulate within-cluster sum of u into s
+      s = sum(u(start(k) : start(k) + len(k) - 1, :), DIM=1)
       do i=1,p
         do j=1,p
           w(i,j) = w(i,j) + s(i) * s(j)
         end do
       end do
       
-    END DO
+    end do
   
-    RETURN
-  END SUBROUTINE robcovf
+    return
+  end subroutine robcovf
   

@@ -33,7 +33,7 @@
 #' @param normwt set to `TRUE` to scale `weights` so they sum to \eqn{n}, the length of `y`; useful for sample surveys as opposed to the default of frequency weighting
 #' @param transx set to `FALSE` to prevent `x` from being centered and QR-factored to orthogonalize.  See [this](https://hbiostat.org/rmsc/mle#qr) for details.  When `maxit=1`, `transx` defaults to `FALSE`.
 #' @param compvar set to `FALSE` to prevent the calculation of the variance-covariance matrix.
-#' @param compstats set to `FALSE` to prevent the calculation of the vector of model statistics (defaults to `FALSE` when `maxit=1`)
+#' @param compstats set to `FALSE` to prevent the calculation of the vector of model statistics
 #' @param inclpen set to `FALSE` to not include the penalty matrix in the Hessian when the Hessian is being computed on transformed `x`, vs. adding the penalty after back-transforming.  This should not matter.
 #' @param initglm set to `TRUE` to compute starting values for an ordinal model by using `glm.fit` to fit a binary logistic model for predicting the probability that `y` exceeds or equals the median of `y`.  After fitting the binary model, the usual starting estimates for intercepts (log odds of cumulative raw proportions) are all adjusted so that the intercept corresponding to the median is the one from `glm.fit`.
 #'
@@ -93,7 +93,7 @@ lrm.fit <-
     gradtol=1e-5, factr=1e7, eps=5e-4,
     minstepsize=1e-4, trace=0,
     tol=1e-13, penalty.matrix=NULL, weights=NULL, normwt=FALSE,
-    transx=maxit > 1, compvar=TRUE, compstats=maxit > 1,
+    transx=maxit > 1, compvar=TRUE, compstats=TRUE,
     inclpen=TRUE, initglm=FALSE)
 {
 
