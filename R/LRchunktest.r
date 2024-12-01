@@ -1,4 +1,4 @@
-LRchunktest <- function(object, i, tol=1e-7) {
+LRchunktest <- function(object, i, tol=1e-13, fitargs=NULL) {
   k   <- class(object)[1]
   fmi <- k == 'fit.mult.impute'
   if(fmi) k <- class(object)[2]
@@ -22,7 +22,7 @@ LRchunktest <- function(object, i, tol=1e-7) {
   
   switch(k,
          lrm = {
-            dev  <- lrm.fit(X, y, maxit=12, tol=tol)$deviance[2]
+            dev <- do.call(lrm.fit, c(list(x=X, y=y, tol=tol), fitargs))$deviance[2]
          },
          orm = {
            dev <- orm.fit(X, y, family=object$family, tol=tol)$deviance[2]
@@ -36,7 +36,7 @@ LRchunktest <- function(object, i, tol=1e-7) {
          psm = {
            devf <- -2 * logl
            dev  <- -2 * survreg.fit2(X, y, dist=object$dist,
-                                     tol=1e-12)$loglik[2]
+                                     tol=tol)$loglik[2]
          },
          Glm = {
            dev <- glm.fit(x=cbind(1., X), y=y,

@@ -82,7 +82,7 @@ A comprehensive example demonstrates the use of all of the functions.
 bootcov(fit, cluster, B=200, fitter, 
         coef.reps=TRUE, loglik=FALSE,
         pr=FALSE, maxit=15, eps=0.0001, group=NULL, stat=NULL,
-        seed=sample(10000, 1))
+        seed=sample(10000, 1), ...)
 
 
 bootplot(obj, which=1 : ncol(Coef), X,
@@ -192,6 +192,7 @@ a vector of labels for labeling the axes in plots produced by \code{bootplot}.
 Default is row names of \code{X} if there are any, or sequential integers.
 }
 \item{\dots}{
+For \code{bootcov}, extra arguments to pass to \code{lrm.fit} for logistic models.
 For \code{bootplot} these are optional arguments passed to
 \code{histdensity}.  Also may be optional arguments passed to
 \code{plot} by \code{confplot} or optional arguments passed to

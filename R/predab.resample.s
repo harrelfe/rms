@@ -27,7 +27,10 @@ predab.resample <-
   options(digits=4)
   on.exit(options(oldopt))
 
-  efit <- function(...) list(fail=TRUE)
+  efit <- function(...) {
+    message(...)
+    list(fail=TRUE)
+  }
   
   ## Following logic prevents having to load a copy of a large x object
   if(any(match(c("x", "y"), names(fit.orig), 0) == 0))

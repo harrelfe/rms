@@ -62,8 +62,7 @@ range of predicted probabilities over which to compute the maximum
 error.  Default is entire range. 
 }
 \item{\dots}{
-other arguments to pass to \code{lrm.fit} (now only \code{maxit} and
-\code{tol} are allowed) and to \code{predab.resample} (note especially
+other arguments to pass to \code{lrm.fit} and to \code{predab.resample} (note especially
 the \code{group}, \code{cluster}, and \code{subset} parameters)
 }}
 \value{

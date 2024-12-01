@@ -9,7 +9,8 @@ lrm.fit(
   y,
   offset = 0,
   initial,
-  opt_method = c("nlminb", "NR", "nlm", "BFGS", "L-BFGS-B", "CG", "Nelder-Mead"),
+  opt_method = c("nlminb", "NR", "glm.fit", "nlm", "BFGS", "L-BFGS-B", "CG",
+    "Nelder-Mead"),
   maxit = 50,
   reltol = 1e-10,
   abstol = if (opt_method == "NR") 1e-05 else 0,
@@ -42,6 +43,7 @@ lrm.fit(
 \itemize{
 \item \code{'nlminb'} : the default, a quasi-Newton method using \code{\link[stats:nlminb]{stats::nlminb()}} which uses gradients and the Hessian.  This is a very fast and robust algorithm.
 \item \code{'NR'} : standard Newton-Raphson iteration using the gradient and Hessian, with step-helving.  All three convergence criteria of \verb{eps, gradtol, abstol} must be satisfied.  Relax some of these if you do not want to consider some of them in judging convergence.
+\item \code{'glm.fit'} : for binary \code{y} without penalization only
 \item \code{'nlm'} : see \code{\link[stats:nlm]{stats::nlm()}}; not highly recommended
 \item \code{'BFGS'} :
 \item \code{'L-BFGS-B'} :
@@ -53,7 +55,7 @@ lrm.fit(
 
 \item{reltol}{used by \code{BFGS}, \code{nlminb}, \code{glm.fit} to specify the convergence criteria in relative terms with regard to -2 LL, i.e., convergence is assume when one minus the fold-change falls below \code{reltol}}
 
-\item{abstol}{used by \code{NR} (maximum absolute change in parameter estimates from one iteration to the next before convergence can be declared), \code{nlminb} (by default has no effect; see \code{abs.tol} argument)}
+\item{abstol}{used by \code{NR} (maximum absolute change in parameter estimates from one iteration to the next before convergence can be declared), \code{nlminb} (by default has no effect; see \code{abs.tol} argument; set to e.g. 0.001 for \code{nlminb} when there is complete separation)}
 
 \item{gradtol}{used by \code{NR} (maximuma absolute gradient before convergence can be declared) and \code{nlm} (similar but for a scaled gradient)}
 
@@ -118,16 +120,20 @@ a list with the following elements:
 \item \code{weights}:  \code{weights} or \code{NULL}
 \item \code{xbar}:  vector of column means of \code{x}, or \code{NULL} if \code{transx=FALSE}
 \item \code{xtrans}:  input value of \code{transx}
+\item \code{R}: R matrix from QR to be used to rotate parameters back to original scale in the future
+\item \code{Ri}: inverse of \code{R}
 \item \code{opt_method}:  input value
 }
 }
 \description{
-Logisitic Model Fitter
+Logistic Model Fitter
 }
 \details{
 Fits a binary or propoortional odds ordinal logistic model for a given design matrix and response vector with no missing values in either.  Ordinary or quadratic penalized maximum likelihood estimation is used.
 
-\code{lrm.fit} implements a large number of optimization algorithms with the default being the quasi-Newtom method \code{\link[stats:nlminb]{stats::nlminb()}}.  For binary logistic regression it uses the fast iteratively reweighted least squares method in \code{\link[stats:glm]{stats::glm.fit()}}.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  By default, the \code{x} matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original \code{x} scale after fitting.  More detail and comparisons of the various optimization methods may be found \href{https://fharrell.com/post/mle/}{here}.  For ordinal regression with a large number of intercepts (distinct \code{y} values less one) you may want to use \verb{optim_method='BFGS', compvar=FALSE} which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
+\code{lrm.fit} implements a large number of optimization algorithms with the default being the quasi-Newtom method \code{\link[stats:nlminb]{stats::nlminb()}}.  For binary logistic regression without penalization iteratively reweighted least squares method in \code{\link[stats:glm]{stats::glm.fit()}} is an option.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  By default, the \code{x} matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original \code{x} scale after fitting.  More detail and comparisons of the various optimization methods may be found \href{https://fharrell.com/post/mle/}{here}.  For ordinal regression with a large number of intercepts (distinct \code{y} values less one) you may want to use \verb{optim_method='BFGS', compvar=FALSE} which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
+
+When there is complete separation (Hauck-Donner condition), i.e., the MLE of a coefficient is \eqn{\pm\infty}, and \code{y} is binary and there is no penalty, \code{glm.fit} may not converge because it does not have a convergence parameter for the deviance.  Setting \code{trace=1} will reveal that the -2LL is approaching zero but doesn't get there, relatively speaking.  In such cases the default of \code{nlminb} with \code{abstol=0.001} works well.
 }
 \examples{
 \dontrun{

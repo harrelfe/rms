@@ -1,6 +1,6 @@
 bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE, 
                     loglik=FALSE, pr=FALSE, maxit=15, eps=.0001,
-                    group=NULL, stat=NULL, seed=sample(10000, 1)) {
+                    group=NULL, stat=NULL, seed=sample(10000, 1), ...) {
 
   coxcph <- inherits(fit,'coxph') || inherits(fit,'cph')
 
@@ -53,9 +53,9 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
              else function(x, y, ...) {
                lm.fit.qr.bare(x, y, tolerance=1e-11, intercept=TRUE)
              }, 
-             lrm=function(x, y, maxit=15, eps=.0001, penalty.matrix,...) {
-               lrm.fit(x, y, maxit=maxit, tol=1E-11, eps=eps,
-                       penalty.matrix=penalty.matrix)
+             lrm=function(x, y, maxit=15, eps=.0001, penalty.matrix, strata, ytarget, ...) {
+               lrm.fit(x, y, maxit=maxit, eps=eps,
+                       penalty.matrix=penalty.matrix, ...)
              }, 
              cph=function(x, y, strata=NULL, maxit=15, eps=.0001,...) {
                coxphFit(x, y, strata=strata, iter.max=maxit, 
@@ -223,11 +223,11 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       
       ## Note: If Strata is NULL, NULL[j] is still NULL
       
-      f <- tryCatch(fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE], maxit=maxit, 
+        f <- tryCatch(fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE], maxit=maxit, 
                            eps=eps, ytarget=ytarget,
-                           penalty.matrix=penalty.matrix, strata=Strata[j]),
+                           penalty.matrix=penalty.matrix, strata=Strata[j], ...),
                     error=function(...) list(fail=TRUE))
-      if(length(f$fail) && f$fail) next
+      if(length(f$fail) && f$fail) next  
           
       cof <- f$coefficients
       if(any(is.na(cof))) next   # glm
@@ -303,7 +303,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       f <- tryCatch(fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE], 
                            maxit=maxit, eps=eps, ytarget=ytarget,
                            penalty.matrix=penalty.matrix,
-                           strata=Strata[obs]),
+                           strata=Strata[obs], ...),
                     error=function(...) list(fail=TRUE))
       if(length(f$fail) && f$fail) next
       

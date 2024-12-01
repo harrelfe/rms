@@ -62,10 +62,11 @@ depending on \code{options(prType=)}.  For
 \code{html.anova.rms} just calls \code{latex.anova.rms}.
 }
 \usage{
-\method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-9,
+\method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-13,
       test=c('F','Chisq','LR'), india=TRUE, indnl=TRUE, ss=TRUE,
       vnames=c('names','labels'),
-      posterior.summary=c('mean', 'median', 'mode'), ns=500, cint=0.95)
+      posterior.summary=c('mean', 'median', 'mode'), ns=500, cint=0.95,
+      fitargs=NULL)
 
 \method{print}{anova.rms}(x,
       which=c('none','subscripts','names','dots'),
@@ -139,6 +140,7 @@ sums of squares, mean squares, and the Error SS and MS.
 \item{ns}{number of random samples from the posterior draws to use for
 	REV highest posterior density intervals}
 \item{cint}{HPD interval probability}
+\item{fitargs}{a list of extra arguments to be passed to the fitter for LR tests}
 \item{x}{for \code{print,plot,text} is the result of \code{anova}.
 }
 \item{which}{

@@ -1,17 +1,17 @@
 #main.effect=F to suppress printing main effects when the factor in
 #question is involved in any interaction.
 
-anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-9, 
+anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-13, 
                       test=c('F', 'Chisq', 'LR'),
                       india=TRUE, indnl=TRUE, ss=TRUE,
                       vnames=c('names', 'labels'),
                       posterior.summary=c('mean', 'median', 'mode'),
-                      ns=500, cint=0.95) {
+                      ns=500, cint=0.95, fitargs=NULL) {
 
   misstest <- missing(test)
   test     <- match.arg(test)
 
-  ava <- if(test == 'LR') function(idx) LRchunktest(object, idx, tol=tol)
+  ava <- if(test == 'LR') function(idx) LRchunktest(object, idx, tol=tol, fitargs=fitargs)
             else function(idx) {
               chisq <- coef[idx] %*% solvet(cov[idx, idx], coef[idx], tol=tol)
               c(chisq, length(idx))

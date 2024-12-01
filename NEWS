@@ -7,6 +7,8 @@ Changes in version 6.9-0 (2024-11-28)
    * removed lrm.fit.bare function since the new lrm.fit handles this
    * removed lrm.fit.strat, stratification no longer supported for lrm
    * remove score statistics from lrm
+   * pentrace: added ... argument passed to fitter, changed default tol from 1e-7 to 1e-13 and maxit from 12 to 20
+   * bootcov, validate.lrm, anova.rms: passed extra arguments to lrm.fit
 
 Changes in version 6.8-2 (2024-08-22)
    * added dependency on the latest version of R at the time

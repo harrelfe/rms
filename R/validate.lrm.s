@@ -69,12 +69,12 @@ validate.lrm <- function(fit,method="boot",
       z
     }
   
-  lrmfit <- function(x, y, maxit=12, tol=1e-7, penalty.matrix=NULL, 
-                     xcol=NULL, ...)
+  lrmfit <- function(x, y, maxit=12, tol=1e-13, penalty.matrix=NULL, 
+                     xcol=NULL, strata, iter, Dxy.method, ...)
     {
       if(length(xcol) && length(penalty.matrix) > 0)
         penalty.matrix <- penalty.matrix[xcol, xcol, drop=FALSE]
-      lrm.fit(x, y, maxit=maxit, penalty.matrix=penalty.matrix, tol=tol)
+      lrm.fit(x, y, maxit=maxit, penalty.matrix=penalty.matrix, tol=tol, ...)
     }
 
   z <- predab.resample(fit, method=method, fit=lrmfit, measure=discrim, pr=pr,
@@ -85,8 +85,8 @@ validate.lrm <- function(fit,method="boot",
   kept <- attr(z, 'kept')
   calib <- z[3:4,5]
   p <- seq(emax.lim[1],emax.lim[2],.0005)
-  L <- logb(p/(1-p))
-  P <- plogis(calib[1]+calib[2]*L)  # 1/(1+exp(-calib[1]-calib[2]*L))
+  L <- qlogis(p)
+  P <- plogis(calib[1] + calib[2] * L)  # 1/(1+exp(-calib[1]-calib[2]*L))
   emax <- max(abs(p-P), na.rm=TRUE)
   z <- rbind(z[1:4,],c(0,0,emax,emax,emax,z[1,6]),z[5:nrow(z),])
   dimnames(z) <- list(c("Dxy", "R2","Intercept", "Slope", "Emax", "D", "U", "Q",
