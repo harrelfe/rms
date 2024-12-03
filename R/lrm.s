@@ -4,10 +4,11 @@ lrm <- function(formula, data=environment(formula),
                 linear.predictors=TRUE, se.fit=FALSE, 
                 penalty=0, penalty.matrix,
                 var.penalty,
-                weights, normwt=FALSE, ...)
+                weights, normwt=FALSE, scale, ...)
 {
   call <- match.call()
   if(! missing(var.penalty)) warning('var.penalty is deprecated and ignored')
+  if(! missing(scale))       warning('scale is deprecated and ignored; see lrm.fit transx=')
 
   callenv <- parent.frame()   # don't delay these evaluations
   weights <- if(! missing(weights)) eval(substitute(weights), data, callenv)
@@ -102,7 +103,24 @@ lrm <- function(formula, data=environment(formula),
   if(x) f$x <- X
   if(y) f$y <- Y
   nrp <- f$non.slopes
-  if(penpres) f$penalty <- penalty
+  if(penpres) {
+    f$penalty <- penalty
+    ## Get improved covariance matrix
+    v <- f$var
+    # if(var.penalty=='sandwich') f$var.from.info.matrix <- v
+    f.nopenalty <- 
+        lrm.fit(X, Y, offset=offs, initial=f$coef, maxit=1, ...)
+    ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
+    info.matrix.unpenalized <- f.nopenalty$info.matrix
+    dag <- diag(info.matrix.unpenalized %*% v)
+    f$effective.df.diagonal <- dag
+    f$var <- v
+    # v %*% info.matrix.unpenalized %*% v
+    df <- sum(dag[- (1 : nrp)])
+    lr <- f.nopenalty$stats["Model L.R."]
+    pval <- 1 - pchisq(lr, df)
+    f$stats[c('d.f.','Model L.R.','P')] <- c(df, lr, pval)  
+  }
 
   ass <- if(xpres) DesignAssign(atr, nrp, Terms) else list()
   

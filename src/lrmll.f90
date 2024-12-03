@@ -21,7 +21,7 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
      
   use, intrinsic :: ISO_FORTRAN_ENV, only: dp => real64, int32
   implicit none
-  integer(int32), intent(in)  :: y(n), n, k, p, what, debug, penhess
+  integer(int32), intent(in)  :: n, y(n), k, p, what, debug, penhess
   real(dp),       intent(in)  :: x(n, p), offset(n), wt(n), penmat(p, p), alpha(k), beta(p)
   real(dp),       intent(out) :: logL, u(k + p), &
                                  hess(merge(k + p, 0, what == 3), merge(k + p, 0, what == 3))

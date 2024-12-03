@@ -23,7 +23,7 @@ lrm.fit(
   penalty.matrix = NULL,
   weights = NULL,
   normwt = FALSE,
-  transx = maxit > 1,
+  transx = FALSE,
   compvar = TRUE,
   compstats = TRUE,
   inclpen = TRUE,
@@ -75,7 +75,7 @@ lrm.fit(
 
 \item{normwt}{set to \code{TRUE} to scale \code{weights} so they sum to \eqn{n}, the length of \code{y}; useful for sample surveys as opposed to the default of frequency weighting}
 
-\item{transx}{set to \code{FALSE} to prevent \code{x} from being centered and QR-factored to orthogonalize.  See \href{https://hbiostat.org/rmsc/mle#qr}{this} for details.  When \code{maxit=1}, \code{transx} defaults to \code{FALSE}.}
+\item{transx}{set to \code{TRUE} to center \code{x} and QR-factor it to orthogonalize.  See \href{https://hbiostat.org/rmsc/mle#qr}{this} for details.}
 
 \item{compvar}{set to \code{FALSE} to prevent the calculation of the variance-covariance matrix.}
 
@@ -102,7 +102,7 @@ a list with the following elements:
 \item \code{Dxy}: Somer's Dxy rank correlation between predicted probability and \code{y}, = 2(C - 0.5)
 \item \code{Gamma}:
 \item \code{Tau-a}:
-\item \code{R2}: documented \href{https://hbiostat/bib/r2.html/}{here}
+\item \code{R2}: documented \href{https://hbiostat.org/bib/r2.html/}{here}
 \item \code{Brier}: Brier score.  For ordinal models this is computed with respect the the median intercept.
 \item \code{g}: g-index (Gini's mean difference of linear predictors)
 \item \code{gr}: g-index on the odds ratio scale
@@ -131,7 +131,7 @@ Logistic Model Fitter
 \details{
 Fits a binary or propoortional odds ordinal logistic model for a given design matrix and response vector with no missing values in either.  Ordinary or quadratic penalized maximum likelihood estimation is used.
 
-\code{lrm.fit} implements a large number of optimization algorithms with the default being the quasi-Newtom method \code{\link[stats:nlminb]{stats::nlminb()}}.  For binary logistic regression without penalization iteratively reweighted least squares method in \code{\link[stats:glm]{stats::glm.fit()}} is an option.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  By default, the \code{x} matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original \code{x} scale after fitting.  More detail and comparisons of the various optimization methods may be found \href{https://fharrell.com/post/mle/}{here}.  For ordinal regression with a large number of intercepts (distinct \code{y} values less one) you may want to use \verb{optim_method='BFGS', compvar=FALSE} which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
+\code{lrm.fit} implements a large number of optimization algorithms with the default being the quasi-Newtom method \code{\link[stats:nlminb]{stats::nlminb()}}.  For binary logistic regression without penalization iteratively reweighted least squares method in \code{\link[stats:glm]{stats::glm.fit()}} is an option.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  By default, the \code{x} matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original \code{x} scale after fitting.  More detail and comparisons of the various optimization methods may be found \href{https://www.fharrell.com/post/mle/}{here}.  For ordinal regression with a large number of intercepts (distinct \code{y} values less one) you may want to use \verb{optim_method='BFGS', compvar=FALSE} which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
 
 When there is complete separation (Hauck-Donner condition), i.e., the MLE of a coefficient is \eqn{\pm\infty}, and \code{y} is binary and there is no penalty, \code{glm.fit} may not converge because it does not have a convergence parameter for the deviance.  Setting \code{trace=1} will reveal that the -2LL is approaching zero but doesn't get there, relatively speaking.  In such cases the default of \code{nlminb} with \code{abstol=0.001} works well.
 }

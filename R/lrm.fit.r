@@ -2,7 +2,7 @@
 #'
 #' Fits a binary or propoortional odds ordinal logistic model for a given design matrix and response vector with no missing values in either.  Ordinary or quadratic penalized maximum likelihood estimation is used.
 #'
-#' `lrm.fit` implements a large number of optimization algorithms with the default being the quasi-Newtom method [stats::nlminb()].  For binary logistic regression without penalization iteratively reweighted least squares method in [stats::glm.fit()] is an option.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  By default, the `x` matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original `x` scale after fitting.  More detail and comparisons of the various optimization methods may be found [here](https://fharrell.com/post/mle/).  For ordinal regression with a large number of intercepts (distinct `y` values less one) you may want to use `optim_method='BFGS', compvar=FALSE` which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
+#' `lrm.fit` implements a large number of optimization algorithms with the default being the quasi-Newtom method [stats::nlminb()].  For binary logistic regression without penalization iteratively reweighted least squares method in [stats::glm.fit()] is an option.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  By default, the `x` matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original `x` scale after fitting.  More detail and comparisons of the various optimization methods may be found [here](https://www.fharrell.com/post/mle/).  For ordinal regression with a large number of intercepts (distinct `y` values less one) you may want to use `optim_method='BFGS', compvar=FALSE` which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
 #'
 #' When there is complete separation (Hauck-Donner condition), i.e., the MLE of a coefficient is \eqn{\pm\infty}, and `y` is binary and there is no penalty, `glm.fit` may not converge because it does not have a convergence parameter for the deviance.  Setting `trace=1` will reveal that the -2LL is approaching zero but doesn't get there, relatively speaking.  In such cases the default of `nlminb` with `abstol=0.001` works well.
 #' @title lrm.fit
@@ -31,7 +31,7 @@
 #' @param penalty.matrix a self-contained ready-to-use penalty matrix - see [lrm()].  It is \eqn{p \times p} where \eqn{p} is the number of columns of `x`.
 #' @param weights a vector (same length as `y`) of possibly fractional case weights
 #' @param normwt set to `TRUE` to scale `weights` so they sum to \eqn{n}, the length of `y`; useful for sample surveys as opposed to the default of frequency weighting
-#' @param transx set to `FALSE` to prevent `x` from being centered and QR-factored to orthogonalize.  See [this](https://hbiostat.org/rmsc/mle#qr) for details.  When `maxit=1`, `transx` defaults to `FALSE`.
+#' @param transx set to `TRUE` to center `x` and QR-factor it to orthogonalize.  See [this](https://hbiostat.org/rmsc/mle#qr) for details.
 #' @param compvar set to `FALSE` to prevent the calculation of the variance-covariance matrix.
 #' @param compstats set to `FALSE` to prevent the calculation of the vector of model statistics
 #' @param inclpen set to `FALSE` to not include the penalty matrix in the Hessian when the Hessian is being computed on transformed `x`, vs. adding the penalty after back-transforming.  This should not matter.
@@ -51,7 +51,7 @@
 #'     * `Dxy`: Somer's Dxy rank correlation between predicted probability and `y`, = 2(C - 0.5)
 #'     * `Gamma`:
 #'     * `Tau-a`:
-#'     * `R2`: documented [here](https://hbiostat/bib/r2.html/)
+#'     * `R2`: documented [here](https://hbiostat.org/bib/r2.html/)
 #'     * `Brier`: Brier score.  For ordinal models this is computed with respect the the median intercept.
 #'     * `g`: g-index (Gini's mean difference of linear predictors)
 #'     * `gr`: g-index on the odds ratio scale
@@ -93,7 +93,7 @@ lrm.fit <-
     gradtol=1e-5, factr=1e7, eps=5e-4,
     minstepsize=1e-4, trace=0,
     tol=1e-13, penalty.matrix=NULL, weights=NULL, normwt=FALSE,
-    transx=maxit > 1, compvar=TRUE, compstats=TRUE,
+    transx=FALSE, compvar=TRUE, compstats=TRUE,
     inclpen=TRUE, initglm=FALSE)
 {
 
@@ -615,3 +615,5 @@ newtonr <- function(init, obj, grad, hessian,
 
   list(code = 1, message=msg)
 }
+
+utils::globalVariables('.lrm_gradient.')
