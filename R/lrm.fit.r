@@ -2,17 +2,17 @@
 #'
 #' Fits a binary or propoortional odds ordinal logistic model for a given design matrix and response vector with no missing values in either.  Ordinary or quadratic penalized maximum likelihood estimation is used.
 #'
-#' `lrm.fit` implements a large number of optimization algorithms with the default being the quasi-Newtom method [stats::nlminb()].  For binary logistic regression without penalization iteratively reweighted least squares method in [stats::glm.fit()] is an option.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  By default, the `x` matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original `x` scale after fitting.  More detail and comparisons of the various optimization methods may be found [here](https://www.fharrell.com/post/mle/).  For ordinal regression with a large number of intercepts (distinct `y` values less one) you may want to use `optim_method='BFGS', compvar=FALSE` which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
+#' `lrm.fit` implements a large number of optimization algorithms with the default being Newton-Raphson with step-halving.  For binary logistic regression without penalization iteratively reweighted least squares method in [stats::glm.fit()] is an option.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  Optionally, the `x` matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original `x` scale after fitting.  More detail and comparisons of the various optimization methods may be found [here](https://www.fharrell.com/post/mle/).  For ordinal regression with a large number of intercepts (distinct `y` values less one) you may want to use `optim_method='BFGS', compvar=FALSE` which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
 #'
-#' When there is complete separation (Hauck-Donner condition), i.e., the MLE of a coefficient is \eqn{\pm\infty}, and `y` is binary and there is no penalty, `glm.fit` may not converge because it does not have a convergence parameter for the deviance.  Setting `trace=1` will reveal that the -2LL is approaching zero but doesn't get there, relatively speaking.  In such cases the default of `nlminb` with `abstol=0.001` works well.
+#' When there is complete separation (Hauck-Donner condition), i.e., the MLE of a coefficient is \eqn{\pm\infty}, and `y` is binary and there is no penalty, `glm.fit` may not converge because it does not have a convergence parameter for the deviance.  Setting `trace=1` will reveal that the -2LL is approaching zero but doesn't get there, relatively speaking.  In such cases the default of `NR` with `eps=5e-4` or using `nlminb` with its default of `abstol=0.001` works well.
 #' @title lrm.fit
 #' @param x design matrix with no column for an intercept.  If a vector is transformed to a one-column matrix.
 #' @param y response vector, numeric, categorical, or character.  For ordinal regression, the order of categories comes from `factor` levels, and if `y` is not a factor, from the numerical or alphabetic order of `y` values.
 #' @param offset optional numeric vector containing an offset on the logit scale
 #' @param initial vector of initial parameter estimates, beginning with the intercepts
 #' @param opt_method optimization method, with possible values
-#'   * `'nlminb'` : the default, a quasi-Newton method using [stats::nlminb()] which uses gradients and the Hessian.  This is a very fast and robust algorithm.
-#'   * `'NR'` : standard Newton-Raphson iteration using the gradient and Hessian, with step-helving.  All three convergence criteria of `eps, gradtol, abstol` must be satisfied.  Relax some of these if you do not want to consider some of them in judging convergence.
+#'   * `'NR'` : the default, standard Newton-Raphson iteration using the gradient and Hessian, with step-helving.  All three convergence criteria of `eps, gradtol, abstol` must be satisfied.  Relax some of these if you do not want to consider some of them at all in judging convergence.  The defaults for the various tolerances for `NR` result in convergence being mainly judged by `eps` in most uses.  Tighten the non-`eps` parameters to give more weight to the other criteria.
+#'   * `'nlminb'` : a quasi-Newton method using [stats::nlminb()] which uses gradients and the Hessian.  This is a fast and robust algorithm.
 #'   * `'glm.fit'` : for binary `y` without penalization only
 #'   * `'nlm'` : see [stats::nlm()]; not highly recommended
 #'   * `'BFGS'` :
@@ -21,13 +21,13 @@
 #'   * `'Nelder-Mead'` : see [stats::optim()] for these 4 methods
 #' @param maxit maximum number of iterations allowed, which means different things for different `opt_method`.  For `NR` it is the number of updates to parameters not counting step-halving steps.  When `maxit=1`, `initial` is assumed to contain the maximum likelihood estimates already, and those are returned as `coefficients`, along with `u`, `info.matrix` (negative Hessian) and `deviance`.  If `compvar=TRUE`, the `var` matrix is also returned, and `stats` are only computed if `compstats` is explicitly set to `TRUE` by the user.
 #' @param reltol used by `BFGS`, `nlminb`, `glm.fit` to specify the convergence criteria in relative terms with regard to -2 LL, i.e., convergence is assume when one minus the fold-change falls below `reltol`
-#' @param abstol used by `NR` (maximum absolute change in parameter estimates from one iteration to the next before convergence can be declared), `nlminb` (by default has no effect; see `abs.tol` argument; set to e.g. 0.001 for `nlminb` when there is complete separation)
+#' @param abstol used by `NR` (maximum absolute change in parameter estimates from one iteration to the next before convergence can be declared; by default has no effect), `nlminb` (by default has no effect; see `abs.tol` argument; set to e.g. 0.001 for `nlminb` when there is complete separation)
 #' @param gradtol used by `NR` (maximuma absolute gradient before convergence can be declared) and `nlm` (similar but for a scaled gradient)
 #' @param factr see [stats::optim()] documentation for `L-BFGS-B`
 #' @param eps difference in -2 log likelihood for declaring convergence with `opt_method='NR'`.  At present, the old `lrm.fit` approach of still declaring convergence even if the -2 LL gets worse by `eps/10` while the maximum absolute gradient is below 1e-9 is not implemented.  This handles the case where the initial estimates are actually MLEs, and prevents endless step-halving.
 #' @param minstepsize used with `opt_method='NR'` to specify when to abandon step-halving
 #' @param trace set to a positive integer to trace the iterative process.  Some optimization methods distinguish `trace=1` from `trace` higher than 1.
-#' @param tol singularity criterion for inverting the -Hession matrix to get the covariance matrix, or for `opt_method='NR'` updates.
+#' @param tol QR singularity criterion for `opt_method='NR'` updates; ignored when inverting the final information matrix because `chol` is used for that.
 #' @param penalty.matrix a self-contained ready-to-use penalty matrix - see [lrm()].  It is \eqn{p \times p} where \eqn{p} is the number of columns of `x`.
 #' @param weights a vector (same length as `y`) of possibly fractional case weights
 #' @param normwt set to `TRUE` to scale `weights` so they sum to \eqn{n}, the length of `y`; useful for sample surveys as opposed to the default of frequency weighting
@@ -51,12 +51,12 @@
 #'     * `Dxy`: Somer's Dxy rank correlation between predicted probability and `y`, = 2(C - 0.5)
 #'     * `Gamma`:
 #'     * `Tau-a`:
-#'     * `R2`: documented [here](https://hbiostat.org/bib/r2.html/)
+#'     * `R2`: documented [here](https://hbiostat.org/bib/r2.html/); the first element, with the plain `'R2'` name is Nagelkerke's \eqn{R^2}
 #'     * `Brier`: Brier score.  For ordinal models this is computed with respect the the median intercept.
 #'     * `g`: g-index (Gini's mean difference of linear predictors)
 #'     * `gr`: g-index on the odds ratio scale
 #'     * `gp`: g-index on the probability scale
-#'   * `fail`:  `TRUE` if any matrix inversion or failure to converge occurred
+#'   * `fail`:  `TRUE` if any matrix inversion or failure to converge occurred, `FALSE` otherwise
 #'   * `coefficients`:
 #'   * `var`:  variance-covariance matrix if `compvar=TRUE`
 #'   * `u`:  gradient vector
@@ -86,15 +86,16 @@
 #' }
 #' @seealso [lrm()], [stats::glm()], [cr.setup()], [gIndex()]
 lrm.fit <-
-  function(x, y, offset=0, initial,
-    opt_method=c('nlminb', 'NR', 'glm.fit', 'nlm', 'BFGS', 'L-BFGS-B', 'CG', 'Nelder-Mead'),
-    maxit=50, reltol=1e-10,
-    abstol=if(opt_method=='NR') 1e-5 else 0e0,
-    gradtol=1e-5, factr=1e7, eps=5e-4,
-    minstepsize=1e-4, trace=0,
-    tol=1e-13, penalty.matrix=NULL, weights=NULL, normwt=FALSE,
-    transx=FALSE, compvar=TRUE, compstats=TRUE,
-    inclpen=TRUE, initglm=FALSE)
+  function(x, y, offset = 0, initial,
+    opt_method = c('NR', 'nlminb', 'glm.fit', 'nlm', 'BFGS', 'L-BFGS-B', 'CG', 'Nelder-Mead'),
+    maxit   = 50, reltol = 1e-10,
+    abstol  = if(opt_method=='NR') 1e10 else 0e0,
+    gradtol = if(opt_method=='NR') 1e-3 else 1e-5,
+    factr = 1e7, eps = 5e-4,
+    minstepsize = 1e-4, trace = 0,
+    tol = 1e-13, penalty.matrix = NULL, weights = NULL, normwt = FALSE,
+    transx = FALSE, compvar = TRUE, compstats = TRUE,
+    inclpen = TRUE, initglm = FALSE)
 {
 
   cal                     <- match.call()
@@ -168,7 +169,7 @@ lrm.fit <-
   y       <- as.integer(y) - 1  # 0, 1, 2, 3, ... k
   ymed    <- max(1, round(median(y)))
 
- 
+
   if(opt_method == 'glm.fit' && (k > 1 || penpres))
     stop('opt_method="glm.fit" only applies when k=1 and there is no penalty')
 
@@ -188,7 +189,7 @@ lrm.fit <-
   if(missing(initial)) {
     ncum    <- rev(cumsum(rev(sumwty)))[2 : (k + 1)]
     pp      <- ncum / sumwt
-    initial <- qlogis(pp)
+    initial <- qlogis(pp)   # Pt A
     if(ofpres) initial <- initial - mean(offset)
   }
   if(length(initial) < nv)
@@ -201,7 +202,7 @@ lrm.fit <-
     if(nrow(penalty.matrix) != p || ncol(penalty.matrix) != p)
       stop(paste("penalty.matrix does not have", p, "rows and columns"))
   }
-  else
+  else 
     penalty.matrix <- 0
   storage.mode(penalty.matrix) <- 'double'
 
@@ -214,13 +215,13 @@ lrm.fit <-
                        list(trace=trace, maxit=maxit) )
 
   info  <- NULL
-  statsnull <- c(n, 0, 0, 0, NA, rep(0, 6), rep(NA, 4))
 
   if(p == 0 & ! ofpres) {
-    loglik <- rep(loglik, 2)
+    loglik         <- rep(loglik, 2)
+    stats <- lrmstats(y, ymed, p, initial[ymed], loglik, 0, weights, sumwt, sumwty)
     res <- list(coef=initial,
                 u=rep(0, k),
-                stats=statsnull)
+                stats=stats)
   }
 
   envi <- .GlobalEnv
@@ -283,7 +284,7 @@ lrm.fit <-
 
       # Compute info matrix (- Hessian)
       # Hess * -0.5 = Hessian
-      info <- 0.5 * Hess(cof)      
+      info <- 0.5 * Hess(cof)
       # This is the information matrix for (delta, gamma) on the centered and QR-transformed
       # x without including the penalty matrix (which will be added below after
       # transformations) if inclpen is FALSE.
@@ -352,65 +353,27 @@ lrm.fit <-
     if(! ok) {
       msg  <- opt$message
       if(! length(msg))
-        msg <- paste('Iterations, function and gradient evaluations:',
+        msg <- paste('Iterations and/or function and gradient evaluations:',
                       paste(it, collapse=' '))
       message('optimization did not converge for lrm.fit', '\n', msg,
               '\nconvergence code ', con)
       return(structure(list(fail=TRUE), class='lrm'))
     }
+
     ibeta <- if(p == 0) integer(0) else - (1 : k)
     list(logl=ll, alpha=cof[ialpha], beta=cof[ibeta], u=gr,
          info=info, iter=it)
-  }
+  }   # end mle()
 
-stats <- function(lp, u) {
-    llnull   <- loglik[length(loglik) - 1]
-    model.lr <- llnull - loglik[length(loglik)]
-    model.df <- p
-    model.p  <- if(model.df > 0) 1 - pchisq(model.lr, model.df) else 1e0
 
-    r2     <- 1 - exp(- model.lr / sumwt)
-    r2.max <- 1 - exp(- llnull   / sumwt)
-    r2     <- r2 / r2.max
-    r2m    <- R2Measures(model.lr, model.df, sumwt, sumwty)
-    prob   <- plogis(lp)
-    event  <- y > (ymed - 1)
-    # B <- mean((prob - event)^2)
-    B     <- sum(weights*(prob - event)^2) / sum(weights)
-    g     <- GiniMd(lp)
-    gp    <- GiniMd(prob)
-    a     <- suppressWarnings(survival::concordancefit(y, lp, reverse=FALSE))
-    conc  <- a$count['concordant']
-    disc  <- a$count['discordant']
-    tiedy <- a$count['tied.y']
-    fn    <- as.double(n)
-    pairs <- fn * (fn - 1e0) / 2e0
-    rankstats <- c(C     = a$concordance,
-                   Dxy   = (conc - disc) / (pairs - tiedy),
-                   Gamma = (conc - disc) / (conc + disc),
-                   Tau_a = (conc - disc) / pairs)
-    stats <- c(n, max(abs(u)), model.lr, model.df,
-               model.p, rankstats,
-               r2, r2m, B, g, exp(g), gp)
-
-    nam <- c("Obs", "Max Deriv",
-             "Model L.R.", "d.f.", "P", "C", "Dxy",
-             "Gamma", "Tau-a", "R2", names(r2m), "Brier", "g", "gr", "gp")
-
-    names(stats) <- ifelse(nam == 'R2m', names(r2m), nam)
-
-    if(wtpres) stats <- c(stats, 'Sum of Weights'=sumwt)
-    stats
-  }
-  
   storage.mode(n) <- storage.mode(k) <- storage.mode(p) <- storage.mode(y) <- 'integer'
   v <- vc <- NULL
 
   if(maxit == 1) {
     loglik <- c(loglik, logl(initial))
-    if(p == 0) lpmid <- rep(initial[ymed], n)
+    if(p == 0) lpmid <- initial[ymed] + offset
     else {
-      lp     <- matxv(x, initial, kint=1)
+      lp     <- matxv(x, initial, kint=1) + offset
       lpmid  <- lp - initial[1] + initial[ymed]
     }
 
@@ -421,10 +384,10 @@ stats <- function(lp, u) {
                 deviance     = loglik,
                 info.matrix  =  0.5 * Hess(initial),
                 u            = u,
-                stats        = if(compstats) stats(lpmid, u),
+                stats        = if(compstats) lrmstats(y, ymed, p, lpmid, loglik, u, weights, sumwt, sumwty),
                 maxit = 1, fail=FALSE, class='lrm')
     if(compvar) {
-        vc <- try(solve(res$info.matrix, tol=tol))
+        vc <- try(chol2inv(chol(res$info.matrix)))
         if(inherits(vc, 'try-error')) {
           cat(vc)
           return(structure(list(fail=TRUE), class='lrm'))
@@ -438,9 +401,9 @@ stats <- function(lp, u) {
     # Fit model with only intercept(s) and offset
     ml <- mle(0L, initial[1 : k])
     if(inherits(ml, 'lrm')) return(ml)
-    loglik  <- c(loglik, ml$logl)
-    res     <- list(coef=ml$alpha, u=ml$u, info=ml$info, iter=ml$iter)
-    initial[1 : k] <- ml$alpha
+    loglik         <- c(loglik, ml$logl)
+    res            <- list(coef=ml$alpha, u=ml$u, info=ml$info, iter=ml$iter)
+    initial[1 : k] <- ml$alpha    # Pt B
     }
 
   # Fit full model
@@ -459,8 +422,7 @@ stats <- function(lp, u) {
       initial[1 : k] <- initial[1 : k] - initial[ymed] + f$coefficients[1]
       initial[-(1 : k)] <- f$coefficients[-1]
     }
-      
-      
+
     ml <- mle(p, initial)
     if(inherits(ml, 'lrm')) return(ml)
     loglik <- c(loglik, ml$logl)
@@ -481,13 +443,13 @@ stats <- function(lp, u) {
                  cbind(matrix(0e0, nrow=p, ncol=k),  Ri))
       info <- t(J) %*% info %*% J
       }
-      
+
     # Add second derivative of penalty function if needed, on the original scale
     if(! inclpen && penpres)
       info[-(1:k), -(1:k)] <- info[-(1:k), -(1:k)] - original.penalty.matrix
 
   if(compvar) {
-      vc <- try(solve(info, tol=tol))
+      vc <- try(chol2inv(chol(info)))
       if(inherits(vc, 'try-error')) {
         cat(vc)
         return(structure(list(fail=TRUE), class='lrm'))
@@ -511,9 +473,13 @@ stats <- function(lp, u) {
       # M = matrix(1, nrow=k, ncol=1) %*% matrix(xbar, nrow=1)
     } else {alpha <- delta; beta <- gamma}
     res <- list(coef=c(alpha, beta), u=ml$u, iter=ml$iter)
-  } else {
+  } else {   # p = 0
     lp    <- rep(res$alpha[1],    n)
     lpmid <- rep(res$alpha[ymed], n)
+    if(compvar) {
+      info <- 0.5 * Hess(initial[1 : k])
+      vc   <- chol2inv(chol(info))
+    }
   }
 
   name <- if(k == 1) 'Intercept' else paste('y>=', ylevels[2 : (k + 1)], sep="")
@@ -521,16 +487,18 @@ stats <- function(lp, u) {
   kof  <- res$coef
 
   names(kof) <- name
-  if(length(res$u)) names(res$u) <- name
+  if(length(res$u))   names(res$u)   <- name
   if(! is.null(info)) dimnames(info) <- list(name, name)
   if(! is.null(vc))   dimnames(vc)   <- list(name, name)
-  if(length(R))  dimnames(R) <- dimnames(Ri) <- list(xname, xname)
+  if(length(R))       dimnames(R)    <- dimnames(Ri) <- list(xname, xname)
 
+  if(p == 0) lpmid <- initial[ymed] + offset     # initial is defined at Pt A or Pt B above
+ 
   retlist <-
      list(call              = cal,
           freq              = numy,
           sumwty            = if(wtpres) sumwty,
-          stats             = if(p == 0) statsnull else if(compstats) stats(lpmid, res$u),
+          stats             = if(compstats) lrmstats(y, ymed, p, lpmid, loglik, res$u, weights, sumwt, sumwty),
           fail              = FALSE,
           coefficients      = kof,
           info.matrix       = info,
@@ -571,7 +539,7 @@ newtonr <- function(init, obj, grad, hessian,
     gradient <- grad(theta)     # Compute the gradient vector
     hess     <- hessian(theta)  # Compute the Hessian matrix
 
-    delta <- try(qr.solve(hess, gradient, tol=tolsolve)) # Compute the Newton-Raphson step
+    delta <- try(solve(hess, gradient, tol=tolsolve)) # Compute the Newton-Raphson step
     if(inherits(delta, 'try-error'))
       return(list(code=2, message='singular Hessian matrix'))
 
@@ -615,5 +583,58 @@ newtonr <- function(init, obj, grad, hessian,
 
   list(code = 1, message=msg)
 }
+
+lrmstats <- function(y, ymed, p, lp, loglik, u, weights, sumwt, sumwty) {
+  n      <- length(y)
+  prob   <- plogis(lp)
+  event  <- y > (ymed - 1)
+
+  nam1 <- c('Obs', 'Max Deriv',
+             'Model L.R.', 'd.f.', 'P', 'C', 'Dxy',
+             'Gamma', 'Tau-a', 'R2')
+  nam2 <- c('Brier', 'g', 'gr', 'gp')
+
+  if(p == 0) {
+    # N, max |u|, LR, df,       P,   C, Dxy, Gamma, Tau, R2, Brier, g, gr, gp
+    stats <- c(n, 0, 0, 0,  1, 0.5, rep(0, 3),   0, B=NA, rep(0, 3))
+    names(stats) <- c(nam1, nam2)
+
+  } else {
+    llnull   <- loglik[length(loglik) - 1]
+    model.lr <- llnull - loglik[length(loglik)]
+    model.df <- p
+    model.p  <- if(model.df > 0) 1 - pchisq(model.lr, model.df) else 1e0
+
+    r2     <- 1 - exp(- model.lr / sumwt)
+    r2.max <- 1 - exp(- llnull   / sumwt)
+    r2     <- r2 / r2.max
+    r2m    <- R2Measures(model.lr, model.df, sumwt, sumwty)
+    g      <- GiniMd(lp)
+    gp     <- GiniMd(prob)
+    a      <- suppressWarnings(survival::concordancefit(y, lp, reverse=FALSE))
+    conc   <- a$count['concordant']
+    disc   <- a$count['discordant']
+    tiedy  <- a$count['tied.y']
+    fn     <- as.double(n)
+    pairs  <- fn * (fn - 1e0) / 2e0
+    rankstats <- c(C     = a$concordance,
+                   Dxy   = (conc - disc) / (pairs - tiedy),
+                   Gamma = (conc - disc) / (conc + disc),
+                   Tau_a = (conc - disc) / pairs)
+    stats <- c(n, max(abs(u)), model.lr, model.df,
+               model.p, rankstats,
+               r2, r2m, B=NA, g, exp(g), gp)
+    nam <- c(nam1, names(r2m), nam2)
+    names(stats) <- ifelse(nam == 'R2m', names(r2m), nam)
+  }
+
+  # B <- mean((prob - event)^2)
+  B     <- sum(weights*(prob - event)^2) / sum(weights)
+  stats['Brier'] <- B
+   
+  if(any(weights != 1.0)) stats <- c(stats, 'Sum of Weights'=sumwt)
+  stats
+  }
+
 
 utils::globalVariables('.lrm_gradient.')

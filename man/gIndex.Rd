@@ -146,8 +146,7 @@ gIndex(f, type='cterms')
 gIndex(f, type='terms')
 
 y <- y > .8
-f <- lrm(y ~ x * w * u, x=TRUE, y=TRUE, opt_method='BFGS')
-# or f <- lrm(y ~ x * w * u, x=TRUE, y=TRUE, reltol=1e-6)
+f <- lrm(y ~ x * w * u, x=TRUE, y=TRUE, reltol=1e-5)
 
 gIndex(f, fun=plogis, funlabel='Prob[y=1]')
 

@@ -48,15 +48,7 @@ In the case of an ordinal model, specify which intercept to validate.
 Default is the middle intercept.  For \code{validate.orm},
 intercept-specific quantities are not validated so this does not matter.
 }
-\item{Dxy.method}{
-\code{"lrm"} to use \code{lrm}s computation of \eqn{D_{xy}} correlation,
-which rounds predicted probabilities to nearest .002.  Use
-\code{Dxy.method="somers2"} (the default) to instead use the more
-accurate but slower \code{somers2} function.  This will matter most when
-the model is extremely predictive. The default is \code{"lrm"} for
-ordinal models, since \code{somers2} only handles binary response
-variables. 
-}
+\item{Dxy.method}{deprecated and ignored}
 \item{emax.lim}{
 range of predicted probabilities over which to compute the maximum
 error.  Default is entire range. 

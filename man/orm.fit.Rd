@@ -14,7 +14,7 @@
 }
 \usage{
 orm.fit(x=NULL, y, family='logistic',
-        offset=0., initial,  maxit=12L, eps=.005, tol=1e-7, trace=FALSE,
+        offset=0., initial,  maxit=30L, eps=5e-4, tol=1e-13, trace=FALSE,
         penalty.matrix=NULL, scale=FALSE, y.precision = 7)
 }
 \arguments{
@@ -44,16 +44,16 @@ is assumed from \code{factor(y)}.
 	intercepts.  If \code{initial} is not specified, the function computes
   the overall score \eqn{\chi^2} test for the global null hypothesis of
 	no regression.}
-\item{maxit}{maximum no. iterations (default=\code{12}).}
+\item{maxit}{maximum no. iterations (default=\code{30}).}
 \item{eps}{
 difference in \eqn{-2 log} likelihood for declaring convergence.
-Default is \code{.005}.  If the \eqn{-2 log} likelihood gets
+Default is \code{.0005}.  If the \eqn{-2 log} likelihood gets
 worse by eps/10 while the maximum absolute first derivative of
 \preformatted{-2 log} likelihood is below 1E-9, convergence is still
 declared.  This handles the case where the initial estimates are MLEs,
 to prevent endless step-halving.
 }
-\item{tol}{Singularity criterion. Default is 1e-7}
+\item{tol}{Singularity criterion. Default is 1e-13}
 \item{trace}{
 set to \code{TRUE} to print -2 log likelihood, step-halving
 fraction, change in -2 log likelihood, and maximum absolute value of first

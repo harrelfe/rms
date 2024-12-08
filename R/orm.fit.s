@@ -1,7 +1,7 @@
 orm.fit <- function(x=NULL, y,
                     family='logistic',
                     offset=0., initial, 
-                    maxit=12L, eps=.005, tol=1e-7, trace=FALSE,
+                    maxit=30L, eps=5e-4, tol=1e-13, trace=FALSE,
                     penalty.matrix=NULL, scale=FALSE, y.precision = 7)
 {	
   cal <- match.call()

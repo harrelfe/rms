@@ -1,14 +1,18 @@
-Changes in version 6.9-0 (2024-12-03)
+Changes in version 6.9-0 (2024-12-07)
    * replaced Ratfor code for robcovf and ormuv with Fortran 2018 with lots of nice vectorization for ormuv thanks to ChatGPT
    * added new test robcovf.r for robcov by comparing with sandwich package
    * wrote Fortran 2018 lrmll routine to efficiently compute log-likelihood, score vector, and Hessian matrix for binary and proportional odds penalized or unpenalized logistic models
-   * completely re-wrote lrm.fit: orthogonalized X matrix using qr decomposition, used lrmll with an array of optimization options in the R stats package, removed code to compute rank correlation indexes with binning, instead doing exact calculations using the survival package's concordance.fit function.  Extensive details are at https://fharrell.com/post/mle/.
+   * completely re-wrote lrm.fit: optionally orthogonalized X matrix using qr decomposition, used lrmll with an array of optimization options in the R stats package, removed code to compute rank correlation indexes with binning, instead doing exact calculations using the survival package's concordance.fit function.  Extensive details are at https://fharrell.com/post/mle/.
    * modified lrm to use the new lrm.fit
    * removed lrm.fit.bare function since the new lrm.fit handles this
    * removed lrm.fit.strat, stratification no longer supported for lrm (strata.penalty argument dropped, and strata.coefs in print.lrm)
    * remove score statistics from lrm
    * pentrace: added ... argument passed to fitter, changed default tol from 1e-7 to 1e-13 and maxit from 12 to 20
    * bootcov, validate.lrm, anova.rms: passed extra arguments to lrm.fit
+   * predab.resample: stop() instead of return() in case original fit failed
+   * validate.lrm: changed calibration intercept and slope to NA if a model has no predictors; deprecated Dxy.method
+   * validate.lrm, validate.orm: removed maxit= internally, use default value in lrm.fit, orm.fit
+   * orm.fit: changed defaults for eps, maxit and tol
 
 Changes in version 6.8-2 (2024-08-22)
    * added dependency on the latest version of R at the time
@@ -105,7 +109,7 @@ Changes in version 6.2-0 (2021-03-17)
    * validate.cph: surrounded survival::survConcordance with suppressWarnings
    * fixed how matrx predictors were being handled
    * contrast.rms: added better ggplot2 examples for odds ratios
-	 
+
 Changes in version 6.1-1 (2021-02-06)
    * Design, Getlim: allowed datadist option to actually contain the datadist (used by Hmisc::estSeqMarkovOrd)
 
@@ -137,7 +141,7 @@ Changes in version 6.0-1 (2020-07-15)
    * Dropped Mean and Quantile since it is already in Hmisc
    * Fixed bug in modelData when formula2 was not the same as formula
    * Predict: added calling environment argument to eval() to allow calling Predict from within a function
-	 
+
 Changes in version 6.0-0 (2020-06-04)
    * orm.fit: changed to result in a fail=TRUE fit if NA, NaN element of variance matrix (Thanks: Thomas Dupont)
    * prModFit: changed default in catl function to center=FALSE
@@ -180,7 +184,7 @@ Changes in version 5.1-4 (2019-11-16)
    * psm: stored original Y if y=TRUE
    * residuals.psm: implemented type='score' (used by robcov)
    * depend on survival >= 3.1-6 and use survival's new coding of reference (censoring) event for competing risk models
-   
+
 Changes in version 5.1-3 (2019-01-27)
    * lrm: when lrm.fit fails, don't stop altogether but print warning and return fit with fail=TRUE
    * summary.orm: stopped negating linear predictor before computing hazard ratio for orm fit with log-log family (confidence limits never attempted to do this).  See https://github.com/harrelfe/rms/issues/56
@@ -276,7 +280,7 @@ Changes in version 5.0-0 (2016-10-31)
 	 * ggplot.Predict: quit ignoring xlim; suppress confidence bands if two group bariables because ggplot2 geom_ribbon doesn't support multiple aesthetics
 	 * predictrms: set contrasts for ordered factors to contr.treatment instead of contr.poly
 	 * val.prob: changed line of identity to use wide grayscale line instead of dashed line
-	 
+
 Changes in version 4.5-1 (2016-06-01)
    * ggplot.Predict: fixed bug related to .predictor. vs. .Predictor. which resulted in double plotting of some anova annotations
    * tests/ggplot3: new tests related to above
@@ -529,7 +533,7 @@ Changes in version 3.6-3 (2013-01-11)
    * Remove glm null fit usage as this is no longer in R
 
 Changes in version 3.6-2 (2012-12-09)
-   * bootcov, predab.resample: captured errors in all fits (to ignore bootstrap rep) using tryCatch.  Thanks: Max Gordoin <max@gforge.se>
+   * bootcov, predab.resample: captured errors in all fits (to ignore bootstrap rep) using tryCatch.  Thanks: Max Gordon <max@gforge.se>
    * predab.resample: made as.matrix(y) conditional to handle change in the survival package whereby the "type" attribute did not exist for a matrix
    * anova.rms: added new parameter vnames to allow use of variable labels instead of names in anova table; added vinfo attribute
    * residuals.lrm: removed intercept from partial residuals for binary models
@@ -554,7 +558,7 @@ Changes in version 3.6-0 (2012-10-26)
    * Added type= to plot.Predict to allow user to specify a different default line/point type (especially useful when x is categorical)
    * Corrected bug in offset in psm - made default offset the length of X
    * Corrected bug in calibrate.psm (fixed -> parms)
-   * predab.resample, calibrate.cph, calibrate.default, calibrate.psm: stopped putting results from overall initial fit into .Global and instead had predab.resample put them in attribute keepinfo, obtained from measure() 
+   * predab.resample, calibrate.cph, calibrate.default, calibrate.psm: stopped putting results from overall initial fit into .Global and instead had predab.resample put them in attribute keepinfo, obtained from measure()
 
 Changes in version 3.5-0 (2012-03-24)
    * contrast.rms: saved conf.type and conf.int in returned object, added to print method
@@ -637,7 +641,7 @@ Changes in version 3.3-0 (2011-02-28)
    * Fixed val.surv by pulling surv object from survest result
    * Clarified in predict.lrm help file that doesn't always use the first intercept
    * lrm.fit, lrm: linear predictor stored in fit object now uses first intercept and not middle one (NOT DOWNWARD COMPATIBLE but makes predict work when using stored linear.predictors)
-   * Fixed argument consistency with validate methods   
+   * Fixed argument consistency with validate methods
 
 Changes in version 3.2-0 (2011-02-14)
    * Changed to be compatible with survival 2.36-3 which is now required
