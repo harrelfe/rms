@@ -17,9 +17,9 @@ lrm.fit(
   gradtol = if (opt_method == "NR") 0.001 else 1e-05,
   factr = 1e+07,
   eps = 5e-04,
-  minstepsize = 1e-04,
+  minstepsize = 0.01,
   trace = 0,
-  tol = 1e-13,
+  tol = 1e-14,
   penalty.matrix = NULL,
   weights = NULL,
   normwt = FALSE,
@@ -27,7 +27,8 @@ lrm.fit(
   compvar = TRUE,
   compstats = TRUE,
   inclpen = TRUE,
-  initglm = FALSE
+  initglm = FALSE,
+  y.precision = 7
 )
 }
 \arguments{
@@ -84,12 +85,16 @@ lrm.fit(
 \item{inclpen}{set to \code{FALSE} to not include the penalty matrix in the Hessian when the Hessian is being computed on transformed \code{x}, vs. adding the penalty after back-transforming.  This should not matter.}
 
 \item{initglm}{set to \code{TRUE} to compute starting values for an ordinal model by using \code{glm.fit} to fit a binary logistic model for predicting the probability that \code{y} exceeds or equals the median of \code{y}.  After fitting the binary model, the usual starting estimates for intercepts (log odds of cumulative raw proportions) are all adjusted so that the intercept corresponding to the median is the one from \code{glm.fit}.}
+
+\item{y.precision}{when \verb{y`` is numeric, values may need to be rounded to avoid unpredictable behavior with [unique()] with floating-point numbers. Default is to round floating point }y` to 7 decimal places.}
 }
 \value{
 a list with the following elements:
 \itemize{
 \item \code{call}:  the R call to \code{lrm.fit}
 \item \code{freq}:  vector of \code{y} frequencies
+\item \code{ymedian}: median of original \code{y} values if \code{y} is numeric, otherwise the median of the integer-recorded version of \code{y}
+\item \code{yunique}: vector of distinct original \code{y} values, subject to rounding
 \item \code{sumty}:  vector of weighted \code{y} frequencies
 \item \code{stats}:  vector with a large number of indexes and model parameters (\code{NULL} if \code{compstats=FALSE}):
 \itemize{
@@ -145,7 +150,7 @@ fit <- lrm.fit(cbind(age,blood.pressure,sex), death)
 }
 }
 \seealso{
-\code{\link[=lrm]{lrm()}}, \code{\link[stats:glm]{stats::glm()}}, \code{\link[=cr.setup]{cr.setup()}}, \code{\link[=gIndex]{gIndex()}}
+\code{\link[=lrm]{lrm()}}, \code{\link[stats:glm]{stats::glm()}}, \code{\link[=cr.setup]{cr.setup()}}, \code{\link[=gIndex]{gIndex()}}, \code{\link[stats:optim]{stats::optim()}}, \code{\link[stats:nlminb]{stats::nlminb()}}, \code{\link[stats:nlm]{stats::nlm()}},\code{\link[stats:glm]{stats::glm.fit()}}, \code{\link[=recode2integer]{recode2integer()}}, \code{\link[Hmisc:qrxcenter]{Hmisc::qrxcenter()}}
 }
 \author{
 Frank Harrell \href{mailto:fh@fharrell.com}{fh@fharrell.com}

@@ -1,4 +1,4 @@
-Changes in version 6.9-0 (2024-12-07)
+Changes in version 6.9-0 (2024-12-11)
    * replaced Ratfor code for robcovf and ormuv with Fortran 2018 with lots of nice vectorization for ormuv thanks to ChatGPT
    * added new test robcovf.r for robcov by comparing with sandwich package
    * wrote Fortran 2018 lrmll routine to efficiently compute log-likelihood, score vector, and Hessian matrix for binary and proportional odds penalized or unpenalized logistic models
@@ -13,6 +13,9 @@ Changes in version 6.9-0 (2024-12-07)
    * validate.lrm: changed calibration intercept and slope to NA if a model has no predictors; deprecated Dxy.method
    * validate.lrm, validate.orm: removed maxit= internally, use default value in lrm.fit, orm.fit
    * orm.fit: changed defaults for eps, maxit and tol
+   * inst/tests/lrm3.r: new test related to reverse dependency check problem
+   * recode2integer: new function from Cole Beck, took out corresponding code from orm.fit
+   * added call to recode2integer in lrm.fit (and orm.fit) so the y values will only be considered unique to within a default of 7 decimal places to the right
 
 Changes in version 6.8-2 (2024-08-22)
    * added dependency on the latest version of R at the time

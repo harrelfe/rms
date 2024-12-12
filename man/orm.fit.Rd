@@ -14,7 +14,7 @@
 }
 \usage{
 orm.fit(x=NULL, y, family='logistic',
-        offset=0., initial,  maxit=30L, eps=5e-4, tol=1e-13, trace=FALSE,
+        offset=0., initial,  maxit=30L, eps=5e-4, tol=1e-14, trace=FALSE,
         penalty.matrix=NULL, scale=FALSE, y.precision = 7)
 }
 \arguments{
@@ -53,7 +53,7 @@ worse by eps/10 while the maximum absolute first derivative of
 declared.  This handles the case where the initial estimates are MLEs,
 to prevent endless step-halving.
 }
-\item{tol}{Singularity criterion. Default is 1e-13}
+\item{tol}{Singularity criterion. Default is 1e-14}
 \item{trace}{
 set to \code{TRUE} to print -2 log likelihood, step-halving
 fraction, change in -2 log likelihood, and maximum absolute value of first
@@ -135,7 +135,8 @@ fh@fharrell.com
 }
 \seealso{
 	\code{\link{orm}}, \code{\link{lrm}}, \code{\link{glm}},
-	\code{\link{gIndex}}, \code{\link[SparseM:SparseM.solve]{solve}}
+	\code{\link{gIndex}}, \code{\link[SparseM:SparseM.solve]{solve}},
+  \code{\link{recode2integer}}
 }
 \examples{
 #Fit an additive logistic model containing numeric predictors age, 

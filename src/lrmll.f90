@@ -47,8 +47,10 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
     call intpr('hess', 4, size(hess), 1)
     call intpr('what', 4, what, 1)
     call intpr('debug', 5, debug, 1)
+    call dblepr('alpha', 5, alpha, k)
+    call dblepr('beta', 4, beta, p)
+    call dblepr('penmat', 6, penmat, p * p)
   end if
-  if(debug == 1) return
  
   n0 = count(y == 0)
   nk = count(y == k)
@@ -152,7 +154,6 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
     ! f(x) = Pr(Y = j); f'(d) is given above
 
     do i = 1, n
-      if(debug > 0) call intpr('hess i', 6, i, 1)
       j  = y(i)
       j1 = max(j, 1)
       if(j == 0 .or. j == k) then

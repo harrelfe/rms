@@ -31,7 +31,7 @@ substituted for \eqn{D_{xy}}, and a new index is reported: \code{pdm}, the mean
 \method{validate}{lrm}(fit, method="boot", B=40,
          bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0,
          force=NULL, estimates=TRUE,
-         pr=FALSE,  kint, Dxy.method=if(k==1) 'somers2' else 'lrm',
+         pr=FALSE,  kint, Dxy.method,
          emax.lim=c(0,1), \dots)
 \method{validate}{orm}(fit, method="boot", B=40, bw=FALSE, rule="aic",
          type="residual",	sls=.05, aics=0, force=NULL, estimates=TRUE,
@@ -48,7 +48,7 @@ In the case of an ordinal model, specify which intercept to validate.
 Default is the middle intercept.  For \code{validate.orm},
 intercept-specific quantities are not validated so this does not matter.
 }
-\item{Dxy.method}{deprecated and ignored}
+\item{Dxy.method}{deprecated and ignored.  \code{lrm} through \code{lrm.fit} computes exact rank correlation coefficients as of version 6.9-0.}
 \item{emax.lim}{
 range of predicted probabilities over which to compute the maximum
 error.  Default is entire range. 

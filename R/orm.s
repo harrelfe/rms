@@ -2,7 +2,7 @@ orm <- function(formula, data=environment(formula),
         subset, na.action=na.delete,
 				method="orm.fit", model=FALSE, x=FALSE, y=FALSE, 
 				linear.predictors=TRUE, se.fit=FALSE, 
-				penalty=0, penalty.matrix, tol=1e-7, eps=0.005,
+				penalty=0, penalty.matrix, tol=1e-14, eps=5e-4,
                 var.penalty=c('simple','sandwich'), scale=FALSE, ...)
 {
   call <- match.call()

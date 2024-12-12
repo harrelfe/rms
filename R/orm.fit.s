@@ -1,7 +1,7 @@
 orm.fit <- function(x=NULL, y,
                     family='logistic',
                     offset=0., initial, 
-                    maxit=30L, eps=5e-4, tol=1e-13, trace=FALSE,
+                    maxit=30L, eps=5e-4, tol=1e-14, trace=FALSE,
                     penalty.matrix=NULL, scale=FALSE, y.precision = 7)
 {	
   cal <- match.call()
@@ -48,74 +48,22 @@ orm.fit <- function(x=NULL, y,
       }
     }
 
-  # changed from 1 to 7 (traditional median) in Oct '23
-  median_type <- 7L
-  # four scenarios for "y"
-  # 1. y is numeric and contains decimals
-  # 2. y is numeric and does not contain decimals
-  # 3. y is factor/categorical
-  # 4. y is something else (character)
-  y_new <- NULL
-  ynumeric <- is.numeric(y)
-  if(ynumeric) {
-    # median of "y"
-    mediany <- quantile(y, probs = 0.5, type = median_type)
-    # need y.precision if any decimal places
-    needPrecision <- any(y %% 1 != 0)
-    if(needPrecision) {
-      ## scenario #1
-      # when determining unique values of "y", round to avoid unpredictable behavior
-      # this is better than `round(y, y.precision)`
-      y_rnd <- round(y * 10^y.precision)
-      mediany_rnd <- round(mediany * 10^y.precision)
-      # unique values of "y"
-      yu <- sort(unique(y_rnd))
-      # convert whole number back to decimal
-      ylevels <- yu * 10^-y.precision
-      # map "y" values from 1:n for `n` unique value
-      y_new <- match(y_rnd, yu)
-      # find the midpoint
-      kmid <- max(1, which.min(abs(yu - mediany_rnd)) - 1L)
-    } else {
-      ## scenario #2
-      yu      <- sort(unique(y))
-      ylevels <- yu
-      y_new   <- match(y, yu)
-      kmid    <- max(1, which.min(abs(yu - mediany)) - 1L)
-    }
-  }
-  # For large n, as.factor is slow
-  # if(!is.factor(y)) y <- as.factor(y)
-  if(is.factor(y)) {
-    ## scenario #3
-    ylevels <- levels(y)
-    y       <- unclass(y)
-  }
-  else {
-    if(!is.null(y_new)) {
-      # work already done if "y_new" is set
-      y       <- y_new
-    } else {
-      ## scenario #4
-      # if not done, map "y" values from 1:n for `n` unique value
-      ylevels <- sort(unique(y))
-      y       <- match(y, ylevels)
-    }
-  }
-  if(! ynumeric) {
-    yu      <- sort(unique(y))
-    mediany <- quantile(y, probs = 0.5, type = median_type)
-    kmid    <- max(1, which.min(abs(yu - mediany)) - 1L)
-  }
+  # Prevent y levels from being created because of e.g. changes in the 7th decimal place 
+
+  w       <- recode2integer(y, precision=y.precision)
+  y       <- w$y
+  ylevels <- w$ylevels
+  kmid    <- max(w$whichmedian - 1L, 1L)
+  numy    <- w$freq
+  mediany <- w$median
 
   kint <- length(ylevels) - 1L
   if(kint == 1) kmid <- 1
+
   ofpres <- ! all(offset == 0)
   if(ofpres && length(offset) != n) stop("offset and y must have same length")
   
   if(n < 3) stop("must have >=3 non-missing observations")
-  numy        <- tabulate(y)
-  names(numy) <- ylevels
   p           <- as.integer(nx + kint)
 
   if(missing(initial)) {

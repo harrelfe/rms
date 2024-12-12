@@ -36,10 +36,13 @@
 #' @param compstats set to `FALSE` to prevent the calculation of the vector of model statistics
 #' @param inclpen set to `FALSE` to not include the penalty matrix in the Hessian when the Hessian is being computed on transformed `x`, vs. adding the penalty after back-transforming.  This should not matter.
 #' @param initglm set to `TRUE` to compute starting values for an ordinal model by using `glm.fit` to fit a binary logistic model for predicting the probability that `y` exceeds or equals the median of `y`.  After fitting the binary model, the usual starting estimates for intercepts (log odds of cumulative raw proportions) are all adjusted so that the intercept corresponding to the median is the one from `glm.fit`.
+#' @param y.precision when `y`` is numeric, values may need to be rounded to avoid unpredictable behavior with [unique()] with floating-point numbers. Default is to round floating point `y` to 7 decimal places.
 #'
 #' @return a list with the following elements:
 #'   * `call`:  the R call to `lrm.fit`
 #'   * `freq`:  vector of `y` frequencies
+#'   * `ymedian`: median of original `y` values if `y` is numeric, otherwise the median of the integer-recorded version of `y`
+#'   * `yunique`: vector of distinct original `y` values, subject to rounding
 #'   * `sumty`:  vector of weighted `y` frequencies
 #'   * `stats`:  vector with a large number of indexes and model parameters (`NULL` if `compstats=FALSE`):
 #'     * `Obs`: number of observations
@@ -84,7 +87,8 @@
 #'
 #' fit <- lrm.fit(cbind(age,blood.pressure,sex), death)
 #' }
-#' @seealso [lrm()], [stats::glm()], [cr.setup()], [gIndex()]
+#' @seealso [lrm()], [stats::glm()], [cr.setup()], [gIndex()], [stats::optim()], [stats::nlminb()], [stats::nlm()],[stats::glm.fit()], [recode2integer()], [Hmisc::qrxcenter()]
+#' 
 lrm.fit <-
   function(x, y, offset = 0, initial,
     opt_method = c('NR', 'nlminb', 'glm.fit', 'nlm', 'BFGS', 'L-BFGS-B', 'CG', 'Nelder-Mead'),
@@ -92,10 +96,10 @@ lrm.fit <-
     abstol  = if(opt_method=='NR') 1e10 else 0e0,
     gradtol = if(opt_method=='NR') 1e-3 else 1e-5,
     factr = 1e7, eps = 5e-4,
-    minstepsize = 1e-4, trace = 0,
-    tol = 1e-13, penalty.matrix = NULL, weights = NULL, normwt = FALSE,
+    minstepsize = 1e-2, trace = 0,
+    tol = 1e-14, penalty.matrix = NULL, weights = NULL, normwt = FALSE,
     transx = FALSE, compvar = TRUE, compstats = TRUE,
-    inclpen = TRUE, initglm = FALSE)
+    inclpen = TRUE, initglm = FALSE, y.precision=7)
 {
 
   cal                     <- match.call()
@@ -130,12 +134,13 @@ lrm.fit <-
   if(missing(x) || length(x) == 0) {
     p     <- 0L
     xname <- NULL
-    x     <- 0e0
+    x     <- matrix(0e0, nrow=n, ncol=0)
   } else {
     if(! is.matrix(x)) x <- as.matrix(x)
+    storage.mode(x) <- 'double'
     xname <- colnames(x)
-    dx <- dim(x)
-    p  <- dx[2]
+    dx    <- dim(x)
+    p     <- dx[2]
     if(dx[1] != n) stop("x and y must have same number of rows")
 
     # Center X columns then QR-transform them
@@ -149,7 +154,6 @@ lrm.fit <-
       w    <- NULL
     }
 
-    storage.mode(x) <- "double"
     if(length(xname) == 0) xname <- paste("x[", 1 : ncol(x), "]", sep="")
 
     # Modify penalty matrix so that it applies to the QR-transformed beta
@@ -162,13 +166,15 @@ lrm.fit <-
       penalty.matrix <- t(R) %*% penalty.matrix %*% R
   }
 
-  if(! is.factor(y)) y <- as.factor(y)
-  numy    <- table(y)
-  ylevels <- names(numy)
-  k       <- length(ylevels) - 1
-  y       <- as.integer(y) - 1  # 0, 1, 2, 3, ... k
-  ymed    <- max(1, round(median(y)))
+  # Only consider uniqueness of y values to within 7 decimal places to the right
+  w       <- recode2integer(y, precision=y.precision)
+  y       <- w$y - 1
+  ylevels <- w$ylevels
+  ymed    <- max(w$whichmedian - 1L, 1L)
+  ymedian <- w$median
+  numy    <- w$freq
 
+  k       <- length(ylevels) - 1
 
   if(opt_method == 'glm.fit' && (k > 1 || penpres))
     stop('opt_method="glm.fit" only applies when k=1 and there is no penalty')
@@ -198,13 +204,13 @@ lrm.fit <-
   loglik <- -2 * sum(sumwty * logb(sumwty / sum(sumwty)))
 
   if(p > 0) {
-    if(! penpres) penalty.matrix <- matrix(0, nrow=p, ncol=p)
+    if(! penpres) penalty.matrix <- matrix(0e0, nrow=p, ncol=p)
     if(nrow(penalty.matrix) != p || ncol(penalty.matrix) != p)
       stop(paste("penalty.matrix does not have", p, "rows and columns"))
+    storage.mode(penalty.matrix) <- 'double'
   }
   else 
-    penalty.matrix <- 0
-  storage.mode(penalty.matrix) <- 'double'
+    penalty.matrix <- matrix(0e0, nrow=0, ncol=0)
 
   cont <- switch(opt_method,
            BFGS      = list(trace=trace, maxit=maxit, reltol=reltol),
@@ -241,6 +247,7 @@ lrm.fit <-
     p     <- length(parm) - k
     ibeta <- if(p == 0) integer(0) else - (1 : k)
     db('2', n, k, p)
+    ww <- llist(x, y, offset, weights, penalty.matrix)
     g <- .Fortran(F_lrmll, n, k, p, x, y, offset, weights, penalty.matrix,
                   as.double(parm[ialpha]), as.double(parm[ibeta]),
                   logL=numeric(1), grad=numeric(k + p), numeric(0),
@@ -278,20 +285,22 @@ lrm.fit <-
                      tolsolve    = tol,
                      maxit       = maxit,
                      trace       = trace)
-      ll  <- opt$obj
-      cof <- opt$param
-      gr  <- -0.5 * opt$grad
-
-      # Compute info matrix (- Hessian)
-      # Hess * -0.5 = Hessian
-      info <- 0.5 * Hess(cof)
-      # This is the information matrix for (delta, gamma) on the centered and QR-transformed
-      # x without including the penalty matrix (which will be added below after
-      # transformations) if inclpen is FALSE.
-
-      it  <- opt$iter
       con <- opt$code
       ok  <- con == 0
+      if(ok) {
+        ll  <- opt$obj
+        cof <- opt$param
+        gr  <- -0.5 * opt$grad
+
+        # Compute info matrix (- Hessian)
+        # Hess * -0.5 = Hessian
+        info <- 0.5 * Hess(cof)
+        # This is the information matrix for (delta, gamma) on the centered and QR-transformed
+        # x without including the penalty matrix (which will be added below after
+        # transformations) if inclpen is FALSE.
+
+        it  <- opt$iter
+      }
     }
     else if(opt_method == 'nlm') {
       obj <- function(parm, ...) {
@@ -497,6 +506,8 @@ lrm.fit <-
   retlist <-
      list(call              = cal,
           freq              = numy,
+          ymedian           = ymedian,
+          yunique           = ylevels,
           sumwty            = if(wtpres) sumwty,
           stats             = if(compstats) lrmstats(y, ymed, p, lpmid, loglik, res$u, weights, sumwt, sumwty),
           fail              = FALSE,
@@ -526,12 +537,12 @@ lrm.fit <-
 
 newtonr <- function(init, obj, grad, hessian,
                     objtol = 5e-4, gradtol = 1e-5, paramtol = 1e-5,
-                    minstepsize = 5e-4,
+                    minstepsize = 1e-2,
                     tolsolve=1e-7, maxit = 100, trace=0) {
 
   m <- function(x) max(abs(x))
 
-  theta <- init # Initialize the parameter vector
+  theta  <- init # Initialize the parameter vector
   oldobj <- 1e10
   objf   <- obj(theta)
 
@@ -544,7 +555,8 @@ newtonr <- function(init, obj, grad, hessian,
       return(list(code=2, message='singular Hessian matrix'))
 
     if(trace > 0)
-      cat('Iteration:', iter, '  -2LL:', objf, '  Max |gradient|:', m(gradient),
+      cat('Iteration:', iter, '  -2LL:', format(objf, nsmall=4),
+          '  Max |gradient|:', m(gradient),
           '  Max |change in parameters|:', m(delta), '\n', sep='')
 
     step_size <- 1                # Initialize step size for step-halving
@@ -553,7 +565,7 @@ newtonr <- function(init, obj, grad, hessian,
     while (step_size > minstepsize) {
       new_theta <- theta - step_size * delta # Update parameter vector
       objfnew <- obj(new_theta)
-      if (objfnew > objf) {     # Objective function failed to be reduced
+      if (objfnew > objf + 1e-6) {     # Objective function failed to be reduced
         step_size <- step_size / 2e0         # Reduce the step size
         if(trace > 0) cat('Step size reduced to', step_size, '\n')
       } else {
@@ -565,7 +577,7 @@ newtonr <- function(init, obj, grad, hessian,
     }
 
     # Convergence check - must meet 3 criteria
-    if((objf <= oldobj && (oldobj - objf < objtol)) &&
+    if((objf <= oldobj + 1e-6 && (oldobj - objf < objtol)) &&
        (m(gradient) < gradtol) &&
        (m(delta)    < paramtol))
         return(list(param          = theta,
