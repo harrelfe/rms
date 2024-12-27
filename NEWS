@@ -1,7 +1,7 @@
 Changes in version 7.0-0 (2024-)
    * complete re-write of orm.fit making use of ultra-compact sparse represention of pure intercept part of Hessian, and splitting returned information matrix into 3 submatrices
    * this involved writing a new Fortran subroutine ormll; all the link-related calculations were moved into ormll
-   * orm: removed support for user-supplied link functions; stayed with 5 hard-coded cumulative probability distributions
+   * orm: removed support for user-supplied link functions; stayed with 5 hard-coded cumulative probability distributions and these must now be regular character string values
    * add Matrix to imports
    * orm, orm.fit: added weights and penalties
    * infoMxop: new function to take either an ordinary information matrix or a list containing information submatrices (one of them being a symmetric band diagonal sparse representation), and either returns the assembled sparse matrix, its inverse, or selected rows/columns of the inverse.  Used by functions such as orm, anova.rms, Mean.lrm, Quantile.orm, ExProb.orm to do efficient calculations on the variance-covariance matrix.

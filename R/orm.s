@@ -1,7 +1,7 @@
 orm <- function(formula, data=environment(formula),
         subset, na.action=na.delete,
 				method="orm.fit",
-				family='logistic',
+				family=c("logistic","probit","loglog","cloglog","cauchit"),
 				model=FALSE, x=FALSE, y=FALSE,
 				linear.predictors=TRUE, se.fit=FALSE,
 				penalty=0, penalty.matrix,
@@ -10,12 +10,8 @@ orm <- function(formula, data=environment(formula),
 {
   call        <- match.call()
   var.penalty <- match.arg(var.penalty)
+  family      <- match.arg(family)
   nact        <- NULL
-
-  family <- as.character(substitute(family))
-  if(length(family) != 1) stop('family can be only one distribution')
-  if(family %nin% c("logistic","probit","loglog","cloglog","cauchit"))
-    stop('family is not logistic, probit, loglog, cloglog, or cauchit')
 
   tform <- terms(formula, data=data)
   if(! missing(data) || (

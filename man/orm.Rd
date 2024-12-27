@@ -48,7 +48,7 @@
 \usage{
 orm(formula, data=environment(formula),
     subset, na.action=na.delete, method="orm.fit",
-    family="logistic",
+    family=c("logistic","probit","loglog","cloglog","cauchit"),
     model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE,
     penalty=0, penalty.matrix,
     var.penalty=c('simple','sandwich'), scale=FALSE,
@@ -86,13 +86,11 @@ This is usually specified using \code{options(na.action="na.delete")}.
 name of fitting function. Only allowable choice at present is \code{orm.fit}.
 }
 \item{family}{
-specifies the distribution family, corresponding to logistic (the
+character value specifying the distribution family, corresponding to logistic (the
 	default), Gaussian, Cauchy, Gumbel maximum (\eqn{exp(-exp(-x))};
 	extreme value type I), and Gumbel minimum
 	(\eqn{1-exp(-exp(x))}) distributions.  These are the cumulative
-	distribution functions assumed for \eqn{Prob[Y \ge y | X]}.  The
-	\code{family} argument can be an unquoted or a quoted string,
-	e.g. \code{family=loglog} or \code{family="loglog"}.
+	distribution functions assumed for \eqn{Prob[Y \ge y | X]}.
 }
 \item{model}{
 causes the model frame to be returned in the fit object
@@ -197,9 +195,7 @@ for the middle intercept and regression coefficients.  See
 \code{\link{lrm}} for details if penalization is used.
 }
 \item{effective.df.diagonal}{see \code{\link{lrm}}}
-\item{family}{the character string for \code{family}.  If \code{family}
-	was a user-customized list, it must have had an element named
-	\code{name}, which is taken as the return value for \code{family} here.}
+\item{family}{the character string for \code{family}.}
 \item{trans}{a list of functions for the choice of \code{family}, with
 	elements \code{cumprob} (the cumulative probability distribution
 	function), \code{inverse} (inverse of \code{cumprob}), \code{deriv}
@@ -288,10 +284,10 @@ g <- orm(y ~ x1)
 g
 k <- coef(g)
 i <- num.intercepts(g)
-h <- orm(y ~ x1, family=probit)
-ll <- orm(y ~ x1, family=loglog)
-cll <- orm(y ~ x1, family=cloglog)
-cau <- orm(y ~ x1, family=cauchit)
+h <- orm(y ~ x1, family='probit')
+ll <- orm(y ~ x1, family='loglog')
+cll <- orm(y ~ x1, family='cloglog')
+cau <- orm(y ~ x1, family='cauchit')
 x <- 1:i
 z <- list(logistic=list(x=x, y=coef(g)[1:i]),
           probit  =list(x=x, y=coef(h)[1:i]),
@@ -334,9 +330,9 @@ x1 <- rnorm(n)
 y <- x1 + rnorm(n)
 dd <- datadist(x1); options(datadist='dd')
 f <- ols(y ~ x1)
-g <- orm(y ~ x1, family=probit)
-h <- orm(y ~ x1, family=logistic)
-w <- orm(y ~ x1, family=cloglog)
+g <- orm(y ~ x1, family='probit')
+h <- orm(y ~ x1, family='logistic')
+w <- orm(y ~ x1, family='cloglog')
 mg <- Mean(g); mh <- Mean(h); mw <- Mean(w)
 r <- rbind(ols      = Predict(f, conf.int=FALSE),
            probit   = Predict(g, conf.int=FALSE, fun=mg),
@@ -353,7 +349,7 @@ r <- rbind(probit   = Predict(g, conf.int=FALSE, fun=qu80),
 plot(r, groups='.set.')
 
 # Verify transformation invariance of ordinal regression
-ga <- orm(exp(y) ~ x1, family=probit)
+ga <- orm(exp(y) ~ x1, family='probit')
 qua <- Quantile(ga)
 qua80 <- function(lp) log(qua(.8, lp))
 r <- rbind(logprobit = Predict(ga, conf.int=FALSE, fun=qua80),
@@ -426,7 +422,7 @@ for(beta in c(0, .4)) {
       plogistic[j]  <- f$stats['P']
       plogistics[j] <- f$stats['Score P']
       plogisticw[j] <- 1 - pchisq(coef(f)['x']^2 / vcov(f)[2,2], 1)
-      f <- orm(y ~ x, family=probit)
+      f <- orm(y ~ x, family'='probit')
       pprobit[j]  <- f$stats['P']
       pprobits[j] <- f$stats['Score P']
       pprobitw[j] <- 1 - pchisq(coef(f)['x']^2 / vcov(f)[2,2], 1)
