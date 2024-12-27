@@ -1,7 +1,7 @@
 orm <- function(formula, data=environment(formula),
         subset, na.action=na.delete,
 				method="orm.fit",
-				family=c("logistic","probit","loglog","cloglog","cauchit"),
+				family="logistic",
 				model=FALSE, x=FALSE, y=FALSE,
 				linear.predictors=TRUE, se.fit=FALSE,
 				penalty=0, penalty.matrix,
@@ -10,7 +10,18 @@ orm <- function(formula, data=environment(formula),
 {
   call        <- match.call()
   var.penalty <- match.arg(var.penalty)
-  family      <- match.arg(family)
+
+  # Define families as variables in case orm() call did not quote them
+  logistic <- 'logistic'
+  probit   <- 'probit'
+  loglog   <- 'loglog'
+  cloglog  <- 'cloglog'
+  cauchit  <- 'cauchit'
+  family   <- eval(substitute(family)) 
+  if(length(family) != 1 ||
+     family %nin% c("logistic","probit","loglog","cloglog","cauchit"))
+     stop('family must be one of logistic,probit,loglog,cloglog,cauchit')
+
   nact        <- NULL
 
   tform <- terms(formula, data=data)

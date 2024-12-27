@@ -99,7 +99,7 @@ subroutine ormll(n, k, p, x, y, offset, wt, penmat, link, alpha, beta, logL, u, 
   ! pdf1(i0) =   pdf(alpha(1)       + lp(i0), 1.0_dp - p1(i0), link)   ! first term -
   ! pdf1(ib) =   pdf(alpha(y(ib))   + lp(ib), p1(ib), link)
   ! pdf1(ik) =   pdf(alpha(k)       + lp(ik), p1(ik), link)
-  pdf1     = pdf(alpha(y1) + lp, p1, link)  ! for vectors, max = R pmax
+  pdf1     = pdf(alpha(y1)       + lp,     p1,      link)  ! for vectors, max = R pmax
   pdf2     = 0_dp
   pdf2(ib) = pdf(alpha(y(ib) + 1) + lp(ib), p2(ib), link)
 
