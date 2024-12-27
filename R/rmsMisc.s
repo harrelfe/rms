@@ -19,7 +19,7 @@ DesignAssign <- function(atr, non.slopes, Terms) {
   }
   assign
 }
-  
+
 #Function to return variance-covariance matrix, optionally deleting
 #rows and columns corresponding to parameters such as scale parameters
 #in parametric survival models (if regcoef.only=TRUE)
@@ -50,7 +50,7 @@ vcov.cph <- function(object, regcoef.only=TRUE, ...)
 vcov.psm <- function(object, regcoef.only=TRUE, ...)
   vcov.rms(object, regcoef.only=regcoef.only, ...)
 
-vcov.orm <- function(object, regcoef.only=TRUE,
+vv <- vcov.orm <- function(object, regcoef.only=TRUE,
                      intercepts='mid', ...) {
   v <- object$var
   if(! length(intercepts)) return(v)
@@ -63,62 +63,42 @@ vcov.orm <- function(object, regcoef.only=TRUE,
   if(! length(iat)) {
     if(li1 && intercepts == 'mid') {
       i <- c(iref, (num.intercepts(object, 'var') + 1) : nrow(v))
-      return(object$var[i, i, drop=FALSE])
+      return(v[i, i, drop=FALSE])
     }
     return(vcov.lrm(object, regcoef.only=regcoef.only,
                     intercepts=intercepts, ...))
   }
-  
+
   if(li1 && intercepts == 'none')
     return(object$var[-(1 : length(iat)),
                       -(1 : length(iat)), drop=FALSE])
     if(li1 && intercepts == 'mid' && length(iat) == 1) return(object$var)
-  
-  iref <- object$interceptRef
-  info <- object$info.matrix
+
+  iref  <- object$interceptRef
+  info  <- object$info.matrix
   isbootcov <- length(object$boot.coef)
-  ns <- num.intercepts(object)
-  p  <- ncol(info)
-  ns <- num.intercepts(object)
-  nx <- p - ns
-  scale <- attr(info, 'scale')
+  ns    <- num.intercepts(object)
+  np    <- infoMxop(info, np=TRUE)   # just compute # parameters
+  nx    <- np - ns
   name <- names(coef(object))
-  if(length(scale) && (! is.character(intercepts) ||
-                       (li1 && intercepts == 'all'))) {
-    xbar  <- scale$mean
-    xsd   <- scale$sd
-    trans <- 
-      rbind(cbind(diag(ns), matrix(0, nrow=ns, ncol=nx)),
-            cbind(-matrix(rep(xbar / xsd, ns), ncol=ns),
-                  diag(1 / as.vector(xsd))))
-  }
-  
-                       
+
   if(li1 && is.character(intercepts)) {
     if(intercepts != 'mid' && isbootcov)
       stop('intercepts must be "mid" if object produced by bootcov')
       switch(intercepts,
              mid = return(object$var),
              all = {
-               if(! length(scale)) {
-                 v <- as.matrix(solve(info))
+                 v <- infoMxop(info, invert=TRUE)
                  dimnames(v) <- list(name, name)
                  return(v)
-               }
-               kint <- num.intercepts(object)
-               v <- t(trans) %*% as.matrix(solve(info)) %*% trans
-               dimnames(v) <- list(name, name)
-               return(v)
              },
              none= return(object$var[-1, -1, drop=FALSE]) )
   }
   if(isbootcov)
     stop('intercepts must be "mid" if object produced by bootcov')
-  
-  i <- if(nx == 0) intercepts else c(intercepts, (ns+1):p)
-  v <- if(length(scale))
-    (t(trans) %*% as.matrix(solve(info)) %*% trans)[i,i]
-  else as.matrix(solve(info)[i,i])
+
+  i <- if(nx == 0) intercepts else c(intercepts, (ns + 1) : np)
+  v <- infoMxop(info, i=i)
   dimnames(v) <- list(name[i], name[i])
   v
 }
@@ -169,7 +149,7 @@ oos.loglik.lrm <- function(fit, lp, y, ...) {
   p <- plogis(lp)
   -2*sum(ifelse(y==1, logb(p), logb(1-p)))
 }
-  
+
 oos.loglik.cph <- function(fit, lp, y, ...) {
   if(missing(lp)) return(-2*fit$loglik[2])
   else stop('not implemented for cph models')
@@ -184,7 +164,7 @@ oos.loglik.Glm <- function(fit, lp, y, ...)
   if(missing(lp)) deviance(fit) else
   glm.fit(x=NULL, y=as.vector(y), offset=lp, family=fit$family)$deviance
 
-  
+
 #Function to retrieve limits and values, from fit (if they are there)
 #or from a datadist object.  If need.all=F and input is coming from datadist,
 #insert columns with NAs for variables not defined
@@ -213,7 +193,7 @@ if((length(X) + length(limits)) == 0) {
   if(allow.null) {
     lims <- list()
     for(nn in nam) lims[[nn]] <- rep(NA,7)
-    lims <- structure(lims, class="data.frame", 
+    lims <- structure(lims, class="data.frame",
       row.names=c("Low:effect","Adjust to", "High:effect", "Low:prediction",
 		  "High:prediction","Low","High"))
     return(list(limits=lims, values=values))
@@ -235,11 +215,11 @@ if(length(lims) && any(na)) for(n in nam[na]) { #if() assumes NA stored in fit
   }
   else limits[[n]] <- u
 }
-limits <- structure(limits, class="data.frame", 
+limits <- structure(limits, class="data.frame",
    row.names=c("Low:effect","Adjust to", "High:effect", "Low:prediction",
 		"High:prediction","Low","High"))
 
-if(length(vals)) values <- c(values, 
+if(length(vals)) values <- c(values,
 	vals[match(names(vals),nam,0)>0 & match(names(vals),names(values),0)==0]
 	)   # add in values from datadist corresponding to vars in model
             # not already defined for model
@@ -252,7 +232,7 @@ list(limits=limits, values=values)
 
 Getlimi <- function(name, Limval, need.all=TRUE)
 {
-   lim <- if(match(name, names(Limval$limits), 0) > 0) 
+   lim <- if(match(name, names(Limval$limits), 0) > 0)
      Limval$limits[[name]] else NULL
    if(is.null(Limval) || is.null(lim) || all(is.na(lim))) {
       if(need.all) stop(paste("no limits defined by datadist for variable",
@@ -294,7 +274,7 @@ related.predictors <- function(at, type=c("all","direct"))
       x[[i]] <- r
     }
   if(type=="direct") return(x)
-  
+
   while(TRUE)
     {
       bigger <- FALSE
@@ -361,7 +341,7 @@ combineRelatedPredictors <- function(at)
       }
     list(names=newnames, namesia=newnamesia, components=components)
   }
-    
+
 
 #Function to list all interaction term numbers that include predictor
 #pred as one of the interaction components
@@ -405,7 +385,7 @@ if(term.order==3) nonlin else nonlin | ia
 #		factor variable in the model be a factor variable with
 #		the levels that were used in the model.  This is primarily
 #		so that row insertion will work right with <-[.data.frame
-#	
+#
 #at=Design attributes
 
 rms.levels <- function(df, at)
@@ -431,14 +411,14 @@ Penalty.matrix <- function(at, X)
 {
   d1 <- dimnames(X)[[2]][1]
   if(d1 %in% c('Intercept', '(Intercept)')) X <- X[, -1, drop=FALSE]
-  
+
   d <- dim(X)
   n <- d[1]; p <- d[2]
   center <- as.vector(rep(1 / n, n) %*% X)   # see scale() function
   v <- as.vector(rep(1 / (n - 1), n) %*%
                  (X - rep(center, rep(n, p)))^2)
-  
-  pen <- if(p == 1) as.matrix(v) else as.matrix(diag(v))    
+
+  pen <- if(p == 1) as.matrix(v) else as.matrix(diag(v))
   ## works even if X one column
 
   is <- 1
@@ -473,7 +453,7 @@ Penalty.setup <- function(at, penalty)
   if(!length(tinteraction)) tinteraction <- tnonlinear
   tnonlinear.interaction <- penalty$nonlinear.interaction
   if(!length(tnonlinear.interaction)) tnonlinear.interaction <- tinteraction
-  
+
   nonlin <- unlist(at$nonlinear[at$name[at$assume!='strata']])
   ia <- NULL
   for(i in (1:length(at$name))[at$assume!='strata'])
@@ -502,27 +482,27 @@ lrtest <- function(fit1, fit2)
     stop('fit1 had failed')
   if(length(fit2$fail) && fit2$fail)
     stop('fit2 had failed')
-  
+
   s1 <- fit1$stats
   s2 <- fit2$stats
-  
+
   if(!length(s1))
     s1 <- c('Model L.R.'=fit1$null.deviance - fit1$deviance,
             'd.f.'=fit1$rank - (any(names(coef(fit1))=='(Intercept)')))
   if(!length(s2))
     s2 <- c('Model L.R.'=fit2$null.deviance - fit2$deviance,
             'd.f.'=fit2$rank - (any(names(coef(fit2))=='(Intercept)')))
-  
+
   chisq1 <- s1['Model L.R.']
   chisq2 <- s2['Model L.R.']
-  if(length(chisq1)==0 || length(chisq2)==2) 
+  if(length(chisq1)==0 || length(chisq2)==2)
     stop('fits do not have stats component with "Model L.R." or deviance component')
   df1 <- s1['d.f.']
   df2 <- s2['d.f.']
   if(df1==df2) stop('models are not nested')
 
   lp1 <- length(fit1$parms);  lp2 <- length(fit2$parms)
-  if(lp1 != lp2) warning('fits do not have same number of scale parameters') else 
+  if(lp1 != lp2) warning('fits do not have same number of scale parameters') else
   if(lp1 == 1 && abs(fit1$parms-fit2$parms)>1e-6)
     warning('fits do not have same values of scale parameters.\nConsider fixing the scale parameter for the reduced model to that from the larger model.')
 
@@ -563,9 +543,9 @@ Newlabels.rms <- function(fit, labels, ...)
       if(length(labels)!=length(at$name))
         stop('labels is not a named vector and its length is not equal to the number of variables in the fit')
       nam <- at$name
-    } 
+    }
   i <- match(nam, at$name, nomatch=0)
-  
+
   if(any(i==0))
     {
       warning(paste('the following variables were not in the fit and are ignored:\n',
@@ -573,9 +553,9 @@ Newlabels.rms <- function(fit, labels, ...)
       labels <- labels[i>0]
       i <- i[i>0]
     }
-  
+
   at$label[i] <- labels
-  
+
   fit$Design <- at
   fit
 }
@@ -589,14 +569,14 @@ Newlevels.rms <- function(fit, levels, ...)
   if(length(nam)==0) stop('levels must have names')
 
   i <- match(nam, at$name, nomatch=0)
-  
+
   if(any(i==0))
     {
       warning(paste('the following variables were not in the fit and are ignored:\n',
                     paste(nam[i==0],collapse=' ')))
       nam <- nam[i>0]
     }
-  
+
   for(n in nam)
     {
       prm <- at$parms[[n]]
@@ -616,7 +596,7 @@ Newlevels.rms <- function(fit, levels, ...)
         }
       at$parms[[n]] <- levs
     }
-  
+
   fit$Design <- at
   fit
 }
@@ -699,7 +679,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
   vbar <- transl('|')
   chi2 <- specs$chisq()
   beta <- htmlGreek('beta')
-  
+
   R <- character(0)
 
   bverb <- function() {
@@ -708,13 +688,13 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
            latex = '\\begin{verbatim}',
            plain = NULL)
     }
-  
+
   everb <- function()
     switch(lang,
            html  = '</pre>',
            latex = '\\end{verbatim}',
            plain = NULL)
-  
+
   skipt  <- function(n=1) {
     if(n==0) return(character(0))
     if(n == 1) return('')
@@ -758,14 +738,14 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
   }
   latexVector <- function(x, ...)
     latexTabular(t(x), helvetica=FALSE, ...)
-  
+
   if(length(x$fail) && x$fail) {
     return(catl('Model Did Not Converge.  No summary provided.',
                 bold=TRUE, pre=1, verb=TRUE))
   }
 
   R <- character(0)
-  
+
   if(! missing(needspace) && lang == 'latex')
     R <- paste0('\\Needspace{', needspace, '}')
 
@@ -775,7 +755,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
   ## was skip=if(lsub) 0 else 1
   if(lsub)
     for(i in lsub) R <- c(R, catl(subtitle[i], bold=FALSE, pre=1))
-  
+
   if(long) {
     R <- c(R, bverb(), deparse(x$call), everb(), '')
     ## dput(x$call) didn't work with rmarkdown because dput has no append=
@@ -794,7 +774,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
       }
       if(lang == 'html') type <- 'html.naprint.delete'
     }
-    
+
     preskip <- z$preskip
     if(! length(preskip)) preskip <- 0
     if(! tex && length(titl)) R <- c(R, '', catl(titl, pre=preskip, skip=1))
@@ -803,7 +783,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
     } else if(type == 'coefmatrix') {
       if(coefs) {
         pad <- function(x)
-          switch(lang, 
+          switch(lang,
                  latex = paste0('~', x, '~'),
                  html  = paste0(nbsp, x),
                  plain  = x)
@@ -811,7 +791,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
                         plain = 'Beta',
                         html  = htmlGreek('beta'),
                         latex = '$\\hat{\\beta}$')
-                        
+
         B   <- obj$bayes
         if(length(B)) {
           U <- matrix('', nrow=nrow(B), ncol=ncol(B))
@@ -878,7 +858,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
         if(lang %in% c('latex', 'html')) {
           R <- c(R, skipt(1))
           rownames(U) <- transl(betanames)
-          
+
           if(is.numeric(coefs)) {
             U <- U[1:coefs,,drop=FALSE]
             U <- rbind(U, rep('', ncol(U)))
@@ -886,11 +866,11 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
           }
           ## Translate interaction symbol (*) to times symbol
           rownames(U) <- gsub('*', specs$times, rownames(U), fixed=TRUE)
- 
+
           if(! missing(needspace) && lang == 'latex')
             R <- c(R, paste0('\\Needspace{', needspace, '}'))
 
-          if(lang == 'latex') 
+          if(lang == 'latex')
             R <- c(R,   # was capture.output(latex())
                    capture.output(latex(U, file='',
                                         first.hline.double=FALSE,
@@ -975,16 +955,16 @@ latex.naprint.delete <- function(object, file='', append=TRUE, ...) {
     }
     cat("\n")
   }
-  
+
   if(length(g <- object$na.detail.response)) {
     cat("\nStatistics on Response by Missing/Non-Missing Status of Predictors\n\n")
     print(unclass(g))
-    cat("\n")           
+    cat("\n")
   }
   if(file != '') sink()
   invisible()
 }
-                         
+
 html.naprint.delete <- function(object, ...) {
   lg <- length(g <- object$nmiss)
   R <- character(0)
@@ -1011,10 +991,10 @@ html.naprint.delete <- function(object, ...) {
       #          sort   = 'descending',
       #          xlab   = 'Missing',
       #          width  = min(550, 300 + 20 * maxlen),
-      #          height = plotlyParm$heightDotchart(lg)) ) 
+      #          height = plotlyParm$heightDotchart(lg)) )
     }
   }
-  
+
   if(length(g <- object$na.detail.response)) {
     R <- c(R, '',
            'Statistics on Response by Missing/Non-Missing Status of Predictors<br>',
@@ -1022,7 +1002,7 @@ html.naprint.delete <- function(object, ...) {
   }
   R
 }
-    
+
 ## Function to print model fit statistics
 ## Example:
 #prStats(list('Observations', c('Log','Likelihood'),
@@ -1106,7 +1086,7 @@ for(i in 1:p) {
     fil <- if(lang == 'latex') '~\\hfill ' else htmlSpecial('emsp')
 
     chisq <- specs$chisq()
-    
+
     trans <- rbind(
       'Dxy'        = c(latex = '$D_{xy}$',
                        html  = '<i>D</i><sub>xy</sub>'),
@@ -1155,7 +1135,7 @@ for(i in 1:p) {
                          '</span>'))
 
     )
-    
+
     for(i in 1 : p) {
       k <- names(w[[i]])
       for(j in 1 : length(k)) {
@@ -1176,7 +1156,7 @@ for(i in 1:p) {
       }
       z[1 : length(k), i] <- paste0(k, fil, w[[i]])
     }
-    
+
     al <- paste0('|', paste(rep('c|', p), collapse=''))
     if(lang == 'latex')
       w <- latexTabular(z, headings=labels, align=al, halign=al,
@@ -1224,7 +1204,7 @@ for(i in 1:p) {
 ## The last form causes B to be expanded into to two list elements
 ## named x1 and x2 and the name B is ignored
 ## reListclean(A=x[1], namesFrom=z) where z is only a 1 element vector will
-## still override namesFrom (literally) with names(z) if 
+## still override namesFrom (literally) with names(z) if
 ## Update 2023-04-23: new argument dec which is appended to resulting
 ## vector and has elements removed if elements are removed from main
 ## information due to NA or NULL
@@ -1245,7 +1225,7 @@ reListclean <- function(..., dec=NULL, na.rm=TRUE) {
   keep <- which(sapply(d, g))
   w    <- d[keep]
   if(length(dec)) dec <- dec[keep]
-  
+
   r <- list()
   nam <- names(w)
   i   <- 0
@@ -1284,7 +1264,7 @@ formatNP <- function(x, digits=NULL, pvalue=FALSE,
   f <- ifelse(is.na(x), '', f)
 
   if(! pvalue) return(f)
-  
+
   if(! length(digits)) stop('must specify digits if pvalue=TRUE')
   s <- ! is.na(x) & x < 10 ^ (-digits)
   if(any(s)) {
@@ -1316,7 +1296,7 @@ logLik.rms <- function(object, ...)
   }
 
 logLik.Gls <- function(object, ...) getS3method('logLik', 'gls')(object, ...)
-    
+
 AIC.rms <- function(object, ..., k=2, type=c('loglik','chisq'))
   {
     type <- match.arg(type)

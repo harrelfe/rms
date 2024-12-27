@@ -42,15 +42,17 @@
 	interval for quantiles will be computed using the delta method, if
 	\code{conf.int > 0} is specified to the function generated from calling
 	\code{Quantile} and you specify \code{X}.  In that case, a
-	\code{"lims"} attribute is included 
+	\code{"lims"} attribute is included
 	in the result computed by the derived quantile function.
 }
 \usage{
 orm(formula, data=environment(formula),
     subset, na.action=na.delete, method="orm.fit",
-    model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE, 
-    penalty=0, penalty.matrix, tol=1e-14, eps=5e-4, 
-    var.penalty=c('simple','sandwich'), scale=FALSE, \dots)
+    family="logistic",
+    model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE,
+    penalty=0, penalty.matrix,
+    var.penalty=c('simple','sandwich'), scale=FALSE,
+    maxit=30, weights, normwt=FALSE, \dots)
 
 \method{print}{orm}(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
     intercepts=x$non.slopes < 10, title, \dots)
@@ -64,7 +66,7 @@ fitting of a model such as \eqn{logit(Y=1) = X\beta + W}, where \eqn{W} is the
 offset variable having no estimated coefficient.
 The response variable can be any data type; \code{orm} converts it
 in alphabetic or numeric order to a factor variable and
-recodes it 1,2,\dots internally. 
+recodes it 1,2,\dots internally.
 }
 \item{data}{
 data frame to use. Default is the current frame.
@@ -77,11 +79,20 @@ observations to analyze
 function to handle \code{NA}s in the data. Default is \code{na.delete}, which
 deletes any observation having response or predictor missing, while
 preserving the attributes of the predictors and maintaining frequencies
-of deletions due to each variable in the model.  
+of deletions due to each variable in the model.
 This is usually specified using \code{options(na.action="na.delete")}.
 }
 \item{method}{
 name of fitting function. Only allowable choice at present is \code{orm.fit}.
+}
+\item{family}{
+specifies the distribution family, corresponding to logistic (the
+	default), Gaussian, Cauchy, Gumbel maximum (\eqn{exp(-exp(-x))};
+	extreme value type I), and Gumbel minimum
+	(\eqn{1-exp(-exp(x))}) distributions.  These are the cumulative
+	distribution functions assumed for \eqn{Prob[Y \ge y | X]}.  The
+	\code{family} argument can be an unquoted or a quoted string,
+	e.g. \code{family=loglog} or \code{family="loglog"}.
 }
 \item{model}{
 causes the model frame to be returned in the fit object
@@ -106,17 +117,22 @@ intercept is used.
 }
 \item{penalty}{see \code{\link{lrm}}}
 \item{penalty.matrix}{see \code{\link{lrm}}}
-\item{tol}{singularity criterion (see \code{orm.fit})}
-\item{eps}{difference in \eqn{-2 log} likelihood for declaring convergence}
 \item{var.penalty}{see \code{\link{lrm}}}
 \item{scale}{set to \code{TRUE} to subtract column means and divide by
 	column standard deviations of the design matrix
   before fitting, and to back-solve for the un-normalized covariance
   matrix and regression coefficients.  This can sometimes make the model
-	converge for very large 
+	converge for very large
   sample sizes where for example spline or polynomial component
   variables create scaling problems leading to loss of precision when
   accumulating sums of squares and crossproducts.}
+\item{maxit}{maximum number of iterations to allow in \code{orm.fit}}
+\item{weights}{a vector (same length as \code{y}) of possibly fractional case weights}
+\item{normwt}{
+ set to \code{TRUE} to scale \code{weights} so they sum to the length of
+ \code{y}; useful for sample surveys as opposed to the default of
+ frequency weighting
+ }
 \item{\dots}{arguments that are passed to \code{orm.fit}, or from
     \code{print}, to \code{\link{prModFit}}.  Ignored for
 		\code{Quantile}.  One of the most important arguments is \code{family}.}
@@ -166,7 +182,7 @@ the marginal median).
 In the case of penalized estimation, the \code{"Model L.R."} is computed
 without the penalty factor, and \code{"d.f."} is the effective d.f. from
 Gray's (1992) Equation 2.9.  The \eqn{P}-value uses this corrected model
-L.R. \eqn{\chi^2}{chi-square} and corrected d.f. 
+L.R. \eqn{\chi^2}{chi-square} and corrected d.f.
 The score chi-square statistic uses first derivatives which contain
 penalty components.
 }
@@ -221,7 +237,7 @@ Department of Biostatistics, Vanderbilt University
 \references{
 Sall J: A monotone regression smoother based on ordinal cumulative
 logistic regression, 1991.
-	
+
 Le Cessie S, Van Houwelingen JC: Ridge estimators in logistic regression.
 Applied Statistics 41:191--201, 1992.
 

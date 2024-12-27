@@ -1,11 +1,11 @@
-bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE, 
-                    loglik=FALSE, pr=FALSE, maxit=15, eps=.0001,
+bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
+                    loglik=FALSE, pr=FALSE,
                     group=NULL, stat=NULL, seed=sample(10000, 1), ...) {
 
   coxcph <- inherits(fit,'coxph') || inherits(fit,'cph')
 
   nfit <- class(fit)[1]
-  
+
   if(length(fit$weights) && (coxcph || nfit[1] == 'Rq'))
     stop('does not handle weights')
 
@@ -20,7 +20,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     fixed <- fit$fixed   #psm only
     fixed <- if(length(fixed) == 1 && is.logical(fixed) && !fixed) list()
     else list(scale=TRUE)
-    
+
     fixed <-  NULL
     dist <-   fit$dist
     parms <-  fit$parms
@@ -37,45 +37,44 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
 
   ## See if ordinal regression being done
   ordinal <- nfit == 'orm' || (nfit == 'lrm' && length(unique(Y)) > 2)
-    
+
   penalty.matrix <- fit$penalty.matrix
 
   if(missing(fitter)) {
     fitter <-
       switch(nfit,
              ols=if(length(penalty.matrix)) {
-               function(x, y, penalty.matrix,...) {
+               function(x, y, penalty.matrix, strata, ytarget, ...) {
                  lm.pfit(cbind(Intercept=1., x), y,
                          penalty.matrix=penalty.matrix,
                          tol=1e-11, regcoef.only=TRUE)
                }
              }
-             else function(x, y, ...) {
-               lm.fit.qr.bare(x, y, tolerance=1e-11, intercept=TRUE)
-             }, 
-             lrm=function(x, y, maxit=15, eps=.0001, penalty.matrix, strata, ytarget, ...) {
-               lrm.fit(x, y, maxit=maxit, eps=eps,
-                       penalty.matrix=penalty.matrix, ...)
-             }, 
-             cph=function(x, y, strata=NULL, maxit=15, eps=.0001,...) {
-               coxphFit(x, y, strata=strata, iter.max=maxit, 
-                        eps=eps, method="efron", toler.chol=1e-11, type='right')
+             else function(x, y, strata, ytarget, penalty.matrix, ...) {
+               lm.fit.qr.bare(x, y, intercept=TRUE)
              },
-             psm=function(x, y, maxit=15,...) {
+             lrm=function(x, y, penalty.matrix, strata, ytarget, ...) {
+               lrm.fit(x, y,
+                       penalty.matrix=penalty.matrix, compvar=FALSE, compstats=FALSE, ...)
+             },
+             cph=function(x, y, strata=NULL, ytarget, penalty.matrix, ...) {
+               coxphFit(x, y, strata=strata,
+                        method="efron", type='right', ...)
+             },
+             psm=function(x, y, strata, ytarget, penalty.matrix, ...) {
                survreg.fit2(x, y, dist=dist, parms=parms, fixed=fixed,
-                            offset=NULL, init=NULL, maxiter=maxit)
+                            offset=NULL, init=NULL, ...)
              },
-             bj=function(x, y, maxit=15, eps=.0001, ...) {
-               bj.fit(x, y, control=list(iter.max=maxit, eps=eps))
+             bj=function(x, y, strata, ytarget, penalty.matrix, ...) {
+               bj.fit(x, y, ...)
              },
-             Glm=function(x, y, ...) {
-               glm.fit(cbind(1., x), as.vector(y), family=fitFamily)
+             Glm=function(x, y, strata, ytarget, penalty.matrix, ...) {
+               glm.fit(cbind(1., x), as.vector(y), family=fitFamily, ...)
              },
              Rq=RqFit(fit, wallow=FALSE),
-             orm=function(x, y, maxit=14L, eps=.005, tol=1e-7,
-               ytarget=NULL, ...) {
+             orm=function(x, y, ytarget=NULL, strata, ...) {
                f <- orm.fit(x, y, family=fitFamily,
-                            maxit=maxit, eps=eps, tol=tol)
+                            compstats=FALSE, compvar=FALSE, ...)
                ns  <- f$non.slopes
                cof <- f$coefficients
                if(length(ytarget)) {
@@ -99,9 +98,9 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
                f
              })
   }
-  
+
   if(!length(fitter)) stop("fitter not valid")
-  
+
   if(loglik)
     {
       oosl <- switch(nfit,
@@ -110,15 +109,15 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
                      cph=oos.loglik.cph,
                      psm=oos.loglik.psm,
                      Glm=oos.loglik.Glm)
-      
+
       if(!length(oosl))
         stop('loglik=TRUE but no oos.loglik method for model in rmsMisc')
-      
+
       Loglik <- double(B+1)
       Loglik[B+1] <- oosl(fit)
     }
   else Loglik <- NULL
-  
+
   n     <- nrow(X)
   cof   <- fit$coefficients
   if(nfit == 'orm') {
@@ -172,19 +171,19 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     #### CHANGE TO FILL IN ONLY INTERCEPTS
     c(rev(fillInTheBlanks(rev(ints))), cof[-(1L : nc)])
   }
-    
+
   bar <- rep(0, p)
   cov <- matrix(0, nrow=p, ncol=p, dimnames=list(vname,vname))
   if(coef.reps) coefs <- matrix(NA, nrow=B, ncol=p, dimnames=list(NULL,vname))
   if(length(stat)) stats <- numeric(B)
-  
+
   Y <- as.matrix(if(is.factor(Y)) unclass(Y) else Y)
   ny <- ncol(Y)
 
   Strata <- fit$strata
-  
+
   nac <- fit$na.action
-  
+
   if(length(group)) {
     if(length(group) > n) {
       ## Missing observations were deleted during fit
@@ -193,7 +192,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
         group <- group[j]
       }
     }
-    
+
     if(length(group) != n)
       stop('length of group does not match # rows used in fit')
 
@@ -211,7 +210,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     pb <- setPb(B, type='Boot', onlytk=!pr, every=20)
     for(i in 1:B) {
       pb(i)
-      
+
       if(ngroup) {
         j <- integer(n)
         for(si in 1L : ngroup) {
@@ -220,19 +219,19 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
         }
       }
       else j <- sample(1L : n, n, replace=TRUE)
-      
+
       ## Note: If Strata is NULL, NULL[j] is still NULL
-      
-        f <- tryCatch(fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE], maxit=maxit, 
-                           eps=eps, ytarget=ytarget,
+
+        f <- tryCatch(fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE],
+                           ytarget=ytarget,
                            penalty.matrix=penalty.matrix, strata=Strata[j], ...),
                     error=function(...) list(fail=TRUE))
-      if(length(f$fail) && f$fail) next  
-          
+      if(length(f$fail) && f$fail) next
+
       cof <- f$coefficients
       if(any(is.na(cof))) next   # glm
       b <- b + 1L
-          
+
       if(sc.pres) cof <- c(cof, 'log scale' = log(f$scale))
 
       ## Index by names used since some intercepts may be missing in a
@@ -242,13 +241,13 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       if(ordinal) cof <- fill(cof, vname, ns)
       if(any(is.infinite(cof))) anyinf <- TRUE
       if(coef.reps) coefs[b,] <- cof
-      
+
       if(length(stat)) stats[b] <- f$stats[stat]
-      
+
       bar <- bar + cof
       cof <- as.matrix(cof)
       cov <- cov + cof %*% t(cof)
-      
+
       if(loglik) Loglik[b] <- oosl(f, matxv(X,cof), Y)
     }
   }
@@ -261,24 +260,24 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
         cluster <- cluster[j]
       }
     }
-    
+
     if(length(cluster) != n)
       stop("length of cluster does not match # rows used in fit")
-    
+
     if(any(is.na(cluster))) stop("cluster contains NAs")
-    
+
     cluster <- as.character(cluster)
-    
+
     clusters <- unique(cluster)
     nc <- length(clusters)
     Obsno <- split(1:n, cluster)
-    
+
     b <- 0
     pb <- setPb(B, type='Boot', onlytk=!pr, every=20)
 
     for(i in 1L : B) {
       pb(i)
-      
+
       ## Begin addition Bill Pikounis
       if(ngroup) {
         j <- integer(0L)
@@ -299,32 +298,32 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
         j <- sample(clusters, nc, replace=TRUE)
         obs <- unlist(Obsno[j])
       }
-      
-      f <- tryCatch(fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE], 
-                           maxit=maxit, eps=eps, ytarget=ytarget,
+
+      f <- tryCatch(fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE],
+                           ytarget=ytarget,
                            penalty.matrix=penalty.matrix,
                            strata=Strata[obs], ...),
                     error=function(...) list(fail=TRUE))
       if(length(f$fail) && f$fail) next
-      
+
       cof <- f$coefficients
       if(any(is.na(cof))) next  # glm
       b <- b + 1L
-          
+
       if(sc.pres) cof <- c(cof, 'log scale' = log(f$scale))
-      
+
       cof <- fill(cof, vname, ns)
       if(any(is.infinite(cof))) anyinf <- TRUE
       if(coef.reps)    coefs[b,] <- cof
       if(length(stat)) stats[b] <- f$stats[stat]
-      
+
       bar <- bar + cof
       cof <- as.matrix(cof)
       cov <- cov + cof %*% t(cof)
       if(loglik) Loglik[b] <- oosl(f, matxv(X,cof), Y)
     }
   }
-  
+
   if(b < B) {
     warning(paste('fit failure in',B-b,
                   'resamples.  Might try increasing maxit'))
@@ -332,16 +331,16 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     Loglik <- Loglik[1L : b]
   }
   if(nfit == 'orm') attr(coefs, 'intercepts') <- iref
-  
+
   if(anyinf) warning('at least one resample excluded highest Y values, invalidating bootstrap covariance matrix estimate')
-  
+
   bar           <- bar / b
   fit$B         <- b
   fit$seed      <- seed
   names(bar)    <- vname
   fit$boot.coef <- bar
   if(coef.reps) fit$boot.Coef <- coefs
-  
+
   bar <- as.matrix(bar)
   cov <- (cov - b * bar %*% t(bar)) / (b - 1L)
   fit$orig.var <- fit$var
@@ -359,7 +358,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   fit$clusterInfo <- clusterInfo
   fit
 }
-  
+
 bootplot <- function(obj, which=1 : ncol(Coef), X,
                      conf.int=c(.9,.95,.99),
                      what=c('density', 'qqnorm', 'box'),
@@ -385,11 +384,11 @@ bootplot <- function(obj, which=1 : ncol(Coef), X,
     qoi <- t(Coef)
     nns <- num.intercepts(obj)
     if(missing(labels.)) {
-      labels. <- paste(ifelse(which > nns, 'Coefficient of ', ''), 
+      labels. <- paste(ifelse(which > nns, 'Coefficient of ', ''),
                        dimnames(Coef)[[2]], sep='')
     }
   }
-  
+
   nq   <- nrow(qoi)
   qoi  <- fun(qoi)
   quan <- NULL
@@ -422,7 +421,7 @@ bootplot <- function(obj, which=1 : ncol(Coef), X,
       qqline(qoi[j,])
     }
   }
-  
+
   invisible(list(qoi=drop(qoi), quantiles=drop(quan)))
 }
 
@@ -439,7 +438,7 @@ histdensity <- function(y, xlab, nclass, width, mult.width=1, ...) {
   }
 
   if(missing(nclass)) nclass <- (logb(length(y),base=2)+1)*2
-  
+
   hist(y, nclass=nclass, xlab=xlab, probability=TRUE, ...)
   if(missing(width)) {
     nbar <- logb(length(y), base = 2) + 1
@@ -451,10 +450,10 @@ histdensity <- function(y, xlab, nclass, width, mult.width=1, ...) {
 }
 
 
-confplot <- function(obj, X, against, 
+confplot <- function(obj, X, against,
                      method=c('simultaneous', 'pointwise'),
                      conf.int=0.95,
-                     fun=function(x) x, 
+                     fun=function(x) x,
                      add=FALSE, lty.conf=2, ...) {
 
   method <- match.arg(method)
@@ -462,11 +461,11 @@ confplot <- function(obj, X, against,
 
   boot.Coef <- obj$boot.Coef
   if(length(boot.Coef) == 0) stop('did not specify "coef.reps=TRUE" to bootcov')
-  
+
   if(!is.matrix(X)) X <- matrix(X, nrow=1)
-  
+
   fitted <- fun(matxv(X, obj$coefficients))
-  
+
   if(method == 'pointwise') {
     pred <- matxv(X, boot.Coef, bmat=TRUE)   ## n x B
     p <- fun(apply(pred, 1, quantile,
@@ -479,7 +478,7 @@ confplot <- function(obj, X, against,
     boot.Coef <- rbind(boot.Coef, obj$coefficients)
     loglik    <- obj$boot.loglik
     if(length(loglik) == 0) stop('did not specify "loglik=TRUE" to bootcov')
-    
+
     crit  <- quantile(loglik, conf.int, na.rm=TRUE)
     qual  <- loglik <= crit
     boot.Coef <- boot.Coef[qual,,drop=FALSE]
@@ -488,14 +487,14 @@ confplot <- function(obj, X, against,
     lower  <- fun(apply(pred, 1, min))
     pred   <- fun(pred)
   }
-  
+
   if(!missing(against)) {
     lab <- label(against)
     if(lab == '') lab <- (as.character(sys.call())[-1])[3]
-    
+
     if(add) lines(against, fitted, ...)
     else plot(against, fitted, xlab=lab, type='l', ...)
-    
+
     lines(against, lower, lty=lty.conf)
     lines(against, upper, lty=lty.conf)
   }

@@ -139,7 +139,7 @@ y-axis label, default is \code{"Actual Probability"} for
 limits for both x and y axes  
 }
 \item{m}{
-If grouped proportions are desired, average no. observations per group
+If grouped proportions are desired, minimum no. observations per group
 }
 \item{g}{
 If grouped proportions are desired, number of quantile groups

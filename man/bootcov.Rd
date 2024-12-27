@@ -81,7 +81,7 @@ A comprehensive example demonstrates the use of all of the functions.
 \usage{
 bootcov(fit, cluster, B=200, fitter, 
         coef.reps=TRUE, loglik=FALSE,
-        pr=FALSE, maxit=15, eps=0.0001, group=NULL, stat=NULL,
+        pr=FALSE, group=NULL, stat=NULL,
         seed=sample(10000, 1), ...)
 
 
@@ -152,8 +152,6 @@ the -2 log likelihood for the original model fit.
 \item{pr}{
 set to \code{TRUE} to print the current sample number to monitor progress.
 }
-\item{maxit}{maximum number of iterations, to pass to \code{fitter}}
-\item{eps}{argument to pass to various fitters}
 \item{group}{
 a grouping variable used to stratify the sample upon bootstrapping.
 This allows one to handle k-sample problems, i.e., each bootstrap
@@ -192,7 +190,7 @@ a vector of labels for labeling the axes in plots produced by \code{bootplot}.
 Default is row names of \code{X} if there are any, or sequential integers.
 }
 \item{\dots}{
-For \code{bootcov}, extra arguments to pass to \code{lrm.fit} for logistic models.
+For \code{bootcov}, extra arguments to pass to any of the fitting functions.
 For \code{bootplot} these are optional arguments passed to
 \code{histdensity}.  Also may be optional arguments passed to
 \code{plot} by \code{confplot} or optional arguments passed to

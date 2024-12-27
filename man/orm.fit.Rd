@@ -7,15 +7,16 @@
 	intercepts by capitalizing on the information matrix being sparse.
 	Five different distribution functions are implemented, with the
 	default being the logistic (yielding the proportional odds
-	model).  Penalized estimation will be implemented in the future.
-	Weights are not implemented.
+	model).  Penalized estimation and weights are also implemented, as in `[lrm.fit()]`.
   The optimization method is Newton-Raphson with step-halving.
 	Execution time is linear in the number of intercepts.
 }
 \usage{
-orm.fit(x=NULL, y, family='logistic',
-        offset=0., initial,  maxit=30L, eps=5e-4, tol=1e-14, trace=FALSE,
-        penalty.matrix=NULL, scale=FALSE, y.precision = 7)
+orm.fit(x=NULL, y, family=c("logistic","probit","loglog","cloglog","cauchit"),
+        offset, initial,  maxit=30L, eps=5e-4, gradtol=0.001, abstol=1e10, 
+        minstepsize=0.01, tol=1e-14, trace=FALSE,
+        penalty.matrix=NULL, weights=NULL, normwt=FALSE, scale=FALSE,
+        inclpen=TRUE, y.precision = 7, compvar=TRUE, compstats=TRUE)
 }
 \arguments{
 \item{x}{
@@ -25,7 +26,7 @@ design matrix with no column for an intercept
 response vector, numeric, factor, or character.  The ordering of levels
 is assumed from \code{factor(y)}.
 }
-\item{family}{the distribution family, corresponding to logistic (the
+\item{family}{a character value specifying the distribution family, corresponding to logistic (the
 	default), Gaussian, Cauchy, Gumbel maximum (\eqn{exp(-exp(-x))};
 	extreme value type I), and Gumbel minimum
 	(\eqn{1-exp(-exp(x))}) distributions.  These are the cumulative
@@ -34,11 +35,7 @@ is assumed from \code{factor(y)}.
 	e.g. \code{family=loglog} or \code{family="loglog"}.  To use
 	a built-in family, the string must be one of the following
 	corresponding to the previous list: \code{logistic, probit, loglog,
-		cloglog, cauchit}.  The user can also provide her own customized
-	family by setting \code{family} to a list with elements \code{cumprob,
-	inverse, deriv, deriv2}; see the body of \code{orm.fit} for examples.
-  An additional element, \code{name} must be given, which is a character
-  string used to name the family for \code{print} and \code{latex}.}
+		cloglog, cauchit}.}
 \item{offset}{optional numeric vector containing an offset on the logit scale}
 \item{initial}{vector of initial parameter estimates, beginning with the
 	intercepts.  If \code{initial} is not specified, the function computes
@@ -47,36 +44,40 @@ is assumed from \code{factor(y)}.
 \item{maxit}{maximum no. iterations (default=\code{30}).}
 \item{eps}{
 difference in \eqn{-2 log} likelihood for declaring convergence.
-Default is \code{.0005}.  If the \eqn{-2 log} likelihood gets
-worse by eps/10 while the maximum absolute first derivative of
-\preformatted{-2 log} likelihood is below 1E-9, convergence is still
-declared.  This handles the case where the initial estimates are MLEs,
+Default is \code{.0005}.  This handles the case where the initial estimates are MLEs,
 to prevent endless step-halving.
 }
+\item{gradtol}{maximum absolute gradient before convergence can be declared. \code{gradtol} is automatically scaled by n / 1000 since the gradient is proportional to the sample size.}
+\item{abstol}{maximum absolute change in parameter estimates from one iteration to the next before convergence can be declared; by default has no effect}
+\item{minstepsize}{used to specify when to abandon step-halving}
 \item{tol}{Singularity criterion. Default is 1e-14}
 \item{trace}{
 set to \code{TRUE} to print -2 log likelihood, step-halving
-fraction, change in -2 log likelihood, and maximum absolute value of first
-derivative at each iteration.
+fraction, change in -2 log likelihood, maximum absolute value of first
+derivative, and max absolute change in parameter estimates at each iteration.
 }
 \item{penalty.matrix}{
-	a self-contained ready-to-use penalty matrix - see\code{lrm} 
+	a self-contained ready-to-use penalty matrix - see\code{lrm}
 }
+\item{weights}{a vector (same length as \code{y}) of possibly fractional case weights}
+\item{normwt}{set to \code{TRUE} to scale \code{weights} so they sum to \eqn{n}, the length of \code{y}; useful for sample surveys as opposed to the default of frequency weighting}
 \item{scale}{set to \code{TRUE} to subtract column means and divide by
 	column standard deviations of \code{x}
   before fitting, and to back-solve for the un-normalized covariance
   matrix and regression coefficients.  This can sometimes make the model
-	converge for very large 
+	converge for very large
   sample sizes where for example spline or polynomial component
   variables create scaling problems leading to loss of precision when
   accumulating sums of squares and crossproducts.}
+\item{inclpen}{set to \code{FALSE} to not include the penalty matrix in the Hessian when the Hessian is being computed on transformed \code{x}, vs. adding the penalty after back-transforming.  This should not matter.}
 \item{y.precision}{When \sQuote{y} is numeric, values may need to be rounded
 to avoid unpredictable behavior with \code{unique()} with floating-point
 numbers. Default is to 7 decimal places.}
+\item{compvar}{set to \code{FALSE} to prevent the calculation of the variance-covariance matrix.}
+\item{compstats}{set to \code{FALSE} to prevent the calculation of the vector of model statistics}
 }
-
 \value{
-a list with the following components:
+a list with the following components, not counting all the components produced by `orm.fit`:
 
 \item{call}{
 calling expression
@@ -114,7 +115,7 @@ intercept.
 }
 \item{family, trans}{see \code{\link{orm}}}
 \item{deviance}{
--2 log likelihoods. 
+-2 log likelihoods.
 When an offset variable is present, three
 deviances are computed: for intercept(s) only, for
 intercepts+offset, and for intercepts+offset+predictors.
@@ -139,8 +140,8 @@ fh@fharrell.com
   \code{\link{recode2integer}}
 }
 \examples{
-#Fit an additive logistic model containing numeric predictors age, 
-#blood.pressure, and sex, assumed to be already properly coded and 
+#Fit an additive logistic model containing numeric predictors age,
+#blood.pressure, and sex, assumed to be already properly coded and
 #transformed
 #
 # fit <- orm.fit(cbind(age,blood.pressure,sex), death)

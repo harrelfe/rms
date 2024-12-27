@@ -1,7 +1,7 @@
 #main.effect=F to suppress printing main effects when the factor in
 #question is involved in any interaction.
 
-anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-13, 
+anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-14,
                       test=c('F', 'Chisq', 'LR'),
                       india=TRUE, indnl=TRUE, ss=TRUE,
                       vnames=c('names', 'labels'),
@@ -13,7 +13,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-13,
 
   ava <- if(test == 'LR') function(idx) LRchunktest(object, idx, tol=tol, fitargs=fitargs)
             else function(idx) {
-              chisq <- coef[idx] %*% solvet(cov[idx, idx], coef[idx], tol=tol)
+              chisq <- coef[idx] %*% solve(cov[idx, idx], coef[idx], tol=tol)
               c(chisq, length(idx))
             }
 
@@ -25,9 +25,9 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-13,
     for(i in 1 : m)
       chisq[i] <- coef[i,, drop=FALSE] %*%
         solvet(co, t(coef[i,, drop=FALSE]), tol=tol)
-    
+
     if(! length(test)) return(chisq)   # Assumes stored in chisqT
-    
+
     ## variance explained by a variable/set of variables is
     ## approximated by the Wald chi-square
     ## pev = partial explained variation = chisq/(chisq for full model)
@@ -37,7 +37,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-13,
     ci <- rmsb::HPDint(pev[-m], cint)
     c(REV=pev[m], Lower=ci[1], Upper=ci[2], d.f.=length(test))
   }
-  
+
   obj.name <- as.character(sys.call())[2]
   vnames <- match.arg(vnames)
   posterior.summary <- match.arg(posterior.summary)
@@ -93,7 +93,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-13,
 
   ia <- at$interactions
   nia <- if(!length(ia)) 0 else ncol(ia)
-  
+
   assume <- at$assume.code
   parms  <- at$parms
   f      <- length(assume)
@@ -126,7 +126,7 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-13,
 
     if(test != 'LR' && ! length(object$coefficients))
         stop("estimates not available for Wald statistics")
-      
+
     coef <- object$coefficients
     cik  <- attr(coef, 'intercepts')
 #    }
@@ -136,12 +136,12 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-13,
 #      coef <- object$u
 #    }
   }
-  
+
 cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
 
   if(bayes) for(j in 1:length(assign))
         assign[[j]] <- assign[[j]] - nrp
- 
+
   else {
     ## Omit row/col for scale parameters
     ## Compute # intercepts nrpcoef to skip in testing
@@ -151,12 +151,12 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
       for(j in 1:length(assign))
         assign[[j]] <- assign[[j]] - nrpcoef
     }
-    
+
     nc <- length(coef)
   }
 
   dos <- if(bayes) eEV else ava
-  
+
   stats <- NULL
   lab   <- NULL
   W     <- vinfo <- list()
@@ -167,29 +167,29 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
   num.ia     <- 0
   num.nonlin <- 0
   issue.warn <- FALSE
-  
+
   for(i in which) {
     j <- assume[i]
     parmi <- parms[[name[i]]]
     low.fact <- if(j != 9) i else (parmi[,1])[parmi[,1] > 0]
-    
+
     nl <- if(!length(names(at$nonlinear))) at$nonlinear[[i]]
     else at$nonlinear[[name[i]]]
-    
+
     if(!length(nl))
       nl <- rep(FALSE, length(assign[[name[i]]]))
-    
+
     ## Factor no. according to model matrix is 1 + number of non-strata factors
     ## before this factor
     if(j != 8) {
       ##ignore strata
       jfact <- if(i==1) 1 else 1 + sum(assume[1 : (i - 1)] != 8)
-      
+
       main.index <- assign[[jfact + asso]]
       nonlin.ia.index <- NULL	#Should not have to be here. Bug in S?
       all.slopes[main.index] <- TRUE
       ni <- if(nia == 0) 0 else sum(ia == i)
-      
+
       if(nia==0) ni <- 0
       else
         for(k in 1:ncol(ia))
@@ -202,7 +202,7 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
         lab <- c(lab, namelab[i])
         vinfo[[s]] <- list(name=name[i], type='main effect')
       }
-      
+
       ## If term is involved in any higher order effect, get pooled test
       ## by adding in all high-order effects containing this term
       ## For 2nd order interaction, look for 3rd order interactions
@@ -219,28 +219,28 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
           if(!any(is.na(m))) {
             kfact <- if(k==1) 1 else
             1 + sum(assume[1:(k-1)] != 8)
-            
+
             idx <- assign[[kfact + asso]]
             ia.index <- c(ia.index, idx)
-            
+
             if(ncol(parmk)>1)
               for(jj in 1:length(m))
                 nonlin.ia.index <- c(nonlin.ia.index,
                                      idx[parmk[m[jj],-1] == 1])
-                    
+
             nonlin.ia.index <- if(length(nonlin.ia.index))
               unique(nonlin.ia.index)
             else NULL
             ##Highest order can be counted twice
           }
         }
-            
+
         idx <- c(main.index, ia.index)
         all.slopes[idx] <- TRUE
         w <- dos(idx)
         s <- s + 1; W[[s]] <- idx
         stats <- rbind(stats, w)
-        lab <- c(lab, paste(namelab[i], 
+        lab <- c(lab, paste(namelab[i],
                             " (Factor+Higher Order Factors)"))
         vinfo[[s]] <- list(name=name[low.fact],
                            type=if(j==9) 'interaction' else 'combined effect')
@@ -271,7 +271,7 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
                              type=if(j==9)
                              'nonlinear interaction' else 'nonlinear')
         }
-      } 
+      }
       ## If interaction factor involves a non-linear term from an
       ## expanded polynomial, lspline, rcspline, or scored factor,
       ## do tests to see if a simplification (linear interaction) is
@@ -281,7 +281,7 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
         all.ia[main.index] <- TRUE
         if(parmi[3,1] > 0)
           issue.warn <- TRUE
-        
+
         if(parmi[3,1] == 0 && ncol(parmi) > 1) {
           nonlin.x <- as.logical(parmi[1,2:ncol(parmi)])
           nonlin.y <- as.logical(parmi[2,2:ncol(parmi)])
@@ -289,7 +289,7 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
           nonlin.xandy <- nonlin.x & nonlin.y
           idx <- main.index[nonlin.xy]
           li <- length(idx)
-          
+
           if(li > 0) {
             num.nonlin <- num.nonlin+1
             all.nonlin[idx] <- TRUE
@@ -304,7 +304,7 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
             }
             idx <- main.index[nonlin.xandy]
             li <- length(idx)
-            
+
             if(indnl && li > 0) {
               w <- dos(idx)
               s <- s + 1
@@ -314,7 +314,7 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
               vinfo[[s]] <- list(name=name[low.fact],
                                  type='doubly nonlinear interaction')
             }
-            
+
             idx <- main.index[nonlin.x]
             li <- length(idx)
             if(indnl && (li > 0 & any(nonlin.x != nonlin.xy))) {
@@ -328,10 +328,10 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
                 list(name=name[low.fact],
                      type='nonlinear interaction in first variable')
             }
-            
+
             idx <- main.index[nonlin.y]
             li <- length(idx)
-            
+
             if(indnl && (li > 0 & any(nonlin.y != nonlin.xy))) {
               w <- dos(idx)
               s <- s + 1
@@ -396,7 +396,7 @@ cov <- vcov(object, regcoef.only=TRUE, intercepts='none')
   stats <- rbind(stats, w)
   lab <- c(lab, "TOTAL")
   vinfo[[s]] <- list(type='global')
-  
+
 statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
            else
              c('Chi-Square','d.f.')
@@ -406,9 +406,9 @@ statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
       sigma2 <- object$stats['Sigma']^2
       dfe    <- object$df.residual
     }
-    
+
     if(ss) {
-      stats <- cbind(stats[,2], stats[,1]*sigma2, stats[,1]*sigma2/stats[,2], 
+      stats <- cbind(stats[,2], stats[,1]*sigma2, stats[,1]*sigma2/stats[,2],
                      stats[,1])
       statnam <- c('d.f.', 'Partial SS', 'MS', 'Chi-Square')
       stats <- rbind(stats, Error=c(dfe, sigma2*dfe, sigma2, NA))
@@ -416,10 +416,10 @@ statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
       lab <- c(lab, 'ERROR')
       vinfo[[s]] <- list(type='error')
     }
-  
+
     j <- statnam == 'Chi-Square'
     dfreg <- stats[, statnam=='d.f.']
-    
+
     if(test == 'F') {
       stats[,j] <- stats[,j] / dfreg
       statnam[j] <- 'F'
@@ -428,7 +428,7 @@ statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
     }
     else
       stats <- cbind(stats,1 - pchisq(stats[,j], dfreg))
-    
+
     statnam <- c(statnam, 'P')
   }
 
@@ -436,7 +436,7 @@ statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
   attr(stats,'formula') <- formula(object)
   attr(stats,"obj.name") <- obj.name
   attr(stats,"class") <- c("anova.rms","matrix")
-  
+
   names(W) <- lab
   attr(stats, 'which') <- W
   attr(stats, 'test')  <- test
@@ -444,10 +444,10 @@ statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
   attr(stats,"non.slopes") <- nrp
   attr(stats,"vinfo")      <- vinfo
   attr(stats,"chisqBayes") <- chisqBayes
-  
-  if(issue.warn) 
+
+  if(issue.warn)
     warning("tests of nonlinear interaction with respect to single component \nvariables ignore 3-way interactions")
-  
+
   stats
 }
 
@@ -461,11 +461,11 @@ print.anova.rms <- function(x, which=c('none','subscripts',
   stats <- x
   digits <- c('Chi-Square'=2, F=2, 'd.f.'=0, 'Partial SS'=15, MS=15, P=4,
               REV=3, Lower=3, Upper=3)
-  cstats <- matrix('', nrow=nrow(stats), ncol=ncol(stats), 
+  cstats <- matrix('', nrow=nrow(stats), ncol=ncol(stats),
                    dimnames=dimnames(stats))
 
   bchi <- attr(stats, 'chisqBayes')
-  
+
   test <- attr(stats, 'test')
   if(! length(test)) test <- 'Chisq'   # for legacy fit objects
   if(test == 'LR')    test <- 'Likelihood Ratio'
@@ -473,7 +473,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 
   do.which <- which!='none' && length(W <- attr(stats,'which'))
   params <- NULL
-  
+
   if(do.which) {
     if(which=='subscripts')
       simplifyr <- function(x) {
@@ -482,7 +482,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
         ranges <- character(n)
         m <- 0
         s <- x
-        
+
         while(length(s) > 0) {
           j <- s == s[1] + (1:length(s))-1
           m <- m+1
@@ -493,7 +493,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 
         ranges[1:m]
       }
-  
+
     k <- length(W)
     w <- character(k)
     coef.names <- attr(stats,'coef.names')
@@ -524,17 +524,17 @@ print.anova.rms <- function(x, which=c('none','subscripts',
   if(lang != 'plain')
     return(latex.anova.rms(x, file='', table.env=table.env,
                            params=params, ...))
-  
+
   sn <- colnames(cstats)
-  
+
   for(j in 1:ncol(cstats))
     cstats[,j] <- format(round(stats[,j], digits[sn[j]]))
-  
+
   cstats[is.na(stats)] <- ''
   j <- sn=='P'
   cstats[stats[,j] < 0.00005,j] <- '<.0001'
   cstats <- cbind(rownames(stats), cstats)
-  
+
   dimnames(cstats) <- list(rep("",nrow(stats)),
                            c("Factor    ",colnames(stats)))
 
@@ -545,23 +545,23 @@ print.anova.rms <- function(x, which=c('none','subscripts',
              paste("                ",
                    if(any(colnames(stats) == 'F')) "Analysis of Variance"
                    else paste(test, "Statistics"),
-                   "          Response: ", 
+                   "          Response: ",
                    as.character(attr(stats, "formula")[2]), sep = "")
-  
+
   cat(heading,"\n\n")
   if(any(sn=='MS'))
     cstats[cstats[,1]=='TOTAL',1] <- 'REGRESSION'
-  
+
   if(do.which) cstats <- cbind(cstats, Tested=w)
-  
+
   print(cstats, quote=FALSE)
-  
+
   if(do.which && which!='names') {
     cat('\nSubscripts correspond to:\n')
     print(coef.names, quote=FALSE)
   }
-  
-  if(!any(sn=='MS') && length(dfe <- attr(stats,'df.residual'))) 
+
+  if(!any(sn=='MS') && length(dfe <- attr(stats,'df.residual')))
     cat('\nError d.f.:', dfe, '\n')
 
   if(length(bchi)) {
@@ -570,7 +570,7 @@ print.anova.rms <- function(x, which=c('none','subscripts',
         bchi['Central'], ' [', bchi['Lower'], ', ',
         bchi['Upper'], ']\n', sep='')
   }
-  
+
   invisible()
 }
 
@@ -584,24 +584,24 @@ latex.anova.rms <-
 
     ## params is only used if called from print.anova.rms
     ## It is not meant to be provided by the user in a latex. call
-    
+
     lang <- prType()
     html <- lang == 'html'
-    
+
     sn   <- colnames(object)
     rowl <- rownames(object)
     if(any(sn=='MS')) rowl[rowl=='TOTAL'] <- 'REGRESSION'
-    
+
     if(! html) rowl <- latexTranslate(rowl)
 
     specs <- markupSpecs[[lang]]
     bold  <- specs$bold
     math  <- specs$math
-    
+
     ## Translate interaction symbol (*) to times symbol
     ## rowl <- gsub('\\*', specs$times, rowl)   # changed * to $times$
     rowl <- gsub('*', specs$times, rowl, fixed=TRUE)
-  
+
     ## Put TOTAL rows in boldface
     rowl <- ifelse(substring(rowl, 1, 5) %in% c("REGRE", "ERROR", "TOTAL"),
                    bold(rowl), rowl)
@@ -611,10 +611,10 @@ latex.anova.rms <-
                  rowl) # preserve leading blank
 
     P <- object[,3]
-  
+
     dstats <- as.data.frame(object)
     attr(dstats, 'row.names') <- rowl
-    
+
     digits <- c('Chi-Square'=dec.chisq, F=dec.F, 'd.f.'=0,
                 'Partial SS'=dec.ss, MS=dec.ms, P=dec.P,
                 REV=dec.REV, Lower=dec.REV, Upper=dec.REV)
@@ -696,7 +696,7 @@ plot.anova.rms <-
            sort=c("descending","ascending","none"),
            margin=c('chisq', 'P'),
            pl=TRUE, trans=NULL, ntrans=40, height=NULL, width=NULL, ...) {
-    
+
     what <- match.arg(what)
     sort <- match.arg(sort)
     isbase <- Hmisc::grType() == 'base'
@@ -709,7 +709,7 @@ plot.anova.rms <-
     if(! length(xlab)) {
 
       xlab <-
-        if(isbase) 
+        if(isbase)
           switch(what,
                  chisq=expression(chi^2),
                  "proportion chisq"=expression(paste("Proportion of Overall", ~chi^2)),
@@ -733,17 +733,17 @@ plot.anova.rms <-
                  "proportion R2"='Proportion of Overall R<sup>2</sup>')
       }
     rm <- c(if(rm.totals) c("TOTAL NONLINEAR","TOTAL NONLINEAR + INTERACTION",
-                            "TOTAL INTERACTION","TOTAL"), 
+                            "TOTAL INTERACTION","TOTAL"),
             " Nonlinear"," All Interactions", "ERROR",
             " f(A,B) vs. Af(B) + Bg(A)", rm.other)
-    
+
     rn <- rownames(x)
     rm <- c(rm, rn[substring(rn, 2, 10) == "Nonlinear"])
     k <- !(rn %in% rm)
     if(rm.ia) k[grep("\\*", rn)] <- FALSE
-    
+
     an <- x[k,, drop=FALSE]
-    
+
     if(! isbase && ! length(height))
       height <- plotlyParm$heightDotchart(nrow(an))
 
@@ -771,11 +771,11 @@ plot.anova.rms <-
                       width=width, height=height)
       return(p)
       }
-    
+
     if(what %in% c("partial R2", "remaining R2", "proportion R2")) {
       if("Partial SS" %nin% colnames(x))
         stop('to plot R2 you must have an ols model and must not have specified ss=FALSE to anova')
-      
+
       sse <- x ['ERROR', 'Partial SS']
       ssr <- x ['TOTAL', 'Partial SS']
       pss <- an[, 'Partial SS']
@@ -784,7 +784,7 @@ plot.anova.rms <-
 
     dof <- an[, 'd.f.']
     P   <- an[, 'P']
-    
+
     if(any(colnames(an) == 'F')) {
       chisq    <- an[, 'F'] * dof
       totchisq <- x['TOTAL', 'F'] * x['TOTAL', 'd.f.']
@@ -803,10 +803,10 @@ plot.anova.rms <-
                 "remaining R2"  = (ssr - pss) / sst,
                 "proportion R2" = pss / ssr,
                 "proportion chisq" = chisq / totchisq)
-    
+
     if(missing(newnames))
       newnames <- sedit(names(w),"  (Factor+Higher Order Factors)", "")
-    
+
     names(w) <- newnames
     is <- switch(sort,
                 descending =  order(-w),
@@ -839,7 +839,7 @@ plot.anova.rms <-
         for(marg in margin) {
           aux <-
             if(isbase)
-              switch(marg, 
+              switch(marg,
                      chisq = list('chi^2', fn(chisq, 1)),
                      'proportion chisq' =
                        list('Proportion~chi^2', fn(chisq / totchisq, 2)),
@@ -848,7 +848,7 @@ plot.anova.rms <-
                      'partial R2' = list('Partial~R^2',       fn(pss / sst, 2)),
                      'proportion R2' = list('Proportion~R^2', fn(pss / ssr, 2)))
             else
-              switch(marg, 
+              switch(marg,
                      chisq = paste(htmlSpecs$chisq(dof), fn(chisq, 1)),
                      'proportion chisq' =
                        paste0('Proportion ', schisq, '=',
@@ -867,7 +867,7 @@ plot.anova.rms <-
             if(length(auxdata))
               auxdata  <- paste(auxdata,  aux[[2]], sep='  ')
             else auxdata  <- aux[[2]]
-          } else 
+          } else
             auxdata <- if(length(auxdata))
                          paste(auxdata, aux, sep=paste0(nbsp,nbsp))
                        else

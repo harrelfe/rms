@@ -9,12 +9,12 @@ lrm.fit(
   y,
   offset = 0,
   initial,
-  opt_method = c("NR", "nlminb", "glm.fit", "nlm", "BFGS", "L-BFGS-B", "CG",
+  opt_method = c("NR", "nlminb", "LM", "glm.fit", "nlm", "BFGS", "L-BFGS-B", "CG",
     "Nelder-Mead"),
   maxit = 50,
   reltol = 1e-10,
-  abstol = if (opt_method == "NR") 1e+10 else 0,
-  gradtol = if (opt_method == "NR") 0.001 else 1e-05,
+  abstol = if (opt_method \%in\% c("NR", "LM")) 1e+10 else 0,
+  gradtol = if (opt_method \%in\% c("NR", "LM")) 0.001 else 1e-05,
   factr = 1e+07,
   eps = 5e-04,
   minstepsize = 0.01,
@@ -43,6 +43,7 @@ lrm.fit(
 \item{opt_method}{optimization method, with possible values
 \itemize{
 \item \code{'NR'} : the default, standard Newton-Raphson iteration using the gradient and Hessian, with step-helving.  All three convergence criteria of \verb{eps, gradtol, abstol} must be satisfied.  Relax some of these if you do not want to consider some of them at all in judging convergence.  The defaults for the various tolerances for \code{NR} result in convergence being mainly judged by \code{eps} in most uses.  Tighten the non-\code{eps} parameters to give more weight to the other criteria.
+\item \code{'LM'} : the Levenberg-Marquardt method, with the same convergence criteria as \code{'NR'}
 \item \code{'nlminb'} : a quasi-Newton method using \code{\link[stats:nlminb]{stats::nlminb()}} which uses gradients and the Hessian.  This is a fast and robust algorithm.
 \item \code{'glm.fit'} : for binary \code{y} without penalization only
 \item \code{'nlm'} : see \code{\link[stats:nlm]{stats::nlm()}}; not highly recommended
@@ -58,7 +59,7 @@ lrm.fit(
 
 \item{abstol}{used by \code{NR} (maximum absolute change in parameter estimates from one iteration to the next before convergence can be declared; by default has no effect), \code{nlminb} (by default has no effect; see \code{abs.tol} argument; set to e.g. 0.001 for \code{nlminb} when there is complete separation)}
 
-\item{gradtol}{used by \code{NR} (maximuma absolute gradient before convergence can be declared) and \code{nlm} (similar but for a scaled gradient)}
+\item{gradtol}{used by \code{NR} and \code{LM} (maximum absolute gradient before convergence can be declared) and \code{nlm} (similar but for a scaled gradient).  For \code{NR} and \code{LM} \code{gradtol} is multiplied by the the sample size / 1000.}
 
 \item{factr}{see \code{\link[stats:optim]{stats::optim()}} documentation for \code{L-BFGS-B}}
 
@@ -146,7 +147,7 @@ When there is complete separation (Hauck-Donner condition), i.e., the MLE of a c
 # blood.pressure, and sex, assumed to be already properly coded and
 # transformed
 
-fit <- lrm.fit(cbind(age,blood.pressure,sex), death)
+fit <- lrm.fit(cbind(age,blood.pressure,sex=='male'), death)
 }
 }
 \seealso{

@@ -34,7 +34,7 @@ groupkm <- function(x, Srv, m=50, g,
   else
     if(!missing(g)) q <- cut2(x, g=g)
   else
-    q <- cut2(x, m=m)
+    q <- cutGm(x, m=m, what='factor')
   if(any(table(q) < 2)) warning('one interval had < 2 observations')
 
   q <- unclass(q)  #need integer

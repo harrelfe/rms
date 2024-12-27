@@ -133,7 +133,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
       leg <- c(leg, "Nonparametric")
     }
     if(! missing(m) | ! missing(g) | ! missing(cuts)) {
-           if(! missing(m))    q <- cut2(p, m=m, levels.mean=TRUE, digits=7)
+           if(! missing(m))    q <- cutGn(p, m=m)
       else if(! missing(g))    q <- cut2(p, g=g, levels.mean=TRUE, digits=7)
       else if(! missing(cuts)) q <- cut2(p, cuts=cuts, levels.mean=TRUE,
                                         digits=7)

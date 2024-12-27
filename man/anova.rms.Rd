@@ -62,7 +62,7 @@ depending on \code{options(prType=)}.  For
 \code{html.anova.rms} just calls \code{latex.anova.rms}.
 }
 \usage{
-\method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-13,
+\method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-14,
       test=c('F','Chisq','LR'), india=TRUE, indnl=TRUE, ss=TRUE,
       vnames=c('names','labels'),
       posterior.summary=c('mean', 'median', 'mode'), ns=500, cint=0.95,
@@ -179,8 +179,8 @@ a list of other predictor names to omit from the chart
 \item{newnames}{
 a list of substitute predictor names to use, after omitting any.
 }
-\item{sort}{default is to sort bars in descending order of the summary statistic. 
-Available options: 'ascending', 'descending', 'none'. 
+\item{sort}{default is to sort bars in descending order of the summary statistic.
+Available options: 'ascending', 'descending', 'none'.
 }
 \item{margin}{set to a vector of character strings to write text for
 	selected statistics in the right margin of the dot chart.  The

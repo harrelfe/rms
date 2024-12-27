@@ -12,6 +12,7 @@
 #' @param initial vector of initial parameter estimates, beginning with the intercepts
 #' @param opt_method optimization method, with possible values
 #'   * `'NR'` : the default, standard Newton-Raphson iteration using the gradient and Hessian, with step-helving.  All three convergence criteria of `eps, gradtol, abstol` must be satisfied.  Relax some of these if you do not want to consider some of them at all in judging convergence.  The defaults for the various tolerances for `NR` result in convergence being mainly judged by `eps` in most uses.  Tighten the non-`eps` parameters to give more weight to the other criteria.
+#'   * `'LM'` : the Levenberg-Marquardt method, with the same convergence criteria as `'NR'`
 #'   * `'nlminb'` : a quasi-Newton method using [stats::nlminb()] which uses gradients and the Hessian.  This is a fast and robust algorithm.
 #'   * `'glm.fit'` : for binary `y` without penalization only
 #'   * `'nlm'` : see [stats::nlm()]; not highly recommended
@@ -22,7 +23,7 @@
 #' @param maxit maximum number of iterations allowed, which means different things for different `opt_method`.  For `NR` it is the number of updates to parameters not counting step-halving steps.  When `maxit=1`, `initial` is assumed to contain the maximum likelihood estimates already, and those are returned as `coefficients`, along with `u`, `info.matrix` (negative Hessian) and `deviance`.  If `compvar=TRUE`, the `var` matrix is also returned, and `stats` are only computed if `compstats` is explicitly set to `TRUE` by the user.
 #' @param reltol used by `BFGS`, `nlminb`, `glm.fit` to specify the convergence criteria in relative terms with regard to -2 LL, i.e., convergence is assume when one minus the fold-change falls below `reltol`
 #' @param abstol used by `NR` (maximum absolute change in parameter estimates from one iteration to the next before convergence can be declared; by default has no effect), `nlminb` (by default has no effect; see `abs.tol` argument; set to e.g. 0.001 for `nlminb` when there is complete separation)
-#' @param gradtol used by `NR` (maximuma absolute gradient before convergence can be declared) and `nlm` (similar but for a scaled gradient)
+#' @param gradtol used by `NR` and `LM` (maximum absolute gradient before convergence can be declared) and `nlm` (similar but for a scaled gradient).  For `NR` and `LM` `gradtol` is multiplied by the the sample size / 1000.
 #' @param factr see [stats::optim()] documentation for `L-BFGS-B`
 #' @param eps difference in -2 log likelihood for declaring convergence with `opt_method='NR'`.  At present, the old `lrm.fit` approach of still declaring convergence even if the -2 LL gets worse by `eps/10` while the maximum absolute gradient is below 1e-9 is not implemented.  This handles the case where the initial estimates are actually MLEs, and prevents endless step-halving.
 #' @param minstepsize used with `opt_method='NR'` to specify when to abandon step-halving
@@ -85,16 +86,17 @@
 #' # blood.pressure, and sex, assumed to be already properly coded and
 #' # transformed
 #'
-#' fit <- lrm.fit(cbind(age,blood.pressure,sex), death)
+#' fit <- lrm.fit(cbind(age,blood.pressure,sex=='male'), death)
 #' }
 #' @seealso [lrm()], [stats::glm()], [cr.setup()], [gIndex()], [stats::optim()], [stats::nlminb()], [stats::nlm()],[stats::glm.fit()], [recode2integer()], [Hmisc::qrxcenter()]
-#' 
+#'
 lrm.fit <-
   function(x, y, offset = 0, initial,
-    opt_method = c('NR', 'nlminb', 'glm.fit', 'nlm', 'BFGS', 'L-BFGS-B', 'CG', 'Nelder-Mead'),
+    opt_method = c('NR', 'nlminb', 'LM', 'glm.fit', 'nlm', 'BFGS', 'L-BFGS-B',
+      'CG', 'Nelder-Mead'),
     maxit   = 50, reltol = 1e-10,
-    abstol  = if(opt_method=='NR') 1e10 else 0e0,
-    gradtol = if(opt_method=='NR') 1e-3 else 1e-5,
+    abstol  = if(opt_method %in% c('NR', 'LM')) 1e10 else 0e0,
+    gradtol = if(opt_method %in% c('NR', 'LM')) 1e-3 else 1e-5,
     factr = 1e7, eps = 5e-4,
     minstepsize = 1e-2, trace = 0,
     tol = 1e-14, penalty.matrix = NULL, weights = NULL, normwt = FALSE,
@@ -209,7 +211,7 @@ lrm.fit <-
       stop(paste("penalty.matrix does not have", p, "rows and columns"))
     storage.mode(penalty.matrix) <- 'double'
   }
-  else 
+  else
     penalty.matrix <- matrix(0e0, nrow=0, ncol=0)
 
   cont <- switch(opt_method,
@@ -277,7 +279,7 @@ lrm.fit <-
   mle <- function(p, init) {
 
     if(opt_method == 'NR') {
-      opt <- newtonr(init, logl, grad, Hess,
+      opt <- newtonr(init, logl, grad, Hess, n,
                      objtol      = eps,
                      gradtol     = gradtol,
                      paramtol    = abstol,
@@ -300,6 +302,24 @@ lrm.fit <-
         # transformations) if inclpen is FALSE.
 
         it  <- opt$iter
+      }
+    }
+    else if(opt_method == 'LM') {
+      opt <- levenberg_marquardt(init, logl, grad, Hess, n,
+                     objtol      = eps,
+                     gradtol     = gradtol,
+                     paramtol    = abstol,
+                     tolsolve    = tol,
+                     maxit       = maxit,
+                     trace       = trace)
+      con <- opt$code
+      ok  <- con == 0
+      if(ok) {
+        ll   <- opt$obj
+        cof  <- opt$param
+        gr   <- -0.5 * opt$grad
+        info <- 0.5 * Hess(cof)
+        it   <- opt$iter
       }
     }
     else if(opt_method == 'nlm') {
@@ -502,7 +522,7 @@ lrm.fit <-
   if(length(R))       dimnames(R)    <- dimnames(Ri) <- list(xname, xname)
 
   if(p == 0) lpmid <- initial[ymed] + offset     # initial is defined at Pt A or Pt B above
- 
+
   retlist <-
      list(call              = cal,
           freq              = numy,
@@ -535,16 +555,18 @@ lrm.fit <-
 # The Hessian needs to be computed by the user on the
 # final param values after newtonr completes
 
-newtonr <- function(init, obj, grad, hessian,
+newtonr <- function(init, obj, grad, hessian, n,
                     objtol = 5e-4, gradtol = 1e-5, paramtol = 1e-5,
                     minstepsize = 1e-2,
-                    tolsolve=1e-7, maxit = 100, trace=0) {
+                    tolsolve=1e-7, maxit = 30, trace=0) {
 
   m <- function(x) max(abs(x))
 
   theta  <- init # Initialize the parameter vector
   oldobj <- 1e10
   objf   <- obj(theta)
+
+  gradtol <- gradtol * n / 1000.
 
   for (iter in 1:maxit) {
     gradient <- grad(theta)     # Compute the gradient vector
@@ -562,12 +584,19 @@ newtonr <- function(init, obj, grad, hessian,
     step_size <- 1                # Initialize step size for step-halving
 
     # Step-halving loop
-    while (step_size > minstepsize) {
+    while (TRUE) {
       new_theta <- theta - step_size * delta # Update parameter vector
       objfnew <- obj(new_theta)
+      if(trace > 1) cat('Old - new -2LL:', objf - objfnew, '\n')
       if (objfnew > objf + 1e-6) {     # Objective function failed to be reduced
         step_size <- step_size / 2e0         # Reduce the step size
         if(trace > 0) cat('Step size reduced to', step_size, '\n')
+        if(step_size <= minstepsize) {
+          msg <- paste('Step size ', step_size, ' has reduced below minstepsize=',
+                        minstepsize,
+                        'without improving log likelihood; fitting stopped')
+          return(list(code=1, message=msg)) 
+        }             
       } else {
         theta  <- new_theta                   # Accept the new parameter vector
         oldobj <- objf
@@ -575,7 +604,7 @@ newtonr <- function(init, obj, grad, hessian,
         break
       }
     }
-
+ 
     # Convergence check - must meet 3 criteria
     if((objf <= oldobj + 1e-6 && (oldobj - objf < objtol)) &&
        (m(gradient) < gradtol) &&
@@ -595,6 +624,68 @@ newtonr <- function(init, obj, grad, hessian,
 
   list(code = 1, message=msg)
 }
+
+# Levenberg-Marquardt
+levenberg_marquardt <-
+  function(init, obj, grad, hessian, n,
+           objtol = 5e-4, gradtol = 1e-5, paramtol = 1e-5,
+           lambda = 1e-3,
+           tolsolve=1e-7, maxit = 30, trace=0) {
+
+  m <- function(x) max(abs(x))
+
+  theta  <- init
+  oldobj <- 1e10
+  g      <- grad(theta)
+  H      <- hessian(theta)
+
+  gradtol <- gradtol * n / 1000.
+
+  for (i in 1 : maxit) {
+    H_damped <- H + lambda * Matrix::Diagonal(x = diag(H)) # Damping term
+    delta    <- try(Matrix::solve(H_damped, g, tol=tolsolve))
+    if(inherits(delta, 'try-error'))
+      return(list(code=2, message='singular Hessian matrix'))
+    theta_new <- theta - delta
+    objf      <- obj(theta_new)
+    if(trace > 0)
+      cat('Iteration:', i, '  -2LL:', format(objf, nsmall=4),
+          '  Max |gradient|:', m(g),
+          '  Max |change in parameters|:', m(delta), '\n', sep='')
+    if(trace > 1) cat('Old - new -2LL:', oldobj - objf, '\n')
+
+    if((objf    <=  oldobj + 1e-6 && (oldobj - objf < objtol)) &&
+       (m(g)     <  gradtol) &&
+       (m(delta) < paramtol)) break
+
+    if (objf < oldobj) {
+      # Accept the step and decrease lambda
+      theta  <- theta_new
+      oldobj <- objf
+      g      <- grad(theta)
+      H      <- hessian(theta)
+      lambda <- lambda / 10
+    } else {
+      # Reject the step and increase lambda
+      lambda <- lambda * 10
+    }
+  }
+ if(i == maxit) {
+  msg <- paste('Reached', maxit, 'iterations without convergence\nChange in -2LL:',
+      oldobj -objf, ' Max |gradient|:', m(g),
+      ' Max |change in parameters|:', m(delta))
+  return(list(code = 1, message=msg))
+  }
+
+  list(param          = theta,
+       obj            = objf,
+       grad           = g,
+       objchange      = oldobj - objf,
+       maxgrad        = m(g),
+       maxparamchange = m(delta),
+       iter=i, code=0, message='')
+}
+
 
 lrmstats <- function(y, ymed, p, lp, loglik, u, weights, sumwt, sumwty) {
   n      <- length(y)
@@ -623,12 +714,12 @@ lrmstats <- function(y, ymed, p, lp, loglik, u, weights, sumwt, sumwty) {
     r2m    <- R2Measures(model.lr, model.df, sumwt, sumwty)
     g      <- GiniMd(lp)
     gp     <- GiniMd(prob)
-    a      <- suppressWarnings(survival::concordancefit(y, lp, reverse=FALSE))
+    a      <- suppressWarnings(
+      survival::concordancefit(y, lp, weights=weights, reverse=FALSE))
     conc   <- a$count['concordant']
     disc   <- a$count['discordant']
     tiedy  <- a$count['tied.y']
-    fn     <- as.double(n)
-    pairs  <- fn * (fn - 1e0) / 2e0
+    pairs  <- sum(as.double(a$count))
     rankstats <- c(C     = a$concordance,
                    Dxy   = (conc - disc) / (pairs - tiedy),
                    Gamma = (conc - disc) / (conc + disc),
@@ -643,7 +734,7 @@ lrmstats <- function(y, ymed, p, lp, loglik, u, weights, sumwt, sumwty) {
   # B <- mean((prob - event)^2)
   B     <- sum(weights*(prob - event)^2) / sum(weights)
   stats['Brier'] <- B
-   
+
   if(any(weights != 1.0)) stats <- c(stats, 'Sum of Weights'=sumwt)
   stats
   }

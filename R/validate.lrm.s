@@ -122,7 +122,7 @@ validate.orm <- function(fit, method="boot",
       else {
         k          <- fit$non.slopes
         null.model <- length(fit$coefficients)==k
-        refit      <- if(null.model) ormfit2(y=y) else ormfit2(x, y, tol=1e-13)
+        refit      <- if(null.model) ormfit2(y=y) else ormfit2(x, y, tol=1e-14)
         kr         <- refit$non.slopes
         ## Model with no variables = null model
         stats      <- refit$stats
@@ -139,7 +139,7 @@ validate.orm <- function(fit, method="boot",
       z
     }
   
-  ormfit2 <- function(x, y, tol=1e-13, penalty.matrix=NULL, 
+  ormfit2 <- function(x, y, tol=1e-14, penalty.matrix=NULL, 
                       xcol=NULL, ...)
     {
       if(length(xcol) && length(penalty.matrix) > 0)

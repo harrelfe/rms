@@ -59,7 +59,7 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
   allocate(lp(n), ww(p), i0(n0), ik(nk), ib(nb), &
            p1(n), p2(n), d(n), v1(n), v2(n), w1(n), w2(n))
 
-  i0 = pack([(i, i=1,n)], y == 0)
+  i0 = pack([(i, i=1,n)], y == 0)             ! row numbers for which y==0
   ik = pack([(i, i=1,n)], y == k)
   ib = pack([(i, i=1,n)], y > 0 .and. y < k)
 
@@ -145,6 +145,10 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
 
 
   ! Hessian
+  ! For large k, hess is not storage-efficient because it stores all the zeros.
+  ! It is computationally efficient because no terms are computed that are zero.
+  ! I.e., computations respect the tri-band diagonal form of hess.
+
   if(what == 3_int32) then
     hess = 0.0_dp
     w1  = v1 * (1_dp - 2_dp * p1)
@@ -166,7 +170,7 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
             end do
           end do
         end if
-      else 
+      else   ! 0 < y(i) < k
         hess(j1,         j1) = hess(j1,     j1)     + wt(i) * (w1(i) * d(i) - v1(i) ** 2) / d(i) **2
         hess(j1 + 1, j1 + 1) = hess(j1 + 1, j1 + 1) + wt(i) * (-w2(i) * d(i) - v2(i) ** 2) / d(i) ** 2
         hess(j1,     j1 + 1) = hess(j1,     j1 + 1) + wt(i) * v1(i) * v2(i) / d(i) ** 2
