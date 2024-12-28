@@ -130,6 +130,7 @@ lrm <- function(formula, data=environment(formula),
         f$linear.predictors <- NULL
 
       if(se.fit) {
+        if(! length(f$var)) stop('must have compvar=TRUE when se.fit=TRUE')
         xint <- matrix(0, nrow=length(Y), ncol=f$non.slopes)
         xint[,1] <- 1
         X <- cbind(xint, X)

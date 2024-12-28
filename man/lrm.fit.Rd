@@ -59,7 +59,7 @@ lrm.fit(
 
 \item{abstol}{used by \code{NR} (maximum absolute change in parameter estimates from one iteration to the next before convergence can be declared; by default has no effect), \code{nlminb} (by default has no effect; see \code{abs.tol} argument; set to e.g. 0.001 for \code{nlminb} when there is complete separation)}
 
-\item{gradtol}{used by \code{NR} and \code{LM} (maximum absolute gradient before convergence can be declared) and \code{nlm} (similar but for a scaled gradient).  For \code{NR} and \code{LM} \code{gradtol} is multiplied by the the sample size / 1000.}
+\item{gradtol}{used by \code{NR} and \code{LM} (maximum absolute gradient before convergence can be declared) and \code{nlm} (similar but for a scaled gradient).  For \code{NR} and \code{LM} \code{gradtol} is multiplied by the the sample size / 1000, because the gradient is proportional to sample size.}
 
 \item{factr}{see \code{\link[stats:optim]{stats::optim()}} documentation for \code{L-BFGS-B}}
 
@@ -79,7 +79,7 @@ lrm.fit(
 
 \item{transx}{set to \code{TRUE} to center \code{x} and QR-factor it to orthogonalize.  See \href{https://hbiostat.org/rmsc/mle#qr}{this} for details.}
 
-\item{compvar}{set to \code{FALSE} to prevent the calculation of the variance-covariance matrix.}
+\item{compvar}{set to \code{FALSE} to prevent the calculation of the variance-covariance matrix.  It is automatically set to \code{FALSE} if there are more than 3000 intercepts, for which \code{\link[=orm]{orm()}} should be used instead.}
 
 \item{compstats}{set to \code{FALSE} to prevent the calculation of the vector of model statistics}
 
@@ -116,7 +116,7 @@ a list with the following elements:
 }
 \item \code{fail}:  \code{TRUE} if any matrix inversion or failure to converge occurred, \code{FALSE} otherwise
 \item \code{coefficients}:
-\item \code{var}:  variance-covariance matrix if \code{compvar=TRUE}
+\item \code{var}:  variance-covariance matrix if \code{compvar=TRUE}. It will be a \code{Matrix} package object if using \code{NR} or \code{LQ} optimization.
 \item \code{u}:  gradient vector
 \item \code{iter}:  number of iterations required.  For some optimization methods this is a vector.
 \item \code{deviance}:  vector of deviances: intercepts-only, intercepts + offset (if \code{offset} is present), final model (if \code{x} is used)
@@ -138,6 +138,8 @@ Logistic Model Fitter
 Fits a binary or propoortional odds ordinal logistic model for a given design matrix and response vector with no missing values in either.  Ordinary or quadratic penalized maximum likelihood estimation is used.
 
 \code{lrm.fit} implements a large number of optimization algorithms with the default being Newton-Raphson with step-halving.  For binary logistic regression without penalization iteratively reweighted least squares method in \code{\link[stats:glm]{stats::glm.fit()}} is an option.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  Optionally, the \code{x} matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original \code{x} scale after fitting.  More detail and comparisons of the various optimization methods may be found \href{https://www.fharrell.com/post/mle/}{here}.  For ordinal regression with a large number of intercepts (distinct \code{y} values less one) you may want to use \verb{optim_method='BFGS', compvar=FALSE} which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
+
+When using Newton-Raphson or Levenberg-Marquardt optimization, sparse Hessian/information/variance-covariance matrices are used throughout.  For \code{nlminb} the Hessian has to be expanded into full non-sparse form, so \code{nlminb} will not be very efficient for a large number of intercepts.
 
 When there is complete separation (Hauck-Donner condition), i.e., the MLE of a coefficient is \eqn{\pm\infty}, and \code{y} is binary and there is no penalty, \code{glm.fit} may not converge because it does not have a convergence parameter for the deviance.  Setting \code{trace=1} will reveal that the -2LL is approaching zero but doesn't get there, relatively speaking.  In such cases the default of \code{NR} with \code{eps=5e-4} or using \code{nlminb} with its default of \code{abstol=0.001} works well.
 }

@@ -1,5 +1,5 @@
-subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, &
-                  what, debug, penhess)
+subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, &
+                 ha, hb, hab, what, debug, penhess, salloc)
 ! n      : # observations
 ! k      : # intercepts
 ! p      : # x columns
@@ -12,7 +12,12 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
 ! beta   : p-vector of regression coefficients
 ! logL   : returned -2 LL if what=1 or 3
 ! u      : returned k + p-vector of 1st derivatives if what=2
-! hess   : returned k + p x k + p matrix of 2nd derivatives if what=3
+! ha     : returned k x 2 matrix for alpha portion of Hessian for sparse
+!          representation with the Matrix R package; first column is the 
+!          diagonal, second is the superdiagonal (last element ignored)
+! hb     : returned p x p matrix for beta portion of Hessian
+! hab    : returned k x p matrix for alpha x beta portion of Hessian
+!!! hess   : returned k + p x k + p matrix of 2nd derivatives if what=3
 !          should be zero length if what is not 3
 ! what   : 1 for -2LL only, 2 for gradient, 3 for hessian
 ! debug  : 1 to print input parameters/sizes and quit, 2 to also print Hessian info
@@ -24,8 +29,8 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
   integer(int32), intent(in)  :: n, y(n), k, p, what, debug, penhess
   real(dp),       intent(in)  :: x(n, p), offset(n), wt(n), penmat(p, p), alpha(k), beta(p)
   real(dp),       intent(out) :: logL, u(k + p), &
-                                 hess(merge(k + p, 0, what == 3), merge(k + p, 0, what == 3))
-    
+                                 ha(k, 2), hb(p, p), hab(k, p)
+  integer(int32), intent(out) :: salloc
   integer(int32)  :: i, j, l, c, n0, nk, nb, ii, j1
   real(dp), allocatable :: lp(:), ww(:), d(:), &
                            p1(:), p2(:), v1(:), v2(:), w1(:), w2(:)
@@ -44,7 +49,7 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
     call intpr('penmat', 6, size(penmat), 1)
     call intpr('alpha', 5, size(alpha), 1)
     call intpr('beta', 4, size(beta), 1)
-    call intpr('hess', 4, size(hess), 1)
+    call intpr('ha', 2, size(ha), 1)
     call intpr('what', 4, what, 1)
     call intpr('debug', 5, debug, 1)
     call dblepr('alpha', 5, alpha, k)
@@ -57,7 +62,7 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
   nb = count(y > 0 .and. y < k)
 
   allocate(lp(n), ww(p), i0(n0), ik(nk), ib(nb), &
-           p1(n), p2(n), d(n), v1(n), v2(n), w1(n), w2(n))
+           p1(n), p2(n), d(n), v1(n), v2(n), w1(n), w2(n), stat=salloc)
 
   i0 = pack([(i, i=1,n)], y == 0)             ! row numbers for which y==0
   ik = pack([(i, i=1,n)], y == k)
@@ -101,7 +106,7 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
     v2  = p2 * (1_dp - p2)
   end if
 
-  ! Gradient (score vector)
+  ! Gradient (per-parameter score vector)
   if(what == 2_int32) then
     u = 0_dp
 
@@ -150,7 +155,9 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
   ! I.e., computations respect the tri-band diagonal form of hess.
 
   if(what == 3_int32) then
-    hess = 0.0_dp
+    ha  = 0.0_dp
+    hb  = 0.0_dp
+    hab = 0.0_dp
     w1  = v1 * (1_dp - 2_dp * p1)
     w2  = v2 * (1_dp - 2_dp * p2)
 
@@ -161,27 +168,27 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
       j  = y(i)
       j1 = max(j, 1)
       if(j == 0 .or. j == k) then
-        hess(j1, j1) = hess(j1, j1) - wt(i) * v1(i)
+        ha(j1, 1) = ha(j1, 1) - wt(i) * v1(i)
         if(p > 0) then
           do l = 1, p
-            hess(j1, k + l) = hess(j1, k + l) - wt(i) * v1(i) * x(i, l)
+            hab(j1, l) = hab(j1, l) - wt(i) * v1(i) * x(i, l)
             do c = l, p
-            hess(k + l, k + c) = hess(k + l, k + c) - wt(i) * x(i, l) * x(i, c) * v1(i)
+            hb(l, c) = hb(l, c) - wt(i) * x(i, l) * x(i, c) * v1(i)
             end do
           end do
         end if
       else   ! 0 < y(i) < k
-        hess(j1,         j1) = hess(j1,     j1)     + wt(i) * (w1(i) * d(i) - v1(i) ** 2) / d(i) **2
-        hess(j1 + 1, j1 + 1) = hess(j1 + 1, j1 + 1) + wt(i) * (-w2(i) * d(i) - v2(i) ** 2) / d(i) ** 2
-        hess(j1,     j1 + 1) = hess(j1,     j1 + 1) + wt(i) * v1(i) * v2(i) / d(i) ** 2
+        ha(j1,     1) = ha(j1,     1) + wt(i) * (w1(i) * d(i) - v1(i) ** 2) / d(i) **2
+        ha(j1 + 1, 1) = ha(j1 + 1, 1) + wt(i) * (-w2(i) * d(i) - v2(i) ** 2) / d(i) ** 2
+        ha(j1,     2) = ha(j1,     2) + wt(i) * v1(i) * v2(i) / d(i) ** 2
         if(p > 0) then
           do l = 1, p
-            hess(j1,     k + l) = hess(j1,     k + l) + wt(i) * x(i, l) * (  w1(i) * d(i) - &
+            hab(j1,     l) = hab(j1,     l) + wt(i) * x(i, l) * (  w1(i) * d(i) - &
                                                           v1(i) * (v1(i) - v2(i))) / d(i) ** 2
-            hess(j1 + 1, k + l) = hess(j1 + 1, k + l) + wt(i) * x(i, l) * &
+            hab(j1 + 1, l) = hab(j1 + 1, l) + wt(i) * x(i, l) * &
                                                           (- w2(i) * d(i) + v2(i) * (v1(i) - v2(i))) / d(i) ** 2
             do c = l, p
-              hess(k + l, k + c) = hess(k + l, k + c) + &
+              hb(l, c) = hb(l, c) + &
                 wt(i) * x(i, l) * x(i, c) * ((w1(i) - w2(i)) * d(i) - (v1(i) - v2(i)) ** 2) / d(i) ** 2
             end do
           end do
@@ -190,18 +197,17 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, hess, 
     end do
 
     ! Finish symmetric matrix
-    do l=1, k + p - 1
-      do c = l + 1, k + p
-        hess(c, l) = hess(l, c)
+    do l=1, p - 1
+      do c = l + 1, p
+        hb(c, l) = hb(l, c)
       end do
     end do
     if(debug > 0) call intpr('hess A', 6, 0, 1)
     ! To add derivative of penalty function -0.5 b'Pb = -Pb :
-    if(p > 0 .and. penhess > 0) hess((k + 1) : (k + p), (k + 1) : (k + p)) = &
-              hess((k + 1) : (k + p), (k + 1) : (k + p)) - penmat
+    if(p > 0 .and. penhess > 0) hb = hb - penmat
   end if
 
-if(debug > 0) call intpr('hess B', 6, size(hess), 1)
+if(debug > 0) call intpr('hab B', 5, size(hab), 1)
 
 deallocate(lp, ww, i0, ik, ib, d, &
            p1, p2, v1, v2, w1, w2)
