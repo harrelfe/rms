@@ -23,7 +23,7 @@ statistic for each model.
 }
 \usage{
 fastbw(fit, rule=c("aic", "p"),
-       type=c("residual", "individual", "total"),  sls=.05, aics=0, eps=1e-9,
+       type=c("residual", "individual", "total"),  sls=.05, aics=0, eps=1e-14,
        k.aic=2, force=NULL)
 
 \method{print}{fastbw}(x, digits=4, estimates=TRUE, \dots)
@@ -52,7 +52,7 @@ Default \code{aics} is zero to use the ordinary AIC.  Set \code{aics} to say 100
 to see all variables deleted in order of descending importance.
 }
 \item{eps}{
-Singularity criterion, default is \code{1E-9}.
+Singularity criterion, default is \code{1E-14}.
 }
 \item{k.aic}{
 multiplier to compute AIC, default is 2.  To use BIC, set \code{k.aic} equal

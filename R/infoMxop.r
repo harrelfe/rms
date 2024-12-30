@@ -5,10 +5,11 @@
 #' When inverting `info`, if `info` has a `'scale'` attribute with elements `mean` and `sd`, the scaling is reversed after inverting `info`.
 #'
 #' @param info an information matrix object
-#' @param i integer vector specifying elements returned from the inverse
+#' @param i integer vector specifying elements returned from the inverse.  You an also specify `i='x'` to return non-intercepts or `i='i'` to return intercepts.
 #' @param invert set to `TRUE` to invert `info` (implied when `i` or `B` is given)
 #' @param B multiplier matrix
 #' @param np set to `TRUE` to just fetch the total number of parameters (intercepts + betas)
+#' @param k number of intercepts; only needed when `info` is a non-triband diagonal type of matrix as in old version `lrm` results
 #' @param tol tolerance for matrix inversion singularity
 #' @param abort set to `FALSE` to run the `solve` calculation through `try()` without aborting; the user will detect that the operation did not success by examinine `inherits(result, 'try-error')` for being `TRUE`.
 #'
@@ -24,27 +25,45 @@
 #' infoMxop(v, i=c(2,4))     # returns a submatrix of v inverse
 #' }
 infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
-                     B=NULL, np=FALSE, tol=1e-14, abort=TRUE) {
+                     B=NULL, np=FALSE, k, tol=1e-14, abort=TRUE) {
   if(! missing(i) && ! invert)
     stop('i is irrelevant if invert=FALSE')
   
-  sc <- attr(info, 'scale')
+  xname <- iname <- name <- sc <- NULL
+  if(is.matrix(info)) name <- colnames(info)
   
   type <- 'plain'
   if(inherits(info, 'matrix.csr')) type <- 'SparseM'
   else if(! is.matrix(info)) {
     type <- 'Matrix'
-    # Assumed to be a 3-element list produced by orm.fit etc.
-    a  <- info$a   # intercepts
-    b  <- info$b   # betas
-    ab <- info$ab  # intercepts x betas
-    if(np) return(sum(dim(ab)))
-    k  <- nrow(ab) # no. of intercepts = nrow(a)
-    p  <- ncol(ab) # no. of betas
-    # Simplify if only one intercept, no need for sparseness
-    a <- if(k == 1) a[1, 1]
-    else Matrix::bandSparse(k, k=c(0,1), diagonals=a, symmetric=TRUE)
-    info <- rbind(cbind(a, ab), cbind(t(ab), b))
+    if(! is.list(info) || any(c('a', 'b', 'ab') %nin% names(info))) {
+      # a Matrix object such as one from lrm
+      # (sparse but not as efficient as triband diagonal)
+      nv <- ncol(info)
+      if(np) return(nv)
+      if(missing(k)) stop('must specify k= for lrm information matrix')
+      p  <- nv - k
+    } else {
+      # 3-element list produced by lrm.fit or orm.fit
+      a     <- info$a   # intercepts
+      b     <- info$b   # betas
+      ab    <- info$ab  # intercepts x betas
+      xname <- info$xname
+      iname <- info$iname
+      sc    <- info$scale
+
+      if(np) return(sum(dim(ab)))
+      if(! missing(k) && k != nrow(ab))
+        stop('superfluous k specified and does not match info$ab')
+      k  <- nrow(ab) # no. of intercepts = nrow(a)
+      p  <- ncol(ab) # no. of betas
+      # Simplify if only one intercept, no need for sparseness
+      a <- if(k == 1) a[1, 1]
+      else Matrix::bandSparse(k, k=c(0,1), diagonals=a, symmetric=TRUE)
+      info <- rbind(cbind(a, ab), cbind(t(ab), b))
+      name <- c(iname, xname)
+      dimnames(info) <- list(name, name)
+    }
   }
   if(np) return(ncol(info))
 
@@ -78,6 +97,10 @@ infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
   else {
     # Construct w = a p x r matrix where r = no. desired inverse elements
     # jth column of w has a 1 in i(j) row
+    if(is.character(i) && length(i) == 1) 
+      i <- switch(i,
+                  i = 1 : k,
+                  x = (k + 1) : nv)
     l <- length(i)
     w <- matrix(0., nv, l)
     w[cbind(i, 1 : l)] <- 1
@@ -87,6 +110,7 @@ infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
       w <- trans[i, i, drop=FALSE]
       v <- t(w) %*% v %*% w
     }
+    dimnames(v) <- list(name[i], name[i])
   }
   v
 }

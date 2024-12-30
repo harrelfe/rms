@@ -7,7 +7,7 @@
 Trace AIC and BIC vs. Penalty
 }
 \description{
-For an ordinary unpenalized fit from \code{lrm} or \code{ols} and for a vector or list of penalties, 
+For an ordinary unpenalized fit from \code{lrm}, \code{orm}, or \code{ols} and for a vector or list of penalties, 
 fits a series of logistic or linear models using penalized maximum likelihood
 estimation, and saves the effective degrees of freedom, Akaike Information
 Criterion (\eqn{AIC}), Schwarz Bayesian Information Criterion (\eqn{BIC}), and
@@ -31,7 +31,7 @@ the first two types of penalty factors are plotted, showing only the \eqn{AIC}.
 pentrace(fit, penalty, penalty.matrix, 
          method=c('grid','optimize'),
          which=c('aic.c','aic','bic'), target.df=NULL,
-         fitter, pr=FALSE, tol=1e-13,
+         fitter, pr=FALSE, tol=1e-14,
          keep.coef=FALSE, complex.more=TRUE, verbose=FALSE, maxit=20,
          subset, noaddzero=FALSE, ...)
 
@@ -45,7 +45,7 @@ effective.df(fit, object)
 }
 \arguments{
 \item{fit}{
-a result from \code{lrm} or \code{ols} with \code{x=TRUE, y=TRUE} and without using \code{penalty} or
+a result from \code{lrm}, \code{orm}, or \code{ols} with \code{x=TRUE, y=TRUE} and without using \code{penalty} or
 \code{penalty.matrix}
 (or optionally using penalization in the case of \code{effective.df})
 }
@@ -183,7 +183,7 @@ Hurvich CM, Tsai, CL: Regression and time series model selection in small
 samples.  Biometrika 76:297--307, 1989.
 }
 \seealso{
-\code{\link{lrm}}, \code{\link{ols}}, \code{\link[Hmisc]{solvet}}, \code{\link{rmsMisc}}, \code{\link{image}}
+\code{\link{lrm}}, \code{\link{orm}}, \code{\link{ols}}, \code{\link[Hmisc]{solvet}}, \code{\link{rmsMisc}}, \code{\link{image}}
 }
 \examples{
 n <- 1000    # define sample size

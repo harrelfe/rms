@@ -22,11 +22,11 @@ LRchunktest <- function(object, i, tol=1e-14, fitargs=NULL) {
 
   switch(k,
          lrm = {
-            dev <- do.call(lrm.fit, c(list(x=X, y=y, tol=tol, compstats=FALSE, compvar=FALSE),
+            dev <- do.call(lrm.fit, c(list(x=X, y=y, tol=tol, compstats=FALSE),
                                       fitargs))$deviance[2]
          },
          orm = {
-           dev <- orm.fit(X, y, family=object$family, tol=tol, compstats=FALSE, compvar=FALSE)$deviance[2]
+           dev <- orm.fit(X, y, family=object$family, tol=tol, compstats=FALSE)$deviance[2]
          },
          cph = {
            devf <- -2 * logl

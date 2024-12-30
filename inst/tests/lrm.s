@@ -5,6 +5,7 @@ x2 <- runif(n)
 x3 <- runif(n)
 x4 <- runif(n)
 x5 <- runif(n)
+
 x6 <- runif(n)
 x7 <- runif(n)
 x8 <- runif(n)
@@ -39,7 +40,7 @@ print(summary(f, digits=7))
 system.time(g <- lrm(y ~ x1 + x2 + x3))
 print(g, digits=7)
 c(-f$zeta, f$coefficients) - coef(g)
-print( (diag(vcov(f))[c(4:7, 1:3)])/diag(vcov(g)), digits=10)
+print( (diag(vcov(f))[c(4:7, 1:3)])/Matrix::diag(vcov(g)), digits=10)
 
 w <- function(m) {
   x <- runif(200)

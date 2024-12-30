@@ -55,7 +55,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
              },
              lrm=function(x, y, penalty.matrix, strata, ytarget, ...) {
                lrm.fit(x, y,
-                       penalty.matrix=penalty.matrix, compvar=FALSE, compstats=FALSE, ...)
+                       penalty.matrix=penalty.matrix, compstats=FALSE, ...)
              },
              cph=function(x, y, strata=NULL, ytarget, penalty.matrix, ...) {
                coxphFit(x, y, strata=strata,
@@ -74,7 +74,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
              Rq=RqFit(fit, wallow=FALSE),
              orm=function(x, y, ytarget=NULL, strata, ...) {
                f <- orm.fit(x, y, family=fitFamily,
-                            compstats=FALSE, compvar=FALSE, ...)
+                            compstats=FALSE, ...)
                ns  <- f$non.slopes
                cof <- f$coefficients
                if(length(ytarget)) {

@@ -231,12 +231,12 @@ sensuc <- function(fit,
           else
             {
               effect.u[j] <- odds(event[u==1])/odds(event[u==0])
-              g <- lrm.fit(cbind(u,X),event,maxit=20,tol=1E-11)
-              ns <- g$non.slopes
-              cof <- g$coefficients[-(1:ns)]
-              vr  <- g$var[-(1:ns),-(1:ns)]
+              g   <- lrm.fit(cbind(u,X), event)
+              ns  <- g$non.slopes
+              cof <- g$coefficients[- (1 : ns)]
+              vr  <- infoMxop(g$info.matrix, i=(ns + 1) : length(g$coefficients))
             }
-          z   <- cof/sqrt(diag(vr))
+          z   <- cof / sqrt(Matrix::diag(vr))
           
           effect.u.adj[j] <- exp(cof[1])
           effect.x[j] <- exp(cof[2])

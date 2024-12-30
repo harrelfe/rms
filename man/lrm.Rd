@@ -25,7 +25,9 @@ lrm(formula, data=environment(formula),
     weights, normwt=FALSE, scale, \dots)
 
 \method{print}{lrm}(x, digits=4, r2=c(0,2,4),
-    coefs=TRUE, pg=FALSE, title='Logistic Regression Model', \dots)
+    coefs=TRUE, pg=FALSE,
+    intercepts=x$non.slopes < 10,
+    title='Logistic Regression Model', \dots)
 }
 \arguments{
 \item{formula}{
@@ -145,6 +147,7 @@ done.
   to print only the first \code{n} regression coefficients in the
   model.}
 \item{pg}{set to \code{TRUE} to print g-indexes}
+\item{intercepts}{controls printing of intercepts.  By default they are only printed if there aren't more than 10 of them.}
 \item{title}{a character string title to be passed to \code{prModFit}}
 }
 \value{
@@ -269,13 +272,12 @@ label(sex)            <- 'Sex'
 units(cholesterol)    <- 'mg/dl'   # uses units.default in Hmisc
 units(blood.pressure) <- 'mmHg'
 
-#To use prop. odds model, avoid using a huge number of intercepts by
-#grouping cholesterol into 40-tiles
+# Group cholesterol unnecessarily into 40-tiles
 ch <- cut2(cholesterol, g=40, levels.mean=TRUE) # use mean values in intervals
 table(ch)
 f <- lrm(ch ~ age)
 # options(prType='latex')
-print(f, coefs=4)  # write latex code to console if prType='latex' is in effect
+print(f)  # write latex code to console if prType='latex' is in effect
 m <- Mean(f)    # see help file for Mean.lrm
 d <- data.frame(age=seq(0,90,by=10))
 m(predict(f, d))

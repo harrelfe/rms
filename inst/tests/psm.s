@@ -11,29 +11,29 @@ cens <- 15*runif(n)
 death <- ifelse(d.time <= cens,1,0)
 d.time <- pmin(d.time, cens)
 pol <- function(x, d) cbind(x, x^2)
-g <- survreg(Surv(d.time,death) ~ sex*pol(age,2), 
+g <- survreg(Surv(d.time,death) ~ sex*pol(age,2),
              dist='lognormal')
 rg <- residuals(g, type='matrix')[,'dg']
 
 require(rms)
-h <- survreg(Surv(d.time,death) ~ sex*pol(age,2), 
+h <- survreg(Surv(d.time,death) ~ sex*pol(age,2),
              dist='lognormal', x=TRUE)
 # lognormal is bad fit for these data
 rbind(coef(g), coef(h))
 
 rm(pol)
-f <- psm(Surv(d.time,death) ~ sex*pol(age,2), 
+f <- psm(Surv(d.time,death) ~ sex*pol(age,2),
               dist='lognormal', x=TRUE, y=TRUE) #, control=survreg.control())
 rbind(coef(h), coef(f))
 v <- vcov(f, regcoef.only=FALSE)
-diag(vcov(h)) / diag(v)
+Matrix::diag(vcov(h)) / Matrix::diag(v)
 
 r <- residuals(f, type='matrix')[,'dg']
 if(intr) xless(cbind(rg, r))
 
 if(intr) xless(residuals(f, type='score'))
 fr <- robcov(f)
-diag(vcov(f)) / diag(vcov(fr))
+Matrix::diag(vcov(f)) / Matrix::diag(vcov(fr))
 
 
 r <- residuals(f)

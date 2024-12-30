@@ -1,6 +1,6 @@
 contrast <- function(fit, ...) UseMethod("contrast")
 
-contrast.rms <-
+crms <- contrast.rms <-
   function(fit, a, b, a2, b2, ycut=NULL, cnames=NULL, fun=NULL, funint=TRUE,
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'), usebootcoef=TRUE,
@@ -28,15 +28,18 @@ contrast.rms <-
     dens$x[which.max(dens$y)[1]]
     }
   
-  if(! bayes) betas <- coef(fit)
+  if(! bayes) {
+    betas <- coef(fit)
+    iparm <- 1 : length(betas)
+  }
   fite  <- fit
   if(inherits(fit, 'orm')) {
     nrp <- 1
     ## Note: is 1 for orm because vcov defaults to intercepts='mid'
-    w <- c(fit$interceptRef, (num.intercepts(fit) + 1) : length(betas))
-    betas <- betas[w]
+    iparm <- c(fit$interceptRef, (num.intercepts(fit) + 1) : length(betas))
+    betas <- betas[iparm]
     fite$coefficients <- betas    # for simult confint
-    if(usebootcoef) bcoef <- bcoef[, w, drop=FALSE]
+    if(usebootcoef) bcoef <- bcoef[, iparm, drop=FALSE]
   } else nrp <- num.intercepts(fit, 'var')
     
   if(length(bcoef) && conf.type != 'simultaneous')
@@ -201,7 +204,7 @@ contrast.rms <-
   est <- matxv(X, betas)
   v <- X %*% vcov(fit, regcoef.only=TRUE) %*% t(X)
   ndf <- if(is.matrix(v)) nrow(v) else 1
-  se <- as.vector(if(ndf == 1) sqrt(v) else sqrt(diag(v)))
+  se <- as.vector(if(ndf == 1) sqrt(v) else sqrt(Matrix::diag(v)))
   Z <- est / se
   P <- if(length(idf)) 2 * pt(- abs(Z), idf) else 2 * pnorm(- abs(Z))
   if(conf.type != 'simultaneous') {
@@ -221,6 +224,12 @@ contrast.rms <-
       upper <- est + zcrit*se
     }
   } else {
+    # glht uses vcov(fite) which for lrm & orm are sparse Matrix objects
+    # Make vcov use fite$var instead
+    fite$non.slopes   <- 1L
+    fite$interceptRef <- 1L
+    if(! length(fite$var))
+      fite$var <- Matrix::as.matrix(infoMxop(fite$info.matrix, i=iparm))
     u <- confint(multcomp::glht(fite, X,
                       df=if(length(idf)) idf else 0),
                  level=conf.int)$confint

@@ -23,8 +23,8 @@ for(type in c('li.shepherd', 'ordinary', 'score', 'pearson',
 }
 
 options(digits=7)
-diag(vcov(f)) / diag(vcov(g, intercepts='all'))
-diag(vcov(robcov(f))) / diag(vcov(robcov(g), intercepts='all'))
+Matrix::diag(vcov(f)) / Matrix::diag(vcov(g, intercepts='all'))
+Matrix::diag(vcov(robcov(f))) / Matrix::diag(vcov(robcov(g), intercepts='all'))
 
 rf <- robcov(f)
 rg <- robcov(g)

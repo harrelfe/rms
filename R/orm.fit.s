@@ -5,7 +5,7 @@ orm.fit <- function(x=NULL, y,
                     minstepsize=1e-2, tol=1e-14, trace=FALSE,
                     penalty.matrix=NULL, weights=NULL, normwt=FALSE,
                     scale=FALSE, inclpen=TRUE, y.precision = 7,
-                    compvar=TRUE, compstats=TRUE)
+                    compstats=TRUE)
 {
   cal    <- match.call()
   family <- match.arg(family)
@@ -75,6 +75,10 @@ orm.fit <- function(x=NULL, y,
   k <- length(ylevels) - 1L
   if(k == 1) kmid <- 1
 
+  iname <- if(k == 1) "Intercept" else paste("y>=", ylevels[-1L], sep="")
+  name  <- c(iname, xname)
+  
+
   if(missing(offset) || (length(offset) == 1 && offset == 0.)) offset <- rep(0., n)
   ofpres <- ! all(offset == 0.)
   if(ofpres && length(offset) != n) stop("offset and y must have same length")
@@ -106,21 +110,22 @@ orm.fit <- function(x=NULL, y,
   if(ofpres) {
     ## Fit model with only intercept(s) and offset
     ## Check that lrm.fit uses penmat in this context   ??
-    z <- ormfit(NULL, y, k, 0, initial=initial, offset=offset, wt=weights,
+    z <- ormfit(NULL, y, k, initial=initial[1 : k],
+                offset=offset, wt=weights,
                 penmat=penmat, maxit=maxit,
                 tolsolve=tol, objtol=eps, paramtol=abstol,
-                trace=trace, link=link)
+                trace=trace, link=link, iname=iname, xname=xname)
     if(z$fail) return(structure(list(fail=TRUE), class="orm"))
     loglik <- c(loglik, z$loglik)
-    initial <- z$coef
+    initial <- c(z$coef, rep(0., p))
   }
 
   if(p > 0) {
     # Fit model with intercept(s), offset, covariables
-    z <- ormfit(x, y, k, p, initial=initial, offset=offset, wt=weights,
+    z <- ormfit(x, y, k, initial=initial, offset=offset, wt=weights,
                 penmat=penmat,
                 maxit=maxit, tolsolve=tol, objtol=eps, paramtol=abstol,
-                trace=trace, link=link)
+                trace=trace, link=link, iname=iname, xname=xname)
     if(z$fail) return(structure(list(fail=TRUE), class="orm"))
     loglik <- c(loglik, z$loglik)
     kof  <- z$coef
@@ -136,7 +141,7 @@ orm.fit <- function(x=NULL, y,
       names(xbar) <- xname
       xsd         <- as.vector(xsd)
       names(xsd)  <- xname
-      attr(info, 'scale') <- list(mean=xbar, sd=xsd)
+      info$scale  <- list(mean=xbar, sd=xsd)
     }
   } else lp <- rep(kof[kmid], n)
 
@@ -149,20 +154,8 @@ orm.fit <- function(x=NULL, y,
   # closest to the median y
 
   v <- NULL
-  if(compvar) {
-    i <- if(p > 0) c(kmid, (k + 1) : nv) else kmid
-    v <- infoMxop(info, i)    # infoMxop automatically scales upon inversion
-    if(inherits(v, 'try-error')) return(structure(list(fail=TRUE, class='orm')))
-  }
-
-  name <- if(k == 1) "Intercept" else paste("y>=", ylevels[-1L], sep="")
-  name       <- c(name, xname)
+  
   names(kof) <- name
-
-  if(compvar) {
-    dimnames(v) <- list(name[i], name[i])
-   if(k > 1L) attr(v, 'intercepts') <- kmid
-  }
 
   stats <- NULL
   if(compstats) {
@@ -205,6 +198,9 @@ orm.fit <- function(x=NULL, y,
     names(stats) <- nam
     }
 
+  info$iname <- iname
+  info$xname <- xname
+
   retlist <- list(call              = cal,
                   freq              = numy,
                   yunique           = ylevels,
@@ -230,12 +226,13 @@ orm.fit <- function(x=NULL, y,
 }
 
 ormfit <-
-  function(x, y, k, p, link, initial,
+  function(x, y, k, link, initial,
            offset=rep(0., n), wt=rep(1., n), penmat=matrix(0., p, p),
            maxit=30L, objtol=5e-4, gradtol=1e-3, paramtol=1e10, tolsolve=1e-14,
-           minstepsize=1e-2, trace=FALSE) {
+           minstepsize=1e-2, trace=FALSE, iname, xname) {
 
 n <- length(y)
+p <- length(initial) - k
 
 if(k > 1 && any(diff(initial[1:k]) >= 0))
   stop('initial values for intercepts are not in descending order')
@@ -250,18 +247,14 @@ storage.mode(wt)      <- 'double'
 storage.mode(penmat)  <- 'double'
 storage.mode(link)    <- 'integer'
 
-.grad <- numeric(k + p)       # allocate space for Fortran returned
-.ha   <- matrix(0e0, k, 2)    # quantities just once
-.hb   <- matrix(0e0, p, p)
-.hab  <- matrix(0e0, k, p)
-
 rfort <- function(theta, what=3L, debug=0L) {
+  p <- as.integer(length(theta) - k)
   if(debug) {
     a <- llist(n, k, p, y, link, what)
     s <- sapply(a, storage.mode)
     if(any(s != 'integer')) stop(s)
     a <- llist(x, offset, wt, penmat, theta[1:k], theta[-(1:k)],
-                logL=numeric(1), grad=.grad, ha=.ha, hb=.hb, hab=.hab)
+                logL=numeric(1))
     s <- sapply(a, storage.mode)
     if(any(s != 'double')) stop(s)
     g <- function(x) if(is.matrix(x)) paste(dim(x), collapse='x') else length(x)
@@ -269,8 +262,9 @@ rfort <- function(theta, what=3L, debug=0L) {
   }
   w <- .Fortran(F_ormll, n, k, p, x, y, offset, wt, penmat,
                 link=link, theta[1:k], theta[-(1:k)],
-                logL=numeric(1), grad=.grad, ha=.ha, hb=.hb, hab=.hab,
-                what=3L, debug=as.integer(debug), 1L, salloc=integer(1))
+                logL=numeric(1), grad=numeric(k + p),
+                a=matrix(0e0, k, 2), b=matrix(0e0, p, p), ab=matrix(0e0, k, p),
+                what=what, debug=as.integer(debug), 1L, salloc=integer(1))
   if(w$salloc != 0)
     stop('Failed dynamic array allocation in Fortran subroutine ormll: code ', w$salloc)
   w
@@ -300,7 +294,7 @@ rfort <- function(theta, what=3L, debug=0L) {
     w <- rfort(theta)
     if(iter == 1) objf <- w$logL
     gradient <- w$grad
-    hess <- infoMxop(list(a=w$ha, b=w$hb, ab=w$hab))
+    hess <- infoMxop(w[c('a', 'b', 'ab')])
 
     # Newton-Raphson step
 
@@ -350,7 +344,9 @@ rfort <- function(theta, what=3L, debug=0L) {
       # Compute final information matrix (in 3 parts) since not computed
       # since Newton-Raphson updating
       w <- rfort(theta)
-      info <- list(a =- w$ha, b = - w$hb, ab = - w$hab)
+      info <- list(a =- w$a, b = - w$b, ab = - w$ab,
+                   iname=iname, xname=xname)
+
       return(list(coef           = theta,
                   loglik         = w$logL,
                   u              = w$grad,

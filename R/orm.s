@@ -130,8 +130,8 @@ orm <- function(formula, data=environment(formula),
         fitter(X, Y, family=family, offset=offs, initial=f$coef, maxit=1,
                weights=weights, normwt=normwt)
     ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
-    info.matrix.unpenalized <- f.nopenalty$info.matrix
-    dag <- diag(info.matrix.unpenalized %*% v)
+    info.matrix.unpenalized <- infoMxop(f.nopenalty$info.matrix)
+    dag <- Matrix::diag(info.matrix.unpenalized %*% v)
     f$effective.df.diagonal <- dag
     f$var <- if(var.penalty == 'simple') v else
        v %*% info.matrix.unpenalized %*% v
@@ -220,7 +220,7 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
     penaltyFactor <- as.vector(t(cof) %*% pm %*% cof)
   }
   vv <- Matrix::diag(vcov(x, intercepts=if(intercepts) 'all' else 'none'))
-  if(!intercepts) {
+  if(! intercepts) {
     nints <- if(!length(cik)) ns else {
       if(length(cik) == 1 && cik ==0) 0 else length(cik)
     }
@@ -348,7 +348,7 @@ Quantile.orm <- function(object, codes=FALSE, ...)
         # lb.se[, i] <- sqrt(diag(dlb.dtheta %*% v.i %*% t(dlb.dtheta)))
         # Compute (i, idx) portion of info inverse, multiplied by t(dlb.dtheta)
         v.i        <- infoMxop(info, i=c(i, idx), B=t(dlb.dtheta))
-        lb.se[, i] <- sqrt(diag(dlb.dtheta %*% v.i))
+        lb.se[, i] <- sqrt(Matrix::diag(dlb.dtheta %*% v.i))
       }
       w <- qnorm((1 + conf.int) / 2)
       ci.ub <- matrix(sapply(1:ns, FUN=function(i) {1 - cumprob(lb[, i] - w * lb.se[, i])}), ncol = ns)
@@ -445,7 +445,7 @@ ExProb.orm <- function(object, codes=FALSE, ...)
       dlb.dtheta <- as.matrix(cbind(1, X))
       lb.se <- sapply(1:length(y), function(i)
         # diag(dlb.dtheta %*% info.inverse[c(index[i], idx), c(index[i], idx)] %*% t(dlb.dtheta))
-        diag(dlb.dtheta %*% infoMxop(info, i=c(index[i], idx), B=t(dlb.dtheta)))
+        Matrix::diag(dlb.dtheta %*% infoMxop(info, i=c(index[i], idx), B=t(dlb.dtheta)))
         )
       lb.se <- matrix(sqrt(lb.se), ncol = length(y))
       m.alpha <- c(intercepts, slopes)[index]

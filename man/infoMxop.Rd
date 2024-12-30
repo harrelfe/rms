@@ -10,6 +10,7 @@ infoMxop(
   invert = !missing(i) || !missing(B),
   B = NULL,
   np = FALSE,
+  k,
   tol = 1e-14,
   abort = TRUE
 )
@@ -17,13 +18,15 @@ infoMxop(
 \arguments{
 \item{info}{an information matrix object}
 
-\item{i}{integer vector specifying elements returned from the inverse}
+\item{i}{integer vector specifying elements returned from the inverse.  You an also specify \code{i='x'} to return non-intercepts or \code{i='i'} to return intercepts.}
 
 \item{invert}{set to \code{TRUE} to invert \code{info} (implied when \code{i} or \code{B} is given)}
 
 \item{B}{multiplier matrix}
 
 \item{np}{set to \code{TRUE} to just fetch the total number of parameters (intercepts + betas)}
+
+\item{k}{number of intercepts; only needed when \code{info} is a non-triband diagonal type of matrix as in old version \code{lrm} results}
 
 \item{tol}{tolerance for matrix inversion singularity}
 

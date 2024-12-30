@@ -102,19 +102,21 @@ lrm <- function(formula, data=environment(formula),
   if(model) f$model <- m
   if(x) f$x <- X
   if(y) f$y <- Y
-  nrp <- f$non.slopes
+  nrp  <- f$non.slopes
+  info <- f$info.matrix
+
   if(penpres) {
     f$penalty <- penalty
     ## Get improved covariance matrix
-    v <- f$var
+    v <- infoMxop(info, invert=TRUE)
     # if(var.penalty=='sandwich') f$var.from.info.matrix <- v
     f.nopenalty <- 
         lrm.fit(X, Y, offset=offs, initial=f$coef, maxit=1, ...)
     ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
-    info.matrix.unpenalized <- f.nopenalty$info.matrix
-    dag <- diag(info.matrix.unpenalized %*% v)
+    info.matrix.unpenalized <- infoMxop(f.nopenalty$info.matrix)
+    dag <- Matrix::diag(info.matrix.unpenalized %*% v)
     f$effective.df.diagonal <- dag
-    f$var <- v
+    f$var <- v   ## ?? does this makes sense to just copy v as in 6.9-0?
     # v %*% info.matrix.unpenalized %*% v
     df <- sum(dag[- (1 : nrp)])
     lr <- f.nopenalty$stats["Model L.R."]
@@ -130,11 +132,13 @@ lrm <- function(formula, data=environment(formula),
         f$linear.predictors <- NULL
 
       if(se.fit) {
-        if(! length(f$var)) stop('must have compvar=TRUE when se.fit=TRUE')
         xint <- matrix(0, nrow=length(Y), ncol=f$non.slopes)
         xint[,1] <- 1
+        nx <- ncol(X)
         X <- cbind(xint, X)
-        se <- drop((((X %*% f$var) * X) %*% rep(1, ncol(X)))^.5)
+        v <- infoMxop(info, i=c(1, nrp + (1 : nx)), B=t(X))
+        se <- drop(sqrt((t(v) * X) %*% rep(1, ncol(X))))
+        ## ?? se <- drop((((X %*% f$var) * X) %*% rep(1, ncol(X)))^.5)
         names(se) <- names(Y)
         f$se.fit <- se
       }
@@ -150,7 +154,9 @@ lrm <- function(formula, data=environment(formula),
 }
 
 print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
-                      pg=FALSE, title='Logistic Regression Model', ...) {
+                      pg=FALSE,
+                      intercepts=x$non.slopes < 10,
+                      title='Logistic Regression Model', ...) {
 
   latex <- prType() == 'latex'
   
@@ -183,23 +189,25 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
   pm <- x$penalty.matrix
   penaltyFactor <- NULL
   if(length(pm)) {
-    psc <- if(length(pm)==1) sqrt(pm)
+    psc <- if(length(pm) == 1) sqrt(pm)
     else
       sqrt(diag(pm))
-    penalty.scale <- c(rep(0,ns),psc)
-    cof <- matrix(x$coef[-(1:ns)], ncol=1)
+    penalty.scale <- c(rep(0, ns), psc)
+    cof <- matrix(x$coef[- (1 : ns)], ncol=1)
     k <- k + 1
     z[[k]] <- list(type='print', list(as.data.frame(x$penalty, row.names='')),
                    title='Penalty factors')
     penaltyFactor <- as.vector(t(cof) %*% pm %*% cof)
   }
 
-  ## ?ok to have uncommented next 3 lines?
-  est.exp <- 1:ns
-  if(length(x$est)) est.exp <-
-    c(est.exp, ns + x$est[x$est + ns <= length(x$coefficients)])
-  vv <- diag(x$var)
-  cof <- x$coef
+  cof   <- x$coef
+  
+  if(length(x$var)) {     # old fit object < rms 7.0-0 or result of bootcov, robcov
+    vv <- diag(x$var)
+    if(! intercepts) vv <- vv[- (1 : ns)]
+  } else vv <- Matrix::diag(vcov(x, intercepts=if(intercepts) 'all' else 'none'))
+
+  if(! intercepts) cof <- cof[- (1 : ns)]
   stats <- x$stats
 
   maxd <- stats['Max Deriv']

@@ -12,26 +12,26 @@
 # F. Harrell 18Jan91
 
 fastbw <- function(fit, rule=c("aic", "p"),
-                   type=c("residual","individual","total"), sls=.05, aics=0, 
-                   eps=1e-9, k.aic=2, force=NULL)
+                   type=c("residual","individual","total"), sls=.05, aics=0,
+                   eps=1e-14, k.aic=2, force=NULL)
 {
   rule <- match.arg(rule)
   type <- match.arg(type)
-  
+
   ns <- num.intercepts(fit)
   if(length(force)) force <- force + ns
   L <- if(ns==0) NULL else 1:ns
-  
+
   pt  <- length(fit$coef)
   p   <- pt - ns
   atr <- fit$Design
-  
+
   assume <- atr$assume.code
   if(!length(assume)) stop("fit does not have design information")
   assign <- fit$assign
   nama <- names(assign)[1]
   asso <- 1*(nama=="(Intercept)" | nama=="Intercept")
-  
+
   f <- sum(assume != 8)
   strt <- integer(f)
   len <- strt
@@ -82,10 +82,10 @@ fastbw <- function(fit, rule=c("aic", "p"),
     ## X <- fit$x
     Y   <- if(length(fit$y))fit$y else fit$fitted.values + fit$residuals
     r2  <- double(f)
-    sst <- sum((Y-mean(Y))^2)
+    sst <- sum((Y - mean(Y))^2)
     sigma2 <- fit$stats['Sigma']^2
     ## Get X'Y using b=(X'X)^-1 X'Y, X'X^-1 = var matrix / sigma2
-    xpy <- matrix(solvet(Cov, beta, tol=eps)*sigma2, ncol=1)
+    xpy <- matrix(Matrix::solve(Cov, beta, tol=eps) * sigma2, ncol=1)
     ypy <- sum(Y^2)
   }
 
@@ -114,26 +114,26 @@ fastbw <- function(fit, rule=c("aic", "p"),
       ##               ln[k],df=integer(1),eps,vsub,s1,s2,s3,s4,pivot,NAOK=TRUE)
       ##	chisq <- z$chisq
       ##	df <- z$df
-      
+
       ##replace previous 5 statements with following 3 to use slow method
       q <- st[k] : en[k]
       chisq <- if(any(q %in% force)) Inf else
-               beta[q] %*% solvet(cov[q,q], beta[q], tol=eps)
+               beta[q] %*% Matrix::solve(cov[q, q, drop=FALSE], beta[q], tol=eps)
       df <- length(q)
-      
+
       crit <- switch(rule, aic=chisq-k.aic * df, p=pchisq(chisq, df))
       if(crit < crit.min) {
         jmin     <- j
         crit.min <- crit
         chisq.crit.min <- chisq
         df.min   <- df
-      }	
+      }
     }
-    
+
     factors.in <- factors.in[factors.in != jmin]
     parms.in <- parms.in[parms.in < strt[jmin] | parms.in > ed[jmin]]
     if(length(parms.in)==0) q <- 1:pt else q <- (1:pt)[-parms.in]
-    
+
     ## if(under.unix && !.R.) {
     ## z <- if(.R.)
     ##  .Fortran("avia",fit$coef,Cov,chisq=double(1),
@@ -146,9 +146,9 @@ fastbw <- function(fit, rule=c("aic", "p"),
     ## resid <- z$chisq
     ## resid.df <- z$df
     ##}
-    
+
     ##replace previous 5 statements with following 2 to use slow method
-    resid <- fit$coef[q] %*% solvet(Cov[q,q], fit$coef[q], tol=eps)
+    resid    <- fit$coef[q] %*% Matrix::solve(Cov[q, q, drop=FALSE], fit$coef[q], tol=eps)
     resid.df <- length(q)
 
     del <- switch(type,
@@ -164,7 +164,7 @@ fastbw <- function(fit, rule=c("aic", "p"),
       resid.del  [d] <- resid
       df.resid   [d] <- resid.df
       if(length(parms.in)) {
-        cov.rm.inv <- solvet(Cov[-parms.in, -parms.in], tol=eps)
+        cov.rm.inv <- Matrix::solve(Cov[-parms.in, -parms.in], tol=eps)
         cov.cross  <- Cov[parms.in, -parms.in, drop=FALSE]
         w    <- cov.cross %*% cov.rm.inv
         beta <- fit$coef[parms.in] - w %*% fit$coef[-parms.in]
@@ -189,7 +189,7 @@ fastbw <- function(fit, rule=c("aic", "p"),
     }
     else break
   }
-  
+
   if(d > 0) {
     u <- 1:d
     fd <- factors.del[u]
@@ -211,9 +211,9 @@ fastbw <- function(fit, rule=c("aic", "p"),
     res <- NULL
     fk <- 1:f
   }
-  
+
   nf <- name[fk]
-  
+
   pd <- NULL
   if(d > 0) for(i in 1:d) pd <- c(pd, (strt[fd[i]] : ed[fd[i]]))
 
@@ -226,13 +226,13 @@ fastbw <- function(fit, rule=c("aic", "p"),
     if(d==0) pk <- 1:pt
     else
       pk <- (1:pt)[-pd]
-  
+
   if(length(pd) != p) {
     beta <- as.vector(beta)
     names(beta) <- names(fit$coef)[pk]
     dimnames(cov) <- list(names(beta),names(beta))
   }
-  
+
   if(dor2) res <- cbind(res, R2=r2)
   r <- list(result=res, names.kept=nf, factors.kept=fk,
             factors.deleted=fd,
@@ -243,7 +243,7 @@ fastbw <- function(fit, rule=c("aic", "p"),
   r
 }
 
-		
+
 print.fastbw <- function(x, digits=4, estimates=TRUE,...)
 {
 
@@ -266,8 +266,8 @@ print.fastbw <- function(x, digits=4, estimates=TRUE,...)
     if(estimates && length(x$coef)) {
       cat("\nApproximate Estimates after Deleting Factors\n\n")
       cof <- coef(x)
-      vv <- if(length(cof)>1) diag(x$var) else x$var
-      z <- cof/sqrt(vv)
+      vv <- if(length(cof)>1) Matrix::diag(x$var) else x$var
+      z <- cof / sqrt(vv)
       stats <- cbind(cof, sqrt(vv), z, 1 - pchisq(z^2,1))
       dimnames(stats) <- list(names(cof), c("Coef","S.E.","Wald Z","P"))
       print(stats, digits=digits)

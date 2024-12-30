@@ -15,5 +15,5 @@ coef(g)
 coef(f) - coef(g)
 vcov(f) / vcov(g, intercepts='all')
 
-infoMxop(g$info.matrix) - f$info.matrix
+infoMxop(g$info.matrix) - infoMxop(f$info.matrix)
 infoMxop(g$info.matrix, invert=TRUE) - vcov(f)

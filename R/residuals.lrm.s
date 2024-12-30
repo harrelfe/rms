@@ -339,7 +339,7 @@ residuals.lrm <-
     if(type=="dfbetas") {
       ## i <- c(kint, (k+1):length(cof))
       vv <- vcov(object, intercepts=1)
-      return(naresid(naa, sweep(dfb, 2, diag(vv)^.5,"/")))
+      return(naresid(naa, sweep(dfb, 2, Matrix::diag(vv)^.5,"/")))
       ## was diag(object$var[i, i])
     }
     if(type=="hat") return(naresid(naa, infl$hat))

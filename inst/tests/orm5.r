@@ -9,9 +9,11 @@ SimData <- data.frame( x1 = sample(c(-1,0,1), n, TRUE),
 SimData$y <- round(runif(n), 2)
 dd <- datadist(SimData)
 options(datadist="dd")
-f <- lrm(y ~ x1 + x2 + offset(log(exposure)), data=SimData, eps=.0001)
-d <- orm(y ~ x1 + x2 + offset(log(exposure)), data=SimData, eps=.0001)
+f <- lrm(y ~ x1 + x2 + offset(log(exposure)), data=SimData, trace=1)
+d <- orm(y ~ x1 + x2 + offset(log(exposure)), data=SimData, trace=1)
 max(abs(coef(f) - coef(d)))
+range(vcov(f) / vcov(d, intercepts='all'))
+
 
 h <- orm(y ~ x1 + x2, family='cloglog', data=SimData)
 k <- orm(y ~ x1 + x2 + offset( log( exposure ) ),

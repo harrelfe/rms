@@ -24,7 +24,7 @@ df <- data.frame(y = rnorm(n = 100),
                  x1 = rnorm(n = 100),
                  x2 = rnorm(mean = 5, sd = 0.5, n = 100))
 
-cat('Error expected in solvet when nsides=2\n')
+cat('Error expected in solvet when nsites=2\n')
 for(nsites in 7:2) {
   cat('nsites:', nsites, '\n')
   df$site <- sample(LETTERS[1:nsites], size = 100, replace = TRUE)

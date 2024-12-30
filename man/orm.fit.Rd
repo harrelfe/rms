@@ -16,7 +16,7 @@ orm.fit(x=NULL, y, family=c("logistic","probit","loglog","cloglog","cauchit"),
         offset, initial,  maxit=30L, eps=5e-4, gradtol=0.001, abstol=1e10, 
         minstepsize=0.01, tol=1e-14, trace=FALSE,
         penalty.matrix=NULL, weights=NULL, normwt=FALSE, scale=FALSE,
-        inclpen=TRUE, y.precision = 7, compvar=TRUE, compstats=TRUE)
+        inclpen=TRUE, y.precision = 7, compstats=TRUE)
 }
 \arguments{
 \item{x}{
@@ -73,7 +73,6 @@ derivative, and max absolute change in parameter estimates at each iteration.
 \item{y.precision}{When \sQuote{y} is numeric, values may need to be rounded
 to avoid unpredictable behavior with \code{unique()} with floating-point
 numbers. Default is to 7 decimal places.}
-\item{compvar}{set to \code{FALSE} to prevent the calculation of the variance-covariance matrix.}
 \item{compstats}{set to \code{FALSE} to prevent the calculation of the vector of model statistics}
 }
 \value{
@@ -105,13 +104,6 @@ set to \code{TRUE} if convergence failed (and \code{maxit>1})
 }
 \item{coefficients}{
 estimated parameters
-}
-\item{var}{
-estimated variance-covariance matrix (inverse of information matrix).
-Note that in the case of penalized estimation, \code{var} is not the
-improved sandwich-type estimator (which \code{lrm} does compute).  The
-only intercept parameter included in the stored object is the middle
-intercept.
 }
 \item{family, trans}{see \code{\link{orm}}}
 \item{deviance}{

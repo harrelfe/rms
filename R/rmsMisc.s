@@ -29,16 +29,19 @@ vcov.lrm <- function(object, regcoef.only=TRUE, intercepts='all', ...) {
      intercepts %nin% c('all', 'none'))
     stop('if character, intercepts must be "all" or "none"')
 
-  if(!length(intercepts) ||
+  if(! length(intercepts) ||
      (length(intercepts) == 1) && intercepts == 'all')
     return(vcov.rms(object, regcoef.only=regcoef.only, ...))
   ns <- num.intercepts(object)
-  v <- object$var
-  p <- ncol(v)
-  nx <- p - ns
-  if(intercepts == 'none') intercepts <- integer(0)
-  i <- if(nx == 0) intercepts else c(intercepts, (ns+1):p)
-  v[i, i, drop=FALSE]
+  v    <- object$var
+  info <- object$info.matrix
+  p    <- if(length(v)) ncol(v) else infoMxop(info, np=TRUE)
+  nx   <- p - ns
+  if(length(intercepts) == 1 && intercepts == 'none')
+    intercepts <- integer(0)
+  i <- if(nx == 0) intercepts else c(intercepts, (ns + 1) : p)
+  if(length(v)) v[i, i, drop=FALSE]
+  else infoMxop(info, i=i)
 }
 
 vcov.ols <- function(object, regcoef.only=TRUE, ...)
@@ -50,10 +53,15 @@ vcov.cph <- function(object, regcoef.only=TRUE, ...)
 vcov.psm <- function(object, regcoef.only=TRUE, ...)
   vcov.rms(object, regcoef.only=regcoef.only, ...)
 
-vv <- vcov.orm <- function(object, regcoef.only=TRUE,
+vcov.orm <- function(object, regcoef.only=TRUE,
                      intercepts='mid', ...) {
-  v <- object$var
-  if(! length(intercepts)) return(v)
+  np   <- length(object$coefficients)
+  ns   <- num.intercepts(object)
+  v    <- object$var
+  info <- object$info.matrix
+  # Handle old fit objects from < rms 7.0-0
+  if(! length(intercepts))
+    return(if(length(v)) v else infoMxop(info, invert=TRUE))
   li1 <- length(intercepts) == 1
   iat <- attr(v, 'intercepts')  # handle fit.mult.impute (?), robcov
   # robcov re-writes var object and uses all intercepts
@@ -62,37 +70,41 @@ vv <- vcov.orm <- function(object, regcoef.only=TRUE,
      intercepts == iref) intercepts <- 'mid'
   if(! length(iat)) {
     if(li1 && intercepts == 'mid') {
-      i <- c(iref, (num.intercepts(object, 'var') + 1) : nrow(v))
-      return(v[i, i, drop=FALSE])
+      # See if v was stored with just one intercept.  It was kmid.
+      if(length(v) && (ncol(v) ==  1 + np - ns)) return(v)
+      i <- c(iref, (ns + 1) : np)
+      return(infoMxop(info, i=i))
     }
     return(vcov.lrm(object, regcoef.only=regcoef.only,
                     intercepts=intercepts, ...))
   }
 
   if(li1 && intercepts == 'none')
-    return(object$var[-(1 : length(iat)),
-                      -(1 : length(iat)), drop=FALSE])
-    if(li1 && intercepts == 'mid' && length(iat) == 1) return(object$var)
+    return(if(length(v)) v[-(1 : length(iat)), -(1 : length(iat)), drop=FALSE]
+           else infoMxop(info, i=setdiff(1 : np, 1 : length(iat))))
+    if(li1 && intercepts == 'mid' && length(iat) == 1)
+      return(if(length(v)) v
+             else infoMxop(info, i=c(iref, (ns + 1) : np)) )
 
-  iref  <- object$interceptRef
-  info  <- object$info.matrix
   isbootcov <- length(object$boot.coef)
-  ns    <- num.intercepts(object)
-  np    <- infoMxop(info, np=TRUE)   # just compute # parameters
-  nx    <- np - ns
-  name <- names(coef(object))
+  ns        <- num.intercepts(object)
+  nx        <- np - ns
+  name      <- names(coef(object))
 
   if(li1 && is.character(intercepts)) {
     if(intercepts != 'mid' && isbootcov)
       stop('intercepts must be "mid" if object produced by bootcov')
       switch(intercepts,
-             mid = return(object$var),
+             mid = return(if(length(v)) v else
+                          infoMxop(info, i=c(iref, (ns + 1) : np))),
              all = {
                  v <- infoMxop(info, invert=TRUE)
                  dimnames(v) <- list(name, name)
                  return(v)
              },
-             none= return(object$var[-1, -1, drop=FALSE]) )
+             none= return(if(length(v)) v[-1, -1, drop=FALSE]
+                          else infoMxop(info, i = (ns + 1) : np))
+      )
   }
   if(isbootcov)
     stop('intercepts must be "mid" if object produced by bootcov')
@@ -105,19 +117,22 @@ vv <- vcov.orm <- function(object, regcoef.only=TRUE,
 
 vcov.rms <- function(object, regcoef.only=TRUE, intercepts='all', ...)
   {
+    np <- length(object$coefficients)
+    ns <- num.intercepts(object)
     cov <- object$var
-    if(!length(cov)) stop("fit does not have variance-covariance matrix")
-    if(regcoef.only) {
-      p <- length(object$coefficients)
-      cov <- cov[1:p, 1:p, drop=FALSE]
+    if(length(cov)) {
+      if(regcoef.only) cov <- cov[1 : np, 1 : np, drop=FALSE]
+      if(length(intercepts) && intercepts == 'none' && ns > 0)
+        cov <- cov[- (1 : ns), - (1 : ns), drop=FALSE]
+      return(cov)
     }
-    if(length(intercepts) && intercepts == 'none') {
-      ns <- num.intercepts(object)
-      if(ns > 0) cov <- cov[-(1:ns), -(1:ns), drop=FALSE]
-    }
-    cov
+    # regcoef.only does not apply to fits from lrm, orm which are the only fits using
+    # info.matrix
+    info <- object$info.matrix
+    if(length(intercepts) && intercepts == 'none')
+      infoMxop(info, i = (ns + 1) : np)
+      else infoMxop(info, invert=TRUE)
   }
-
 
 
 ## Functions for Out Of Sample computation of -2 log likelihood
@@ -630,8 +645,8 @@ vif <- function(fit)
     v <- v[-(1:ns),-(1:ns),drop=FALSE]
     nam <- nam[-(1:ns)]
   }
-  d <- diag(v)^.5
-  v <- diag(solve(v/(d %o% d)))
+  d <- Matrix::diag(v)^.5
+  v <- Matrix::diag(Matrix::solve(v/(d %o% d)))
   names(v) <- nam
   v
 }

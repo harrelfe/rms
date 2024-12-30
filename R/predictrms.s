@@ -371,6 +371,8 @@ predictrms <-
                      Xx <- cbind(Intercept=1., X)
                      sqrt(((Xx %*% cov) * Xx) %*% rep(1L, ncol(Xx)))
                    })
+
+        se <- as.vector(Matrix::as.matrix(se))  # no Matrix::as.vector
         names(se) <- rnam
         sef <- naresid(naa, se)
         }

@@ -2,7 +2,7 @@
 #'
 #' Fits a binary or propoortional odds ordinal logistic model for a given design matrix and response vector with no missing values in either.  Ordinary or quadratic penalized maximum likelihood estimation is used.
 #'
-#' `lrm.fit` implements a large number of optimization algorithms with the default being Newton-Raphson with step-halving.  For binary logistic regression without penalization iteratively reweighted least squares method in [stats::glm.fit()] is an option.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  Optionally, the `x` matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original `x` scale after fitting.  More detail and comparisons of the various optimization methods may be found [here](https://www.fharrell.com/post/mle/).  For ordinal regression with a large number of intercepts (distinct `y` values less one) you may want to use `optim_method='BFGS', compvar=FALSE` which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
+#' `lrm.fit` implements a large number of optimization algorithms with the default being Newton-Raphson with step-halving.  For binary logistic regression without penalization iteratively reweighted least squares method in [stats::glm.fit()] is an option.  The -2 log likeilhood, gradient, and Hessian (negative information) matrix are computed in Fortran for speed.  Optionally, the `x` matrix is mean-centered and QR-factored to help in optimization when there are strong collinearities.  Parameter estimates and the covariance matrix are adjusted to the original `x` scale after fitting.  More detail and comparisons of the various optimization methods may be found [here](https://www.fharrell.com/post/mle/).  For ordinal regression with a large number of intercepts (distinct `y` values less one) you may want to use `optim_method='BFGS', which does away with the need to compute the Hessian.  This will be helpful if statistical tests and confidence intervals are not being computed, or when only likelihood ratio tests are done.
 #'
 #' When using Newton-Raphson or Levenberg-Marquardt optimization, sparse Hessian/information/variance-covariance matrices are used throughout.  For `nlminb` the Hessian has to be expanded into full non-sparse form, so `nlminb` will not be very efficient for a large number of intercepts.
 #' 
@@ -22,7 +22,7 @@
 #'   * `'L-BFGS-B'` :
 #'   * `'CG'` :
 #'   * `'Nelder-Mead'` : see [stats::optim()] for these 4 methods
-#' @param maxit maximum number of iterations allowed, which means different things for different `opt_method`.  For `NR` it is the number of updates to parameters not counting step-halving steps.  When `maxit=1`, `initial` is assumed to contain the maximum likelihood estimates already, and those are returned as `coefficients`, along with `u`, `info.matrix` (negative Hessian) and `deviance`.  If `compvar=TRUE`, the `var` matrix is also returned, and `stats` are only computed if `compstats` is explicitly set to `TRUE` by the user.
+#' @param maxit maximum number of iterations allowed, which means different things for different `opt_method`.  For `NR` it is the number of updates to parameters not counting step-halving steps.  When `maxit=1`, `initial` is assumed to contain the maximum likelihood estimates already, and those are returned as `coefficients`, along with `u`, `info.matrix` (negative Hessian) and `deviance`.  `stats` are only computed if `compstats` is explicitly set to `TRUE` by the user.
 #' @param reltol used by `BFGS`, `nlminb`, `glm.fit` to specify the convergence criteria in relative terms with regard to -2 LL, i.e., convergence is assume when one minus the fold-change falls below `reltol`
 #' @param abstol used by `NR` (maximum absolute change in parameter estimates from one iteration to the next before convergence can be declared; by default has no effect), `nlminb` (by default has no effect; see `abs.tol` argument; set to e.g. 0.001 for `nlminb` when there is complete separation)
 #' @param gradtol used by `NR` and `LM` (maximum absolute gradient before convergence can be declared) and `nlm` (similar but for a scaled gradient).  For `NR` and `LM` `gradtol` is multiplied by the the sample size / 1000, because the gradient is proportional to sample size.
@@ -31,11 +31,10 @@
 #' @param minstepsize used with `opt_method='NR'` to specify when to abandon step-halving
 #' @param trace set to a positive integer to trace the iterative process.  Some optimization methods distinguish `trace=1` from `trace` higher than 1.
 #' @param tol QR singularity criterion for `opt_method='NR'` updates; ignored when inverting the final information matrix because `chol` is used for that.
-#' @param penalty.matrix a self-contained ready-to-use penalty matrix - see [lrm()].  It is \eqn{p \times p} where \eqn{p} is the number of columns of `x`.
+#' @param penalty.matrix a self-contained ready-to-use penalty matrix - see [lrm()].  It is \eqn{p x p} where \eqn{p} is the number of columns of `x`.
 #' @param weights a vector (same length as `y`) of possibly fractional case weights
 #' @param normwt set to `TRUE` to scale `weights` so they sum to \eqn{n}, the length of `y`; useful for sample surveys as opposed to the default of frequency weighting
 #' @param transx set to `TRUE` to center `x` and QR-factor it to orthogonalize.  See [this](https://hbiostat.org/rmsc/mle#qr) for details.
-#' @param compvar set to `FALSE` to prevent the calculation of the variance-covariance matrix.  It is automatically set to `FALSE` if there are more than 3000 intercepts, for which [orm()] should be used instead.
 #' @param compstats set to `FALSE` to prevent the calculation of the vector of model statistics
 #' @param inclpen set to `FALSE` to not include the penalty matrix in the Hessian when the Hessian is being computed on transformed `x`, vs. adding the penalty after back-transforming.  This should not matter.
 #' @param initglm set to `TRUE` to compute starting values for an ordinal model by using `glm.fit` to fit a binary logistic model for predicting the probability that `y` exceeds or equals the median of `y`.  After fitting the binary model, the usual starting estimates for intercepts (log odds of cumulative raw proportions) are all adjusted so that the intercept corresponding to the median is the one from `glm.fit`.
@@ -64,7 +63,7 @@
 #'     * `gp`: g-index on the probability scale
 #'   * `fail`:  `TRUE` if any matrix inversion or failure to converge occurred, `FALSE` otherwise
 #'   * `coefficients`:
-#'   * `var`:  variance-covariance matrix if `compvar=TRUE`. It will be a `Matrix` package object if using `NR` or `LQ` optimization.
+#'   * `info.matrix`: a list of 3 elements `a`, `b`, `ab` with `a` being a $k x 2$ matrix for $k$ intercepts, `b` being $p x p$ for $p$ predictors, and `ab` being $k x p$.  See [infoMxop()] for easy ways of operating on these 3 elements.
 #'   * `u`:  gradient vector
 #'   * `iter`:  number of iterations required.  For some optimization methods this is a vector.
 #'   * `deviance`:  vector of deviances: intercepts-only, intercepts + offset (if `offset` is present), final model (if `x` is used)
@@ -90,7 +89,7 @@
 #'
 #' fit <- lrm.fit(cbind(age,blood.pressure,sex=='male'), death)
 #' }
-#' @seealso [lrm()], [stats::glm()], [cr.setup()], [gIndex()], [stats::optim()], [stats::nlminb()], [stats::nlm()],[stats::glm.fit()], [recode2integer()], [Hmisc::qrxcenter()]
+#' @seealso [lrm()], [stats::glm()], [cr.setup()], [gIndex()], [stats::optim()], [stats::nlminb()], [stats::nlm()],[stats::glm.fit()], [recode2integer()], [Hmisc::qrxcenter()], [infoMxop()]
 #'
 lrm.fit <-
   function(x, y, offset = 0, initial,
@@ -102,7 +101,7 @@ lrm.fit <-
     factr = 1e7, eps = 5e-4,
     minstepsize = 1e-2, trace = 0,
     tol = 1e-14, penalty.matrix = NULL, weights = NULL, normwt = FALSE,
-    transx = FALSE, compvar = TRUE, compstats = TRUE,
+    transx = FALSE, compstats = TRUE,  ## ??
     inclpen = TRUE, initglm = FALSE, y.precision=7)
 {
 
@@ -115,7 +114,7 @@ lrm.fit <-
   ftdb <- as.integer(getOption('lrm.fit.debug', 0L))
   if(ftdb) {
     w <- llist(opt_method, length(x), dim(x), length(y), length(offset),
-               if(! missing(initial)) initial, compvar, compstats, ftdb, maxit, labels=FALSE)
+               if(! missing(initial)) initial, compstats, ftdb, maxit, labels=FALSE)
     prn(w, file='/tmp/z')
   }
   db <- if(! ftdb) function(...) {} else function(...) cat(..., '\n', file='/tmp/z', append=TRUE)
@@ -179,10 +178,8 @@ lrm.fit <-
   numy    <- w$freq
 
   k       <- length(ylevels) - 1
-  if(k > 3000 && compvar) {
-    warning('compvar set to FALSE when there are > 3000 intercepts.  Consider using orm.')
-    compvar <- FALSE
-  }
+  iname <- if(k == 1) 'Intercept' else paste('y>=', ylevels[2 : (k + 1)], sep="")
+  name <- c(iname, xname)
 
   if(opt_method == 'glm.fit' && (k > 1 || penpres))
     stop('opt_method="glm.fit" only applies when k=1 and there is no penalty')
@@ -242,53 +239,45 @@ lrm.fit <-
 
   ialpha = 1 : k
 
-  .grad <- numeric(k + p)       # allocate space for Fortran returned
-  .ha   <- matrix(0e0, k, 2)    # quantities just once
-  .hb   <- matrix(0e0, p, p)
-  .hab  <- matrix(0e0, k, p)
-
+  rfort <- function(parm, what, penhess=0L, debug=0L) {
+    nv    <- length(parm)
+    p     <- nv - k
+    ibeta <- if(p == 0) integer(0) else - (1 : k)
+    db('0', n, k, p)
+    w <- .Fortran(F_lrmll, n, k, p, x, y, offset, weights, penalty.matrix,
+             as.double(parm[ialpha]), as.double(parm[ibeta]),
+             logL=numeric(1), grad=numeric(nv),
+             a=matrix(0e0, k, 2), b=matrix(0e0, p, p), ab=matrix(0e0, k, p),
+             what=what, ftdb, penhess, salloc=integer(1))
+    if(w$salloc != 0)
+      stop('Failed dynamic array allocation in Fortran subroutine lrmll: code ', w$salloc)
+    w
+  }
 
   logl <- function(parm, ...) {
-    p     <- length(parm) - k
-    ibeta <- if(p == 0) integer(0) else - (1 : k)
     db('1', n, k, p)
-    .Fortran(F_lrmll, n, k, p, x, y, offset, weights, penalty.matrix,
-             as.double(parm[ialpha]), as.double(parm[ibeta]),
-             logL=numeric(1), .grad, .ha, .hb, .hab,
-             1L, ftdb, 0L, salloc=integer(1))$logL
+    rfort(parm, 1L)$logL
   }
 
   grad <- function(parm, ...) {
-    p     <- length(parm) - k
-    ibeta <- if(p == 0) integer(0) else - (1 : k)
     db('2', n, k, p)
-    ww <- llist(x, y, offset, weights, penalty.matrix)
-    g <- .Fortran(F_lrmll, n, k, p, x, y, offset, weights, penalty.matrix,
-                  as.double(parm[ialpha]), as.double(parm[ibeta]),
-                  logL=numeric(1), grad=.grad, .ha, .hb, .hab,
-                  2L, ftdb, 0L, salloc=integer(1))$grad
+    g <- rfort(parm, 2L)$grad
     # Save last computed gradient
     if(! outputs_gradient) assign('.lrm_gradient.', g, envir=envi)
     -2e0 * g
   }
 
-  Hess <- function(parm, ...) {
-    p     <- length(parm) - k
-    ibeta <- if(p == 0) integer(0) else - (1 : k)
+  Hess <- function(parm, what='matrix', ...) {
     # Last argument to lrmll = penhess = 1 so that penalty matrix is
     # included in Hessian so that it's used in Newton-Raphson updating.
     # Later for evaluating the Hessian a final time for getting the
     # covariance matrix we'll want to suppress penhess
     db('3', n, k, p)
-    w <- .Fortran(F_lrmll, n, k, p, x, y, offset, weights, penalty.matrix,
-                  as.double(parm[ialpha]), as.double(parm[ibeta]),
-                  logL=numeric(1), grad=.grad,
-                  a=.ha, b=.hb, ab=.hab,
-                  3L, ftdb, 1L, salloc=integer(1))
-    if(w$salloc != 0)
-      stop('Failed dynamic array allocation in Fortran subroutine lrmll: code ', w$salloc)
-
-    h <- infoMxop(w[c('a', 'b', 'ab')])
+    h <- rfort(parm, 3L, penhess=1L)[c('a', 'b', 'ab')]
+    if(what == 'info')
+      return(list(a = - h$a, b = - h$b, ab = - h$ab,
+                  iname=iname, xname=xname))
+    h <- infoMxop(h)
     if(sparse_hessian_ok) -2e0 * h else -2e0 * Matrix::as.matrix(h) 
   }
 
@@ -314,8 +303,7 @@ lrm.fit <-
         gr  <- -0.5 * opt$grad
 
         # Compute info matrix (- Hessian)
-        # Hess * -0.5 = Hessian
-        info <- 0.5 * Hess(cof)
+        info <- Hess(cof, what='info')
         # This is the information matrix for (delta, gamma) on the centered and QR-transformed
         # x without including the penalty matrix (which will be added below after
         # transformations) if inclpen is FALSE.
@@ -337,7 +325,7 @@ lrm.fit <-
         ll   <- opt$obj
         cof  <- opt$param
         gr   <- -0.5 * opt$grad
-        info <- 0.5 * Hess(cof)
+        info <- Hess(cof, what='info')
         it   <- opt$iter
       }
     }
@@ -353,7 +341,7 @@ lrm.fit <-
       ll   <- opt$minimum
       cof  <- opt$estimate
       gr   <- -0.5 * opt$gradient
-      info <- 0.5 * Hess(cof)
+      info <- Hess(cof, what='info')
       it   <- opt$iterations
       con  <- opt$code
       ok   <- con <= 3
@@ -364,7 +352,7 @@ lrm.fit <-
       ll   <- opt$objective
       cof  <- opt$par
       gr   <- .lrm_gradient.
-      info <- 0.5 * Hess(cof)
+      info <- Hess(cof, what='info')
       it   <- c(iterations=opt$iterations, evaluations=opt$evaluations)
       con  <- opt$convergence
       ok   <- con == 0
@@ -392,7 +380,7 @@ lrm.fit <-
       ll   <- opt$value
       cof  <- opt$par
       gr   <- .lrm_gradient.
-      info <- 0.5 * Hess(cof)
+      info <- Hess(cof, what='info')
       it   <- opt$counts
       con  <- opt$convergence
       ok   <- con == 0
@@ -430,18 +418,18 @@ lrm.fit <-
     u <- -0.5 * grad(initial)
     res <- list(coefficients = initial,
                 deviance     = loglik,
-                info.matrix  =  0.5 * Hess(initial),
+                info.matrix  =  Hess(initial, what='info'),
                 u            = u,
                 stats        = if(compstats) lrmstats(y, ymed, p, lpmid, loglik, u, weights, sumwt, sumwty),
                 maxit = 1, fail=FALSE, class='lrm')
-    if(compvar) {
-        vc <- try(if(sparse_hessian_ok) Matrix::solve(res$info.matrix, tol=tol) else chol2inv(chol(res$info.matrix)))
-        if(inherits(vc, 'try-error')) {
-          cat(vc)
-          return(structure(list(fail=TRUE), class='lrm'))
-        }
-      res$var <- vc
-    }
+  ##??  if(compvar) {
+  #      vc <- try(if(sparse_hessian_ok) Matrix::solve(res$info.matrix, tol=tol) else chol2inv(chol(res$info.matrix)))
+  #      if(inherits(vc, 'try-error')) {
+  #        cat(vc)
+  #        return(structure(list(fail=TRUE), class='lrm'))
+  #      }
+  #    res$var <- vc
+  #  }
     return(res)
   }
 
@@ -489,20 +477,22 @@ lrm.fit <-
       M <- matrix(1, nrow=k, ncol=1) %*% matrix(xbar, nrow=1)
       J <- rbind(cbind(diag(k),                      M ),
                  cbind(matrix(0e0, nrow=p, ncol=k),  Ri))
-      info <- t(J) %*% info %*% J
+      info <- t(J) %*% infoMxop(info, B=J)
       }
 
     # Add second derivative of penalty function if needed, on the original scale
-    if(! inclpen && penpres)
-      info[-(1:k), -(1:k)] <- info[-(1:k), -(1:k)] - original.penalty.matrix
-
-  if(compvar) {
-      vc <- try(if(sparse_hessian_ok) Matrix::solve(info, tol=tol) else chol2inv(chol(info)))
-      if(inherits(vc, 'try-error')) {
-        cat(vc)
-        return(structure(list(fail=TRUE), class='lrm'))
-      }
+    if(! inclpen && penpres) {
+      if(is.list(info) && length(info) == 3) info$b <- info$b - original.penalty.matrix
+      else info[-(1:k), -(1:k)] <- info[-(1:k), -(1:k)] - original.penalty.matrix
     }
+
+##??  if(compvar) {
+#      vc <- try(if(sparse_hessian_ok) Matrix::solve(info, tol=tol) else chol2inv(chol(info)))
+#      if(inherits(vc, 'try-error')) {
+#        cat(vc)
+#        return(structure(list(fail=TRUE), class='lrm'))
+#      }
+#    }
     # Save predictions before reverting since original x not kept
     # x and kof both translated -> x * kof on original scale
     kof    <- c(delta, gamma)
@@ -524,23 +514,20 @@ lrm.fit <-
   } else {   # p = 0
     lp    <- rep(res$alpha[1],    n)
     lpmid <- rep(res$alpha[ymed], n)
-    if(compvar) {
-      info <- 0.5 * Hess(initial[1 : k])
-      vc   <- if(sparse_hessian_ok) Matrix::solve(info, tol=tol) else chol2inv(chol(info))
-    }
   }
 
-  name <- if(k == 1) 'Intercept' else paste('y>=', ylevels[2 : (k + 1)], sep="")
-  name <- c(name, xname)
   kof  <- res$coef
 
   names(kof) <- name
   if(length(res$u))   names(res$u)   <- name
-  if(! is.null(info)) dimnames(info) <- list(name, name)
-  if(! is.null(vc))   dimnames(vc)   <- list(name, name)
   if(length(R))       dimnames(R)    <- dimnames(Ri) <- list(xname, xname)
 
   if(p == 0) lpmid <- initial[ymed] + offset     # initial is defined at Pt A or Pt B above
+
+  if(! transx) {
+    info$iname <- iname
+    info$xname <- xname
+  }
 
   retlist <-
      list(call              = cal,
@@ -552,7 +539,6 @@ lrm.fit <-
           fail              = FALSE,
           coefficients      = kof,
           info.matrix       = info,
-          var               = vc,
           u                 = res$u,
           iter              = res$iter,
           deviance          = loglik,
@@ -590,7 +576,6 @@ newtonr <- function(init, obj, grad, hessian, n,
   for (iter in 1:maxit) {
     gradient <- grad(theta)     # Compute the gradient vector
     hess     <- hessian(theta)  # Compute the Hessian matrix
-
     delta <- try(Matrix::solve(hess, gradient, tol=tolsolve)) # Compute the Newton-Raphson step
     if(inherits(delta, 'try-error'))
       return(list(code=2, message='singular Hessian matrix'))
