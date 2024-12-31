@@ -9,7 +9,6 @@
 #' @param invert set to `TRUE` to invert `info` (implied when `i` or `B` is given)
 #' @param B multiplier matrix
 #' @param np set to `TRUE` to just fetch the total number of parameters (intercepts + betas)
-#' @param k number of intercepts; only needed when `info` is a non-triband diagonal type of matrix as in old version `lrm` results
 #' @param tol tolerance for matrix inversion singularity
 #' @param abort set to `FALSE` to run the `solve` calculation through `try()` without aborting; the user will detect that the operation did not success by examinine `inherits(result, 'try-error')` for being `TRUE`.
 #'
@@ -25,60 +24,49 @@
 #' infoMxop(v, i=c(2,4))     # returns a submatrix of v inverse
 #' }
 infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
-                     B=NULL, np=FALSE, k, tol=1e-14, abort=TRUE) {
+                     B=NULL, np=FALSE, tol=1e-14, abort=TRUE) {
   if(! missing(i) && ! invert)
     stop('i is irrelevant if invert=FALSE')
   
   xname <- iname <- name <- sc <- NULL
   if(is.matrix(info)) name <- colnames(info)
-  
+
   type <- 'plain'
+  t3   <- FALSE
   if(inherits(info, 'matrix.csr')) type <- 'SparseM'
-  else if(! is.matrix(info)) {
-    type <- 'Matrix'
-    if(! is.list(info) || any(c('a', 'b', 'ab') %nin% names(info))) {
-      # a Matrix object such as one from lrm
-      # (sparse but not as efficient as triband diagonal)
-      nv <- ncol(info)
-      if(np) return(nv)
-      if(missing(k)) stop('must specify k= for lrm information matrix')
-      p  <- nv - k
-    } else {
-      # 3-element list produced by lrm.fit or orm.fit
+  else if(is.list(info) && all(c('a', 'b', 'ab') %in% names(info))) {
+    # Object created by lrm or orm
+      type  <- 'Matrix'
+      t3    <- TRUE
       a     <- info$a   # intercepts
       b     <- info$b   # betas
       ab    <- info$ab  # intercepts x betas
       xname <- info$xname
       iname <- info$iname
       sc    <- info$scale
-
-      if(np) return(sum(dim(ab)))
-      if(! missing(k) && k != nrow(ab))
-        stop('superfluous k specified and does not match info$ab')
-      k  <- nrow(ab) # no. of intercepts = nrow(a)
-      p  <- ncol(ab) # no. of betas
+      k     <- nrow(ab) # no. of intercepts = nrow(a)
+      p     <- ncol(ab) # no. of betas
+      if(np) return(k + p)
       # Simplify if only one intercept, no need for sparseness
       a <- if(k == 1) a[1, 1]
       else Matrix::bandSparse(k, k=c(0,1), diagonals=a, symmetric=TRUE)
       info <- rbind(cbind(a, ab), cbind(t(ab), b))
       name <- c(iname, xname)
       dimnames(info) <- list(name, name)
-    }
-  }
-  if(np) return(ncol(info))
+    } else if(inherits(info, 'Matrix')) type <- 'Matrix'
+    else type <- 'plain'
 
+  nv <- ncol(info)
+  if(np) return(nv)
   if(! invert) return(info)
-  nv    <- ncol(info)
 
   # ChatGPT confirmed that extracting submatrices of t(trans) x V x trans equals
   # operating on a submatrix of trans: https://chatgpt.com/share/676e6cb9-bde0-800a-b5f6-0b2c53393ae1
   if(length(sc)) {
-    p <- length(sc$mean)
-    k <- nv - p
     # t(trans) %*% covariance matrix %*% trans = rescaled cov matrix
-    trans <- rbind(cbind(diag(k), matrix(0, nrow=k, ncol=p)),
-                   cbind(-matrix(rep(sc$mean / sc$sd, k), ncol=k),
-                  diag(1 / as.vector(sc$sd))))
+    trans <- rbind(cbind(Matrix::Diagonal(k), Matrix::Matrix(0., k, p)),
+                   cbind(Matrix::Matrix(- rep(sc$mean / sc$sd, k), ncol=k),
+                  Matrix::Diagonal(x = 1. / as.vector(sc$sd))))
   }
 
   tryit <- if(abort) function(x) x else function(x) try(x)
@@ -95,22 +83,33 @@ infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
     if(length(sc)) v <- t(trans) %*% v %*% trans
   }
   else {
+    # User has specied i, a vector of indexes of rows/columns of inverse to keep
     # Construct w = a p x r matrix where r = no. desired inverse elements
     # jth column of w has a 1 in i(j) row
-    if(is.character(i) && length(i) == 1) 
+    if(is.character(i) && length(i) == 1) {
+      if(! t3) k <- attr(info, 'intercepts')
+      if(! length(k)) 
+        stop("may only specify i='i' or 'x' when operating on the default ",
+             "lrm or orm 3-element information matrix or when info has ",
+             "an intercepts attribute")
       i <- switch(i,
                   i = 1 : k,
                   x = (k + 1) : nv)
+    }
     l <- length(i)
     w <- matrix(0., nv, l)
     w[cbind(i, 1 : l)] <- 1
-    if(! missing(B)) w <- w %*% B
+    if(type == 'Matrix') w <- Matrix::Matrix(w)
+    if(! missing(B)) {
+      B <- Matrix::Matrix(B)
+      w <- w %*% B
+    }
     v <- tryit(asm(solv(info, w, tol=tol)[i, , drop=FALSE]))
     if(length(sc)) {
       w <- trans[i, i, drop=FALSE]
       v <- t(w) %*% v %*% w
     }
-    dimnames(v) <- list(name[i], name[i])
+    if(missing(B)) dimnames(v) <- list(name[i], name[i])
   }
   v
 }

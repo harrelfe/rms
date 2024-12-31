@@ -101,7 +101,7 @@ lrm.fit <-
     factr = 1e7, eps = 5e-4,
     minstepsize = 1e-2, trace = 0,
     tol = 1e-14, penalty.matrix = NULL, weights = NULL, normwt = FALSE,
-    transx = FALSE, compstats = TRUE,  ## ??
+    transx = FALSE, compstats = TRUE,
     inclpen = TRUE, initglm = FALSE, y.precision=7)
 {
 
@@ -418,18 +418,10 @@ lrm.fit <-
     u <- -0.5 * grad(initial)
     res <- list(coefficients = initial,
                 deviance     = loglik,
-                info.matrix  =  Hess(initial, what='info'),
+                info.matrix  = Hess(initial, what='info'),
                 u            = u,
                 stats        = if(compstats) lrmstats(y, ymed, p, lpmid, loglik, u, weights, sumwt, sumwty),
                 maxit = 1, fail=FALSE, class='lrm')
-  ##??  if(compvar) {
-  #      vc <- try(if(sparse_hessian_ok) Matrix::solve(res$info.matrix, tol=tol) else chol2inv(chol(res$info.matrix)))
-  #      if(inherits(vc, 'try-error')) {
-  #        cat(vc)
-  #        return(structure(list(fail=TRUE), class='lrm'))
-  #      }
-  #    res$var <- vc
-  #  }
     return(res)
   }
 
@@ -474,10 +466,11 @@ lrm.fit <-
       # Transform the information matrix from the (delta, gamma) scale to (alpha, beta)
       # See https://hbiostat.org/rmsc/mle#qr and https://stats.stackexchange.com/questions/657210
       # In the future see the R madness package
-      M <- matrix(1, nrow=k, ncol=1) %*% matrix(xbar, nrow=1)
-      J <- rbind(cbind(diag(k),                      M ),
-                 cbind(matrix(0e0, nrow=p, ncol=k),  Ri))
-      info <- t(J) %*% infoMxop(info, B=J)
+      # M <- Matrix::Matrix(1, nrow=k, ncol=1) %*% Matrix::Matrix(xbar, nrow=1)
+      M <- Matrix::Matrix(rep(xbar, each=k), nrow=k)
+      J <- rbind(cbind(Matrix::Diagonal(k),                  M ),
+                 cbind(Matrix::Matrix(0e0, nrow=p, ncol=k),  Ri))
+      info <- Matrix::t(J) %*% infoMxop(info) %*% J
       }
 
     # Add second derivative of penalty function if needed, on the original scale
@@ -486,13 +479,6 @@ lrm.fit <-
       else info[-(1:k), -(1:k)] <- info[-(1:k), -(1:k)] - original.penalty.matrix
     }
 
-##??  if(compvar) {
-#      vc <- try(if(sparse_hessian_ok) Matrix::solve(info, tol=tol) else chol2inv(chol(info)))
-#      if(inherits(vc, 'try-error')) {
-#        cat(vc)
-#        return(structure(list(fail=TRUE), class='lrm'))
-#      }
-#    }
     # Save predictions before reverting since original x not kept
     # x and kof both translated -> x * kof on original scale
     kof    <- c(delta, gamma)

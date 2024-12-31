@@ -29,7 +29,7 @@ pentrace <-
   clas <- class(fit)[1]
   isols <- clas=='ols'
 
-  if(!(isols || inherits(fit, 'lrm')))
+  if(!(isols || inherits(fit, 'lrm') || inherits(fit, 'orm')))
     stop("at present pentrace only works for lrm or ols")
 
   if(missing(fitter))
@@ -131,7 +131,7 @@ pentrace <-
         if(! length(v)) v <- infoMxop(f$info.matrix, invert=TRUE)
         f.nopenalty <- fitter(X, Y, initial=f$coef, maxit=1, tol=tol, ...)
         if(length(f.nopenalty$fail) && f.nopenalty$fail)
-          stop('fitter failed.  Try changing tol')
+          stop('fitter failed.  Try changing maxit or tol')
         info.matrix.unpenalized <-
           if(length(f.nopenalty$info.matrix))
             infoMxop(f.nopenalty$info.matrix) else
@@ -214,7 +214,7 @@ pentrace <-
       if(! length(v)) v <- infoMxop(f$info.matrix, invert=TRUE)
       f.nopenalty <- fitter(X, Y, initial=f$coef, maxit=1, tol=tol, ...)
       if(length(f.nopenalty$fail) && f.nopenalty$fail)
-        stop('fitter failed.  Try changing tol')
+        stop('fitter failed.  Try changing maxit or tol')
       info.matrix.unpenalized <-
         if(length(f.nopenalty$info.matrix)) infoMxop(f.nopenalty$info.matrix)
         else

@@ -6,11 +6,9 @@ Changes in version 7.0-0 (2024-)
    * orm, orm.fit: added weights and penalties
    * lrm, lrmll.f90: changed to use Matrix package sparse representation of Hessian/information matrix.  This allows lrm to have as many intercepts as orm.
    * lrm, orm: removed $var in fit object; use vcov() to extract the variance-covariance matrix.
-   * ??
    * Added intercepts argument to print.lrm and by default intercepts are not printed if there are more than 10
    * infoMxop: new function to take either an ordinary information matrix or a list containing information submatrices (one of them being a symmetric band diagonal sparse representation), and either returns the assembled sparse matrix, its inverse, or selected rows/columns of the inverse.  Used by functions such as orm, anova.rms, Mean.lrm, Quantile.orm, ExProb.orm to do efficient calculations on the variance-covariance matrix.
    * vcov.orm: changed to use infoMxop
-   * ??
    * Changed rms service routines to deal with lrm, orm fits not containing $var but allowing for old fit objects that do
    * Mean.lrm, Quantile.orm, ExProb.orm: more efficient matrix operations using infoMxop
    * anova.rms: change default tol from 1e-13 to 1e-14, change LRchunktest to run faster for lrm and orm by not computing model statistics or variance matrices

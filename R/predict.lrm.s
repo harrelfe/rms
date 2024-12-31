@@ -97,7 +97,7 @@ Mean.lrm <- function(object, codes=FALSE, ...)
                                 x * (values[2:length(values)] - values[1:ns])))
       dmean.dbeta  <- apply(dmean.dalpha, 1, sum) * X
       dmean.dtheta <- cbind(dmean.dalpha, dmean.dbeta)
-      mean.var <- diag(dmean.dtheta %*% infoMxop(info, B=t(dmean.dtheta), k=ns))
+      mean.var <- diag(dmean.dtheta %*% infoMxop(info, B=t(dmean.dtheta)))
       w <- qnorm((1 + conf.int) / 2) * sqrt(mean.var)   
       attr(m, 'limits') <- list(lower = m - w, 
                                 upper = m + w)

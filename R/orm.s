@@ -120,17 +120,20 @@ orm <- function(formula, data=environment(formula),
   if(model) f$model <- m
   if(x) f$x <- X
   if(y) f$y <- Y
-  nrp <- f$non.slopes
+  nrp  <- f$non.slopes
+  info <- f$info.matrix
   if(penpres) {
     f$penalty <- penalty
     ## Get improved covariance matrix
-    v <- f$var
+    v <- infoMxop(info, invert=TRUE)
+ 
     if(var.penalty == 'sandwich') f$var.from.info.matrix <- v
     f.nopenalty <-
         fitter(X, Y, family=family, offset=offs, initial=f$coef, maxit=1,
                weights=weights, normwt=normwt)
     ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
     info.matrix.unpenalized <- infoMxop(f.nopenalty$info.matrix)
+    ## Why can't just just come from f$info.matrix ??
     dag <- Matrix::diag(info.matrix.unpenalized %*% v)
     f$effective.df.diagonal <- dag
     f$var <- if(var.penalty == 'simple') v else
