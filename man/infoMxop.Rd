@@ -8,9 +8,8 @@ infoMxop(
   info,
   i,
   invert = !missing(i) || !missing(B),
-  B = NULL,
+  B,
   np = FALSE,
-  k,
   tol = 1e-14,
   abort = TRUE
 )
@@ -26,8 +25,6 @@ infoMxop(
 
 \item{np}{set to \code{TRUE} to just fetch the total number of parameters (intercepts + betas)}
 
-\item{k}{number of intercepts; only needed when \code{info} is a non-triband diagonal type of matrix as in old version \code{lrm} results}
-
 \item{tol}{tolerance for matrix inversion singularity}
 
 \item{abort}{set to \code{FALSE} to run the \code{solve} calculation through \code{try()} without aborting; the user will detect that the operation did not success by examinine \code{inherits(result, 'try-error')} for being \code{TRUE}.}
@@ -39,6 +36,8 @@ a single integer or a matrix
 Processes three types of information matrices: ones produced by the \code{SparseM} package for the \code{orm} function in \code{rms} version 6.9-0 and earlier, by the \code{Matrix} package for version 7.0-0 of \code{rms}, or plain matrices.  For \code{Matrix}, the input information matrix is a list with three elements: \code{a} containing in two columns the diagonal and superdiagonal for intercepts, \code{b}, a square matrix for the covariates, and \code{ab} for intercepts x covariates.  If nothing else is specified, the assembled information matrix is returned for \code{Matrix}, or the original \code{info} otherwise.  If \code{p=TRUE}, the number of parameters in the model (number of rows and columns in the whole information matrix) is returned.  If \code{i} is given, the \code{i} elements of the inverse of \code{info} are returned, using efficient calculation to avoid inverting the whole matrix.  Otherwise if \code{invert=TRUE} or \code{B} is given without \code{i}, the efficiently (if \code{Matrix} or \code{SparseM}) inverted matrix is returned, or the matrix multiplication of the inverse and \code{B}.  If both \code{i} and \code{B} are given, what is returned is the \code{i} portion of the inverse of the information matrix, matrix multiplied by \code{B}.  This is done inside \code{solve()}.
 }
 \details{
+When only variance-covariance matrix elements corresponding to the non-intercepts are desired, specify
+\code{i='x'} or \code{i=(k + 1) : nv} where \code{nv} is the number of intercepts and slopes combined.  \code{infoMxop} computes the needed covariance matrix very quickly in this case.
 When inverting \code{info}, if \code{info} has a \code{'scale'} attribute with elements \code{mean} and \code{sd}, the scaling is reversed after inverting \code{info}.
 }
 \examples{
@@ -46,6 +45,7 @@ When inverting \code{info}, if \code{info} has a \code{'scale'} attribute with e
 f <- orm(y ~ x)
 infoMxop(f$info.matrix)   # assembles 3 pieces
 infoMxop(v, i=c(2,4))     # returns a submatrix of v inverse
+infoMxop(f$info.matrix, i='x')  # sub-covariance matrix for just the betas
 }
 }
 \author{
