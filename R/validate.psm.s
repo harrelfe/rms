@@ -80,12 +80,12 @@ validate.psm <-
 }
 
 
-survreg.fit2 <- function(x, y, iter=0, dist, parms=NULL, tol, maxiter=15, 
+survreg.fit2 <- function(x, y, offset=NULL, iter=0, dist, parms=NULL, tol, maxiter=15, 
                          init=NULL, rel.tolerance=1e-5, fixed=NULL, ...)
 {
   e <- y[, 2]
   if(sum(e) < 5) return(list(fail=TRUE))
-  x     <- x	#Get around lazy evaluation creating complex expression
+  x     <- x	# Get around lazy evaluation creating complex expression
   dlist <- survreg.distributions[[dist]]
   logcorrect <- 0
   trans      <- dlist$trans
@@ -102,7 +102,7 @@ survreg.fit2 <- function(x, y, iter=0, dist, parms=NULL, tol, maxiter=15,
     survreg.fit(cbind(Intercept=1, x), y, dist=dlist, parms=parms,
                 controlvals=survreg.control(maxiter=maxiter,
                   rel.tolerance=rel.tolerance),
-                offset=rep(0, length(e)), init=init)
+                offset=offset, init=init)
 
   if(is.character(f)) { warning(f); return(list(fail=TRUE)) }
   f$fail <- FALSE

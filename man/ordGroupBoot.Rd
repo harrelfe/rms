@@ -8,7 +8,7 @@ ordGroupBoot(
   y,
   B = 0,
   m = 7:min(15, floor(n/3)),
-  what = c("mean", "factor"),
+  what = c("mean", "factor", "m"),
   aprob = 0.9999,
   pr = TRUE
 )
@@ -20,7 +20,7 @@ ordGroupBoot(
 
 \item{m}{range of minimum group sizes to test; the default range is usually adequate}
 
-\item{what}{specifies that either the mean \code{y} in each group should be returned, or a \code{factor} version of this with interval endpoints in the levels should be returned}
+\item{what}{specifies that either the mean \code{y} in each group should be returned, a \code{factor} version of this with interval endpoints in the levels, or the computed value of \code{m} should be returned}
 
 \item{aprob}{minimum coverage probability sought}
 

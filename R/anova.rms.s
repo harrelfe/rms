@@ -8,14 +8,33 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-14,
                       posterior.summary=c('mean', 'median', 'mode'),
                       ns=500, cint=0.95, fitargs=NULL) {
 
-  misstest <- missing(test)
-  test     <- match.arg(test)
+  misstest   <- missing(test)
+  test       <- match.arg(test)
+  fitfunName <- class(object)
 
-  ava <- if(test == 'LR') function(idx) LRchunktest(object, idx, tol=tol, fitargs=fitargs)
-            else function(idx) {
-              chisq <- coef[idx] %*% solve(cov[idx, idx], coef[idx], tol=tol)
-              c(chisq, length(idx))
-            }
+
+  if(test == 'LR') {
+    if('x' %nin% names(object))
+      stop('must specify x=TRUE, y=TRUE when fitting model to use LR test')
+    X <- object[['x']]
+    fitter <- do.call('quickRefit', c(list(object, what='fitter'), fitargs))
+    # Compute deviance for full model
+    devf <- getDeviance(object)
+    devf <- devf[length(devf)]
+  }
+
+ ava <- if(test == 'LR') function(idx) {
+   if(length(idx) == ncol(X)) c(object$stats['Model L.R.'], length(idx))
+   else {
+    devs <- getDeviance(fitter(X[, - idx, drop=FALSE]), fitfunName)
+    devs <- devs[length(devs)]
+    c(devs - devf, length(idx))
+   }
+  } else function(idx) {
+    chisq <- coef[idx] %*% solve(cov[idx, idx], coef[idx], tol=tol)
+    c(chisq, length(idx))
+  }
+             
 
   eEV <- function(test=integer()) {
     coef  <- if(length(test)) draws[, test, drop=FALSE] else draws

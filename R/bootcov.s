@@ -6,124 +6,42 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
 
   nfit <- class(fit)[1]
 
-  if(length(fit$weights) && (coxcph || nfit[1] == 'Rq'))
-    stop('does not handle weights')
-
   if(!length(X <- fit$x) | !length(Y <- fit$y))
     stop("you did not specify x=TRUE and y=TRUE in the fit")
 
-
-  sc.pres <- match('scale',names(fit),0) > 0
+  sc.pres <- 'scale' %in% names(fit)
   ns <- fit$non.slopes
-
-  if(nfit == 'psm') {
-    fixed <- fit$fixed   #psm only
-    fixed <- if(length(fixed) == 1 && is.logical(fixed) && !fixed) list()
-    else list(scale=TRUE)
-
-    fixed <-  NULL
-    dist <-   fit$dist
-    parms <-  fit$parms
-  }
-
-  if(nfit %in% c('Glm','orm')) fitFamily <- fit$family
-
-  ## For orm fits, find y cutoff target for intercept (from median of
-  ## original sample)
-  ytarget <- if(nfit == 'orm')
-    with(fit,
-         ifelse(is.numeric(yunique), yunique[interceptRef + 1L],
-                interceptRef + 1L))
 
   ## See if ordinal regression being done
   ordinal <- nfit == 'orm' || (nfit == 'lrm' && length(unique(Y)) > 2)
 
-  penalty.matrix <- fit$penalty.matrix
+  ## Someday need to add resampling of offsets, weights    TODO
+  if(missing(fitter)) fitter <- quickRefit(fit, what='fitter', storevals=FALSE)
 
-  if(missing(fitter)) {
-    fitter <-
-      switch(nfit,
-             ols=if(length(penalty.matrix)) {
-               function(x, y, penalty.matrix, strata, ytarget, ...) {
-                 lm.pfit(cbind(Intercept=1., x), y,
-                         penalty.matrix=penalty.matrix,
-                         tol=1e-11, regcoef.only=TRUE)
-               }
-             }
-             else function(x, y, strata, ytarget, penalty.matrix, ...) {
-               lm.fit.qr.bare(x, y, intercept=TRUE)
-             },
-             lrm=function(x, y, penalty.matrix, strata, ytarget, ...) {
-               lrm.fit(x, y,
-                       penalty.matrix=penalty.matrix, compstats=FALSE, ...)
-             },
-             cph=function(x, y, strata=NULL, ytarget, penalty.matrix, ...) {
-               coxphFit(x, y, strata=strata,
-                        method="efron", type='right', ...)
-             },
-             psm=function(x, y, strata, ytarget, penalty.matrix, ...) {
-               survreg.fit2(x, y, dist=dist, parms=parms, fixed=fixed,
-                            offset=NULL, init=NULL, ...)
-             },
-             bj=function(x, y, strata, ytarget, penalty.matrix, ...) {
-               bj.fit(x, y, ...)
-             },
-             Glm=function(x, y, strata, ytarget, penalty.matrix, ...) {
-               glm.fit(cbind(1., x), as.vector(y), family=fitFamily, ...)
-             },
-             Rq=RqFit(fit, wallow=FALSE),
-             orm=function(x, y, ytarget=NULL, strata, ...) {
-               f <- orm.fit(x, y, family=fitFamily,
-                            compstats=FALSE, ...)
-               ns  <- f$non.slopes
-               cof <- f$coefficients
-               if(length(ytarget)) {
-                 ## Y values corresponding to intercepts
-                 yu <- f$yunique[-1]
-                 ## Linearly interpolate to return an intercept aimed
-                 ## at Y >= ytarget
-                 intcept <- approx(yu, cof[1:ns], xout=ytarget)$y
-                 ## if(min(abs(intcept - cof[1:ns])) > 1e-9) cat('****')
-                 intattr <- approx(yu, 1:ns, xout=ytarget)$y
-               }
-               else {
-                 k       <- f$interceptRef
-                 intattr <- k
-                 intcept <- cof[k]
-               }
-               names(intcept) <- 'Intercept'
-               cof <- c(intcept, cof[(ns + 1) : length(cof)])
-               attr(cof, 'intercepts') <- intattr
-               f$coefficients          <- cof
-               f
-             })
-  }
+  if(! length(fitter)) stop("fitter not valid")
 
-  if(!length(fitter)) stop("fitter not valid")
-
-  if(loglik)
-    {
-      oosl <- switch(nfit,
-                     ols=oos.loglik.ols,
-                     lrm=oos.loglik.lrm,
-                     cph=oos.loglik.cph,
-                     psm=oos.loglik.psm,
-                     Glm=oos.loglik.Glm)
+  if(loglik) {
+    oosl <- switch(nfit,
+                   ols=oos.loglik.ols,
+                   lrm=oos.loglik.lrm,
+                   cph=oos.loglik.cph,
+                   psm=oos.loglik.psm,
+                   Glm=oos.loglik.Glm)
 
       if(!length(oosl))
         stop('loglik=TRUE but no oos.loglik method for model in rmsMisc')
 
-      Loglik <- double(B+1)
+      Loglik      <- double(B + 1)
       Loglik[B+1] <- oosl(fit)
     }
   else Loglik <- NULL
 
   n     <- nrow(X)
   cof   <- fit$coefficients
-  if(nfit == 'orm') {
-    iref <- fit$interceptRef
-    cof <- cof[c(iref, (ns + 1L) : length(cof))]
-  }
+  # if(nfit == 'orm') {
+  #   iref <- fit$interceptRef
+  #   cof  <- cof[c(iref, (ns + 1L) : length(cof))]
+  # }
   p     <- length(cof)
   vname <- names(cof)
   if(sc.pres) {
@@ -131,50 +49,10 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     vname <- c(vname, "log scale")
   }
 
-  ## Function to carry non-NA values backwards and replace NAs at the
-  ## right end with zeros.  This will cause cell proportions for unsampled
-  ## Y values to be zero for the purpose of computing means
-  ## The zero placements will mess up bootstrap covariance matrix however
-  fillInTheBlanks <- function(S) {
-    ## http://stackoverflow.com/questions/1782704/propagating-data-within-a-vector/1783275#1783275
-    ## NA in S are replaced with observed values
-    ## accepts a vector possibly holding NA values and returns a vector
-    ## where all observed values are carried forward and the first is
-    ## also carried backward.  cfr na.locf from zoo library.
-    L <- !is.na(S)
-    c(S[L][1L], S[L])[cumsum(L) + 1L]
-  }
-  ## vn = names of full coefficient vector
-  ## ns = # non-slopes (intercepts) in full vector (target)
-  ## nc = # non-slopes for current fit in cof
-  fill <- function(cof, vn, ns) {
-    p <- length(vn)
-    if(length(cof) == p) return(cof)
-    nc <- ns - (p - length(cof))
-    cints              <- cof[1L : nc]  ## current intercepts
-    ints               <- rep(NA, ns)
-    names(ints)        <- vn[1L : ns]
-    ints[names(cints)] <- cints
-    ## Set not just last intercept to -Inf if missing but set all
-    ## NA intercepts at the right end to -Inf.  This will later lead to
-    ## cell probabilities of zero for bootstrap-omitted levels of Y
-    if(is.na(ints[ns])) {
-      l <- ns
-      if(ns > 1L) {
-        for(j in (ns - 1L) : 1L) {
-          if(!is.na(ints[j])) break
-          l <- j
-        }
-      }
-      ints[l : ns] <- -Inf  ## probability zero of exceeding unobserved high Y
-    }
-    #### CHANGE TO FILL IN ONLY INTERCEPTS
-    c(rev(fillInTheBlanks(rev(ints))), cof[-(1L : nc)])
-  }
-
+  
   bar <- rep(0, p)
   cov <- matrix(0, nrow=p, ncol=p, dimnames=list(vname,vname))
-  if(coef.reps) coefs <- matrix(NA, nrow=B, ncol=p, dimnames=list(NULL,vname))
+  if(coef.reps) coefs <- matrix(NA, nrow=B, ncol=p, dimnames=list(NULL, vname))
   if(length(stat)) stats <- numeric(B)
 
   Y <- as.matrix(if(is.factor(Y)) unclass(Y) else Y)
@@ -188,7 +66,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     if(length(group) > n) {
       ## Missing observations were deleted during fit
       if(length(nac)) {
-        j <- !is.na(naresid(nac, Y) %*% rep(1,ny))
+        j <- !is.na(naresid(nac, Y) %*% rep(1, ny))
         group <- group[j]
       }
     }
@@ -207,7 +85,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     clusterInfo <- NULL
     nc <- n
     b <- 0
-    pb <- setPb(B, type='Boot', onlytk=!pr, every=20)
+    pb <- setPb(B, type='Boot', onlytk=! pr, every=20)
     for(i in 1:B) {
       pb(i)
 
@@ -221,10 +99,8 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       else j <- sample(1L : n, n, replace=TRUE)
 
       ## Note: If Strata is NULL, NULL[j] is still NULL
-
-        f <- tryCatch(fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE],
-                           ytarget=ytarget,
-                           penalty.matrix=penalty.matrix, strata=Strata[j], ...),
+      f <- tryCatch(fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE],
+                           strata=Strata[j], ...),
                     error=function(...) list(fail=TRUE))
       if(length(f$fail) && f$fail) next
 
@@ -234,13 +110,13 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
 
       if(sc.pres) cof <- c(cof, 'log scale' = log(f$scale))
 
-      ## Index by names used since some intercepts may be missing in a
-      ## bootstrap resample from an ordinal logistic model
-      ## Missing coefficients represent values of Y not appearing in the
-      ## bootstrap sample.  Carry backwards the next non-NA intercept
-      if(ordinal) cof <- fill(cof, vname, ns)
-      if(any(is.infinite(cof))) anyinf <- TRUE
-      if(coef.reps) coefs[b,] <- cof
+      if(length(cof) != length(vname))
+        stop('Bootstrap sample did not include the following intercepts. ',
+             'Do minimal grouping on y using ordGroupBoot() to ensure that ',
+             'all bootstrap samples will have all original distinct y values ',
+             'represented.  ', paste(setdiff(vname, names(cof)), collapse=' '))
+      
+      if(coef.reps)             coefs[b,] <- cof
 
       if(length(stat)) stats[b] <- f$stats[stat]
 
@@ -270,7 +146,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
 
     clusters <- unique(cluster)
     nc <- length(clusters)
-    Obsno <- split(1:n, cluster)
+    Obsno <- split(1 : n, cluster)
 
     b <- 0
     pb <- setPb(B, type='Boot', onlytk=!pr, every=20)
@@ -282,26 +158,24 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       if(ngroup) {
         j <- integer(0L)
         for(si in 1L : ngroup) {
-          gi <- group.inds[[si]]
-          cluster.gi <- cluster[gi]
+          gi          <- group.inds[[si]]
+          cluster.gi  <- cluster[gi]
           clusters.gi <- unique(cluster.gi)
-          nc.gi <- length(clusters.gi)
-          Obsno.gci <- split(gi, cluster.gi)
-          j.gci <- sample(clusters.gi, nc.gi, replace = TRUE)
-          obs.gci <- unlist(Obsno.gci[j.gci])
-          j <- c(j, obs.gci)
+          nc.gi       <- length(clusters.gi)
+          Obsno.gci   <- split(gi, cluster.gi)
+          j.gci       <- sample(clusters.gi, nc.gi, replace = TRUE)
+          obs.gci     <- unlist(Obsno.gci[j.gci])
+          j           <- c(j, obs.gci)
         }
         obs <- j
       }
       else {
         ## End addition Bill Pikounis (except for closing brace below)
-        j <- sample(clusters, nc, replace=TRUE)
+        j   <- sample(clusters, nc, replace=TRUE)
         obs <- unlist(Obsno[j])
       }
 
       f <- tryCatch(fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE],
-                           ytarget=ytarget,
-                           penalty.matrix=penalty.matrix,
                            strata=Strata[obs], ...),
                     error=function(...) list(fail=TRUE))
       if(length(f$fail) && f$fail) next
@@ -312,8 +186,12 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
 
       if(sc.pres) cof <- c(cof, 'log scale' = log(f$scale))
 
-      cof <- fill(cof, vname, ns)
-      if(any(is.infinite(cof))) anyinf <- TRUE
+      if(length(cof) != length(vname))
+        stop('Bootstrap sample did not include the following intercepts. ',
+             'Do minimal grouping on y using ordGroupBoot() to ensure that ',
+             'all bootstrap samples will have all original distinct y values ',
+             'represented.  ', paste(setdiff(vname, names(cof)), collapse=' '))
+      
       if(coef.reps)    coefs[b,] <- cof
       if(length(stat)) stats[b] <- f$stats[stat]
 
@@ -325,14 +203,16 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   }
 
   if(b < B) {
-    warning(paste('fit failure in',B-b,
-                  'resamples.  Might try increasing maxit'))
+    warning('fit failure in ', B-b,
+            ' resamples.  Consider specifying maxit or other convergence criteria.')
     if(coef.reps) coefs <- coefs[1L : b,,drop=FALSE]
     Loglik <- Loglik[1L : b]
   }
-  if(nfit == 'orm') attr(coefs, 'intercepts') <- iref
+  # if(nfit == 'orm') attr(coefs, 'intercepts') <- iref
 
-  if(anyinf) warning('at least one resample excluded highest Y values, invalidating bootstrap covariance matrix estimate')
+  if(anyinf)
+    warning('at least one resample excluded highest Y values, invalidating ',
+            'bootstrap covariance matrix estimate')
 
   bar           <- bar / b
   fit$B         <- b
@@ -344,14 +224,14 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   bar <- as.matrix(bar)
   cov <- (cov - b * bar %*% t(bar)) / (b - 1L)
   fit$orig.var <- fit$var
-  if(nfit == 'orm') attr(cov, 'intercepts') <- iref
+  # if(nfit == 'orm') attr(cov, 'intercepts') <- iref
   fit$var <- cov
   fit$boot.loglik <- Loglik
   if(length(stat)) fit$boot.stats <- stats
   if(nfit == 'Rq') {
     newse <- sqrt(diag(cov))
-    newt <- fit$summary[, 1L]/newse
-    newp <- 2. * (1. - pt(abs(newt), fit$stats['n'] - fit$stats['p']))
+    newt  <- fit$summary[, 1L] / newse
+    newp  <- 2. * (1. - pt(abs(newt), fit$stats['n'] - fit$stats['p']))
     fit$summary[, 2L : 4L] <- cbind(newse, newt, newp)
   }
   if(length(clusterInfo)) clusterInfo$n <- nc

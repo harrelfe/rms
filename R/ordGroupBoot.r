@@ -5,7 +5,7 @@
 #' @param y a numeric vector
 #' @param B number of bootstrap samples to test, or zero to use a coverage probability approximation
 #' @param m range of minimum group sizes to test; the default range is usually adequate
-#' @param what specifies that either the mean `y` in each group should be returned, or a `factor` version of this with interval endpoints in the levels should be returned
+#' @param what specifies that either the mean `y` in each group should be returned, a `factor` version of this with interval endpoints in the levels, or the computed value of `m` should be returned
 #' @param aprob minimum coverage probability sought
 #' @param pr set to `FALSE` to not print the computed value of the minimum `m` satisfying the needed condition
 #'
@@ -21,19 +21,19 @@
 #' ordGroupBoot(x, m=5:10)
 #' ordGroupBoot(x, m=5:10, B=5000, what='factor')
 ordGroupBoot <- function(y, B=0, m=7:min(15, floor(n / 3)),
-                         what=c('mean', 'factor'),
+                         what=c('mean', 'factor', 'm'),
                          aprob=0.9999, pr=TRUE) {
   what <- match.arg(what)
   n    <- sum(! is.na(y))
 
   for(mm in m) {
-    yr  <- cutGn(y, m=mm, what=what)
+    yr  <- cutGn(y, m=mm, what=if(what == 'm') 'mean' else what)
     if(B == 0) {
       tab <- table(yr)
       p <- 1 - sum(exp(- tab))
       if(p > aprob) {
         if(pr) cat('Minimum m:', mm, '\n')
-        return(yr)
+        return(if(what == 'm') mm else yr)
       }
       next
     }
@@ -44,7 +44,7 @@ ordGroupBoot <- function(y, B=0, m=7:min(15, floor(n / 3)),
     }
     if(i == B) {
       if(pr) cat('Minimum m:', mm, '\n')
-      return(yr)
+      return(if(what == 'm') mm else yr)
     }
   }
   stop('no value of m tested will sufficiently guarantee coverage of original values in samples with replacement')

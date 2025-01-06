@@ -4,7 +4,7 @@ outcome <- gl(3,1,9)
 treatment <- gl(3,3)
 
 f <- Glm(counts ~ outcome + treatment, family=poisson(), x=TRUE, y=TRUE)
-g <- bootcov(f,B=100)
+g <- bootcov(f, B=100)
 f
 g
 diag(vcov(g))/diag(vcov(f))
@@ -48,3 +48,4 @@ cbind(predict(a, nd), predict(b, nd))
 Predict(a, x1=1, x2=1.5, offset=list(N=1000))
 cbind(fitted(a), fitted(b))
 cbind(resid(a), resid(b))
+

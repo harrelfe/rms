@@ -41,12 +41,11 @@ set.seed(1)
 x <- matrix(rnorm(n * p), n, p)
 y <- 0:999
 k <- 999
-system.time(f <- orm(y ~ x))
-system.time(g <- lrm(y ~ x))
+f <- orm(y ~ x)
+g <- lrm(y ~ x)
 range(coef(f) - coef(g))
 range(vcov(f, intercepts='all') - vcov(g))
 
-detach(package:rms, unload=TRUE)
 require(rms)
 n <- 2000; p <- 5; k <- 10
 set.seed(1)
@@ -59,20 +58,21 @@ f <- readRDS('~/tmp/orm-old-fit.rds')
 g <- orm(y ~ x)
 class(f$info.matrix); class(g$info.matrix)
 f; g
-dim(vcov(f))
-range(vcov(f) - vcov(g))
 vf <- vcov(f, intercepts='all'); dim(vf)
 vg <- vcov(g, intercepts='all'); dim(vg)
 range(vf - vg)
 
 h <- orm(y ~ x, scale=TRUE)
 range(coef(g) - coef(h))
-range(g$var - h$var)
+range(vcov(g) - vcov(h))
 range(vcov(g, intercepts='all') - vcov(h, intercepts='all'))
 
 g <- update(g, x=TRUE, y=TRUE)
 b <- bootcov(g, B=150)
-g$var - b$var
-diag(g$var) / diag(b$var)
+range(vcov(b) - vcov(g))
+
+vcov(b) - b$var
+range(vcov(g, intercepts='all') - b$var)
+diag(b$var) / diag(vcov(g, intercepts='all'))
 
 v <- validate(g, B=100)

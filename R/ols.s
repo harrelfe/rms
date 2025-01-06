@@ -169,7 +169,7 @@ ols <- function(formula, data=environment(formula),
 }
 
 
-lm.pfit <- function(X, Y, offset=NULL, penalty.matrix, tol=1e-7,
+lm.pfit <- function(X, Y, offset=NULL, penalty.matrix, tol=1e-14,
                     regcoef.only=FALSE,
                     var.penalty=c('simple', 'sandwich'))
 {

@@ -107,6 +107,7 @@ Glm <-
   fit <- glm.fit(x = X, y = Y, weights = weights, start = start,
                  offset = offset, family = family, control = control,
                  intercept = attr(mt, "intercept") > 0)
+  fit$oweights <- weights
   if (length(offset) && attr(mt, "intercept") > 0) {
     fit$null.deviance <-
       if(is.empty.model(mt))
@@ -135,6 +136,7 @@ Glm <-
   class(fit) <- c('Glm', 'rms', 'glm', 'lm')
   fit
 }
+
 ##' Print a `Glm` Object
 ##'
 ##' Prints a `Glm` object, optionally in LaTeX or html

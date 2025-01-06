@@ -184,9 +184,10 @@ lrm.fit <-
   if(opt_method == 'glm.fit' && (k > 1 || penpres))
     stop('opt_method="glm.fit" only applies when k=1 and there is no penalty')
 
+  if(! length(offset)) offset <- 0e0
+  if(length(offset) > 1 && (length(offset) != n)) stop('offset and y must have same length')
   offset <- rep(offset, length=n)
-  ofpres <- ! all(offset == 0)
-  if(ofpres && length(offset) != n) stop("offset and y must have same length")
+  ofpres <- ! all(offset == 0e0)
   storage.mode(offset) <- "double"
 
   if(n < 3) stop("must have >=3 non-missing observations")

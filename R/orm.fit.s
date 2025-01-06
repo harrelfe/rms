@@ -79,7 +79,8 @@ orm.fit <- function(x=NULL, y,
   name  <- c(iname, xname)
   
 
-  if(missing(offset) || (length(offset) == 1 && offset == 0.)) offset <- rep(0., n)
+  if(missing(offset) || ! length(offset) || (length(offset) == 1 && offset == 0.))
+    offset <- rep(0., n)
   ofpres <- ! all(offset == 0.)
   if(ofpres && length(offset) != n) stop("offset and y must have same length")
 
