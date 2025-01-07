@@ -2,7 +2,6 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
                     loglik=FALSE, pr=FALSE,
                     group=NULL, stat=NULL, seed=sample(10000, 1), ytarget=NULL, ...) {
 
-## ??
 tryCatch <- function(x, error) x
 
   coxcph <- inherits(fit,'coxph') || inherits(fit,'cph')
@@ -15,11 +14,11 @@ tryCatch <- function(x, error) x
   Y <- fit$y
 
   sc.pres <- 'scale' %in% names(fit)
-  ns <- fit$non.slopes
+  ns <- num.intercepts(fit)
 
   ## See if ordinal regression being done
-  yu <- fit$yunique
-  ychar <- is.character(yu)
+  yu      <- fit$yunique
+  ychar   <- is.character(yu)
   ordinal <- nfit == 'orm' || (nfit == 'lrm' && length(yu) > 2)
 
   ## Someday need to add resampling of offsets, weights    TODO
@@ -45,20 +44,20 @@ tryCatch <- function(x, error) x
   else Loglik <- NULL
 
   n        <- nrow(X)
-  cof      <- fit$coefficients
-  intnames <- names(cof)[1 : ns]
+  Cof      <- fit$coefficients
+  intnames <- names(Cof)[1 : ns]
  
   if(nfit == 'orm' && length(ytarget)) {
     # Unlike original fit, bootstrap fits will keep only one intercept
-    cof <- c(NA, cof[ - (1 : ns)])
-    names(cof)[1] <- 'Intercept'
+    Cof <- c(Cof[1], Cof[ - (1 : ns)])
+    names(Cof)[1] <- 'Intercept'
   }
   #   iref <- fit$interceptRef
   #   cof  <- cof[c(iref, (ns + 1L) : length(cof))]
   # }
 
-  p     <- length(cof)
-  vname <- names(cof)
+  p     <- length(Cof)
+  vname <- names(Cof)
   if(sc.pres) {
     p     <- p + 1L
     vname <- c(vname, "log scale")
@@ -157,8 +156,8 @@ tryCatch <- function(x, error) x
       if(sc.pres) cof <- c(cof, 'log scale' = log(f$scale))
     
       non_repres_y <- length(vname) - length(cof)
-      nry[i] <- non_repres_y
-      cof    <- process_ints(cof, f$non.slopes, non_repres_y)
+      nry[i]       <- non_repres_y
+      cof          <- process_ints(cof, num.intercepts(f), non_repres_y)
       
       if(coef.reps)             coefs[b, ] <- cof
 
@@ -233,7 +232,7 @@ tryCatch <- function(x, error) x
 
       non_repres_y <- length(vname) - length(cof)
       nry[i]       <- non_repres_y
-      cof          <- process_ints(cof, f$non.slopes, non_repres_y)
+      cof          <- process_ints(cof, num.intercepts(f), non_repres_y)
 
       if(coef.reps)    coefs[b,] <- cof
       if(length(stat)) stats[b] <- f$stats[stat]
@@ -254,7 +253,8 @@ tryCatch <- function(x, error) x
   # if(nfit == 'orm') attr(coefs, 'intercepts') <- iref
 
   if(sum(nry) > 0) {
-    cat('Counts of missing intercepts filled in by interpolation/extrapolation\n\n')
+    cat('Counts of missing intercepts filled in by interpolation/extrapolation',
+        '(median=', median(nry), 'out of', ns, 'intercepts)\n\n')
     print(table(nry))
   }
   
@@ -264,7 +264,16 @@ tryCatch <- function(x, error) x
   names(bar)    <- vname
   fit$boot.coef <- bar
   if(coef.reps) fit$boot.Coef <- coefs
-
+  if(length(ytarget)) {
+    # Get intercept number in original fit corresponding to ytarget
+    j <- if(is.na(ytarget)) fit$interceptRef else which.min(abs(yu[-1] - ytarget))
+    Cof[1]           <- fit$coefficients[j]
+    fit$coefficients <- Cof
+    fit$non.slopes   <- 1
+    fit$interceptRef <- 1
+  }
+  fit$info.matrix  <- NULL
+  
   bar <- as.matrix(bar)
   cov <- (cov - b * bar %*% t(bar)) / (b - 1L)
   fit$orig.var <- fit$var

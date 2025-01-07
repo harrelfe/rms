@@ -78,7 +78,7 @@ twice the number of classes than the default for \code{hist}, and 1.5 times the
 
 A comprehensive example demonstrates the use of all of the functions.
 
-When bootstrapping an ordinal model for a numeric Y (when \code{ytarget} is not specified), some original distinct Y values are not sampled so there will be fewer intercepts in the model. \code{bootcov} linearly interpolates and extrapolates to fill in the missing intercepts so that the intercepts are aligned over bootstrap samples.
+When bootstrapping an ordinal model for a numeric Y (when \code{ytarget} is not specified), some original distinct Y values are not sampled so there will be fewer intercepts in the model. \code{bootcov} linearly interpolates and extrapolates to fill in the missing intercepts so that the intercepts are aligned over bootstrap samples.  Also see the \code{ordGroupBoot} function.
 }
 \usage{
 bootcov(fit, cluster, B=200, fitter, 
@@ -289,8 +289,9 @@ Presented at the Joint Statistical Meetings,
 Chicago, August 1996.
 }
 \seealso{
+\code{\link{ordGroupBoot}},
 \code{\link{robcov}}, \code{\link{sample}}, \code{\link{rms}},
-\code{\link{lm.fit}}, \code{\link{lrm.fit}},
+\code{\link{lm.fit}}, \code{\link{lrm.fit}}, \code{\link{orm.fit}},
 \code{\link[survival]{survival-internal}}, 
 \code{\link{predab.resample}}, \code{\link{rmsMisc}},
 \code{\link{Predict}}, \code{\link{gendata}}, 
@@ -520,6 +521,24 @@ quantile(dif, c(.025,.25,.5,.75,.975))
 z <- (g$stats['C'] - f$stats['C'])/sd(dif)
 names(z) <- NULL
 c(z=z, P=2*pnorm(-abs(z)))
+
+# For an ordinal y with some distinct values of y not very popular, let
+# bootcov use linear extrapolation to fill in intercepts for non-sampled levels
+
+f <- orm(y ~ x1 + x2, x=TRUE, y=TRUE)
+bootcov(f, B=200)
+
+# Instead of filling in missing intercepts, perform minimum binning so that
+# there is a 0.9999 probability that all distinct Y values will be represented
+# in bootstrap samples
+y <- ordGroupBoot(y)
+f <- orm(y ~ x1 + x2, x=TRUE, y=TRUE)
+bootcov(f, B=200)
+
+# Instead just keep one intercept for all bootstrap fits - the intercept
+# that pertains to y=10
+
+bootcov(f, B=200, ytarget=10)   # use ytarget=NA for the median
 }
 }
 \keyword{models}

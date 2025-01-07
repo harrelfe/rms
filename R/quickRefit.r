@@ -76,8 +76,8 @@ quickRefit <-
              } else {
               # Linearly interpolate to return an intercept aimed
               # at Y >= ytarget
-              intcept <- approx(yu, cof[1:ns], xout=ytarget)$y
-              intattr <- approx(yu, 1:ns,      xout=ytarget)$y
+              intattr <- which.min(abs(yu - ytarget))
+              intcept <- cof[intattr]
              }
            } else {
              # ytarget=NA; use stored reference category, corresponding to median Y

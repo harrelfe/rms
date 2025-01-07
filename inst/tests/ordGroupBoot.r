@@ -1,6 +1,7 @@
 # For a variety of sample sizes and distribution of number of ties solve
 # for the value of aprob that makes ordGroupBoot(x, aprob=aprob) agree the
 # most with ordGroupBoot(x, B=1000)
+# Note that output is expected to include an Error
 
 require(rms)
 set.seed(1)
