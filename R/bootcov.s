@@ -1,22 +1,30 @@
 bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
                     loglik=FALSE, pr=FALSE,
-                    group=NULL, stat=NULL, seed=sample(10000, 1), ...) {
+                    group=NULL, stat=NULL, seed=sample(10000, 1), ytarget=NULL, ...) {
+
+## ??
+tryCatch <- function(x, error) x
 
   coxcph <- inherits(fit,'coxph') || inherits(fit,'cph')
 
   nfit <- class(fit)[1]
 
-  if(!length(X <- fit$x) | !length(Y <- fit$y))
+  if(any(c('x', 'y') %nin% names(fit)))
     stop("you did not specify x=TRUE and y=TRUE in the fit")
+  X <- fit$x
+  Y <- fit$y
 
   sc.pres <- 'scale' %in% names(fit)
   ns <- fit$non.slopes
 
   ## See if ordinal regression being done
-  ordinal <- nfit == 'orm' || (nfit == 'lrm' && length(unique(Y)) > 2)
+  yu <- fit$yunique
+  ychar <- is.character(yu)
+  ordinal <- nfit == 'orm' || (nfit == 'lrm' && length(yu) > 2)
 
   ## Someday need to add resampling of offsets, weights    TODO
-  if(missing(fitter)) fitter <- quickRefit(fit, what='fitter', storevals=FALSE)
+  if(missing(fitter))
+    fitter <- quickRefit(fit, what='fitter', ytarget=ytarget, storevals=FALSE)
 
   if(! length(fitter)) stop("fitter not valid")
 
@@ -36,12 +44,19 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     }
   else Loglik <- NULL
 
-  n     <- nrow(X)
-  cof   <- fit$coefficients
-  # if(nfit == 'orm') {
+  n        <- nrow(X)
+  cof      <- fit$coefficients
+  intnames <- names(cof)[1 : ns]
+ 
+  if(nfit == 'orm' && length(ytarget)) {
+    # Unlike original fit, bootstrap fits will keep only one intercept
+    cof <- c(NA, cof[ - (1 : ns)])
+    names(cof)[1] <- 'Intercept'
+  }
   #   iref <- fit$interceptRef
   #   cof  <- cof[c(iref, (ns + 1L) : length(cof))]
   # }
+
   p     <- length(cof)
   vname <- names(cof)
   if(sc.pres) {
@@ -49,11 +64,11 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     vname <- c(vname, "log scale")
   }
 
-  
   bar <- rep(0, p)
   cov <- matrix(0, nrow=p, ncol=p, dimnames=list(vname,vname))
   if(coef.reps) coefs <- matrix(NA, nrow=B, ncol=p, dimnames=list(NULL, vname))
   if(length(stat)) stats <- numeric(B)
+  nry <- rep(0, B)
 
   Y <- as.matrix(if(is.factor(Y)) unclass(Y) else Y)
   ny <- ncol(Y)
@@ -79,12 +94,43 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   }
   else ngroup <- 0
 
-  anyinf <- FALSE
+  # Given a vector of intercepts, with those corresponding to non-sampled Y
+  # equal to NA, use linear interpolation/extrapolation to fill in the NAs
+  fillin <- function(y, alpha) {
+    if(length(y) != length(alpha)) stop('lengths of y and alpha must match')
+    i <- ! is.na(alpha)
+    if(sum(i) < 2)
+      stop('need at least 3 distinct Y values sampled to be able to extrapolate intercepts')
+    est_alpha <- approxExtrap(y[i], alpha[i], xout=y[! i])$y
+    alpha[! i] <- est_alpha
+    alpha
+  }
+
+  process_ints <- function(cof, ints_fitted, nry) {
+    if(nry == 0) return(cof)
+    if(length(ytarget))
+      stop('Program logic error: ytarget is specified but there are still ',
+           'missing intercepts in a bootstrap sample')
+    if((nfit == 'orm') && ! ychar) {
+      # Numeric Y; use linear interpolation/extrapolation to fill in
+      # intercepts for non-sampled Y values
+      alphas <- structure(rep(NA, ns), names=intnames)  # intercept template
+      ints_actual <- cof[1 : ints_fitted]
+      alphas[names(ints_actual)] <- ints_actual
+      if(sum(is.na(alphas)) != nry) stop('program logic error in alphas') 
+      alphas <- fillin(yu[- 1], alphas)
+      return(c(alphas, cof[- (1 : ints_fitted)]))
+      }
+    stop('Bootstrap sample did not include the following intercepts. ',
+         'Do minimal grouping on y using ordGroupBoot() to ensure that ',
+         'all bootstrap samples will have all original distinct y values ',
+         'represented.  ', paste(setdiff(vname, names(cof)), collapse=' '))
+    }
 
   if(missing(cluster)) {
     clusterInfo <- NULL
     nc <- n
-    b <- 0
+    b  <- 0
     pb <- setPb(B, type='Boot', onlytk=! pr, every=20)
     for(i in 1:B) {
       pb(i)
@@ -100,7 +146,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
 
       ## Note: If Strata is NULL, NULL[j] is still NULL
       f <- tryCatch(fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE],
-                           strata=Strata[j], ...),
+                           strata=Strata[j], ytarget=ytarget, ...),
                     error=function(...) list(fail=TRUE))
       if(length(f$fail) && f$fail) next
 
@@ -109,14 +155,12 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       b <- b + 1L
 
       if(sc.pres) cof <- c(cof, 'log scale' = log(f$scale))
-
-      if(length(cof) != length(vname))
-        stop('Bootstrap sample did not include the following intercepts. ',
-             'Do minimal grouping on y using ordGroupBoot() to ensure that ',
-             'all bootstrap samples will have all original distinct y values ',
-             'represented.  ', paste(setdiff(vname, names(cof)), collapse=' '))
+    
+      non_repres_y <- length(vname) - length(cof)
+      nry[i] <- non_repres_y
+      cof    <- process_ints(cof, f$non.slopes, non_repres_y)
       
-      if(coef.reps)             coefs[b,] <- cof
+      if(coef.reps)             coefs[b, ] <- cof
 
       if(length(stat)) stats[b] <- f$stats[stat]
 
@@ -176,22 +220,21 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       }
 
       f <- tryCatch(fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE],
-                           strata=Strata[obs], ...),
+                           strata=Strata[obs], ytarget=ytarget, ...),
                     error=function(...) list(fail=TRUE))
       if(length(f$fail) && f$fail) next
 
       cof <- f$coefficients
+
       if(any(is.na(cof))) next  # glm
       b <- b + 1L
 
       if(sc.pres) cof <- c(cof, 'log scale' = log(f$scale))
 
-      if(length(cof) != length(vname))
-        stop('Bootstrap sample did not include the following intercepts. ',
-             'Do minimal grouping on y using ordGroupBoot() to ensure that ',
-             'all bootstrap samples will have all original distinct y values ',
-             'represented.  ', paste(setdiff(vname, names(cof)), collapse=' '))
-      
+      non_repres_y <- length(vname) - length(cof)
+      nry[i]       <- non_repres_y
+      cof          <- process_ints(cof, f$non.slopes, non_repres_y)
+
       if(coef.reps)    coefs[b,] <- cof
       if(length(stat)) stats[b] <- f$stats[stat]
 
@@ -210,10 +253,11 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   }
   # if(nfit == 'orm') attr(coefs, 'intercepts') <- iref
 
-  if(anyinf)
-    warning('at least one resample excluded highest Y values, invalidating ',
-            'bootstrap covariance matrix estimate')
-
+  if(sum(nry) > 0) {
+    cat('Counts of missing intercepts filled in by interpolation/extrapolation\n\n')
+    print(table(nry))
+  }
+  
   bar           <- bar / b
   fit$B         <- b
   fit$seed      <- seed
