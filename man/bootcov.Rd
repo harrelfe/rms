@@ -77,12 +77,14 @@ twice the number of classes than the default for \code{hist}, and 1.5 times the
 
 
 A comprehensive example demonstrates the use of all of the functions.
+
+When bootstrapping an ordinal model for a numeric Y (when \code{ytarget} is not specified), some original distinct Y values are not sampled so there will be fewer intercepts in the model. \code{bootcov} linearly interpolates and extrapolates to fill in the missing intercepts so that the intercepts are aligned over bootstrap samples.
 }
 \usage{
 bootcov(fit, cluster, B=200, fitter, 
         coef.reps=TRUE, loglik=FALSE,
         pr=FALSE, group=NULL, stat=NULL,
-        seed=sample(10000, 1), ...)
+        seed=sample(10000, 1), ytarget=NULL, ...)
 
 
 bootplot(obj, which=1 : ncol(Coef), X,
@@ -167,6 +169,7 @@ You may specify both \code{group} and \code{cluster}.
 }
 \item{seed}{random number seed for \code{set.seed}, defaults to a random
 	integer between 1 and 10000; user should specify a constant for reproducibility}
+\item{ytarget}{when using \code{orm}, set \code{ytarget=NA} to save only the intercept that corresponds to the median Y.  Set \code{ytarget} to a specific value (including a character value) to use a different target for the sole retained intercept.}
 \item{which}{
 one or more integers specifying which regression coefficients to
 plot for \code{bootplot}

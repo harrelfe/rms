@@ -578,8 +578,10 @@ newtonr <- function(init, obj, grad, hessian, n,
     while (TRUE) {
       new_theta <- theta - step_size * delta # Update parameter vector
       objfnew <- obj(new_theta)
-      if(trace > 1) cat('Old - new -2LL:', objf - objfnew, '\n')
-      if (objfnew > objf + 1e-6) {     # Objective function failed to be reduced
+      if(trace > 1)
+        cat('Old, new, old - new -2LL:', objf, objfnew, objf - objfnew, '\n')
+      if (! is.finite(objfnew) || (objfnew > objf + 1e-6)) {
+        # Objective function failed to be reduced or is infinite
         step_size <- step_size / 2e0         # Reduce the step size
         if(trace > 0) cat('Step size reduced to', step_size, '\n')
         if(step_size <= minstepsize) {
@@ -643,13 +645,14 @@ levenberg_marquardt <-
       cat('Iteration:', i, '  -2LL:', format(objf, nsmall=4),
           '  Max |gradient|:', m(g),
           '  Max |change in parameters|:', m(delta), '\n', sep='')
-    if(trace > 1) cat('Old - new -2LL:', oldobj - objf, '\n')
+    if(trace > 1) cat('Old, new, old - new -2LL:', oldobj, objf, oldobj - objf, '\n')
 
-    if((objf    <=  oldobj + 1e-6 && (oldobj - objf < objtol)) &&
+    if(is.finite(objf) &&
+       (objf    <=  oldobj + 1e-6 && (oldobj - objf < objtol)) &&
        (m(g)     <  gradtol) &&
        (m(delta) < paramtol)) break
 
-    if (objf < oldobj) {
+    if (is.finite(objf) && (objf < oldobj)) {
       # Accept the step and decrease lambda
       theta  <- theta_new
       oldobj <- objf

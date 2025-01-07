@@ -73,13 +73,13 @@ vcov.orm <- function(object, regcoef.only=TRUE, intercepts='mid', ...) {
   else {
     if(intercepts == 'none') i <- 'x'
     else if(intercepts == 'all') {
-      v <- infoMxop(info, invert=TRUE)
+      v <- Matrix::as.matrix(infoMxop(info, invert=TRUE))
       dimnames(v) <- list(name, name)
       return(v)
     }
   }
   # Left with original i for mid intercept, or i just defined
-  v <- infoMxop(info, i=i)
+  v <- Matrix::as.matrix(infoMxop(info, i=i))
   if(is.character(i) && (i == 'x')) i <- - (1 : ns)
   dimnames(v) <- list(name[i], name[i])
   v

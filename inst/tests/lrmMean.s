@@ -1,7 +1,9 @@
 require(rms)
 set.seed(6) # was 3
-n <- 85+15
+n <- 100
 y <- sample(1:10, n, TRUE)
+# Do minimal combining of levels to ensure bootstraps will sample all values
+y <- round(ordGroupBoot(y), 3)
 x1 <- runif(n)
 f <- lrm(y ~ x1, x=TRUE, y=TRUE)
 g <- bootcov(f, B=500, coef.reps=TRUE)

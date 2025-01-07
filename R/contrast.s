@@ -1,6 +1,6 @@
 contrast <- function(fit, ...) UseMethod("contrast")
 
-crms <- contrast.rms <-
+contrast.rms <-
   function(fit, a, b, a2, b2, ycut=NULL, cnames=NULL, fun=NULL, funint=TRUE,
            type=c('individual','average','joint'),
            conf.type=c('individual','simultaneous'), usebootcoef=TRUE,

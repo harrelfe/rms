@@ -272,7 +272,7 @@ rfort <- function(theta, what=3L, debug=0L) {
 }
 
   if(missing(x) || ! length(x) || p == 0) {
-    x  <- 0.
+    x <- 0.
     p <- 0L
   }
 
@@ -303,13 +303,13 @@ if(maxit == 1) {
   oldobj     <- 1e10
   score.test <- NA
 
-  gradtol <- gradtol * n / 1000.
+  gradtol <- gradtol * n / 1e3
 
   for (iter in 1:maxit) {
     w <- rfort(theta)
     if(iter == 1) objf <- w$logL
     gradient <- w$grad
-    hess <- infoMxop(w[c('a', 'b', 'ab')])
+    hess     <- infoMxop(w[c('a', 'b', 'ab')])
 
     # Newton-Raphson step
 
@@ -325,7 +325,7 @@ if(maxit == 1) {
           '  Max |gradient|:', m(gradient),
           '  Max |change in parameters|:', m(delta), '\n', sep='')
 
-    if(is.na(score.test) && p > 0 && all(theta[-(1:k)] == 0.))
+    if(is.na(score.test) && p > 0 && all(theta[- (1 : k)] == 0.))
       score.test <- - gradient %*% delta
 
     step_size <- 1.0           # Initialize step size for step-halving
@@ -334,8 +334,10 @@ if(maxit == 1) {
     while (TRUE) {
       new_theta <- theta - step_size * delta # Update parameter vector
       objfnew <- rfort(new_theta, what=1L)$logL
-      if(trace > 1) cat('Old - new -2 LL:', objf - objfnew, '\n')
-      if (objfnew > objf + 1e-6) {     # Objective function failed to be reduced
+      if(trace > 1)
+        cat('Old, new, old - new -2 LL:', objf, objfnew, objf - objfnew, '\n')
+      if (! is.finite(objfnew) || objfnew > objf + 1e-6) {
+        # Objective function failed to be reduced or is infinite
         step_size <- step_size / 2e0         # Reduce the step size
         if(trace) cat('Step size reduced to', step_size, '\n')
         if(step_size < minstepsize) {

@@ -58,8 +58,8 @@ f <- readRDS('~/tmp/orm-old-fit.rds')
 g <- orm(y ~ x)
 class(f$info.matrix); class(g$info.matrix)
 f; g
-vf <- vcov(f, intercepts='all'); dim(vf)
-vg <- vcov(g, intercepts='all'); dim(vg)
+vf <- vcov(f, intercepts='mid'); dim(vf)
+vg <- vcov(g, intercepts='mid'); dim(vg)
 range(vf - vg)
 
 h <- orm(y ~ x, scale=TRUE)
@@ -69,9 +69,8 @@ range(vcov(g, intercepts='all') - vcov(h, intercepts='all'))
 
 g <- update(g, x=TRUE, y=TRUE)
 b <- bootcov(g, B=150)
-range(vcov(b) - vcov(g))
+range(vcov(b, intercepts='all') - vcov(g, intercepts='all'))
 
-vcov(b) - b$var
 range(vcov(g, intercepts='all') - b$var)
 diag(b$var) / diag(vcov(g, intercepts='all'))
 

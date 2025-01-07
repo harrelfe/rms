@@ -64,10 +64,10 @@ summary.rms <- function(object, ..., ycut=NULL,
 
   scale <- object$scale.pred
   if(missing(antilog)) antilog <- length(scale)==2
-  if(antilog & length(scale) < 2) scale <- c("","Antilog")
+  if(antilog & length(scale) < 2) scale <- c("", "Antilog")
 
   factors <- rmsArgs(substitute(list(...)))
-  nf <- length(factors)
+  nf      <- length(factors)
 
   if(est.all) which <- (1 : length(assume))[assume != 9]
   if(nf > 0) {
@@ -211,7 +211,7 @@ summary.rms <- function(object, ..., ycut=NULL,
   }
   
   for(j in 1 : length(xadj)) xadj[[j]] <- rep(xadj[[j]], 2)
-  
+
   for(i in which[assume[which] == 5 | ucat[which]]) {
     ## All comparisons with reference category
     

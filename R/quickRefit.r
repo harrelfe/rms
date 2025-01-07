@@ -32,10 +32,8 @@ quickRefit <-
   fmi  <- k == 'fit.mult.impute'
   if(fmi) k <- class(object)[2]
   if(k == 'ols' && length(penalty.matrix)) k <- 'olsp'
-  if(k == 'orm' && length(ytarget)) {
-    k <- 'ormt'
-    if(what == 'fitter') stop('what ="fitter" is not allowed with ytarget')
-  }
+  if(k == 'orm' && length(ytarget)) k <- 'ormt'
+
   if(! length(X) || ! length(y))
     stop('you must specify x=TRUE, y=TRUE when fitting, or provide them to quickRefit')
 
@@ -64,26 +62,34 @@ quickRefit <-
          ormt= function(X, y, family, compstats, offset=NULL, penalty.matrix, weights=NULL,
                         strata=NULL, ytarget, ...) {
            f <- orm.fit(X, y, family=family, compstats=compstats, offset=offset,
-                        penalty.matrix=penalty.matrix, weights=weights,
-                        strata, ytarget, ...)
+                        penalty.matrix=penalty.matrix, weights=weights, ...)
            ns  <- f$non.slopes
            cof <- f$coefficients
            if(! is.na(ytarget)) {
+             # ytarget is not NA: find intercept for closest match to Y=ytarget
              # Y values corresponding to intercepts
              yu <- f$yunique[-1]
-             # Linearly interpolate to return an intercept aimed
-             # at Y >= ytarget
-             intcept <- approx(yu, cof[1:ns], xout=ytarget)$y
-             intattr <- approx(yu, 1:ns, xout=ytarget)$y
+             if(is.character(yu)) {
+               intattr <- which(yu == ytarget)
+               if(! length(intattr)) stop('no intercept matches ytarget=', ytarget)
+               intcept <- cof[intattr]
+             } else {
+              # Linearly interpolate to return an intercept aimed
+              # at Y >= ytarget
+              intcept <- approx(yu, cof[1:ns], xout=ytarget)$y
+              intattr <- approx(yu, 1:ns,      xout=ytarget)$y
+             }
            } else {
+             # ytarget=NA; use stored reference category, corresponding to median Y
              k         <- f$interceptRef
              intattr   <- k
-             intercept <- cof[k]
+             intcept <- cof[k]
            }
           names(intcept) <- 'Intercept'
           cof <- c(intcept, cof[(ns + 1) : length(cof)])
-          attr(cof, 'intercepts') <- intattr
+          attr(cof, 'intercepts') <- 1L
           f$coefficients          <- cof
+          f$non.slopes            <- 1L
           return(f)
          } ,
          cph = function(X, y, method, type, strata=NULL, weights=NULL, offset=NULL,
@@ -136,7 +142,7 @@ if(k == 'psm') {
   formals(g)$fixed <- fixed
   formals(g)$parms <- object[['parms']]
   }
-if(k %in% c('orm', 'Glm')) formals(g)$family <- object$family
+if(k %in% c('orm', 'ormt', 'Glm')) formals(g)$family <- object$family
 
 if(what == 'fitter') return(g)
 f <- g(X, y, ...)
