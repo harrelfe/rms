@@ -120,10 +120,10 @@ pentrace <-
         stop('fitter failed.  Try changing maxit or tol')
 
       if(isols) {
-        ## ols (from lm.pfit) already stored correct LR chisq and effective df
+        # ols (from lm.pfit) already stored correct LR chisq and effective df
         stats <- f$stats
-        df <- stats['d.f.']
-        lr <- stats['Model L.R.']
+        df  <- stats['d.f.']
+        lr  <- stats['Model L.R.']
         dag <- f$effective.df.diagonal
       }
       else  {

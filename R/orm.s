@@ -151,8 +151,10 @@ orm <- function(formula, data=environment(formula),
         f$linear.predictors <- NULL
 
       if(se.fit) {
-        X <- cbind(1, X)
-        se <- drop((((X %*% f$var) * X) %*% rep(1, ncol(X)))^.5)
+        nx <- ncol(X)
+        X  <- cbind(1, X)
+        v  <- infoMxop(info, i=c(f$interceptRef, (nrp + 1) : (nrp + nx)), B=t(X))
+        se <- drop(sqrt((t(v) * X) %*% rep(1, nx + 1)))
         names(se) <- names(Y)
         f$se.fit <- se
       }

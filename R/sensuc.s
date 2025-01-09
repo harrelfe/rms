@@ -234,7 +234,7 @@ sensuc <- function(fit,
               g   <- lrm.fit(cbind(u,X), event)
               ns  <- g$non.slopes
               cof <- g$coefficients[- (1 : ns)]
-              vr  <- infoMxop(g$info.matrix, i=(ns + 1) : length(g$coefficients))
+              vr  <- infoMxop(g$info.matrix, i='x')
             }
           z   <- cof / sqrt(Matrix::diag(vr))
           

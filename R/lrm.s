@@ -138,7 +138,6 @@ lrm <- function(formula, data=environment(formula),
         X <- cbind(xint, X)
         v <- infoMxop(info, i=c(1, nrp + (1 : nx)), B=t(X))
         se <- drop(sqrt((t(v) * X) %*% rep(1, ncol(X))))
-        ## ?? se <- drop((((X %*% f$var) * X) %*% rep(1, ncol(X)))^.5)
         names(se) <- names(Y)
         f$se.fit <- se
       }
