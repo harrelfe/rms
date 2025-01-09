@@ -41,6 +41,8 @@ vcov.orm <- function(object, regcoef.only=TRUE, intercepts='mid', ...) {
   ns   <- num.intercepts(object)
   v    <- object$var
   info <- object$info.matrix
+  override <- object$override_vcov_intercept
+  if(length(override)) intercepts <- override
   li1  <- length(intercepts) == 1
   iat  <- if(length(v)) attr(v, 'intercepts')  # handle fit.mult.impute (?), robcov
   iref <- object$interceptRef

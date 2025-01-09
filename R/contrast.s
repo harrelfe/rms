@@ -33,9 +33,11 @@ contrast.rms <-
     iparm <- 1 : length(betas)
   }
   fite  <- fit
-  if(inherits(fit, 'orm')) {
+  if(inherits(fit, 'orm') || inherits(fit, 'orm')) {
     nrp <- 1
-    ## Note: is 1 for orm because vcov defaults to intercepts='mid'
+    ## Note: is 1 for orm because vcov defaults to intercepts='mid' and
+    ## we are overriding the default vcov uses for lrm
+    fit$override_vcov_intercept <- 'mid'
     iparm <- c(fit$interceptRef, (num.intercepts(fit) + 1) : length(betas))
     betas <- betas[iparm]
     fite$coefficients <- betas    # for simult confint
@@ -203,6 +205,7 @@ contrast.rms <-
   else {
   est <- matxv(X, betas)
   v <- X %*% vcov(fit, regcoef.only=TRUE) %*% t(X)
+  ## vcov(lrm fit) has an override to use middle intercept - see above
   ndf <- if(is.matrix(v)) nrow(v) else 1
   se <- as.vector(if(ndf == 1) sqrt(v) else sqrt(Matrix::diag(v)))
   Z <- est / se
@@ -225,7 +228,6 @@ contrast.rms <-
     }
   } else {
     # glht uses vcov(fite) which for lrm & orm are sparse Matrix objects
-    # Make vcov use fite$var instead
     fite$non.slopes   <- 1L
     fite$interceptRef <- 1L
     if(! length(fite$var))
