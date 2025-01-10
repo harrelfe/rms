@@ -3,7 +3,7 @@ set.seed(1)
 n <- 100
 yo <- sample(1 : 10, n, TRUE)
 table(yo)
-y <- ordGroupBoot(yo, aprob=0.9995, B=0*1000)
+y <- ordGroupBoot(yo, aprob=0.9995, B=1000)
 table(yo, y)
 x1 <- runif(n)
 x2 <- runif(n)

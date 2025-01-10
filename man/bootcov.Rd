@@ -78,7 +78,7 @@ twice the number of classes than the default for \code{hist}, and 1.5 times the
 
 A comprehensive example demonstrates the use of all of the functions.
 
-When bootstrapping an ordinal model for a numeric Y (when \code{ytarget} is not specified), some original distinct Y values are not sampled so there will be fewer intercepts in the model. \code{bootcov} linearly interpolates and extrapolates to fill in the missing intercepts so that the intercepts are aligned over bootstrap samples.  Also see the \code{ordGroupBoot} function.
+When bootstrapping an ordinal model for a numeric Y (when \code{ytarget} is not specified), some original distinct Y values are not sampled so there will be fewer intercepts in the model. \code{bootcov} linearly interpolates and extrapolates to fill in the missing intercepts so that the intercepts are aligned over bootstrap samples.  Also see the \code{Hmisc} \code{ordGroupBoot} function.
 }
 \usage{
 bootcov(fit, cluster, B=200, fitter, 
@@ -289,7 +289,7 @@ Presented at the Joint Statistical Meetings,
 Chicago, August 1996.
 }
 \seealso{
-\code{\link{ordGroupBoot}},
+\code{\link[Hmisc]{ordGroupBoot}},
 \code{\link{robcov}}, \code{\link{sample}}, \code{\link{rms}},
 \code{\link{lm.fit}}, \code{\link{lrm.fit}}, \code{\link{orm.fit}},
 \code{\link[survival]{survival-internal}}, 

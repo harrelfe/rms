@@ -98,7 +98,7 @@ n <- 300
 x1 <- runif(n)
 ddist <- datadist(x1); options(datadist='ddist')
 yo  <- x1 + runif(n)
-y <- round(ordGroupBoot(yo, aprob=0.9995, B=0*1000), 3)
+y <- round(ordGroupBoot(yo, aprob=0.9995, B=1000), 3)
 x1[1:35] <- NA
 dat <- data.frame(x1, y)
 f <- orm(y ~ x1, x=TRUE, y=TRUE)

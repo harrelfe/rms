@@ -18,7 +18,6 @@ Changes in version 7.0-0 (2024-01-)
    * bootcov: changed arguments to fitting functions to be passed via ...; for lrm.fit and orm.fit added compstats=FALSE, compvar=FALSE for speed
    * bootcov: removed logic to fill in intercepts for non-sampled Y values and instead used linear interpolation/extrapolation to estimate missing intercepts from sampled Y values; also added ytarget argument to just keep one intercept per bootstrap fit.  Results will be different from the "flat carry forward" method that was used before version 7.0.
    * lrm.fit: added Levenberg-Marquardt optimization, changed gradient comvergence criterion for this and Newton-Raphson to be gradtol * n / 1000, which is also used in the new orm.fit
-   * ordGroupBoot: new function to group a numeric variable minimally so that bootstrap samples will cover all the original distinct data values
    * groupkm, val.prob: use the new Hmisc cutGn function in place of cut2 for m=
    * LRchunktest: removed; anova.rms now uses quickRefit
    * Re-factored quick rms fitters to function quickRefit, modified LRchunktest to use it
@@ -29,11 +28,10 @@ Changes in version 7.0-0 (2024-01-)
    * require Hmisc 5.2-2 or later
    * start conceptualizing a road map for future developments for lrm and orm:
      + orm will be the one supporting multiple link functions
-     + orm will ultimately support left, right, and interval-censoring but with the Hessian less sparse in those cases
+     + orm will ultimately support left, right, and interval-censoring but with the Hessian less sparse when any obs. are interval-censored
      + orm with the log-log link will provide a full-likelihood Cox PH model; will need to write survplot and other routines to support it
      + lrm will ultimately support the constrained partial PO model
-     + assess whether lrm and orm can be merged, just differing on choice of model performance measures that are computed
-     + consider whether orm and lrm can be combined with an lrm frontend to orm
+     + assess whether lrm and orm can be merged, just differing on choice of model performance measures that are computed; lrm could be a front-end to orm
 
 Changes in version 6.9-0 (2024-12-11)
    * replaced Ratfor code for robcovf and ormuv with Fortran 2018 with lots of nice vectorization for ormuv thanks to ChatGPT

@@ -344,7 +344,7 @@ if(maxit == 1) {
           message('Step size ', step_size, ' has reduced below minstepsize=',
                   minstepsize,
                   ' without improving log likelihood; fitting stopped')
-          return(fail=TRUE)
+          return(list(fail=TRUE))
         }
       } else {
         theta  <- new_theta                   # Accept the new parameter vector
