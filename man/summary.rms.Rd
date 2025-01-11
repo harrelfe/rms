@@ -48,6 +48,10 @@ special effects are implemented such as only drawing 0.95 confidence
 limits by default but including a legend that allows the other CLs to be
 activated.  Hovering over point estimates shows adjustment values if
 there are any.  \code{nbar} is not implemented for \code{plotly}.
+
+To get more accurate likelihood profile confidence limits, use the \code{contrast.rms}
+function.  An example in its help file shows how to get profile likelihood confidence
+intervals for coefficients or for any contrast.
 }
 \usage{
 \method{summary}{rms}(object, \dots, ycut=NULL, est.all=TRUE, antilog,

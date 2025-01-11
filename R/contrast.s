@@ -6,7 +6,7 @@ contrast.rms <-
            conf.type=c('individual','simultaneous','profile'), usebootcoef=TRUE,
            boot.type=c('percentile','bca','basic'),
            posterior.summary=c('mean', 'median', 'mode'),
-           weights='equal', conf.int=0.95, tol=1e-7, expand=TRUE, se_factor=4,
+           weights='equal', conf.int=0.95, tol=1e-10, expand=TRUE, se_factor=4,
            plot_profile=FALSE, opt_method=c('LM', 'NR'), ...)
 {
   type              <- match.arg(type)
@@ -232,6 +232,8 @@ contrast.rms <-
                           se_factor=se_factor, opt_method=opt_method, ...)
       lower <- w$lower
       upper <- w$upper
+      LR    <- w$LR
+      P     <- w$P
     } else {
       lower <- est - zcrit*se
       upper <- est + zcrit*se
@@ -262,7 +264,8 @@ contrast.rms <-
               conf.type=conf.type, conf.int=conf.int,
               posterior.summary=posterior.summary,
               cdraws = cdraws)
-  if(type != 'average') res <- c(vary, res)
+  if(conf.type == 'profile') res$LR <- LR
+  if(type != 'average')      res <- c(vary, res)
   
   r <- qr(v, tol=tol)
   nonred <- r$pivot[1 : r$rank]   # non-redundant contrasts
@@ -302,8 +305,12 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
     }
   
   edf <- x$df.residual
-  sn <- if(length(edf)) 't' else 'Z'
-  pn <- if(length(edf)) 'Pr(>|t|)' else 'Pr(>|z|)'
+  sn <- if(length(edf)) 't' else if(x$conf.type == 'profile') '\u03A7\u00B2' else 'Z'
+  pn <- if(length(edf)) 'Pr(>|t|)' else if(x$conf.type == 'profile') 'Pr(>\u03A7\u00B2)' else 'Pr(>|z|)'
+  if(length(x$LR)) {
+    x$Z  <- x$LR
+    x$LR <- NULL
+  }
   w <- x[1 : (x$nvary + 7)]
   isn <- sapply(w, is.null)
   w <- w[! isn]
@@ -336,8 +343,10 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
   # Assign modified names to w
   names(w) <- no
 
+  if(x$conf.type == 'profile') w$S.E. <- NULL
+
   # Print w
-  if(!jointonly) {
+  if(! jointonly) {
     ## print(as.matrix(w), quote=FALSE)
     print(w, ...)
     if(any(x$redundant)) cat('\nRedundant contrasts are denoted by *\n')
@@ -358,7 +367,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
           round(Pval, 4),'\n', sep='')
     }
   }
-  if(!jointonly && length(edf))cat('\nError d.f.=',edf,'\n')
+  if(!jointonly && length(edf)) cat('\nError d.f.=',edf,'\n')
   cotype <- if(x$conf.type == 'profile') 'profile likelihood' else x$conf.type
   if(x$posterior.summary == '')
     cat('\nConfidence intervals are', x$conf.int, cotype,
@@ -391,7 +400,7 @@ rms_profile_ci <-
   m     <- nrow(C)
 
   if(p == (1 + length(fit$coefficients) - num.intercepts(fit))) C <- C[, -1, drop=FALSE]
-  lower <- upper <- numeric(m)
+  lower <- upper <- LR <- numeric(m)
   odev  <- getDeviance(fit)     # original deviance for full model
   odev  <- odev[length(odev)]
 
@@ -412,8 +421,23 @@ rms_profile_ci <-
     D <- C[i, , drop=FALSE]
     est <- est_C[i]
     se  <- se_C[i]
-    v <- svd(rbind(D, diag(p)))$v / sqrt(sum(D ^ 2))
+    v <- svd(rbind(D, diag(p)))$v
+    u <- sqrt(sum(D ^ 2))
+    beta_contrast <- v[, 1] * u
+    # SVD has an arbitrary sign
+    if(max(abs(D - beta_contrast)) > 1e-6) {
+      v <- -v
+      beta_contrast <- v[, 1] * u
+      if(max(abs(D - beta_contrast)) > 1e-6)
+        stop('SVD-generated contrast could not reproduce original contrast')
+    }
+    # Compute contrast to put on design matrix that gives the above contrast in betas
+    v <- v / u
     Z <- X %*% v
+    # Likelihood ratio chi-square obtained by removing first column of Z
+    drop1 <- quickRefit(fit, X=Z[, -1, drop=FALSE], what='deviance', opt_method=opt_method, ...)
+    drop1 <- drop1[length(drop1)]
+    LR[i] <- drop1 - odev
     if(plot_profile) {
       thetas      <- seq(est - se_factor * se, est + se_factor * se, length=50)
       ch_deviance <- rep(NA, length(thetas))
@@ -424,13 +448,13 @@ rms_profile_ci <-
       title(paste('Contrast', i))
       title(sub='Vertical lines are at point estimate of contrast \u00b1 S.E.', adj=1, cex.sub=0.65)  
     }
-    hi <- try(uniroot(g, c(est + se/100, est + se_factor * se), trace=5)$root)
+    hi <- try(uniroot(g, c(est + se/100, est + se_factor * se))$root)
     if(inherits(hi, 'try-error')) hi <-  Inf
     lo <- try(uniroot(g, c(est - se_factor * se, est - se/100))$root)
     if(inherits(lo, 'try-error')) lo <- -Inf
     lower[i] <- lo
     upper[i] <- hi
   }
-list(lower=lower, upper=upper)
+list(lower=lower, upper=upper, LR=LR, P=1. - pchisq(LR, 1))
 }
 
