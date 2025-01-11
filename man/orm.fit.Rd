@@ -8,12 +8,15 @@
 	Five different distribution functions are implemented, with the
 	default being the logistic (yielding the proportional odds
 	model).  Penalized estimation and weights are also implemented, as in `[lrm.fit()]`.
-  The optimization method is Newton-Raphson with step-halving.
-	Execution time is linear in the number of intercepts.
+  The optimization method is Newton-Raphson with step-halving, or the Levenberg-Marquart method.
+  The latter has been shown to converge better when there are large offsets.
+	Execution time is is fast even for hundreds of thousands of intercepts.  The limiting factor
+  is the number of intercepts times the number of columns of \code{x}.
 }
 \usage{
 orm.fit(x=NULL, y, family=c("logistic","probit","loglog","cloglog","cauchit"),
-        offset, initial,  maxit=30L, eps=5e-4, gradtol=0.001, abstol=1e10, 
+        offset, initial, opt_method=c('NR', 'LM'),
+        maxit=30L, eps=5e-4, gradtol=0.001, abstol=1e10, 
         minstepsize=0.01, tol=1e-14, trace=FALSE,
         penalty.matrix=NULL, weights=NULL, normwt=FALSE, scale=FALSE,
         inclpen=TRUE, y.precision = 7, compstats=TRUE)
@@ -41,6 +44,7 @@ is assumed from \code{factor(y)}.
 	intercepts.  If \code{initial} is not specified, the function computes
   the overall score \eqn{\chi^2} test for the global null hypothesis of
 	no regression.}
+\item{opt_method}{set to \code{"LM"} to use Levenberg-Marquardt instead of the default Newton-Raphson}
 \item{maxit}{maximum no. iterations (default=\code{30}).}
 \item{eps}{
 difference in \eqn{-2 log} likelihood for declaring convergence.

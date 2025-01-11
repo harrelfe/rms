@@ -637,8 +637,12 @@ levenberg_marquardt <-
   for (i in 1 : maxit) {
     H_damped <- H + lambda * Matrix::Diagonal(x = Matrix::diag(H)) # Damping term
     delta    <- try(Matrix::solve(H_damped, g, tol=tolsolve))
-    if(inherits(delta, 'try-error'))
-      return(list(code=2, message='singular Hessian matrix'))
+    if(inherits(delta, 'try-error')) {
+      # Increase lambda if Hessian is ill-conditioned
+      lambda <- lambda * 10
+      next
+      }
+
     theta_new <- theta - delta
     objf      <- obj(theta_new)
     if(trace > 0)

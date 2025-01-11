@@ -46,23 +46,23 @@ quickRefit <-
   
   g <-
   switch(k,
-         ols = function(X, y, strata=NULL, offset=NULL, weights=NULL, penalty.matrix, ytarget, ...)
+         ols = function(X, y, strata=NULL, offset=NULL, weights=NULL, penalty.matrix, ytarget, opt_method, ...)
                                    lm.fit.qr.bare(X, y, intercept=TRUE, ...),
-         olsp= function(X, y,  strata=NULL, offset=NULL, weights=NULL, penalty.matrix, ytarget, ...)
+         olsp= function(X, y,  strata=NULL, offset=NULL, weights=NULL, penalty.matrix, ytarget, opt_method, ...)
                                    lm.pfit(cbind(Intercept=1e0, X), y,
                                            penalty.matrix=penalty.matrix, regcoef.only=TRUE, ...),
          lrm = function(X, y, compstats, offset=NULL, penalty.matrix, weights=NULL,
-                        strata=NULL, ytarget, ...)
+                        strata=NULL, ytarget, opt_method='NR', ...)
            lrm.fit(X, y, compstats=compstats, offset=offset, 
-                   penalty.matrix=penalty.matrix, weights=weights, ...),
+                   penalty.matrix=penalty.matrix, weights=weights, opt_method=opt_method, ...),
          orm = function(X, y, family, compstats, offset=NULL, penalty.matrix, weights=NULL,
-                        strata=NULL, ytarget, ...)
+                        strata=NULL, ytarget, opt_method='NR', ...)
            orm.fit(X, y, family=family, compstats=compstats, offset=offset,
-                        penalty.matrix=penalty.matrix, weights=weights,...),
+                        penalty.matrix=penalty.matrix, weights=weights, opt_method=opt_method, ...),
          ormt= function(X, y, family, compstats, offset=NULL, penalty.matrix, weights=NULL,
-                        strata=NULL, ytarget, ...) {
+                        strata=NULL, ytarget, opt_method='NR', ...) {
            f <- orm.fit(X, y, family=family, compstats=compstats, offset=offset,
-                        penalty.matrix=penalty.matrix, weights=weights, ...)
+                        penalty.matrix=penalty.matrix, weights=weights, opt_method=opt_method, ...)
            ns  <- f$non.slopes
            cof <- f$coefficients
            if(! is.na(ytarget)) {
@@ -93,15 +93,15 @@ quickRefit <-
           return(f)
          } ,
          cph = function(X, y, method, type, strata=NULL, weights=NULL, offset=NULL,
-                        ytarget, penalty.matrix, ...)
+                        ytarget, penalty.matrix, opt_method, ...)
                                    coxphFit(X, y, method=method, type=type,
                                             strata=strata, weights=weights, offset=offset, ...),
          psm = function(X, y, offset=NULL, dist, fixed, parms, strata=NULL, weights=NULL,
-                        penalty.matrix, ytarget, ...)
+                        penalty.matrix, ytarget, opt_method, ...)
                                    survreg.fit2(X, y, offset=offset, dist=dist,
                                                 fixed=fixed, parms=parms, ...),
          Glm = function(X, y, family, offset=NULL, weights=NULL, control=glm.control(),
-                        strata=NULL, penalty.matrix, ytarget, ...) {
+                        strata=NULL, penalty.matrix, ytarget, opt_method, ...) {
            f <- glm.fit(x=cbind(1e0, X), y=as.vector(y), family=family, 
                         offset=offset, weights=weights,
                         control=control, ...)
@@ -109,10 +109,10 @@ quickRefit <-
            f
          },
          Rq  = function(X, y, tau, offset=NULL, weights=NULL, method, strata=NULL,
-                        penalty.matrix, ytarget,...)
+                        penalty.matrix, ytarget, opt_method, ...)
                         quantreg::rq.wfit(cbind(Intercept=1e0, X), y, tau=tau,
                                           weights=weights, method=method, ...),
-         bj  = function(X, y,  strata=NULL, offset=NULL, penalty.matrix, ytarget, ...)
+         bj  = function(X, y,  strata=NULL, offset=NULL, penalty.matrix, ytarget, opt_method, ...)
                     bj.fit(X, y, ...),
          stop('fit must be from ols, lrm, orm, cph, psm, Glm, bj, Rq')
          )
@@ -146,7 +146,7 @@ if(k %in% c('orm', 'ormt', 'Glm')) formals(g)$family <- object$family
 
 if(what == 'fitter') return(g)
 f <- g(X, y, ...)
-if(what == 'fit') return(f)
+if(what == 'fit' || (length(f$fail) && f$fail)) return(f)
 
 dev  <- getDeviance(f, k)
 fdev <- dev[length(dev)]

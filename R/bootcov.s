@@ -2,8 +2,6 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
                     loglik=FALSE, pr=FALSE,
                     group=NULL, stat=NULL, seed=sample(10000, 1), ytarget=NULL, ...) {
 
-tryCatch <- function(x, error) x
-
   coxcph <- inherits(fit,'coxph') || inherits(fit,'cph')
 
   nfit <- class(fit)[1]
