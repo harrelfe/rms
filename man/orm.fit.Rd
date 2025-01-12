@@ -17,7 +17,7 @@
 orm.fit(x=NULL, y, family=c("logistic","probit","loglog","cloglog","cauchit"),
         offset, initial, opt_method=c('NR', 'LM'),
         maxit=30L, eps=5e-4, gradtol=0.001, abstol=1e10, 
-        minstepsize=0.01, tol=1e-14, trace=FALSE,
+        minstepsize=0.01, tol=.Machine$double.eps, trace=FALSE,
         penalty.matrix=NULL, weights=NULL, normwt=FALSE, scale=FALSE,
         inclpen=TRUE, y.precision = 7, compstats=TRUE)
 }
@@ -54,7 +54,7 @@ to prevent endless step-halving.
 \item{gradtol}{maximum absolute gradient before convergence can be declared. \code{gradtol} is automatically scaled by n / 1000 since the gradient is proportional to the sample size.}
 \item{abstol}{maximum absolute change in parameter estimates from one iteration to the next before convergence can be declared; by default has no effect}
 \item{minstepsize}{used to specify when to abandon step-halving}
-\item{tol}{Singularity criterion. Default is 1e-14}
+\item{tol}{Singularity criterion. Default is typically 2e-16}
 \item{trace}{
 set to \code{TRUE} to print -2 log likelihood, step-halving
 fraction, change in -2 log likelihood, maximum absolute value of first

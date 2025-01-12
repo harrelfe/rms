@@ -31,7 +31,7 @@ the first two types of penalty factors are plotted, showing only the \eqn{AIC}.
 pentrace(fit, penalty, penalty.matrix, 
          method=c('grid','optimize'),
          which=c('aic.c','aic','bic'), target.df=NULL,
-         fitter, pr=FALSE, tol=1e-14,
+         fitter, pr=FALSE, tol=.Machine$double.eps,
          keep.coef=FALSE, complex.more=TRUE, verbose=FALSE, maxit=20,
          subset, noaddzero=FALSE, ...)
 

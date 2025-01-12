@@ -62,7 +62,7 @@ depending on \code{options(prType=)}.  For
 \code{html.anova.rms} just calls \code{latex.anova.rms}.
 }
 \usage{
-\method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=1e-14,
+\method{anova}{rms}(object, \ldots, main.effect=FALSE, tol=.Machine$double.eps,
       test=c('F','Chisq','LR'), india=TRUE, indnl=TRUE, ss=TRUE,
       vnames=c('names','labels'),
       posterior.summary=c('mean', 'median', 'mode'), ns=500, cint=0.95,

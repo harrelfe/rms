@@ -64,7 +64,7 @@ calibrate.default <- function(fit, predy,
     }
     f <-
       switch(model,
-             lr = lrm.fit(x, y, penalty.matrix=penalty.matrix, tol=1e-13),
+             lr = lrm.fit(x, y, penalty.matrix=penalty.matrix, tol=.Machine$double.eps),
              ol = if(length(penalty.matrix)==0)
                 {
                   w <- lm.fit.qr.bare(x, y, intercept=TRUE, xpxi=TRUE)

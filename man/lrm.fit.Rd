@@ -19,7 +19,7 @@ lrm.fit(
   eps = 5e-04,
   minstepsize = 0.01,
   trace = 0,
-  tol = 1e-14,
+  tol = .Machine$double.eps,
   penalty.matrix = NULL,
   weights = NULL,
   normwt = FALSE,

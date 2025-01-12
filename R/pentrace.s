@@ -3,7 +3,7 @@ pentrace <-
 					 method=c('grid', 'optimize'),
 					 which=c('aic.c', 'aic', 'bic'), target.df=NULL,
            fitter, pr=FALSE,
-           tol=1e-14, keep.coef=FALSE, complex.more=TRUE,
+           tol=.Machine$double.eps, keep.coef=FALSE, complex.more=TRUE,
            verbose=FALSE, maxit=20, subset, noaddzero=FALSE, ...)
 {
   ## Need to check Strata for cph

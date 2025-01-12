@@ -27,7 +27,7 @@
 #' infoMxop(f$info.matrix, i='x')  # sub-covariance matrix for just the betas
 #' }
 infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
-                     B, np=FALSE, tol=1e-14, abort=TRUE) {
+                     B, np=FALSE, tol=.Machine$double.eps, abort=TRUE) {
   if(! missing(i) && ! invert)
     stop('i is irrelevant if invert=FALSE')
   Bp <- ! missing(B) 

@@ -1365,7 +1365,8 @@ removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
   if('offset' %in% which) {
     form <- format(form)
     which[which == 'offset'] <- '.off.'
-    form <- as.formula(gsub('offset(', '.off.(', form, fixed=TRUE))
+    z <- gsub('offset(', '.off.(', form, fixed=TRUE)
+    form <- as.formula(paste(z, collapse=' '))
   }
 
   te <- terms(form, specials=which)

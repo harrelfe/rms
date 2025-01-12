@@ -1,4 +1,4 @@
-Changes in version 7.0-0 (2024-01-12)
+Changes in version 7.0-0 (2024-01-11)
    * orm.fit: complete re-write making use of ultra-compact sparse represention of pure intercept part of Hessian, and splitting returned information matrix into 3 submatrices
    * this involved writing a new Fortran subroutine ormll; all the link-related calculations were moved into ormll
    * orm: removed support for user-supplied link functions; stayed with 5 hard-coded cumulative probability distributions and these must now be regular character string values

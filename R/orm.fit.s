@@ -3,7 +3,7 @@ orm.fit <- function(x=NULL, y,
                     offset, initial,
                     opt_method=c('NR', 'LM'),
                     maxit=30L, eps=5e-4, gradtol=1e-3, abstol=1e10,
-                    minstepsize=1e-2, tol=1e-14, trace=FALSE,
+                    minstepsize=1e-2, tol=.Machine$double.eps, trace=FALSE,
                     penalty.matrix=NULL, weights=NULL, normwt=FALSE,
                     scale=FALSE, inclpen=TRUE, y.precision = 7,
                     compstats=TRUE)
@@ -226,7 +226,7 @@ orm.fit <- function(x=NULL, y,
 ormfit <-
   function(x, y, k, link, initial,
            offset=rep(0., n), wt=rep(1., n), penmat=matrix(0., p, p), opt_method='NR',
-           maxit=30L, objtol=5e-4, gradtol=1e-3, paramtol=1e10, tolsolve=1e-14,
+           maxit=30L, objtol=5e-4, gradtol=1e-3, paramtol=1e10, tolsolve=.Machine$double.eps,
            minstepsize=1e-2, trace=FALSE, iname, xname) {
 
 n <- length(y)

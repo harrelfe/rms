@@ -1,7 +1,7 @@
 #main.effect=F to suppress printing main effects when the factor in
 #question is involved in any interaction.
 
-anova.rms <- function(object, ..., main.effect=FALSE, tol=1e-14,
+anova.rms <- function(object, ..., main.effect=FALSE, tol=.Machine$double.eps,
                       test=c('F', 'Chisq', 'LR'),
                       india=TRUE, indnl=TRUE, ss=TRUE,
                       vnames=c('names', 'labels'),

@@ -1,6 +1,6 @@
 Package: rms
 Version: 7.0-0
-Date: 2025-01-01
+Date: 2025-01-11
 Title: Regression Modeling Strategies
 Authors@R: person(given = c("Frank", "E"),
                   family = "Harrell Jr",

@@ -10,7 +10,7 @@ infoMxop(
   invert = !missing(i) || !missing(B),
   B,
   np = FALSE,
-  tol = 1e-14,
+  tol = .Machine$double.eps,
   abort = TRUE
 )
 }

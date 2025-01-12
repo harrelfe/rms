@@ -100,7 +100,7 @@ lrm.fit <-
     gradtol = if(opt_method %in% c('NR', 'LM')) 1e-3 else 1e-5,
     factr = 1e7, eps = 5e-4,
     minstepsize = 1e-2, trace = 0,
-    tol = 1e-14, penalty.matrix = NULL, weights = NULL, normwt = FALSE,
+    tol = .Machine$double.eps, penalty.matrix = NULL, weights = NULL, normwt = FALSE,
     transx = FALSE, compstats = TRUE,
     inclpen = TRUE, initglm = FALSE, y.precision=7)
 {
@@ -550,7 +550,7 @@ lrm.fit <-
 newtonr <- function(init, obj, grad, hessian, n,
                     objtol = 5e-4, gradtol = 1e-5, paramtol = 1e-5,
                     minstepsize = 1e-2,
-                    tolsolve=1e-7, maxit = 30, trace=0) {
+                    tolsolve=.Machine$double.eps, maxit = 30, trace=0) {
 
   m <- function(x) max(abs(x))
 
@@ -623,7 +623,7 @@ levenberg_marquardt <-
   function(init, obj, grad, hessian, n,
            objtol = 5e-4, gradtol = 1e-5, paramtol = 1e-5,
            lambda = 1e-3,
-           tolsolve=1e-7, maxit = 30, trace=0) {
+           tolsolve=.Machine$double.eps, maxit = 30, trace=0) {
 
   m <- function(x) max(abs(x))
 

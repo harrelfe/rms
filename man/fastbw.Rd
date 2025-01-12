@@ -23,7 +23,7 @@ statistic for each model.
 }
 \usage{
 fastbw(fit, rule=c("aic", "p"),
-       type=c("residual", "individual", "total"),  sls=.05, aics=0, eps=1e-14,
+       type=c("residual", "individual", "total"),  sls=.05, aics=0, eps=.Machine$double.eps,
        k.aic=2, force=NULL)
 
 \method{print}{fastbw}(x, digits=4, estimates=TRUE, \dots)

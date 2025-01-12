@@ -15,7 +15,7 @@ there is a fitter function call \code{lm.pfit}.
 ols(formula, data=environment(formula), weights, subset, na.action=na.delete, 
     method="qr", model=FALSE,
     x=FALSE, y=FALSE, se.fit=FALSE, linear.predictors=TRUE,
-    penalty=0, penalty.matrix, tol=1e-7, sigma,
+    penalty=0, penalty.matrix, tol=.Machine$double.eps, sigma,
     var.penalty=c('simple','sandwich'), \dots)
 }
 \arguments{

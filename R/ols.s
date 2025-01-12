@@ -2,7 +2,7 @@ ols <- function(formula, data=environment(formula),
                 weights, subset, na.action=na.delete, 
                 method = "qr", model = FALSE, x = FALSE, y = FALSE,
                 se.fit=FALSE, linear.predictors=TRUE,
-                penalty=0, penalty.matrix, tol=1e-7, sigma=NULL,
+                penalty=0, penalty.matrix, tol=.Machine$double.eps, sigma=NULL,
                 var.penalty=c('simple','sandwich'), ...)
 {
   call <- match.call()
@@ -169,7 +169,7 @@ ols <- function(formula, data=environment(formula),
 }
 
 
-lm.pfit <- function(X, Y, offset=NULL, penalty.matrix, tol=1e-14,
+lm.pfit <- function(X, Y, offset=NULL, penalty.matrix, tol=.Machine$double.eps,
                     regcoef.only=FALSE,
                     var.penalty=c('simple', 'sandwich'))
 {
