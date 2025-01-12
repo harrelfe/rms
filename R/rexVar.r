@@ -96,7 +96,7 @@ rexVar <- function(object, data, ns=500, cint=0.95) {
     ## used in X
     .lp. <- matxv(X, draws[i, , drop=TRUE])
     g <- lm.fit.qr.bare(X, as.vector(.lp.),
-                        tolerance=1e-13, intercept=TRUE, xpxi=TRUE)
+                        tolerance=.Machine$double.eps, intercept=TRUE, xpxi=TRUE)
     ## Trick to update original ols model fit; speeds up over
     ## having to recreate design matrix each time
     f$coefficients   <- g$coefficients

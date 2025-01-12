@@ -18,7 +18,7 @@ predab.resample(fit.orig, fit, measure,
                 method=c("boot","crossvalidation",".632","randomization"),
                 bw=FALSE, B=50, pr=FALSE, prmodsel=TRUE,
                 rule="aic", type="residual", sls=.05, aics=0,
-                tol=1e-12, force=NULL, estimates=TRUE,
+                tol=.Machine$double.eps, force=NULL, estimates=TRUE,
                 non.slopes.in.x=TRUE, kint=1,
                 cluster, subset, group=NULL,
                 allow.varying.intercepts=FALSE, debug=FALSE, \dots)

@@ -10,7 +10,7 @@ predab.resample <-
            type="residual",
            sls=.05,
            aics=0,
-           tol=1e-12,
+           tol=.Machine$double.eps,
            force=NULL,
            estimates=TRUE,
            non.slopes.in.x=TRUE,

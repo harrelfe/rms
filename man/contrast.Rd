@@ -82,7 +82,7 @@ contrast(fit, \dots)
          conf.type=c("individual","simultaneous","profile"), usebootcoef=TRUE,
          boot.type=c("percentile","bca","basic"),
          posterior.summary=c('mean', 'median', 'mode'),
-         weights="equal", conf.int=0.95, tol=1e-10, expand=TRUE,
+         weights="equal", conf.int=0.95, tol=.Machine$double.eps, expand=TRUE,
          se_factor=4, plot_profile=FALSE, opt_method=c('LM', 'NR'), \dots)
 \method{print}{contrast.rms}(x, X=FALSE,
        fun=function(u)u, jointonly=FALSE, prob=0.95, \dots)
