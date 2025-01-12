@@ -4,12 +4,13 @@
 #bw=T to incorporate backward stepdown (using fastbw) with params rule,type,sls
 #pr=T to print results of each bootstrap rep
 
-validate.lrm <- function(fit,method="boot",
-	B=40, bw=FALSE, rule="aic", type="residual",
-	sls=.05, aics=0, force=NULL, estimates=TRUE, pr=FALSE,
-    kint,
-	Dxy.method,
-	emax.lim=c(0,1), ...)
+validate.lrm <-
+function(fit,method="boot",
+	       B=40, bw=FALSE, rule="aic", type="residual",
+	       sls=.05, aics=0, force=NULL, estimates=TRUE, pr=FALSE,
+         kint,
+	       Dxy.method,
+	       emax.lim=c(0,1), ...)
 {
   if(! missing(Dxy.method)) warning('Dxy.method is deprecated and ignored')
   k <- fit$non.slopes
@@ -28,36 +29,37 @@ validate.lrm <- function(fit,method="boot",
       k <- fit$non.slopes
       null.model <- length(fit$coefficients)==k
       if(evalfit) {	# Fit was for bootstrap sample
-        stats <- fit$stats
-        lr    <- stats["Model L.R."]
-        Dxy   <- stats["Dxy"]
+        stats     <- fit$stats
+        lr        <- stats["Model L.R."]
+        Dxy       <- stats["Dxy"]
         intercept <- if(null.model) NA else 0
         shrink    <- if(null.model) NA else 1
-        n  <- stats["Obs"]
-        D  <- (lr - 1)/n
-        U  <- -2 / n
-        Q  <- D - U
-        R2 <- stats["R2"]
-        g  <- stats['g']
-        gp <- stats['gp']
+        n         <- stats["Obs"]
+        D         <- (lr - 1)/n
+        U         <- -2 / n
+        Q         <- D - U
+        R2        <- stats["R2"]
+        g         <- stats['g']
+        gp        <- stats['gp']
       }
       else {	
-        refit <- if(null.model) lrm.fit(y=y) else lrm.fit(x,y)
-        kr    <- refit$non.slopes
+        refit     <- if(null.model) lrm.fit(y=y) else lrm.fit(x,y)
+        kr        <- refit$non.slopes
         ## Model with no variables = null model
-        stats <- refit$stats
-        lr    <- stats["Model L.R."]
-        Dxy   <- stats["Dxy"]
+        stats     <- refit$stats
+        lr        <- stats["Model L.R."]
+        Dxy       <- stats["Dxy"]
         intercept <- if(null.model) NA else refit$coefficients[kint]
         shrink    <- if(null.model) NA else refit$coefficients[kr + 1]
-        n <- stats["Obs"]
-        D <- (lr - 1) / n
-        L01 <- -2 * sum( (y >= kint)*x - logb(1 + exp(x)), na.rm=TRUE)
-        U <- (L01 - refit$deviance[2] - 2)/n
-        Q <- D - U
-        R2 <- stats["R2"]
-        g  <- if(null.model) 0 else GiniMd(shrink * x)
-        gp <- if(null.model) 0 else GiniMd(plogis(intercept + shrink * x))
+        n         <- stats["Obs"]
+        D         <- (lr - 1) / n
+        xc        <- pmin(40e0, pmax(x, -40e0))
+        L01       <- -2 * sum( (y >= kint) * xc - logb(1 + exp(xc)), na.rm=TRUE)
+        U         <- (L01 - refit$deviance[2] - 2)/n
+        Q         <- D - U
+        R2        <- stats["R2"]
+        g         <- if(null.model) 0 else GiniMd(shrink * x)
+        gp        <- if(null.model) 0 else GiniMd(plogis(intercept + shrink * x))
       }
       P <- plogis(x)  # 1/(1+exp(-x))
       B <- sum(((y >= kint) - P)^2)/n
@@ -132,7 +134,7 @@ validate.orm <- function(fit, method="boot",
         n          <- stats["Obs"]
         R2         <- stats["R2"]
         g          <- if(null.model) 0 else GiniMd(shrink * x)
-        pdm <- stats['pdm']
+        pdm        <- stats['pdm']
       }
       z <- c(rho, R2, shrink, g, pdm)
       names(z) <- c("rho", "R2", "Slope", "g", "pdm")
