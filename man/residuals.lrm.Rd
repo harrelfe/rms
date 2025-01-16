@@ -315,7 +315,7 @@ set.seed(3)
 n  <- 100
 x1 <- rnorm(n)
 y  <- x1 + rnorm(n)
-g <- orm(y ~ x1, family=probit, x=TRUE, y=TRUE)
+g <- orm(y ~ x1, family='probit', x=TRUE, y=TRUE)
 g.resid <- resid(g)
 plot(x1, g.resid, cex=0.4); lines(lowess(x1, g.resid)); abline(h=0, col=2,lty=2)
 
@@ -324,7 +324,7 @@ n <- 100
 x1 <- rnorm(n)
 y <- x1 + x1^2 +rnorm(n)
 # model misspecification, the square term is left out in the model
-g <- orm(y ~ x1, family=probit, x=TRUE, y=TRUE)
+g <- orm(y ~ x1, family='probit', x=TRUE, y=TRUE)
 g.resid <- resid(g)
 plot(x1, g.resid, cex=0.4); lines(lowess(x1, g.resid)); abline(h=0, col=2,lty=2)
 

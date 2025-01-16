@@ -8,10 +8,10 @@ sex <- factor(sample(c("f","m"), n, rep=TRUE))
 age <- runif(n, 20, 50)
 sexo <- sex; ageo <- age
 require(rms)
-f <- orm(y ~ age + sex, family=loglog)
-g <- orm(y ~ age + sex, family=cloglog)
-h <- orm(-y ~ age + sex, family=loglog)
-i <- orm(-y ~ age + sex, family=cloglog)
+f <- orm(y ~ age + sex, family='loglog')
+g <- orm(y ~ age + sex, family='cloglog')
+h <- orm(-y ~ age + sex, family='loglog')
+i <- orm(-y ~ age + sex, family='cloglog')
 p <- function(fit) coef(fit)[c('age','sex=m')]
 p(f); p(g); p(h); p(i)
 for(type in 1:2) {

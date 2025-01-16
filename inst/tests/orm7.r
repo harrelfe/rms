@@ -4,8 +4,8 @@ x <- 1 : 10
 y <- c(0, 1, 0, 0, 0, 1, 0, 1, 1, 1)
 lrm(y ~ x)
 orm(y ~ x)
-orm(y ~ x, family=probit)
-orm(y ~ x, family=loglog, trace=1)
+orm(y ~ x, family='probit')
+orm(y ~ x, family='loglog', trace=1)
 
 x <- 1 : 10
 y <- c(0, 2, 0, 1, 0, 2, 2, 1, 1, 2)
@@ -19,11 +19,11 @@ x <- 1:10
 y <- c(0, 2, 0, 1, 0, 3, 2, 1, 1, 3)
 f <- orm(y ~ x)
 g <- lrm(y ~ x)
-orm(y ~ x, family=probit)
+orm(y ~ x, family='probit')
 require(MASS)
 yf <- factor(y)
 summary(polr(yf ~ x, method='probit'))
-f <- orm(y ~ x, family=loglog)
+f <- orm(y ~ x, family='loglog')
 f$deviance
 h <- polr(yf ~ x, method='cloglog')
 h

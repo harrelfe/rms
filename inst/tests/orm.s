@@ -221,9 +221,9 @@ set.seed(1)
 n <- 1000
 x1 <- runif(n)
 y <- 30 + x1 + rnorm(n)
-f <- orm(y ~ x1, family=probit)
+f <- orm(y ~ x1, family='probit')
 y2 <- y + 20
-f2 <- orm(y2 ~ x1, family=probit)
+f2 <- orm(y2 ~ x1, family='probit')
 plot(coef(f), coef(f2)) # unaffected by shift
 
 g  <- ols(y ~ x1)
@@ -238,7 +238,7 @@ text(-32, 2, paste('Slope:', round(co[2], 4)))
 abline(a=co[1], b=co[2], col='gray70')
 
 ## Compare coefficients with those from partial likelihood (Cox model)
-orm(y ~ pol(x1,2), family=loglog)
+orm(y ~ pol(x1,2), family='loglog')
 require(survival)
 cph(Surv(y) ~ pol(x1,2))
 

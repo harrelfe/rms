@@ -18,6 +18,7 @@ Changes in version 7.0-0 (2024-01-15)
    * bootcov: removed rms fitter construction and replaced with quickRefit
    * bootcov: changed arguments to fitting functions to be passed via ...; for lrm.fit and orm.fit added compstats=FALSE, compvar=FALSE for speed
    * bootcov: removed logic to fill in intercepts for non-sampled Y values and instead used linear interpolation/extrapolation to estimate missing intercepts from sampled Y values; also added ytarget argument to just keep one intercept per bootstrap fit.  Results will be different from the "flat carry forward" method that was used before version 7.0.
+   * plotIntercepts: new function to plot step function representing the intercepts in lrm or orm
    * lrm: fixed bug in Dxy calculation
    * lrm.fit, orm.fit: added Levenberg-Marquardt optimization, changed gradient comvergence criterion for this and Newton-Raphson to be gradtol * n / 1000, which is also used in the new orm.fit
    * groupkm, val.prob: use the new Hmisc cutGn function in place of cut2 for m=

@@ -226,8 +226,6 @@ lrm.fit <-
           glm.fit    = list(epsilon=reltol, maxit=maxit, trace=trace),
                        list(trace=trace, maxit=maxit) )
 
-  info  <- NULL
-
   if(p == 0 & ! ofpres) {
     loglik         <- rep(loglik, 2)
     stats <- lrmstats(y, ymed, p, initial[ymed], loglik, 0, weights, sumwt, sumwty)
@@ -426,13 +424,20 @@ lrm.fit <-
     return(res)
   }
 
+  if(p == 0 && ! ofpres) {
+    ml <- mle(0L, initial[1 : k])
+    if(inherits(ml, 'lrm')) return(ml)
+    info <- ml$info
+  } 
+
   if(ofpres) {
     # Fit model with only intercept(s) and offset
     ml <- mle(0L, initial[1 : k])
     if(inherits(ml, 'lrm')) return(ml)
-    loglik         <- c(loglik, ml$logl)
-    res            <- list(coef=ml$alpha, u=ml$u, info=ml$info, iter=ml$iter)
-    initial[1 : k] <- ml$alpha    # Pt B
+    loglik          <- c(loglik, ml$logl)
+    res             <- list(coef=ml$alpha, u=ml$u, info=ml$info, iter=ml$iter)
+    initial[1 : k]  <- ml$alpha    # Pt B
+    if(p == 0) info <- ml$info
     }
 
   # Fit full model

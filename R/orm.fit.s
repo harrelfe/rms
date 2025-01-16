@@ -107,9 +107,15 @@ orm.fit <- function(x=NULL, y,
   loglik <- -2 * sum(sumwty * log(sumwty / sum(sumwty)))
 
   if(p==0 & ! ofpres) {
-      loglik <- rep(loglik, 2)
-      z      <- list(coef=initial, u=rep(0, k))
-      kof    <- initial
+    z <- ormfit(NULL, y, k, initial=initial[1 : k],
+                offset=offset, wt=weights,
+                penmat=penmat, opt_method=opt_method, maxit=maxit,
+                tolsolve=tol, objtol=eps, gradtol=gradtol, paramtol=abstol,
+                trace=trace, link=link, iname=iname, xname=xname)
+    if(z$fail) return(structure(list(fail=TRUE), class="orm"))
+    kof    <- z$coef
+    loglik <- z$loglik
+    info   <- z$info
   }
 
   if(ofpres) {
@@ -124,9 +130,8 @@ orm.fit <- function(x=NULL, y,
     kof    <- z$coef
     loglik <- c(loglik, z$loglik)
     initial <- c(z$coef, rep(0., p))
+    if(p == 0) info <- z$info
   }
-
-  info <- NULL
   
   if(p > 0) {
     # Fit model with intercept(s), offset, covariables
@@ -162,8 +167,11 @@ orm.fit <- function(x=NULL, y,
 
   stats <- NULL
   if(compstats) {
-    llnull   <- loglik[length(loglik) - 1L]
-    model.lr <- llnull - loglik[length(loglik)]
+    if(p == 0) {llnull <- loglik[length(loglik)]; model.lr <- 0e0}
+    else {
+      llnull   <- loglik[length(loglik) - 1L]
+      model.lr <- llnull - loglik[length(loglik)]
+    }
     model.df <- p
     if(initial.there || maxit == 1)
       model.p <- score <- score.p <- NA
@@ -186,7 +194,7 @@ orm.fit <- function(x=NULL, y,
     ## compute average |difference| between 0.5 and the condition
     ## probability of being >= marginal median
     pdm <- mean(abs(fam$cumprob(lp) - 0.5))
-    rho <- cor(rank(lp), rank(y))
+    rho <- if(p == 0) 0e0 else cor(rank(lp), rank(y))
     ## Somewhat faster:
     ## rho <- .Fortran('rcorr', cbind(lp, y), as.integer(n), 2L, 2L, r=double(4),
     ##                 integer(4), double(n), double(n), double(n), double(n),

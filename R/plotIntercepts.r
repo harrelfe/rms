@@ -1,7 +1,8 @@
 #' Plot Intercepts
 #'
 #' Plots the step function corresponding to the intercepts in a `orm` or `lrm` model.  This can be thought
-#' of as the link function of the covariate-adjusted empirical cumulative distribution function.  It is
+#' of as the link function of the covariate-adjusted empirical cumulative distribution function
+#' (actually 1 - ECDF).  It is
 #' also related to q-q plots.  For example, if a probit link function is an appropriate choice, and the
 #' residuals actually had a normal distribution (not needed by the semiparametric ordinal model), the step
 #' function of the intercepts would form a straight line.
@@ -28,6 +29,8 @@ plotIntercepts <- function(fit) {
   alpha  <- coef(fit)[1 : ns]
   y      <- fit$yunique[-1]
   yname  <- all.vars(fit$sformula)[1]
+
   plot(y, alpha, xlab=yname, ylab='Intercept')
-  segments(y[-ns], alpha[-ns], y[-1], alpha[-ns], col='gray85')
+  segments(y[-ns], alpha[-ns], y[-1], alpha[-ns])                # horizontals
+  segments(y[-1],  alpha[-ns], y[-1], alpha[-1], col='gray85')   # verticals
 }

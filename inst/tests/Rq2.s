@@ -48,7 +48,7 @@ cmse <- function(n) {   # n = # obs per each of 5 samples
   sampmed <- median(y[s])
   f <- rq(y ~ x)
   qrmed <- coef(f)[1] + coef(f)['xe']
-  f <- orm(y ~ x, family=probit)
+  f <- orm(y ~ x, family='probit')
   if(f$fail) return(c(NA, NA, NA))
   qu <- Quantile(f)
   iref <- f$interceptRef

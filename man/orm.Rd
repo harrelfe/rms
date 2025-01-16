@@ -48,7 +48,7 @@
 \usage{
 orm(formula, data=environment(formula),
     subset, na.action=na.delete, method="orm.fit",
-    family='logistic',
+    family=c("logistic", "probit", "loglog", "cloglog", "cauchit"),
     model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE,
     penalty=0, penalty.matrix,
     var.penalty=c('simple','sandwich'), scale=FALSE,
@@ -91,8 +91,7 @@ character value specifying the distribution family, which is one of the followin
 	default), Gaussian, Cauchy, Gumbel maximum (\eqn{exp(-exp(-x))};
 	extreme value type I), and Gumbel minimum
 	(\eqn{1-exp(-exp(x))}) distributions.  These are the cumulative
-	distribution functions assumed for \eqn{Prob[Y \ge y | X]}.  Family names may be unquoted
-  if calling \code{orm} directly.  The default is \code{"logistic"}.
+	distribution functions assumed for \eqn{Prob[Y \ge y | X]}.  The default is \code{"logistic"}.
 }
 \item{model}{
 causes the model frame to be returned in the fit object

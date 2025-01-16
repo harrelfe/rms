@@ -162,7 +162,8 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
   z <- list()
   k <- 0
   
-  if(length(x$freq) > 3) {
+  lf <- length(x$freq)
+  if(lf > 3 && lf <= 20) {
     k <- k + 1
     z[[k]] <- list(type='print', list(x$freq),
                    title='Frequencies of Responses')
