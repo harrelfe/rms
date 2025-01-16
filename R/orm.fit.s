@@ -68,12 +68,12 @@ orm.fit <- function(x=NULL, y,
 
   # Prevent y levels from being created because of e.g. changes in the 7th decimal place
 
-  w       <- recode2integer(y, precision=y.precision)
-  y       <- w$y - 1
-  ylevels <- w$ylevels
-  kmid    <- max(w$whichmedian - 1L, 1L)
-  numy    <- w$freq
-  mediany <- w$median
+  w           <- recode2integer(y, precision=y.precision)
+  y           <- w$y - 1
+  ylevels     <- w$ylevels
+  kmid        <- max(w$whichmedian - 1L, 1L)
+  numy        <- w$freq
+  mediany     <- w$median
 
   k <- length(ylevels) - 1L
   if(k == 1) kmid <- 1
@@ -108,7 +108,8 @@ orm.fit <- function(x=NULL, y,
 
   if(p==0 & ! ofpres) {
       loglik <- rep(loglik, 2)
-      z <- list(coef=initial, u=rep(0, k))
+      z      <- list(coef=initial, u=rep(0, k))
+      kof    <- initial
   }
 
   if(ofpres) {
@@ -117,18 +118,22 @@ orm.fit <- function(x=NULL, y,
     z <- ormfit(NULL, y, k, initial=initial[1 : k],
                 offset=offset, wt=weights,
                 penmat=penmat, opt_method=opt_method, maxit=maxit,
-                tolsolve=tol, objtol=eps, paramtol=abstol,
+                tolsolve=tol, objtol=eps, gradtol=gradtol, paramtol=abstol,
                 trace=trace, link=link, iname=iname, xname=xname)
     if(z$fail) return(structure(list(fail=TRUE), class="orm"))
+    kof    <- z$coef
     loglik <- c(loglik, z$loglik)
     initial <- c(z$coef, rep(0., p))
   }
 
+  info <- NULL
+  
   if(p > 0) {
     # Fit model with intercept(s), offset, covariables
     z <- ormfit(x, y, k, initial=initial, offset=offset, wt=weights,
                 penmat=penmat, opt_method=opt_method,
-                maxit=maxit, tolsolve=tol, objtol=eps, paramtol=abstol,
+                maxit=maxit, tolsolve=tol, objtol=eps,
+                gradtol=gradtol, paramtol=abstol,
                 trace=trace, link=link, iname=iname, xname=xname)
     if(z$fail) return(structure(list(fail=TRUE), class="orm"))
     loglik <- c(loglik, z$loglik)

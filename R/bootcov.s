@@ -11,13 +11,27 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   X <- fit$x
   Y <- fit$y
 
+  if(length(stat) > 1) stop('stat may only contain one statistic name')
+
   sc.pres <- 'scale' %in% names(fit)
-  ns <- num.intercepts(fit)
+  ns      <- num.intercepts(fit)
 
   ## See if ordinal regression being done
   yu      <- fit$yunique
   ychar   <- is.character(yu)
   ordinal <- nfit == 'orm' || (nfit == 'lrm' && length(yu) > 2)
+
+  if(length(ytarget) && nfit != 'orm') stop('ytarget applies only to orm fits'
+  )
+  if(nfit == 'orm' && length(ytarget)) {
+    if(is.na(ytarget)) {
+      iref    <- fit$interceptRef
+      ytarget <- if(ychar) yu[-1][iref] else median(Y)
+    } else {
+      iref <- if(ychar) which(yu[-1] == ytarget) else which.min(abs(yu[-1] - ytarget))
+      if(! length(iref)) stop('no intercept corresponds to ytarget=', ytarget)
+    }
+  }
 
   ## Someday need to add resampling of offsets, weights    TODO
   if(missing(fitter))
@@ -36,8 +50,8 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       if(!length(oosl))
         stop('loglik=TRUE but no oos.loglik method for model in rmsMisc')
 
-      Loglik      <- double(B + 1)
-      Loglik[B+1] <- oosl(fit)
+      Loglik        <- double(B + 1)
+      Loglik[B + 1] <- oosl(fit)
     }
   else Loglik <- NULL
 
@@ -46,14 +60,12 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   intnames <- names(Cof)[1 : ns]
  
   if(nfit == 'orm' && length(ytarget)) {
-    # Unlike original fit, bootstrap fits will keep only one intercept
-    Cof <- c(Cof[1], Cof[ - (1 : ns)])
+    message('Keeping only intercept ', iref, ' (position for original sample) for ytarget=', ytarget)
+    ikeep         <- c(iref, (ns + 1) : length(Cof))
+    Cof           <- Cof[ikeep]
     names(Cof)[1] <- 'Intercept'
   }
-  #   iref <- fit$interceptRef
-  #   cof  <- cof[c(iref, (ns + 1L) : length(cof))]
-  # }
-
+  
   p     <- length(Cof)
   vname <- names(Cof)
   if(sc.pres) {
@@ -67,7 +79,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   if(length(stat)) stats <- numeric(B)
   nry <- rep(0, B)
 
-  Y <- as.matrix(if(is.factor(Y)) unclass(Y) else Y)
+  Y  <- as.matrix(if(is.factor(Y)) unclass(Y) else Y)
   ny <- ncol(Y)
 
   Strata <- fit$strata
@@ -91,7 +103,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   }
   else ngroup <- 0
 
-  # Given a vector of intercepts, with those corresponding to non-sampled Y
+  # Given a vector of intercepts, with those corresponding to non-sampled y
   # equal to NA, use linear interpolation/extrapolation to fill in the NAs
   fillin <- function(y, alpha) {
     if(length(y) != length(alpha)) stop('lengths of y and alpha must match')
@@ -123,6 +135,8 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
          'all bootstrap samples will have all original distinct y values ',
          'represented.  ', paste(setdiff(vname, names(cof)), collapse=' '))
     }
+
+  set.seed(seed)
 
   if(missing(cluster)) {
     clusterInfo <- NULL
@@ -244,7 +258,7 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
 
   if(b < B) {
     warning('fit failure in ', B-b,
-            ' resamples.  Consider specifying maxit or other convergence criteria.')
+            ' resamples.  Consider specifying tol, maxit, opt_method, or other optimization criteria.')
     if(coef.reps) coefs <- coefs[1L : b,,drop=FALSE]
     Loglik <- Loglik[1L : b]
   }
@@ -263,20 +277,23 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
   fit$boot.coef <- bar
   if(coef.reps) fit$boot.Coef <- coefs
   if(length(ytarget)) {
-    # Get intercept number in original fit corresponding to ytarget
-    j <- if(is.na(ytarget)) fit$interceptRef else which.min(abs(yu[-1] - ytarget))
-    Cof[1]           <- fit$coefficients[j]
     fit$coefficients <- Cof
     fit$non.slopes   <- 1
     fit$interceptRef <- 1
+    if(length(fit$linear.predictors) &&
+       length(attr(fit$linear.predictors, 'intercepts')))
+         attr(fit$linear.predictors, 'intercepts') <- 1
+    fit$var <- infoMxop(fit$info.matrix, i=ikeep)
+    for(i in 1 : length(fit$assign))
+      fit$assign[[i]] <- fit$assign[[i]] - (ns - 1)
   }
-  fit$info.matrix  <- NULL
   
   bar <- as.matrix(bar)
   cov <- (cov - b * bar %*% t(bar)) / (b - 1L)
   fit$orig.var <- fit$var
-  # if(nfit == 'orm') attr(cov, 'intercepts') <- iref
+  # if(nfit == 'orm') attr(cov, 'intercepts') <- iref   1 if ytarget
   fit$var <- cov
+  fit$info.matrix <- NULL
   fit$boot.loglik <- Loglik
   if(length(stat)) fit$boot.stats <- stats
   if(nfit == 'Rq') {

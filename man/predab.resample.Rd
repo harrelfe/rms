@@ -85,7 +85,8 @@ Number of repetitions, default=50. For \code{method="crossvalidation"},
 this is also the number of groups the original sample is split into.
 }
 \item{pr}{
-\code{TRUE} to print results for each sample. Default is \code{FALSE}.
+\code{TRUE} to print results for each sample. Default is \code{FALSE}.  Also controls printing
+of number of divergent or singular samples.
 }
 \item{prmodsel}{
 set to \code{FALSE} to suppress printing of model selection output such

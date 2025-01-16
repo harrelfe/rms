@@ -72,7 +72,7 @@ predictrms <-
   Center <- if(cox) fit$center else 0.
 
   oldopts <- options(contrasts=c(factor="contr.treatment",
-                       ordered="contr.treatment"),   # was "contr.poly"
+                                 ordered="contr.treatment"),   # was "contr.poly"
                      Design.attr=at)
 
   ## In SV4 options(two lists) causes problems

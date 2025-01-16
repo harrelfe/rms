@@ -563,7 +563,7 @@ newtonr <- function(init, obj, grad, hessian, n,
   for (iter in 1:maxit) {
     gradient <- grad(theta)     # Compute the gradient vector
     hess     <- hessian(theta)  # Compute the Hessian matrix
-    delta <- try(Matrix::solve(hess, gradient, tol=tolsolve)) # Compute the Newton-Raphson step
+    delta <- try(Matrix::solve(hess, gradient, tol=tolsolve), silent=TRUE) # Compute the Newton-Raphson step
     if(inherits(delta, 'try-error'))
       return(list(code=2, message='singular Hessian matrix'))
 
@@ -629,6 +629,7 @@ levenberg_marquardt <-
 
   theta  <- init
   oldobj <- 1e10
+  objf   <- NA     # needed in case no H_damped is ever positive definite
   g      <- grad(theta)
   H      <- hessian(theta)
 
@@ -636,7 +637,7 @@ levenberg_marquardt <-
 
   for (i in 1 : maxit) {
     H_damped <- H + lambda * Matrix::Diagonal(x = Matrix::diag(H)) # Damping term
-    delta    <- try(Matrix::solve(H_damped, g, tol=tolsolve))
+    delta    <- try(Matrix::solve(H_damped, g, tol=tolsolve), silent=TRUE)
     if(inherits(delta, 'try-error')) {
       # Increase lambda if Hessian is ill-conditioned
       lambda <- lambda * 10
@@ -716,10 +717,10 @@ lrmstats <- function(y, ymed, p, lp, loglik, u, weights, sumwt, sumwty) {
       survival::concordancefit(y, lp, weights=weights, reverse=FALSE))
     conc   <- a$count['concordant']
     disc   <- a$count['discordant']
-    tiedy  <- a$count['tied.y']
+    tiedx  <- a$count['tied.x']
     pairs  <- sum(as.double(a$count))
-    rankstats <- c(C     = a$concordance,
-                   Dxy   = (conc - disc) / (pairs - tiedy),
+    rankstats <- c(C     = a$concordance,    # (conc + 0.5 * tiedx) / (conc + disc + tiedx)
+                   Dxy   = (conc - disc) / (conc + disc + tiedx),
                    Gamma = (conc - disc) / (conc + disc),
                    Tau_a = (conc - disc) / pairs)
     stats <- c(n, max(abs(u)), model.lr, model.df,

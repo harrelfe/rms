@@ -69,7 +69,7 @@ rexVar <- function(object, data, ns=500, cint=0.95) {
   draws <- object$draws
   drawtype <- 'bayes'
   if(! length(draws)) {
-    draws <- object$boot.Coef
+    draws    <- object$boot.Coef
     drawtype <- 'bootstrap'
     }
   if(inherits(object, 'ols') && ! length(draws))
@@ -105,7 +105,9 @@ rexVar <- function(object, data, ns=500, cint=0.95) {
     rx[i, ] <- rex(f)
   }
 
-  lim <- apply(rx, 2, rmsb::HPDint, prob=cint)
+  lim <- switch(drawtype,
+                bayes     = apply(rx, 2, rmsb::HPDint, prob=cint),
+                bootstrap = apply(rx, 2, quantile, probs=c((1. - cint) / 2., 1. - (1. - cint) / 2.))  )
   r   <- cbind(REV=overall.rex, Lower=lim[1, ], Upper=lim[2, ])
   rownames(r) <- names(overall.rex)
   structure(r, class='rexVar', drawtype=drawtype)

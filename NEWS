@@ -1,4 +1,4 @@
-Changes in version 7.0-0 (2024-01-11)
+Changes in version 7.0-0 (2024-01-15)
    * orm.fit: complete re-write making use of ultra-compact sparse represention of pure intercept part of Hessian, and splitting returned information matrix into 3 submatrices
    * this involved writing a new Fortran subroutine ormll; all the link-related calculations were moved into ormll
    * orm: removed support for user-supplied link functions; stayed with 5 hard-coded cumulative probability distributions and these must now be regular character string values
@@ -18,6 +18,7 @@ Changes in version 7.0-0 (2024-01-11)
    * bootcov: removed rms fitter construction and replaced with quickRefit
    * bootcov: changed arguments to fitting functions to be passed via ...; for lrm.fit and orm.fit added compstats=FALSE, compvar=FALSE for speed
    * bootcov: removed logic to fill in intercepts for non-sampled Y values and instead used linear interpolation/extrapolation to estimate missing intercepts from sampled Y values; also added ytarget argument to just keep one intercept per bootstrap fit.  Results will be different from the "flat carry forward" method that was used before version 7.0.
+   * lrm: fixed bug in Dxy calculation
    * lrm.fit, orm.fit: added Levenberg-Marquardt optimization, changed gradient comvergence criterion for this and Newton-Raphson to be gradtol * n / 1000, which is also used in the new orm.fit
    * groupkm, val.prob: use the new Hmisc cutGn function in place of cut2 for m=
    * LRchunktest: removed; anova.rms now uses quickRefit
@@ -27,6 +28,9 @@ Changes in version 7.0-0 (2024-01-11)
    * Glm and other code using glm.fit: glm.fit was storing a weight variable that is not the original given by the user when fitting the model; this hurt quickRefit and perhaps other routines.  Change all glm.fit calls to store the original weights as fit object component oweights
    * contrast.rms: use middle intercept for lrm
    * Ocens: moved from rmsb to rms
+   * Various: changed default tol for solve() to .Machine$double.eps
+   * validate.lrm: curtail x to [-40,40] in L01 calculation; fixes infinite value problem for U and Q
+   * removeFormulaTerms: dispensed with R warning by pasting together multiple line formulas
    * require Hmisc 5.2-2 or later
    * start conceptualizing a road map for future developments for lrm and orm:
      + orm will be the place for extending the model (censoring and constrained partial PO model), and lrm will handle multiple optimization methods

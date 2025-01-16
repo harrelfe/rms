@@ -6,14 +6,13 @@ contrast.rms <-
            conf.type=c('individual','simultaneous','profile'), usebootcoef=TRUE,
            boot.type=c('percentile','bca','basic'),
            posterior.summary=c('mean', 'median', 'mode'),
-           weights='equal', conf.int=0.95, tol=.Machine$double.eps, expand=TRUE, se_factor=4,
-           plot_profile=FALSE, opt_method=c('LM', 'NR'), ...)
+           weights='equal', conf.int=0.95, tol=1e-7, expand=TRUE, se_factor=4,
+           plot_profile=FALSE, ...)
 {
   type              <- match.arg(type)
   conf.type         <- match.arg(conf.type)
   boot.type         <- match.arg(boot.type)
   posterior.summary <- match.arg(posterior.summary)
-  opt_method        <- match.arg(opt_method)
 
   draws <- fit$draws
   bayes <- length(draws) > 0
@@ -229,7 +228,7 @@ contrast.rms <-
       }
     } else if(conf.type == 'profile') {
       w <- rms_profile_ci(X, fit, conf.int, est, se, plot_profile=plot_profile,
-                          se_factor=se_factor, opt_method=opt_method, ...)
+                          se_factor=se_factor, ...)
       lower <- w$lower
       upper <- w$upper
       LR    <- w$LR
@@ -275,7 +274,7 @@ contrast.rms <-
   if(type=='joint') {
     est <- est[! redundant]
     v <- v[! redundant, ! redundant, drop=FALSE]
-    res$jointstat <- as.vector(est %*% solve(v, tol=tol) %*% est)
+    res$jointstat <- as.vector(est %*% solve(v, est, tol=tol))
   }
   
   structure(res, class='contrast.rms')
@@ -343,7 +342,8 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
   # Assign modified names to w
   names(w) <- no
 
-  if(x$conf.type == 'profile') w$S.E. <- NULL
+  if(x$conf.type == 'profile')             w$S.E. <- NULL
+  if(length(w$S.E.) && all(is.na(w$S.E.))) w$S.E. <- NULL
 
   # Print w
   if(! jointonly) {
@@ -386,7 +386,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
 }
 
 rms_profile_ci <-
-  function(C, fit, conf.int, est_C, se_C, se_factor=4e0, opt_method=NULL,
+  function(C, fit, conf.int, est_C, se_C, se_factor=4e0,
           plot_profile=FALSE, ...) {
   # Separate likelihood profile confidence intervals for contrasts in
   # each row of C.  est_C is estimated contrast, se_C is its standard error
@@ -406,7 +406,7 @@ rms_profile_ci <-
 
   g <- function(theta) {
     dev <- quickRefit(fit, X=Z[, -1, drop=FALSE], offset=theta * Z[, 1],
-                      what='deviance', opt_method=opt_method, ...)
+                      what='deviance', ...)
     if(is.list(dev) && length(dev$fail) && dev$fail) {
       message('Fit failed in profile likelihood.  theta=', format(theta), ' S.E.=', format(se),
            ' range of offsets:', paste(format(range(theta * Z[, 1])), collapse=', '))
@@ -435,7 +435,7 @@ rms_profile_ci <-
     v <- v / u
     Z <- X %*% v
     # Likelihood ratio chi-square obtained by removing first column of Z
-    drop1 <- quickRefit(fit, X=Z[, -1, drop=FALSE], what='deviance', opt_method=opt_method, ...)
+    drop1 <- quickRefit(fit, X=Z[, -1, drop=FALSE], what='deviance', ...)
     drop1 <- drop1[length(drop1)]
     LR[i] <- drop1 - odev
     if(plot_profile) {

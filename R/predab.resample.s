@@ -399,7 +399,7 @@ predab.resample <-
   
   if(pr) cat("\n\n")
   
-  if(j != B)
+  if(pr && (j != B))
     cat("\nDivergence or singularity in", B - j, "samples\n")
   
   train.stat <- train.stat / num

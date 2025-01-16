@@ -8,10 +8,14 @@
 # For orm models, specify ytarget=constant to subset intercepts and reform
 # the fit to be like a binary regression model for Y >= ytarget
 # Set ytarget to NA to use the default reference intercept in doing this.
+# The original fit (object) provides the default reference intercept and
+# y values.
 # Set storevals=FALSE to not store original X, y, offset, strata, weights as
 # default argument values in generated functions
 # storevals can be FALSE when the model re-fitting is specifying all data-related
 # arguments to the fitter each time.  This applies when what='fitter'.
+# If object is an orm and ytarget is used, set compvar=TRUE to compute the variance matrix
+# that uses only the reference intercept
 
 quickRefit <-
   function(object,
@@ -24,6 +28,7 @@ quickRefit <-
            compstats      = FALSE, 
            ytarget        = NULL,
            what           = c('chisq', 'deviance', 'fit', 'fitter'),
+           compvar        = FALSE,
            storevals      = TRUE,
            ...) {
 
@@ -34,7 +39,8 @@ quickRefit <-
   if(k == 'ols' && length(penalty.matrix)) k <- 'olsp'
   if(k == 'orm' && length(ytarget)) k <- 'ormt'
 
-  if(! length(X) || ! length(y))
+  # is.null instead of ! length because X may be a no-covariate matrix during profile likelihood
+  if(is.null(X) || is.null(y))    # is.null instead of ! length because X may be a no-covariate matrix during profile likelihood
     stop('you must specify x=TRUE, y=TRUE when fitting, or provide them to quickRefit')
 
   if(length(offset) && any(offset != 0e0) && (k %in% c('ols', 'olsp', 'Rq')))
@@ -60,37 +66,25 @@ quickRefit <-
            orm.fit(X, y, family=family, compstats=compstats, offset=offset,
                         penalty.matrix=penalty.matrix, weights=weights, opt_method=opt_method, ...),
          ormt= function(X, y, family, compstats, offset=NULL, penalty.matrix, weights=NULL,
-                        strata=NULL, ytarget, opt_method='NR', ...) {
+                        strata=NULL, ytarget, compvar, opt_method='NR', ...) {
            f <- orm.fit(X, y, family=family, compstats=compstats, offset=offset,
                         penalty.matrix=penalty.matrix, weights=weights, opt_method=opt_method, ...)
            ns  <- f$non.slopes
            cof <- f$coefficients
-           if(! is.na(ytarget)) {
-             # ytarget is not NA: find intercept for closest match to Y=ytarget
-             # Y values corresponding to intercepts
-             yu <- f$yunique[-1]
-             if(is.character(yu)) {
-               intattr <- which(yu == ytarget)
-               if(! length(intattr)) stop('no intercept matches ytarget=', ytarget)
-               intcept <- cof[intattr]
-             } else {
-              # Linearly interpolate to return an intercept aimed
-              # at Y >= ytarget
-              intattr <- which.min(abs(yu - ytarget))
-              intcept <- cof[intattr]
-             }
-           } else {
-             # ytarget=NA; use stored reference category, corresponding to median Y
-             k         <- f$interceptRef
-             intattr   <- k
-             intcept <- cof[k]
-           }
-          names(intcept) <- 'Intercept'
-          cof <- c(intcept, cof[(ns + 1) : length(cof)])
-          attr(cof, 'intercepts') <- 1L
-          f$coefficients          <- cof
-          f$non.slopes            <- 1L
-          return(f)
+           # For character y, find the intercept that exactly matchines ytarget
+           # For numeric y, find the intercept corresponding to being closest to ytarget
+           yu   <- f$yunique[-1]
+           iref <- if(is.character(yu)) which(yu == ytarget) else which.min(abs(yu - ytarget))
+           if(! length(iref)) stop('no intercept matches ytarget=', ytarget)
+           i   <- c(iref, (ns + 1) : length(cof))
+           cof <- cof[i]
+           names(cof[1]) <- 'Intercept'
+           attr(cof, 'intercepts') <- 1L
+           f$coefficients          <- cof
+           f$non.slopes            <- 1L
+           if(compvar) f$var       <- infoMxop(f$info.matrix, i=i)
+           f$info.matrix           <- NULL
+           f
          } ,
          cph = function(X, y, method, type, strata=NULL, weights=NULL, offset=NULL,
                         ytarget, penalty.matrix, opt_method, ...)
@@ -130,7 +124,12 @@ formals(g)$penalty.matrix <- penalty.matrix
 
 if(k %in% c('lrm', 'orm', 'ormt'))
                            formals(g)$compstats <- compstats
+if(k == 'ormt' && is.na(ytarget)) {
+  yu   <- object$yunique[-1]
+  ytarget <- if(is.character(yu)) yu[object$interceptRef] else median(object[['y']])
+}
 if(k == 'ormt')            formals(g)$ytarget   <- ytarget
+if(k == 'ormt')            formals(g)$compvar   <- compvar                                                    
 if(k == 'cph')             formals(g)$type      <- attr(y, 'type')
 if(k %in% c('cph', 'Rq'))  formals(g)$method    <- object$method
 if(k == 'Rq')              formals(g)$tau       <- object$tau
