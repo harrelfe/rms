@@ -37,7 +37,7 @@ contrast.rms <-
     iparm <- 1 : length(betas)
   }
   fite   <- fit
-  ordfit <- inherits(fit, 'orm') || inherits(fit, 'lrm'))
+  ordfit <- inherits(fit, 'orm') || inherits(fit, 'lrm')
   if(ordfit) {
     nrp <- 1
     ## Note: is 1 for orm because vcov defaults to intercepts='mid' and
