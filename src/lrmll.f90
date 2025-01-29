@@ -39,21 +39,11 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, &
   integer(int32), allocatable :: i0(:), ik(:), ib(:)
 
   if(debug > 0) then
-    call intpr('n', 1, n, 1)
-    call intpr('k', 1, k, 1)
-    call intpr('p', 1, p, 1)
-    call intpr('x', 1, size(x), 1)
-    call intpr('y', 1, size(y), 1)
-    call intpr('offset', 6, size(offset), 1)
-    call intpr('wt', 2, size(wt), 1)
-    call intpr('penmat', 6, size(penmat), 1)
-    call intpr('alpha', 5, size(alpha), 1)
-    call intpr('beta', 4, size(beta), 1)
-    call intpr('ha', 2, size(ha), 1)
-    call intpr('what', 4, what, 1)
-    call intpr('debug', 5, debug, 1)
-    call dblepr('alpha', 5, alpha, k)
-    call dblepr('beta', 4, beta, p)
+    call intpr('n,k,p,x,y,o,w,pen,a,b,ha,what', 19, &
+               [n, k, p, size(x), size(y), size(offset), size(wt), size(penmat), &
+                size(alpha), size(beta), size(ha), what], 12)
+    call dblepr('alpha',  5, alpha,  k)
+    call dblepr('beta',   4, beta,   p)
     call dblepr('penmat', 6, penmat, p * p)
   end if
  
@@ -83,6 +73,12 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, &
   p2(ib) = expit(alpha(y(ib) + 1) + lp(ib))
   p1(ik) = expit(alpha(k)         + lp(ik))
   d      = p1 - p2
+
+  if(debug > 0) then
+    call dblepr('p1', 2, p1, size(p1))
+    call dblepr('p2', 2, p2, size(p2))
+    call dblepr('d',  1, d,  size(d))
+  end if
 
   logL = -2_dp * sum(wt * log(d)) +  dot_product(beta, matmul(penmat, beta))
 
@@ -202,12 +198,12 @@ subroutine lrmll(n, k, p, x, y, offset, wt, penmat, alpha, beta, logL, u, &
         hb(c, l) = hb(l, c)
       end do
     end do
-    if(debug > 0) call intpr('hess A', 6, 0, 1)
+    if(debug > 0) call intpr1('hess A', 6, 0)
     ! To add derivative of penalty function -0.5 b'Pb = -Pb :
     if(p > 0 .and. penhess > 0) hb = hb - penmat
   end if
 
-if(debug > 0) call intpr('hab B', 5, size(hab), 1)
+if(debug > 0) call intpr1('hab B', 5, size(hab))
 
 deallocate(lp, ww, i0, ik, ib, d, &
            p1, p2, v1, v2, w1, w2)

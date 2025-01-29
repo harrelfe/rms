@@ -1,6 +1,6 @@
 #' Operate on Information Matrices
 #'
-#' Processes three types of information matrices: ones produced by the `SparseM` package for the `orm` function in `rms` version 6.9-0 and earlier, by the `Matrix` package for version 7.0-0 of `rms`, or plain matrices.  For `Matrix`, the input information matrix is a list with three elements: `a` containing in two columns the diagonal and superdiagonal for intercepts, `b`, a square matrix for the covariates, and `ab` for intercepts x covariates.  If nothing else is specified, the assembled information matrix is returned for `Matrix`, or the original `info` otherwise.  If `p=TRUE`, the number of parameters in the model (number of rows and columns in the whole information matrix) is returned.  If `i` is given, the `i` elements of the inverse of `info` are returned, using efficient calculation to avoid inverting the whole matrix.  Otherwise if `invert=TRUE` or `B` is given without `i`, the efficiently (if `Matrix` or `SparseM`) inverted matrix is returned, or the matrix multiplication of the inverse and `B`.  If both `i` and `B` are given, what is returned is the `i` portion of the inverse of the information matrix, matrix multiplied by `B`.  This is done inside `solve()`.
+#' Processes four types of information matrices: ones produced by the `SparseM` package for the `orm` function in `rms` version 6.9-0 and earlier, by the `Matrix` package for version 7.0-0 of `rms` using a tri-band diagonal matrix for the intercepts, using `Matrix` for general sparse information matrices for intercepts (when any interval-censored observations exist), or plain matrices.  For `Matrix`, the input information matrix is a list with three elements: `a` containing in two columns the diagonal and superdiagonal for intercepts (when there is no interval censoring) or a list with three elements `row`, `col`, `a` (when there is interval censoring), `b`, a square matrix for the covariates, and `ab` for intercepts x covariates.  If nothing else is specified, the assembled information matrix is returned for `Matrix`, or the original `info` otherwise.  If `p=TRUE`, the number of parameters in the model (number of rows and columns in the whole information matrix) is returned.  If `i` is given, the `i` elements of the inverse of `info` are returned, using efficient calculation to avoid inverting the whole matrix.  Otherwise if `invert=TRUE` or `B` is given without `i`, the efficiently (if `Matrix` or `SparseM`) inverted matrix is returned, or the matrix multiplication of the inverse and `B`.  If both `i` and `B` are given, what is returned is the `i` portion of the inverse of the information matrix, matrix multiplied by `B`.  This is done inside `solve()`.
 #' 
 #' When only variance-covariance matrix elements corresponding to the non-intercepts are desired, specify
 #' `i='x'` or `i=(k + 1) : nv` where `nv` is the number of intercepts and slopes combined.  `infoMxop` computes the needed covariance matrix very quickly in this case.
@@ -53,7 +53,8 @@ infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
       p     <- ncol(ab) # no. of betas
       if(np) return(k + p)
       # Simplify if only one intercept, no need for sparseness
-      a <- if(k == 1) a[1, 1]
+      a <- if(k == 1) if(is.list(a)) a$a[1] else a[1, 1]
+      else if(is.list(a)) Matrix::sparseMatrix(a$row, a$col, x=a$a, dims=c(k, k), symmetric=TRUE)
       else Matrix::bandSparse(k, k=c(0,1), diagonals=a, symmetric=TRUE)
       info <- rbind(cbind(a, ab), cbind(t(ab), b))
       name <- c(iname, xname)

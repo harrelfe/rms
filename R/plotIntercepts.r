@@ -8,6 +8,7 @@
 #' function of the intercepts would form a straight line.
 #'
 #' @param fit an `orm` or `lrm` fit object, usually with a numeric dependent variable having many levels
+#' @param dots set to `TRUE` to show solid dots at the intecept values
 #'
 #' @returns nothing; only plots
 #' @export
@@ -19,7 +20,7 @@
 #' f <- orm(y ~ x1 + x2 + x3)
 #' plotIntercepts(f)
 #' }
-plotIntercepts <- function(fit) {
+plotIntercepts <- function(fit, dots=FALSE) {
   if(! inherits(fit, 'lrm') && ! inherits(fit, 'orm')) stop('fit must be from lrm or orm')
 
   opar <- par(mar=c(4,4,2,3), mgp=c(3-.75,1-.5,0))
@@ -30,7 +31,7 @@ plotIntercepts <- function(fit) {
   y      <- fit$yunique[-1]
   yname  <- all.vars(fit$sformula)[1]
 
-  plot(y, alpha, xlab=yname, ylab='Intercept')
+  plot(y, alpha, xlab=yname, ylab='Intercept', pch=20, cex=if(dots) 0.7 else 0)
   segments(y[-ns], alpha[-ns], y[-1], alpha[-ns])                # horizontals
   segments(y[-1],  alpha[-ns], y[-1], alpha[-1], col='gray85')   # verticals
 }

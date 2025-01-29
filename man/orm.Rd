@@ -49,7 +49,8 @@
 orm(formula, data=environment(formula),
     subset, na.action=na.delete, method="orm.fit",
     family=c("logistic", "probit", "loglog", "cloglog", "cauchit"),
-    model=FALSE, x=FALSE, y=FALSE, linear.predictors=TRUE, se.fit=FALSE,
+    model=FALSE, x=FALSE, y=FALSE, lpe=FALSE,
+    linear.predictors=TRUE, se.fit=FALSE,
     penalty=0, penalty.matrix,
     var.penalty=c('simple','sandwich'), scale=FALSE,
     maxit=30, weights, normwt=FALSE, \dots)
@@ -105,6 +106,10 @@ created by \code{orm}.
 causes the response variable (with missings excluded) to be returned
 under the name \code{y}.
 }
+\item{lpe}{set \code{lpe=TRUE} to store the vector of likelihood probability elements
+in the fit object in a list element named \code{lpe}.
+This will enable the \code{ordESS} function to summarize the
+effective sample sizes of any censored observations.}
 \item{linear.predictors}{
 causes the predicted X beta (with missings excluded) to be returned
 under the name \code{linear.predictors}.  The first intercept is used.
@@ -167,7 +172,7 @@ in addition to the ones mentioned under the optional arguments.
 table of frequencies for \code{Y} in order of increasing \code{Y}}
 \item{stats}{
 vector with the following elements: number of observations used in the
-fit, number of unique \code{Y} values, median \code{Y} from among the
+fit, effective sample size ESS, number of unique \code{Y} values, median \code{Y} from among the
 observations used int he fit, maximum absolute value of first
 derivative of log likelihood, model likelihood ratio
 \eqn{\chi^2}{chi-square}, d.f.,  \eqn{P}-value, score \eqn{\chi^2}
@@ -254,6 +259,7 @@ from \url{https://hbiostat.org/talks/iscb98.pdf}.
 }
 \seealso{
 \code{\link{orm.fit}}, \code{\link{predict.orm}}, \code{\link[SparseM:SparseM.solve]{solve}},
+\code{\link{ordESS}},
 \code{\link{rms.trans}}, \code{\link{rms}}, \code{\link[MASS]{polr}},
 \code{\link{latex.orm}},  \code{\link{vcov.orm}},
 \code{\link[Hmisc]{num.intercepts}},

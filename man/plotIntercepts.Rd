@@ -4,10 +4,12 @@
 \alias{plotIntercepts}
 \title{Plot Intercepts}
 \usage{
-plotIntercepts(fit)
+plotIntercepts(fit, dots = FALSE)
 }
 \arguments{
 \item{fit}{an \code{orm} or \code{lrm} fit object, usually with a numeric dependent variable having many levels}
+
+\item{dots}{set to \code{TRUE} to show solid dots at the intecept values}
 }
 \value{
 nothing; only plots

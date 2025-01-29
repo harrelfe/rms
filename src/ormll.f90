@@ -1,12 +1,21 @@
-subroutine ormll(n, k, p, x, y, offset, wt, penmat, link, alpha, beta, logL, u, &
-                 ha, hb, hab, &
+subroutine ormll(n, k, p,  &
+                 x, y, y2, offset, wt, penmat, link, alpha, beta, logL, u, &
+                 d, ha, hb, hab, &
+                 intcens, row, col, ai, nai, ne, &
                  what, debug, penhess, salloc)
 
 ! n      : # observations
 ! k      : # intercepts
 ! p      : # x columns
+! ne     : # elements set aside for sparse intercept
+!          hessian when interval censoring is present
+! intcens: 1 if any interval censoring, 0 otherwose
 ! x      : covariate matrix
 ! y      : integer outcome vector with values 0 : k
+! y2     : for censoring, y=y2 => uncensored; y2 is 0 : k
+!           y  =  -1 for left censored observation
+!           y2 = k+1 for right censored observation
+!           0 <= y < y1 <= k for interval-censored data
 ! offset : n-vector of offsets
 ! wt     : n-vector of case weights
 ! penmat : p x p penalty matrix (ignored for Hessian in case x was QR-transformed)
@@ -15,182 +24,239 @@ subroutine ormll(n, k, p, x, y, offset, wt, penmat, link, alpha, beta, logL, u, 
 ! beta   : p-vector of regression coefficients
 ! logL   : -2 LL
 ! u      : returned k + p-vector of 1st derivatives
+! d      : returned per-observation probability element used in log likelihood calculation
 ! ha     : returned k x 2 matrix for alpha portion of Hessian for sparse
 !          representation with the Matrix R package; first column is the 
 !          diagonal, second is the superdiagonal (last element ignored)
 ! hb     : returned p x p matrix for beta portion of Hessian
 ! hab    : returned k x p matrix for alpha x beta portion of Hessian
+! nai    : number of elements set aside for row, col, ai when intcens=1
+! row    : returned vector of row numbers for intercept hessian with interval censoring
+! col    : returned column numbers
+! ai     : returned intercept hessian entry when intcens=1
+! ne     : returned number of row, col, ai actually used
 ! what   : 1 for -2 LL, 2 for -2 LL and gradient, 3 for those plus Hessian
-! debug  : 1 to print input parameters/sizes and quit, 2 to also print Hessian info
-!          and not quit, 0 otherwise
+! debug  : 1 to print input parameters/sizes, 2 to also print Hessian info
+!          0 otherwise
 ! penhess: 1 to penalize Hessian with penmat, 0 to ignore penmat
-! salloc : 0 if dynamic array allocation succeeded, > 0 if not
+! salloc : 0 if dynamic array allocation succeeded, > 0 if not,
+!          999 if negative or zero Y=j probability encountered
+!          998 if censored data configuration encountered that is not implemented
+!          997 if hessian needs more than 1000000 elements due to the variety
+!              of interval-censored values
      
   use, intrinsic :: ISO_FORTRAN_ENV, only: dp => real64, int32
   implicit none
-  integer(int32), intent(in)  :: n, y(n), k, p, what, debug, penhess, link
+  integer(int32), intent(in)  :: n, y(n), y2(n), k, p, what, debug, penhess, link, &
+                                 nai, intcens
   real(dp),       intent(in)  :: x(n, p), offset(n), wt(n), penmat(p, p), & 
                                  alpha(k), beta(p)
-  real(dp),       intent(out) :: logL, u(k + p), &
-                                 ha(k, 2), hb(p, p), hab(k, p)
-  integer(int32), intent(out) :: salloc
+  real(dp),       intent(out) :: logL, d(n), u(k + p), &
+                                 ha(k * (1 - intcens), 2), hb(p, p), hab(k, p), &
+                                 ai(nai)
+  integer(int32), intent(out) :: row(nai), col(nai), ne, salloc
     
-  integer(int32)  :: i, j, l, c, n0, nk, nb, ii, j1
-  real(dp)                    :: w, z
-  real(dp), allocatable :: lp(:), d(:), &
+  integer(int32)  :: i, j, l, c, nb, j2, a, b, nbad, il(1)
+  real(dp)                    :: w, z, g1, g2
+  real(dp), allocatable :: lp(:), sgn(:), &
                            p1(:), p2(:), pdf1(:), pdf2(:), dpdf1(:), dpdf2(:)
-  ! which obs have y=0, y=k, 0<y<k
-  ! Suffix b = "between"
-  integer(int32), allocatable :: i0(:), ik(:), ib(:), y1(:)
+  ! ib: which obs have y=0, y=k, 0<y<k or are interval censored
+  ! Suffix b = "between", suffix a = "alpha"
+  integer(int32), allocatable :: ib(:), ia(:), ia2(:), ibad(:)
   
   if(debug > 0) then
-    call intpr('n', 1, n, 1)
-    call intpr('k', 1, k, 1)
-    call intpr('p', 1, p, 1)
-    call intpr('x', 1, size(x), 1)
-    call intpr('y', 1, size(y), 1)
-    call intpr('offset', 6, size(offset), 1)
-    call intpr('wt', 2, size(wt), 1)
-    call intpr('penmat', 6, size(penmat), 1)
-    call intpr('alpha', 5, size(alpha), 1)
-    call intpr('beta', 4, size(beta), 1)
-    call intpr('ha', 4, size(ha), 1)
-    call intpr('debug', 5, debug, 1)
-    call dblepr('alpha', 5, alpha, k)
-    call dblepr('beta', 4, beta, p)
+    call intpr('n,k,p,ic,nai,x,y,o,w,pen,a,b,ha,d,r,c,ai', 40, &
+      [n, k, p, intcens, nai, size(x), size(y), size(offset), size(wt), size(penmat), &
+       size(alpha), size(beta), size(ha), size(d), size(row), size(col), size(ai)],   17)
+    call dblepr('alpha',  5, alpha,  k)
+    call dblepr('beta',   4, beta,   p)
     call dblepr('penmat', 6, penmat, p * p)
   end if
 
-  n0 = count(y == 0)
-  nk = count(y == k)
-  nb = count(y > 0 .and. y < k)
+  nb = count((y > 0 .and. y < k .and. y == y2) .or. & ! uncensored Y, 0 < Y < k
+             (y >= 0 .and. y2 <= k .and. y /= y2))    ! or interval censored
 
-  allocate(lp(n), i0(n0), ik(nk), ib(nb), y1(n), &
-           p1(n), p2(n), d(n), pdf1(n), pdf2(n), &
+  allocate(lp(n), ib(nb), ia(n), ia2(n), sgn(n), &
+           p1(n), p2(n), pdf1(n), pdf2(n), &
            dpdf1(n), dpdf2(n), stat=salloc)
 
   if(salloc /= 0) return
 
-  i0 = pack([(i, i=1,n)], y == 0)             ! row numbers for which y==0
-  ik = pack([(i, i=1,n)], y == k)
-  ib = pack([(i, i=1,n)], y > 0 .and. y < k)
+  ! Compute observation numbers of uncensored data with 0 <= y <= k or
+  ! interval censored observations involving two alphas
+  ib = pack([(i, i=1,n)], (y > 0 .and. y < k .and. y == y2) .or. &
+                          (y >= 0 .and. y2 <= k .and. y /= y2)      )
 
   lp = offset
   if(p > 0) lp = lp + matmul(x, beta)
 
   ! Model:
-  ! Pr(Y = 0) = 1 - F(alpha(1) + lp) = F(-alpha(1) - lp) (logit, probit only)
-  ! Pr(Y = k) =     F(alpha(k) + lp)
-  ! Pr(Y = j) = F(alpha(j) + lp) - F(alpha(j+1) + lp), 0 < j < k
+  ! Pr(Y = 0) = 1 - F(alpha(1) + lp)
+  ! Pr(Y = k) = F(alpha(k) + lp)
+  ! Pr(Y = j) = F(alpha(j) + lp) - F(alpha(j+1) + lp), 0 < j < k, uncensored
+  ! Pr(Y < j) = 1 - F(alpha(j) + lp)     ! left censored at j
+  ! Pr(Y > j) = F(alpha(j+1) + lp)       ! right censored at j, j < k
+  ! Pr(Y > k) = F(alpha(k) + lp)         ! right censored at k
+  !                                      ! => reinterpret F(alpha(k) + lp) as P(Y >= k)
+  ! The first F() corresponds to p1.  For 0 < y < k p2 corresponds to second F()
+  ! General formula:
+  !  ia  = index of involved alpha for p1 term
+  !  s   = -1 for Y=0 or left censoring, +1 otherwise
+  !  [s = -1] + s * F(alpha(ia) + lp) - [0 < Y < k, uncensored] * F(alpha(ia + 1) + lp)
+  !  [s = -1] + s * p1 - [0 < Y < k, uncensored] * p2
+  !
+  ! For interval censored observations [j, l], 0 <= j,l <= k
+  !   Pr(j <= Y <= l) = F(alpha(j) + lp) - F(alpha(l + 1) + lp), j > 0, l < k
+  !   Pr(0 <= Y <= l) = 1 - Pr(Y > l) = 1 - F(alpha(l + 1) + lp), l < k (s = -1)
+  !   Pr(j <= Y <= k) = Pr(Y >= j) = F(alpha(j) + lp), j > 0, j < k
 
-  ! p1(i0) = 1.0_dp - cdf(alpha(1)+ lp(i0), link)
-  ! p1(ib) = cdf(alpha(y(ib))     + lp(ib), link)
-  ! p1(ik) = cdf(alpha(k)         + lp(ik), link)
-  ! Defer 1 - p1 for i0 until derivatives are computed
-  y1     = max(y, 1_int32)
-  p1     = cdf(alpha(y1)        + lp,     link)
-  p2     = 0_dp
-  p2(ib) = cdf(alpha(y(ib) + 1) + lp(ib), link)
+  ! Compute ia : which alpha is involved (first alpha if 0 < y < k & uncensored)
+  !         ia2: second alpha involved, will always have negated F(); ia2=0 if no second alpha
+  !         ia goes with p1, ia2 goes with p2, take p1 - p2
+  !         s  : 1.0 when prob is F(), -1.0 when prob is 1 - F() 
 
-  ! Compute all derivatives of cdf corresponding to p1 and p2
-  ! Variables ending with 2 only apply to 0 < Y < k so are left at 0
-  ! for Y=0 or k  
+  sgn = 1_dp
+  ia2 = 0_int32
+  do i = 1, n
+    a  = y (i)
+    b  = y2(i)
+    if(a == b) then       ! uncensored
+      if(a == 0) then
+        ia(i)  = 1        ! alpha(1)
+        sgn(i) = -1_dp
+      else if(a == k) then
+        ia(i) = k
+      else                ! 0 < a < k
+        ia(i)  = a        ! alpha number of p1; for p2 is ia + 1
+        ia2(i) = a + 1
+      end if
+    else                       ! a not= b: censored
+      if(a == -1_int32) then   ! left censored
+        ia(i)  = a
+        sgn(i) = -1_dp
+      else if(b > k) then ! right censored
+        ! It is possible that the highest right-censored a-value is at a=k
+        ! In that case the intercept involved is a=k and the interpretation
+        ! of the fitted model for the highest value of y (y=k) is
+        ! P(Y >= k | X) instead of P(Y == k | X)
+        ia(i) = min(a + 1, k)
+      else if(a == 0 .and. b < k) then      ! interval censored [0, b]
+        ia(i)  = b + 1
+        sgn(i) = -1_dp
+      else if(a > 0 .and. b == k) then  ! interval censored [a, k]
+        ia(i) = a
+      else if(a > 0 .and. b < k .and. a < b) then
+        ia(i)  = a
+        ia2(i) = b + 1
+      else
+        salloc = 998
+        return
+      end if
+    end if
+  end do
 
-  ! pdf1(i0) =   pdf(alpha(1)       + lp(i0), 1.0_dp - p1(i0), link)   ! first term -
-  ! pdf1(ib) =   pdf(alpha(y(ib))   + lp(ib), p1(ib), link)
-  ! pdf1(ik) =   pdf(alpha(k)       + lp(ik), p1(ik), link)
-  pdf1     = pdf(alpha(y1)       + lp,     p1,      link)  ! for vectors, max = R pmax
-  pdf2     = 0_dp
-  pdf2(ib) = pdf(alpha(y(ib) + 1) + lp(ib), p2(ib), link)
-
-  ! Compute all second derivatives of cdf corresponding to p1 and p2
-  dpdf2     = 0_dp
-  
-  ! dpdf1(i0) = dpdf(alpha(1)         + lp(i0), p1(i0), pdf1(i0), link)
-  ! dpdf1(ib) = dpdf(alpha(y(ib))     + lp(ib), p1(ib), pdf1(ib), link)
-  ! dpdf1(ik) = dpdf(alpha(k)         + lp(ik), p1(ik), pdf1(ik), link)
-  dpdf1     = dpdf(alpha(y1)        + lp,     p1,     pdf1,     link)
-  dpdf2(ib) = dpdf(alpha(y(ib) + 1) + lp(ib), p2(ib), pdf2(ib), link)
-
-  p1(i0) = 1.0_dp - p1(i0)   ! Handle Y=0 case now that derivatives are computed
-  d      = p1 - p2
+  ! Compute first probability component without applying sgn, as this will become an
+  ! argument for derivative functions to reduce execution time
+  p1  = cdf(alpha(ia) + lp, link)
+  ! Compute second probability component for in-between y observations
+  p2  = 0_dp
+  if(nb > 0) p2(ib) = cdf(alpha(ia2(ib)) + lp(ib), link)
+  ! Compute probability element for likelihood
+  d = merge(p1 - p2, 1_dp - p1, sgn == 1_dp)
 
   if(debug > 0) then
-    call dblepr('p1', 2, p1, size(p1))
-    call dblepr('p2', 2, p2, size(p2))
-    call dblepr('pdf1', 4, pdf1, size(pdf1))
-    call dblepr('pdf2', 4, pdf2, size(pdf2))
-    call dblepr('dpdf1', 5, dpdf1, size(dpdf1))
-    call dblepr('dpdf2', 5, dpdf2, size(dpdf2))
+    call intpr('ia',           2, ia,          size(ia))
+    call intpr('ia2',          3, ia2,         size(ia2))
+    call dblepr('alpha(ia)',   9, alpha(ia),   size(ia))
+    call dblepr('alpha(ia2)', 10, alpha(ia2),  size(ia2))
+    call dblepr('sgn',         3, sgn,         size(sgn))
+    call dblepr('lp',          2, lp,          size(lp))
+  end if
+
+  nbad = count(d <= 0_dp)
+  if(nbad > 0_int32) then
+    allocate(ibad(nbad))
+    ibad = pack([(i, i=1,n)], d <= 0_dp)
+    call intpr('Zero or negative probability for observations ', 45, ibad, nbad)
+    call intpr('Intercept involved', 18, ia(ibad), nbad)
+    if(any(ia2 > 0)) call intpr('2nd Intercept involved', 22, ia2(ibad), nbad)
+    call intpr('y',    1, y  (ibad),   nbad)
+    call intpr('y2',   2, y2 (ibad),   nbad)
+    call dblepr('d',   1, d  (ibad),   nbad)
+    call dblepr('p1',  2, p1 (ibad),   nbad)
+    call dblepr('p2',  2, p2 (ibad),   nbad)
+    call dblepr('sgn', 3, sgn(ibad),   nbad)
+    salloc = 999_int32
+    deallocate(lp, ib, ia, ia2, sgn, p1, p2, pdf1, pdf2, dpdf1, dpdf2, ibad)
+    return
+  end if
+
+  if(debug > 0) then
+    call dblepr('alpha', 5, alpha, k)
+    call dblepr('beta',  4, beta,  p)
+    call dblepr('sgn',   3, sgn,   n)
+    call dblepr('p1',    2, p1,    size(p1))
+    call dblepr('p2',    2, p2,    size(p2))
+    call dblepr('d',     1, d,     size(d))
   end if
 
   logL = -2_dp * sum(wt * log(d)) +  dot_product(beta, matmul(penmat, beta))
 
   u   = 0_dp
-  ha  = 0.0_dp
-  hb  = 0.0_dp
-  hab = 0.0_dp
+  ha  = 0_dp
+  hb  = 0_dp
+  hab = 0_dp
 
   if(what == 1) then
-    deallocate(lp, i0, ik, ib, y1, d, &
+    deallocate(lp, ib, ia, ia2, sgn, &
                p1, p2, pdf1, pdf2, dpdf1, dpdf2)
     return
   end if
 
-  ! Y=0
-  ! Probability: 1 - cdf(alpha(1) + lp) = p1
-  !  D log p /D theta = - 1 / p1 * pdf
-  ! Y=k
-  ! Probability: cdf(alpha(k) + lp) = p1
-  !  D log p / D theta = 1 / p1 * pdf
-  ! 0 < Y < k
-  ! D log(d) = (1/d) (p1' D() - p2' D())
-  !  D p1 or p2 = pdf() D()
-  !  => [pdf(alpha(y) + lp) D( ) + pdf(alpha(y+1) + lp) D( )] / d
-  ! () = argument to pdf()
+  ! Probability: [s = 1] + s * cdf(alpha(ia) + lp) - p2 = d
+  !            = [s = 1] + s * p1 - p2 (p2 = 0 for L/R censored y or y=0,k)
+  ! D log d / D theta = s * pdf(alpha(ia) + lp) D() / d - pdf(alpha(ia2) + lp) D() / d
+  ! For L/R censored y or y=0, k the second term is ignored
+  ! D() = D(argument to pdf) / D theta
+  ! D log d / D theta = [s * pdf1 - pdf2] / d
 
   ! Gradient (score vector)
-  
-  ! All obs with y=0
-  u(1) = - sum(wt(i0) * pdf1(i0) / p1(i0))
-  if(p > 0) then
-    do l = 1, p
-      u(k + l) = - sum(wt(i0) * pdf1(i0) * x(i0, l) / p1(i0))
-    end do
-  end if
-  ! All obs with y=k
-  u(k) = u(k) + sum(wt(ik) * pdf1(ik) / p1(ik))
-  if(p > 0) then
-    do l = 1, p
-      u(k + l) = u(k + l) + sum(wt(ik) * pdf1(ik) * x(ik, l) / p1(ik))
-    end do
-  end if
-  ! All obs with 0 < y < k
-  if(nb > 0) then
-    do ii = 1, nb
-      i = ib(ii)   ! original row # of ii'th observation with 0 < y < k
-      j = y(i)
-      ! For p1, D() = 1 for alpha(j), 0 for alpha(j+1)
-      ! For p2, D() = 0 for alpha(j), 1 for alpha(j+1)
-      u(j)     = u(j)     + wt(i) * pdf1(i) / d(i)
-      u(j + 1) = u(j + 1) - wt(i) * pdf2(i) / d(i)
 
-      if(p > 0) then
-        do l = 1, p
-          u(k + l) = u(k + l) + wt(i) * x(i, l) * (pdf1(i) - pdf2(i)) / d(i)
-        end do
-      end if
-    end do
+  pdf1     = pdf(alpha(ia)      + lp,     p1,     link)
+  pdf2     = 0_dp
+  pdf2(ib) = pdf(alpha(ia2(ib)) + lp(ib), p2(ib), link)
+
+  if(debug > 0) then
+    call dblepr('pdf1',  4, pdf1,  size(pdf1))
+    call dblepr('pdf2',  4, pdf2,  size(pdf2))
   end if
+
+  do i = 1, n
+    a    = y(i)
+    j    = ia(i)    ! subscript of applicable alpha
+    j2   = ia2(i)   ! subscript of second alpha, 0 if not there
+    w    = wt(i) / d(i)
+    g1   = pdf1(i) * sgn(i)
+    g2   = pdf2(i)
+    u(j) = u(j) + w * g1
+    if(j2 > 0) u(j2) = u(j2) - w * g2
+    if(p > 0) then
+      do l = 1, p
+        u(k + l) = u(k + l) + w * (g1 - g2) * x(i, l)
+      end do
+    end if
+  end do
 
   ! Add derivative of penalty function -0.5 b'Pb = -Pb
   if(p > 0) u((k + 1) : (k + p)) = u((k + 1) : (k + p)) - matmul(penmat, beta)
 
+  if(debug > 0) call dblepr('u', 1, u, k + p)
+
   if(what == 2) then
-    deallocate(lp, i0, ik, ib, y1, d, &
+    deallocate(lp, ib, ia, sgn, &
                p1, p2, pdf1, pdf2, dpdf1, dpdf2)
     return
-end if
+    end if
 
   
   ! Hessian
@@ -200,52 +266,102 @@ end if
   ! two bands (diagonal ha[, 1] and superdiagonal ha[, 2] with ha[k, 2] irrelevant.)
   ! For derivation of the Hessian components see
   ! https://fharrell.com/post/mle#sec-hessformula
+  ! If there are any interval-censored observatons, ha is instead computed
+  ! as ai using general sparse form
   
+  ! Compute all second derivatives of cdf corresponding to p1 and p2
+  
+  ! dpdf1(i0) = dpdf(alpha(1)         + lp(i0), p1(i0), pdf1(i0), link)
+  ! dpdf1(ib) = dpdf(alpha(y(ib))     + lp(ib), p1(ib), pdf1(ib), link)
+  ! dpdf1(ik) = dpdf(alpha(k)         + lp(ik), p1(ik), pdf1(ik), link)
+
+  ! For the sometimes-interval-censoring form of ha,
+  ! initialize row and col for intercept hessian elements that are always used
+  ! E.g. if k=4 we use (row,col) (1,1), (2,2), (3,3), (4,4), (l,2), (2,3), (3,4)
+
+  ne = 0
+  if(intcens == 1) then
+    row(1 : k) = [(i, i=1, k)]    ! diagonal elements
+    col(1 : k) = row(1 : k)
+    row((k + 1) : (2 * k - 1)) = [(i, i=1, k - 1)]   ! minor diagonal above major one
+    col((k + 1) : (2 * k - 1)) = [(i, i=2, k)]
+    ne = 2_int32 * k - 1_int32
+    ai(1 : ne)  = 0_dp
+    end if
+
+  dpdf1     = dpdf(alpha(ia)        + lp,     p1,     pdf1,     link)
+  dpdf2     = 0_dp
+  dpdf2(ib) = dpdf(alpha(ia2(ib)) + lp(ib), p2(ib), pdf2(ib), link)
+
+  if(debug > 0) then
+    call dblepr('dpdf1', 5, dpdf1, size(dpdf1))
+    call dblepr('dpdf2', 5, dpdf2, size(dpdf2))
+  end if
+
   
   do i = 1, n
-    j  = y(i)
-    j1 = max(j, 1)
-    w  = wt(i) * 1.0_dp / d(i) ** 2
-    if(j == 0 .or. j == k) then
-      if(j == 0) then
-        z = - (d(i) * dpdf1(i) + pdf1(i) ** 2)
-      else
-        z =    d(i) * dpdf1(i) - pdf1(i) ** 2
+    a  = y(i)
+    j  = ia(i)     ! intercept involved in p1
+    j2 = ia2(i)    ! intercept involved in p2 (0 if not there)
+    w  = wt(i) * 1_dp / d(i) ** 2
+    z  = w * (sgn(i) * d(i) * dpdf1(i) - pdf1(i) ** 2)
+    ! Intercept-only part of hessian, starting with the no-interval-censored case
+    if(intcens == 0) then
+      ha(j, 1) = ha(j, 1) + z
+      if(j2 /= 0) then
+        ha(j2, 1) = ha(j2, 1) - w * (d(i) * dpdf2(i) + pdf2(i) ** 2)  ! diagonal
+        ha(j,  2) = ha(j, 2)  + w * pdf1(i) * pdf2(i)                 ! super diagonal
       end if
-      z = w * z
-      ha(j1, 1) = ha(j1, 1) + z
-      if(p > 0) then
-        do l = 1, p
-          hab(j1, l) = hab(j1, l) + x(i, l) * z
-          do c = l, p
-            hb(l, c) = hb(l, c) + x(i, l) * x(i, c) * z
-          end do
-        end do 
-      end if
-    else    ! 0 < Y < k
-      ! D alpha(j)^2:
-      ha(j, 1) = ha(j, 1) + w * (d(i) * dpdf1(i) - pdf1(i) ** 2)
-      ! D alpha(j + 1)^2:
-      ha(j + 1, 1) = ha(j + 1, 1) - w * &
-          (d(i) * dpdf2(i) + pdf2(i) ** 2)
-      ! alpha(j1), alpha(j1 + 1):
-      ha(j, 2) = ha(j, 2) + w * pdf1(i) * pdf2(i)
-      if(p > 0) then
-        do l = 1, p
-          ! D alpha(j)^2:
-          hab(j, l) = hab(j, l) + w * x(i, l) * &
-             (d(i) * dpdf1(i) - pdf1(i) * (pdf1(i) - pdf2(i)))
-          ! D alpha(j+1)^2:
-          hab(j + 1, l) = hab(j + 1, l) - w * x(i, l) * &
-              (d(i) * dpdf2(i) - pdf2(i) * (pdf1(i) - pdf2(i)))   ! was + pdf2(i) by ChatGPT
-          do c = l, p
-            hb(l, c) = hb(l, c) + w * x(i, l) * x(i, c) * &
-              (d(i) * (dpdf1(i) - dpdf2(i)) - (pdf1(i) - pdf2(i)) ** 2)
-          end do
-        end do
+    else                 ! some interval censored observations
+      ai(j) = ai(j) + z  ! diagonal element; place in ai already allocated
+      if(j2 > 0) then    ! second intercept involved
+        ai(j2) = ai(j2) - w * (d(i) * dpdf2(i) + pdf2(i) ** 2)    ! diagonal element
+        if(j2 == (j + 1)) then   ! adjacent intercepts involved and place already allocated
+          ai(k + j2 - 1) = ai(k + j2 - 1) + w * pdf1(i) * pdf2(i) ! super diagonal
+        else
+          ! involves 2 non-adjacent intercepts; may have to allocate new position in ai
+          if(any((row(1 : ne) == j) .and. (col(1 : ne) == j2))) then
+            il = findloc(row(1 : ne), j, mask = (col(1 : ne) == j2))
+            l  = il(1)
+            ai(l) = ai(l) + w * pdf1(i) * pdf2(i)
+          else   ! add a new entry
+            ne = ne + 1
+            if(ne > nai) then
+              salloc = 997
+              return
+            end if
+            row(ne) = j
+            col(ne) = j2
+            ai(ne)  = w * pdf1(i) * pdf2(i)
+          end if
+        end if
       end if
     end if
-  end do
+
+    if(p == 0) cycle
+
+    if(j2 == 0) then      ! only one intercept involved
+      do l = 1, p
+        hab(j, l) = hab(j, l) + x(i, l) * z
+        do c = l, p
+          hb(l, c) = hb(l, c) + x(i, l) * x(i, c) * z
+        end do
+      end do 
+    else                    ! two intercepts involved
+      do l = 1, p
+        ! D alpha(j)^2:
+        hab(j, l) = hab(j, l) + w * x(i, l) * &
+               (d(i) * dpdf1(i) - pdf1(i) * (pdf1(i) - pdf2(i)))
+        ! D alpha(j+1)^2:
+        hab(j2, l) = hab(j2, l) - w * x(i, l) * &
+              (d(i) * dpdf2(i) - pdf2(i) * (pdf1(i) - pdf2(i)))
+        do c = l, p
+          hb(l, c) = hb(l, c) + w * x(i, l) * x(i, c) * &
+              (d(i) * (dpdf1(i) - dpdf2(i)) - (pdf1(i) - pdf2(i)) ** 2)
+        end do
+      end do
+    end if
+end do
 
   ! Finish symmetric matrix
   if(p > 0) then
@@ -256,18 +372,19 @@ end if
   end do
   end if
 
-  if(debug > 0) call intpr('hess A', 6, 0, 1)
+  if(debug > 1) call intpr1('hess A', 6, 0)
+
   ! To add derivative of penalty function -0.5 b'Pb = -Pb :
   if(p > 0 .and. penhess > 0) hb = hb - penmat
 
-if(debug > 0) then
-  call dblepr('ha',  2, ha, size(ha))
-  call dblepr('hb',  2, hb, size(hb))
-  call dblepr('hab', 3, hab, size(hab))
-end if
+  if(debug > 1) then
+    call dblepr('ha',  2, ha,  size(ha))
+    call dblepr('hb',  2, hb,  size(hb))
+    call dblepr('hab', 3, hab, size(hab))
+  end if
 
-deallocate(lp, i0, ik, ib, y1, d, &
-           p1, p2, pdf1, pdf2, dpdf1, dpdf2)
+deallocate(lp, ib, ia, ia2, sgn, &
+            p1, p2, pdf1, pdf2, dpdf1, dpdf2)
 
 return
 
@@ -283,7 +400,7 @@ contains
   case(1)              ! logistic
     p = 1.0_dp / (1.0_dp + exp(- x))
   case(2)              ! probit
-    p = 0.5_dp * (1.0_dp + erf(x / sqrt(2.0_dp)))
+    p = 0.5_dp * (1.0_dp + erf(x / 1.414213562373095_dp))
   case(3)
     p = exp(-exp(-x))  ! loglog
   case(4)              ! complementary loglog

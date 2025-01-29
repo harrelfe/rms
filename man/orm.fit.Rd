@@ -118,6 +118,8 @@ intercepts+offset, and for intercepts+offset+predictors.
 When there is no offset variable, the vector contains deviances for
 the intercept(s)-only model and the model with intercept(s) and predictors.
 }
+\item{lpe}{vector of per-observation likelihood probability elements.  An observation's
+contribution to the log likelihood is the log of \code{lpe}.}
 \item{non.slopes}{number of intercepts in model}
 \item{interceptRef}{the index of the middle (median) intercept used in
 	computing the linear predictor and \code{var}}

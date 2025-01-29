@@ -4,20 +4,26 @@
 \alias{Ocens}
 \title{Censored Ordinal Variable}
 \usage{
-Ocens(a, b = a, precision = 7)
+Ocens(a, b = a, precision = 7, verbose = TRUE)
 }
 \arguments{
-\item{a}{vector representing a `factor`, numeric, or alphabetically ordered character strings}
+\item{a}{vector representing a `factor`, numeric, or alphabetically ordered character strings.  Censoring points have values of `-Inf`.}
 
-\item{b}{like `a`.  If omitted, it copies `a`, representing nothing but uncensored values}
+\item{b}{like `a`.  If omitted, it copies `a`, representing nothing but uncensored values.  Censoring points have values of `Inf`.}
 
 \item{precision}{when `a` and `b` are numeric, values may need to be rounded to avoid unpredictable behavior with \code{unique()} with floating-point numbers. Default is to 7 decimal places.}
 }
 \value{
-a 2-column integer matrix of class `"Ocens"` with an attribute `levels` (ordered).  When the original variables were `factor`s, these are factor levels, otherwise are numerically or alphabetically sorted distinct (over `a` and `b` combined) values.  When the variables are not factors and are numeric, another attribute `median` is also returned.  This is the median of the uncensored values.  When the variables are factor or character, the median of the integer versions of variables for uncensored observations is returned as attribute `mid`.  A final attribute `freq` is the vector of frequencies of occurrences of all uncensored values.  `freq` aligns with `levels`.
+a 2-column integer matrix of class `"Ocens"` with an attribute `levels` (ordered).  When the original variables were `factor`s, these are factor levels, otherwise are numerically or alphabetically sorted distinct (over `a` and `b` combined) values.  When the variables are not factors and are numeric, another attributes `median` and `range` are also returned.  `median` is the median of the uncensored values on the origiinal scale.  `range` is a 2-vector range of original data values before adjustments to closest uncensored points.  When the variables are factor or character, the median of the integer versions of variables for uncensored observations is returned as attribute `mid`.  A final attribute `freq` is the vector of frequencies of occurrences of all uncensored values.  `freq` aligns with `levels`.
 }
 \description{
-Creates a 2-column integer matrix that handles left- right- and interval-censored ordinal or continuous values for use in [rmsb::blrm()] and in the future [orm()].  A pair of values `[a, b]` represents an interval-censored value known to be in the interval `[a, b]` inclusive of `a` and `b`.  It is assumed that all distinct values are observed as uncensored for at least one observation.  When both input variables are `factor`s it is assume that the one with the higher number of levels is the one that correctly specifies the order of levels, and that the other variable does not contain any additional levels.  If the variables are not `factor`s it is assumed their original values provide the orderings.  Since all values that form the left or right endpoints of an interval censored value must be represented in the data, a left-censored point is is coded as `a=1` and a right-censored point is coded as `b` equal to the maximum observed value.  If the maximum observed value is not really the maximum possible value, everything still works except that predictions involving values above the highest observed value cannot be made.  As with most censored-data methods, modeling functions assumes that censoring is independent of the response variable values that would have been measured had censoring not occurred.
+Creates a 2-column integer matrix that handles left- right- and interval-censored ordinal or continuous values for use in [rmsb::blrm()] and [orm()].  A pair of values `[a, b]` represents an interval-censored value known to be in the interval `[a, b]` inclusive of `a` and `b`.  It is assumed that all distinct values are observed as uncensored for at least one observation.  When both input variables are `factor`s it is assumed that the one with the higher number of levels is the one that correctly specifies the order of levels, and that the other variable does not contain any additional levels.  If the variables are not `factor`s it is assumed their original values provide the orderings.  A left-censored point is is coded as having `-Inf` as a lower limit, and a right-censored point is coded as having `Inf` as an upper limit.   As with most censored-data methods, modeling functions assumes that censoring is independent of the response variable values that would have been measured had censoring not occurred.  `Ocens` creates a 2-column integer matrix suitable for ordinal regression.  Attributes of the returned object give more information.
+}
+\details{
+The upper limit of a left-censored observation is coded as the minimum uncensored value that is at or above the original upper limit.
+The lower limit of a right-censored observation is coded as the maximum uncensored value that is at or below the original lower limit.
+For interval-censored values, the limits are from uncensored values at the limits or just interior to them.  These steps are taken
+because there are no intercept parameters in ordinal models for censored points that do not also correspond to uncensored values.
 }
 \author{
 Frank Harrell

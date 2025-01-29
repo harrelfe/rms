@@ -2,7 +2,7 @@ orm <- function(formula, data=environment(formula),
         subset, na.action=na.delete,
 				method="orm.fit",
 				family=c("logistic", "probit", "loglog", "cloglog", "cauchit"),
-				model=FALSE, x=FALSE, y=FALSE,
+				model=FALSE, x=FALSE, y=FALSE, lpe=FALSE,
 				linear.predictors=TRUE, se.fit=FALSE,
 				penalty=0, penalty.matrix,
         var.penalty=c('simple','sandwich'),
@@ -55,7 +55,6 @@ orm <- function(formula, data=environment(formula),
     xpres <- length(X) > 0
 
     p <- length(atr$colnames)
-    n <- length(Y)
 
     penpres <- !(missing(penalty) && missing(penalty.matrix))
     if(penpres && missing(var.penalty))
@@ -83,9 +82,9 @@ orm <- function(formula, data=environment(formula),
       offs <- model.offset(X)
       if(!length(offs)) offs <- 0
       Y <- model.extract(X, 'response')
-      Y <- Y[!is.na(Y)]
-      Terms <- X <- NULL
-      xpres <- FALSE
+      Y <- if(is.matrix(Y)) Y[! is.na(Y),, drop=FALSE] else Y[! is.na(Y)]
+      Terms   <- X <- NULL
+      xpres   <- FALSE
       penpres <- FALSE
       penalty.matrix <- NULL
     }  ##Model: y~. without data= -> no predictors
@@ -108,8 +107,9 @@ orm <- function(formula, data=environment(formula),
   f$call <- NULL
   f$sformula <- sformula
   if(model) f$model <- m
-  if(x) f$x <- X
-  if(y) f$y <- Y
+  if(x)   f$x <- X
+  if(y)   f$y <- Y
+  if(! lpe) f$lpe <- NULL
   nrp  <- f$non.slopes
   info <- f$info.matrix
   if(penpres) {
@@ -231,7 +231,28 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
     x$freq
     }
 
+  Ncens <- x$Ncens
+  if(! length(Ncens)) {ce <- ced <- NULL}
+  else {
+    if(sum(Ncens > 0) == 1) {   # only one type of censoring; be concise
+    cthere   <- which(Ncens > 0)
+    censtype <- c('L', 'R', 'I')[cthere]
+    ce       <- paste0(censtype, '=', Ncens[cthere])
+    ced      <- NULL
+    } else {
+      L     <- if(Ncens[1] > 0) paste0('L=', Ncens[1])
+      R     <- if(Ncens[2] > 0) paste0('R=', Ncens[2])
+      int   <- if(Ncens[3] > 0) paste0('I=', Ncens[3])
+      ce    <- if(sum(Ncens) > 0) sum(Ncens)
+      ced   <- if(sum(Ncens) > 0)
+                 paste0(paste(c(L, R, int), collapse=', '))
+    }
+  }
+
   misc <- reListclean(Obs           = stats['Obs'],
+                      ESS           = round(stats['ESS'], 1),
+                      Censored      = ce,
+                      ' '           = ced,
                       'Distinct Y'    = stats['Distinct Y'],
                       'Cluster on'  = ci$name,
                       Clusters      = ci$n,

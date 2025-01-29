@@ -238,7 +238,7 @@ lrm.fit <-
 
   ialpha = 1 : k
 
-  rfort <- function(parm, what, penhess=0L, debug=0L) {
+  rfort <- function(parm, what, penhess=0L, debug=ftdb) {
     nv    <- length(parm)
     p     <- nv - k
     ibeta <- if(p == 0) integer(0) else - (1 : k)
