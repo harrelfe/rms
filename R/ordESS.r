@@ -12,7 +12,7 @@
 #' @export
 #'
 #' @examples
-#' /dontrun{
+#' \dontrun{
 #' f <- orm(Ocens(y1, y2) ~ x, y=TRUE, lpe=TRUE)
 #' ordESS(f)
 #' }
@@ -66,3 +66,4 @@ ordESS <- function(fit) {
          labs(caption=cap) +
          guides(color=guide_legend(title=''))
 }
+utils::globalVariables(c('ESS', 'type'))

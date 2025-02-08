@@ -1,6 +1,6 @@
 Package: rms
 Version: 7.1-0
-Date: 2025-01-17
+Date: 2025-02-08
 Title: Regression Modeling Strategies
 Authors@R: person(given = c("Frank", "E"),
                   family = "Harrell Jr",
@@ -9,7 +9,7 @@ Authors@R: person(given = c("Frank", "E"),
 Maintainer: Frank E Harrell Jr <fh@fharrell.com>
 Depends: R (>= 4.4.0), Hmisc (>= 5.2-2)
 Imports: methods, survival, quantreg, ggplot2, Matrix, SparseM, rpart, nlme (>= 3.1-123), polspline, multcomp, htmlTable (>= 1.11.0), htmltools, MASS, cluster, digest, colorspace, knitr, grDevices
-Suggests: boot, tcltk, plotly (>= 4.5.6), mice, rmsb, nnet, VGAM, lattice, kableExtra
+Suggests: boot, tcltk, plotly (>= 4.5.6), mice, icenReg, rmsb, nnet, VGAM, lattice, kableExtra
 Description: Regression modeling, testing, estimation, validation,
 	graphics, prediction, and typesetting by storing enhanced model design
 	attributes in the fit.  'rms' is a collection of functions that

@@ -32,12 +32,12 @@ modelData(d, formula= ~ rcs(x,k))
 d <- list(x=x, k=6)
 modelData(d, ~ rcs(x, k))
 
-b <- 1:8
-a <- c(1, 1, 2, 2, 3, 4, 7, 7)
+b <- 0:9
+a <- c(0,1, 1, 2, 2, 3, 4, 7, 7, 9)
 Ocens(a, b)
 d <- data.frame(a, b)
 x <- runif(8)
-m <- modelData(d, Ocens(a, b) ~ x, subset=1:4)
+m <- modelData(d, Ocens(a, b) ~ x, subset=1:8)
 attributes(m[[1]])
 
 

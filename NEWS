@@ -1,8 +1,9 @@
-Changes in version 7.1-0 (2025-01-27)
+Changes in version 7.1-0 (2025-02-08)
    * orm, orm.fit: implemented left, right, and interval censoring
-   * Ocens: changed to use -Inf, Inf as limits for left or right censored observations
+   * Ocens: changed to use -Inf, Inf as limits for left or right censored observations, converted to using Turnbull intervals computed by the icenReg package, and added two interval consolidation procedures using icenReg to prevent zero probabilities in likelihood calculations with `orm.fit`
    * contrast.rms: fixed bug regarding vcov for simultaneous intervals (thanks: Antonio Eleuteri)
    * ordESS: new function to describe the effective sample size contributed by censored Y for orm fits
+   * DESCRIPTION: added icenReg to SUGGESTS; needed by orm for interval censoring 
 
 Changes in version 7.0-0 (2025-01-15)
    * orm.fit: complete re-write making use of ultra-compact sparse represention of pure intercept part of Hessian, and splitting returned information matrix into 3 submatrices

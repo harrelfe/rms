@@ -26,6 +26,6 @@ fit <- lrm(y ~ blood.pressure + sex * (age + rcs(cholesterol,4)),
               x=TRUE, y=TRUE)
 
 g <- Function(fit)
-cat(perlcode(g), '\n')
+# cat(perlcode(g), '\n')
 
 

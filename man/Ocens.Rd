@@ -4,7 +4,15 @@
 \alias{Ocens}
 \title{Censored Ordinal Variable}
 \usage{
-Ocens(a, b = a, precision = 7, verbose = TRUE)
+Ocens(
+  a,
+  b = a,
+  precision = 7,
+  maxit = 10,
+  nponly = FALSE,
+  cons = c("intervals", "data", "none"),
+  verbose = FALSE
+)
 }
 \arguments{
 \item{a}{vector representing a `factor`, numeric, or alphabetically ordered character strings.  Censoring points have values of `-Inf`.}
@@ -12,18 +20,25 @@ Ocens(a, b = a, precision = 7, verbose = TRUE)
 \item{b}{like `a`.  If omitted, it copies `a`, representing nothing but uncensored values.  Censoring points have values of `Inf`.}
 
 \item{precision}{when `a` and `b` are numeric, values may need to be rounded to avoid unpredictable behavior with \code{unique()} with floating-point numbers. Default is to 7 decimal places.}
+
+\item{maxit}{maximum number of iterations allowed in the interval consolidation process when `cons='data'`}
+
+\item{nponly}{set to `TRUE` to return a list containing the survival curve estimates before interval consolidation, using [icenReg::ic_np()]}
+
+\item{cons}{set to `'none'` to not consolidate intervals when the survival estimate stays constant; this will likely cause a lot of trouble with zero cell probabilities during maximum likelihood estimation.  The default is to consolidate consecutive intervals.  Set `cons='data'` to change the raw data values to make observed intervals wider, in an iterative manner until no more consecutive tied survival estimates remain.}
+
+\item{verbose}{set to `TRUE` to print information messages.  Set `verbose` to a number greater than 1 to get more information printed, such as the estimated survival curve at each stage of consolidation.}
 }
 \value{
-a 2-column integer matrix of class `"Ocens"` with an attribute `levels` (ordered).  When the original variables were `factor`s, these are factor levels, otherwise are numerically or alphabetically sorted distinct (over `a` and `b` combined) values.  When the variables are not factors and are numeric, another attributes `median` and `range` are also returned.  `median` is the median of the uncensored values on the origiinal scale.  `range` is a 2-vector range of original data values before adjustments to closest uncensored points.  When the variables are factor or character, the median of the integer versions of variables for uncensored observations is returned as attribute `mid`.  A final attribute `freq` is the vector of frequencies of occurrences of all uncensored values.  `freq` aligns with `levels`.
+a 2-column integer matrix of class `"Ocens"` with an attribute `levels` (ordered), and if there are zero-width intervals arising from censoring, an attribute `upper` with the vector of upper limits.  Left-censored values are coded as `-Inf` in the first column of the returned matrix, and right-censored values as `Inf`.  When the original variables were `factor`s, these are factor levels, otherwise are numerically or alphabetically sorted distinct (over `a` and `b` combined) values.  When the variables are not factors and are numeric, other attributes `median`, `range`, and `npsurv` are also returned.  `median` is the median of the uncensored values on the origiinal scale.  `range` is a 2-vector range of original data values before adjustments to closest uncensored points.  `npsurv` is the estimated survival curve (with elements `time` and `surv`) from the `icenReg` package after any interval consolidation.  If the argument `npsurv=TRUE` was given, this `npsurv` list before consolidation is returned and no other calculations are done.  When the variables are factor or character, the median of the integer versions of variables for uncensored observations is returned as attribute `mid`.  A final attribute `freq` is the vector of frequencies of occurrences of all values.  `freq` aligns with `levels`.
 }
 \description{
-Creates a 2-column integer matrix that handles left- right- and interval-censored ordinal or continuous values for use in [rmsb::blrm()] and [orm()].  A pair of values `[a, b]` represents an interval-censored value known to be in the interval `[a, b]` inclusive of `a` and `b`.  It is assumed that all distinct values are observed as uncensored for at least one observation.  When both input variables are `factor`s it is assumed that the one with the higher number of levels is the one that correctly specifies the order of levels, and that the other variable does not contain any additional levels.  If the variables are not `factor`s it is assumed their original values provide the orderings.  A left-censored point is is coded as having `-Inf` as a lower limit, and a right-censored point is coded as having `Inf` as an upper limit.   As with most censored-data methods, modeling functions assumes that censoring is independent of the response variable values that would have been measured had censoring not occurred.  `Ocens` creates a 2-column integer matrix suitable for ordinal regression.  Attributes of the returned object give more information.
+Creates a 2-column integer matrix that handles left- right- and interval-censored ordinal or continuous values for use in [rmsb::blrm()] and [orm()].  A pair of values `[a, b]` represents an interval-censored value known to be in the interval `[a, b]` inclusive of `a` and `b`. Left censored values are coded as `(-Infinity, b)` and right-censored as `(a, Infinity)`, both of these intervals being open at the finite endpoints. Open left and right censoring intervals are created by adding a small increment (subtracting for left censoring) to `a` or `b`. When this occurs at the outer limits, new ordinal categories will be created by `orm` to capture the real and unique information in outer censored values.  For example if the highest uncensored value is 10 and there is a right-censored value in the data at 10, a new category `10+` is created, separate from the category for `10`.  So it is assumed that if an exact value of 10 was observed, the pair of values for that observation would not be coded as `(10, Infinity)`.
 }
 \details{
-The upper limit of a left-censored observation is coded as the minimum uncensored value that is at or above the original upper limit.
-The lower limit of a right-censored observation is coded as the maximum uncensored value that is at or below the original lower limit.
-For interval-censored values, the limits are from uncensored values at the limits or just interior to them.  These steps are taken
-because there are no intercept parameters in ordinal models for censored points that do not also correspond to uncensored values.
+The intervals that drive the coding of the input data into numeric ordinal levels are the Turnbull intervals computed by the non-exported `findMaximalIntersections` function in the `icenReg` package, which handles all three types of censoring.  These are defined in the `levels` and `upper` attributes of the object returned by `Ocens`.  Sometimes consecutive Turnbull intervals contain the same statistical information likelihood function-wise, leading to the same survival estimates over two ore more consecutive intervals.  This leads to zero probabilities of involved ordinal values, preventing `orm` from computing a valid log-likeliihood.  A limited about of interval consolidation is done by `Ocens` to alleviate this problem.  Depending on the value of `cons` this consolidation is done by intervals (preferred) or by changing the raw data.  If `verbose=TRUE`, information about the actions taken is printed.
+
+When both input variables are `factor`s it is assumed that the one with the higher number of levels is the one that correctly specifies the order of levels, and that the other variable does not contain any additional levels.  If the variables are not `factor`s it is assumed their original values provide the orderings.  A left-censored point is is coded as having `-Inf` as a lower limit, and a right-censored point is coded as having `Inf` as an upper limit.   As with most censored-data methods, modeling functions assumes that censoring is independent of the response variable values that would have been measured had censoring not occurred.  `Ocens` creates a 2-column integer matrix suitable for ordinal regression.  Attributes of the returned object give more information.
 }
 \author{
 Frank Harrell

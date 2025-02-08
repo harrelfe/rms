@@ -84,8 +84,9 @@ subroutine ormll(n, k, p,  &
 
   ! Compute observation numbers of uncensored data with 0 <= y <= k or
   ! interval censored observations involving two alphas
+  ! Interval censored [a, k] just involves one alpha
   ib = pack([(i, i=1,n)], (y > 0 .and. y < k .and. y == y2) .or. &
-                          (y >= 0 .and. y2 <= k .and. y /= y2)      )
+                          (y >= 0 .and. y2 < k .and. y /= y2)      )
 
   lp = offset
   if(p > 0) lp = lp + matmul(x, beta)
@@ -97,7 +98,7 @@ subroutine ormll(n, k, p,  &
   ! Pr(Y < j) = 1 - F(alpha(j) + lp)     ! left censored at j
   ! Pr(Y > j) = F(alpha(j+1) + lp)       ! right censored at j, j < k
   ! Pr(Y > k) = F(alpha(k) + lp)         ! right censored at k
-  !                                      ! => reinterpret F(alpha(k) + lp) as P(Y >= k)
+  !                                      ! => reinterpret F(alpha(k) + lp) as P(Y >= k) ??
   ! The first F() corresponds to p1.  For 0 < y < k p2 corresponds to second F()
   ! General formula:
   !  ia  = index of involved alpha for p1 term
@@ -132,13 +133,15 @@ subroutine ormll(n, k, p,  &
       end if
     else                       ! a not= b: censored
       if(a == -1_int32) then   ! left censored
-        ia(i)  = a
+        ia(i)  = max(b, 1)
         sgn(i) = -1_dp
       else if(b > k) then ! right censored
         ! It is possible that the highest right-censored a-value is at a=k
         ! In that case the intercept involved is a=k and the interpretation
         ! of the fitted model for the highest value of y (y=k) is
         ! P(Y >= k | X) instead of P(Y == k | X)
+        ! If right censoring occurs when b=k the observation is treated the
+        ! same as an uncensored point in the likelihood calculations
         ia(i) = min(a + 1, k)
       else if(a == 0 .and. b < k) then      ! interval censored [0, b]
         ia(i)  = b + 1
@@ -175,19 +178,22 @@ subroutine ormll(n, k, p,  &
 
   nbad = count(d <= 0_dp)
   if(nbad > 0_int32) then
-    allocate(ibad(nbad))
-    ibad = pack([(i, i=1,n)], d <= 0_dp)
-    call intpr('Zero or negative probability for observations ', 45, ibad, nbad)
-    call intpr('Intercept involved', 18, ia(ibad), nbad)
-    if(any(ia2 > 0)) call intpr('2nd Intercept involved', 22, ia2(ibad), nbad)
-    call intpr('y',    1, y  (ibad),   nbad)
-    call intpr('y2',   2, y2 (ibad),   nbad)
-    call dblepr('d',   1, d  (ibad),   nbad)
-    call dblepr('p1',  2, p1 (ibad),   nbad)
-    call dblepr('p2',  2, p2 (ibad),   nbad)
-    call dblepr('sgn', 3, sgn(ibad),   nbad)
+    if(debug > 0) then
+      allocate(ibad(nbad))
+      ibad = pack([(i, i=1,n)], d <= 0_dp)
+      call intpr('Zero or negative probability for observations ', 45, ibad, nbad)
+      call intpr('Intercept involved', 18, ia(ibad), nbad)
+      if(any(ia2(ibad) > 0)) call intpr('2nd Intercept involved', 22, ia2(ibad), nbad)
+      call intpr('y',    1, y  (ibad),   nbad)
+      call intpr('y2',   2, y2 (ibad),   nbad)
+      call dblepr('d',   1, d  (ibad),   nbad)
+      call dblepr('p1',  2, p1 (ibad),   nbad)
+      call dblepr('p2',  2, p2 (ibad),   nbad)
+      call dblepr('sgn', 3, sgn(ibad),   nbad)
+      deallocate(ibad)
+    end if
     salloc = 999_int32
-    deallocate(lp, ib, ia, ia2, sgn, p1, p2, pdf1, pdf2, dpdf1, dpdf2, ibad)
+    deallocate(lp, ib, ia, ia2, sgn, p1, p2, pdf1, pdf2, dpdf1, dpdf2)
     return
   end if
 

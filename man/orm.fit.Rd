@@ -19,7 +19,7 @@ orm.fit(x=NULL, y, family=c("logistic","probit","loglog","cloglog","cauchit"),
         maxit=30L, eps=5e-4, gradtol=0.001, abstol=1e10, 
         minstepsize=0.01, tol=.Machine$double.eps, trace=FALSE,
         penalty.matrix=NULL, weights=NULL, normwt=FALSE, scale=FALSE,
-        inclpen=TRUE, y.precision = 7, compstats=TRUE)
+        inclpen=TRUE, y.precision = 7, compstats=TRUE, onlydata=FALSE)
 }
 \arguments{
 \item{x}{
@@ -78,6 +78,7 @@ derivative, and max absolute change in parameter estimates at each iteration.
 to avoid unpredictable behavior with \code{unique()} with floating-point
 numbers. Default is to 7 decimal places.}
 \item{compstats}{set to \code{FALSE} to prevent the calculation of the vector of model statistics}
+\item{onlydata}{set to \code{TRUE} to return the data used in model fitting as a list, without fitting the model}
 }
 \value{
 a list with the following components, not counting all the components produced by `orm.fit`:
