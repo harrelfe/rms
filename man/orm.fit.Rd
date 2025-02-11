@@ -110,7 +110,7 @@ set to \code{TRUE} if convergence failed (and \code{maxit>1})
 \item{coefficients}{
 estimated parameters
 }
-\item{family, trans}{see \code{\link{orm}}}
+\item{family, famfunctions}{see \code{\link{orm}}}
 \item{deviance}{
 -2 log likelihoods.
 When an offset variable is present, three

@@ -202,6 +202,8 @@ for the middle intercept and regression coefficients.  See
 }
 \item{effective.df.diagonal}{see \code{\link{lrm}}}
 \item{family}{the character string for \code{family}.}
+\item{famfunctions}{a vector of expressions containing functions for the cumulative probability,
+inverse cumulative probability, derivative, second derivative, and derivative as a function of only x}
 \item{trans}{a list of functions for the choice of \code{family}, with
 	elements \code{cumprob} (the cumulative probability distribution
 	function), \code{inverse} (inverse of \code{cumprob}), \code{deriv}

@@ -284,8 +284,9 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
   headings <- c('',
                 'Model Likelihood\nRatio Test',
                 'Discrimination\n Indexes',
-                'Rank Discrim.\nIndexes')
-  data <- list(misc, lr, disc, discr)
+                if(length(discr)) 'Rank Discrim.\nIndexes')
+  # discr is empty if rho is NA (when there is censoring)
+  data <- if(length(discr)) list(misc, lr, disc, discr) else list(misc, lr, disc)
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
 
@@ -302,7 +303,6 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
                         aux=if(length(pm)) penalty.scale,
                         auxname='Penalty Scale'))
   }
-
   prModFit(x, title=title, z, digits=digits,
            coefs=coefs, ...)
 }
@@ -318,7 +318,7 @@ Quantile.orm <- function(object, codes=FALSE, ...)
   if(codes) vals <- 1:length(object$freq)
   else {
     vals <- object$yunique
-    if(!length(vals)) vals <- names(object$freq)
+    if(! length(vals)) vals <- names(object$freq)
     vals <- as.numeric(vals)
     if(any(is.na(vals)))
       stop('values of response levels must be numeric for codes=FALSE')
@@ -329,9 +329,11 @@ Quantile.orm <- function(object, codes=FALSE, ...)
                 interceptRef=integer(0), trans=trans, conf.int=0,
                 method=c('interpolated', 'discrete'))
   {
-    inverse <- trans$inverse
-    cumprob <- trans$cumprob
-    deriv   <- trans$deriv
+    inverse <- eval(trans[2])
+    cumprob <- eval(trans[1])
+    deriv   <- eval(trans[5])
+    ## Uses the first derivative that doesn't need the f argument
+  
     ns <- length(intercepts)
     method <- match.arg(method)
     lp <- if(length(lp)) lp - intercepts[interceptRef] else matxv(X, slopes)
@@ -390,12 +392,10 @@ Quantile.orm <- function(object, codes=FALSE, ...)
     }
     z
   }
-  ## Re-write first derivative so that it doesn't need the f argument
-  if(object$family == "logistic")
-    object$trans$deriv <- function(x) {p <- plogis(x); p * (1. - p)}
-  trans <- object$trans
-  if(! length(trans)) trans <- probabilityFamilies$logistic
-  ir <- object$interceptRef
+  # Pass expressions instead of functions because sometimes R loses the stats:: environment for things such as
+  # the C function called by plogis or qlogis
+  trans <- object$famfunctions
+  ir    <- object$interceptRef
   if(! length(ir)) ir <- 1
   formals(f) <- list(q=numeric(0), lp=numeric(0), X=numeric(0),
                      intercepts=object$coef[1:ns],
@@ -405,9 +405,6 @@ Quantile.orm <- function(object, codes=FALSE, ...)
                      conf.int=0, method=c('interpolated', 'discrete'))
   f
 }
-
-
-
 
 ExProb <- function(object, ...) UseMethod("ExProb")
 
@@ -423,10 +420,10 @@ ExProb.orm <- function(object, codes=FALSE, ...)
   f <- function(lp=numeric(0), X=numeric(0), y=NULL,
                 intercepts=numeric(0), slopes=numeric(0),
                 info=numeric(0), values=numeric(0),
-                interceptRef=integer(0), trans=trans, yname=NULL,
+                interceptRef=integer(0), cumprob=NULL, yname=NULL,
                 conf.int=0)
   {
-    cumprob <- trans$cumprob
+    cumprob <- eval(cumprob)
     lp <- if(length(lp)) lp - intercepts[interceptRef] else matxv(X, slopes)
     prob <- cumprob(sapply(c(1e30, intercepts), '+', lp))
     dim(prob) <- c(length(lp), length(values))
@@ -479,18 +476,18 @@ ExProb.orm <- function(object, codes=FALSE, ...)
     }
     result
   }
-  trans <- object$trans
+
   formals(f) <- list(lp=numeric(0), X=numeric(0), y=NULL,
                      intercepts=object$coef[1:ns],
                      slopes=object$coef[-(1 : ns)],
                      info=object$info.matrix, values=vals,
                      interceptRef=object$interceptRef,
-                     trans=trans, yname=all.vars(object$terms)[1],
+                     cumprob=object$famfunctions[1],
+                     yname=all.vars(object$terms)[1],
                      conf.int=0)
 
   f
 }
-
 
 plot.ExProb <- function(x, ..., data=NULL,
                         xlim=NULL, xlab=x$yname, ylab=expression(Prob(Y>=y)),

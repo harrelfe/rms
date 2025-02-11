@@ -12,9 +12,7 @@ predict.lrm <- function(object, ...,
   rnam <- names(xb)
   ns <- object$non.slopes
   cnam <- names(object$coef[1:ns])
-  trans <- object$trans
-  ## If orm object get cumulative probability function used
-  cumprob <- if(length(trans)) trans$cumprob else plogis
+  cumprob <- if(length(object$famfunctions)) eval(object$famfunctions[1]) else plogis
   if(se.fit)
     warning('se.fit not supported with type="fitted" or type="mean"')
   if(ns == 1 & type == "mean")
@@ -80,19 +78,21 @@ Mean.lrm <- function(object, codes=FALSE, ...)
   f <- function(lp=numeric(0), X=numeric(0),
                 intercepts=numeric(0), slopes=numeric(0),
                 info=numeric(0), values=numeric(0),
-                interceptRef=integer(0), trans=trans, conf.int=0)
+                interceptRef=integer(0), famfunctions=NULL, conf.int=0)
   {
     ns <- length(intercepts)
     lp <- if(length(lp)) lp - intercepts[interceptRef] else matxv(X, slopes) 
     xb <- sapply(intercepts, '+', lp)
-    P  <- matrix(trans$cumprob(xb), ncol = ns)
+    cumprob <- eval(famfunctions[1])
+    deriv   <- eval(famfunctions[5])
+    P  <- matrix(cumprob(xb), ncol = ns)
     P  <- cbind(1, P) - cbind(P, 0)
     m  <- drop(P %*% values)
     names(m) <- names(lp)
     if(conf.int) {
       if(! length(X)) stop('must specify X if conf.int > 0')
       lb <- matrix(sapply(intercepts, '+', lp), ncol = ns)
-      dmean.dalpha <- t(apply(trans$deriv(lb),
+      dmean.dalpha <- t(apply(deriv(lb),
                               1, FUN=function(x)
                                 x * (values[2:length(values)] - values[1:ns])))
       dmean.dbeta  <- apply(dmean.dalpha, 1, sum) * X
@@ -107,21 +107,18 @@ Mean.lrm <- function(object, codes=FALSE, ...)
   }
   ## If lrm fit, add information that orm fits have
   family <- object$family
-  trans  <- object$trans
+  famf   <- object$famfunctions
   if(! length(family)) {
     family <- 'logistic'
-    trans  <- probabilityFamilies$logistic
+    famf   <- probabilityFamilies$logistic
     }
-  ## Re-write first derivative so that it doesn't need the f argument
-  if(family == "logistic")
-    trans$deriv <- function(x) {p <- plogis(x); p * (1. - p)}
   ir <- object$interceptRef
   if(!length(ir)) ir <- 1
   formals(f) <- list(lp=numeric(0), X=numeric(0), 
                      intercepts=object$coef[1 : ns],
                      slopes=object$coef[- (1 : ns)],
                      info=object$info.matrix,   
-                     values=vals, interceptRef=ir, trans=trans,
+                     values=vals, interceptRef=ir, famfunctions=famf,
                      conf.int=0)
   f 
 }

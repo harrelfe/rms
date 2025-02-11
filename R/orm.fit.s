@@ -159,7 +159,8 @@ orm.fit <- function(x=NULL, y,
       ncum   <- rev(cumsum(rev(sumwty)))[2 : (k + 1)]
       pp     <- ncum / sumwt
     }
-    initial <- fam$inverse(pp)
+    finverse <- eval(fam[2])
+    initial <- finverse(pp)
     if(ofpres) initial <- initial - mean(offset)
     initial <- c(initial, rep(0., p))
  }
@@ -269,7 +270,8 @@ orm.fit <- function(x=NULL, y,
     g  <- GiniMd(lp)
     ## compute average |difference| between 0.5 and the condition
     ## probability of being >= marginal median
-    pdm <- mean(abs(fam$cumprob(lp) - 0.5))
+    cump <- eval(fam[1])
+    pdm <- mean(abs(cump(lp) - 0.5))
     rho <- if(anycens) NA else if(p == 0 || diff(range(lp)) == 0e0) 0e0 else cor(rank(lp), rank(y))
     ## Somewhat faster:
     ## rho <- .Fortran('rcorr', cbind(lp, y), as.integer(n), 2L, 2L, r=double(4),
@@ -301,7 +303,8 @@ orm.fit <- function(x=NULL, y,
                   u                 = z$u,
                   lpe               = z$lpe,
                   iter              = z$iter,
-                  family            = family, trans=fam,
+                  family            = family,
+                  famfunctions      = fam,
                   deviance          = loglik,
                   non.slopes        = k,
                   interceptRef      = kmid,
@@ -584,37 +587,48 @@ if(maxit == 1) {
 }
 
 ## Note: deriv and deriv2 below are no longer used as are hard-coded into ormll
+## Expressions are used because if using a function that calls plogis(),
+## the .C call for plogis will can result in R losing the environment
+## of the C code.  
+## The 5 expression elements are cumprob, inverse, deriv, deriv2, and 
+## deriv as a function only of x
 
 ## Extreme value type I dist = Gumbel maximum = exp(-exp(-x)) = MASS:::pgumbel
 ## Gumbel minimum = 1 - exp(-exp(x))
 probabilityFamilies <-
   list(logistic =
-         list(cumprob=plogis,
-              inverse=qlogis,
-              deriv  =function(x, f) f * (1 - f),
-              deriv2 =function(x, f, deriv) f * (1 - 3*f + 2*f*f) ),
+         expression(function(x) plogis(x),
+                    function(x) qlogis(x),
+                    function(x, f) f*(1-f),
+                    function(x, f, deriv) f*(1-3*f+2*f*f),
+                    function(x) {f <- plogis(x); f*(1-f)}),
        probit =
-         list(cumprob=pnorm,
-              inverse=qnorm,
-              deriv  =function(x, ...)      dnorm(x),
-              deriv2 =function(x, f, deriv) - deriv * x),
+         expression(function(x) pnorm(x),
+                    function(x) qnorm(x),
+                    function(x, f) dnorm(x),
+                    function(x, f, deriv) - deriv * x,
+                    function(x) dnorm(x)),
        loglog =
-         list(cumprob=function(x)      exp(-exp(-x)),
-              inverse=function(x)      -log(-log(x    )),
-              deriv  =function(x, ...) exp(-x - exp(-x)),
-              deriv2 =function(x, ...)
-                ifelse(abs(x) > 200, 0,
-                       exp(-x - exp(-x)) * (-1 + exp(-x)))),
+         expression(function(x) exp(-exp(-x)),
+                    function(x) -log(-log(x)),
+                    function(x, f) exp(-x-exp(-x)),
+                    function(x, f, deriv)
+                      ifelse(abs(x) > 200, 0,
+                             exp(-x - exp(-x)) * (-1 + exp(-x))),
+                    function(x) exp(-x-exp(-x))),
        cloglog =
-         list(cumprob=function(x)      1 - exp(-exp(x)),
-              inverse=function(x)      log(-log(1 - x)),
-              deriv  =function(x, ...) exp( x - exp( x)),
-              deriv2 =function(x, f, deriv)
-                ifelse(abs(x) > 200, 0, deriv * ( 1 - exp( x)))),
+         expression(function(x) 1-exp(-exp(x)),
+                    function(x) log(-log(1-x)),
+                    function(x, f) exp(x-exp(x)),
+                    function(x, f, deriv)
+                      ifelse(abs(x) > 200, 0, deriv * ( 1 - exp( x))) ,
+                    function(x) exp(x-exp(x))),
        cauchit =
-         list(cumprob=pcauchy, inverse=qcauchy,
-              deriv  =function(x, ...) dcauchy(x),
-              deriv2 =function(x, ...) -2 * x * ((1 + x*x)^(-2)) / pi)
+         expression(function(x) pcauchy(x),
+                    function(x) qcauchy(x),
+                    function(x, f) dcauchy(x), 
+                    function(x, f, deriv) -2 * x * ((1 + x*x)^(-2)) / pi,
+                    function(x) dcauchy(x))
   )
 
 ## Check:

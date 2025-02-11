@@ -105,9 +105,9 @@ Ocens <- function(a, b=a, precision=7, maxit=10, nponly=FALSE,
         }
         if(verbose) {
           cat('\nIntervals before consolidation\n\n')
-          print(cbind(L, R))
+          print(mul * cbind(L, R))
           cat('\nIntervals after consolidation\n\n')
-          print(cbind(Ln, Rn))
+          print(mul * cbind(Ln, Rn))
         }
         L <- Ln
         R <- Rn

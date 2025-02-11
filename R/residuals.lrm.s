@@ -15,9 +15,10 @@ residuals.lrm <-
   L     <- object$linear.predictors
   isorm <- inherits(object, 'orm')
 
-  trans <- object$trans
-  cumprob <- if(length(trans)) trans$cumprob else plogis
-  deriv   <- if(length(trans)) trans$deriv   else function(x, f) f * (1 - f)
+  famf    <- object$famfunctions
+  if(! length(famf)) famf <- probabilityFamilies$logistic
+  cumprob <- eval(famf[1])
+  deriv   <- eval(famf[3])
   
   if(length(L) == 0) stop('you did not use linear.predictors=TRUE for the fit')
 

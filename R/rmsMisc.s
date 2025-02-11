@@ -653,6 +653,8 @@ rmsArgs <- function(.object, envir=parent.frame(2))
 
 prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
                      lines.page=40, long=TRUE, needspace, subtitle=NULL, ...) {
+  debug  <- getOption('rmsdebug', FALSE)
+  if(debug) saveRDS(list(x=x, title=title, w=w, digits=digits, ...), '/tmp/prmod.rds')
   lang   <- prType()
   specs  <- markupSpecs[[lang]]
   transl <- switch(lang,
@@ -914,7 +916,7 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
   if(length(footer))
     R <- c(R, paste(specs$smallskip, transl(footer)))
 
-  if(getOption('rmsdebug', FALSE))
+  if(debug)
     cat(R, sep='\n', append=TRUE, file='/tmp/rmsdebug.txt')
 
   switch(lang,

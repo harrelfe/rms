@@ -4,21 +4,22 @@
 require(rms)
 require(icenReg)
 Y7 <- NULL
+midpts <- TRUE
 for(irep in 1 : 25) {
 cat('\n----------------------------------------------------\nRepetition', irep, '\n')
 set.seed(20 + irep)
-N <- 80
+N <- 250  # was 80
 y  <- sample(10 : 50, N, TRUE)
 maxy <- max(y)
 y2 <- y
 # Left censoring
-y[1:5] <- -Inf
+y[1:30] <- -Inf
 # Right censoring
-y2[6:10] <- Inf
+y2[31:60] <- Inf
 # Interval censoring
-y2[11:15] <- pmin(maxy, y[11:15] + sample(2 : 10, 5, TRUE))
+y2[61:90] <- pmin(maxy, y[61:90] + sample(2 : 10, 30, TRUE))
 # if(irep == 1) saveRDS(list(y, y2), 'orm-censor3-problem-data.rds')
-if(irep == 7) {
+if(FALSE && irep == 7) {
   i <- order(y)
   Y7 <- cbind(y, y2)[i, ]
   print(Y7)
@@ -26,9 +27,13 @@ if(irep == 7) {
 
 d <- data.frame(y, y2, grp=factor(rep(1, N)))
 f <- ic_np(cbind(y, y2) ~ grp, data=d)
-s <- f$scurves[[1]]
+cu <- f$scurves[[1]]
+su <- cu$S_curves$baseline
+tbull <- cu$Tbull_ints
+ti <- (tbull[, 1] + tbull[, 2]) / 2
+plot(ti, su, type='s', xlab='Time', ylab='Survival', main=paste('Example', irep))
 # print(data.frame(s$Tbull_ints, s$S_curves$baseline)[1:5,])
-plot(f, plot_legend=FALSE, main=paste('Example', irep))
+# plot(f, plot_legend=FALSE, main=paste('Example', irep))
 
 s <- Ocens(y, y2, nponly=TRUE)
 # print(data.frame(time=c(s$time[1], s$time), surv=c(s$surv, NA))[1:5, ])
@@ -41,7 +46,10 @@ lines(c(s$time[1], s$time), c(s$surv, NA), type='s', col='yellow')
 
 options(orm.fit.debug=FALSE)
 f <- orm.fit(y=Y, trace=1)
-lines(c(f$yunique[1], f$yunique), c(1, plogis(coef(f)), NA), type='s', col='blue')
+ti <- if(midpts || ! length(f$yupper)) f$yunique else (f$yunique + f$yupper) / 2
+ti <- c(ti[1], ti)
+su  <- c(1, plogis(coef(f)), NA)
+lines(ti, su, type='s', col='blue', lwd=2)
 }
 
 # See what happens when interval consolidation is not done
