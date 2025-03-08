@@ -29,7 +29,6 @@ residuals.lrm <-
   ## residuals explicitly handled for ordinal model
   if(ordone && !missing(kint)) 
     stop('may not specify kint for li.shepherd, partial, score, score.binary, or gof')
-
   if(isorm) L <- L - cof[attr(L, 'intercepts')] + cof[1]
 
   if(k > 1 && kint != 1 && ! ordone) L <- L - cof[1] + cof[kint]

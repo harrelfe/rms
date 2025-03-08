@@ -11,7 +11,6 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
     if(method=='efron') stop('method="efron" only works for ols fits')
 
   X <- as.matrix(residuals(fit, type=if(method=='huber')"score" else "hscore"))
-
   n <- nrow(X)
   if(missing(cluster)) {
     clusterInfo <- NULL
@@ -22,7 +21,8 @@ robcov <- function(fit, cluster, method=c('huber','efron'))
     clusterInfo <- list(name=deparse(substitute(cluster)))
   }
   if(length(cluster) != n)
-    stop("length of cluster does not match number of observations used in fit")
+    stop('length of cluster (', length(cluster), ') ',
+         'does not match number of observations used in fit (', n, ')')
   cluster <- as.factor(cluster)
 
   p <- ncol(var)

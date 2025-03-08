@@ -260,7 +260,7 @@ contrast.rms <-
               Lower=lower, Upper=upper,
               Z=Z, Pvalue=P, PP=PP,
               var=v, df.residual=idf,
-              X=X, ycut=ycut, yname=if(length(ycut)) fit$yname,
+              X=X, ycut=ycut, yname=fit$yname,  # was =if(length(ycut)) fit$yname
               cnames=if(type=='average') NULL else cnames,
               nvary=length(vary),
               conf.type=conf.type, conf.int=conf.int,

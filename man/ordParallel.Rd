@@ -7,9 +7,10 @@
 ordParallel(
   fit,
   which,
-  terms = FALSE,
+  terms = onlydata,
   m,
   maxcuts = 75,
+  onlydata = FALSE,
   scale = c("iqr", "none"),
   conf.int = 0.95,
   alpha = 0.15
@@ -20,11 +21,13 @@ ordParallel(
 
 \item{which}{specifies which columns of the design matrix are assessed.  By default, all columns are analyzed.}
 
-\item{terms}{set to \code{TRUE} to collapse all components of each predictor into a single column weighted by the original regression coefficients but scaled according to \code{scale}.  This means that each predictor will have a regression coefficient of 1.0 when refitting the original model on this transformed X matrix, before any further scaling.  Plots will then show the relative effects over time, i.e., the slope of these combined columns over cuts on Y, so that deviations indicate non-parallelism.  But since in this case only relative effects are shown, a weak predictor may be interpreted as having an exagerrated y-dependency if \code{scale='none'}.}
+\item{terms}{set to \code{TRUE} to collapse all components of each predictor into a single column weighted by the original regression coefficients but scaled according to \code{scale}.  This means that each predictor will have a regression coefficient of 1.0 when refitting the original model on this transformed X matrix, before any further scaling.  Plots will then show the relative effects over time, i.e., the slope of these combined columns over cuts on Y, so that deviations indicate non-parallelism.  But since in this case only relative effects are shown, a weak predictor may be interpreted as having an exagerrated y-dependency if \code{scale='none'}.  \code{terms} detauls to \code{TRUE} when \code{onlydata=TRUE}.}
 
 \item{m}{the lowest cutoff is chosen as the first Y value having at meast \code{m} observations to its left, and the highest cutoff is chosen so that there are at least \code{m} observations tot he right of it.  Cutoffs are equally spaced between these values.  If omitted, \code{m} is set to the minimum of 50 and one quarter of the sample size.}
 
 \item{maxcuts}{the maximum number of cutoffs analyzed}
+
+\item{onlydata}{set to \code{TRUE} to return a data frame suitable for modeling effects of cuts, instead of constructing a graph.  The returned data frame has variables \verb{Ycut, Yge_cut, obs}, and the original names of the predictors.  \code{Ycut} has the cutpoint on the original scale.  \code{Yge_cut} is \code{TRUE/FALSE} dependent on whether the Y variable is greater than or equal to \code{Ycut}, with \code{NA} if censoring prevented this determination.  The \code{obs} variable is useful for passing as the \code{cluster} argument to \code{\link[=robcov]{robcov()}} to account for the high correlations in regression coefficients across cuts.  See the example which computes Wald tests for parallelism where the \code{Ycut} dependence involves a spline function.  But since \code{terms} was used, each predictor is reduced to a single degree of freedom.}
 
 \item{scale}{applies to \code{terms=TRUE}; set to \code{'none'} to leave the predictor terms scaled by regression coefficient so the coefficient of each term in the overall fit is 1.0.  The default is to scale terms by the interquartile-range (Gini's mean difference if IQR is zero) of the term.  This prevents changes in weak predictors over different cutoffs from being impressive.}
 
@@ -33,7 +36,7 @@ ordParallel(
 \item{alpha}{saturation for confidence bands}
 }
 \value{
-\code{ggplot2} object
+\code{ggplot2} object or a data frame
 }
 \description{
 \code{orm} models are refitted as a series of binary models for a sequence of cutoffs
@@ -47,6 +50,28 @@ observations are ignored.
 \dontrun{
 f <- orm(..., x=TRUE, y=TRUE)
 ordParallel(f, which=1:5)  # first 5 betas
+
+getHdata(nhgh)
+set.seed(1)
+nhgh$ran <- runif(nrow(nhgh))
+f <- orm(gh ~ rcs(age, 4) + ran, data=nhgh, x=TRUE, y=TRUE)
+ordParallel(f)  # one panel per parameter (multiple parameters per predictor)
+dd <- datadist(nhgh); options(datadist='dd')
+ordParallel(f, terms=TRUE)
+d <- ordParallel(f, maxcuts=30, onlydata=TRUE)
+dd2 <- datadist(d); options(datadist='dd2')  # needed for plotting
+g <- orm(Yge_cut ~ (age + ran) * rcs(Ycut, 4), data=d, x=TRUE, y=TRUE)
+h <- robcov(g, d$obs)
+anova(h)
+qu <- quantile(d$age, c(1, 3)/4)
+qu
+cuts <- sort(unique(d$Ycut))
+cuts
+z <- contrast(h, list(age=qu[2], Ycut=cuts),
+                 list(age=qu[1], Ycut=cuts))
+z <- as.data.frame(z[.q(Ycut, Contrast, Lower, Upper)])
+ggplot(z, aes(x=Ycut, y=Contrast)) + geom_line() +
+  geom_ribbon(aes(ymin=Lower, ymax=Upper), alpha=0.2)
 }
 }
 \author{

@@ -371,6 +371,8 @@ Ocens2ord <- function(y, precision=7, maxit=10, nponly=FALSE,
   mid  <- quantile(a[uncensored], probs=.5, type=1L)
   A[notna] <- a
   B[notna] <- b
+  # Categorical variables cannot be infinite, so no left or rt censoring
+  ncen <- c(left=0, right=0, interval=sum(! uncensored))
   structure(cbind(a=A, b=B),
             class='Ocens', levels=at$levels, freq=freq, mid=mid,
             label=ylabel,
