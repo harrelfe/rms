@@ -17,13 +17,13 @@
 #' ordESS(f)
 #' }
 ordESS <- function(fit) {
-  if('y' %nin% names(fit) || 'lpe' %nin% names(fit) || ! length(fit$Ncens) ||
-     sum(fit$Ncens) == 0) {
+  if('y' %nin% names(fit) || 'lpe' %nin% names(fit) || ! length(fit$Ncens1) ||
+     sum(fit$Ncens1) == 0) {
     message('Fit did not specify y=TRUE, lpe=TRUE.  Returning ESS stored with fit.')
     return(fit$stats['ESS'])
   }
-  Nc    <- fit[['Ncens']]
-  Y     <- fit[['y']]
+  Nc    <- fit[['Ncens1']]
+  Y     <- fit[['y']] 
   p     <- fit[['lpe']]
   v     <- fit$yunique
   ll    <- -2 * log(p)
@@ -51,12 +51,12 @@ ordESS <- function(fit) {
   }
   if(Nc['right'] > 0) {
     i <- is.infinite(y2)
-    dur <- v[y1[i]]
+    dur <- y1[i]
     d <- rbind(d, g('Right Censored'))
   }
   if(ni > 0) {
     i <- is.finite(y1) & is.finite(y2) & (y1 < y2)
-    dur <- (v[y2] - v[y1])[i]
+    dur <- (y2 - y1)[i]
     d <- rbind(d, g('Interval Censored'))
   }
   xl  <- if(ni > 0) 'Duration' else 'Censoring Point'

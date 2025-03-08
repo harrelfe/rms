@@ -1,12 +1,25 @@
-Changes in version 7.1-0 (2025-02-11)
-   * orm, orm.fit: implemented left, right, and interval censoring
+Changes in version 7.1-0 (2025-02-23)
+   * orm, orm.fit: implemented left, right, and interval censoring; added Dxy to orm.fit
    * Ocens: changed to use -Inf, Inf as limits for left or right censored observations, converted to using Turnbull intervals computed by the icenReg package, and added two interval consolidation procedures using icenReg to prevent zero probabilities in likelihood calculations with `orm.fit`
    * contrast.rms: fixed bug regarding vcov for simultaneous intervals (thanks: Antonio Eleuteri)
    * ordESS: new function to describe the effective sample size contributed by censored Y for orm fits
    * DESCRIPTION: added icenReg to SUGGESTS; needed by orm for interval censoring 
    * residuals.lrm, predict.lrm: changed to use famfunctions function expressions for cumprob and deriv
+   * orm.fit: new argument mscore to store score matrix with fit; Fortran code ormll.f90 extended to compute its elements
    * Survival.orm: new function; streamlined a lot of the code in Exprob.orm and returns a data.frame in non-simple cases
    * survest.orm: new function for easy estimation of survival probabilities and confidence limits
+   * survplot.rms: enhanced to plot survival curves estimated by orm
+   * survplot.orm: put this in a separate function, and to use ggplot2R
+   * survplot.rms: added argument ggplot; if TRUE calls survplot.orm; intended for psm fits
+   * ggplot.npsurv: new function; uses ggplot2 and gives prettier output than survplot.rms for npsurv objects, but does not handle n.risk
+   * ordParallel: new function for checking parallelism assumption for orm mo
+   * addded scales package to IMPORTS
+   * val.surv: changed two of the plots to use ggplot2; removed NAs in group for plotting to keep group in parallel with other variables that may have NAs
+   * residuals.lrm, orm: recognize mscore in fit for score residuals for censored Y; for type='fitted.ind' get levels from object$yunique, use ggplot2 instead of box plots for score.binary, generalized score.binary to account for censoring
+   * orm.fit: allowed -2LL to get worse by eps/10 and still not do step-halving
+   * survfit.cph: added censor argument
+   * cph with surv=TRUE: passed censor=FALSE to survfit.cph to keep censoring times and associated surv estimates out of result when surv=TRUE
+   * predab.resample: allow for Ocens objects for y
 
 Changes in version 7.0-0 (2025-01-15)
    * orm.fit: complete re-write making use of ultra-compact sparse represention of pure intercept part of Hessian, and splitting returned information matrix into 3 submatrices

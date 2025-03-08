@@ -16,20 +16,20 @@ unp <- function(x) {
 }
 
 w <- function(a, b) {
-  Y <- Ocens(a, b, verbose=TRUE)
+  y <- Ocens(a, b)
+  Y <- Ocens2ord(y, verbose=TRUE)
   f <- attr(Y, 'npsurv')
-  y <- Y
-  attributes(y) <- attributes(Y)['dim']
-  u <- orm.fit(y = Y, onlydata=TRUE)
+  attributes(Y) <- attributes(Y)['dim']
+  u <- orm.fit(y = y, onlydata=TRUE)
   with(u, cat('\nk=', u$k, ' Ncens=', u$Ncens, '\n'))
   with(f, prn(cbind(time, surv), 'npsurv'))
-  ormout <<- capture.output(fit <<- orm.fit(y = Y))
+  ormout <<- capture.output(fit <<- orm.fit(y = y))
   p <- c(1, plogis(coef(fit)))
   prn(cbind(time=fit$yunique, upper=fit$yupper, surv=p), 'orm.fit')
   ia  <- unp('ia')
   ia2 <- unp('ia2')
   sgn <- unp('sgn')
-  d <- data.frame(a, b, y, u$Y)
+  d <- data.frame(a, b, Y, u$Y)   # ? a, b, y ??
   cat('\n')
   print(d)
   cat('\n')

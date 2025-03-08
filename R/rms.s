@@ -465,9 +465,10 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
                       dotexpand=TRUE, callenv=parent.frame(n=2)) {
 
   ## calibrate.cph etc. uses a matrix, even if only one column
+  ## Don't give an exception to Ocens (for orm) just as we don't give an exception for Surv
   ismat <- function(z) {
     cl <- class(z)
-    ('matrix' %in% cl) && ('rms' %nin% cl) ## && ncol(z) > 1
+    ('matrix' %in% cl) && ('rms' %nin% cl)
     }
   
   ## Get a list of all variables in either formula

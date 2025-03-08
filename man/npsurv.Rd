@@ -43,7 +43,7 @@ objects are \code{print}, \code{summary}, \code{plot},\code{lines}, and
 \code{\link{lines}},
 \code{\link[survival]{coxph}},
 \code{\link[survival]{strata}},
-\code{\link{survplot}}
+\code{\link{survplot}}, \code{\link{ggplot.npsurv}}
 }
 \author{Thomas Lumley \email{tlumley@u.washington.edu} and Terry Therneau}
 
@@ -53,6 +53,7 @@ require(survival)
 fit <- npsurv(Surv(time, status) ~ x, data = aml)
 plot(fit, lty = 2:3)
 legend(100, .8, c("Maintained", "Nonmaintained"), lty = 2:3)
+ggplot(fit)   # prettier than plot()
 
 # Here is the data set from Turnbull
 #  There are no interval censored subjects, only left-censored (status=3),

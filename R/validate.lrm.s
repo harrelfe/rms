@@ -1,4 +1,4 @@
-#Resampling optimism of discrimination and reliability of a logistic 
+#Resampling optimism of discrimination and reliability of a logistic
 #regression model
 #B: # reps
 #bw=T to incorporate backward stepdown (using fastbw) with params rule,type,sls
@@ -18,11 +18,11 @@ function(fit,method="boot",
   if(length(y)==0) stop("fit did not use x=TRUE,y=TRUE")
   if(!is.factor(y)) y <- factor(y)   ## was category 11Apr02
   fit$y <- unclass(y) - 1  #mainly for Brier score (B)
-  
+
   if(missing(kint)) kint <- floor((k+1)/2)
-  
+
   penalty.matrix <- fit$penalty.matrix
-  
+
   discrim <- function(x, y, fit, iter, evalfit=FALSE, pr=FALSE,
                       penalty.matrix, kint, ...)
     {
@@ -42,7 +42,7 @@ function(fit,method="boot",
         g         <- stats['g']
         gp        <- stats['gp']
       }
-      else {	
+      else {
         refit     <- if(null.model) lrm.fit(y=y) else lrm.fit(x,y)
         kr        <- refit$non.slopes
         ## Model with no variables = null model
@@ -68,8 +68,8 @@ function(fit,method="boot",
                     "g",   "gp")
       z
     }
-  
-  lrmfit <- function(x, y, penalty.matrix=NULL, 
+
+  lrmfit <- function(x, y, penalty.matrix=NULL,
                      xcol=NULL, strata, iter, ...)
     {
       if(length(xcol) && length(penalty.matrix) > 0)
@@ -102,19 +102,19 @@ validate.orm <- function(fit, method="boot",
 	sls=.05, aics=0, force=NULL, estimates=TRUE, pr=FALSE,  ...)
 {
   k <- fit$non.slopes
-  y <- fit$y
+  y <- fit[['y']]
   if(length(y)==0) stop("fit did not use x=TRUE, y=TRUE")
-  if(!is.factor(y)) y <- factor(y)
-  
-  penalty.matrix <- fit$penalty.matrix
-  
-  discrim <- function(x, y, fit, iter, evalfit=FALSE, pr=FALSE,
-                      penalty.matrix, ...)
+  cens <- NCOL(y) == 2
+
+  db <- getOption('validate.debug', FALSE)
+
+  discrim <- function(x, y, fit, iter, evalfit=FALSE, pr=FALSE, ...)
     {
       if(evalfit) {	 # Fit was for bootstrap sample
         stats <- fit$stats
         lr  <- stats["Model L.R."]
         rho <- stats["rho"]
+        Dxy <- stats["Dxy"]
         shrink <- 1
         n   <- stats["Obs"]
         R2  <- stats["R2"]
@@ -123,42 +123,42 @@ validate.orm <- function(fit, method="boot",
       }
       else {
         k          <- fit$non.slopes
-        null.model <- length(fit$coefficients)==k
-        refit      <- if(null.model) ormfit2(y=y) else ormfit2(x, y, tol=.Machine$double.eps)
+        null.model <- length(fit$coefficients) == k
+        refit      <- if(null.model) ormfit2(y=y) else ormfit2(x, y)
         kr         <- refit$non.slopes
         ## Model with no variables = null model
         stats      <- refit$stats
         lr         <- stats["Model L.R."]
         rho        <- stats['rho']
+        Dxy        <- stats['Dxy']
         shrink     <- if(null.model) NA else refit$coefficients[kr + 1]
         n          <- stats["Obs"]
         R2         <- stats["R2"]
         g          <- if(null.model) 0 else GiniMd(shrink * x)
         pdm        <- stats['pdm']
       }
-      z <- c(rho, R2, shrink, g, pdm)
-      names(z) <- c("rho", "R2", "Slope", "g", "pdm")
+      z <- c(rho, Dxy, R2, shrink, g, pdm)
+      names(z) <- c("rho", "Dxy", "R2", "Slope", "g", "pdm")
+      if(cens) z <- z[-1]   # rho doesn't handle censoring, is NA
       z
     }
-  
-  ormfit2 <- function(x, y, tol=.Machine$double.eps, penalty.matrix=NULL, 
-                      xcol=NULL, ...)
-    {
-      if(length(xcol) && length(penalty.matrix) > 0)
-        penalty.matrix <- penalty.matrix[xcol, xcol, drop=FALSE]
-      # x has names() like y >= ... - DROP ??
-      # predab.resample is getting constant x as if an intercept
-      orm.fit(x, y, penalty.matrix=penalty.matrix, tol=tol)
-    }
 
-  z <- predab.resample(fit, method=method, fit=ormfit2, measure=discrim, pr=pr,
-                       B=B, bw=bw, rule=rule, type=type, sls=sls, aics=aics,
-                       force=force, estimates=estimates, 
+  ormfit2 <- quickRefit(fit, what='fitter', storevals=FALSE, compstats=TRUE)
+  if(db) {
+    saveRDS(ormfit2, '/tmp/ormfit2.rds')
+    ormfit3 <- function(...) {
+      saveRDS(list(...), '/tmp/ormfit3.rds')
+      ormfit2(...)
+    }
+  }
+
+  z <- predab.resample(fit, method=method, fit=if(db) ormfit3 else ormfit2, measure=discrim,
+                       pr=pr, B=B, bw=bw, rule=rule, type=type, sls=sls, aics=aics,
+                       force=force, estimates=estimates,
                        non.slopes.in.x=FALSE,
-                       penalty.matrix=penalty.matrix,
                        allow.varying.intercepts=TRUE, ...)
   kept <- attr(z, 'kept')
-  dimnames(z) <- list(c("rho", "R2", "Slope", "g", "pdm"),
+  dimnames(z) <- list(c(if(! cens) "rho", "Dxy", "R2", "Slope", "g", "pdm"),
                       c("index.orig","training","test","optimism",
                         "index.corrected","n"))
   structure(z, class='validate', kept=kept)

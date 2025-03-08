@@ -303,8 +303,8 @@ predictrms <-
           strata[[nst]] <- factor(ste[X[,i]], ste)
         }
       }
-      X <- if(! somex) NULL
-      else model.matrix(Terms.ns, X)[, -1L, drop=FALSE]
+
+      X <- if(somex) model.matrix(Terms.ns, X)[, -1L, drop=FALSE]
       
       if(nstrata > 0L) {
         names(strata) <- paste("S", 1L : nstrata, sep="")

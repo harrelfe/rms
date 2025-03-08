@@ -5,8 +5,8 @@ survplot.rms <-
            ylim=if(loglog) c(-5,1.5) else 
             if(what == "survival" & missing(fun)) c(0,1),
            xlab, ylab, time.inc,
-           what=c("survival","hazard"),
-           type=c("tsiatis","kaplan-meier"),
+           what=c("survival", "hazard"),
+           type=c("tsiatis", "kaplan-meier"),
            conf.type=c("log","log-log","plain","none"),
            conf.int=FALSE, conf=c("bands","bars"), mylim=NULL,
            add=FALSE, label.curves=TRUE,
@@ -17,15 +17,19 @@ survplot.rms <-
            dots=FALSE, dotsize=.003, grid=NULL,
            srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,
            y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'),
-           cex.ylab=cex.xlab, pr=FALSE)
+           cex.ylab=cex.xlab, pr=FALSE, ggplot=FALSE)
 {
 
-  what <- match.arg(what)
-  polyg <- ordGridFun(grid=FALSE)$polygon
-  ylim <- ylim  ## before R changes missing(fun)
-  type <- match.arg(type)
+  what      <- match.arg(what)
+  polyg     <- ordGridFun(grid=FALSE)$polygon
+  ylim      <- ylim  ## before R changes missing(fun)
+  type      <- match.arg(type)
   conf.type <- match.arg(conf.type)
-  conf <- match.arg(conf)
+  conf      <- match.arg(conf)
+
+  psmfit    <- inherits(fit, 'psm')
+
+  if(ggplot && psmfit) return(survplot.orm(fit, ..., conf.int=conf.int, adj.subtitle=adj.subtitle))
 
   opar <- par(c('mar', 'xpd'))
   on.exit(par(opar))
@@ -34,10 +38,9 @@ survplot.rms <-
     if(length(mylim)) c(min(ylim[1], mylim[1]), max(ylim[2], mylim[2]))
     else ylim
 
-  psmfit <- inherits(fit,'psm')
-  if(what == "hazard" && !psmfit)
+  if(what == "hazard" && ! psmfit)
     stop('what="hazard" may only be used for fits from psm')
-  if(what == "hazard" & conf.int > 0) {
+  if(what == "hazard" && conf.int > 0) {
     warning('conf.int may only be used with what="survival"')
     conf.int <- FALSE
   }
@@ -60,23 +63,26 @@ survplot.rms <-
 
   if(use.fun | logt | what == "hazard") { dots <- FALSE; grid <- NULL }
   
-  cox <- inherits(fit,"cph")
+  cox  <- inherits(fit, 'cph')
+  ormf <- inherits(fit, 'orm')
+  
   if(cox) {
-    if(n.risk | conf.int>0) surv.sum <- fit$surv.summary
-    exactci <- !(is.null(fit$x)|is.null(fit$y))
+    if(n.risk | conf.int > 0) surv.sum <- fit$surv.summary
+    exactci <- length(fit[['x']]) && length(fit[['y']])
     ltype <- "s"	#step functions for cph
   }
   
   else {
-    if(n.risk) stop("the n.risk option applies only to fits from cph")
+    if(n.risk) stop("The n.risk option applies only to fits from cph")
     exactci <- TRUE
-    ltype <- "l"
+    ltype   <- if(ormf) 's' else 'l'
   }
   
   par(xpd=NA)
   
-  ## Compute confidence limits for survival based on -log survival,
-  ## constraining to be in [0,1]; d = std.error of cum hazard * z value
+  # Compute confidence limits for survival based on -log survival,
+  # constraining to be in [0,1]; d = std.error of cum hazard * z value
+  # Not used for orm
   ciupper <- function(surv, d) ifelse(surv == 0, 0, pmin(1, surv*exp(d)))
   cilower <- function(surv, d) ifelse(surv == 0, 0, surv*exp(-d))
   
@@ -90,23 +96,23 @@ survplot.rms <-
     else ylab <- "Survival Probability"
   }
   if(missing(xlab)) {
-    if(logt) xlab <- paste("log Survival Time in ",units,"s",sep="")
-    else xlab <- paste(units,"s",sep="")
+    if(logt) xlab <- paste("log Survival Time in ", units, "s", sep="")
+    else xlab <- ifelse(length(units) && units != '', upFirst(units), '')
   }
   
-  maxtime <- fit$maxtime
-  maxtime <- max(pretty(c(0,maxtime)))
-  if(missing(time.inc)) time.inc <- fit$time.inc
+  maxtime <- if(ormf) fit$yrange[2] else fit$maxtime
+  maxtime <- max(pretty(c(0, maxtime)))
+  if(missing(time.inc)) time.inc <- if(ormf) maxtime / 10 else fit$time.inc
 
   if(missing(xlim)) 
-    xlim <- if(logt)logb(c(maxtime/100,maxtime)) else c(0,maxtime)
+    xlim <- if(logt) logb(c(maxtime / 100, maxtime)) else c(0, maxtime)
 
   if(length(grid) && is.logical(grid)) grid <- if(grid) gray(.8) else NULL
 
   if(is.logical(conf.int)) {
     if(conf.int) conf.int <- .95	else conf.int <- 0
   }
-  zcrit <- qnorm((1+conf.int)/2)
+  zcrit <- qnorm((1 + conf.int) / 2)
   
   xadj <- Predict(fit, type='model.frame', np=5,
                   factors=rmsArgs(substitute(list(...))))
@@ -137,7 +143,7 @@ survplot.rms <-
   }
   
   ## One curve for each value of y, excl style used for C.L.
-  lty <- if(missing(lty)) seq(nc+1)[-2]
+  lty <- if(missing(lty)) seq(nc + 1)[-2]
   else
     rep(lty, length=nc)
   col <- rep(col, length=nc)
@@ -148,9 +154,9 @@ survplot.rms <-
   abbrevy <- if(abbrev.label) abbreviate(y) else y
   abbrevy <- if(is.factor(abbrevy)) as.character(abbrevy) else format(abbrevy)
   
-  if(labelc || conf == 'bands') curves <- vector('list',nc)
+  if(labelc || conf == 'bands') curves <- vector('list', nc)
 
-  for(i in 1:nc) {
+  for(i in 1 : nc) {
     ci <- conf.int
     ay <- if(length(varying)) xadj[[varying]] else ''
     if(covpres) {
@@ -163,12 +169,12 @@ survplot.rms <-
 
     time <- w$time
     if(logt) time <- logb(time)
-    s <- !is.na(time) & (time>=xlim[1])
+    s <- ! is.na(time) & (time >= xlim[1])
     surv <- w$surv
-    if(is.null(ylim)) ylim <- cylim(range(surv, na.rm=TRUE))
+    if(! length(ylim)) ylim <- cylim(range(surv, na.rm=TRUE))
     stratum <- w$strata
-    if(is.null(stratum)) stratum <- 1
-    if(!is.na(stratum)) {
+    if(! length(stratum)) stratum <- 1
+    if(! is.na(stratum)) {
       ##can be NA if illegal strata combinations requested
       cl <- if(is.factor(ay)) as.character(ay)
       else format(ay)
@@ -176,15 +182,15 @@ survplot.rms <-
       if(i == 1 & !add) {				
         plot(time, surv, xlab='', xlim=xlim,
              ylab='', ylim=ylim, type="n", axes=FALSE)	
-        mgp.axis(1, at=if(logt)pretty(xlim) else
+        mgp.axis(1, at=if(logt) pretty(xlim) else
                  seq(xlim[1], max(pretty(xlim)), time.inc), labels=TRUE,
                  axistitle=xlab, cex.lab=cex.xlab)
         mgp.axis(2, at=pretty(ylim), axistitle=ylab, cex.lab=cex.ylab)
         
-        if(!logt & (dots || length(grid))) {
+        if(! logt & (dots || length(grid))) {
           xlm <- pretty(xlim)
           xlm <-  c(xlm[1], xlm[length(xlm)])
-          xp <- seq(xlm[1], xlm[2],by=time.inc)
+          xp <- seq(xlm[1], xlm[2], by=time.inc)
           yd <- ylim[2] - ylim[1]
           if(yd <= .1) yi <- .01
           else if(yd <= .2) yi <- .025
@@ -192,7 +198,7 @@ survplot.rms <-
           else yi <- .1
           yp <- seq(ylim[2], ylim[1] +
                     if(n.risk && missing(y.n.risk)) yi else 0, 
-                    by=- yi)
+                    by= - yi)
           if(dots) for(tt in xp)symbols(rep(tt, length(yp)), yp,
                                         circles=rep(dotsize, length(yp)),
                                         inches=dotsize, add=TRUE)
@@ -207,7 +213,7 @@ survplot.rms <-
       if(max(tim) > xlim[2]) {
         if(ltype == "s") {
           ##Get estimate at last permissible point to plot
-          ## s.last <- min(srv[tim<=xlim[2]+1e-6])  #not work with function
+          ## s.last <- min(srv[tim <= xlim[2] + 1e-6])  # not work with function
           s.last <- srv[tim <= xlim[2] + 1e-6]
           s.last <- s.last[length(s.last)]
           k <- tim < xlim[2]
@@ -233,16 +239,16 @@ survplot.rms <-
       if(labelc || conf == 'bands') curves[[i]] <- list(tim, srv)
       
       if(pr) {
-        zest <- rbind(tim,srv)
-        dimnames(zest) <- list(c("Time","Survival"), rep("",length(srv)))
+        zest <- rbind(tim, srv)
+        dimnames(zest) <- list(c("Time", "Survival"), rep("", length(srv)))
         cat("\nEstimates for ", cl,"\n\n")
         print(zest, digits=3)
       }
       if(conf.int > 0) {
         if(conf == "bands") {
-          polyg(x = c(tim,    rev(tim)),
-                y = c(blower, rev(bupper)),
-                col =  col.fill[i], type=ltype)
+          polyg(x   = c(tim,    rev(tim)),
+                y   = c(blower, rev(bupper)),
+                col = col.fill[i], type=ltype)
         }
         else {
           if(exactci) { # not from cph(surv=T)
@@ -254,14 +260,13 @@ survplot.rms <-
             ss    <- v$surv
             lower <- v$lower
             upper <- v$upper
-            if(!length(ylim)) ylim <- cylim(range(ss, na.rm=TRUE))
+            if(! length(ylim)) ylim <- cylim(range(ss, na.rm=TRUE))
             if(logt) tt <- logb(ifelse(tt == 0, NA, tt))
           }
           else {
             tt <- as.numeric(dimnames(surv.sum)[[1]])
             if(logt) tt <- logb(tt)
-            ss <- surv.sum[,stratum,'Survival']^
-            exp(w$linear.predictors)
+            ss <- surv.sum[,stratum,'Survival'] ^ exp(w$linear.predictors)
             se <- surv.sum[,stratum,'std.err']
             ss <- fun(ss)
             lower <- fun(cilower(ss, zcrit*se))
@@ -270,24 +275,22 @@ survplot.rms <-
             lower[is.infinite(lower)] <- NA
             upper[is.infinite(upper)] <- NA
           }
-          tt <- tt + xd*(i-1)*.01
+          tt <- tt + xd * (i - 1) * .01
           errbar(tt, ss, upper, lower, add=TRUE, lty=lty[i], col=col[i])
         }
       }
       if(n.risk) {
         if(length(Y <- fit$y)) {
-          tt <- seq(max(0,xlim[1]),min(maxtime,xlim[2]),by=time.inc)
+          tt <- seq(max(0, xlim[1]), min(maxtime, xlim[2]), by=time.inc)
           ny <- ncol(Y)
-          if(!length(str <- fit$strata)) Y <- Y[,ny-1]
+          if(!length(str <- fit$strata)) Y <- Y[, ny - 1]
           else Y <- Y[unclass(str) == unclass(stratum), ny - 1]
           nrisk <-
             rev(cumsum(table(
-              cut(-Y,sort(unique(-c(tt,range(Y)+
-                                    c(-1,1)))))
-              )[-length(tt)-1]))	
+              cut(-Y, sort(unique(-c(tt, range(Y) + c(-1, 1))))))[-length(tt)-1]))	
         }
         else {
-          if(is.null(surv.sum))
+          if(! length(surv.sum))
             stop("you must use surv=T or y=T in fit to use n.risk=T")
           tt <- as.numeric(dimnames(surv.sum)[[1]])
           l <- (tt >= xlim[1]) & (tt <= xlim[2])
@@ -298,7 +301,7 @@ survplot.rms <-
         yd <- ylim[2] - ylim[1]
         if(missing(y.n.risk)) y.n.risk <- ylim[1]
         if(y.n.risk == 'auto') y.n.risk <- - diff(ylim) / 3
-        yy <- y.n.risk + yd*(nc-i)*sep.n.risk #was .029, .038, .049
+        yy <- y.n.risk + yd * (nc - i) * sep.n.risk #was .029, .038, .049
         
         nri <- nrisk
         nri[tt > xlim[2]] <- NA

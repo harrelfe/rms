@@ -4,19 +4,17 @@
 \alias{[.Ocens}
 \title{Ocens}
 \usage{
-\method{[}{Ocens}(x, rows = 1:d[1], cols = 1:d[2], ...)
+\method{[}{Ocens}(x, ..., drop)
 }
 \arguments{
 \item{x}{an \code{Ocens} object}
 
-\item{rows}{logical or integer vector}
+\item{...}{the usual rows and columns specifiers}
 
-\item{cols}{logical or integer vector}
-
-\item{...}{ignored}
+\item{drop}{set to \code{FALSE} to not drop unneeded dimensions}
 }
 \value{
-new \code{Ocens} object
+new \code{Ocens} object or by default an unclassed vector if only one column of \code{x} is being kept
 }
 \description{
 Subset Method for \code{Ocens} Objects

@@ -1,4 +1,4 @@
-export(annotateAnova,asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineRelatedPredictors,confplot,contrast,coxphFit,cph,cr.setup,datadist,Design,DesignAssign,dxy.cens,effective.df,ExProb,fastbw,formatNP,gendata,ggplot,gIndex,Glm,Gls,groupkm,gTrans,Hazard,hazard.ratio.plot,histdensity,"%ia%",ie.setup,impactPO,infoMxop,interactions.containing,legend.nomabbrev,lm.pfit,lrm,lrm.fit,lrtest,LRupdate,lsp,matinv,matrx,modelData,Newlabels,Newlevels,nomogram,npsurv,Ocens,ols,ols.influence,oos.loglik,ordESS,orm,orm.fit,pantext,Penalty.matrix,Penalty.setup,pentrace,perimeter,perlcode,plotmathAnova,plot.contrast.rms,plot.lrm.partial,plotIntercepts,plot.xmean.ordinaly,pol,poma,pphsm,predab.resample,Predict,predictrms,prmiInfo,prModFit,probabilityFamilies,processMI,psm,rcs,recode2integer,related.predictors,reListclean,rexVar,robcov,Rq,sascode,scored,sensuc,setPb,show.influence,specs,strat,Surv,survreg.auxinfo,survdiffplot,survest,Survival,survplot,survplotp,univarLR,validate,val.prob,val.probg,val.surv,vif,which.influence,Xcontrast)
+export(annotateAnova,asis,bj,bjplot,bootBCa,bootcov,bootplot,bplot,calibrate,cph,catg,combineRelatedPredictors,confplot,contrast,coxphFit,cph,cr.setup,datadist,Design,DesignAssign,dxy.cens,effective.df,ExProb,fastbw,formatNP,gendata,ggplot,gIndex,Glm,Gls,groupkm,gTrans,Hazard,hazard.ratio.plot,histdensity,"%ia%",ie.setup,impactPO,infoMxop,interactions.containing,legend.nomabbrev,lm.pfit,lrm,lrm.fit,lrtest,LRupdate,lsp,matinv,matrx,modelData,Newlabels,Newlevels,nomogram,npsurv,Ocens,Ocens2ord,Ocens2Surv,ols,ols.influence,oos.loglik,ordESS,orm,ordParallel,orm.fit,pantext,Penalty.matrix,Penalty.setup,pentrace,perimeter,perlcode,plotmathAnova,plot.contrast.rms,plot.lrm.partial,plotIntercepts,plot.xmean.ordinaly,pol,poma,pphsm,predab.resample,Predict,predictrms,prmiInfo,prModFit,probabilityFamilies,processMI,psm,rcs,recode2integer,related.predictors,reListclean,rexVar,robcov,Rq,sascode,scored,sensuc,setPb,show.influence,specs,strat,Surv,survreg.auxinfo,survdiffplot,survest,Survival,survplot,survplotp,univarLR,validate,val.prob,val.probg,val.surv,vif,which.influence,Xcontrast)
 
 useDynLib(rms, .registration=TRUE, .fixes="F_")
 
@@ -7,20 +7,22 @@ importFrom(survival, Surv, is.Surv, concordancefit, coxph.fit, coxph.control, su
 importFrom(SparseM, solve, t, as.matrix)
 #import(SparseM)
 
+#import(ggplot2)
 importFrom(ggplot2, ggplot, guides,  geom_point, geom_text, geom_col,
-           xlab, ylab, labs, geom_tile, geom_segment, scale_size, aes,
+           xlab, ylab, labs, geom_tile, geom_segment, geom_step, scale_size, aes,
            facet_wrap, facet_grid, scale_color_manual, scale_shape_manual,
            ggplotGrob, coord_flip, element_blank, element_text, geom_path,
            geom_smooth, guide_legend, layer, layer_scales, scale_color_gradientn,
            scale_fill_brewer, scale_size_continuous, scale_size_manual,
            scale_x_continuous, scale_y_continuous, theme, unit, xlim, ylim,
-           annotate)
+           annotate, .data)
 
 importFrom(cluster, ellipsoidhull)
 importFrom(colorspace, rainbow_hcl)
 importFrom(digest, digest)
 importFrom(grDevices, n2mfrow)
 importFrom(MASS, kde2d, bandwidth.nrd, cov.mve)
+importFrom(scales, breaks_pretty, trans_new)
 
 import(ggplot2)
 #import(gridExtra)  # DOES NOT WORK UNLESS IN Depends IN DESCRIPTION
@@ -63,6 +65,7 @@ S3method(anova, rms)
 
 S3method(calibrate, cph)
 S3method(calibrate, default)
+S3method(calibrate, orm)
 S3method(calibrate, psm)
 
 S3method(contrast, rms)
@@ -78,6 +81,7 @@ S3method(html, anova.rms)
 S3method(html, naprint.delete)
 S3method(html, summary.rms)
 S3method(html, validate)
+
 
 S3method(latex, anova.rms)
 S3method(latex, bj)
@@ -114,6 +118,7 @@ S3method(nobs, rms)
 
 S3method("[", Ocens)
 S3method(as.data.frame, Ocens)
+S3method(is.na, Ocens)
 
 S3method(oos.loglik, ols)
 S3method(oos.loglik, lrm)
@@ -144,6 +149,7 @@ S3method(plotp, Predict)
 
 S3method(processMI, fit.mult.impute)
 
+S3method(ggplot, npsurv)
 S3method(ggplot, Predict)
 
 S3method(predict, bj)
@@ -170,6 +176,7 @@ S3method(print, impactPO)
 S3method(print, lrm)
 S3method(print, lrtest)
 S3method(print, nomogram)
+S3method(print, Ocens)
 S3method(print, ols)
 S3method(print, orm)
 S3method(print, pentrace)
@@ -213,6 +220,7 @@ S3method(survfit, cph)
 S3method(survplot, residuals.psm.censored.normalized)
 S3method(survplot, rms)
 S3method(survplot, npsurv)
+S3method(survplot, orm)
 
 S3method(survplotp, npsurv)
 

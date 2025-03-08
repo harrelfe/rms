@@ -17,7 +17,8 @@ indicators) to estimate the actual survival probability at time
 time, \code{est.surv}.  If \code{est.surv} is not given, \code{fit} must
 be specified and the \code{survest} function is used to obtain the
 predicted values (using \code{newdata} if it is given, or using the
-stored linear predictor values if not).  \code{hare} is given the sole
+stored linear predictor values if not).  \code{hare} or \code{movStats}
+(when \code{method="smoothkm"}) is given the sole
 predictor \code{fun(est.surv)} where \code{fun} is given by the user or
 is inferred from \code{fit}.  \code{fun} is the function of predicted
 survival probabilities that one expects to create a linear relationship
@@ -29,13 +30,17 @@ in time \eqn{t}, and cross-products between the two splines are allowed so as to
 not assume proportional hazards.  Thus \code{hare} assumes that the
 covariate and time functions are smooth but not much else, if the number
 of events in the dataset is large enough for obtaining a reliable
-flexible fit.  There are special \code{print} and \code{plot} methods
+flexible fit.  Or specify \code{method="smoothkm"} to use the \code{Hmisc} \code{movStats}
+function to compute smoothed (by default using \code{supsmu})
+moving window Kaplan-Meier estimates.  This method is more flexible than \code{hare}.
+
+There are special \code{print} and \code{plot} methods
 when \code{u} is given.  In this case, \code{val.surv} returns an object
 of class \code{"val.survh"}, otherwise it returns an object of class
 \code{"val.surv"}.
 
 If \code{u} is not specified, \code{val.surv} uses Cox-Snell (1968)
-residuals on the cumulative 
+residuals on the cumulative
 probability scale to check on the calibration of a survival model
 against right-censored failure time data.  If the predicted survival
 probability at time \eqn{t} for a subject having predictors \eqn{X} is
@@ -65,10 +70,13 @@ is well calibrated.  A smooth plot of \eqn{2F(T|X)/F(C|X)} for
 uncensored \eqn{T} should be a flat line through \eqn{y=1.0}. The smooth
 plot is obtained by smoothing the (linear predictor, difference or
 ratio) pairs.
+
+Note that the Cox-Snell residual plot is not very sensitive to model lack of fit.
 }
 \usage{
-val.surv(fit, newdata, S, est.surv, censor,
-         u, fun, lim, evaluate=100, pred, maxdim=5, ...)
+val.surv(fit, newdata, S, est.surv,
+         method=c('hare', 'smoothkm'),
+         censor, u, fun, lim, evaluate=100, pred, maxdim=5, ...)
 
 \method{print}{val.survh}(x, ...)
 
@@ -88,11 +96,12 @@ a data frame for which \code{val.surv} should obtain predicted survival
 probabilities.  If omitted, survival estimates are made for all of the
 subjects used in \code{fit}.
 }
-\item{S}{an \code{\link[survival]{Surv}} object}
+\item{S}{an \code{\link[survival]{Surv}} object or an \code{\link{Ocens}} object}
 \item{est.surv}{
 a vector of estimated survival probabilities corresponding to times in
 the first column of \code{S}.
 }
+\item{method}{applies if \code{u} is specified and defaults to \code{hare}}
 \item{censor}{
 a vector of censoring times.  Only the censoring times for uncensored
 observations are used.
@@ -129,11 +138,11 @@ observations are used.
      By default, the option \code{nhistSpike=200} is passed so that a spike
      histogram is used if the sample size exceeds 200.}
 \item{\dots}{When \code{u} is given to \code{val.surv}, \dots represents
-     optional arguments to \code{hare}.  It can represent arguments to
-     pass to \code{plot} or \code{lines} for 
+     optional arguments to \code{hare} or \code{movStats}.  It can represent arguments to
+     pass to \code{plot} or \code{lines} for
      \code{plot.val.survh}.  Otherwise, \dots contains optional
      arguments for \code{plsmo} or \code{plot}.   For
-     \code{print.val.survh}, \dots is ignored.} 
+     \code{print.val.survh}, \dots is ignored.}
 \item{group}{
 a grouping variable.  If numeric this variable is grouped into
 \code{g.group} quantile groups (default is quartiles).  \code{group},
@@ -152,7 +161,7 @@ ratio instead.
 \item{type}{
 Set to the default (\code{"l"}) to plot the trend line only, \code{"b"}
 to plot both individual subjects ratios and trend lines, or
-\code{"p"} to plot only points. 
+\code{"p"} to plot only points.
 }
 \item{xlim,ylim}{
 axis limits for \code{plot.val.surv} when the \code{censor} variable was used.
@@ -163,7 +172,7 @@ that is created as a result of \code{censor} being present.  Set
 \code{datadensity=FALSE} to suppress these tick marks drawn by \code{scat1d}.
 }
 }
-\value{a list of class \code{"val.surv"} or \code{"val.survh"}}
+\value{a list of class \code{"val.surv"} or \code{"val.survh"}.  Some \code{plot} methods return a \code{ggplot2} object.}
 \author{
 Frank Harrell\cr
 Department of Biostatistics, Vanderbilt University\cr
@@ -215,13 +224,11 @@ S <- Surv(t, ev)
 # In addition, use groupkm to show that grouping predictions into
 # intervals and computing Kaplan-Meier estimates is not as accurate.
 
-if(requireNamespace('polspline')) {
-  s1 <- exp(-h*1)
-  w <- val.surv(est.surv=s1, S=S, u=1,
-                fun=function(p)log(-log(p)))
-  plot(w, lim=c(.85,1), scat1d.opts=list(nhistSpike=200, side=1))
-  groupkm(s1, S, m=100, u=1, pl=TRUE, add=TRUE)
-}
+s1 <- exp(-h*1)
+w <- val.surv(est.surv=s1, S=S, u=1,
+              fun=function(p)log(-log(p)))
+plot(w, lim=c(.85,1), scat1d.opts=list(nhistSpike=200, side=1))
+groupkm(s1, S, m=100, u=1, pl=TRUE, add=TRUE)
 
 # Now validate the true model using residuals
 

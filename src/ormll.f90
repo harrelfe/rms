@@ -1,7 +1,8 @@
 subroutine ormll(n, k, p,  &
                  x, y, y2, offset, wt, penmat, link, alpha, beta, logL, u, &
-                 d, ha, hb, hab, &
+                 d, ha, hb, hab,                 &
                  intcens, row, col, ai, nai, ne, &
+                 urow, ucol, um, nu, nuu,        &
                  what, debug, penhess, salloc)
 
 ! n      : # observations
@@ -9,6 +10,9 @@ subroutine ormll(n, k, p,  &
 ! p      : # x columns
 ! ne     : # elements set aside for sparse intercept
 !          hessian when interval censoring is present
+! nu     : # elements set aside for sparse score matrix
+!           Set to zero to not compute the score matrix
+!           To be safe, set nu = n * (2 + p)
 ! intcens: 1 if any interval censoring, 0 otherwose
 ! x      : covariate matrix
 ! y      : integer outcome vector with values 0 : k
@@ -35,6 +39,10 @@ subroutine ormll(n, k, p,  &
 ! col    : returned column numbers
 ! ai     : returned intercept hessian entry when intcens=1
 ! ne     : returned number of row, col, ai actually used
+! urow   : returned integer vector of row numbers for score matrix
+! ucol   : returned integer vector of column numbers for score matrix
+! um     : returned real vector of score matrix elements going with urow, ucol
+! nuu    : number of score matrix elements actually computed
 ! what   : 1 for -2 LL, 2 for -2 LL and gradient, 3 for those plus Hessian
 ! debug  : 1 to print input parameters/sizes, 2 to also print Hessian info
 !          0 otherwise
@@ -44,17 +52,18 @@ subroutine ormll(n, k, p,  &
 !          998 if censored data configuration encountered that is not implemented
 !          997 if hessian needs more than 1000000 elements due to the variety
 !              of interval-censored values
+!          996 if nu > 0 but is not large enough to hold all score vector elements
      
   use, intrinsic :: ISO_FORTRAN_ENV, only: dp => real64, int32
   implicit none
   integer(int32), intent(in)  :: n, y(n), y2(n), k, p, what, debug, penhess, link, &
-                                 nai, intcens
+                                 nai, intcens, nu
   real(dp),       intent(in)  :: x(n, p), offset(n), wt(n), penmat(p, p), & 
                                  alpha(k), beta(p)
   real(dp),       intent(out) :: logL, d(n), u(k + p), &
                                  ha(k * (1 - intcens), 2), hb(p, p), hab(k, p), &
-                                 ai(nai)
-  integer(int32), intent(out) :: row(nai), col(nai), ne, salloc
+                                 ai(nai), um(nu)
+  integer(int32), intent(out) :: row(nai), col(nai), ne, urow(nu), ucol(nu), nuu, salloc
     
   integer(int32)  :: i, j, l, c, nb, j2, a, b, nbad, il(1)
   real(dp)                    :: w, z, g1, g2
@@ -231,14 +240,20 @@ subroutine ormll(n, k, p,  &
   pdf1     = pdf(alpha(ia)      + lp,     p1,     link)
   pdf2     = 0_dp
   pdf2(ib) = pdf(alpha(ia2(ib)) + lp(ib), p2(ib), link)
+  nuu      = 0_int32
 
   if(debug > 0) then
     call dblepr('pdf1',  4, pdf1,  size(pdf1))
     call dblepr('pdf2',  4, pdf2,  size(pdf2))
   end if
 
+  if(nu > 1) then
+    urow = 0_int32
+    ucol = 0_int32
+    um   = 0_dp
+  end if
+
   do i = 1, n
-    a    = y(i)
     j    = ia(i)    ! subscript of applicable alpha
     j2   = ia2(i)   ! subscript of second alpha, 0 if not there
     w    = wt(i) / d(i)
@@ -251,9 +266,37 @@ subroutine ormll(n, k, p,  &
         u(k + l) = u(k + l) + w * (g1 - g2) * x(i, l)
       end do
     end if
+
+    if(nu > 0) then  ! compute sparse score matrix elements
+      if(nuu + 2_int32 + p > nu) then
+        salloc = 996_int32
+        deallocate(lp, ib, ia, ia2, sgn, p1, p2, pdf1, pdf2, dpdf1, dpdf2)
+        return
+      end if
+      nuu = nuu + 1
+      urow(nuu) = i
+      ucol(nuu) = j
+      um(nuu)   = w * g1
+      if(j2 > 0) then
+        nuu = nuu + 1
+        urow(nuu) = i
+        ucol(nuu) = j2
+        um(nuu)   = - w * g2
+      end if
+      if(p > 0) then
+        do l = 1, p
+          nuu = nuu + 1
+          urow(nuu) = i
+          ucol(nuu) = k + l
+          um(nuu)   = w * (g1 - g2) * x(i, l)
+        end do
+      end if
+    end if
+
   end do
 
   ! Add derivative of penalty function -0.5 b'Pb = -Pb
+  ! Ignored at present for mscore
   if(p > 0) u((k + 1) : (k + p)) = u((k + 1) : (k + p)) - matmul(penmat, beta)
 
   if(debug > 0) call dblepr('u', 1, u, k + p)

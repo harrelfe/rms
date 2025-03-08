@@ -25,7 +25,6 @@ validate.ols <- function(fit, method="boot",
                       pr=FALSE, ...)
 	{
       resid <- if(evalfit) fit$residuals else y - x
-
       n <- length(resid)
       sst <- (n - 1) * var(y)   # sum(y^2) - (sum(y)^2)/n
       mse <- sum(resid^2)

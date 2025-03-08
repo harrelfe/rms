@@ -24,22 +24,46 @@ names(ms)
 X <- pol(x, 2)
 ms <- modelData(formula=y ~ X)
 names(ms)
+sapply(ms, class)
 
 k <- 4
 x <- 1:20
 d <- data.frame(x)
+m <- model.frame(d, formula=~poly(x, 2))
+m
+names(m)
+m[[1]]
 modelData(d, formula= ~ rcs(x,k))
 d <- list(x=x, k=6)
-modelData(d, ~ rcs(x, k))
+m <- modelData(d, ~ rcs(x, k))
+m
+m[[1]]
+
 
 b <- 0:9
 a <- c(0,1, 1, 2, 2, 3, 4, 7, 7, 9)
+e <- rep(c(FALSE, TRUE), length=length(a))
 Ocens(a, b)
-d <- data.frame(a, b)
+d <- data.frame(a, b, e)
 x <- runif(8)
 m <- modelData(d, Ocens(a, b) ~ x, subset=1:8)
 attributes(m[[1]])
-
+y <- m[[1]]
+class(y)
+y1 <- y[1:3,]
+class(y1)
+y1
+y1 <- y[1:3, 1]
+class(y1)
+y1
+y1 <- y[,1]
+class(y1)
+dim(y1)
+m <- modelData(d, Surv(a, e) ~ x, subset=1:8)
+y <- m[[1]]
+class(y)
+y[,1]
+class(y[,1])
 
 x <- c(rep('a', 10), rep('b', 11), rep('c', 12))
 x <- factor(x, c('a', 'b', 'c', 'd'))

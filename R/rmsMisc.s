@@ -1019,6 +1019,8 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html')) {
   beta    <- htmlGreek('beta')
   geq     <- htmlTranslate('>=')
 
+  debug   <- getOption('rmsdebug', FALSE)
+
 
   spaces <- function(n) if(n <= 0.5) '' else
    substring('                                                         ',
@@ -1034,6 +1036,7 @@ prStats <- function(labels, w, lang=c('plain', 'latex', 'html')) {
                   html  = htmlTranslate,
                   plain = function(x) x )
   ## Find maximum width used for each column
+  if(debug) {prn(labels); prn(length(labels))}
   p <- length(labels)
   width <- numeric(p)
 for(i in 1:p) {
@@ -1048,7 +1051,7 @@ for(i in 1:p) {
     lu  <- length(u)
     dig <- rep(dig, length=lu)
     fu  <- character(lu)
-    for(j in 1 : length(u)) {
+    for(j in seq_len(lu)) {
       uj <- u[[j]]
       nuj <- names(u)[j]
       dg <- dig[j]
@@ -1065,7 +1068,7 @@ for(i in 1:p) {
     }
     names(fu) <- names(u)
     w[[i]]    <- fu
-    for(j in 1 : length(u))
+    for(j in seq_len(length(u)))
       width[i] <- max(width[i],
                       1 + nchar(nuj) + nchar(fu[j]))
   }
@@ -1125,9 +1128,9 @@ for(i in 1:p) {
 
     )
 
-    for(i in 1 : p) {
+    for(i in seq_len(p)) {
       k <- names(w[[i]])
-      for(j in 1 : length(k)) {
+      for(j in seq_len(length(k))) {
         u <- k[j]
         k[j] <- if(u %in% rownames(trans)) trans[u, lang]
         else if(grepl('R2\\(', u))   # handle R2(p,n) from R2Measures
@@ -1143,7 +1146,7 @@ for(i in 1:p) {
                  latex = latexTranslate(u, greek=TRUE),
                  html  = htmlTranslate (u, greek=TRUE) )
       }
-      z[1 : length(k), i] <- paste0(k, fil, w[[i]])
+      z[seq_len(length(k)), i] <- paste0(k, fil, w[[i]])
     }
 
     al <- paste0('|', paste(rep('c|', p), collapse=''))
@@ -1162,15 +1165,15 @@ for(i in 1:p) {
     return(w)
   }
   z <- labs <- character(0)
-  for(i in 1:p) {
+  for(i in seq_len(p)) {
     wid <- width[i]
     lab <- ssplit(labels[i])[[1]]
-    for(j in 1:length(lab))
+    for(j in seq_len(length(lab)))
       lab[j] <- paste0(spaces((wid - nchar(lab[j])) / 2), lab[j])
     labs <- c(labs, paste(lab, collapse='\n'))
     u   <- w[[i]]
     a <- ''
-    for(i in 1:length(u))
+    for(i in seq_len(length(u)))
       a <- paste0(a, names(u)[i],
                  spaces(wid - nchar(u[i]) - nchar(names(u[i]))),
                  u[i],
@@ -1221,7 +1224,7 @@ reListclean <- function(..., dec=NULL, na.rm=TRUE) {
   nm  <- character(0)
   for(u in w) {
     i <- i + 1
-    for(j in 1 : length(u)) {
+    for(j in seq_len(length(u))) {
       if(is.na(u[j])) next
       r <- c(r, u[j])
       nm <- c(nm, if(nam[i] != 'namesFrom' & length(u) == 1) nam[i] else {

@@ -4,14 +4,14 @@ set.seed(1)
 n  <- 400
 n1 <- 300; n2 <- 100
 data <- data.frame(outcome=c(rnorm(n1, mean = .052, sd = .005),
-                     rnorm(n2, mean = .06, sd = .01)),
+                             rnorm(n2, mean = .06, sd = .01)),
                    v2=sample(seq(20,80,5),n,T),
                    v3=sample(seq(60,150,1),n,T),
                    v4=c(rnorm(n1, mean = 80, sd = 10),
-                     rnorm(n2, mean = 60, sd = 15)),
+                        rnorm(n2, mean = 60, sd = 15)),
                    v5=sample(c('M','M','F'),n,T),
                    v6=c(rnorm(n1, mean = 80, sd = 10),
-                     rnorm(n2, mean = 120, sd = 30)))
+                        rnorm(n2, mean = 120, sd = 30)))
 
 # checking data
 head(data)

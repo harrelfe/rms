@@ -1,31 +1,38 @@
 require(rms)
 require(icenReg)
 set.seed(1)
-n <- 200
+n <- 100
 x    <- runif(n)
 cens <- round(runif(n, 0.5, 3), 2)
-etime <- round(rexp(n), 2)
+etime <- round(rexp(n), 3)
 range(etime[etime <= cens])
 # xless(cbind(cens, etime, first=pmin(cens, etime), rt=ifelse(etime < cens, etime, maxt)))
 y1 <- pmin(cens, etime)
 y2 <- ifelse(etime < cens, etime, Inf)
+S  <- Surv(y1, etime < cens)
 # source('~/r/rms/r/Ocens.r')
 y <- Ocens(y1, y2)
-lev <- attr(y, 'levels')
-cbind(cens, etime, y1, y2, y, lev[y[,1]], lev[y[,2]])[36, ]
-cat('k=', length(lev) - 1, '\n')
+# Reconstruct Surv object from Ocens object and check agreement
+# with K-M estimates even though positions of right-censored points
+# backs up to previous uncensored point
+f <- km.quick(S)
+S2 <- Ocens2Surv(y)
+f2 <- km.quick(S2)
+with(f, plot(time, surv, type='s'))
+with(f2, lines(time, surv, type='s', col='red'))
+m <- min(length(f2$time), length(f$time))
+max(abs(f$time[1:m] - f2$time[1:m]))
+max(abs(f$surv[1:m] - f2$surv[1:m]))
+
+#lev <- attr(y, 'levels')
+# cbind(cens, etime, y1, y2, y, lev[y[,1]], lev[y[,2]])[36, ]
+#cat('k=', length(lev) - 1, '\n')
 f <- orm.fit(y=y, family='logistic', trace=1)
+# Had already concerged at starting values (KM estimates)
+# So MLE = K-M
+plotIntercepts(f)
 alpha <- unname(coef(f)[1 : num.intercepts(f)])
 
-s <- km.quick(Surv(y1, etime < cens), interval='>=', type='kaplan-meier')
-s2 <- attr(y, 'npsurv')
-# cbind(s$time, s2$time)
-plot(s$time, s$surv, type='s')
-lines(s2$time, s2$surv, type='s', col='red')
-lines(lev[-1], plogis(alpha), type='s', col='blue')
-
-
-require(rms)
 set.seed(2)
 x1 <- rnorm(100)
 y  <- round(x1 + rnorm(100), 3)
@@ -54,16 +61,16 @@ x1 <- c(x1, rnorm(5))
 y1 <- c(y1, c(-2, -1.5, -1, -.5, 0))
 y2 <- c(y2, c(1, 1, 1, 1, 1))
 # xless(cbind(y1, y2))
-f <- Ocens(y1, y2, verbose=TRUE)
-table(attr(f, 'levels'))
+f <- Ocens(y1, y2)
+# table(attr(f, 'levels'))
 
-Y <- Ocens(y1, y2)
+Y <- Ocens2ord(Ocens(y1, y2))
 f <- attr(Y, 'npsurv')
 plot(f$time, f$surv, type='s')   # may be P(T >= t)
 S <- Surv(y1, y2, type='interval2')
 g <- survfit(S ~ 1)
 lines(g$time, g$surv, type='s', col='blue')  #  P(T > t)
-h <- Ocens(y1, y2)
+h <- Ocens2ord(Ocens(y1, y2))
 a <- attributes(h)
 np <- a$npsurv
 lines(np$time, np$surv, type='s', col='red')
@@ -82,7 +89,7 @@ with(d, points(i[rt], y1[rt], col='red'))
 with(subset(d, ic), for(j in 1:5) lines(c(i[j], i[j]), c(y1[j], y2[j])))
 
 with(d, plot(i[unc], y1[unc], xlab='', ylab='t'))
-Y <- Ocens(y1, y2, verbose=TRUE, maxit=5)
+Y <- Ocens2ord(Ocens(y1, y2))
 a <- attributes(Y)
 np <- a$npsurv
 which(diff(np$surv) >= 0)
@@ -117,13 +124,14 @@ ordESS(g)
 # orm.fit runs by using a general sparse matrix for the intercept hessian matrix
 
 set.seed(2)
-N <- 100000 #100000
+N <- 100000
 x <- matrix(rnorm(N*20), N, 20)
 y <- 1 : N
 system.time(orm.fit(x, y, compstats=FALSE))   # 0.9s
 x <- rbind(x, rnorm(20))
-system.time(Y <- Ocens(c(y, 100), c(y, 150), verbose=TRUE))  # 0.13
-system.time(orm.fit(x, Y, compstats=FALSE)) # 1.0s
+y <- Ocens(c(y, 100), c(y, 150))
+system.time(Y <- Ocens2ord(y, verbose=TRUE))  # 0.13
+system.time(orm.fit(x, y, compstats=FALSE)) # 1.0s
 
 # require(MLEcens)
 # w <- cbind(1:N, c(1:10, 14, 12:N), rep(0, N), rep(1, N))
@@ -137,13 +145,14 @@ y <- 1 : N
 y2 <- y
 y2[i] <- y2[i] + sample(3 : 10, length(i), TRUE)
 
-s <- Ocens(y, y2, nponly=TRUE)  # get initial Turnbull intervals
-Y <- Ocens(y, y2, verbose=TRUE)
+y <- Ocens(y, y2)
+s <- Ocens2ord(y, nponly=TRUE)  # get initial Turnbull intervals
+Y <- Ocens2ord(y)
 plot(s$time, s$surv, type='s', xlab='t', ylab='S(t)')
 
 np <- attr(Y, 'npsurv')   # after consolidation
 with(np, data.frame(time, surv))
-g <- orm.fit(y=Y, trace=2, opt_method='LM')  # did not work with 'NR'
+g <- orm.fit(y=y, trace=2, opt_method='LM')  # did not work with 'NR'
 ti <- g$yunique
 s <- c(1, plogis(coef(g)))
 lines(ti, s, type='s', col='red')

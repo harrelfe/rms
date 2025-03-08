@@ -14,6 +14,7 @@ orm <- function(formula, data=environment(formula),
 
   nact        <- NULL
 
+  yname <- all.vars(formula)[1]
   tform <- terms(formula, data=data)
   if(! missing(data) || (
 						length(atl <- attr(tform,"term.labels")) &&
@@ -22,7 +23,6 @@ orm <- function(formula, data=environment(formula),
     callenv <- parent.frame()   # don't delay these evaluations
     subset  <- if(! missing(subset )) eval(substitute(subset),  data, callenv)
     weights <- if(! missing(weights)) eval(substitute(weights), data, callenv)
-
     X <-
       modelData(data, formula, weights=weights,
                 subset = subset,
@@ -104,7 +104,14 @@ orm <- function(formula, data=environment(formula),
     return(f)
   }
 
-  f$call <- NULL
+  f$call     <- NULL
+  f$yname    <- yname
+  uni        <- f$units
+  ylab       <- f$ylabel
+  f$yplabel  <- if(uni == '' && ylab == '') yname
+  else if(ylab == '') labelPlotmath(upFirst(uni))
+  else labelPlotmath(ylab, paste0(uni, 's'))
+
   f$sformula <- sformula
   if(model) f$model <- m
   if(x)   f$x <- X
@@ -150,10 +157,9 @@ orm <- function(formula, data=environment(formula),
       }
   }
   f <- c(f, list(call=call, Design=if(xpres)atr,
-                 scale.pred=if(f$family=='logistic')
-                  c("log odds","Odds Ratio") else
-                  if(f$family=='loglog') c("log hazard", "Hazard Ratio"),
-                 terms=Terms, assign=ass, na.action=nact))
+                 scale.pred=if(f$family=='logistic') c("log odds", "Odds Ratio") else
+                   if(f$family=='loglog') c("log hazard", "Hazard Ratio"),
+                 terms=Terms, assign=ass, na.action=nact) )
   class(f) <- c("orm","rms")
   f
 }
@@ -231,7 +237,7 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
     x$freq
     }
 
-  Ncens <- x$Ncens
+  Ncens <- x$Ncens1
   if(! length(Ncens)) {ce <- ced <- NULL}
   else {
     if(sum(Ncens > 0) == 1) {   # only one type of censoring; be concise
@@ -249,6 +255,15 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
     }
   }
 
+  if(! length(stats)) {
+    r2m <- R2Measures(NA, NA, 2, 2)
+    statsnam <- c("Obs", "ESS", "Distinct Y", "Median Y", "Max Deriv",
+            "Model L.R.", "d.f.", "P", "Score", "Score P",
+            "rho", "Dxy", "R2", names(r2m), "g", "gr", "pdm")
+    stats <- rep(NA, length(statsnam))
+    names(stats) <- statsnam
+    } 
+
   misc <- reListclean(Obs           = stats['Obs'],
                       ESS           = round(stats['ESS'], 1),
                       Censored      = ce,
@@ -263,6 +278,7 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
                            names(x$freq), sep='')
     misc <- c(misc[1], x$freq, misc[-1])
   }
+
   lr   <- reListclean('LR chi2'    = stats['Model L.R.'],
                    'd.f.'       = round(stats['d.f.'],3),
                    'Pr(> chi2)' = stats['P'],
@@ -279,7 +295,9 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
                       dec       = 3)
   if(any(newr2)) names(disc)[names(disc) == 'R2m'] <- names(stats[newr2])
 
-  discr <-reListclean(rho=stats['rho'], dec=3)
+  discr <-reListclean(rho = stats['rho'],
+                      Dxy = stats['Dxy'],
+                      dec = 3)
 
   headings <- c('',
                 'Model Likelihood\nRatio Test',
@@ -289,7 +307,7 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
   data <- if(length(discr)) list(misc, lr, disc, discr) else list(misc, lr, disc)
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
-
+  
   if(coefs) {
     k <- k + 1
     if(!intercepts) {

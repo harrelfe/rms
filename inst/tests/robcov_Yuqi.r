@@ -22,8 +22,8 @@ func_score <- function(fit){
   u <- matrix(0, nrow = n, ncol=p)
   
   # functions
-  f   <- fit$trans$cumprob
-  fp  <- fit$trans$deriv
+  f   <- eval(fit$famfunctions[1])
+  fp  <- eval(fit$famfunctions[3])
   
   
   xb <- fit$x %*% coef[-(1L : kint)]

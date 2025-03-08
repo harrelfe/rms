@@ -31,7 +31,7 @@
 \usage{
 ExProb(object, \dots)
 
-\method{ExProb}{orm}(object, codes = FALSE, survival=FALSE, ...)
+\method{ExProb}{orm}(object, codes = FALSE, ...)
 
 \method{plot}{ExProb}(x, \dots, data=NULL,
                       xlim=NULL, xlab=x$yname, ylab=expression(Prob(Y>=y)),
@@ -97,7 +97,7 @@ abline(h=c(.1,.5), col='gray80')
 abline(v=qu(.5, lp), col='gray80')
 abline(v=qu(.9, lp), col='green')
 \dontrun{
-  Y <- Ocens(dtime, ifelse(censored, Inf, dtime)
+  Y <- Ocens(dtime, ifelse(censored, Inf, dtime))
   f <- orm(Y ~ x, family='loglog')
   s <- Survival(f)
   s()  # all times
@@ -105,5 +105,6 @@ abline(v=qu(.9, lp), col='green')
   d <- data.frame(x=2:4)
   s(X=predict(f, d, conf.int=0.95)  # all times
   s(lp=predict(f, d))  # same surv estimates, no CLs
+  # use s(..., forcedf=TRUE) to force output to be a data.frame
 }
 }

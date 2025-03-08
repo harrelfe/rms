@@ -19,7 +19,7 @@ y2[31:60] <- Inf
 # Interval censoring
 y2[61:90] <- pmin(maxy, y[61:90] + sample(2 : 10, 30, TRUE))
 # if(irep == 1) saveRDS(list(y, y2), 'orm-censor3-problem-data.rds')
-if(FALSE && irep == 7) {
+if(irep == 7) {
   i <- order(y)
   Y7 <- cbind(y, y2)[i, ]
   print(Y7)
@@ -35,17 +35,17 @@ plot(ti, su, type='s', xlab='Time', ylab='Survival', main=paste('Example', irep)
 # print(data.frame(s$Tbull_ints, s$S_curves$baseline)[1:5,])
 # plot(f, plot_legend=FALSE, main=paste('Example', irep))
 
-s <- Ocens(y, y2, nponly=TRUE)
+s <- Ocens2ord(Ocens(y, y2), nponly=TRUE)
 # print(data.frame(time=c(s$time[1], s$time), surv=c(s$surv, NA))[1:5, ])
 lines(c(s$time[1], s$time), c(s$surv, NA), type='s', col='green')
-Y <- Ocens(y, y2, verbose=FALSE)
+Y <- Ocens2ord(Ocens(y, y2), verbose=FALSE)
 s <- attr(Y, 'npsurv')
 # print(data.frame(time=s$time, surv=s$surv)[1:5,])
 
 lines(c(s$time[1], s$time), c(s$surv, NA), type='s', col='yellow')
 
 options(orm.fit.debug=FALSE)
-f <- orm.fit(y=Y, trace=1)
+f <- orm.fit(y=Ocens(y, y2), trace=1)
 ti <- if(midpts || ! length(f$yupper)) f$yunique else (f$yunique + f$yupper) / 2
 ti <- c(ti[1], ti)
 su  <- c(1, plogis(coef(f)), NA)
@@ -53,13 +53,14 @@ lines(ti, su, type='s', col='blue', lwd=2)
 }
 
 # See what happens when interval consolidation is not done
+if(FALSE) {
 y  <- Y7[, 1]
 y2 <- Y7[, 2]
 Y <- Ocens(y, y2)
 Y <- Ocens(y, y2, cons='none')
 np <- attr(Y, 'npsurv')
 with(np, cbind(time, surv, c(NA, diff(surv) == 0)))
-Y7[y %in% 26:27,]
+# Y7[y %in% 26:27,]
 # Compute initial values forcing them to be in order
 init <- qlogis(np$surv[-1])
 init[12] <- 0.72
@@ -84,3 +85,4 @@ plot(1 : nrow(vi), diag(vi))
 co <- cov2cor(vi)
 plotCorrM(co)
 co[29:32,29:32]   # r=0.994 for (30, 31)
+}

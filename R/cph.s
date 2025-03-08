@@ -306,7 +306,7 @@ cph <- function(formula     = formula(data),
               x=X, y=Y, strata=Strata, offset=offset, weights=weights,
               terms=Terms, call=call)
     g <- survfit.cph(g, se.fit=is.character(surv) || surv,
-                     type=type, vartype=vartype, conf.type='log')
+                     type=type, vartype=vartype, conf.type='log', censor=FALSE)
 
     strt <- if(nstr > 1) rep(names(g$strata), g$strata)
 

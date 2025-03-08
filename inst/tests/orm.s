@@ -24,13 +24,14 @@ coef(g) - coef(f)
 w <- vcov(g, intercepts='all') / vcov(f) - 1
 max(abs(w))
 
-
+if(FALSE) {
 m <- Mean(g)
-formals(m) <- list(lp=NULL, intercepts=runif(30000), values=runif(30001),
+formals(m) <- list(lp=NULL, X=NULL, intercepts=runif(30000), values=runif(30001),
                    conf.int=0, interceptRef=3, cumprob=function(x) 1 / (1 + exp(-x)))
 system.time(m(1))
 system.time(m(1:100))
 system.time(m(1:1000))
+}
 
 set.seed(1)
 n <- 1000
@@ -186,7 +187,7 @@ xb <- Function(g)(age=70)
 intercepts <- coef(f)[1 : num.intercepts(f)]
 # Compute Prob(Y <= y) from Prob(Y >= y) by shifting one level
 # Prob(Y > y) = Prob(Y >= y + epsilon)
-cumprob <- g$trans$cumprob
+cumprob <- eval(g$famfunctions[1])
 # xless(cumprob(intercepts + xb))
 names(intercepts) <- Lag(names(intercepts))
 names(intercepts) <- gsub('>=', '>', names(intercepts))

@@ -2,6 +2,7 @@
 \alias{calibrate}
 \alias{calibrate.default}
 \alias{calibrate.cph}
+\alias{calibrate.orm}
 \alias{calibrate.psm}
 \alias{print.calibrate}
 \alias{print.calibrate.default}
@@ -13,30 +14,30 @@ Resampling Model Calibration
 \description{
 Uses bootstrapping or cross-validation to get bias-corrected (overfitting-
 corrected) estimates of predicted vs. observed values based on
-subsetting predictions into intervals (for survival models) or on
-nonparametric smoothers (for other models). There are calibration
+subsetting predictions into intervals or better on
+nonparametric or adaptive parametric smoothers. There are calibration
 functions for Cox (\code{cph}), parametric survival models (\code{psm}),
-binary and ordinal logistic models (\code{lrm}) and ordinary least
-squares (\code{ols}).  For survival models,
+binary and ordinal logistic models (\code{lrm}, \code{orm}) and ordinary least
+squares (\code{ols}).  For survival models and \code{orm},
 "predicted" means predicted survival probability at a single
 time point, and "observed" refers to the corresponding Kaplan-Meier 
 survival estimate, stratifying on intervals of predicted survival, or,
-if the \code{polspline} package is installed, the predicted survival
+the predicted survival
 probability as a function of transformed predicted survival probability
-using the flexible hazard regression approach (see the \code{val.surv}
-function for details).  For logistic and linear models, a nonparametric
-calibration curve is estimated over a sequence of predicted values.  The
-fit must have specified \code{x=TRUE, y=TRUE}.  The \code{print} and
-\code{plot} methods for \code{lrm} and \code{ols} models (which use
-\code{calibrate.default}) print the mean absolute error in predictions,
+using the flexible hazard regression approach or for \code{orm} and probably
+better, smoothed overlapping moving Kaplan-Meier estimates
+(see the \code{val.surv.args} argument and \code{val.surv}
+function for details).  Nonparametric
+calibration curves are estimated over a regular sequence of predicted values.  The
+fit must have specified \code{x=TRUE, y=TRUE}.
+
+The \code{print} and
+\code{plot} methods print the mean absolute error in predictions,
 the mean squared error, and the 0.9 quantile of the absolute error.
 Here, error refers to the difference between the predicted values and
 the corresponding bias-corrected calibrated values.
 
-Below, the second, third, and fourth invocations of \code{calibrate}
-are, respectively, for \code{ols} and \code{lrm}, \code{cph}, and
-\code{psm}.  The first and second \code{plot} invocation are
-respectively for \code{lrm} and \code{ols} fits or all other fits.
+Below, \code{calibrate.default} is for the \code{ols} and \code{lrm}.
 }
 \usage{
 calibrate(fit, \dots)
@@ -51,6 +52,13 @@ calibrate(fit, \dots)
   bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, force=NULL,
   estimates=TRUE,
   pr=FALSE, what="observed-predicted", tol=1e-12, maxdim=5, \dots)
+\method{calibrate}{orm}(fit, 
+                        method="boot", u, m=150, pred, B=40,
+                        bw=FALSE, rule="aic",
+                        type="residual", sls=.05, aics=0, force=NULL,
+                        estimates=TRUE, pr=FALSE, what="observed-predicted",
+                        val.surv.args=list(method='smoothkm'),
+                        \dots)
 \method{calibrate}{psm}(fit, cmethod=c('hare', 'KM'),
   method="boot", u, m=150, pred, cuts, B=40,
   bw=FALSE,rule="aic",
@@ -136,6 +144,10 @@ probability that \eqn{Y\geq} the middle level.  Specify \code{kint} to specify t
 intercept to use, e.g., \code{kint=2} means to calibrate \eqn{Prob(Y\geq
   b)}, where \eqn{b} is the second level of \eqn{Y}.
 }
+\item{val.surv.args}{a list containing arguments to send to \code{val.surv} when
+running \code{calibrate.orm}.  By default smoothed overlapping windows of Kaplan-Meier
+estimates are used for \code{orm}.  The \code{val.surv.args} argument is especially
+useful for specifying bandwidths and the \code{movStats} \code{eps} argument.}
 \item{smoother}{
 a function in two variables which produces \eqn{x}- and
 \eqn{y}-coordinates by smoothing the input \code{y}.  The default is to
@@ -218,7 +230,8 @@ fh@fharrell.com
   \code{\link{groupkm}}, \code{\link[Hmisc]{errbar}},
   \code{\link[Hmisc]{scat1d}}, \code{\link{cph}}, \code{\link{psm}},
   \code{\link{lowess}},\code{\link[Hmisc]{fit.mult.impute}},
-	\code{\link{processMI}}
+	\code{\link{processMI}}, \code{\link{val.surv}}, \code{\link{orm}},
+  \code{\link[Hmisc]{movStats}}
 }
 \examples{
 require(survival)

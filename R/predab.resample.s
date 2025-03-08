@@ -31,6 +31,8 @@ predab.resample <-
     message(...)
     list(fail=TRUE)
   }
+
+  if(getOption('rmsdebug', FALSE)) tryCatch <- function(x, ...) x
   
   ## Following logic prevents having to load a copy of a large x object
   if(any(match(c("x", "y"), names(fit.orig), 0) == 0))
@@ -75,11 +77,12 @@ predab.resample <-
   attr(x,'class') <- NULL	
 
   y <- fit.orig[['y']]
+  if(! inherits(y, 'Ocens') && ! is.Surv(y)) {
+    # if(! is.factor(y)) y <- factor(y)            ## ?? why was this ever here?
+    # y <- as.matrix(unclass(y) - 1L)
+    y <- as.matrix(unclass(y))
+  }
   
-  if(is.factor(y)) y <- unclass(y)
-
-  if(! is.Surv(y))  y <- as.matrix(y)
-
   ## some subjects have multiple records now
   multi <- ! missing(cluster)
 

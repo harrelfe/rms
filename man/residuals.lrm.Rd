@@ -28,7 +28,7 @@ Alternatively, specify \code{type="score.binary"}
 to use binary model score residuals but for all cutpoints of \eqn{Y}
 (plotted only, not returned). The \code{score.binary}, 
 \code{partial}, and perhaps \code{score} residuals are useful for
-checking the proportional odds assumption. 
+checking the proportional odds assumption although many attempts to do so have failed. 
 If the option \code{pl=TRUE} is used to plot the \code{score} or
 \code{score.binary} residuals, a score residual plot is made for each
 column of the design (predictor) matrix, with \code{Y} cutoffs on the 

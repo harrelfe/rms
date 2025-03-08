@@ -8,7 +8,7 @@ residuals.lrm <-
 {
   gotsupsmu <- FALSE
   type <- match.arg(type)
-  dopl <- (is.logical(pl) && pl) || is.character(pl)
+  dopl   <- (is.logical(pl) && pl) || is.character(pl)
   ylabpr <- NULL   # y-axis label for partial residuals
 
   k     <- object$non.slopes
@@ -36,12 +36,20 @@ residuals.lrm <-
   P <- cumprob(L)
   if(length(Y <- object[['y']]) == 0)
      stop("you did not specify y=TRUE in the fit")
+  isocens <- isorm && NCOL(Y) == 2
+  if(isocens) {
+    Y   <- Ocens2ord(Y)
+    lev <- attr(Y, 'levels')
+    YO  <- extractCodedOcens(Y, what=4, intcens='low', ivalues=TRUE)
+    Y   <- YO$y    # already -1 to start at y=0 when ivalues=TRUE
+  } else {
+    Y   <- recode2integer(Y)
+    lev <- Y$ylevels
+    Y   <- Y$y - 1
+  }
   rnam <- names(Y)
   cnam <- names(cof)
-  if(!is.factor(Y)) Y <- factor(Y)
-  lev  <- levels(Y)
   lev2 <- names(cof)[1:k]
-  Y <- unclass(Y) - 1
   if(! ordone && k > 1) Y <- Y >= kint
   if(k > 1 && missing(kint) && !ordone)
     warning(paste('using first intercept and ',
@@ -56,7 +64,7 @@ residuals.lrm <-
                     dimnames=list(if(k > 1) lev2,
                       c("Sum of squared errors", "Expected value|H0",
                         "SD", "Z", "P")))
-    X <- cbind(1,X)
+    X <- cbind(1, X)
     for(j in 1:k) {
       y <- Y >= j
       p <- cumprob(L - cof[1] + cof[j])
@@ -79,12 +87,12 @@ residuals.lrm <-
   
   if(type=="ordinary") return(naresid(naa, Y - cumprob(L)))
 
-  if(type %in% c('score','score.binary','partial')) {
+  if(type %in% c('score','score.binary')) {
     nc <- length(cof)
-    if(missing(which)) which <- if(type == 'score') 1:nc else 1:(nc - k) else
-    if(type=='score') which <- k + which
+    if(missing(which))
+      which <- if(type == 'score.binary') seq(nc - k) else 1 : nc
   }
-  
+
   if(type=='score' || type=='score.binary')
     plotit <- function(w, ylim, xlab, ylab, lev=names(w)) {
       statsum <- function(x) {
@@ -99,7 +107,7 @@ residuals.lrm <-
       k <- length(w)
       w <- lapply(w, statsum)
       plot(c(1,k), c(0,0), xlab=xlab, ylab=ylab,
-           ylim=if(length(ylim)==0) range(unlist(w)) else ylim,
+           ylim=if(length(ylim)==0) range(unlist(w), na.rm=TRUE) else ylim,
            type='n', axes=FALSE)
       mgp.axis(2)
       mgp.axis(1, at=1:k, labels=lev)
@@ -113,30 +121,46 @@ residuals.lrm <-
     }
   
   if(type=='score.binary') {
-    if(k==1)  stop('score.binary only applies to ordinal models')
-    if(!dopl) stop('score.binary only applies if you are plotting')
-    if(!length(X <- unclass(object[['x']])))
+    if(k == 1)  stop('score.binary only applies to ordinal models')
+    if(! length(X <- unclass(object[['x']])))
       stop('you did not specify x=TRUE for the fit')
+
+   
+    deriv <- if(isorm) object$famfunctions[5] else probabilityFamilies$logistic[5]
+    deriv <- eval(deriv)
+
     xname <- dimnames(X)[[2]]
     yname <- as.character(formula(object))[2]
-    for(i in which) {
-      xi <- X[,i]
-      r <- vector('list',k)
-      names(r) <- lev[-1]
-      for(j in 1:k) 
-        r[[j]] <- xi * ((Y >= j) - cumprob(L - cof[1] + cof[j]))
-      if(pl!='boxplot') plotit(r, ylim=if(missing(ylim)) NULL else ylim,
-           xlab=yname, ylab=xname[i])
-      else
-        boxplot(r, varwidth=TRUE, notch=TRUE, err=-1,
-                ylim=if(missing(ylim)) quantile(unlist(r), c(.1, .9))
-                else ylim, ...)
-      title(xlab=yname, ylab=xname[i])
+    W <- vector('list', k)
+    for(j in 1 : k) {
+      z <- if(isocens) geqOcens(YO$a, YO$b, YO$ctype, j) else Y >= j
+      nna <- ! is.na(z)
+      lp  <- L - cof[1] + cof[j]
+      rj  <- rep(NA, length(L))
+      i1 <- nna & z == 1
+      i0 <- nna & z == 0
+      # v <- infoMxop(object$info.matrix, i=k + which)
+      # v <- Matrix::diag(v)
+      w <- NULL
+      for(i in which) {
+        xi <- X[, i]
+        rj[i1] <-   xi[i1] * deriv(lp[i1]) / cumprob(lp[i1])
+        rj[i0] <- - xi[i0] * deriv(lp[i0]) / (1 - cumprob(lp[i0])) 
+        # rj <- rj * v[i]
+        d <- data.frame(y=j, x=xname[i], r=rj[nna])
+        w <- rbind(w, d)
+      }
+      W[[j]] <- w
     }
-    invisible()
+    w   <- do.call('rbind', W)
+    w$x <- factor(w$x, xname)
+    g <- ggplot(w, aes(x=.data$y, y=.data$r)) + geom_smooth() +
+           facet_wrap(~ .data$x, scales='free_y') +
+           xlab(yname)
+    return(g)
   }
   
-  if(type=="score") {
+  if(type == "score") {
     if(! length(X <- unclass(object[['x']])))
       stop("you did not specify x=TRUE for the fit")
     if(k == 1) return(naresid(naa, cbind(1, X) * (Y - P))) # only one intercept
@@ -146,8 +170,6 @@ residuals.lrm <-
     ##  z$k <- k; z$L <- L-cof[1]; z$coef <- cof
     # formals(z) <- list(i=NA, k=k, L=L-cof[1], coef=cof)
     ## set defaults in fctn def'n
-    u <- matrix(NA, nrow=length(L), ncol=length(which),
-                dimnames=list(names(L), names(cof)[which]))
     ## Compute probabilities of being in observed cells
     # pc    <- ifelse(Y==0, 1 - z(1), ifelse(Y == k, z(k), z(Y) - z(Y + 1)) )
     xname   <- dimnames(X)[[2]]
@@ -164,19 +186,29 @@ residuals.lrm <-
     derivy  <- deriv(Ly , cumy)
     derivy1 <- deriv(Ly1, cumy1)
 
-    ii      <- 0
+    if(! (isorm && length(u <- object$mscore))) {
+      u <- matrix(NA, nrow=length(L), ncol=length(which),
+                  dimnames=list(names(L), names(cof)[which]))
+      ii      <- 0
+      for(i in which) {
+        ii <- ii + 1
+        di  <- if(i <= k) ifelse(Y == 0, i == 1, Y == i)          else X[, i - k]
+        di1 <- if(i <= k) ifelse(Y == k, 0, (Y + 1) == i)         else X[, i - k]
+        # di  <- if(i <= k) ifelse(Y==0, if(i==1) 1 else 0, Y==i) else X[,i - k]
+        # di1 <- if(i <= k) ifelse(Y==0 | Y==k, 0, (Y + 1) == i)  else X[,i - k]
+        ui  <- (derivy * di - derivy1 * di1) / pc
+        # ui  <- ifelse(Y == 0, -z(1) * di,
+        #               ifelse(Y == k, (1 - z(k)) * di,
+        #               (deriv(L + ints[Y + 1L], z(Y)) * di -
+        #                deriv(L + ints[Y + 2L], z(Y + 1)) * di1) / pc ) )
+        u[, ii] <- ui
+      }
+    }
+
+    ii <- 0
     for(i in which) {
       ii <- ii + 1
-      di  <- if(i <= k) ifelse(Y == 0, i == 1, Y == i)           else X[, i - k]
-      di1 <- if(i <= k) ifelse(Y == k, 0, (Y + 1) == i) else X[, i - k]
-      # di  <- if(i <= k) ifelse(Y==0, if(i==1) 1 else 0, Y==i) else X[,i - k]
-      # di1 <- if(i <= k) ifelse(Y==0 | Y==k, 0, (Y + 1) == i)  else X[,i - k]
-      ui  <- (derivy * di - derivy1 * di1) / pc
-      # ui  <- ifelse(Y == 0, -z(1) * di,
-      #               ifelse(Y == k, (1 - z(k)) * di,
-      #               (deriv(L + ints[Y + 1L], z(Y)) * di -
-      #                deriv(L + ints[Y + 2L], z(Y + 1)) * di1) / pc ) )
-      u[,ii] <- ui
+      ui <- u[, ii]
       if(dopl && i > k) {
         if(pl=='boxplot') {
           boxplot(split(ui, Y), varwidth=TRUE, notch=TRUE,
@@ -188,7 +220,7 @@ residuals.lrm <-
         else plotit(split(ui,Y), ylim=if(missing(ylim)) NULL else ylim,
                     lev=lev,
                     xlab=yname,
-                    ylab=paste('Score Residual for', xname[i-k]))
+                    ylab=paste('Score Residual for', xname[i-k]))   
       }
     }
     return(if(dopl) invisible(naresid(naa, u)) else naresid(naa, u))
@@ -227,12 +259,12 @@ residuals.lrm <-
     return(naresid(naa, r))
   }
   
-  if(type=="partial") {
+  if(type == "partial") {
     if(!length(X <- unclass(object[['x']])))
       stop("you did not specify x=TRUE in the fit")
     cof.int <- cof[1 : k]
     cof     <- cof[- (1 : k)]
-    if(!missing(which)) {
+    if(! missing(which)) {
       X <- X[, which, drop=FALSE]
       cof <- cof[which]
     }
@@ -257,7 +289,7 @@ residuals.lrm <-
             stop('pl="loess" not implemented for ordinal response')
           xi <- X[,i]
           ri <- r[,i]
-          ddf <- data.frame(xi,ri)
+          ddf <- data.frame(xi, ri)
           
           plot(xi, ri, xlim=if(missing(xlim)) range(xi) else xlim,
                ylim=if(missing(ylim)) range(ri) else ylim,
@@ -362,6 +394,12 @@ residuals.orm <-
            which, ...)
 {
   type <- match.arg(type)
+  if(type == 'score' && ! length(object$mscore)) {
+    if(! length(y <- object[['y']]))
+      stop('When the fit did not specify mscore=TRUE it must specify x=TRUE, y=TRUE to get score residuals')
+    else if(NCOL(y) == 2)
+      stop('To get score residuals with censored Y you must specify mscore=TRUE during the fit')
+  }
   args <- list(object=object, type=type, pl=pl,
                label.curves=label.curves, ...)
   if(!missing(kint))  args$kint  <- kint
@@ -389,7 +427,7 @@ plot.lrm.partial <- function(..., labels, center=FALSE, ylim)
     ymin <- 1e10; ymax <- -1e10
     for(j in 1:nfit) {
       xx <- dotlist[[j]][['x']][,vname[i]]
-      yy <- r[[j]][,vname[i]]
+      yy <- r[[j]][, vname[i]]
       if(center)yy <- yy - mean(yy)
       curves[[j]] <- lowess(xx, yy, iter=0)
       ymin <- min(ymin, curves[[j]]$y)

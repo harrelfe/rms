@@ -1,9 +1,8 @@
 # Quickly fits a model like an existing fit object but possibly changing
 # X or y.  This is for models in rms using MLE.  For lrm and orm
 # compstats is turned off by default.
-# This function facilitates fast anova tables of LR tests and
-# fast profile likelihood confidence intervals
-# Should also streamline bootcov to use this  TODO
+# This function facilitates fast anova tables of LR tests,
+# fast profile likelihood confidence intervals, and fast bootstrapping.
 #
 # For orm models, specify ytarget=constant to subset intercepts and reform
 # the fit to be like a binary regression model for Y >= ytarget
@@ -15,7 +14,10 @@
 # storevals can be FALSE when the model re-fitting is specifying all data-related
 # arguments to the fitter each time.  This applies when what='fitter'.
 # If object is an orm and ytarget is used, set compvar=TRUE to compute the variance matrix
-# that uses only the reference intercept
+# that uses only the reference intercept.
+# When storevals=TRUE, the subset argument in the generated function will be useful at times.
+# When initial is provided to quickRefit(..., what='fitter') every fit run will use this initial value
+# This is useful in bootstrapping and is used by orm.fit.  initial is used only for orm.fit.
 
 quickRefit <-
   function(object,
@@ -29,6 +31,7 @@ quickRefit <-
            ytarget        = NULL,
            what           = c('chisq', 'deviance', 'fit', 'fitter'),
            compvar        = FALSE,
+           initial        = NULL,
            storevals      = TRUE,
            ...) {
 
@@ -50,25 +53,24 @@ quickRefit <-
   # validate, calibrate, bootcov can pass them without a problem, even to fitters
   # that ignore them
   
-  g <-
+g <-
   switch(k,
-         ols = function(X, y, strata=NULL, offset=NULL, weights=NULL, penalty.matrix, ytarget, opt_method, ...)
-                                   lm.fit.qr.bare(X, y, intercept=TRUE, ...),
-         olsp= function(X, y,  strata=NULL, offset=NULL, weights=NULL, penalty.matrix, ytarget, opt_method, ...)
-                                   lm.pfit(cbind(Intercept=1e0, X), y,
+         ols = function()
+                                   lm.fit.qr.bare(as.matrix(X)[subset,,drop=FALSE], y[subset], intercept=TRUE, ...),
+         olsp= function()
+                                   lm.pfit(cbind(Intercept=1e0, as.matrix(X)[subset,,drop=FALSE]), y[subset],
                                            penalty.matrix=penalty.matrix, regcoef.only=TRUE, ...),
-         lrm = function(X, y, compstats, offset=NULL, penalty.matrix, weights=NULL,
-                        strata=NULL, ytarget, opt_method='NR', ...)
-           lrm.fit(X, y, compstats=compstats, offset=offset, 
-                   penalty.matrix=penalty.matrix, weights=weights, opt_method=opt_method, ...),
-         orm = function(X, y, family, compstats, offset=NULL, penalty.matrix, weights=NULL,
-                        strata=NULL, ytarget, opt_method='NR', ...)
-           orm.fit(X, y, family=family, compstats=compstats, offset=offset,
-                        penalty.matrix=penalty.matrix, weights=weights, opt_method=opt_method, ...),
-         ormt= function(X, y, family, compstats, offset=NULL, penalty.matrix, weights=NULL,
-                        strata=NULL, ytarget, compvar, opt_method='NR', ...) {
-           f <- orm.fit(X, y, family=family, compstats=compstats, offset=offset,
-                        penalty.matrix=penalty.matrix, weights=weights, opt_method=opt_method, ...)
+         lrm = function()
+           lrm.fit(as.matrix(X)[subset,,drop=FALSE], y[subset], compstats=compstats, offset=offset[subset], 
+                   penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method, ...),
+         orm = function()
+           orm.fit(as.matrix(X)[subset,,drop=FALSE], if(is.matrix(y)) y[subset,,drop=FALSE] else y[subset],
+                        family=family, compstats=compstats, offset=offset[subset], initial=initial,
+                        penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method), #, ...),
+         ormt= function() {
+           f <- orm.fit(as.matrix(X)[subset,,drop=FALSE], if(is.matrix(y)) y[subset,,drop=FALSE] else y[subset],
+                        family=family, compstats=compstats, offset=offset[subset], initial=initial,
+                        penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method) # $, ...)
            ns  <- f$non.slopes
            cof <- f$coefficients
            # For character y, find the intercept that exactly matchines ytarget
@@ -86,44 +88,50 @@ quickRefit <-
            f$info.matrix           <- NULL
            f
          } ,
-         cph = function(X, y, method, type, strata=NULL, weights=NULL, offset=NULL,
-                        ytarget, penalty.matrix, opt_method, ...)
-                                   coxphFit(X, y, method=method, type=type,
-                                            strata=strata, weights=weights, offset=offset, ...),
-         psm = function(X, y, offset=NULL, dist, fixed, parms, strata=NULL, weights=NULL,
-                        penalty.matrix, ytarget, opt_method, ...)
-                                   survreg.fit2(X, y, offset=offset, dist=dist,
+         cph = function()
+                                   coxphFit(as.matrix(X)[subset,,drop=FALSE], y[subset,,drop=FALSE], method=method, type=type,
+                                            strata=strata[subset], weights=weights[subset], offset=offset[subset], ...),
+         psm = function()
+                                   survreg.fit2(as.matrix(X)[subset,,drop=FALSE], y[subset], offset=offset[subset], dist=dist,
                                                 fixed=fixed, parms=parms, ...),
-         Glm = function(X, y, family, offset=NULL, weights=NULL, control=glm.control(),
-                        strata=NULL, penalty.matrix, ytarget, opt_method, ...) {
-           f <- glm.fit(x=cbind(1e0, X), y=as.vector(y), family=family, 
-                        offset=offset, weights=weights,
+         Glm = function() {
+           f <- glm.fit(x=cbind(1e0, as.matrix(X)[subset,,drop=FALSE]), y=as.vector(y)[subset], family=family, 
+                        offset=offset[subset], weights=weights[subset],
                         control=control, ...)
            f$oweights <- weights
            f
          },
-         Rq  = function(X, y, tau, offset=NULL, weights=NULL, method, strata=NULL,
-                        penalty.matrix, ytarget, opt_method, ...)
-                        quantreg::rq.wfit(cbind(Intercept=1e0, X), y, tau=tau,
-                                          weights=weights, method=method, ...),
-         bj  = function(X, y,  strata=NULL, offset=NULL, penalty.matrix, ytarget, opt_method, ...)
-                    bj.fit(X, y, ...),
+         Rq  = function()
+                        quantreg::rq.wfit(cbind(Intercept=1e0, as.matrix(X)[subset,,drop=FALSE]), y[subset], tau=tau,
+                                          weights=weights[subset], method=method, ...),
+         bj  = function()
+                    bj.fit(as.matrix(X)[subset,,drop=FALSE], y[subset], ...),
          stop('fit must be from ols, lrm, orm, cph, psm, Glm, bj, Rq')
          )
 
-if(storevals) {
+fm <- if(storevals) list(X=X,    y=y,    strata=strata, offset=offset, weights=weights, penalty.matrix=penalty.matrix)
+      else          list(X=NULL, y=NULL, strata=NULL,   offset=NULL  , weights=NULL,    penalty.matrix=penalty.matrix)
+formals(g) <- c(fm, alist(subset=TRUE, ytarget=, opt_method=, ...=))
+#formals(g) <- c(formals(g), alist(subset=TRUE, ytarget=, opt_method=, ...))
+
+  if(FALSE) {
   formals(g)$X       <- X
   formals(g)$y       <- y
   # Could not set arguments to NULL, as formals(g)$x <- NULL removes x as an argument
   formals(g)$strata  <- strata
   formals(g)$offset  <- offset
   formals(g)$weights <- weights
-}
+  formals(g)$penalty.matrix <- penalty.matrix
+  }
 
-formals(g)$penalty.matrix <- penalty.matrix
-
-if(k %in% c('lrm', 'orm', 'ormt'))
+if(k %in% c('lrm', 'orm', 'ormt')) {
                            formals(g)$compstats <- compstats
+                           formals(g)$opt_method <- 'NR'
+}
+if(k %in% c('orm', 'ormt')) {
+                           fm <- list(initial=initial)
+                           formals(g) <- c(formals(g), fm)
+}
 if(k == 'ormt' && is.na(ytarget)) {
   yu   <- object$yunique[-1]
   ytarget <- if(is.character(yu)) yu[object$interceptRef] else median(object[['y']])
@@ -142,7 +150,13 @@ if(k == 'psm') {
   formals(g)$parms <- object[['parms']]
   }
 if(k %in% c('orm', 'ormt', 'Glm')) formals(g)$family <- object$family
-
+if(k == 'Glm') formals(g)$control <- glm.control()
+if(getOption('rmsdebug', FALSE)) {
+  len <- function(x) if(is.matrix(x)) paste0(nrow(x), 'x', ncol(x))
+           else if(length(x) == 1) as.character(x) else length(x)
+  cat('\nArguments of function constructed by quickRefit:\n\n')
+  print(sapply(formals(g), len), quote=FALSE)
+}
 if(what == 'fitter') return(g)
 f <- g(X, y, ...)
 if(what == 'fit' || (length(f$fail) && f$fail)) return(f)
@@ -179,3 +193,5 @@ getDeviance <- function(object, fitclass) {
   if(k == 'Glm') dev <- c(object$null.deviance, dev)
   dev
 }
+
+utils::globalVariables(c('opt_method', 'method', 'dist', 'parms', 'control', 'tau'))

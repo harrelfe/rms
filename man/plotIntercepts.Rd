@@ -4,12 +4,14 @@
 \alias{plotIntercepts}
 \title{Plot Intercepts}
 \usage{
-plotIntercepts(fit, dots = FALSE)
+plotIntercepts(fit, dots = FALSE, logt = FALSE)
 }
 \arguments{
 \item{fit}{an \code{orm} or \code{lrm} fit object, usually with a numeric dependent variable having many levels}
 
 \item{dots}{set to \code{TRUE} to show solid dots at the intecept values}
+
+\item{logt}{set to \code{TRUE} to use a log scale for the x-axis}
 }
 \value{
 nothing; only plots

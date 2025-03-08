@@ -9,13 +9,16 @@
 \description{
 Plot estimated survival curves, and for parametric survival models, plot
 hazard functions.  There is an option to print the number of subjects
-at risk at the start of each time interval.  Curves are automatically
+at risk at the start of each time interval for certain models.  Curves are automatically
 labeled at the points of maximum separation (using the \code{labcurve}
 function), and there are many other options for labeling that can be
 specified with the \code{label.curves} parameter.  For example, different
 plotting symbols can be placed at constant x-increments and a legend
 linking the symbols with category labels can automatically positioned on
 the most empty portion of the plot.
+
+If the fit is from \code{psm} and \code{ggplot=TRUE} is specified, a \code{ggplot2} graphic
+will instead be produced using the \code{survplot.orm} function.
 
 For the case of a two stratum analysis by \code{npsurv},
 \code{survdiffplot} plots the difference in two Kaplan-Meier estimates
@@ -29,7 +32,8 @@ estimates plus or minus 1/2 the width of the confidence interval for the
 difference of two Kaplan-Meier estimates.
 
 \code{survplotp} creates an interactive \code{plotly} graphic with
-shaded confidence bands.  In the two strata case, it draws the 1/2
+shaded confidence bands for fits other than from \code{orms}.
+In the two strata case, it draws the 1/2
 confidence bands for the difference in two probabilities centered at the
 midpoint of the probability estimates, so that where the two curves
 touch this band there is no significant difference (no multiplicity
@@ -65,7 +69,7 @@ survplotp(fit, \dots)
          n.risk=FALSE, logt=FALSE, dots=FALSE, dotsize=.003,
          grid=NULL, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1, 
          y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'),
-         cex.ylab=cex.xlab, pr=FALSE)
+         cex.ylab=cex.xlab, pr=FALSE, ggplot=FALSE)
 \method{survplot}{npsurv}(fit, xlim, 
          ylim, xlab, ylab, time.inc, state=NULL,
          conf=c("bands","bars","diffbands","none"), mylim=NULL,
@@ -309,6 +313,7 @@ character size for number of subjects at risk (when \code{n.risk} is
 \item{pr}{
 set to \code{TRUE} to print survival curve coordinates used in the plots
 }
+\item{ggplot}{set to \code{TRUE} to use \code{survplot.orm} to draw the curves instead, for a \code{psm} fit}
 \item{aehaz}{set to \code{TRUE} to add number of events and exponential
 	distribution hazard rate estimates in curve labels.  For
 	competing risk data the number of events is for the cause of interest,
@@ -458,6 +463,10 @@ survplot(f, state='death', aehaz=TRUE, col=3,
 f <- npsurv(Surv(stop, event) ~ sex, data=m)
 survplot(f, state='death', aehaz=TRUE, n.risk=TRUE, conf='diffbands',
          label.curves=list(keys='lines'))
+
+# Plot survival curves estimated from an ordinal semiparametric model
+f <- orm(Ocens(y, ifelse(y <= cens, y, Inf)) ~ age)
+survplot(f, age=c(30, 50))
 }
 }
 \keyword{survival}

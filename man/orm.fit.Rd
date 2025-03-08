@@ -18,8 +18,8 @@ orm.fit(x=NULL, y, family=c("logistic","probit","loglog","cloglog","cauchit"),
         offset, initial, opt_method=c('NR', 'LM'),
         maxit=30L, eps=5e-4, gradtol=0.001, abstol=1e10, 
         minstepsize=0.01, tol=.Machine$double.eps, trace=FALSE,
-        penalty.matrix=NULL, weights=NULL, normwt=FALSE, scale=FALSE,
-        inclpen=TRUE, y.precision = 7, compstats=TRUE, onlydata=FALSE)
+        penalty.matrix=NULL, weights=NULL, normwt=FALSE, scale=FALSE, mscore=FALSE,
+        inclpen=TRUE, y.precision = 7, compstats=TRUE, onlydata=FALSE, ...)
 }
 \arguments{
 \item{x}{
@@ -43,7 +43,10 @@ is assumed from \code{factor(y)}.
 \item{initial}{vector of initial parameter estimates, beginning with the
 	intercepts.  If \code{initial} is not specified, the function computes
   the overall score \eqn{\chi^2} test for the global null hypothesis of
-	no regression.}
+	no regression.  \code{initial} is padded to the right with zeros for the regression
+  coefficients, if needed.  When censoring is present, \code{initial} can also be
+  a list with elements \code{time} and \code{surv} from the \code{npsurv} attribute of the
+  \code{y} element of a previous fit.  This is useful when bootstrapping, for example.}
 \item{opt_method}{set to \code{"LM"} to use Levenberg-Marquardt instead of the default Newton-Raphson}
 \item{maxit}{maximum no. iterations (default=\code{30}).}
 \item{eps}{
@@ -65,6 +68,7 @@ derivative, and max absolute change in parameter estimates at each iteration.
 }
 \item{weights}{a vector (same length as \code{y}) of possibly fractional case weights}
 \item{normwt}{set to \code{TRUE} to scale \code{weights} so they sum to \eqn{n}, the length of \code{y}; useful for sample surveys as opposed to the default of frequency weighting}
+\item{mscore}{set to \code{TRUE} to compute the sparse score matrix and store its elements as a list \code{mscore}}
 \item{scale}{set to \code{TRUE} to subtract column means and divide by
 	column standard deviations of \code{x}
   before fitting, and to back-solve for the un-normalized covariance
@@ -79,6 +83,7 @@ to avoid unpredictable behavior with \code{unique()} with floating-point
 numbers. Default is to 7 decimal places.}
 \item{compstats}{set to \code{FALSE} to prevent the calculation of the vector of model statistics}
 \item{onlydata}{set to \code{TRUE} to return the data used in model fitting as a list, without fitting the model}
+\item{\dots}{ignored}
 }
 \value{
 a list with the following components, not counting all the components produced by `orm.fit`:
@@ -96,8 +101,10 @@ fit, number of unique \code{y} values, median \code{y} from among the
 observations used in the fit, maximum absolute value of first
 derivative of log likelihood, model likelihood ratio chi-square, d.f.,
 P-value, score chi-square and its P-value, Spearman's \eqn{\rho} rank
-correlation between linear predictor and \code{y}, the
-Nagelkerke \eqn{R^2} index, the \eqn{g}-index, \eqn{gr} (the
+correlation between linear predictor and \code{y} (if there is no censoring),
+Somers' \eqn{Dxy} rank correlation (if there is no censoring or only
+right censoring),) the
+Nagelkerke \eqn{R^2} index, other \eqn{R^2} measures, the \eqn{g}-index, \eqn{gr} (the
 \eqn{g}-index on the ratio scale), and \eqn{pdm} (the mean absolute
 difference between 0.5 and the estimated probability that \eqn{y\geq}
 the marginal median).

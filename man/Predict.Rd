@@ -118,8 +118,8 @@ the transformed parameters such as means.}
   }
   \item{np}{
 	the number of equally-spaced points computed for continuous
-	predictors that vary, i.e., when the specified value is \code{.}
-	or \code{NA}
+	predictors that vary, i.e., when the specified value is omitted (with the 
+  variable name appearing without an equals sign) or is \code{NA}
   }
   \item{conf.int}{
 	confidence level (highest posterior density interval probability for

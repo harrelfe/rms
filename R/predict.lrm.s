@@ -30,7 +30,7 @@ predict.lrm <- function(object, ...,
   if(type=="fitted") return(P)
 
   ##type="mean" or "fitted.ind"
-  vals <- names(object$freq)
+  vals <- object$yunique
   P   <- matrix(P, ncol=ns)
   Peq <- cbind(1, P) - cbind(P, 0)
   if(type == "fitted.ind") {
