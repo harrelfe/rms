@@ -58,22 +58,24 @@ ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75, onlydata=FALS
   if(! length(Y)) stop('requires y=TRUE specified to orm')
   X <- fit[['x']]
   if(! length(X)) stop('requires x=TRUE specified to orm')
+  n       <- NROW(Y)
   isocens <- NCOL(Y) == 2
   if(isocens) {
-    Y  <- Ocens2ord(Y)
-    YO <- extractCodedOcens(Y, what=4, ivalues=TRUE)
-    Y  <- YO$y
+    Y    <- Ocens2ord(Y)
+    vals <- attr(Y, 'levels')
+    YO   <- extractCodedOcens(Y, what=4, ivalues=TRUE)
+    Y    <- YO$y
   }
   else Y <- recode2integer(Y, ftable=FALSE)$y - 1
   k      <- num.intercepts(fit)
   fitter <- quickRefit(fit, what='fitter')
   cfreq  <- cumsum(fit$freq)
-  n <- max(cfreq)
+  # if(max(cfreq) != n) stop('program logic error in ordParallel ', max(cfreq), ' ', n)
   if(missing(m)) m <- min(ceiling(n / 4), 50)
   if(n < 2 * m) stop('must have at least 2*m observations for m=', m)
   # Find first intercept with at least m observations preceeding it, and the
   # last one with at least m observations after it
-  vals <- as.numeric(names(cfreq))
+  if(! isocens) vals <- as.numeric(names(cfreq))
   lev  <- 0 : k
   low  <- min(lev[cfreq >= m])
   high <- max(lev[cfreq <= n - m])

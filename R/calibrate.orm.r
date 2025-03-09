@@ -3,13 +3,12 @@ calibrate.orm <- function(fit,
                           bw=FALSE, rule="aic",
                           type="residual", sls=.05, aics=0, force=NULL,
                           estimates=TRUE, pr=FALSE, what="observed-predicted",
-                          val.surv.args=list(method='smoothkm'),
+                          val.surv.args=list(method='smoothkm', eps=30),
                           ...)
 {
   call    <- match.call()
 
-  deb <- if(getOption('calibrate.debug', FALSE))
-    function(x) prn(x, 'calibrate.orm', head=deparse(substitute(x), width.cutoff=500)[1]) else function(...) {}
+  deb <- Fdebug(calibrate.debug)
 
   unit <- fit$units
   if(unit=="") unit <- "unit"

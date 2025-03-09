@@ -24,6 +24,5 @@ print Method for Ocens Objects
 \examples{
 Y <- Ocens(1:3, c(1, Inf, 3))
 Y
-print(Y, long=TRUE)
-print(Y, ivalues=TRUE)
+print(Y, ivalues=TRUE)  # doesn't change anything since were numeric
 }

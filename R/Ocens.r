@@ -392,10 +392,14 @@ Ocens2ord <- function(y, precision=7, maxit=10, nponly=FALSE,
 ##' @method as.data.frame Ocens
 ##' @export
 as.data.frame.Ocens <- function(x, row.names = NULL, optional = FALSE, ...) {
+  deb <- Fdebug(rmsdebug)
   nrows <- NROW(x)
+  deb(nrows)
   row.names <- if(optional) character(nrows) else as.character(1:nrows)
   value <- list(x)
+  deb(dim(value[[1]]))
   if(! optional) names(value) <- deparse(substitute(x))[[1]]
+  deb(dim(value[[1]]))
   structure(value, row.names=row.names, class='data.frame')
 }
 
@@ -481,15 +485,17 @@ Ocens2Surv <- function(Y) {
 ##' @examples
 ##' Y <- Ocens(1:3, c(1, Inf, 3))
 ##' Y
-##' print(Y, long=TRUE)
-##' print(Y, ivalues=TRUE)
+##' print(Y, ivalues=TRUE)  # doesn't change anything since were numeric
 print.Ocens <- function(x, ivalues=FALSE, digits=5, ...) {
   y   <- matrix(NA, nrow(x), ncol(x))   # to drop attributes of x
   y[] <- x
   a   <- y[, 1]
   b   <- y[, 2]
-  ia  <- is.finite(a)
-  ib  <- is.finite(b)
+  nna <- ! is.na(a + b)
+  ia  <- is.finite(a) & nna
+  ib  <- is.finite(b) & nna
+  ifa <- is.infinite(a) & nna
+  ifb <- is.infinite(b) & nna
   lev <- attr(x, 'levels')
   if(! ivalues && length(lev) ) {
     a[ia] <- lev[a[ia]]
@@ -503,8 +509,8 @@ print.Ocens <- function(x, ivalues=FALSE, digits=5, ...) {
   a <- format(a)
   b <- format(b)
   z <- a
-  z[! ia] <- paste0(b[! ia], '-')
-  z[! ib] <- paste0(a[ !ib], '+')
+  z[ifa] <- paste0(b[ifa], '-')
+  z[ifb] <- paste0(a[ifb], '+')
   z[intcens] <- paste0('[', a[intcens], ',', b[intcens], ']')
   print(z, quote=FALSE)
   invisible()
