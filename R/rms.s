@@ -28,7 +28,7 @@
 Design <- function(mf, formula=NULL, specials=NULL,
                    allow.offset=TRUE, intercept=1) {
 
-  deb <- Fdebug(rmsdebug)
+  deb <- Fdebug('rmsdebug')
   deb(llist(names(mf), formula, specials))
 
   if(length(formula)) {
@@ -603,8 +603,6 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
     }
   dat
   }
-
-  utils::globalVariables('rmsdebug')
 
 ## Handle spline and other variables with rms class
 as.data.frame.rms <- function(x, row.names = NULL, optional = FALSE, ...) {

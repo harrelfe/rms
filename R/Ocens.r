@@ -392,7 +392,7 @@ Ocens2ord <- function(y, precision=7, maxit=10, nponly=FALSE,
 ##' @method as.data.frame Ocens
 ##' @export
 as.data.frame.Ocens <- function(x, row.names = NULL, optional = FALSE, ...) {
-  deb <- Fdebug(rmsdebug)
+  deb <- Fdebug('rmsdebug')
   nrows <- NROW(x)
   deb(nrows)
   row.names <- if(optional) character(nrows) else as.character(1:nrows)
@@ -402,9 +402,6 @@ as.data.frame.Ocens <- function(x, row.names = NULL, optional = FALSE, ...) {
   deb(dim(value[[1]]))
   structure(value, row.names=row.names, class='data.frame')
 }
-
-utils::globalVariables('rmsdebug')
-
 
 ##' Subset Method for `Ocens` Objects
 ##'

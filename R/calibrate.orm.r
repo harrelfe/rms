@@ -8,7 +8,7 @@ calibrate.orm <- function(fit,
 {
   call    <- match.call()
 
-  deb <- Fdebug(calibrate.debug)
+  deb <- Fdebug('calibrate.debug')
 
   unit <- fit$units
   if(unit=="") unit <- "unit"
@@ -97,5 +97,3 @@ calibrate.orm <- function(fit,
                   class="calibrate", u=u, units=unit, n=N, d=Nevents,
                   p=length(fit$coefficients), m=m, B=B, what=what, call=call)
 }
-
-utils::globalVariables('calibrate.debug')
