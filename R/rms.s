@@ -57,7 +57,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
     rmst <- gsub('<=', '<<', rmst)
     ## Don't let == be translated to blank
     rmst <- gsub('==', '@EQ@', rmst)
-    deb(llist(class, assume.ocde, term.label))
+    deb(llist(class, assume.code, term.label))
     w <- if(assume.code == 1)
            ifelse(class == 'logical', paste0(term.label, 'TRUE'),
                   term.label)
@@ -604,6 +604,8 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
   dat
   }
 
+  utils::globalVariables('rmsdebug')
+
 ## Handle spline and other variables with rms class
 as.data.frame.rms <- function(x, row.names = NULL, optional = FALSE, ...) {
   nrows <- NROW(x)
@@ -612,3 +614,4 @@ as.data.frame.rms <- function(x, row.names = NULL, optional = FALSE, ...) {
   if(! optional) names(value) <- deparse(substitute(x))[[1]]
   structure(value, row.names=row.names, class='data.frame')
 }
+

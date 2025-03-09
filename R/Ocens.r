@@ -403,6 +403,9 @@ as.data.frame.Ocens <- function(x, row.names = NULL, optional = FALSE, ...) {
   structure(value, row.names=row.names, class='data.frame')
 }
 
+utils::globalVariables('rmsdebug')
+
+
 ##' Subset Method for `Ocens` Objects
 ##'
 ##' Subsets an `Ocens` object, preserving its special attributes.  Attributes are not updated.  In the future such updating should be implemented.

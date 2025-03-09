@@ -57,7 +57,7 @@ calibrate(fit, \dots)
                         bw=FALSE, rule="aic",
                         type="residual", sls=.05, aics=0, force=NULL,
                         estimates=TRUE, pr=FALSE, what="observed-predicted",
-                        val.surv.args=list(method='smoothkm'),
+                        val.surv.args=list(method='smoothkm', eps=30),
                         \dots)
 \method{calibrate}{psm}(fit, cmethod=c('hare', 'KM'),
   method="boot", u, m=150, pred, cuts, B=40,
