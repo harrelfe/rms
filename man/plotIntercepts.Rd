@@ -14,7 +14,7 @@ plotIntercepts(fit, dots = FALSE, logt = FALSE)
 \item{logt}{set to \code{TRUE} to use a log scale for the x-axis}
 }
 \value{
-nothing; only plots
+\code{ggplot2} object
 }
 \description{
 Plots the step function corresponding to the intercepts in a \code{orm} or \code{lrm} model.  This can be thought
