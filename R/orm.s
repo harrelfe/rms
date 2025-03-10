@@ -14,7 +14,6 @@ orm <- function(formula, data=environment(formula),
 
   nact        <- NULL
 
-  yname <- all.vars(formula)[1]
   tform <- terms(formula, data=data)
   if(! missing(data) || (
 						length(atl <- attr(tform,"term.labels")) &&
@@ -38,8 +37,10 @@ orm <- function(formula, data=environment(formula),
     atr        <- atrx$Design
     mmcolnames <- atr$mmcolnames
 
-    Y <- model.extract(X, 'response')
-    offs <- atrx$offset
+    Y     <- model.extract(X, 'response')
+    yname <- if(inherits(Y, 'Ocens')) attr(Y, 'name') else all.vars(formula)[1]
+
+    offs  <- atrx$offset
     if(!length(offs)) offs <- 0
     weights <- wt <- model.extract(X, 'weights')
     if(length(weights))

@@ -19,11 +19,11 @@ latex.lrm <-
       w <- '$$'
       
       j <- if(lev[2]=="TRUE") "" else paste("=", lev[2], sep="")
-      if(nrp==1) w <- paste(w, "\\Pr(", Y, j,
+      if(nrp==1) w <- paste(w, "P(", Y, j,
            ") = \\frac{1}{1+\\exp(-X\\beta)}", sep="")
 
       else
-        w <- paste(w,"\\Pr(", Y, 
+        w <- paste(w,"P(", Y, 
                    "\\geq j) = \\frac{1}{1+\\exp(-\\alpha_{j}-X\\beta)}",
                    sep="")
 
@@ -83,9 +83,8 @@ latex.orm <-
   
   if(missing(which) & !inline)
     {
-      Y <- paste("\\mathrm{", as.character(attr(f$terms,"formula")[2]),
-                 "}", sep="")
-      lev <- names(f$freq)
+      Y <- paste0("\\mathrm{", f$yname, "}")
+      lev <- f$yunique
       nrp <- f$non.slopes
 
       z <- '\\alpha_{y} + X\\beta'
@@ -101,7 +100,7 @@ latex.orm <-
                      
       w <- '$$'
       
-      w <- paste(w, "\\Pr(", Y, 
+      w <- paste(w, "P(", Y, 
                    "\\geq y | X) = ", dist, sep='')
 
       w <- paste(w, "\\mathrm{~~where}$$", sep="")
