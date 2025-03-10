@@ -14,7 +14,8 @@ Olinks(object, links = c("logistic", "probit", "loglog", "cloglog"), dec = 3)
 \item{dec}{number of digits to the right of the decimal place to round statistics to}
 }
 \value{
-data frame
+data frame.  The \code{R2} column is from the last adjusted \eqn{R^2} computed by \code{orm},
+which adjustes for the effective sample size and the number of betas.
 }
 \description{
 Likehood-Based Statistics for Other Links for orm Fits

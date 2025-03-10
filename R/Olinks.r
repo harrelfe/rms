@@ -4,7 +4,8 @@
 #' @param links a vector of links to consider other than the one used to get `object`
 #' @param dec number of digits to the right of the decimal place to round statistics to
 #'
-#' @returns data frame
+#' @returns data frame.  The `R2` column is from the last adjusted \eqn{R^2} computed by `orm`,
+#' which adjustes for the effective sample size and the number of betas.
 #' @export
 #' @md
 #' @author Frank Harrell
@@ -23,19 +24,18 @@ Olinks <- function(object, links=c('logistic', 'probit', 'loglog', 'cloglog'), d
   fitter <- quickRefit(object, storevals=TRUE, compstats=TRUE, what='fitter')
   R      <- NULL
   for(fm in links) {
-    f   <- if(fm ==fam) object else fitter(family=fm)
-    dev <- deviance(f)
-    st  <- f$stats
-    r2  <- st[grep('^R2', names(st))]
+    f    <- if(fm ==fam) object else fitter(family=fm)
+    dev  <- deviance(f)
+    st   <- f$stats
+    r2   <- st[grep('^R2', names(st))]
     last <- length(r2)
-    r2  <- r2[last]
-    aic <- dev[2] + 2 * p
-    d   <- data.frame(link=fm, null.deviance=dev[1], deviance=dev[2],
-                      AIC=aic, LR=st['Model L.R.'], R2=r2)
+    r2   <- unname(r2[last])
+    aic  <- dev[2] + 2 * p
+    d    <- data.frame(link=fm, null.deviance=dev[1], deviance=dev[2],
+                       AIC=aic, LR=st['Model L.R.'], R2=r2)
     R   <- rbind(R, d)
   }
   row.names(R) <- NULL
-  names(R)[6]  <- names(r2)
   for(i in 2 : 6) R[[i]] <- round(R[[i]], dec)
   R
 }
