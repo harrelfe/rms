@@ -8,6 +8,7 @@ intCalibration(
   fit,
   ycuts,
   m,
+  x,
   onlydata = FALSE,
   eps = 25,
   bass = 9,
@@ -27,13 +28,15 @@ intCalibration(
 
 \item{m}{used when \code{ycuts} is not given.  The lowest cutoff is chosen as the first Y value having at meast \code{m} uncensored observations to its left, and the highest cutoff is chosen so that there are at least \code{m} uncensored observations to the right of it.  Cutoffs are equally spaced between these values in terms of number of uncensored observations.  If omitted, \code{m} is set to the minimum of 50 and one quarter of the uncensored sample size.}
 
+\item{x}{a variable for which calibration-in-the-small is desired, instead of plotting predicted vs. observed probabilities.  \code{x} will typically be chosen by virtue of being a strong predictor (such that lack of fit will matter more) but doesn't have to be in the model.}
+
 \item{onlydata}{set to \code{TRUE} to return a data frame suitable for plotting instead of actually plotting}
 
 \item{eps, bass, tsmooth, hare}{see \code{\link[Hmisc:movStats]{Hmisc::movStats()}}}
 
 \item{dec}{number of digits to the right of the decimal place to which to round computed \code{ycuts}}
 
-\item{xlab}{x-axis label with default constructed from the Y-variable name in the model fit}
+\item{xlab}{x-axis label with default constructed from the Y-variable name in the model fit (y-axis label when \code{x} is specified)}
 
 \item{ylab}{y-axis label}
 
@@ -48,15 +51,18 @@ intCalibration(
 For all the observations used a model fit, computes the estimated probability that Y is greater than each of a number of cutoffs, and compares this to smoothed estimated probabilities as a function of predicted probabilities, to obtain internal model calibration plots with multiple cutpoints.  When Y is uncensored these are smoothed moving empirical cumulative distribution function estimates, and when Y has censored observations these are smoothing moving Kaplan-Meier estimates.  \code{\link[Hmisc:movStats]{Hmisc::movStats()}} is used to do the moving overlapping window calculations.  When \code{hare=TRUE}, adaptive linear spline hazard regression estimates are also made, using \code{\link[polspline:hare]{polspline::hare()}}.
 }
 \details{
-The function also prints information on calibration-in-the-large, i.e., the mean predicted probability of being beyond each cutpoint vs. the overall proportion of observations above that cutpoint.
+These plots are plots of calibration-in-the-small.  Alternate calibration-in-the-small plots may be obtained by specifying a predictor variable \code{x} against which to plot both predicted and observed probabilties as a function of \code{x}.  This is the only place in the \code{rms} package where the "total effect" of a predictor is estimated instead of a partial effect.  When \code{x} varies and moving overlapping windows of predicted and observed exceedance probabilities are estimated, if \code{x} is collinear with other predictors, they will "come along for the ride".
+
+The function also prints information on calibration-in-the-large, i.e., the mean predicted probability of being beyond each cutpoint vs. the overall proportion of observations above that cutpoint.  This is when \code{x} is not given.
 }
 \examples{
 \dontrun{
 getHdata(nhgh)
-f <- orm(gh ~ rcs(age, 4) + ran, data=nhgh, family='loglog', x=TRUE, y=TRUE)
+f <- orm(gh ~ rcs(age, 4), data=nhgh, family='loglog', x=TRUE, y=TRUE)
 intCalibration(f, ycuts=c(5, 5.5, 6, 6.5))
 f <- update(f, family='cloglog')
 intCalibration(f, ycuts=c(5, 5.5, 6, 6.5))
+intCalibration(f, ycuts=c(5, 6, 7), x=nhgh$age)
 }
 }
 \author{
