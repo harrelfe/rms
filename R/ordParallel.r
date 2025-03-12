@@ -6,6 +6,11 @@
 #' When censoring is present, whether or not Y is
 #' greater than or equal to the current cutoff is not always possible, and such
 #' observations are ignored.
+#' 
+#' Whenver a cut gives rise to extremely high standard error for a regression coefficient,
+#' the confidence limits are set to `NA`.  Unreasonable standard errors are determined from
+#' the confidence interval width exceeding 20 times the standard error at the middle Y cut.
+#' 
 #' @param fit a fit object from `orm` with `x=TRUE, y=TRUE` in effect
 #' @param which specifies which columns of the design matrix are assessed.  By default, all columns are analyzed.
 #' @param terms set to `TRUE` to collapse all components of each predictor into a single column weighted by the original regression coefficients but scaled according to `scale`.  This means that each predictor will have a regression coefficient of 1.0 when refitting the original model on this transformed X matrix, before any further scaling.  Plots will then show the relative effects over time, i.e., the slope of these combined columns over cuts on Y, so that deviations indicate non-parallelism.  But since in this case only relative effects are shown, a weak predictor may be interpreted as having an exagerrated y-dependency if `scale='none'`.  `terms` detauls to `TRUE` when `onlydata=TRUE`.
@@ -102,7 +107,7 @@ ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75, onlydata=FALS
   p     <- length(co)
   if(missing(which)) which <- 1 : p
   co    <- co[which]
-  O     <- data.frame(x=names(co), beta=co)
+  O     <- data.frame(x=names(co), beta=co)  # overall estimates
   if(conf.int > 0) {
     v  <- vcov(fit, intercepts='none')
     s  <- sqrt(diag(v))[which]
@@ -113,6 +118,7 @@ ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75, onlydata=FALS
   D   <- list()
   obs <- 1 : n
   ic  <- 0
+  mid <- ks[which.min(abs(ks - median(ks)))]   # cut closest to middle cut
 
   for(ct in ks) {
     y <- if(isocens) geqOcens(YO$a, YO$b, YO$ctype, ct) else Y >= ct
@@ -129,12 +135,27 @@ ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75, onlydata=FALS
       s <- sqrt(diag(v))[which]
       w <- data.frame(cut=ct, x=names(co), beta=co)
       if(conf.int > 0) {
+        if(ct == mid) secm <- structure(s, names=names(co))
         w$lower <- co - zcrit * s
         w$upper <- co + zcrit * s
         }
       R <- rbind(R, w)
     }
   }
+
+  # If any standard errors blew up, set confidence limits to NA for those
+  # Test: confidence interval width > 20 times the standard error at the middle cut
+  if(conf.int > 0) {
+    for(xnam in names(co)) {
+      i <- which(R$x == xnam)
+      j <- R[i, 'upper'] - R[i, 'lower'] > 20 * secm[xnam]
+      if(any(j)) {
+        R[i[j], 'upper'] <- NA
+        R[i[j], 'lower'] <- NA
+      } 
+    }
+  }
+
   if(onlydata) {
     D <- do.call(rbind, D)
     return(D)

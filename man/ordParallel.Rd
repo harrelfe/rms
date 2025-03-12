@@ -46,6 +46,11 @@ When censoring is present, whether or not Y is
 greater than or equal to the current cutoff is not always possible, and such
 observations are ignored.
 }
+\details{
+Whenver a cut gives rise to extremely high standard error for a regression coefficient,
+the confidence limits are set to \code{NA}.  Unreasonable standard errors are determined from
+the confidence interval width exceeding 20 times the standard error at the middle Y cut.
+}
 \examples{
 \dontrun{
 f <- orm(..., x=TRUE, y=TRUE)
