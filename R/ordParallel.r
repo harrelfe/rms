@@ -9,13 +9,14 @@
 #' 
 #' Whenver a cut gives rise to extremely high standard error for a regression coefficient,
 #' the confidence limits are set to `NA`.  Unreasonable standard errors are determined from
-#' the confidence interval width exceeding 20 times the standard error at the middle Y cut.
+#' the confidence interval width exceeding 7 times the standard error at the middle Y cut.
 #' 
 #' @param fit a fit object from `orm` with `x=TRUE, y=TRUE` in effect
 #' @param which specifies which columns of the design matrix are assessed.  By default, all columns are analyzed.
 #' @param terms set to `TRUE` to collapse all components of each predictor into a single column weighted by the original regression coefficients but scaled according to `scale`.  This means that each predictor will have a regression coefficient of 1.0 when refitting the original model on this transformed X matrix, before any further scaling.  Plots will then show the relative effects over time, i.e., the slope of these combined columns over cuts on Y, so that deviations indicate non-parallelism.  But since in this case only relative effects are shown, a weak predictor may be interpreted as having an exagerrated y-dependency if `scale='none'`.  `terms` detauls to `TRUE` when `onlydata=TRUE`.
 #' @param m the lowest cutoff is chosen as the first Y value having at meast `m` observations to its left, and the highest cutoff is chosen so that there are at least `m` observations tot he right of it.  Cutoffs are equally spaced between these values.  If omitted, `m` is set to the minimum of 50 and one quarter of the sample size.
 #' @param maxcuts the maximum number of cutoffs analyzed
+#' @param lp plot the effect of the linear predictor across cutpoints instead of analyzing individual predictors
 #' @param onlydata set to `TRUE` to return a data frame suitable for modeling effects of cuts, instead of constructing a graph.  The returned data frame has variables `Ycut, Yge_cut, obs`, and the original names of the predictors.  `Ycut` has the cutpoint on the original scale.  `Yge_cut` is `TRUE/FALSE` dependent on whether the Y variable is greater than or equal to `Ycut`, with `NA` if censoring prevented this determination.  The `obs` variable is useful for passing as the `cluster` argument to [robcov()] to account for the high correlations in regression coefficients across cuts.  See the example which computes Wald tests for parallelism where the `Ycut` dependence involves a spline function.  But since `terms` was used, each predictor is reduced to a single degree of freedom.
 #' @param scale applies to `terms=TRUE`; set to `'none'` to leave the predictor terms scaled by regression coefficient so the coefficient of each term in the overall fit is 1.0.  The default is to scale terms by the interquartile-range (Gini's mean difference if IQR is zero) of the term.  This prevents changes in weak predictors over different cutoffs from being impressive.
 #' @param conf.int confidence level for computing Wald confidence intervals for regression coefficients.  Set to 0 to suppress confidence bands.
@@ -54,7 +55,8 @@
 #' ggplot(z, aes(x=Ycut, y=Contrast)) + geom_line() +
 #'   geom_ribbon(aes(ymin=Lower, ymax=Upper), alpha=0.2)
 #' }
-ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75, onlydata=FALSE, 
+ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75, 
+                        lp=FALSE, onlydata=FALSE, 
                         scale=c('iqr', 'none'),
                         conf.int=0.95, alpha=0.15) {
 
@@ -62,7 +64,7 @@ ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75, onlydata=FALS
   Y <- fit[['y']]
   if(! length(Y)) stop('requires y=TRUE specified to orm')
   X <- fit[['x']]
-  if(! length(X)) stop('requires x=TRUE specified to orm')
+  if(! lp && ! length(X)) stop('requires x=TRUE specified to orm')
   n       <- NROW(Y)
   isocens <- NCOL(Y) == 2
   if(isocens) {
@@ -88,6 +90,39 @@ ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75, onlydata=FALS
 
   zcrit <- qnorm((conf.int + 1) / 2)
   ylab <- expression(beta)
+
+  if(lp) {
+    X <- fit$linear.predictors
+    if(! length(X)) stop('fit does not have linear.predictors')
+    ylab <- 'Relative Coefficient'
+    R   <- NULL
+    for(ct in ks) {
+      y <- if(isocens) geqOcens(YO$a, YO$b, YO$ctype, ct) else Y >= ct
+      j <- ! is.na(y)
+      f <- fitter(X, y, subset=j)
+      co <- coef(f)[-1]
+      v <- vcov(f, intercepts='none')
+      s <- sqrt(diag(v))[which]
+      w <- data.frame(cut=ct, beta=co)
+      if(conf.int > 0) {
+        w$lower <- co - zcrit * s
+        w$upper <- co + zcrit * s
+        }
+      R <- rbind(R, w)
+    }
+    pr  <- pretty(vals[ks + 1], n=20)
+    i   <- approx(vals, 0 : k, xout=pr, rule=2)$y
+    ig  <- rmClose(i, minfrac=0.085 / 2)
+    pr  <- pr[i %in% ig]
+    g <- ggplot(R, aes(x=.data$cut, y=.data$beta)) + geom_line(alpha=0.35) + geom_smooth() +
+           scale_x_continuous(breaks=ig, labels=format(pr)) +
+           xlab(fit$yplabel) + ylab(ylab) +
+           labs(caption=paste(length(ks), 'cuts,', m, 'observations beyond outer cuts'),
+                subtitle=paste(fit$family, 'family'))
+    if(conf.int > 0) g <- g + geom_ribbon(aes(ymin=.data$lower, ymax=.data$upper), alpha=alpha)
+    return(g)
+  }
+
   if(terms) {
     X    <- predict(fit, type='terms')
     ylab <- 'Relative Coefficient'
@@ -144,11 +179,11 @@ ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75, onlydata=FALS
   }
 
   # If any standard errors blew up, set confidence limits to NA for those
-  # Test: confidence interval width > 20 times the standard error at the middle cut
-  if(conf.int > 0) {
+  # Test: confidence interval width > 7 times the standard error at the middle cut
+  if(! onlydata && conf.int > 0) {
     for(xnam in names(co)) {
       i <- which(R$x == xnam)
-      j <- R[i, 'upper'] - R[i, 'lower'] > 20 * secm[xnam]
+      j <- R[i, 'upper'] - R[i, 'lower'] > 7 * secm[xnam]
       if(any(j)) {
         R[i[j], 'upper'] <- NA
         R[i[j], 'lower'] <- NA

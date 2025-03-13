@@ -10,6 +10,7 @@ ordParallel(
   terms = onlydata,
   m,
   maxcuts = 75,
+  lp = FALSE,
   onlydata = FALSE,
   scale = c("iqr", "none"),
   conf.int = 0.95,
@@ -26,6 +27,8 @@ ordParallel(
 \item{m}{the lowest cutoff is chosen as the first Y value having at meast \code{m} observations to its left, and the highest cutoff is chosen so that there are at least \code{m} observations tot he right of it.  Cutoffs are equally spaced between these values.  If omitted, \code{m} is set to the minimum of 50 and one quarter of the sample size.}
 
 \item{maxcuts}{the maximum number of cutoffs analyzed}
+
+\item{lp}{plot the effect of the linear predictor across cutpoints instead of analyzing individual predictors}
 
 \item{onlydata}{set to \code{TRUE} to return a data frame suitable for modeling effects of cuts, instead of constructing a graph.  The returned data frame has variables \verb{Ycut, Yge_cut, obs}, and the original names of the predictors.  \code{Ycut} has the cutpoint on the original scale.  \code{Yge_cut} is \code{TRUE/FALSE} dependent on whether the Y variable is greater than or equal to \code{Ycut}, with \code{NA} if censoring prevented this determination.  The \code{obs} variable is useful for passing as the \code{cluster} argument to \code{\link[=robcov]{robcov()}} to account for the high correlations in regression coefficients across cuts.  See the example which computes Wald tests for parallelism where the \code{Ycut} dependence involves a spline function.  But since \code{terms} was used, each predictor is reduced to a single degree of freedom.}
 
@@ -49,7 +52,7 @@ observations are ignored.
 \details{
 Whenver a cut gives rise to extremely high standard error for a regression coefficient,
 the confidence limits are set to \code{NA}.  Unreasonable standard errors are determined from
-the confidence interval width exceeding 20 times the standard error at the middle Y cut.
+the confidence interval width exceeding 7 times the standard error at the middle Y cut.
 }
 \examples{
 \dontrun{
