@@ -1,4 +1,4 @@
-Changes in version 7.1-0 (2025-03-12)
+Changes in version 8.0-0 (2025-03-16)
    * orm, orm.fit: implemented left, right, and interval censoring; added Dxy to orm.fit
    * Ocens: changed to use -Inf, Inf as limits for left or right censored observations, converted to using Turnbull intervals computed by the icenReg package, and added two interval consolidation procedures using icenReg to prevent zero probabilities in likelihood calculations with `orm.fit`
    * contrast.rms: fixed bug regarding vcov for simultaneous intervals (thanks: Antonio Eleuteri)
@@ -22,6 +22,7 @@ Changes in version 7.1-0 (2025-03-12)
    * predab.resample: allow for Ocens objects for y
    * Olinks: new function to compute deviance statistics for links other than the one used in the given model
    * intCalibration: new function for checking internal calibration of model fits
+   * Punits: new internal function for easy preparation of units of measurement strings for plotting
 
 Changes in version 7.0-0 (2025-01-15)
    * orm.fit: complete re-write making use of ultra-compact sparse represention of pure intercept part of Hessian, and splitting returned information matrix into 3 submatrices

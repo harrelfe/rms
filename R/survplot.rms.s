@@ -88,7 +88,7 @@ survplot.rms <-
   
   labelc <- is.list(label.curves) || label.curves
   
-  units <- fit$units
+  units <- Punits(fit$units, adds=FALSE)
   if(missing(ylab)) {
     if(loglog) ylab <- "log(-log Survival Probability)"
     else if(use.fun) ylab <- ""
@@ -97,7 +97,7 @@ survplot.rms <-
   }
   if(missing(xlab)) {
     if(logt) xlab <- paste("log Survival Time in ", units, "s", sep="")
-    else xlab <- ifelse(length(units) && units != '', upFirst(units), '')
+    else xlab <- upFirst(units)
   }
   
   maxtime <- if(ormf) fit$yrange[2] else fit$maxtime

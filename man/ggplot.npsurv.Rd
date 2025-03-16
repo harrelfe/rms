@@ -48,7 +48,7 @@
 
 \item{facet}{when strata are present, set to \code{TRUE} to facet them rather than using colors on one panel}
 
-\item{npretty}{the number of major tick mark labels to be constructed by \code{\link[scales:breaks_pretty]{scales::breaks_pretty()}}}
+\item{npretty}{the number of major tick mark labels to be constructed by \code{\link[scales:breaks_pretty]{scales::breaks_pretty()}} or \code{\link[=pretty]{pretty()}}.  For transformed scales, twice this number is used.}
 
 \item{onlydata}{set to \code{TRUE} to return the data frame to be plotted, and no plot}
 

@@ -134,8 +134,7 @@ plot.val.survh <- function(x, lim, xlab, ylab,
                            scat1d.opts=list(nhistSpike=200), ...)
   {
     if(missing(lim)) lim <- range(c(x$pseq, x$actualseq), na.rm=TRUE)
-    uni <- x$units
-    if(! length(uni) || uni == '') uni <- 'unit'
+    uni <- Punits(x$units, adds=FALSE, default='unit')
     if(x$u != 1) uni <- paste0(uni, 's')
     lab <- paste('Probability of Surviving ', format(x$u), ' ', uni,
                  sep='')

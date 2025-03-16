@@ -71,8 +71,7 @@ survplotp.npsurv <-
     
     
     fit.orig <- fit
-    units <- fit$units
-    if(!length(units)) units <- "Day"
+    units <- Punits(fit$units, upfirst=TRUE, adds=FALSE, default='Day')
     maxtime <- fit$maxtime
     if(! length(maxtime)) maxtime <- max(fit$time)
     mintime <- min(fit$time, 0)
@@ -104,8 +103,7 @@ survplotp.npsurv <-
                      loglog   = 'log(-log Survival Probability)',
                      other    = '')
 
-    un <- fit$units
-    if(un != '') un <- paste0(un, 's')
+    un <- Punits(fit$units, adds=TRUE)
     if(missing(xlab))
       xlab <- if(logt) paste0("log Follow-up Time in ", un)
               else 

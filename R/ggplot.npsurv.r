@@ -12,7 +12,7 @@
 #' @param levels.only set to `FALSE` to keep the original strata name in the levels
 #' @param alpha transparency for confidence bands
 #' @param facet when strata are present, set to `TRUE` to facet them rather than using colors on one panel
-#' @param npretty the number of major tick mark labels to be constructed by [scales::breaks_pretty()]
+#' @param npretty the number of major tick mark labels to be constructed by [scales::breaks_pretty()] or [pretty()].  For transformed scales, twice this number is used.
 #' @param onlydata set to `TRUE` to return the data frame to be plotted, and no plot
 #' @param ... ignored
 #' @param environment unused
@@ -42,15 +42,12 @@ ggplot.npsurv <-
   conf     <- match.arg(conf)
   conf     <- conf == 'bands' && length(fit$lower)
 
-  units <- fit$units
-  if(! length(units)) units <- ''
-  units <- sub('s$', '', units)
-  if(units != '') units <- paste0(units, 's')
+  units <- Punits(fit$units)
 
   if(missing(xlab))
     xlab <- if(length(fit$time.label) && fit$time.label != '')
               labelPlotmath(fit$time.label, units)
-            else if(units != '') upFirst(paste0(units, 's'))
+            else if(units != '') upFirst(units)
             else 'Time'
 
   slev  <- names(fit$strata)
@@ -125,6 +122,19 @@ ggplot.npsurv <-
     xbreaks <- xbreaks[lxb %in% lxbr]
   }
 
+  if(trans == 'identity') ybreaks <- breaks_pretty(n = npretty)
+  else {
+    ybreaks <- pretty(d$surv, 2 * npretty)
+    ybreaks <- sort(unique(c(ybreaks, seq(0.9, 0.99, by=0.01))))
+    ybreaks <- ybreaks[ybreaks > 0 & ybreaks < 1]
+    tyb <- switch(trans,
+                  logit  = qlogis(ybreaks),
+                  probit = qnorm(ybreaks),
+                  loglog = -log(-log(ybreaks)) )
+    tybr <- rmClose(tyb, 0.04)
+    ybreaks <- ybreaks[tyb %in% tybr]
+  }
+
   w <- list(if(ns > 1 && ! facet)
               geom_step(aes(color=.data$gr)) else geom_step(),
             if(conf && ns > 1 && ! facet)
@@ -133,11 +143,11 @@ ggplot.npsurv <-
               geom_stepconfint(aes(ymin=.data$lower, ymax=.data$upper), alpha=alpha),
             scale_x_continuous(transform=xtrans, breaks=xbreaks),  # pb),
             if(trans == 'identity')
-              scale_y_continuous(breaks=pb),
+              scale_y_continuous(breaks=ybreaks),
             if(trans %in% c('logit', 'probit'))
-              scale_y_continuous(transform=trans, breaks=pb),
+              scale_y_continuous(transform=trans, breaks=ybreaks),
             if(trans == 'loglog')
-              scale_y_continuous(transform=loglog()),
+              scale_y_continuous(transform=loglog(), breaks=ybreaks),
             if(facet && ns > 1)
               facet_wrap(~ .data$gr),
             if(! facet && ns > 1)

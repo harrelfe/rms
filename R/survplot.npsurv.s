@@ -23,8 +23,7 @@ survplot.npsurv <-
     else ylim
     
     fit.orig <- fit
-    units <- fit$units
-    if(!length(units)) units <- "Day"
+    units   <- Punits(fit$units, adds=FALSE, upfirst=TRUE, default='day')
     maxtime <- fit$maxtime
     if(! length(maxtime)) maxtime <- max(fit$time)
     mintime <- min(fit$time, 0)
@@ -354,8 +353,7 @@ survdiffplot <-
   opar <- par(c('xpd', 'mar'))
   on.exit(par(opar))
   
-  units <- fit$units
-  if(!length(units)) units <- "Day"
+  units <- Punits(fit$units, adds=FALSE, upfirst=TRUE, default='Day')
   maxtime <- fit$maxtime
   if(!length(maxtime)) maxtime <- max(fit$time)
   mintime <- min(fit$time, 0)
