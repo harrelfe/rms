@@ -17,7 +17,9 @@
 #' @md
 #'
 #' @examples
+#' \dontrun{
 #' Punits('Years')
+#' }
 Punits <- function(u, lower=TRUE, adds=TRUE, upfirst=FALSE, default='') {
   if((! length(u) || u == '') && default != '') u <- default
   if(! length(u)) return('')

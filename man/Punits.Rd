@@ -28,7 +28,9 @@ the string is changed to lower case, \code{"s"} is added, and the first characte
 changed to upper case.
 }
 \examples{
+\dontrun{
 Punits('Years')
+}
 }
 \seealso{
 \code{\link[Hmisc:units]{Hmisc::units()}}

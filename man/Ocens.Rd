@@ -19,6 +19,8 @@ Combines two variables \verb{a, b} into a 2-column matrix, preserving \code{labe
 }
 \details{
 Left censored values will have \code{-Inf} for \code{a} and right-censored values will have \code{Inf} for \code{b}.  Interval-censored observations will have \code{b} > \code{a} and both finite.  For factor or character variables it only makes sense to have interval censoring.
+
+If there is no censoring, \code{a} is returned as an ordinary vector, with \code{label} and \code{units} attributes.
 }
 \author{
 Frank Harrell

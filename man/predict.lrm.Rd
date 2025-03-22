@@ -19,6 +19,10 @@ with nonzero \code{conf.int}, an attribute named \code{limits} is attached
 	to the estimated mean.  This is a list with elements \code{lower} and
 	\code{upper} containing normal approximations for confidence limits
 	using the delta method.
+
+For \code{orm} fits on censored data, the function created by \code{Mean.orm}
+has an argument \code{tmax} which specifies the restriction time for mean
+restricted survival time.
 }
 \usage{
 \method{predict}{lrm}(object, \dots, type=c("lp", "fitted",

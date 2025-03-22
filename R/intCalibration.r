@@ -74,7 +74,7 @@ intCalibration <-
     if(xdisc) hare <- FALSE
     R <- NULL
     for(y in ycuts) {
-      sy    <- subset(s, time == y)
+      sy    <- s[s$time == y,, drop=FALSE]
       spred <- movStats(surv ~ x, data=sy, melt=TRUE, discrete=xdisc,
                         stat=function(x) list(Mean = mean(x)),
                         tunits=fit$units, tsmooth=tsmooth, hare=hare,
@@ -88,7 +88,7 @@ intCalibration <-
       sobs$Type <- if(xdisc) 'Observed' else
         ifelse(sobs$Type == 'Moving', 'Observed (moving K-M)', 'Observed (HARE)')
       sobs$surv <- unclass(1 - sobs$incidence)
-      set(sobs, j='incidence', value=NULL)
+      data.table::set(sobs, j='incidence', value=NULL)
       R <- rbind(R, spred, sobs)
     }
     i <- R$surv >= 0 & R$surv <= 1
@@ -110,7 +110,7 @@ intCalibration <-
 
   R <- NULL
   for(y in ycuts) {
-    sy <- subset(s, time == y)
+    sy <- s[s$time == y,,drop=FALSE]
     km <- movStats(Y ~ surv, times=y, data=sy, melt=TRUE,
                    tunits=fit$units, tsmooth=tsmooth, hare=hare,
                    eps=eps, bass=bass, ...)

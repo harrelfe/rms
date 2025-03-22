@@ -4,6 +4,8 @@
 ##'
 ##' Left censored values will have `-Inf` for `a` and right-censored values will have `Inf` for `b`.  Interval-censored observations will have `b` > `a` and both finite.  For factor or character variables it only makes sense to have interval censoring.
 ##'
+##' If there is no censoring, `a` is returned as an ordinary vector, with `label` and `units` attributes.
+##'
 ##' @param a variable for first column
 ##' @param b variable for second column
 ##' @return a numeric matrix of class `Ocens`
@@ -16,6 +18,9 @@ Ocens <- function(a, b=a) {
   # If the arguments to Ocens were valid R names, use them
   name  <- if(aname == make.names(aname)) aname else if(bname == make.names(bname)) bname else ''
 
+  i     <- ! is.na(a)
+  if(any((! is.na(b)) != i)) stop('a and b must be NA on the same observations')
+
   ia    <- if(is.numeric(a)) is.finite(a) else ! is.na(a) # is.finite counts NAs also as FALSE
   ib    <- if(is.numeric(b)) is.finite(b) else ! is.na(b)
   uni   <- units(a)
@@ -26,6 +31,8 @@ Ocens <- function(a, b=a) {
   if(is.character(a) + is.character(b) == 1) stop('neither or both of a and b should be character')
   if(is.factor(a) + is.factor(b) == 1)       stop('neither or both of a and b should be factor')
   if(is.numeric(a) + is.numeric(b) == 1)     stop('neither or both of a and b should be numeric')
+
+  if(all(a[i] == b[i])) return(structure(a, label=lab, units=uni))
 
   lev <- NULL
   if(! is.numeric(a)) {

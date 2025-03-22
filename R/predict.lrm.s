@@ -75,10 +75,10 @@ Mean.lrm <- function(object, codes=FALSE, ...)
     if(any(is.na(vals)))
       stop('values of response levels must be numeric for codes=FALSE')
   }
-  f <- function(lp=numeric(0), X=numeric(0),
+  f <- function(lp=numeric(0), X=numeric(0), tmax=NULL,
                 intercepts=numeric(0), slopes=numeric(0),
                 info=numeric(0), values=numeric(0),
-                interceptRef=integer(0), famfunctions=NULL, conf.int=0)
+                interceptRef=integer(0), Ncens, famfunctions=NULL, conf.int=0)
   {
     ns <- length(intercepts)
     lp <- if(length(lp)) lp - intercepts[interceptRef] else matxv(X, slopes) 
@@ -86,6 +86,17 @@ Mean.lrm <- function(object, codes=FALSE, ...)
     cumprob <- eval(famfunctions[1])
     deriv   <- eval(famfunctions[5])
     P  <- matrix(cumprob(xb), ncol = ns)
+
+    if(! length(tmax)) {
+      if(length(Ncens) && sum(Ncens) > 0 && min(1 - P) > 1e-3)
+        warning('Computing the mean when the lowest P(Y < y) is ',
+                format(min(1 - P)), '\nand tmax omitted will result in only a lower limit to the mean')
+    } else {
+      if(tmax > max(values))
+        stop('tmax=', tmax, ' > maximum observed Y=', format(max(values)))
+      values[values > tmax] <- tmax
+    }
+
     P  <- cbind(1, P) - cbind(P, 0)
     m  <- drop(P %*% values)
     names(m) <- names(lp)
@@ -94,7 +105,7 @@ Mean.lrm <- function(object, codes=FALSE, ...)
       lb <- matrix(sapply(intercepts, '+', lp), ncol = ns)
       dmean.dalpha <- t(apply(deriv(lb),
                               1, FUN=function(x)
-                                x * (values[2:length(values)] - values[1:ns])))
+                                x * (values[2 : length(values)] - values[1 : ns])))
       dmean.dbeta  <- apply(dmean.dalpha, 1, sum) * X
       dmean.dtheta <- cbind(dmean.dalpha, dmean.dbeta)
       if(getOption('rmsdebug', FALSE)) {prn(infoMxop(info, np=TRUE)); prn(dim(dmean.dtheta))}
@@ -114,11 +125,13 @@ Mean.lrm <- function(object, codes=FALSE, ...)
     }
   ir <- object$interceptRef
   if(!length(ir)) ir <- 1
-  formals(f) <- list(lp=numeric(0), X=numeric(0), 
+  # In the following ns is the original number of intercepts
+  formals(f) <- list(lp=numeric(0), X=numeric(0), tmax=NULL,
                      intercepts=object$coef[1 : ns],
                      slopes=object$coef[- (1 : ns)],
                      info=object$info.matrix,   
-                     values=vals, interceptRef=ir, famfunctions=famf,
+                     values=vals, interceptRef=ir, Ncens=object$Ncens1,
+                     famfunctions=famf,
                      conf.int=0)
   f 
 }
