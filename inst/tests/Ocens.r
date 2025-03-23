@@ -1,7 +1,7 @@
 require(rms)
 options(rmsdebug=TRUE)
 y1 <- c(1, 3, 5, 7, NA)
-y2 <- c(1, Inf, 7, 7, 9)
+y2 <- c(1, Inf, 7, 7, NA)
 label(y1) <- 'Time to event'
 units(y1) <- 'day'
 y <- Ocens(y1, y2)
@@ -33,3 +33,4 @@ class(d2$y)
 d2 <- modelData(d2, formula=y ~ x)
 class(d2$y)
 dim(d2$y)
+

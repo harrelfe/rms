@@ -105,7 +105,7 @@ orm.fit <- function(x=NULL, y,
   } else {
   ylabel    <- label(y)
   uni       <- units(y)
-  orange    <- range(y)
+  orange    <- if(is.numeric(y)) range(y)
   w         <- recode2integer(y, precision=y.precision)
   y         <- w$y - 1
   y2        <- y

@@ -14,9 +14,9 @@ Ocens2ord(
 )
 }
 \arguments{
-\item{y}{an `Ocens` object, which is a 2-column numeric matrix}
+\item{y}{an `Ocens` object, which is a 2-column numeric matrix, or a regular vector representing a `factor`, numeric, integer, or alphabetically ordered character strings.  Censoring points have values of `Inf` or `-Inf`.}
 
-\item{precision}{when `a` and `b` are numeric, values may need to be rounded to avoid unpredictable behavior with \code{unique()} with floating-point numbers. Default is to 7 decimal places.}
+\item{precision}{when `y` columns are numeric, values may need to be rounded to avoid unpredictable behavior with \code{unique()} with floating-point numbers. Default is to 7 decimal places.}
 
 \item{maxit}{maximum number of iterations allowed in the interval consolidation process when `cons='data'`}
 

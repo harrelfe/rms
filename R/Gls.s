@@ -226,7 +226,7 @@ Gls <-
                                                      class(Resid) <- setdiff(cr, 'labelled')
     }
     
-    apVar <- if (controlvals$apVar && FALSE)
+    apVar <- if (controlvals$apVar)    # && FALSE removed 2025-03-23
                glsApVar(glsSt, glsFit$sigma,
                         .relStep  = controlvals[[".relStep"]],  
                         minAbsPar = controlvals[["minAbsParApVar"]],

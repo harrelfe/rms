@@ -1,4 +1,5 @@
 require(rms)
+require(ggplot2)
 getHdata(nhgh)
 set.seed(1)
 nhgh$ran <- runif(nrow(nhgh))
