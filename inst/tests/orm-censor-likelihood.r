@@ -35,27 +35,45 @@ rfort <- function(theta, k, y, y2, x=numeric(0), intcens=FALSE, what=3L) {
   info <- infoMxop(w[c('a', 'b', 'ab')])
   z    <- qr(info)
   red  <- z$pivot[-(1 : z$rank)]
+  diagzero <- Matrix::diag(info) == 0e0
+  if(! identical(which(diagzero), red))
+    cat('Redundant rows without zero diagonal\n')
   list(grad=w$grad, info=info, redundant=red)
 }
 
-ell <- function(y, y2) {
+ell <- function(y, y2, long=FALSE) {
+  o <- Ocens2ord(Ocens(y, y2))
+  k <- length(attr(o, 'levels')) - 1
+  if(long) {
+    cat('Ocens2ord levels:\n')
+    print(attr(o, 'npsurv')$time)
+  }
+
   # Find distinct points whether censored or not
-  u <- unique(sort(c(y[is.finite(y)], y2[is.finite(y2)])))
-  k <- length(u) - 1
-  # Map y and y2 to 0 : k preserving censoring
+  # u <- unique(sort(c(y[is.finite(y)], y2[is.finite(y2)])))
+  u <- unique(sort(c(y, y2)))
+  prn(u)
+  k2 <- length(u) - 1L
+  # Map y and y2 to 0 : k2 preserving censoring
   a <- match(y, u) - 1
   a[is.na(a)] <- -1
   b <- match(y2, u) - 1
-  b[is.na(b)] <- k + 1
+  b[is.na(b)] <- k2 + 1
   storage.mode(a) <- 'integer'
   storage.mode(b) <- 'integer'
-  cat('k=', k, '\n')
 
-  init <- qlogis((k : 1) / (k + 1))
-  r <- rfort(init, k, a, b)
+  init <- qlogis((k2 : 1) / (k2 + 1))
+  r <- rfort(init, k2, a, b)
+  print(r)
   red <- a %in% r$redundant | b %in% r$redundant
-  print(data.frame(a, b, redundant=ifelse(red, '*', '')))
-  r
+  a[a == -1] <- -Inf
+  b[b == k2 + 1] <- Inf
+  prn(k2);prn(r$redundant)
+  cat('k=', k, '', k2 - length(r$redundant), '\n')
+
+  w <- data.frame(y, y2, A=o[, 1] - 1, B=o[, 2] - 1, a, b,
+                  redundant=ifelse(red, '*', ''))
+  w
 }
 
 # Censoring beyond uncensored values
@@ -78,6 +96,15 @@ y <- 1:10; y2 <- y
 cens <- c(2, 3, 5, 7, 9)
 y[cens] <- y[cens] + .01
 y2[cens] <- Inf
+cbind(y, y2)
+ell(y, y2)
+
+y <- 1:10; y2 <- y; cens <- 2:4; y2[cens] <- Inf
+cbind(y, y2)
+ell(y, y2)
+
+y <- 1:10; y2 <- y; cens <- 2:4; y2[cens] <- Inf
+y <- c(y, 8); y2 <- c(y2, Inf)
 cbind(y, y2)
 ell(y, y2)
 
