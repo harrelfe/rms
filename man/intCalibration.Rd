@@ -14,6 +14,7 @@ intCalibration(
   bass = 9,
   tsmooth = "lowess",
   hare = TRUE,
+  ordsurv = TRUE,
   dec = 4,
   xlab = bquote(hat(P)(.(yname) > y)),
   ylab = "Nonparametric Estimate",
@@ -32,7 +33,7 @@ intCalibration(
 
 \item{onlydata}{set to \code{TRUE} to return a data frame suitable for plotting instead of actually plotting}
 
-\item{eps, bass, tsmooth, hare}{see \code{\link[Hmisc:movStats]{Hmisc::movStats()}}}
+\item{eps, bass, tsmooth, hare, ordsurv}{see \code{\link[Hmisc:movStats]{Hmisc::movStats()}}}
 
 \item{dec}{number of digits to the right of the decimal place to which to round computed \code{ycuts}}
 
@@ -40,7 +41,7 @@ intCalibration(
 
 \item{ylab}{y-axis label}
 
-\item{nrow}{if \code{hare=TRUE}, the number of rows in the graph (must be 1 or 2)}
+\item{nrow}{if \code{hare=TRUE} or \code{ordsurv=TRUE}, the number of rows in the graph (must be 1 or 2)}
 
 \item{...}{other arguments passed to \code{\link[Hmisc:movStats]{Hmisc::movStats()}}}
 }
@@ -48,7 +49,7 @@ intCalibration(
 \code{ggplot2} object or a data frame
 }
 \description{
-For all the observations used a model fit, computes the estimated probability that Y is greater than each of a number of cutoffs, and compares this to smoothed estimated probabilities as a function of predicted probabilities, to obtain internal model calibration plots with multiple cutpoints.  When Y is uncensored these are smoothed moving empirical cumulative distribution function estimates, and when Y has censored observations these are smoothing moving Kaplan-Meier estimates.  \code{\link[Hmisc:movStats]{Hmisc::movStats()}} is used to do the moving overlapping window calculations.  When \code{hare=TRUE}, adaptive linear spline hazard regression estimates are also made, using \code{\link[polspline:hare]{polspline::hare()}}.
+For all the observations used a model fit, computes the estimated probability that Y is greater than each of a number of cutoffs, and compares this to smoothed estimated probabilities as a function of predicted probabilities, to obtain internal model calibration plots with multiple cutpoints.  When Y is uncensored these are smoothed moving empirical cumulative distribution function estimates, and when Y has censored observations these are smoothing moving Kaplan-Meier estimates.  \code{\link[Hmisc:movStats]{Hmisc::movStats()}} is used to do the moving overlapping window calculations.  When \code{hare=TRUE}, adaptive linear spline hazard regression estimates are also made, using \code{\link[polspline:hare]{polspline::hare()}}.  When \code{ordsurv=TRUE}, adaptive ordinal regression estimates are made in addition.
 }
 \details{
 These plots are plots of calibration-in-the-small.  Alternate calibration-in-the-small plots may be obtained by specifying a predictor variable \code{x} against which to plot both predicted and observed probabilties as a function of \code{x}.  This is the only place in the \code{rms} package where the "total effect" of a predictor is estimated instead of a partial effect.  When \code{x} varies and moving overlapping windows of predicted and observed exceedance probabilities are estimated, if \code{x} is collinear with other predictors, they will "come along for the ride".

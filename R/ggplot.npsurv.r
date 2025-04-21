@@ -141,7 +141,8 @@ ggplot.npsurv <-
               geom_stepconfint(aes(ymin=.data$lower, ymax=.data$upper, fill=.data$gr), alpha=alpha),
             if(conf && (facet || ns < 2))
               geom_stepconfint(aes(ymin=.data$lower, ymax=.data$upper), alpha=alpha),
-            scale_x_continuous(transform=xtrans, breaks=xbreaks),  # pb),
+            # scale_x_continuous(transform=xtrans, breaks=xbreaks),  # pb),
+            if(xtrans == 'log') scale_x_log10(guide='axis_logticks'),
             if(trans == 'identity')
               scale_y_continuous(breaks=ybreaks),
             if(trans %in% c('logit', 'probit'))

@@ -46,7 +46,7 @@ plotIntercepts <- function(fit, dots=FALSE, logt=FALSE) {
   if(xtrans == 'identity') {
     xbreaks <- pretty(y, npretty)
     labels  <- format(xbreaks)
-  } else {
+  } else if(FALSE) {
     xbreaks <- pretty(y, 2 * npretty)
     xbreaks <- xbreaks[xbreaks > 0]
     if(xbreaks[1] >= 1) xbreaks <- c(0.1, 0.25, 0.5, 0.75, xbreaks)
@@ -58,8 +58,10 @@ plotIntercepts <- function(fit, dots=FALSE, logt=FALSE) {
   }
 
   g <- ggplot(mapping=aes(x=y, y=alpha)) + geom_step() +
-         scale_x_continuous(transform=xtrans, breaks=xbreaks) +
          xlab(ylabel) + ylab(expression(alpha))
+  if(logt) g <- g + scale_x_log10(guide='axis_logticks')
+  else     g <- g + scale_x_continuous(breaks=xbreaks)
+
   if(dots) g <- g + geom_point(size=0.5)
   g
 }

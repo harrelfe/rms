@@ -1,4 +1,8 @@
-Changes in version 8.0-0 (2025-03-23)
+Changes in version 8.0-1 (2025)
+   * ggplot.npsurv, plotIntercepts: better log axes
+   * adapt_orm: new function
+
+Changes in version 8.0-0 (2025-04-04)
    * orm, orm.fit: implemented left, right, and interval censoring; added Dxy to orm.fit
    * Ocens: changed to use -Inf, Inf as limits for left or right censored observations, converted to using Turnbull intervals computed by the icenReg package, and added two interval consolidation procedures using icenReg to prevent zero probabilities in likelihood calculations with `orm.fit`
    * contrast.rms: fixed bug regarding vcov for simultaneous intervals (thanks: Antonio Eleuteri)

@@ -10,6 +10,12 @@ survest.cph <- function(fit, newdata, linear.predictors, x, times, fun,
                         se.fit=TRUE, what=c("survival","parallel"),
                         individual=FALSE, ...)
 {
+  if(getOption('rmsdebug', FALSE)) {
+    w <- list(fit=fit, newdata=if(! missing(newdata)) newdata,
+              times=if(! missing(times)) times, se.fit=se.fit)
+    saveRDS(w, '/tmp/survest.rds')
+  }
+  
   at <- fit$Design
 
   f  <- sum(at$assume.code != 8)		#non-strata factors

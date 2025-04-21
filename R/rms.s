@@ -510,9 +510,11 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
 
   ## Make sure that the second formula doesn't create any NAs on
   ## observations that didn't already have an NA for variables in main formula
+  ## Note: complete.cases is a "data.frame" function but data may be a data.table
+
   if(length(formula2)) {
-    i <- ! complete.cases(data[intersect(names(data), v1)])
-    j <- ! complete.cases(data[intersect(names(data), v2)])
+    i <- ! complete.cases(as.data.frame(data)[intersect(names(data), v1)])
+    j <- ! complete.cases(as.data.frame(data)[intersect(names(data), v2)])
     ## Check: longer object length not mult of shorter:  ???
     if(any(j & ! i))
       stop('A variable in the second formula was missing on an observation that was not missing on any variable in main formula')
