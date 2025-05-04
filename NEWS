@@ -1,6 +1,7 @@
-Changes in version 8.0-1 (2025)
+Changes in version 8.0-1 (2025-04-29)
    * ggplot.npsurv, plotIntercepts: better log axes
    * adapt_orm: new function
+   * intCalibration: added ordsurv option
 
 Changes in version 8.0-0 (2025-04-04)
    * orm, orm.fit: implemented left, right, and interval censoring; added Dxy to orm.fit

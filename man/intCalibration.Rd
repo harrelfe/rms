@@ -43,7 +43,7 @@ intCalibration(
 
 \item{nrow}{if \code{hare=TRUE} or \code{ordsurv=TRUE}, the number of rows in the graph (must be 1 or 2)}
 
-\item{...}{other arguments passed to \code{\link[Hmisc:movStats]{Hmisc::movStats()}}}
+\item{...}{other arguments passed to \code{\link[Hmisc:movStats]{Hmisc::movStats()}}.  To control the number of knots for \code{ordsurv=TRUE} specify \verb{k=} here.}
 }
 \value{
 \code{ggplot2} object or a data frame
