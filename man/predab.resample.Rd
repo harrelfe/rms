@@ -12,11 +12,13 @@ matrix \code{x} must have been created by \code{ols}, \code{lrm}, or \code{cph}.
 If \code{bw=TRUE}, \code{predab.resample} stores as the \code{kept}
 attribute a logical matrix encoding which
 factors were selected at each repetition.
+
+Unless \code{conf.int} is \code{FALSE} or 0, the function computes approximate bootstrap percentile confidence intervals for overfitting-corrected predictive performance measures using the method of Noma et al (2021).  This method does not apply to calibration intercepts and slopes because the apparent estimates of these (0 and 1, respectively) do not vary over bootstrap samples.
 }
 \usage{
 predab.resample(fit.orig, fit, measure, 
                 method=c("boot","crossvalidation",".632","randomization"),
-                bw=FALSE, B=50, pr=FALSE, prmodsel=TRUE,
+                bw=FALSE, B=50, conf.int=0.95, pr=FALSE, prmodsel=TRUE,
                 rule="aic", type="residual", sls=.05, aics=0,
                 tol=.Machine$double.eps, force=NULL, estimates=TRUE,
                 non.slopes.in.x=TRUE, kint=1,
@@ -81,8 +83,11 @@ Set to \code{TRUE} to do fast backward step-down for each training
 sample. Default is \code{FALSE}. 
 }
 \item{B}{
-Number of repetitions, default=50. For \code{method="crossvalidation"},
+Number of repetitions, default=50, which is far too small. For \code{method="crossvalidation"},
 this is also the number of groups the original sample is split into.
+}
+\item{conf.int}{
+  confidence level for approximate confidence limits for overfitting-corrected indexes.  Set to \code{FALSE} or 0 to not compute limits.
 }
 \item{pr}{
 \code{TRUE} to print results for each sample. Default is \code{FALSE}.  Also controls printing
@@ -199,6 +204,8 @@ fh@fharrell.com
 }
 \references{
 Efron B, Tibshirani R (1997). Improvements on cross-validation: The .632+ bootstrap method.  JASA 92:548--560.
+
+Noma H, et al (2021). Confidence intervals of prediction accuracy measures for multivariable prediction models based on the bootstrap-based optimism correction methods.  Statistics in Medicine 40:5691-5701.
 }
 \seealso{
 \code{\link{rms}}, \code{\link{validate}}, \code{\link{fastbw}},

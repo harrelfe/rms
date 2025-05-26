@@ -5,6 +5,7 @@ predab.resample <-
            method=c("boot","crossvalidation",".632","randomization"),
            bw=FALSE,
            B=50,
+           conf.int=0.95,
            pr=FALSE, prmodsel=TRUE,
            rule="aic",
            type="residual",
@@ -188,9 +189,11 @@ predab.resample <-
             iter=0, evalfit=FALSE, fit.orig=fit.orig, kint=kint, ...)
   keepinfo <- attr(index.orig, 'keepinfo')
   
-  test.stat <- double(length(index.orig))
+  nindex     <- length(index.orig)
+  test.stat  <- double(nindex)
   train.stat <- test.stat
-  name <- fparms$Design$name
+  appboot    <- matrix(NA, B, nindex)
+  name       <- fparms$Design$name
   if(bw) varin <- matrix(FALSE, nrow=B, ncol=length(name))
   
   j <- 0
@@ -343,9 +346,9 @@ predab.resample <-
     }
     
     if(! fail) {
-      j <- j + 1
+      j    <- j + 1
       xcol <- x.index(col.kept, ni)
-      xb <- Xb(x[,xcol,drop=FALSE], coef, ni, n, kint=kint)
+      xb   <- Xb(x[,xcol,drop=FALSE], coef, ni, n, kint=kint)
       
       if(missing(subset)) {
         train.statj <-
@@ -380,6 +383,8 @@ predab.resample <-
                               kint=kint, ...)
       }
       
+      appboot[j, ] <- train.statj
+
       na <- is.na(train.statj + test.statj)
       num <- num + ! na
       if(pr) 
@@ -404,6 +409,8 @@ predab.resample <-
   
   if(pr && (j != B))
     cat("\nDivergence or singularity in", B - j, "samples\n")
+
+  appboot <- appboot[1 : j,, drop=FALSE]
   
   train.stat <- train.stat / num
   
@@ -414,7 +421,21 @@ predab.resample <-
   else optimism <- .632 * (index.orig - test.stat)
   
   res <- cbind(index.orig=index.orig, training=train.stat, test=test.stat,
-               optimism=optimism, index.corrected=index.orig-optimism, n=num)
+               optimism=optimism, index.corrected=index.orig - optimism)
+
+  if(conf.int > 0) {
+    tail <- (1 - conf.int) / 2
+    cl   <- apply(appboot, 2, quantile, probs=c(tail, 1 - tail))
+    Lower <- cl[1, ] - optimism
+    Upper <- cl[2, ] - optimism
+    # Calibration intercept and slope have apparent values always 0 and 1
+    # Set confidence limits to NA for them
+    same <- Lower == Upper
+    Lower[same] <- NA
+    Upper[same] <- NA
+    res  <- cbind(res, Lower, Upper)
+  }
+  res <- cbind(res, n=num)
   
   if(bw) {
     varin <- varin[1 : j, , drop=FALSE]

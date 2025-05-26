@@ -138,9 +138,9 @@ latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
     kept <- attr(x, 'kept'); attr(x, 'kept') <- NULL
     cn <- colnames(x)
     cn <- chg(cn, c('index.orig', 'training', 'test', 'optimism',
-                    'index.corrected', 'n'),
+                    'index.corrected', 'Lower', 'Upper', 'n'),
               c('Original\nSample', 'Training\nSample',
-                'Test\nSample', 'Optimism', 'Corrected\nIndex',
+                'Test\nSample', 'Optimism', 'Corrected\nIndex', 'Lower', 'Upper',
                 'Successful\nResamples'))
     rn <- rownames(x)
     rn <- chg(rn, c('Dxy','R2','R-square','Emax','D','U','Q','B','g','gp','gr','rho','pdm'),
@@ -217,9 +217,10 @@ html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...) {
   kept <- attr(x, 'kept'); attr(x, 'kept') <- NULL
   cn <- colnames(x)
   cn <- chg(cn, c('index.orig', 'training', 'test', 'optimism',
-                  'index.corrected', 'n'),
+                  'index.corrected', 'Lower', 'Upper', 'n'),
             c('Original<br>Sample', 'Training<br>Sample',
               'Test<br>Sample', 'Optimism', 'Corrected<br>Index',
+              'Lower', 'Upper',
               'Successful<br>Resamples'))
   rn <- rownames(x)
   rn <- chg(rn, c('Dxy','R2','R-square','Emax','D','U','Q','B','g','gp','gr',
