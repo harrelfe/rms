@@ -5,12 +5,12 @@
 #pr=T to print results of each bootstrap rep
 
 validate.lrm <-
-function(fit,method="boot",
-	       B=40, bw=FALSE, rule="aic", type="residual",
-	       sls=.05, aics=0, force=NULL, estimates=TRUE, pr=FALSE,
-         kint,
-	       Dxy.method,
-	       emax.lim=c(0,1), ...)
+  function(fit,method="boot",
+	         B=40, bw=FALSE, rule="aic", type="residual",
+	         sls=.05, aics=0, force=NULL, estimates=TRUE, pr=FALSE,
+           kint,
+	         Dxy.method,
+	         emax.lim=c(0,1), ...)
 {
   if(! missing(Dxy.method)) warning('Dxy.method is deprecated and ignored')
   k <- fit$non.slopes
@@ -27,13 +27,14 @@ function(fit,method="boot",
                       penalty.matrix, kint, ...)
     {
       k <- fit$non.slopes
-      null.model <- length(fit$coefficients)==k
+      null.model <- length(fit$coefficients) == k
       if(evalfit) {	# Fit was for bootstrap sample
         stats     <- fit$stats
         lr        <- stats["Model L.R."]
         Dxy       <- stats["Dxy"]
         intercept <- if(null.model) NA else 0
         shrink    <- if(null.model) NA else 1
+        Emax      <- 0
         n         <- stats["Obs"]
         D         <- (lr - 1)/n
         U         <- -2 / n
@@ -43,7 +44,7 @@ function(fit,method="boot",
         gp        <- stats['gp']
       }
       else {
-        refit     <- if(null.model) lrm.fit(y=y) else lrm.fit(x,y)
+        refit     <- if(null.model) lrm.fit(y=y) else lrm.fit(x, y)
         kr        <- refit$non.slopes
         ## Model with no variables = null model
         stats     <- refit$stats
@@ -51,6 +52,12 @@ function(fit,method="boot",
         Dxy       <- stats["Dxy"]
         intercept <- if(null.model) NA else refit$coefficients[kint]
         shrink    <- if(null.model) NA else refit$coefficients[kr + 1]
+        Emax      <- if(null.model) NA else {
+          p <- seq(emax.lim[1], emax.lim[2], 0.0005)
+          L <- qlogis(p)
+          P <- plogis(intercept + shrink * L)
+          max(abs(p - P), na.rm=TRUE)
+        }
         n         <- stats["Obs"]
         D         <- (lr - 1) / n
         xc        <- pmin(40e0, pmax(x, -40e0))
@@ -63,8 +70,8 @@ function(fit,method="boot",
       }
       P <- plogis(x)  # 1/(1+exp(-x))
       B <- sum(((y >= kint) - P)^2)/n
-      z <- c(Dxy, R2, intercept, shrink, D, U, Q, B, g, gp)
-      names(z) <- c("Dxy", "R2", "Intercept", "Slope", "D", "U", "Q", "B",
+      z <- c(Dxy, R2, intercept, shrink, Emax, D, U, Q, B, g, gp)
+      names(z) <- c("Dxy", "R2", "Intercept", "Slope", "Emax", "D", "U", "Q", "B",
                     "g",   "gp")
       z
     }
@@ -83,16 +90,12 @@ function(fit,method="boot",
                        non.slopes.in.x=FALSE,
                        penalty.matrix=penalty.matrix, kint=kint, ...)
   kept <- attr(z, 'kept')
-  calib <- z[3 : 4, 5]
-  p <- seq(emax.lim[1], emax.lim[2], 0.0005)
-  L <- qlogis(p)
-  P <- plogis(calib[1] + calib[2] * L)  # 1/(1+exp(-calib[1]-calib[2]*L))
-  emax <- max(abs(p-P), na.rm=TRUE)
-  z <- rbind(z[1 : 4, ], c(0, 0, emax, emax, emax, z[1,6]), z[5 : nrow(z), ])
+  cn <- c("index.orig","training","test","optimism",
+          "index.corrected","Lower", "Upper", "n")
+  if('Lower' %nin% colnames(z)) cn <- cn[-(6:7)]
+
   dimnames(z) <- list(c("Dxy", "R2","Intercept", "Slope", "Emax", "D", "U", "Q",
-                        "B", "g", "gp"),
-                      c("index.orig","training","test","optimism",
-                        "index.corrected","n"))
+                        "B", "g", "gp"), cn)
   structure(z, class='validate', kept=kept)
 }
 
@@ -158,8 +161,9 @@ validate.orm <- function(fit, method="boot",
                        non.slopes.in.x=FALSE,
                        allow.varying.intercepts=TRUE, ...)
   kept <- attr(z, 'kept')
-  dimnames(z) <- list(c(if(! cens) "rho", "Dxy", "R2", "Slope", "g", "pdm"),
-                      c("index.orig","training","test","optimism",
-                        "index.corrected","n"))
+  cn <- c("index.orig","training","test","optimism",
+          "index.corrected","Lower", "Upper", "n")
+  if('Lower' %nin% colnames(z)) cn <- cn[-(6:7)]
+  dimnames(z) <- list(c(if(! cens) "rho", "Dxy", "R2", "Slope", "g", "pdm"), cn)
   structure(z, class='validate', kept=kept)
 }

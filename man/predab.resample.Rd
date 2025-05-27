@@ -13,7 +13,7 @@ If \code{bw=TRUE}, \code{predab.resample} stores as the \code{kept}
 attribute a logical matrix encoding which
 factors were selected at each repetition.
 
-Unless \code{conf.int} is \code{FALSE} or 0, the function computes approximate bootstrap percentile confidence intervals for overfitting-corrected predictive performance measures using the method of Noma et al (2021).  This method does not apply to calibration intercepts and slopes because the apparent estimates of these (0 and 1, respectively) do not vary over bootstrap samples.
+Unless \code{conf.int} is \code{FALSE} or 0, the function computes approximate bootstrap percentile confidence intervals for overfitting-corrected predictive performance measures using the method of Noma et al (2021).  This method does not apply to calibration intercepts and slopes (and measures derived from them such as \code{Emax}) because the apparent estimates of these (0 and 1, respectively) do not vary over bootstrap samples.  For these, `predab.resample` assumes that the indexes are named `intercept`, `slope`, and `emax` ignoring case, and confidence limits are computed solely from the indexes computed from bootstrap fits applied to the original samples.
 }
 \usage{
 predab.resample(fit.orig, fit, measure, 

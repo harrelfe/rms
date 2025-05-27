@@ -195,6 +195,12 @@ predab.resample <-
   appboot    <- matrix(NA, B, nindex)
   name       <- fparms$Design$name
   if(bw) varin <- matrix(FALSE, nrow=B, ncol=length(name))
+
+  # Assuming a naming convention, find out which elements of index.orig correspond to
+  # calibration intercept or slope
+
+  intslope <- if(! length(names(index.orig))) rep(FALSE, length(index.orig))
+  else tolower(names(index.orig)) %in% c('intercept', 'slope', 'emax')
   
   j <- 0
   num <- 0
@@ -383,7 +389,7 @@ predab.resample <-
                               kint=kint, ...)
       }
       
-      appboot[j, ] <- train.statj
+      appboot[j, ] <- ifelse(intslope, test.statj, train.statj)
 
       na <- is.na(train.statj + test.statj)
       num <- num + ! na
@@ -401,7 +407,7 @@ predab.resample <-
       
       train.stat <- train.stat + train.statj
       test.stat  <- test.stat  + test.statj * wt
-      ntest <- ntest + 1
+      ntest      <- ntest + 1
     } 
   }
   
@@ -425,14 +431,9 @@ predab.resample <-
 
   if(conf.int > 0) {
     tail <- (1 - conf.int) / 2
-    cl   <- apply(appboot, 2, quantile, probs=c(tail, 1 - tail))
-    Lower <- cl[1, ] - optimism
-    Upper <- cl[2, ] - optimism
-    # Calibration intercept and slope have apparent values always 0 and 1
-    # Set confidence limits to NA for them
-    same <- Lower == Upper
-    Lower[same] <- NA
-    Upper[same] <- NA
+    cl   <- apply(appboot, 2, quantile, probs=c(tail, 1 - tail), na.rm=TRUE)
+    Lower <- cl[1, ] - ifelse(intslope, 0, optimism)
+    Upper <- cl[2, ] - ifelse(intslope, 0, optimism)
     res  <- cbind(res, Lower, Upper)
   }
   res <- cbind(res, n=num)
