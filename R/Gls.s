@@ -226,9 +226,11 @@ Gls <-
                                                      class(Resid) <- setdiff(cr, 'labelled')
     }
     
-    apVar <- if (FALSE && controlvals$apVar)    # see https://github.com/harrelfe/rms/issues/157
+    # fixedSimga should be set before `glsApVar`
+    attr(glsSt, 'fixedSigma') <- fixedSigma
+    apVar <- if (isTRUE(controlvals$apVar))    # see https://github.com/harrelfe/rms/issues/157
                glsApVar(glsSt, glsFit$sigma,
-                        .relStep  = controlvals[[".relStep"]],  
+                        .relStep  = controlvals[[".relStep"]],
                         minAbsPar = controlvals[["minAbsParApVar"]],
                         natural   = controlvals[["natural"]])
              else
@@ -237,7 +239,6 @@ Gls <-
     dims[["p"]] <- p
     attr(glsSt, "conLin") <- NULL
     attr(glsSt, "glsFit") <- NULL
-    attr(glsSt, 'fixedSigma') <- fixedSigma
     grpDta <- inherits(data, 'groupedData')
     estOut <- list(modelStruct = glsSt, dims = dims, contrasts = contr, 
                    coefficients = glsFit[["beta"]], varBeta = varBeta,
