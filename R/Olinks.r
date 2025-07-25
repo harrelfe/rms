@@ -16,16 +16,16 @@
 #' f <- orm(y ~ x1 + x2, family='loglog', x=TRUE, y=TRUE)
 #' Olinks(f)
 #' }
-Olinks <- function(object, links=c('logistic', 'probit', 'loglog', 'cloglog'), dec=3, ...) {
+Olinks <- function(object, links=c('logistic', 'probit', 'loglog', 'cloglog'), dec=3, gradtol=0.001) {
   if(! inherits(object, 'orm')) stop('object must an orm object')
   if(! all(c('x', 'y') %in% names(object))) stop('must run orm with x=TRUE, y=TRUE')
   fam    <- object$family
   links  <- unique(c(fam, links))
   p      <- length(coef(object))
-  fitter <- quickRefit(object, storevals=TRUE, compstats=TRUE, what='fitter')
+  fitter <- quickRefit(object, storevals=TRUE, compstats=TRUE, gradtol=gradtol, what='fitter')
   R      <- NULL
   for(fm in links) {
-    f    <- if(fm ==fam) object else fitter(family=fm, ...)
+    f    <- if(fm ==fam) object else fitter(family=fm)
     dev  <- deviance(f)
     st   <- f$stats
     r2   <- st[grep('^R2', names(st))]

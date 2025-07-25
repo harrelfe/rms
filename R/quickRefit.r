@@ -27,7 +27,8 @@ quickRefit <-
            strata         = object[['strata'        ]],
            penalty.matrix = object[['penalty.matrix']],
            weights        = object[[if(k == 'Glm')'oweights' else 'weights']],
-           compstats      = FALSE, 
+           compstats      = FALSE,
+           gradtol        = 0.001,
            ytarget        = NULL,
            what           = c('chisq', 'deviance', 'fit', 'fitter'),
            compvar        = FALSE,
@@ -65,11 +66,11 @@ g <-
                    penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method, ...),
          orm = function()
            orm.fit(as.matrix(X)[subset,,drop=FALSE], if(is.matrix(y)) y[subset,,drop=FALSE] else y[subset],
-                        family=family, compstats=compstats, offset=offset[subset], initial=initial,
+                        family=family, compstats=compstats, gradtol=gradtol, offset=offset[subset], initial=initial,
                         penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method), #, ...),
          ormt= function() {
            f <- orm.fit(as.matrix(X)[subset,,drop=FALSE], if(is.matrix(y)) y[subset,,drop=FALSE] else y[subset],
-                        family=family, compstats=compstats, offset=offset[subset], initial=initial,
+                        family=family, compstats=compstats, gradtol=gradtol, offset=offset[subset], initial=initial,
                         penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method) # $, ...)
            ns  <- f$non.slopes
            cof <- f$coefficients
@@ -127,6 +128,7 @@ formals(g) <- c(fm, alist(subset=TRUE, ytarget=, opt_method=, ...=))
 if(k %in% c('lrm', 'orm', 'ormt')) {
                            formals(g)$compstats <- compstats
                            formals(g)$opt_method <- 'NR'
+                           if(k != 'lrm') formals(g)$gradtol <- gradtol
 }
 if(k %in% c('orm', 'ormt')) {
                            fm <- list(initial=initial)

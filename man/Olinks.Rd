@@ -8,7 +8,7 @@ Olinks(
   object,
   links = c("logistic", "probit", "loglog", "cloglog"),
   dec = 3,
-  ...
+  gradtol = 0.001
 )
 }
 \arguments{
