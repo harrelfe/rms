@@ -516,7 +516,7 @@ lrm.fit <-
 
   if(p == 0) lpmid <- initial[ymed] + offset     # initial is defined at Pt A or Pt B above
 
-  if(! transx) {
+  if(! transx && is.list(info)) {
     info$iname <- iname
     info$xname <- xname
   }

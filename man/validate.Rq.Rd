@@ -17,8 +17,8 @@ continuous response is going to be applied to a binary response. A
 Somers' \eqn{D_{xy}} for this case is computed for each resample by
 dichotomizing \code{y}. This can be used to obtain an ordinary receiver
 operating characteristic curve area using the formula \eqn{0.5(D_{xy} +
-1)}. See \code{predab.resample} for the list of
-resampling methods.
+1)}.  See \code{\link{predab.resample}} for information about confidence limits
+and for the list of resampling methods.
 
 The LaTeX \code{needspace} package must be in effect to use the
 \code{latex} method. 

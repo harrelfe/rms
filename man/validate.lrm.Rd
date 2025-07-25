@@ -24,6 +24,8 @@ subset of the above indexes is provided, Spearman's \eqn{\rho} is
 substituted for \eqn{D_{xy}}, and a new index is reported: \code{pdm}, the mean
 	absolute difference between 0.5 and the predicted probability that
 	\eqn{Y\geq} the marginal median of \eqn{Y}.
+
+See \code{\link{predab.resample}} for information about confidence limits.
 }
 
 \usage{
@@ -74,6 +76,8 @@ prints a summary, and optionally statistics for each re-fit
 If the original fit was created using penalized maximum likelihood estimation,
 the same \code{penalty.matrix} used with the original
 fit are used during validation.
+
+See \url{https://fharrell.com/post/bootcal/} for simulations of the accuracy of approximate bootstrap confidence intervals for overfitting-corrected Brier scores.
 }
 \author{
 Frank Harrell\cr

@@ -14,6 +14,8 @@ if \code{options(prType=)} is set to \code{"latex"} or \code{"html"}.
 For \code{"latex"} printing through \code{print()}, the LaTeX table
 environment is turned off.  When using html with Quarto or RMarkdown,
   \code{results='asis'} need not be written in the chunk header.
+
+See \code{\link{predab.resample}} for information about confidence limits.
 }
 \usage{
 # fit <- fitting.function(formula=response ~ terms, x=TRUE, y=TRUE)

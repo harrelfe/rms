@@ -31,6 +31,8 @@ function for details).  Nonparametric
 calibration curves are estimated over a regular sequence of predicted values.  The
 fit must have specified \code{x=TRUE, y=TRUE}.
 
+See \code{\link{predab.resample}} for information about confidence limits.
+
 The \code{print} and
 \code{plot} methods print the mean absolute error in predictions,
 the mean squared error, and the 0.9 quantile of the absolute error.
@@ -159,7 +161,7 @@ use \code{lowess(x, y, iter=0)}.
   probabilities very near 1 that should be treated as 1, and the
   \code{round} function will fix that.  Applies to \code{calibrate.default}.}
 \item{\dots}{
-other arguments to pass to \code{predab.resample}, such as \code{group},
+other arguments to pass to \code{predab.resample}, such as \code{conf.int}, \code{group},
 \code{cluster}, and \code{subset}.
 Also, other arguments for \code{plot}.
 }
@@ -218,6 +220,8 @@ prints, and stores an object \code{pred.obs} or \code{.orig.cal}
 If the fit was created using penalized maximum likelihood estimation,
 the same \code{penalty} and \code{penalty.scale} parameters are used during
 validation.
+
+See \url{https://fharrell.com/post/bootcal/} for simulations of the accuracy of various \code{smoother}s for binary logistic model calibration, as well as simulations of confidence interval coverage.
 }
 \author{
 Frank Harrell\cr

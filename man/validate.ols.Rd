@@ -18,8 +18,7 @@ Somers' \eqn{D_{xy}} for this case is computed for each resample by
 dichotomizing \code{y}. This can be used to obtain an ordinary receiver
 operating characteristic curve area using the formula \eqn{0.5(D_{xy} +
 1)}. The Nagelkerke-Maddala \eqn{R^2} index for the dichotomized
-\code{y} is also given.  See \code{predab.resample} for the list of
-resampling methods.
+\code{y} is also given.  See \code{\link{predab.resample}} for information about confidence limits and for the list of resampling methods.
 
 The LaTeX needspace package must be in effect to use the \code{latex} method.
 }

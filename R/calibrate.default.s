@@ -11,8 +11,8 @@ calibrate.default <- function(fit, predy,
   type   <- match.arg(type)
 
   ns <- num.intercepts(fit)
-  if(missing(kint)) kint <- floor((ns+1)/2)
-  clas <- attr(fit,"class")
+  if(missing(kint)) kint <- floor((ns + 1) / 2)
+  clas  <- attr(fit,"class")
   model <- if(any(clas=="lrm"))"lr"
            else if(any(clas=="ols")) "ol"
            else stop("fit must be from lrm or ols")
@@ -36,7 +36,7 @@ calibrate.default <- function(fit, predy,
   if(missing(predy)) {
     if(n < 11) stop("must have n > 10 if do not specify predy")
     p <- sort(predicted)
-    predy <- seq(p[5], p[n-4], length=50)
+    predy <- seq(p[5], p[n - 4], length=50)
     p <- NULL
   }
   
@@ -149,19 +149,19 @@ plot.calibrate.default <-
   
   if(missing(xlab)) {
     if(at$model=="lr") {
-      xlab <- paste("Predicted Pr{",at$yvar.name,sep="")
-      if(at$non.slopes==1) {
-        xlab <- if(at$lev.name=="TRUE") paste(xlab, "}", sep="")
-        else paste(xlab,"=", at$lev.name, "}", sep="")
+      xlab <- paste("Predicted P(", at$yvar.name, sep="")
+      if(at$non.slopes == 1) {
+        xlab <- if(at$lev.name == "TRUE") paste(xlab, ")", sep="")
+        else paste(xlab,"=", at$lev.name, ")", sep="")
       }
-      else xlab <- paste(xlab,">=", at$lev.name, "}", sep="")
+      else xlab <- paste(xlab, ">=", at$lev.name, ")", sep="")
     }
     else xlab <- paste("Predicted", at$yvar.name)
   }
   
-  p     <- x[,"predy"]
-  p.app <- x[,"calibrated.orig"]
-  p.cal <- x[,"calibrated.corrected"]
+  p     <- x[, "predy"]
+  p.app <- x[, "calibrated.orig"]
+  p.cal <- x[, "calibrated.corrected"]
   if(missing(xlim) & missing(ylim))
     xlim <- ylim <- range(c(p, p.app, p.cal), na.rm=TRUE)
   else {
@@ -171,7 +171,7 @@ plot.calibrate.default <-
   
   plot(p, p.app, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, type="n", ...)
   predicted <- at$predicted
-  err <- NULL
+  err       <- NULL
   if(length(predicted)) {  ## for downward compatibility
     s <- !is.na(p + p.cal)
     err <- predicted - approx(p[s], p.cal[s], xout=predicted, ties=mean)$y
@@ -190,13 +190,21 @@ plot.calibrate.default <-
   lines(p, p.app, lty=3)
   lines(p, p.cal, lty=1)
   abline(a=0, b=1, lty=2)
+  lo  <- x[, 'Lower']
+  hi  <- x[, 'Upper']
+  llo <- length(lo) > 0
+  if(llo) {
+    lines(p, p + lo, col='gray80')
+    lines(p, p + hi, col='gray80')
+  }
   if(subtitles) title(sub=paste("B=", at$B, "repetitions,", at$method),
                       cex.sub=cex.subtitles, adj=0)
   if(!(is.logical(legend) && !legend)) {
     if(is.logical(legend)) legend <- list(x=xlim[1] + .55*diff(xlim),
                                           y=ylim[1] + .32*diff(ylim))
-    legend(legend, c("Apparent", "Bias-corrected", "Ideal"),
-           lty=c(3,1,2), bty="n")
+    legend(legend, c("Apparent", "Bias-corrected", "Ideal", if(llo) 'C.L.'),
+           lty=c(3, 1, 2, if(llo) 1), col=c('black', 'black', 'black', if(llo) 'gray80'),
+           bty="n")
   }
   invisible(err)
 }

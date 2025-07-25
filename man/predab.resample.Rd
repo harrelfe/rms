@@ -13,7 +13,7 @@ If \code{bw=TRUE}, \code{predab.resample} stores as the \code{kept}
 attribute a logical matrix encoding which
 factors were selected at each repetition.
 
-Unless \code{conf.int} is \code{FALSE} or 0, the function computes approximate bootstrap percentile confidence intervals for overfitting-corrected predictive performance measures using the method of Noma et al (2021).  This method does not apply to calibration intercepts and slopes (and measures derived from them such as \code{Emax}) because the apparent estimates of these (0 and 1, respectively) do not vary over bootstrap samples.  For these, `predab.resample` assumes that the indexes are named `intercept`, `slope`, and `emax` ignoring case, and confidence limits are computed solely from the indexes computed from bootstrap fits applied to the original samples.
+Unless \code{conf.int} is \code{FALSE} or 0, the function computes approximate bootstrap confidence intervals for overfitting-corrected predictive performance measures using the method of Harrell (2025) described and tested at \url{https://fharrell.com/post/bootcal/} and inspired by Noma et al (2021). 
 }
 \usage{
 predab.resample(fit.orig, fit, measure, 
@@ -23,7 +23,7 @@ predab.resample(fit.orig, fit, measure,
                 tol=.Machine$double.eps, force=NULL, estimates=TRUE,
                 non.slopes.in.x=TRUE, kint=1,
                 cluster, subset, group=NULL,
-                allow.varying.intercepts=FALSE, debug=FALSE, \dots)
+                allow.varying.intercepts=FALSE, debug=FALSE, saveraw=FALSE, \dots)
 }
 \arguments{
 \item{fit.orig}{
@@ -68,7 +68,7 @@ bootstrapping the area under an ROC curve for a logistic regression model,
 \code{fit.orig}
 is used to pass computed configuration parameters from the original fit such as
 quantiles of predicted probabilities that are used as cut points in other samples.
-The vector created by measure should have \code{names()} associated with it.
+The vector created by \code{measure} should have \code{names()} associated with it if the model performance measures are indexes such as the Brier score or calibration slope.  The vector must not have names if it corresponds to a nonparametric calibration curve.
 }
 \item{method}{
 The default is \code{"boot"} for ordinary bootstrapping (Efron, 1983,
@@ -87,7 +87,7 @@ Number of repetitions, default=50, which is far too small. For \code{method="cro
 this is also the number of groups the original sample is split into.
 }
 \item{conf.int}{
-  confidence level for approximate confidence limits for overfitting-corrected indexes.  Set to \code{FALSE} or 0 to not compute limits.
+  confidence level for approximate confidence limits for overfitting-corrected indexes.  Set to \code{FALSE} or 0 to not compute limits.  For calibration, 
 }
 \item{pr}{
 \code{TRUE} to print results for each sample. Default is \code{FALSE}.  Also controls printing
@@ -155,6 +155,7 @@ each level of group as the number appearing in the original dataset.
 	if the number of intercepts varies from fit to fit}
 \item{debug}{set to \code{TRUE} to print subscripts of all training and
   test samples}
+\item{saveraw}{set to \code{TRUE} to store a list named \code{.predab_raw.} in the global environment.  The list has the elements \code{orig} (original estimates of performance indexes), \code{btrain} (a matrix with up to \code{B} bootstrap repetitions of indexes computed on training samples), and \code{btest} (a similar matrix but computing indexes on the test samples).  For bootstrapping, training samples are bootstrap samples and test samples are the original data.}
 \item{\dots}{
 The user may add other arguments here that are passed to \code{fit} and
 \code{measure}.
@@ -206,6 +207,8 @@ fh@fharrell.com
 Efron B, Tibshirani R (1997). Improvements on cross-validation: The .632+ bootstrap method.  JASA 92:548--560.
 
 Noma H, et al (2021). Confidence intervals of prediction accuracy measures for multivariable prediction models based on the bootstrap-based optimism correction methods.  Statistics in Medicine 40:5691-5701.
+
+Harrell FE (2025). Bootstrap confidence limits for bootstrap overfitting-corrected model performance, \url{https://fharrell.com/post/bootcal/}
 }
 \seealso{
 \code{\link{rms}}, \code{\link{validate}}, \code{\link{fastbw}},

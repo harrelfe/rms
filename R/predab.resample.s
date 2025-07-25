@@ -2,7 +2,7 @@ predab.resample <-
   function(fit.orig,
            fit,
            measure, 
-           method=c("boot","crossvalidation",".632","randomization"),
+           method=c("boot", "crossvalidation", ".632", "randomization"),
            bw=FALSE,
            B=50,
            conf.int=0.95,
@@ -21,6 +21,7 @@ predab.resample <-
            group=NULL,
            allow.varying.intercepts=FALSE,
            debug=FALSE,
+           saveraw=FALSE,
            ...)
 {
   method <- match.arg(method)
@@ -34,6 +35,8 @@ predab.resample <-
   }
 
   if(getOption('rmsdebug', FALSE)) tryCatch <- function(x, ...) x
+
+  if(saveraw) genv <- .GlobalEnv
   
   ## Following logic prevents having to load a copy of a large x object
   if(any(match(c("x", "y"), names(fit.orig), 0) == 0))
@@ -192,17 +195,23 @@ predab.resample <-
   nindex     <- length(index.orig)
   test.stat  <- double(nindex)
   train.stat <- test.stat
-  appboot    <- matrix(NA, B, nindex)
+  btrain     <- btest <- matrix(NA, B, nindex)
   name       <- fparms$Design$name
   if(bw) varin <- matrix(FALSE, nrow=B, ncol=length(name))
 
   # Assuming a naming convention, find out which elements of index.orig correspond to
   # calibration intercept or slope
+  # No names on index.orig if validating nonparametric calibration curves
 
-  intslope <- if(! length(names(index.orig))) rep(FALSE, length(index.orig))
-  else tolower(names(index.orig)) %in% c('intercept', 'slope', 'emax')
+#  index_type <- if(! length(names(index.orig))) rep('npcal', length(index.orig))
+#  else ifelse(tolower(names(index.orig)) %in% c('intercept', 'slope', 'emax'), 'lcal', 'other')
+
+  # index_type  Meaning
+  # npcal       points on nonparametric calibration curve
+  # lcal        linear calibration parameters (slope, intercept, Emax)
+  # other       regular model performance metrics (rank correlation, Brier, etc.)
   
-  j <- 0
+  j   <- 0
   num <- 0
 
   if(method == "crossvalidation") {
@@ -389,15 +398,24 @@ predab.resample <-
                               kint=kint, ...)
       }
       
-      appboot[j, ] <- ifelse(intslope, test.statj, train.statj)
+#      stt <- ifelse(index_type %in% c('lcal', 'npcal'), test.statj, train.statj)
+      btrain[j, ] <- train.statj
+      btest [j, ] <- test.statj
+
+      # Type of Index  Bootstrap Estimates Computed for CLs
+      # lcal           estimates from test (original) sample
+      # npcal          " " "
+      # other          estimates from training (bootstrap) sample
 
       na <- is.na(train.statj + test.statj)
       num <- num + ! na
       if(pr) 
         print(cbind(training=train.statj, test=test.statj))
       
+      # For a given resample, neither training nor test estimates are counted
+      # if either one is NA
       train.statj[na] <- 0
-      test.statj[na] <- 0
+      test.statj[na]  <- 0
       if(method == ".632") {
         wt <- W[i]
         if(any(na))
@@ -416,7 +434,8 @@ predab.resample <-
   if(pr && (j != B))
     cat("\nDivergence or singularity in", B - j, "samples\n")
 
-  appboot <- appboot[1 : j,, drop=FALSE]
+  btrain <- btrain[1 : j,, drop=FALSE]
+  btest  <- btest [1 : j,, drop=FALSE]
   
   train.stat <- train.stat / num
   
@@ -429,14 +448,22 @@ predab.resample <-
   res <- cbind(index.orig=index.orig, training=train.stat, test=test.stat,
                optimism=optimism, index.corrected=index.orig - optimism)
 
+  if(saveraw)
+    assign('.predab_raw.', list(orig=index.orig, btrain=btrain, btest=btest), envir=genv)
+  
   if(conf.int > 0) {
-    tail <- (1 - conf.int) / 2
-    cl   <- apply(appboot, 2, quantile, probs=c(tail, 1 - tail), na.rm=TRUE)
-    Lower <- cl[1, ] - ifelse(intslope, 0, optimism)
-    Upper <- cl[2, ] - ifelse(intslope, 0, optimism)
-    res  <- cbind(res, Lower, Upper)
+    z  <- qnorm((conf.int + 1) / 2)
+    s <- apply(btrain - 1.25 * btest, 2, dualSD)   # dualSD is in Hmisc
+    # Reverse top and bottom since the optimism is subtracted from the apparent index
+    Lower <- index.orig - optimism - z * s['top',   ]
+    Upper <- index.orig - optimism + z * s['bottom',]
+    res   <- cbind(res, Lower, Upper)
   }
   res <- cbind(res, n=num)
+
+  # Note: For npcal, Lower & Upper are on calibrated probabilities minus
+  # predicted probabilities (predy); predy needs to be added back in
+  # calibrate* functions
   
   if(bw) {
     varin <- varin[1 : j, , drop=FALSE]
@@ -444,3 +471,4 @@ predab.resample <-
   }
   structure(res, class='validate', kept=if(bw) varin, keepinfo=keepinfo)
 }
+
