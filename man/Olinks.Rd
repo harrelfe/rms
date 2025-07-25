@@ -4,7 +4,12 @@
 \alias{Olinks}
 \title{Likehood-Based Statistics for Other Links for orm Fits}
 \usage{
-Olinks(object, links = c("logistic", "probit", "loglog", "cloglog"), dec = 3)
+Olinks(
+  object,
+  links = c("logistic", "probit", "loglog", "cloglog"),
+  dec = 3,
+  ...
+)
 }
 \arguments{
 \item{object}{an object created by \code{orm} with \verb{x=TRUE, y=TRUE}}
@@ -12,6 +17,8 @@ Olinks(object, links = c("logistic", "probit", "loglog", "cloglog"), dec = 3)
 \item{links}{a vector of links to consider other than the one used to get \code{object}}
 
 \item{dec}{number of digits to the right of the decimal place to round statistics to}
+
+\item{...}{passed to \code{\link[=orm.fit]{orm.fit()}}}
 }
 \value{
 data frame.  The \code{R2} column is from the last adjusted \eqn{R^2} computed by \code{orm},
