@@ -105,11 +105,17 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
                     u=u, m=m, what=what, sls=sls, aics=aics,
                     force=force, estimates=estimates,
                     pred=pred, orig.cuts=cuts, tol=tol, maxdim=maxdim, ...)
+  
   kept     <- attr(reliability, 'kept')
   keepinfo <- attr(reliability, 'keepinfo')
   n    <- reliability[, "n"]
   rel  <- reliability[, "index.corrected"]
   opt  <- reliability[, "optimism"]
+
+  if('Lower' %in% colnames(reliability)) {
+    Lower <- reliability[, 'Lower']
+    Upper <- reliability[, 'Upper']
+  } else Lower <- Upper <- rep(NA, length(rel))
   
   rel <- cbind(mean.optimism=opt, mean.corrected=rel, n=n)
     
@@ -120,25 +126,30 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
     KM             <- pred.obs[,"KM"]
     obs.corrected  <- KM - opt
     
-    structure(cbind(reliability[,c("index.orig","training","test"),
-                                drop=FALSE],
-                    rel, mean.predicted=mean.predicted, KM=KM,
-                    KM.corrected=obs.corrected,
-                    std.err=pred.obs[, "std.err", drop=FALSE]),
-              predicted=survival, kept=kept,
-              class="calibrate", u=u, units=unit, n=length(e), d=sum(e),
-              p=length(fit$coefficients), m=m, B=B, what=what, call=call)
+    structure(cbind(reliability[,c("index.orig","training","test"), drop=FALSE],
+                    rel,
+                    mean.predicted = mean.predicted,
+                    KM             = KM,
+                    KM.corrected   = obs.corrected,
+                    std.err        = pred.obs[, "std.err", drop=FALSE],
+                    Lower          = Lower,
+                    Upper          = Upper             ),
+              predicted = survival, kept = kept,
+              class="calibrate", u = u, units = unit, n = length(e), d = sum(e),
+              p=length(fit$coefficients), m = m, B = B, what = what, call = call)
   } else {
     calibrated            <- pred.obs$actualseq
     calibrated.corrected  <- calibrated - opt
     
-    structure(cbind(pred=pred,
-                    reliability[, c("index.orig", "training", "test"),
-                                drop=FALSE],
-                    rel, calibrated=calibrated,
-                    calibrated.corrected=calibrated.corrected),
-              predicted=survival, kept=kept,
-              class="calibrate", u=u, units=unit, n=length(e), d=sum(e),
-              p=length(fit$coefficients), m=m, B=B, what=what, call=call)
+    structure(cbind(pred                 = pred,
+                    reliability[, c("index.orig", "training", "test"), drop=FALSE],
+                    rel,
+                    calibrated           = calibrated,
+                    calibrated.corrected = calibrated.corrected,
+                    Lower                = Lower,
+                    Upper                = Upper      ),
+              predicted = survival, kept = kept,
+              class="calibrate", u = u, units = unit, n = length(e), d = sum(e),
+              p = length(fit$coefficients), m = m, B = B, what = what, call = call)
   }
 }

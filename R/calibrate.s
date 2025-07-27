@@ -58,11 +58,11 @@ plot.calibrate <-
   
   predicted <- at$predicted
   if('KM' %in% colnames(x)) {
-    type  <- 'stratified'
-    pred  <- x[,"mean.predicted"]
-    cal   <- x[,"KM"]
-    cal.corrected <- x[,"KM.corrected"]
-    se <- x[,"std.err"]
+    type          <- 'stratified'
+    pred          <- x[, "mean.predicted"]
+    cal           <- x[, "KM"]
+    cal.corrected <- x[, "KM.corrected"]
+    se            <- x[, "std.err"]
   }
   else {
     type <- 'smooth'
@@ -71,11 +71,16 @@ plot.calibrate <-
     cal.corrected <- x[,'calibrated.corrected']
     se <- NULL
   }
+
+  if('Lower' %in% colnames(x)) {
+    Lower <- pred + x[, 'Lower']
+    Upper <- pred + x[, 'Upper']
+  } else Lower <- Upper <- rep(NA, nrow(x))
+  bci <- ! all(is.na(Lower + Upper))
   
   un <- if(u==1) paste(units, 's', sep='') else units
-  if(missing(xlab)) xlab <- paste("Predicted ",format(u),units,"Survival")
-  if(missing(ylab)) ylab <- paste("Fraction Surviving ",format(u)," ",un,
-                                  sep="")
+  if(missing(xlab)) xlab <- paste("Predicted ", format(u), units, "Survival")
+  if(missing(ylab)) ylab <- paste("Fraction Surviving ", format(u), " ", un, sep="")
 
   ##Remember that groupkm stored the se of the log survival
 
@@ -93,7 +98,12 @@ plot.calibrate <-
     else
       plot(pred, cal, xlab=xlab, ylab=ylab,
            type=if(type=='smooth')'l' else "b", ...)
-  
+
+  if(bci) {
+    lines(pred, Lower, col='gray80')
+    lines(pred, Upper, col='gray80')
+  }
+
   err <- NULL
   if(riskdist && length(predicted)) {
     do.call('scat1d', c(list(x=predicted), scat1d.opts))
@@ -108,8 +118,8 @@ plot.calibrate <-
     if(type=='smooth') {
       Col <- par.corrected$col
       substring(Col, 1, 1) <- toupper(substring(Col, 1, 1))
-      title(sub=sprintf('Black: observed  Gray: ideal\n%s : optimism corrected',
-              Col),
+      title(sub=paste0('Black: observed  Dashed: ideal\n', Col, ' : optimism corrected',
+                       if(bci) '\nGray: bootstrap C.L.'),
             adj=0, cex.sub=cex.subtitles)
       w <- if(length(err))
              paste('B=', at$B, ' based on ', at$what,
@@ -131,7 +141,7 @@ plot.calibrate <-
     }
   }
   
-  abline(0, 1, col=gray(.9))	#ideal line
+  abline(0, 1, lty=2)	#ideal line
   if(type=='stratified')
     points(pred, cal.corrected, pch=par.corrected$pch, col=par.corrected$col)
   else

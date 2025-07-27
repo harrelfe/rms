@@ -31,7 +31,7 @@ function for details).  Nonparametric
 calibration curves are estimated over a regular sequence of predicted values.  The
 fit must have specified \code{x=TRUE, y=TRUE}.
 
-See \code{\link{predab.resample}} for information about confidence limits.
+See \code{\link{predab.resample}} for information about confidence limits.  Confidence limits for bootstrap overfitting-corrected calibration curves are not computed for \code{psm} fits.  This is because of \code{calibrate.psm} averages over multiple bootstrap loops.  This can probably be changed.
 
 The \code{print} and
 \code{plot} methods print the mean absolute error in predictions,

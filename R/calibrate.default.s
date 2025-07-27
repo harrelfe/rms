@@ -190,9 +190,11 @@ plot.calibrate.default <-
   lines(p, p.app, lty=3)
   lines(p, p.cal, lty=1)
   abline(a=0, b=1, lty=2)
-  lo  <- x[, 'Lower']
-  hi  <- x[, 'Upper']
-  llo <- length(lo) > 0
+  if('Lower' %in% colnames(x)) {
+    lo  <- x[, 'Lower']
+    hi  <- x[, 'Upper']
+    llo <- any(! is.na(lo))
+  } else llo <- FALSE
   if(llo) {
     lines(p, p + lo, col='gray80')
     lines(p, p + hi, col='gray80')

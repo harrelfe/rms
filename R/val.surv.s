@@ -27,6 +27,7 @@ val.surv <- function(fit, newdata, S, est.surv,
   if(! inherits(S, c('Surv', 'Ocens'))) stop('S must be a Surv or Ocens object')
   if(inherits(S, 'Ocens')) S <- Ocens2Surv(S)
   if(ncol(S) != 2) stop('S must be a right-censored Surv object')
+  
   if(missing(est.surv))
     est.surv <- if(! missing(u)) {
       if(missing(newdata))
@@ -48,6 +49,7 @@ val.surv <- function(fit, newdata, S, est.surv,
     curtail    <- function(x) pmin(.9999, pmax(x, .0001))
     func       <- function(x) fun(curtail(x))
     xx         <- func(est.surv)
+
     f <- switch(method,
                 hare     = polspline::hare(S[,1], S[,2], xx,
                                            maxdim=maxdim, ...),

@@ -55,14 +55,15 @@ calibrate.orm <- function(fit,
 
     psurv <- survest(fit, linear.predictors=x, times=u, conf.int=0)$surv
     deb(psurv)
-
+    
     pred.obs <- do.call(val.surv,
                         c(list(fit, S=y, u=u, est.surv=psurv,
                                pred=pred), val.surv.args))
     deb(unclass(pred.obs))
+    
     dist <- if(what=='observed') pred.obs$actualseq
             else                 pred.obs$actualseq - pred
-    
+    prn(list(pred, pred.obs$actualseq, dist), fi='/tmp/zz')
     if(iter == 0 && pr) print(pred.obs)
     if(iter == 0) structure(dist, keepinfo=list(pred.obs=pred.obs)) else
     dist
@@ -82,6 +83,10 @@ calibrate.orm <- function(fit,
   n    <- reliability[, "n"]
   rel  <- reliability[, "index.corrected"]
   opt  <- reliability[, "optimism"]
+  if('Lower' %in% colnames(reliability)) {
+    Lower <- reliability[, 'Lower']
+    Upper <- reliability[, 'Upper']
+  } else Lower <- Upper <- rep(NA, nrow(reliability))
   
   rel <- cbind(mean.optimism=opt, mean.corrected=rel, n=n)
   
@@ -91,8 +96,11 @@ calibrate.orm <- function(fit,
     
   structure(cbind(pred=pred,
                   reliability[, c("index.orig", "training", "test"), drop=FALSE],
-                  rel, calibrated=calibrated,
-                  calibrated.corrected=calibrated.corrected  ),
+                  Lower                = Lower,
+                  Upper                = Upper,
+                  rel,
+                  calibrated           = calibrated,
+                  calibrated.corrected = calibrated.corrected  ),
                   predicted=survival, kept=kept,
                   class="calibrate", u=u, units=unit, n=N, d=Nevents,
                   p=length(fit$coefficients), m=m, B=B, what=what, call=call)
