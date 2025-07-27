@@ -1,4 +1,4 @@
-Changes in version 8.1-0 (2025-07-25)
+Changes in version 8.1-0 (2025-07-27)
    * ggplot.npsurv, plotIntercepts: better log axes
    * adapt_orm: new function
    * intCalibration: added ordsurv option
@@ -6,6 +6,7 @@ Changes in version 8.1-0 (2025-07-25)
    * validate.lrm: moved computation of Emax to inside bootstrap loop so can get approximate confidence limits
    * Gls: complete "apVar" fix (see GH issue 157)
    * Olinks: added gradtol argument to pass to orm.fit
+   * lrm.residuals score.binary: added method='loess' to geom_smooth.  Thanks: Aruneek Biswas
 
 Changes in version 8.0-0 (2025-04-04)
    * orm, orm.fit: implemented left, right, and interval censoring; added Dxy to orm.fit

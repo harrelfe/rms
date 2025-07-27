@@ -153,7 +153,7 @@ residuals.lrm <-
     }
     w   <- do.call('rbind', W)
     w$x <- factor(w$x, xname)
-    g <- ggplot(w, aes(x=.data$y, y=.data$r)) + geom_smooth() +
+    g <- ggplot(w, aes(x=.data$y, y=.data$r)) + geom_smooth(method='loess') +
            facet_wrap(~ .data$x, scales='free_y') +
            xlab(yname)
     return(g)
