@@ -7,6 +7,7 @@ Changes in version 8.1-0 (2025-07-27)
    * Gls: complete "apVar" fix (see GH issue 157)
    * Olinks: added gradtol argument to pass to orm.fit
    * lrm.residuals score.binary: added method='loess' to geom_smooth.  Thanks: Aruneek Biswas
+   * calibrate.*: implemented ABCLOC confidence bands for overfitting-corrected calibration curves
 
 Changes in version 8.0-0 (2025-04-04)
    * orm, orm.fit: implemented left, right, and interval censoring; added Dxy to orm.fit
