@@ -111,7 +111,8 @@ The \code{lrtest} function does likelihood ratio tests for
 two nested models, from fits that have \code{stats} components with
 \code{"Model L.R."} values.  For models such as \code{psm, survreg, ols, lm} which have
 scale parameters, it is assumed that scale parameter for the smaller model
-is fixed at the estimate from the larger model (see the example).
+is fixed at the estimate from the larger model (see the example).  For non-rms fits it is assumed
+that the \code{logLik} function will return the correct -2 log likelihood for a model fit.
 
 \code{univarLR} takes a multivariable model fit object from
 \code{rms} and re-fits a sequence of models containing one predictor
