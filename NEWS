@@ -1,4 +1,4 @@
-Changes in version 8.1-0 (2025-07-27)
+Changes in version 8.1-0 (2025-08-28)
    * ggplot.npsurv, plotIntercepts: better log axes
    * adapt_orm: new function
    * intCalibration: added ordsurv option
@@ -8,6 +8,7 @@ Changes in version 8.1-0 (2025-07-27)
    * Olinks: added gradtol argument to pass to orm.fit
    * lrm.residuals score.binary: added method='loess' to geom_smooth.  Thanks: Aruneek Biswas
    * calibrate.*: implemented ABCLOC confidence bands for overfitting-corrected calibration curves
+   * lrtest: correct for error in glm deviance with family=gaussian() by using the logLik function instead of deviance values stored in fit objects
 
 Changes in version 8.0-0 (2025-04-04)
    * orm, orm.fit: implemented left, right, and interval censoring; added Dxy to orm.fit

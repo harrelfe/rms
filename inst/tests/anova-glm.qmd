@@ -1,0 +1,117 @@
+---
+title: "LR Tests for glm"
+format: 
+  html:
+    embed-resources: true
+---
+
+For linear models, `rms::lrtest` is not giving the correct likelihood ratio (LR) $\chi^2$ statistic when the fit is from `glm` due to the deviance and null deviance stored with `glm` fits for the Gaussian family not being correct.  Here is the code for `lrtest` from version 8.0-0 of `rms`, stored as function `olrtest` for this report.
+
+```{r}
+require(rms)
+options(prType='html')
+
+olrtest <- function(fit1, fit2)
+{
+  if(length(fit1$fail) && fit1$fail)
+    stop('fit1 had failed')
+  if(length(fit2$fail) && fit2$fail)
+    stop('fit2 had failed')
+
+  s1 <- fit1$stats
+  s2 <- fit2$stats
+
+  if(!length(s1))
+    s1 <- c('Model L.R.'=fit1$null.deviance - fit1$deviance,
+            'd.f.'=fit1$rank - (any(names(coef(fit1))=='(Intercept)')))
+  if(!length(s2))
+    s2 <- c('Model L.R.'=fit2$null.deviance - fit2$deviance,
+            'd.f.'=fit2$rank - (any(names(coef(fit2))=='(Intercept)')))
+
+  chisq1 <- s1['Model L.R.']
+  chisq2 <- s2['Model L.R.']
+  if(length(chisq1)==0 || length(chisq2)==2)
+    stop('fits do not have stats component with "Model L.R." or deviance component')
+  df1 <- s1['d.f.']
+  df2 <- s2['d.f.']
+  if(df1==df2) stop('models are not nested')
+
+  lp1 <- length(fit1$parms);  lp2 <- length(fit2$parms)
+  if(lp1 != lp2) warning('fits do not have same number of scale parameters') else
+  if(lp1 == 1 && abs(fit1$parms-fit2$parms)>1e-6)
+    warning('fits do not have same values of scale parameters.\nConsider fixing the scale parameter for the reduced model to that from the larger model.')
+
+  chisq <- abs(chisq1-chisq2)
+  dof   <- abs(df1-df2)
+  p     <- 1-pchisq(chisq,dof)
+
+  r     <- c(chisq,dof,p)
+  names(r) <- c('L.R. Chisq','d.f.','P')
+  structure(list(stats=r,
+                 formula1=formula(fit1),
+                 formula2=formula(fit2)),
+            class='lrtest')
+}
+```
+
+Simulate some data for testing various ways of computing the LR test and its constituent elements.
+
+```{r}
+set.seed(1)
+x1 <- rnorm(20)
+x2 <- rnorm(20)
+y  <- x1 + rnorm(20)
+f <- ols(y ~ x1 + x2)
+f
+r2 <- f$stats['R2']
+r2
+lr <- - 20 * log(1 - r2)
+lr
+```
+
+The LR $\chi^2$ from the formula $-n \log(1 - R^{2})$ agrees with what `ols` reports.
+
+Now do this with `glm`.
+
+```{r}
+g0 <- glm(y ~ 1)
+g  <- glm(y ~ x1 + x2)
+anova(g0, g)
+```
+
+The -2 LR of 25.943 from `anova` is not correct.  Look at the calculations another way.
+
+```{r}
+c(g0$deviance, g0$null.deviance)
+c(g$deviance,  g$null.deviance)
+g0$deviance - g$deviance
+(g0$deviance - g0$null.deviance) - (g$deviance - g$null.deviance)
+logLik(g0)
+logLik(g)
+2 * (logLik(g) - logLik(g0))
+```
+
+The last calculation is what `ols` got and is correct.  But
+
+```{r}
+olrtest(g0, g)
+```
+
+gives the same wrong answer as `anova.glm`.
+
+`logLik` does its computation on `g$aic` etc., which gets its value from `gaussian()$aic`, which is multiplying the deviance by $2\pi$ as part of the calculation.
+
+```{r}
+gaussian()$aic
+```
+
+Conclusion:  Change `rms::lrtest` to `2 * (logLik(larger model) - logLik(smaller model))`.  This change is made in `rms` 8.1-0.  The following tests this:
+
+```{r}
+lrtest(g0, g)
+```
+
+
+
+
+

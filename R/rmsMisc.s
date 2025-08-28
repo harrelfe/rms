@@ -470,38 +470,31 @@ lrtest <- function(fit1, fit2)
   if(length(fit2$fail) && fit2$fail)
     stop('fit2 had failed')
 
-  s1 <- fit1$stats
-  s2 <- fit2$stats
+  lr <- function(f) {
+    s <- f$stats
+    if(length(s)) s['Model L.R.'] else -2 * logLik(f)
+    # Here Model L.R. is really shifted by null logLik but that will
+    # cancel out later anyway
+    # logLik is correct for glm with gaussian() family even though deviance isn't
+    # glm back-calculates logLik from AIC
+  }
 
-  if(!length(s1))
-    s1 <- c('Model L.R.'=fit1$null.deviance - fit1$deviance,
-            'd.f.'=fit1$rank - (any(names(coef(fit1))=='(Intercept)')))
-  if(!length(s2))
-    s2 <- c('Model L.R.'=fit2$null.deviance - fit2$deviance,
-            'd.f.'=fit2$rank - (any(names(coef(fit2))=='(Intercept)')))
-
-  chisq1 <- s1['Model L.R.']
-  chisq2 <- s2['Model L.R.']
-  if(length(chisq1)==0 || length(chisq2)==2)
-    stop('fits do not have stats component with "Model L.R." or deviance component')
-  df1 <- s1['d.f.']
-  df2 <- s2['d.f.']
-  if(df1==df2) stop('models are not nested')
+  np <- function(f) f$rank - (any(names(coef(f)) == '(Intercept)'))
+    
+  dof <- abs(np(fit2) - np(fit1))
+  if(dof == 0) stop('models are not nested')
 
   lp1 <- length(fit1$parms);  lp2 <- length(fit2$parms)
   if(lp1 != lp2) warning('fits do not have same number of scale parameters') else
-  if(lp1 == 1 && abs(fit1$parms-fit2$parms)>1e-6)
+  if(lp1 == 1 && abs(fit1$parms - fit2$parms) > 1e-6)
     warning('fits do not have same values of scale parameters.\nConsider fixing the scale parameter for the reduced model to that from the larger model.')
 
-  chisq <- abs(chisq1-chisq2)
-  dof   <- abs(df1-df2)
-  p     <- 1-pchisq(chisq,dof)
-
-  r     <- c(chisq,dof,p)
-  names(r) <- c('L.R. Chisq','d.f.','P')
-  structure(list(stats=r,
-                 formula1=formula(fit1),
-                 formula2=formula(fit2)),
+  chisq <- abs(lr(fit2) - lr(fit1))
+  r     <- c(chisq, dof, 1 - pchisq(chisq, dof))
+  names(r) <- c('L.R. Chisq', 'd.f.', 'P')
+  structure(list(stats    = r,
+                 formula1 = formula(fit1),
+                 formula2 = formula(fit2)),
             class='lrtest')
 }
 
