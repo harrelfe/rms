@@ -1,13 +1,11 @@
 Package: rms
 Version: 8.1-0
-Date: 2025-08-28
+Date: 2025-10-07
 Title: Regression Modeling Strategies
-Authors@R: person(given = c("Frank", "E"),
+Authors@R: person(given  = c("Frank", "E"),
                   family = "Harrell Jr",
-                  role = c("aut", "cre"),
-                  email = "fh@fharrell.com")
-Author: Frank E Harrell Jr <fh@fharrell.com>
-Maintainer: Frank E Harrell Jr <fh@fharrell.com>
+                  role   = c("aut", "cre"),
+                  email  = "fh@fharrell.com")
 Depends: R (>= 4.4.0), Hmisc (>= 5.2-4)
 Imports: methods, survival, quantreg, ggplot2, Matrix, SparseM, rpart, nlme (>= 3.1-123), polspline, multcomp, htmlTable (>= 1.11.0), htmltools, MASS, cluster, digest, colorspace, knitr, grDevices, scales
 Suggests: boot, tcltk, plotly (>= 4.5.6), mice, icenReg, rmsb, nnet, VGAM, lattice, kableExtra

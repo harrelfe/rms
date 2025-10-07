@@ -37,11 +37,11 @@ rfort <- function(theta, k, y, y2, x=numeric(0), intcens=FALSE, what=3L) {
   red  <- z$pivot[-(1 : z$rank)]
   diagzero <- Matrix::diag(info) == 0e0
   if(! identical(which(diagzero), red))
-    cat('Redundant rows without zero diagonal\n')
+    stop('Redundant rows without zero diagonal\n')
   list(grad=w$grad, info=info, redundant=red)
 }
 
-ell <- function(y, y2, long=FALSE) {
+ell <- function(y, y2=y, long=FALSE) {
   o <- Ocens2ord(Ocens(y, y2))
   k <- length(attr(o, 'levels')) - 1
   if(long) {
@@ -75,6 +75,9 @@ ell <- function(y, y2, long=FALSE) {
                   redundant=ifelse(red, '*', ''))
   w
 }
+
+# No censoring
+ell(c(1, 3, 11, 17))
 
 # Censoring beyond uncensored values
 ell(c(-Inf, 1, 2, 3, 4), c(0, 1, 2, 3, Inf))
