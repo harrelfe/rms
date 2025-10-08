@@ -18,7 +18,7 @@ Olinks(
 
 \item{dec}{number of digits to the right of the decimal place to round statistics to}
 
-\item{...}{passed to \code{\link[=orm.fit]{orm.fit()}}}
+\item{gradtol}{tolerance for convergence on the absolute gradient; see \code{lrm.fit} and \code{orm.fit}.}
 }
 \value{
 data frame.  The \code{R2} column is from the last adjusted \eqn{R^2} computed by \code{orm},

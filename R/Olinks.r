@@ -3,7 +3,7 @@
 #' @param object an object created by `orm` with `x=TRUE, y=TRUE`
 #' @param links a vector of links to consider other than the one used to get `object`
 #' @param dec number of digits to the right of the decimal place to round statistics to
-#' @param ... passed to [orm.fit()]
+#' @param gradtol tolerance for convergence on the absolute gradient; see `lrm.fit` and `orm.fit`.
 #'
 #' @returns data frame.  The `R2` column is from the last adjusted \eqn{R^2} computed by `orm`,
 #' which adjustes for the effective sample size and the number of betas.

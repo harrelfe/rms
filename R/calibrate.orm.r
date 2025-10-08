@@ -63,7 +63,6 @@ calibrate.orm <- function(fit,
     
     dist <- if(what=='observed') pred.obs$actualseq
             else                 pred.obs$actualseq - pred
-    prn(list(pred, pred.obs$actualseq, dist), fi='/tmp/zz')
     if(iter == 0 && pr) print(pred.obs)
     if(iter == 0) structure(dist, keepinfo=list(pred.obs=pred.obs)) else
     dist
