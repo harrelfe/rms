@@ -221,7 +221,7 @@ If the fit was created using penalized maximum likelihood estimation,
 the same \code{penalty} and \code{penalty.scale} parameters are used during
 validation.
 
-See \url{https://fharrell.com/post/bootcal/} for simulations of the accuracy of various \code{smoother}s for binary logistic model calibration, as well as simulations of confidence interval coverage.
+See \url{https://www.fharrell.com/post/bootcal/} for simulations of the accuracy of various \code{smoother}s for binary logistic model calibration, as well as simulations of confidence interval coverage.
 }
 \author{
 Frank Harrell\cr

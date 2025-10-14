@@ -13,7 +13,7 @@ If \code{bw=TRUE}, \code{predab.resample} stores as the \code{kept}
 attribute a logical matrix encoding which
 factors were selected at each repetition.
 
-Unless \code{conf.int} is \code{FALSE} or 0, the function computes approximate bootstrap confidence intervals for overfitting-corrected predictive performance measures using the method of Harrell (2025) described and tested at \url{https://fharrell.com/post/bootcal/} and inspired by Noma et al (2021). 
+Unless \code{conf.int} is \code{FALSE} or 0, the function computes approximate bootstrap confidence intervals for overfitting-corrected predictive performance measures using the method of Harrell (2025) described and tested at \url{https://www.fharrell.com/post/bootcal/} and inspired by Noma et al (2021). 
 }
 \usage{
 predab.resample(fit.orig, fit, measure, 
@@ -208,7 +208,7 @@ Efron B, Tibshirani R (1997). Improvements on cross-validation: The .632+ bootst
 
 Noma H, et al (2021). Confidence intervals of prediction accuracy measures for multivariable prediction models based on the bootstrap-based optimism correction methods.  Statistics in Medicine 40:5691-5701.
 
-Harrell FE (2025). Bootstrap confidence limits for bootstrap overfitting-corrected model performance, \url{https://fharrell.com/post/bootcal/}
+Harrell FE (2025). Bootstrap confidence limits for bootstrap overfitting-corrected model performance, \url{https://www.fharrell.com/post/bootcal/}
 }
 \seealso{
 \code{\link{rms}}, \code{\link{validate}}, \code{\link{fastbw}},

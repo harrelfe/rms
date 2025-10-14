@@ -77,7 +77,7 @@ If the original fit was created using penalized maximum likelihood estimation,
 the same \code{penalty.matrix} used with the original
 fit are used during validation.
 
-See \url{https://fharrell.com/post/bootcal/} for simulations of the accuracy of approximate bootstrap confidence intervals for overfitting-corrected Brier scores.
+See \url{https://www.fharrell.com/post/bootcal/} for simulations of the accuracy of approximate bootstrap confidence intervals for overfitting-corrected Brier scores.
 }
 \author{
 Frank Harrell\cr
