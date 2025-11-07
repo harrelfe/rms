@@ -1,3 +1,7 @@
+Changes in version 8.1-1 (2025-11-01)
+   * infoMxop: look for intercepts attribute in info if info matrix is not a 3-element list; don't look for a, b, ab if same pertains
+   * lrm.fit, : add intercepts attribute to info.matrix if not a 3-element list; fixes bug with vcov when transx=TRUE
+
 Changes in version 8.1-0 (2025-10-14)
    * ggplot.npsurv, plotIntercepts: better log axes
    * adapt_orm: new function

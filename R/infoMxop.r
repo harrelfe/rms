@@ -1,10 +1,12 @@
 #' Operate on Information Matrices
 #'
-#' Processes four types of information matrices: ones produced by the `SparseM` package for the `orm` function in `rms` version 6.9-0 and earlier, by the `Matrix` package for version 7.0-0 of `rms` using a tri-band diagonal matrix for the intercepts, using `Matrix` for general sparse information matrices for intercepts (when any interval-censored observations exist), or plain matrices.  For `Matrix`, the input information matrix is a list with three elements: `a` containing in two columns the diagonal and superdiagonal for intercepts (when there is no interval censoring) or a list with three elements `row`, `col`, `a` (when there is interval censoring), `b`, a square matrix for the covariates, and `ab` for intercepts x covariates.  If nothing else is specified, the assembled information matrix is returned for `Matrix`, or the original `info` otherwise.  If `p=TRUE`, the number of parameters in the model (number of rows and columns in the whole information matrix) is returned.  If `i` is given, the `i` elements of the inverse of `info` are returned, using efficient calculation to avoid inverting the whole matrix.  Otherwise if `invert=TRUE` or `B` is given without `i`, the efficiently (if `Matrix` or `SparseM`) inverted matrix is returned, or the matrix multiplication of the inverse and `B`.  If both `i` and `B` are given, what is returned is the `i` portion of the inverse of the information matrix, matrix multiplied by `B`.  This is done inside `solve()`.
+#' Processes four types of information matrices: ones produced by the `SparseM` package for the `orm` or `lrm` functions in `rms` version 6.9-0 and earlier, by the `Matrix` package for version 7.0-0 of `rms` using a tri-band diagonal matrix for the intercepts, using `Matrix` for general sparse information matrices for intercepts (when any interval-censored observations exist), or plain matrices.  For `Matrix`, the input information matrix is a list with three elements: `a` containing in two columns the diagonal and superdiagonal for intercepts (when there is no interval censoring) or a list with three elements `row`, `col`, `a` (when there is interval censoring), `b`, a square matrix for the covariates, and `ab` for intercepts x covariates.  If nothing else is specified, the assembled information matrix is returned for `Matrix`, or the original `info` otherwise.  If `p=TRUE`, the number of parameters in the model (number of rows and columns in the whole information matrix) is returned.  If `i` is given, the `i` elements of the inverse of `info` are returned, using efficient calculation to avoid inverting the whole matrix.  Otherwise if `invert=TRUE` or `B` is given without `i`, the efficiently (if `Matrix` or `SparseM`) inverted matrix is returned, or the matrix multiplication of the inverse and `B`.  If both `i` and `B` are given, what is returned is the `i` portion of the inverse of the information matrix, matrix multiplied by `B`.  This is done inside `solve()`.
 #' 
 #' When only variance-covariance matrix elements corresponding to the non-intercepts are desired, specify
 #' `i='x'` or `i=(k + 1) : nv` where `nv` is the number of intercepts and slopes combined.  `infoMxop` computes the needed covariance matrix very quickly in this case.
 #' When inverting `info`, if `info` has a `'scale'` attribute with elements `mean` and `sd`, the scaling is reversed after inverting `info`.
+#'
+#' When the number of intercepts is needed to be known and the `info` object is not a 3-element list, `info` must have an `intercepts` attribute to define the number.  This is used for example when `transx=TRUE` is specified to `lrm` or `lrm.fit`.
 #'
 #' @param info an information matrix object
 #' @param i integer vector specifying elements returned from the inverse.  You an also specify `i='x'` to return non-intercepts or `i='i'` to return intercepts.
@@ -38,6 +40,8 @@ infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
 
   type <- 'plain'
   t3   <- FALSE
+  k    <- attr(info, 'intercepts')
+
   if(inherits(info, 'matrix.csr')) type <- 'SparseM'
   else if(is.list(info) && all(c('a', 'b', 'ab') %in% names(info))) {
     # Object created by lrm or orm
@@ -66,6 +70,8 @@ infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
   if(np) return(nv)
   if(! invert) return(info)
 
+  if(! length(k)) stop('info did not contain intercepts attribute')
+
   # ChatGPT confirmed that extracting submatrices of t(trans) x V x trans equals
   # operating on a submatrix of trans: https://chatgpt.com/share/676e6cb9-bde0-800a-b5f6-0b2c53393ae1
   if(length(sc)) {
@@ -91,11 +97,11 @@ infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
   else {
     # User has specied i, a vector of indexes of rows/columns of inverse to keep
     if(is.character(i) && length(i) == 1) {
-      if(! t3) k <- attr(info, 'intercepts')
-      if(! length(k)) 
-        stop("may only specify i='i' or 'x' when operating on the default ",
-             "lrm or orm 3-element information matrix or when info has ",
-             "an intercepts attribute")
+#      if(! t3) k <- attr(info, 'intercepts')
+#      if(! length(k)) 
+#        stop("may only specify i='i' or 'x' when operating on the default ",
+#             "lrm or orm 3-element information matrix or when info has ",
+#             "an intercepts attribute")
       i <- switch(i,
                   i = 1 : k,
                   x = (k + 1) : nv)
@@ -104,8 +110,10 @@ infoMxop <- function(info, i, invert=! missing(i) || ! missing(B),
       # It's very quick to only get the beta components of the inverse
       # It's slower to do likewise for just the intercept components; best to
       # just use the i=1:k for that
-      M <- b - Matrix::t(ab) %*% solv(a, ab, tol=tol)
-      v <- if(Bp) solv(M, B, tol=tol) else solv(M, tol=tol)
+      if(t3) {
+        M <- b - Matrix::t(ab) %*% solv(a, ab, tol=tol)
+        v <- if(Bp) solv(M, B, tol=tol) else solv(M, tol=tol)
+      } else v <- solv(info)[i, i, drop=FALSE]
       if(length(sc)) {
         w <- trans[i, i, drop=FALSE]
         v <- t(w) %*% v %*% w

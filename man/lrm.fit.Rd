@@ -113,7 +113,7 @@ a list with the following elements:
 }
 \item \code{fail}:  \code{TRUE} if any matrix inversion or failure to converge occurred, \code{FALSE} otherwise
 \item \code{coefficients}:
-\item \code{info.matrix}: a list of 3 elements \code{a}, \code{b}, \code{ab} with \code{a} being a $k x 2$ matrix for $k$ intercepts, \code{b} being $p x p$ for $p$ predictors, and \code{ab} being $k x p$.  See \code{\link[=infoMxop]{infoMxop()}} for easy ways of operating on these 3 elements.
+\item \code{info.matrix}: normally a list of 3 elements \code{a}, \code{b}, \code{ab} with \code{a} being a $k x 2$ matrix for $k$ intercepts, \code{b} being $p x p$ for $p$ predictors, and \code{ab} being $k x p$.  See \code{\link[=infoMxop]{infoMxop()}} for easy ways of operating on these 3 elements.  When \code{info.matrix} is not a 3-element list, as when \code{transx=TRUE}, it will have an \code{intercepts} attribute defining the number of intercepts in the model.
 \item \code{u}:  gradient vector
 \item \code{iter}:  number of iterations required.  For some optimization methods this is a vector.
 \item \code{deviance}:  vector of deviances: intercepts-only, intercepts + offset (if \code{offset} is present), final model (if \code{x} is used)

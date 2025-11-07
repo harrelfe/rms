@@ -63,7 +63,7 @@
 #'     * `gp`: g-index on the probability scale
 #'   * `fail`:  `TRUE` if any matrix inversion or failure to converge occurred, `FALSE` otherwise
 #'   * `coefficients`:
-#'   * `info.matrix`: a list of 3 elements `a`, `b`, `ab` with `a` being a $k x 2$ matrix for $k$ intercepts, `b` being $p x p$ for $p$ predictors, and `ab` being $k x p$.  See [infoMxop()] for easy ways of operating on these 3 elements.
+#'   * `info.matrix`: normally a list of 3 elements `a`, `b`, `ab` with `a` being a $k x 2$ matrix for $k$ intercepts, `b` being $p x p$ for $p$ predictors, and `ab` being $k x p$.  See [infoMxop()] for easy ways of operating on these 3 elements.  When `info.matrix` is not a 3-element list, as when `transx=TRUE`, it will have an `intercepts` attribute defining the number of intercepts in the model.  
 #'   * `u`:  gradient vector
 #'   * `iter`:  number of iterations required.  For some optimization methods this is a vector.
 #'   * `deviance`:  vector of deviances: intercepts-only, intercepts + offset (if `offset` is present), final model (if `x` is used)
@@ -117,7 +117,8 @@ lrm.fit <-
                if(! missing(initial)) initial, compstats, ftdb, maxit, labels=FALSE)
     prn(w, file='/tmp/z')
   }
-  db <- if(! ftdb) function(...) {} else function(...) cat(..., '\n', file='/tmp/z', append=TRUE)
+  db <- if(! ftdb) function(...) {} else 
+                   function(...) cat(..., '\n', file='/tmp/z', append=TRUE)
 
   n <- length(y)
 
@@ -185,7 +186,8 @@ lrm.fit <-
     stop('opt_method="glm.fit" only applies when k=1 and there is no penalty')
 
   if(! length(offset)) offset <- 0e0
-  if(length(offset) > 1 && (length(offset) != n)) stop('offset and y must have same length')
+  if(length(offset) > 1 && (length(offset) != n))
+    stop('offset and y must have same length')
   offset <- rep(offset, length=n)
   ofpres <- ! all(offset == 0e0)
   storage.mode(offset) <- "double"
@@ -224,7 +226,7 @@ lrm.fit <-
           nlminb     = list(trace=trace, iter.max=maxit, eval.max=maxit,
                             rel.tol=reltol, abs.tol=abstol, xf.tol=1e-16),
           glm.fit    = list(epsilon=reltol, maxit=maxit, trace=trace),
-                       list(trace=trace, maxit=maxit) )
+          list(trace=trace, maxit=maxit) )
 
   if(p == 0 & ! ofpres) {
     loglik         <- rep(loglik, 2)
@@ -276,7 +278,7 @@ lrm.fit <-
     if(what == 'info')
       return(list(a = - h$a, b = - h$b, ab = - h$ab,
                   iname=iname, xname=xname))
-    h <- infoMxop(h)
+    h <- infoMxop(h)   # assemble info matrix as a Matrix::Matrix
     if(sparse_hessian_ok) -2e0 * h else -2e0 * Matrix::as.matrix(h) 
   }
 
@@ -405,6 +407,7 @@ lrm.fit <-
   v <- vc <- NULL
 
   if(maxit == 1) {
+    if(transx) warning('information matrix does not account for transx=TRUE')
     loglik <- c(loglik, logl(initial))
     if(p == 0) lpmid <- initial[ymed] + offset
     else {
@@ -481,7 +484,8 @@ lrm.fit <-
 
     # Add second derivative of penalty function if needed, on the original scale
     if(! inclpen && penpres) {
-      if(is.list(info) && length(info) == 3) info$b <- info$b - original.penalty.matrix
+      if(is.list(info) && length(info) == 3)
+        info$b <- info$b - original.penalty.matrix
       else info[-(1:k), -(1:k)] <- info[-(1:k), -(1:k)] - original.penalty.matrix
     }
 
@@ -516,10 +520,10 @@ lrm.fit <-
 
   if(p == 0) lpmid <- initial[ymed] + offset     # initial is defined at Pt A or Pt B above
 
-  if(! transx && is.list(info)) {
+  if(! transx && is.list(info) && (length(info) == 3)) {
     info$iname <- iname
     info$xname <- xname
-  }
+  } else attr(info, 'intercepts') <- k
 
   retlist <-
      list(call              = cal,
