@@ -479,7 +479,10 @@ lrtest <- function(fit1, fit2)
     # glm back-calculates logLik from AIC
   }
 
-  np <- function(f) f$rank - (any(names(coef(f)) == '(Intercept)'))
+  np <- function(f) {
+    s <- f$stats
+    if(length(s)) s['d.f.'] else f$rank - (any(names(coef(f)) == '(Intercept)'))
+  }
     
   dof <- abs(np(fit2) - np(fit1))
   if(dof == 0) stop('models are not nested')
