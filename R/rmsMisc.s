@@ -890,35 +890,35 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
       } else {
         R <- c(R,  skipt(preskip))
       }
-      R <- c(R,
-             if(type == 'html.naprint.delete')
-               do.call(type, obj)
-             else
-               if(type == 'latex.naprint.delete')
-                 capture.output(do.call(type,
-                                        c(obj, list(file=''))))
-             else
-               if(type == 'print')
-                 c(bverb(),
-                   capture.output(do.call(type,
-                                          c(obj, list(quote=FALSE)))), everb())
-             else
-               do.call(type, obj),
+    
+      w <- switch(type, 
+                  html.naprint.delete = do.call(type, obj),
+                  latex.naprint.delete = 
+                    capture.output(do.call(type,
+                                           c(obj, list(file='')))),
+                   print =  
+                     c(bverb(),
+                       capture.output(do.call(type, obj)),
+                       everb()),
+                   do.call(type, obj)
+                   )
+                   
+      R <- c(R, w,
              ## unlike do.call, eval(call(...)) dispatches on class of ...
-             if(tex) '\\end{center}' else ''
-      )
+             if(tex) '\\end{center}' else '' )
     }
   }
   if(length(footer))
     R <- c(R, paste(specs$smallskip, transl(footer)))
-
+    
   if(debug)
     cat(R, sep='\n', append=TRUE, file='/tmp/rmsdebug.txt')
-
+    
   switch(lang,
          html  = rendHTML(R),
          latex = cat(R, sep='\n'),
-         plain = cat(R, sep='\n'))
+         plain = cat(R, sep='\n')
+         )
 }
 
 latex.naprint.delete <- function(object, file='', append=TRUE, ...) {
