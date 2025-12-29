@@ -130,7 +130,7 @@ ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75,
       ylab <- 'Effect in IQR Units'
       iqr <- function(x) {
         d <- diff(quantile(x, c(0.25, 0.75)))
-        if(d == 0e0) d <- GiniMd(d)
+        if(d == 0e0) d <- GiniMd(x)
         d
       }
       iq <- apply(X, 2, iqr)
