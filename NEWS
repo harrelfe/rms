@@ -1,10 +1,12 @@
-Changes in version 8.1-1 (2025-12-29)
+Changes in version 8.1-1 (2026-01-04)
    * infoMxop: look for intercepts attribute in info if info matrix is not a 3-element list; don't look for a, b, ab if same pertains
    * lrm.fit, : add intercepts attribute to info.matrix if not a 3-element list; fixes bug with vcov when transx=TRUE
    * lrtest: corrected to use fit$stats['d.f.'] first
    * Help file importexport.Rd: changed possible values of type argument to match survival 3.8-5
    * prModFit as used by print.Gls: removed quote=FALSE passed to print as nlme::print correlation summary does this already; cleaned up some code; see https://github.com/harrelfe/rms/issues/166
    * ordParallel: fixed issue with wrong argument to GiniMd; see https://github.com/harrelfe/rms/issues/168
+   * vcov.orm (also serves lrm): fixed issue with not utilizing full covariance matrix produced by robcov etc.; see https://github.com/harrelfe/rms/issues/167
+   * inst/tests/ordinal-robcov.r: new test for above
 
 Changes in version 8.1-0 (2025-10-14)
    * ggplot.npsurv, plotIntercepts: better log axes

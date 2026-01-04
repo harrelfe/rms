@@ -39,7 +39,7 @@ vcov.psm <- function(object, regcoef.only=TRUE, ...)
 vcov.orm <- function(object, regcoef.only=TRUE, intercepts='mid', ...) {
   np   <- length(object$coefficients)
   ns   <- num.intercepts(object)
-  v    <- object$var
+  v    <- object[['var']]
   info <- object$info.matrix
   override <- object$override_vcov_intercept
   if(length(override)) intercepts <- override
@@ -63,6 +63,11 @@ vcov.orm <- function(object, regcoef.only=TRUE, intercepts='mid', ...) {
     if(intercepts == 'all' && type == 'full') return(v)
     if(intercepts == 'none') return(if(type == 'mid') v[-1, -1, drop=FALSE]
                                     else v[-(1 : ns), -(1 : ns), drop=FALSE])
+    if(is.numeric(intercepts) && type == 'full') {
+      # See https://github.com/harrelfe/rms/issues/167
+      i <- c(intercepts, if(np > ns) (ns + 1) : np)
+      return(v[i, i, drop=FALSE])
+    }
     stop('intercepts=', intercepts, ' requested for an orm fit wth $var.\n',
          'orm only stored intercept components of the variance-covariance matrix ',
          'for the middle intercept.')
