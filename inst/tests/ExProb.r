@@ -30,7 +30,7 @@ lin1 <- lin0 + lambda
 Y <- ifelse(A == 1,
             exp(lin1 + rnorm(n)),
             exp(lin0 + rnorm(n)))
-Y <- round(Y, 7)
+Y <- 1e-7 * round(Y * 1e7)
 
 f <- orm(Y ~ A + x1 + x2 + x3, family = "probit")
 g <- ExProb(f)
@@ -38,9 +38,11 @@ g <- ExProb(f)
 yu  <- sort(unique(Y))
 new <- data.frame(x1, x2, x3, A=1)
 lp  <- predict(f, newdata = new)
+p1  <- g(lp[1], y=yu)
 p   <- g(lp, y = yu)
 coef(f)[1:10]
 lp[1:10]
 p$y[1:10]
-p$prob[1:10]
+p1$prob[1:10]
+p$prob[1, 1:10]
 
