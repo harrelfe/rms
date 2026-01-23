@@ -15,8 +15,7 @@
 	\code{ExProb} is especially useful for \code{\link{nomogram}}.  \code{Survival}
   generates a similar function but for computing survival probabilities Prob(Y>y)
   and adding an origin of zero.  Plotting of survival curves is done with a 
-  \code{survplot} method.  \code{Survival.orm} merely calls \code{ExProb.orm}
-  with argument \code{survival=TRUE}.  For survival estimation when interval
+  \code{survplot} method.  For survival estimation when interval
   censoring is present, times are taken as interval midpoints with intervals
   corresponding to intercepts in the model.
 	
