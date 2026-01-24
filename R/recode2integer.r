@@ -2,7 +2,7 @@
 #'
 #' For a factor variable `y`, uses existing factor levels and codes the output `y` as integer.  For a character `y`, converts to `factor` and does the same.  For a numeric `y` that is integer, leaves the levels intact and codes `y` as consecutive positive integers corresponding to distinct values in the data.  For numeric `y` that contains any non-integer values, rounds `y` to `precision` decimal places to the right before finding the distinct values.
 #'
-#' This function is used to prepare ordinal variables for [orm.fit()] and [lrm.fit()].  It was written because just using [factor()] creates slightly different distinct `y` levels on different hardware because [factor()] uses [unique()] which functions slightly differently on different systems when there are non-significant digits in floating point numbers.
+#' This function is used to prepare ordinal variables for [orm.fit()] and [lrm.fit()].  It was written because just using [factor()] creates slightly different distinct `y` levels on different hardware because [factor()] uses [unique()] which functions slightly differently on different systems when there are non-significant digits in floating point numbers.  See [this](https://hbiostat.org/r/rms/unique-float/) for more details.
 #'
 #' @title recode2integer
 #' @param y a numeric, factor, or character vector with no `NA`s
