@@ -16,6 +16,9 @@ user previously running \code{options(prType="lang")} where
 \code{"html"}.   When using html with Quarto or RMarkdown,
 \code{results='asis'} need not be written in the chunk header.
 }
+\note{
+  When creating ordinal levels for non-integer numeric Y, this function does not use the \code{unique} function because it was found to be non-reproducible across hardware platforms.  Instead, intercepts are mapped to integers obtained from rounding original Y levels after multiplying by 1e7 (by default).  The only way to guarantee the correct mapping to intercepts is to reference the "official" levels of Y stored in the \code{yunique} object found in the fit object.  Users may opt instead to replace original data with e.g. 1e-7 * round(Y * 1e7) before model fitting.
+}
 \usage{
 lrm(formula, data=environment(formula),
     subset, na.action=na.delete, method="lrm.fit",

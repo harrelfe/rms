@@ -89,6 +89,7 @@ orm.fit <- function(x=NULL, y,
       stop('npsurv must be present when not specifying initial to orm.fit')
     Ncens1  <- a$Ncens1
     Ncens2  <- a$Ncens2
+    rt_cens_beyond <- a$rt_cens_beyond
     k       <- length(ylevels) - 1
     YO      <- extractCodedOcens(y, what=4, ivalues=TRUE)   # ivalues=TRUE -> a, b are [0, k]
     ctype   <- YO$ctype
@@ -101,11 +102,11 @@ orm.fit <- function(x=NULL, y,
     mediany <- a$median
     kmid    <- which.min(abs(ylevels[-1] - mediany))
     anycens <- any(ctype > 0)
-    orange  <- a$range
+    ranges  <- a$ranges
   } else {
   ylabel    <- label(y)
   uni       <- units(y)
-  orange    <- if(is.numeric(y)) range(y)
+  ranges    <- if(is.numeric(y)) list(y=range(y), u=range(y), c=c(NA, NA))
   w         <- recode2integer(y, precision=y.precision)
   y         <- w$y - 1
   y2        <- y
@@ -116,6 +117,7 @@ orm.fit <- function(x=NULL, y,
   mediany   <- w$median
   Ncens1    <- Ncens2 <- c(left=0L, right=0L, interval=0L)
   anycens   <- FALSE
+  rt_cens_beyond <- NULL
   }
 
   intcens <- 1L * any(ctype == 3)
@@ -176,7 +178,7 @@ orm.fit <- function(x=NULL, y,
    # Use linear interpolation/extrapolation from the stored times to the current times
    interp_initial <- approxExtrap(initial$time, initial$surv, xout=ylevels)$y
    if(debug2) {
-     du <- cbind(time    = initial$time, surv       = initial$surv, 
+     du <- cbind(time    = initial$time, surv       = initial$surv,
                  ylevels = ylevels,      interpsurv = interp_initial)
      saveRDS(du, '/tmp/du.rds')
      prn(du[1:min(20, length(ylevels)),], 'orm.fit')
@@ -303,7 +305,7 @@ orm.fit <- function(x=NULL, y,
     ## rho <- .Fortran('rcorr', cbind(lp, y), as.integer(n), 2L, 2L, r=double(4),
     ##                 integer(4), double(n), double(n), double(n), double(n),
     ##                 double(n), integer(n), PACKAGE='Hmisc')$r[2]
-    
+
     cindex <- NA
     if(! anycens || (Ncens1['left'] == 0 && Ncens1['interval'] == 0))
       cindex <- suppressWarnings(concordancefit(if(anycens) Ocens2Surv(Y) else y, lp)$concordance)
@@ -330,7 +332,8 @@ orm.fit <- function(x=NULL, y,
                   Ncens1            = if(isOcens) Ncens1,
                   Ncens2            = if(isOcens) Ncens2,
                   # n.risk          = if(any(ctype > 0)) n.risk,
-                  yrange            = orange,             # range attribute from Ocens
+                  ranges            = ranges,             # ranges attribute from Ocens
+                  rt_cens_beyond    = rt_cens_beyond,
                   stats             = stats,
                   coefficients      = kof,
                   var               = NULL,
@@ -388,7 +391,7 @@ storage.mode(link)    <- 'integer'
 
 if(getOption('rms.fit.debug', FALSE)) try <- function(x) x
 
-rfort <- function(theta, what=3L, mscore=FALSE, 
+rfort <- function(theta, what=3L, mscore=FALSE,
                   debug=as.integer(getOption('orm.fit.debug', 0L)),
                   debug2=getOption('orm.fit.debug2', FALSE)) {
   p <- as.integer(length(theta) - k)
@@ -411,7 +414,7 @@ rfort <- function(theta, what=3L, mscore=FALSE,
                 logL=numeric(1), grad=numeric(k + p), lpe=numeric(n),
                 a=matrix(0e0, (1 - intcens) * k, 2), b=matrix(0e0, p, p), ab=matrix(0e0, k, p),
                 intcens, row=integer(nai), col=integer(nai), ai=numeric(nai), nai=nai, ne=integer(1),
-                urow=integer(nu), ucol=integer(nu), um=numeric(nu), nu=nu, nuu=integer(1),   
+                urow=integer(nu), ucol=integer(nu), um=numeric(nu), nu=nu, nuu=integer(1),
                 what=what, debug=as.integer(debug), 1L, salloc=integer(1))
   if(debug) prn(w$salloc)
 
@@ -640,8 +643,8 @@ if(maxit == 1) {
 ## Note: deriv and deriv2 below are no longer used as are hard-coded into ormll
 ## Expressions are used because if using a function that calls plogis(),
 ## the .C call for plogis will can result in R losing the environment
-## of the C code.  
-## The 5 expression elements are cumprob, inverse, deriv, deriv2, and 
+## of the C code.
+## The 5 expression elements are cumprob, inverse, deriv, deriv2, and
 ## deriv as a function only of x
 
 ## Extreme value type I dist = Gumbel maximum = exp(-exp(-x)) = MASS:::pgumbel
@@ -677,7 +680,7 @@ probabilityFamilies <-
        cauchit =
          expression(function(x) pcauchy(x),
                     function(x) qcauchy(x),
-                    function(x, f) dcauchy(x), 
+                    function(x, f) dcauchy(x),
                     function(x, f, deriv) -2 * x * ((1 + x*x)^(-2)) / pi,
                     function(x) dcauchy(x))
   )

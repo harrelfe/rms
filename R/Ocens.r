@@ -79,7 +79,7 @@ Ocens <- function(a, b=a) {
 ##' @param nponly set to `TRUE` to return a list containing the survival curve estimates before interval consolidation, using [icenReg::ic_np()]
 ##' @param cons set to `'none'` to not consolidate intervals when the survival estimate stays constant; this will likely cause a lot of trouble with zero cell probabilities during maximum likelihood estimation.  The default is to consolidate consecutive intervals.  Set `cons='data'` to change the raw data values to make observed intervals wider, in an iterative manner until no more consecutive tied survival estimates remain.
 ##' @param verbose set to `TRUE` to print information messages.  Set `verbose` to a number greater than 1 to get more information printed, such as the estimated survival curve at each stage of consolidation.
-##' @return a 2-column integer matrix of class `"Ocens"` with an attribute `levels` (ordered), and if there are zero-width intervals arising from censoring, an attribute `upper` with the vector of upper limits.  Left-censored values are coded as `-Inf` in the first column of the returned matrix, and right-censored values as `Inf`.  When the original variables were `factor`s, these are factor levels, otherwise are numerically or alphabetically sorted distinct (over `a` and `b` combined) values.  When the variables are not factors and are numeric, other attributes `median`, `range`, `label`, and `npsurv` are also returned.  `median` is the median of the uncensored values on the origiinal scale.  `ranges` is a 3-element list, each element a 2-vector range.  The element named `y` is the range of original data values before adjustments.  The `u` element is a 2-vector range of uncensored values before adjustment, and the `c` element contains the lowest left censoring point and highest right-censored point.  Getting back to the main returned variables, `label` is the `label` attribute from the first of `a, b` having a label.  `npsurv` is the estimated survival curve (with elements `time` and `surv`) from the `icenReg` package after any interval consolidation.  If the argument `npsurv=TRUE` was given, this `npsurv` list before consolidation is returned and no other calculations are done.  When the variables are factor or character, the median of the integer versions of variables for uncensored observations is returned as attribute `mid`.  A final attribute `freq` is the vector of frequencies of occurrences of all values.  `freq` aligns with `levels`.  A `units` attribute is also included.  Finally there are two 3-vectors `Ncens1` and `Ncens2`, the first containing the original number of left, right, and interval-censored observations and the second containing the frequencies after altering some of the data.  For example, observations that are right-censored beyond the highest uncensored value are coded as uncensored to get the correct likelihood component in `orm.fit`.
+##' @return a 2-column integer matrix of class `"Ocens"` with an attribute `levels` (ordered), and if there are zero-width intervals arising from censoring, an attribute `upper` with the vector of upper limits.  Left-censored values are coded as `-Inf` in the first column of the returned matrix, and right-censored values as `Inf`.  When the original variables were `factor`s, these are factor levels, otherwise are numerically or alphabetically sorted distinct (over `a` and `b` combined) values.  When the variables are not factors and are numeric, other attributes `median`, `range`, `label`, and `npsurv` are also returned.  `median` is the median of the uncensored values on the origiinal scale.  `ranges` is a 3-element list, each element a 2-vector range.  The element named `y` is the range of original data values before adjustments.  The `u` element is a 2-vector range of uncensored values before adjustment, and the `c` element contains the lowest left censoring point and highest right-censored point.  Getting back to the main returned variables, `label` is the `label` attribute from the first of `a, b` having a label.  `npsurv` is the estimated survival curve (with elements `time` and `surv`) from the `icenReg` package after any interval consolidation.  If the argument `npsurv=TRUE` was given, this `npsurv` list before consolidation is returned and no other calculations are done.  When the variables are factor or character, the median of the integer versions of variables for uncensored observations is returned as attribute `mid`.  A final attribute `freq` is the vector of frequencies of occurrences of all values.  `freq` aligns with `levels`.  A `units` attribute is also included.  Finally there are two 3-vectors `Ncens1` and `Ncens2`, the first containing the original number of left, right, and interval-censored observations and the second containing the frequencies after altering some of the data.  For example, observations that are right-censored at or beyond the highest uncensored value are coded as uncensored to get the correct likelihood component in `orm.fit`.  When only right censoring is present and there are censored observations at or beyond the highest uncensored point, another attribute `rt_cens_beyond` is included in the returned list.  It has elements `newlevel` which is the numeric uncensored value assigned to these observations, and `range` which is a 2-vector containing the lowest and highest censored values beyond the last uncensored value.
 ##'
 ##' @author Frank Harrell
 ##' @export
@@ -159,20 +159,25 @@ Ocens2ord <- function(y, precision=7, maxit=10, nponly=FALSE,
 
     eps <- if(mul == 1e0) 0.001 else 0.1
 
-    # If only censored obs are right-censored, make simple adjuste\ments
+    # If only censored obs are right-censored, make simple adjustments
     # and compute Kaplan-Meier estimates
 
-    if(ncen[1] + ncen[3] == 0) {
-      # For obs censored beyond the last uncensored point, make a new
+    min.outer.censored <- rt_cens_beyond <- NULL
+
+    if(ncen[1] + ncen[3] == 0) {    # right censoring only
+      # For obs censored at or beyond the last uncensored point, make a new
       # uncensored category at the minimum of such points, + eps
-      min.outer.censored <- NULL
+
       maxu <- max(a[uncensored])
-      i <- which(is.infinite(b) & a >= maxu)  # was a > maxu ??
+      i <- which(is.infinite(b) & a >= maxu)
       if(length(i)) {
         min.outer.censored <- min(a[i]) + eps
+        rng           <- range(a[i])
         a[i]          <- min.outer.censored
         b[i]          <- a[i]
         uncensored[i] <- TRUE
+        rt_cens_beyond <- list(newlevel = min.outer.censored * mul,
+                               range    = rng * mul)
       }
       #?? Consider all other right censoring points as defining open intervals
       # a[! uncensored] <- a[! uncensored] + eps
@@ -229,6 +234,7 @@ Ocens2ord <- function(y, precision=7, maxit=10, nponly=FALSE,
                         freq    = freq,
                         median  = ymed,
                         ranges  = list(y=yrange, u=urange, c=crange),
+                        rt_cens_beyond = rt_cens_beyond,
                         label   = ylabel,
                         units   = uni,
                         Ncens1  = ncen,
@@ -273,7 +279,7 @@ Ocens2ord <- function(y, precision=7, maxit=10, nponly=FALSE,
         warning('vector length mismatch in icenReg::ic_np result from npsurv=TRUE')
       if(verbose > 1) print(cbind(t=np$time, 'S(t)'=np$surv))
       if(cons == 'none') break
-      s <- round(np$surv, 7)
+      s <- 1e-7 * round(np$surv * 1e7)
       su <- unique(s[duplicated(s)])
       if(! length(su)) break
 

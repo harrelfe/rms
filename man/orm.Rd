@@ -45,6 +45,9 @@
 	\code{"lims"} attribute is included
 	in the result computed by the derived quantile function.
 }
+\note{
+  When creating ordinal levels for non-integer numeric Y, this function does not use the \code{unique} function because it was found to be non-reproducible across hardware platforms.  Instead, intercepts are mapped to integers obtained from rounding original Y levels after multiplying by 1e7 (by default).  When using the \code{ExProb} or \code{Survival} functions to compute exceedance probabilities or survival curves, when the user wishes to obtain probabilities at select non-integer y values, the only way to guarantee the correct mapping to intercepts is to request estimates at the "official" levels of Y stored in the \code{yunique} object found in the fit object.  Users may opt instead to replace original data with e.g. 1e-7 * round(Y * 1e7) before model fitting.
+}
 \usage{
 orm(formula, data=environment(formula),
     subset, na.action=na.delete, method="orm.fit",

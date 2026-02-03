@@ -1,4 +1,4 @@
-Changes in version 8.1-1 (2026-01-04)
+Changes in version 8.1-1 (2026-02-03)
    * infoMxop: look for intercepts attribute in info if info matrix is not a 3-element list; don't look for a, b, ab if same pertains
    * lrm.fit, : add intercepts attribute to info.matrix if not a 3-element list; fixes bug with vcov when transx=TRUE
    * lrtest: corrected to use fit$stats['d.f.'] first
@@ -7,6 +7,10 @@ Changes in version 8.1-1 (2026-01-04)
    * ordParallel: fixed issue with wrong argument to GiniMd; see https://github.com/harrelfe/rms/issues/168
    * vcov.orm (also serves lrm): fixed issue with not utilizing full covariance matrix produced by robcov etc.; see https://github.com/harrelfe/rms/issues/167
    * inst/tests/ordinal-robcov.r: new test for above
+   * inst/tests/Survival-orm-km.r: new test for agreement of ordinal and Kaplan-Meier survival estimates
+   * Ocens2ord: added return value named ranges containing 3 vectors of ranges (overall, uncensored points, censored points), and if there is right censoring, an object rt_cens_beyond with elements newlevel and range
+   * orm.fit, orm: also returns rt_cens_beyond
+   * Survival.orm: reworked logic for right censoring to guarantee agreement with survival::survfit when there are no covariates
 
 Changes in version 8.1-0 (2025-10-14)
    * ggplot.npsurv, plotIntercepts: better log axes
@@ -25,7 +29,7 @@ Changes in version 8.0-0 (2025-04-04)
    * Ocens: changed to use -Inf, Inf as limits for left or right censored observations, converted to using Turnbull intervals computed by the icenReg package, and added two interval consolidation procedures using icenReg to prevent zero probabilities in likelihood calculations with `orm.fit`
    * contrast.rms: fixed bug regarding vcov for simultaneous intervals (thanks: Antonio Eleuteri)
    * ordESS: new function to describe the effective sample size contributed by censored Y for orm fits
-   * DESCRIPTION: added icenReg to SUGGESTS; needed by orm for interval censoring 
+   * DESCRIPTION: added icenReg to SUGGESTS; needed by orm for interval censoring
    * residuals.lrm, predict.lrm: changed to use famfunctions function expressions for cumprob and deriv
    * orm.fit: new argument mscore to store score matrix with fit; Fortran code ormll.f90 extended to compute its elements
    * Survival.orm: new function; streamlined a lot of the code in Exprob.orm and returns a data.frame in non-simple cases
