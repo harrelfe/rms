@@ -88,8 +88,6 @@ Survival.orm <- function(object, ...)
     # In ints, intercept indexes can be duplicated, e.g., when times are close together
     # but also for different X
     ints <- approx(values, 1 : k, xout=ts, method='constant', rule=2)$y
-    ## ?? if(! len_t && any(is.na(ints))) {
-      ## stop('program logic error: unexpected undefined intercepts')
 
     lpsi <- lps + intercepts[ints]
     surv <- cump(lpsi)
@@ -119,32 +117,6 @@ Survival.orm <- function(object, ...)
     } else {
       surv[ts >= max_uncens] <- 0.0
     }
-
-    ## ?? if(length(j)) {
-    if(FALSE) {
-      ts <- w$time
-      ru <- ranges$u    # range of uncensored points
-      rc <- ranges$c    # outermost left and right censoring points
-                        # element=NA if no censoring in that direction
-   #   m <- if(is.na(rc[2])) is.na(ints) & ts >= ru[2] else  # ??
-    #                        is.na(ints) & ts >= ru[2] & rc[2] < ru[2]
-    #  surv[m] <- 0.0
-    #  m <- if(is.na(rc[1])) is.na(ints) & ts <= ru[1] else
-    #                        is.na(ints) & ts <= ru[1] & rc[1] > ru[1]
-
-      m <- if(is.na(rc[2])) ints_curtailed != ints & ts >= ru[2] else ints_curtailed != ints & ts >= ru[2] & rc[2] < ru[2]
-      prn(m) ## ??
-      surv[m] <- 0.0
-      m <- if(is.na(rc[1])) ints_curtailed != ints & ts <= ru[1] else ints_curtailed != ints & ts <= ru[1] & rc[1] > ru[1]
-      prn(m) ## ??
-      surv[m] <- 1.0
-
-      if(! is.na(rc[2]) && rc[2] > max(values))
-        surv[is.na(surv) & ts > max(values) & ts <= rc[2]] <- min(surv, na.rm=TRUE)
-      if(! is.na(rc[1]) && rc[1] < min(values))
-        surv[is.na(surv) & ts < min(values) & ts >= rc[1]] <- max(surv, na.rm=TRUE)
-    }
-
 
     xrow  <- w$Xrow
     w     <- data.frame(time=ts, surv, Xrow=xrow)
