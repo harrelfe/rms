@@ -115,6 +115,7 @@ intCalibration <-
     km <- movStats(Y ~ surv, times=y, data=sy, melt=TRUE,
                    tunits=fit$units, tsmooth=tsmooth, hare=hare, ordsurv=ordsurv,
                    eps=eps, bass=bass, ...)
+    hh <- function(x) sum(! is.na(x))
     i <- km$incidence >= 0 & km$incidence <= 1
     R <- rbind(R, km[i,,drop=FALSE])
   }

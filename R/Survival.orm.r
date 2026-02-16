@@ -37,6 +37,7 @@ Survival.orm <- function(object, ...)
     lp     <- if(np == 0) 0
       else if(length(X)) matxv(X, slopes)
       else lp - intercepts[interceptRef]
+    if(length(X)) len_lp <- length(lp)
 
     # Initially the thought was to reduce lp down to distinct values, but two different
     # values of X can have the same lp but different variances, so this idea was abandoned
@@ -79,7 +80,7 @@ Survival.orm <- function(object, ...)
       stop('logic error in Survival.orm  k=', k,
            ' length(values)=', length(values))
 
-    xrow  <- seq_along(len_lp)
+    xrow  <- seq_len(len_lp)
     # For a data frame with all linear predictor and time combinations
     w     <- expand.grid(time = times, Xrow=xrow)
     ts    <- w$time

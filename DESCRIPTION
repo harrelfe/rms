@@ -2,7 +2,7 @@ Package: rms
 Version: 8.1-1
 Date: 2026-02-15
 Title: Regression Modeling Strategies
-Authors@R: person(given  = c("Frank", "E"),
+Authors@R: person(given  = c("Frank E"),
                   family = "Harrell Jr",
                   role   = c("aut", "cre"),
                   email  = "fh@fharrell.com")

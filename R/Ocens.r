@@ -130,10 +130,10 @@ Ocens2ord <- function(y, precision=7, maxit=10, nponly=FALSE,
     # numerics.  Compute Turnbull intervals
     if(any(b < a)) stop('some values of b are less than corresponding a values')
 
-    urange <- range(a[uncensored])
+    urange <- range(a[uncensored]) * mul
     crange <- c(NA, NA)
-    if(any(lc)) crange[1] <- min(b[lc])
-    if(any(rc)) crange[2] <- max(a[rc])
+    if(any(lc)) crange[1] <- min(b[lc]) * mul
+    if(any(rc)) crange[2] <- max(a[rc]) * mul
 
     ymed   <- median(a[uncensored]) * mul
 

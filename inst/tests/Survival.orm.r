@@ -55,3 +55,4 @@ survest(f, data.frame(x=1), times=6)
 # S(6 | all original x)
 plogis(alpha_ref + beta * x - alpha_ref + alpha['y>=7'])
 S(6, f$linear.predictors)
+
