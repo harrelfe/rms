@@ -688,7 +688,7 @@ probabilityFamilies <-
 ## Check:
 ## P(x) = plogis(x); P'(x) = P(x) - P(x)^2
 ## d <- function(x) plogis(x) - 3*plogis(x)^2 + 2*plogis(x)^3
-## x <- seq(-3, 3, length=150)
+## x <- seq(-3, 3, length.out=150)
 ## plot(x, d(x), type='l')
 ## ad <- c(NA,diff(dlogis(x))/(x[2]-x[1]))
 ## lines(x, ad, col='red')

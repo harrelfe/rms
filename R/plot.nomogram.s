@@ -50,7 +50,7 @@ plot.nomogram <-
       se <- TRUE
       zcrit <- qnorm((conf.int+1)/2)
       bar <- function(x, y, zcrit, se, col.conf, nlev=4) {
-        y <- rep(seq(y[1], y[2], length=nlev), length.out=length(x))
+        y <- rep(seq(y[1], y[2], length.out=nlev), length.out=length(x))
         for(j in 1:length(x)) {
           xj <- x[j]; yj <- y[j]
           W <- c(0,zcrit) * se[j]

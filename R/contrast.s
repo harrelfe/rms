@@ -442,7 +442,7 @@ rms_profile_ci <-
     drop1 <- drop1[length(drop1)]
     LR[i] <- drop1 - odev
     if(plot_profile) {
-      thetas      <- seq(est - se_factor * se, est + se_factor * se, length=50)
+      thetas      <- seq(est - se_factor * se, est + se_factor * se, length.out=50)
       ch_deviance <- rep(NA, length(thetas))
       for(j in 1 : length(thetas)) ch_deviance[j] <- g(thetas[j])
       plot(thetas, ch_deviance, xlab='Contrast Estimate',

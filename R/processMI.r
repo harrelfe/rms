@@ -85,7 +85,7 @@ processMI.fit.mult.impute <-
           ## by rounding to nearest 0.005
           pred <- unique(round(pred / 0.005) * 0.005)
           }
-        else pred <- seq(min(d$predicted), max(d$predicted), length=np)
+        else pred <- seq(min(d$predicted), max(d$predicted), length.out=np)
         np <- length(pred)
         ## For each imputation interpolate all values to this grid
         ## Accumulate sums of interpolated values and get the final

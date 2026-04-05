@@ -42,7 +42,7 @@ hazard.ratio.plot <-
     {
       nblock <- max(round(sum(event) / e), 2)
       uft<-c(0, quantile(y[event == 1],
-                        seq(0, 1, length=nblock + 1))[2 : nblock], 1000000)
+                        seq(0, 1, length.out=nblock + 1))[2 : nblock], 1000000)
       uft <- unique(uft)
     }
   thr <- NULL

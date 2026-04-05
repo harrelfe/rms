@@ -36,7 +36,7 @@ calibrate.default <- function(fit, predy,
   if(missing(predy)) {
     if(n < 11) stop("must have n > 10 if do not specify predy")
     p <- sort(predicted)
-    predy <- seq(p[5], p[n - 4], length=50)
+    predy <- seq(p[5], p[n - 4], length.out=50)
     p <- NULL
   }
   

@@ -366,7 +366,7 @@ lines.residuals.psm.censored.normalized <-
   function(x, n=100, lty=1, xlim=range(r[,-ncol(r)],na.rm=TRUE),
            lwd=3, ...) {
   r <- x
-  x <- seq(xlim[1], xlim[2], length=n)
+  x <- seq(xlim[1], xlim[2], length.out=n)
   tx <- x
   dist <- attr(r, 'dist')
   if(dist %in% c('weibull','loglogistic','lognormal')) tx <- exp(x)

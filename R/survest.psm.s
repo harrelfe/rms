@@ -71,7 +71,7 @@ survest.psm <- function(fit, newdata, linear.predictors, x, times, fun,
     return(trans(times, linear.predictors))
   }
   
-  if(missing(times)) times <- seq(0, fit$maxtime, length=200)
+  if(missing(times)) times <- seq(0, fit$maxtime, length.out=200)
   nt <- length(times)
   n <- length(linear.predictors)
   

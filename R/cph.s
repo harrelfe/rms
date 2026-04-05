@@ -507,7 +507,7 @@ Mean.cph <- function(object, method=c("exact","approximate"),
   }
   else {
     lp     <- object$linear.predictors
-    lp.seq <- if(length(lp)) lp.seq <- seq(min(lp), max(lp), length=n) else 0
+    lp.seq <- if(length(lp)) lp.seq <- seq(min(lp), max(lp), length.out=n) else 0
     
     time   <- object$time
     surv   <- object$surv

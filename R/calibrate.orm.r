@@ -31,7 +31,7 @@ calibrate.orm <- function(fit,
 
   if(missing(pred)) {
     lim  <- datadist(survival)$limits[c('Low:prediction','High:prediction'),]
-    pred <- seq(lim[1], lim[2], length=100)
+    pred <- seq(lim[1], lim[2], length.out=100)
     deb(pred)
   }
   

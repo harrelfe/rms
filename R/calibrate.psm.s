@@ -32,12 +32,12 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
   if(cmethod=='hare' && missing(pred))
     {
       lim <- datadist(survival)$limits[c('Low:prediction','High:prediction'),]
-      pred <- seq(lim[1], lim[2], length=100)
+      pred <- seq(lim[1], lim[2], length.out=100)
     }
   if(cmethod=='KM' && missing(cuts))
     {
       g <- max(1, floor(ny[1]/m))
-      cuts <- quantile(c(0, 1, survival), seq(0, 1, length=g+1), na.rm=TRUE)
+      cuts <- quantile(c(0, 1, survival), seq(0, 1, length.out=g+1), na.rm=TRUE)
     }
   if(cmethod=='hare') cuts <- NULL
   else

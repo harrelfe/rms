@@ -438,7 +438,7 @@ nomogram <-
           cat('Function',i,'values at which to place tick marks:\n')
           print(fat)
         }
-        xseq <- seq(min(lp.at), max(lp.at), length=1000)
+        xseq <- seq(min(lp.at), max(lp.at), length.out=1000)
         fu   <- func(xseq)
         s    <- !is.na(fu)
         w    <- approx(fu[s], xseq[s], fat, ties=mean)$y

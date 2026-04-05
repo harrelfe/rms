@@ -86,7 +86,7 @@ ordParallel <- function(fit, which, terms=onlydata, m, maxcuts=75,
   lev  <- 0 : k
   low  <- min(lev[cfreq >= m])
   high <- max(lev[cfreq <= n - m])
-  ks   <- unique(round(seq(low, high, length=maxcuts)))
+  ks   <- unique(round(seq(low, high, length.out=maxcuts)))
 
   zcrit <- qnorm((conf.int + 1) / 2)
   ylab <- expression(beta)

@@ -346,7 +346,7 @@ residuals.lrm <-
 ##  if(missing(p.convexity)) {
 ##	pq <- quantile(P, c(.01, .99))
 ##	if(pq[1]==pq[2]) pq <- range(P)
-##	p.convexity <- seq(pq[1], pq[2], length=100)
+##	p.convexity <- seq(pq[1], pq[2], length.out=100)
 ## }
 ##  lcp <- length(p.convexity)
 ##  cp <- single(lcp)

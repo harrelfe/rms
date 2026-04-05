@@ -12,7 +12,7 @@ survplot.rms <-
            add=FALSE, label.curves=TRUE,
            abbrev.label=FALSE, levels.only=FALSE,
            lty, lwd=par('lwd'),
-           col=1, col.fill=gray(seq(.95, .75, length=5)),
+           col=1, col.fill=gray(seq(.95, .75, length.out=5)),
            adj.subtitle=TRUE, loglog=FALSE, fun, n.risk=FALSE, logt=FALSE,
            dots=FALSE, dotsize=.003, grid=NULL,
            srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,

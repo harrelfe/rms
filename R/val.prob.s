@@ -168,7 +168,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
                     "Brier","Intercept","Slope","Emax","E90","Eavg","S:z","S:p")
 
   if(pl) {
-    logit <- seq(-7, 7, length=200)
+    logit <- seq(-7, 7, length.out=200)
     prob  <- plogis(logit)
     pred.prob <- f.recal$coef[1] + f.recal$coef[2] * logit
     pred.prob <- plogis(pred.prob)
@@ -198,7 +198,7 @@ val.prob <- function(p, y, logit, group, weights=rep(1,length(y)),
         x <- plogis(x)
         x[p == 0] <- 0; x[p == 1] <- 1
       } else x <- p
-      bins <- seq(lim[1], lim[2], length=101)
+      bins <- seq(lim[1], lim[2], length.out=101)
       x <- x[x >= lim[1] & x <= lim[2]]
       f <- table(cut(x, bins))
       j <- f > 0
@@ -242,7 +242,7 @@ val.probg <- function(p, y, group, evaluate=100, weights, normwt, nmin)
       sm <- wtd.loess.noiter(P, Y, wt, na.rm=FALSE, type='all')
       ##all -> return all points
       curve <- if(length(sm$x) > evaluate)
-        approx(sm, xout=seq(min(P), max(P), length=evaluate), ties=mean) else
+        approx(sm, xout=seq(min(P), max(P), length.out=evaluate), ties=mean) else
       {
         o <- order(sm$x)
         nd <- ! duplicated(sm$x[o])

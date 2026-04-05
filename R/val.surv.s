@@ -58,7 +58,7 @@ val.surv <- function(fit, newdata, S, est.surv,
       if(missing(lim))
         lim <-
           datadist(est.surv)$limits[c('Low:prediction', 'High:prediction'),]
-      pseq <- seq(lim[1], lim[2], length=evaluate)
+      pseq <- seq(lim[1], lim[2], length.out=evaluate)
     }
     else pseq <- pred
     
