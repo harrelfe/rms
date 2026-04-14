@@ -1,5 +1,6 @@
-Changes in version 8.1-2 (2026-04-05)
+Changes in version 8.1-2 (2026-04-14)
   * Changed all length= to length.out= in seq() calls to avoid warnings
+  * Fixed bug in Dxy calculation in dxy.cens in validate.cph.s due to faulty conversion to Surv object from a matrix; thanks: Laurie Samuels https://github.com/harrelfe/rms/issues/171
 
 Changes in version 8.1-1 (2026-02-17)
    * infoMxop: look for intercepts attribute in info if info matrix is not a 3-element list; don't look for a, b, ab if same pertains

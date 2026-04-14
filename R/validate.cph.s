@@ -6,12 +6,12 @@ validate.cph <- function(fit, method="boot",
   atr <- fit$Design
 
   need.surv <- dxy & any(atr$assume.code == 8)
-  
+
   if(need.surv & missing(u))
     stop("Presence of strata -> survival estimates needed for dxy; u omitted")
-  
+
   modtype <- fit$method
-  
+
   discrim <- function(x, y, strata, fit, iter, evalfit=FALSE, dxy=TRUE,
                       need.surv=FALSE, u, modtype, pr=FALSE, ...)
     {
@@ -43,7 +43,7 @@ validate.cph <- function(fit, method="boot",
                           method=modtype, type=type)
             if(f$fail)
               stop('fit failure in discrim,coxphFit')
-            
+
             ##x is x*beta from training sample
             lr <- -2 * (f$loglik[1]-f$loglik[2])
             ll0 <- -2 * f$loglik[1]
@@ -59,7 +59,7 @@ validate.cph <- function(fit, method="boot",
             g <- GiniMd(slope*x)
           }
       }
-      
+
       Q <- D - U
       z   <- c(R2,  slope,    D,  U,   Q,   g)
       nam <- c("R2","Slope", "D", "U", "Q", "g")
@@ -77,34 +77,34 @@ validate.cph <- function(fit, method="boot",
       names(z) <- nam
       z
     }
-  
+
   cox.fit <- function(x, y, strata, u, need.surv=FALSE, modtype, tol=1e-9,
                       ...) {
     if(! length(x))
       return(list(fail=FALSE,coefficients=numeric(0)))
-    
+
     if(! need.surv)
       u <- 0
-    
+
     ##	coxph(x,y,e,pr=F,surv=need.surv)
     if(! need.surv) {
       type <- attr(y, 'type')
       storage.mode(x) <- "double"
       x <- as.matrix(x)
       dimnames(x) <- list(as.character(1:nrow(x)),as.character(1:ncol(x)))
-      
+
       f <- coxphFit(x=x, y=y, strata=strata, iter.max=10, eps=.0001,
                     method=modtype, toler.chol=tol, type=type)
-      
+
       if(f$fail) return(f)
-      
+
       if(any(is.na(f$coef))) {
         cat('Singularity in coxph.fit. Coefficients:\n'); print(f$coef)
         return(list(fail=TRUE))
       }
       return(f)
     }
-    
+
     x <- x      #Don't want lazy evaluation of complex expression
     f <- if(length(strata))
       cph(y ~ x + strat(strata), surv=TRUE, method=modtype)
@@ -114,7 +114,7 @@ validate.cph <- function(fit, method="boot",
     ##Don't fool fastbw called from predab.resample
     f
   }
-  
+
   predab.resample(fit, method=method, fit=cox.fit, measure=discrim,
                   pr=pr, B=B, bw=bw, rule=rule, type=type, sls=sls,
                   aics=aics, force=force, estimates=estimates,
@@ -125,7 +125,10 @@ validate.cph <- function(fit, method="boot",
 dxy.cens <- function(x, y, type=c('time','hazard')) {
   type <- match.arg(type)
   negate <- type == 'hazard'
-  if(! is.Surv(y)) y <- Surv(y)
+  if(! is.Surv(y))
+    y <- if(NCOL(y) == 1) Surv(y) else
+      if(NCOL(y) == 2) Surv(y[, 1], y[, 2]) else
+        stop('y must have 1-2 columns')
    else {
      stype <- attr(y, 'type')
      if(length(stype) == 1 && stype == 'left') {
