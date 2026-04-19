@@ -30,7 +30,7 @@ subroutine ormll(n, k, p,  &
 ! u      : returned k + p-vector of 1st derivatives
 ! d      : returned per-observation probability element used in log likelihood calculation
 ! ha     : returned k x 2 matrix for alpha portion of Hessian for sparse
-!          representation with the Matrix R package; first column is the 
+!          representation with the Matrix R package; first column is the
 !          diagonal, second is the superdiagonal (last element ignored)
 ! hb     : returned p x p matrix for beta portion of Hessian
 ! hab    : returned k x p matrix for alpha x beta portion of Hessian
@@ -53,18 +53,18 @@ subroutine ormll(n, k, p,  &
 !          997 if hessian needs more than 1000000 elements due to the variety
 !              of interval-censored values
 !          996 if nu > 0 but is not large enough to hold all score vector elements
-     
+
   use, intrinsic :: ISO_FORTRAN_ENV, only: dp => real64, int32
   implicit none
   integer(int32), intent(in)  :: n, y(n), y2(n), k, p, what, debug, penhess, link, &
                                  nai, intcens, nu
-  real(dp),       intent(in)  :: x(n, p), offset(n), wt(n), penmat(p, p), & 
+  real(dp),       intent(in)  :: x(n, p), offset(n), wt(n), penmat(p, p), &
                                  alpha(k), beta(p)
   real(dp),       intent(out) :: logL, d(n), u(k + p), &
                                  ha(k * (1 - intcens), 2), hb(p, p), hab(k, p), &
                                  ai(nai), um(nu)
   integer(int32), intent(out) :: row(nai), col(nai), ne, urow(nu), ucol(nu), nuu, salloc
-    
+
   integer(int32)  :: i, j, l, c, nb, j2, a, b, nbad, il(1)
   real(dp)                    :: w, z, g1, g2
   real(dp), allocatable :: lp(:), sgn(:), &
@@ -72,7 +72,7 @@ subroutine ormll(n, k, p,  &
   ! ib: which obs have y=0, y=k, 0<y<k or are interval censored
   ! Suffix b = "between", suffix a = "alpha"
   integer(int32), allocatable :: ib(:), ia(:), ia2(:), ibad(:)
-  
+
   if(debug > 0) then
     call intpr('n,k,p,ic,nai,x,y,o,w,pen,a,b,ha,d,r,c,ai', 40, &
       [n, k, p, intcens, nai, size(x), size(y), size(offset), size(wt), size(penmat), &
@@ -123,7 +123,7 @@ subroutine ormll(n, k, p,  &
   ! Compute ia : which alpha is involved (first alpha if 0 < y < k & uncensored)
   !         ia2: second alpha involved, will always have negated F(); ia2=0 if no second alpha
   !         ia goes with p1, ia2 goes with p2, take p1 - p2
-  !         s  : 1.0 when prob is F(), -1.0 when prob is 1 - F() 
+  !         s  : 1.0 when prob is F(), -1.0 when prob is 1 - F()
 
   sgn = 1_dp
   ia2 = 0_int32
@@ -307,7 +307,7 @@ subroutine ormll(n, k, p,  &
     return
     end if
 
-  
+
   ! Hessian
   ! Create 3 matrices: ha (k x 2), hb (p x p), hab (k x p)
   ! ha represents a sparse matrix to be served up to the Matrix package in R
@@ -317,9 +317,9 @@ subroutine ormll(n, k, p,  &
   ! https://fharrell.com/post/mle#sec-hessformula
   ! If there are any interval-censored observatons, ha is instead computed
   ! as ai using general sparse form
-  
+
   ! Compute all second derivatives of cdf corresponding to p1 and p2
-  
+
   ! dpdf1(i0) = dpdf(alpha(1)         + lp(i0), p1(i0), pdf1(i0), link)
   ! dpdf1(ib) = dpdf(alpha(y(ib))     + lp(ib), p1(ib), pdf1(ib), link)
   ! dpdf1(ik) = dpdf(alpha(k)         + lp(ik), p1(ik), pdf1(ik), link)
@@ -347,7 +347,7 @@ subroutine ormll(n, k, p,  &
     call dblepr('dpdf2', 5, dpdf2, size(dpdf2))
   end if
 
-  
+
   do i = 1, n
     a  = y(i)
     j  = ia(i)     ! intercept involved in p1
@@ -369,9 +369,10 @@ subroutine ormll(n, k, p,  &
           ai(k + j2 - 1) = ai(k + j2 - 1) + w * pdf1(i) * pdf2(i) ! super diagonal
         else
           ! involves 2 non-adjacent intercepts; may have to allocate new position in ai
-          if(any((row(1 : ne) == j) .and. (col(1 : ne) == j2))) then
-            il = findloc(row(1 : ne), j, mask = (col(1 : ne) == j2))
-            l  = il(1)
+          # if(any((row(1 : ne) == j) .and. (col(1 : ne) == j2))) then
+          il = findloc(row(1 : ne), j, mask = (col(1 : ne) == j2))
+          l  = il(1)
+          if(l > 0) then
             ai(l) = ai(l) + w * pdf1(i) * pdf2(i)
           else   ! add a new entry
             ne = ne + 1
@@ -395,7 +396,7 @@ subroutine ormll(n, k, p,  &
         do c = l, p
           hb(l, c) = hb(l, c) + x(i, l) * x(i, c) * z
         end do
-      end do 
+      end do
     else                    ! two intercepts involved
       do l = 1, p
         ! D alpha(j)^2:
