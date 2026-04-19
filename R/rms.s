@@ -540,11 +540,17 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
                 callenv
               else {
                 ## callenv bindings placed in a child of formula's environment
-                ## so callenv takes priority but formula's closure is the fallback
+                ## so callenv takes priority but formula's closure is the fallback.
+                ## Use tryCatch around get() to skip unresolved promise bindings
+                ## (formal arguments that were declared but not supplied by the
+                ## caller, e.g. 'cluster' in lrm).  Those exist as pending
+                ## promises in the fitter's frame and cannot be forced here.
                 e <- new.env(parent = fe)
                 for(nm in ls(callenv, all.names = TRUE))
-                  assign(nm, get(nm, envir = callenv, inherits = FALSE),
-                         envir = e)
+                  tryCatch(
+                    assign(nm, get(nm, envir = callenv, inherits = FALSE),
+                           envir = e),
+                    error = function(cond) NULL)
                 e
               }
             }
