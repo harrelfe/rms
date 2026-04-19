@@ -458,7 +458,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
 
 modelData <- function(data=environment(formula), formula, formula2=NULL,
                       weights=NULL, subset=NULL, na.action=na.delete,
-                      dotexpand=TRUE, callenv=parent.frame(n=2)) {
+                      dotexpand=TRUE, callenv=parent.frame()) {
 
   ## calibrate.cph etc. uses a matrix, even if only one column
   ## Don't give an exception to Ocens (for orm) just as we don't give an exception for Surv
@@ -525,6 +525,30 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
     paste(deparse(x, width.cutoff = 500L, backtick = !is.symbol(x) && 
                   is.language(x)), collapse = " ")
 
+  ## Build an enclosing environment for eval() that replicates the lookup
+  ## order base R's model.frame uses: data frame first, then the caller's
+  ## frame (callenv), then the formula's own closure.  This ensures that
+  ## variables captured in a formula's environment (e.g. knot vectors
+  ## in programmatically constructed formulas) are found without requiring
+  ## callers to assign them into .GlobalEnv.  Only needed for the
+  ## data-frame path; the edata path uses env directly.
+  enclos <- if(edata) env
+            else {
+              fe <- environment(formula)
+              if(is.null(fe) || identical(fe, callenv) ||
+                 identical(fe, .GlobalEnv))
+                callenv
+              else {
+                ## callenv bindings placed in a child of formula's environment
+                ## so callenv takes priority but formula's closure is the fallback
+                e <- new.env(parent = fe)
+                for(nm in ls(callenv, all.names = TRUE))
+                  assign(nm, get(nm, envir = callenv, inherits = FALSE),
+                         envir = e)
+                e
+              }
+            }
+
   processdata <- function(formula, data) {
     if(noexpand) {   # no RHS variables to be used
       predvars <- formula[[2]]
@@ -544,9 +568,7 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
     }
     varnames <- vapply(predvars, deparse2, " ")[-1L]
     rnames <- rownames(data)     # 2023-01-25
-    data <- if(edata) eval(predvars, data, env)
-            else
-              eval(predvars, data, callenv)
+    data <- eval(predvars, data, enclos)
 
     if(is.matrix(data)) data <- data.frame(data)  # e.g. Surv() object
     names(data) <- varnames

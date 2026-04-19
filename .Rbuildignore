@@ -15,4 +15,4 @@ tests/\.Rhistory
 ^\.Rproj\.user$
 
 publish
-
+CLAUDE.md

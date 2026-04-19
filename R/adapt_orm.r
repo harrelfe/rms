@@ -18,26 +18,23 @@
 #' f$family          # print optimum link found
 #' }
 adapt_orm <- function(x, y, maxk=6, ...) {
-  envi <- .GlobalEnv
-  ki   <- min(4, maxk)
-  assign('.ki.', ki, envir=envi)
-  fi   <- if(ki == 0) orm(y ~ x,            x=TRUE, y=TRUE, ...)
-  else                orm(y ~ rcs(x, .ki.), x=TRUE, y=TRUE, ...)
+  ki <- min(4, maxk)
+  fi <- if(ki == 0) orm(y ~ x,            x=TRUE, y=TRUE, ...)
+        else        orm(y ~ rcs(x, ki),   x=TRUE, y=TRUE, ...)
   w    <- Olinks(fi)
   best <- which.min(w[, 'deviance'])
   link <- w[best, 'link']
   if(link != 'logistic')
-    fi <- if(ki == 0) orm(y ~ x,            family=link, ...)
-      else            orm(y ~ rcs(x, .ki.), family=link, ...)
+    fi <- if(ki == 0) orm(y ~ x,          family=link, ...)
+          else        orm(y ~ rcs(x, ki), family=link, ...)
   fits <- list()
   # Use the best link in finding best # knots
   i  <- 0
   ks <- if(maxk < 3) 0 else c(0, 3 : maxk)
   for(k in ks) {
-    assign('.k.', k, envir=envi)   # trick to make modelData work
     f <- if(k == ki) fi
-    else if(k == 0) orm(y ~ x,           family=link, ...)
-    else            orm(y ~ rcs(x, .k.), family=link, ...)
+    else if(k == 0) orm(y ~ x,          family=link, ...)
+    else            orm(y ~ rcs(x, k),  family=link, ...)
     if(! f$fail) {
       i <- i + 1
       fits[[i]] <- f

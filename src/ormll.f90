@@ -369,7 +369,7 @@ subroutine ormll(n, k, p,  &
           ai(k + j2 - 1) = ai(k + j2 - 1) + w * pdf1(i) * pdf2(i) ! super diagonal
         else
           ! involves 2 non-adjacent intercepts; may have to allocate new position in ai
-          # if(any((row(1 : ne) == j) .and. (col(1 : ne) == j2))) then
+          ! if(any((row(1 : ne) == j) .and. (col(1 : ne) == j2))) then
           il = findloc(row(1 : ne), j, mask = (col(1 : ne) == j2))
           l  = il(1)
           if(l > 0) then
