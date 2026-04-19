@@ -64,18 +64,18 @@ survplotp(fit, \dots)
          add=FALSE, label.curves=TRUE,
          abbrev.label=FALSE, levels.only=FALSE,
          lty, lwd=par("lwd"),
-         col=1, col.fill=gray(seq(.95, .75, length=5)),
+         col=1, col.fill=gray(seq(.95, .75, length.out=5)),
          adj.subtitle=TRUE, loglog=FALSE, fun,
          n.risk=FALSE, logt=FALSE, dots=FALSE, dotsize=.003,
-         grid=NULL, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1, 
+         grid=NULL, srt.n.risk=0, sep.n.risk=0.056, adj.n.risk=1,
          y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'),
          cex.ylab=cex.xlab, pr=FALSE, ggplot=FALSE)
-\method{survplot}{npsurv}(fit, xlim, 
+\method{survplot}{npsurv}(fit, xlim,
          ylim, xlab, ylab, time.inc, state=NULL,
          conf=c("bands","bars","diffbands","none"), mylim=NULL,
          add=FALSE, label.curves=TRUE, abbrev.label=FALSE,
          levels.only=FALSE, lty,lwd=par('lwd'),
-         col=1, col.fill=gray(seq(.95, .75, length=5)),
+         col=1, col.fill=gray(seq(.95, .75, length.out=5)),
          loglog=FALSE, fun, n.risk=FALSE, aehaz=FALSE, times=NULL,
          logt=FALSE, dots=FALSE, dotsize=.003, grid=NULL,
          srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,
@@ -119,7 +119,7 @@ effect}, \code{Adjust to}, and \code{High effect} values will be used
 from \code{datadist} if the variable is continuous.  For variables not
 defined to \code{datadist}, you must specify non-missing constant
 settings (or a vector of settings for the one displayed variable).  Note
-that since \code{npsurv} objects do not use the variable list in 
+that since \code{npsurv} objects do not use the variable list in
 \code{\dots}, you can specify any extra arguments to \code{labcurve} by
 adding them at the end of the list of arguments.  For \code{survplotp}
 \dots (e.g., \code{height}, \code{width}) is passed to \code{plotly::plot_ly}.
@@ -135,7 +135,7 @@ default is \code{(1, log(maxtime))}.
 y-axis limits.  Default is \code{c(0,1)} for survival, and
 \code{c(-5,1.5)} if \code{loglog=TRUE}. If \code{fun} or
 \code{loglog=TRUE} are given and \code{ylim} is not, the limits will be
-computed from the data.  For \code{what="hazard"}, default 
+computed from the data.  For \code{what="hazard"}, default
 limits are computed from the first hazard function plotted.
 }
 \item{xlab}{
@@ -143,14 +143,14 @@ x-axis label.  Default is \code{units} attribute of failure time
 variable given to \code{Surv}.
 }
 \item{ylab}{
-y-axis label.  Default is \code{"Survival Probability"} or 
+y-axis label.  Default is \code{"Survival Probability"} or
 \code{"log(-log Survival Probability)"}. If \code{fun} is given, the default
 is \code{""}.  For \code{what="hazard"}, the default is
 \code{"Hazard Function"}.  For a multi-state/competing risk application
 the default is \code{"Cumulative Incidence"}.
 }
 \item{time.inc}{
-time increment for labeling the x-axis and printing numbers at risk. 
+time increment for labeling the x-axis and printing numbers at risk.
 If not specified, the value
 of \code{time.inc} stored with the model fit will be used.
 }
@@ -172,7 +172,7 @@ Default is \code{FALSE}.  Specify e.g. \code{.95} to plot 0.95 confidence bands.
 For fits from parametric survival models, or Cox models with
 \code{x=TRUE} and \code{y=TRUE} specified to the fit, the exact
 asymptotic formulas will be used to compute standard errors, and
-confidence limits are based on \code{log(-log S(t))} if \code{loglog=TRUE}. 
+confidence limits are based on \code{log(-log S(t))} if \code{loglog=TRUE}.
 If \code{x=TRUE} and \code{y=TRUE} were not specified to \code{cph} but
 \code{surv=TRUE} was, the standard errors stored for the underlying
 survival curve(s) will be used. These agree with the former if
@@ -188,7 +188,7 @@ confidence interval specifications.  For \code{survdiffplot} if
 was from \code{cph(\dots, surv=TRUE)}, the \code{time.inc} used will be
 that stored with the fit. Use \code{conf="bands"} (the default) for
 bands using standard errors at each failure time. For \code{npsurv}
-objects only, \code{conf} may also be \code{"none"}, indicating that 
+objects only, \code{conf} may also be \code{"none"}, indicating that
 confidence interval information stored with the \code{npsurv} result
 should be ignored.  For \code{npsurv} and \code{survdiffplot},
 \code{conf} may be \code{"diffbands"} whereby a shaded region is drawn
@@ -205,7 +205,7 @@ significantly different at the \code{1 - conf.int} level.
 defaults to \code{"survival"} to plot survival estimates.  Set to
 \code{"hazard"} or an abbreviation to plot the hazard function (for
 \code{psm} fits only). Confidence intervals are not available for
-\code{what="hazard"}. 
+\code{what="hazard"}.
 }
 \item{add}{
 set to \code{TRUE} to add curves to an existing plot.
@@ -270,7 +270,7 @@ set to \code{TRUE} to add number of subjects at risk for each curve, using the
 fitting the model if \code{y=TRUE} was specified to the fit or if the fit
 was from \code{npsurv}.
 The numbers are placed at the bottom
-of the graph unless \code{y.n.risk} is given. 
+of the graph unless \code{y.n.risk} is given.
 If the fit is from \code{survest.psm}, \code{n.risk} does not apply.
 }
 \item{srt.n.risk}{
@@ -278,7 +278,7 @@ angle of rotation for leftmost number of subjects at risk (since this number
 may run into the second or into the y-axis).  Default is \code{0}.
 }
 \item{adj.n.risk}{
-justification for leftmost number at risk. Default is \code{1} for right 
+justification for leftmost number at risk. Default is \code{1} for right
 justification.
 Use \code{0} for left justification, \code{.5} for centered.
 }
@@ -293,9 +293,9 @@ line of the numbers using \code{y.n.risk}.  Specify
 \code{y.n.risk='auto'} to place the numbers below the x-axis at a
 distance of 1/3 of the range of \code{ylim}.
 }
-\item{cex.n.risk}{ 
+\item{cex.n.risk}{
 character size for number of subjects at risk (when \code{n.risk} is
-\code{TRUE}) 
+\code{TRUE})
 }
 \item{cex.xlab}{\code{cex} for x-axis label}
 \item{cex.ylab}{\code{cex} for y-axis label}
@@ -303,7 +303,7 @@ character size for number of subjects at risk (when \code{n.risk} is
  set to \code{TRUE} to plot a grid of dots.  Will be plotted at every
  \code{time.inc} (see \code{cph}) and at survival increments of .1 (if
  \code{d>.4}), .05 (if \code{.2 < d <= .4}), or .025 (if \code{d <= .2}),
- where \code{d} is the range of survival displayed. 
+ where \code{d} is the range of survival displayed.
 }
 \item{dotsize}{size of dots in inches}
 \item{grid}{
@@ -362,7 +362,7 @@ compare group means in graphs.  J Clin Epi 57:712-715.
 \code{\link{datadist}}, \code{\link{rms}}, \code{\link{cph}},
 \code{\link{psm}}, \code{\link{survest}}, \code{\link{predictrms}},
 \code{\link{plot.Predict}}, \code{\link{ggplot.Predict}},
-\code{\link[Hmisc]{units}}, \code{\link[Hmisc]{errbar}},  
+\code{\link[Hmisc]{units}}, \code{\link[Hmisc]{errbar}},
 \code{\link[survival]{survfit}}, \code{\link[survival]{survreg.distributions}},
 \code{\link[Hmisc]{labcurve}},
 \code{\link[Hmisc:mgp.axis]{mgp.axis}}, \code{\link{par}},
@@ -473,5 +473,3 @@ survplot(f, age=c(30, 50))
 \keyword{hplot}
 \keyword{nonparametric}
 \keyword{models}
-
-

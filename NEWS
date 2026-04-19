@@ -3,6 +3,7 @@ Changes in version 8.1-2 (2026-04-19)
   * Fixed bug in Dxy calculation in dxy.cens in validate.cph.s due to faulty conversion to Surv object from a matrix; thanks: Laurie Samuels https://github.com/harrelfe/rms/issues/171
   * modelData: improved scoping based on Claude suggestions
   * adopt_orm: dropped need for global environment variable due to previous change
+  * ormll.f90: dropped unncessary (per Claude) search for existing row and column since findloc returns 0 if no match found
 
 Changes in version 8.1-1 (2026-02-17)
    * infoMxop: look for intercepts attribute in info if info matrix is not a 3-element list; don't look for a, b, ab if same pertains

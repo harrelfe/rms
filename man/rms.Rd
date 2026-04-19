@@ -19,12 +19,12 @@ stratification variables, analysis of variance (with tests of linearity
 of each factor and pooled tests), plotting effects of variables in the
 model, estimating and graphing effects of variables that appear non-linearly in the
 model using e.g. inter-quartile-range hazard ratios, bootstrapping
-model fits, and constructing nomograms for obtaining predictions manually. 
+model fits, and constructing nomograms for obtaining predictions manually.
 Behind the scene is the \code{Design} function which
 stores extra attributes. \code{Design()} is not intended to be
-called by users.  
+called by users.
 \code{Design} causes detailed design attributes
-and descriptions of the distribution of predictors to be stored 
+and descriptions of the distribution of predictors to be stored
 in an attribute of the \code{terms} component called \code{Design}.
 
 \code{modelData} is a replacement for \code{model.frame.default} that is
@@ -35,12 +35,12 @@ are the same for both formulas, and produces a second model frame for
 }
 \usage{
 modelData(data=environment(formula), formula, formula2=NULL,
-          weights, subset, na.action=na.delete, dotexpand=TRUE,
-          callenv=parent.frame(n=2))
+          weights=NULL, subset=NULL, na.action=na.delete, dotexpand=TRUE,
+          callenv=parent.frame())
 
 Design(mf, formula=NULL, specials=NULL, allow.offset=TRUE, intercept=1)
 # not to be called by the user; called by fitting routines
-# dist <- datadist(x1,x2,sex,age,race,bp)   
+# dist <- datadist(x1,x2,sex,age,race,bp)
 # or dist <- datadist(my.data.frame)
 # Can omit call to datadist if not using summary.rms, Predict,
 # survplot.rms, or if all variable settings are given to them
@@ -137,7 +137,7 @@ options(datadist=NULL)
 f <- ols(y ~ x1*x2)          # Saves enough information to do fastbw, anova
 anova(f)                     # Will not do Predict since distributions
 fastbw(f)                    # of predictors not saved
-plot(f, x1=seq(100,300,by=.5), x2=.5) 
+plot(f, x1=seq(100,300,by=.5), x2=.5)
                              # all values defined - don't need datadist
 dist <- datadist(x1,x2)      # Equivalent to datadist(f)
 options(datadist="dist")

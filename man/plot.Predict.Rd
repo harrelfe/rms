@@ -34,9 +34,9 @@
 \usage{
 \method{plot}{Predict}(x, formula, groups=NULL,
      cond=NULL, varypred=FALSE, subset,
-     xlim, ylim, xlab, ylab, 
+     xlim, ylim, xlab, ylab,
      data=NULL, subdata, anova=NULL, pval=FALSE, cex.anova=.85,
-     col.fill=gray(seq(.825, .55, length=5)),
+     col.fill=gray(seq(.825, .55, length.out=5)),
      adj.subtitle, cex.adj, cex.axis, perim=NULL, digits=4, nlevels=3,
      nlines=FALSE, addpanel, scat1d.opts=list(frac=0.025, lwd=0.3),
      type=NULL, yscale=NULL, scaletrans=function(z) z, ...)
@@ -75,7 +75,7 @@ pantext(object, x, y, cex=.5, adj=0, fontfamily="Courier", lattice=TRUE)
 This parameter is seldom used, as limits are usually controlled with
 \code{Predict}.  One reason to use \code{xlim} is to plot a
 \code{factor} variable on the x-axis that was created with the \code{cut2} function
-with the \code{levels.mean} option, with \code{val.lev=TRUE} specified to \code{plot.Predict}. 
+with the \code{levels.mean} option, with \code{val.lev=TRUE} specified to \code{plot.Predict}.
 In this case you may want the axis to
 have the range of the original variable values given to \code{cut2} rather
 than the range of the means within quantile groups.
@@ -190,7 +190,7 @@ default is 4 significant digits.
   curves are most separated, labeling each curve with the full curve label.
   Set \code{label.curves} to a \code{list} to specify options to
   \code{labcurve}, e.g., \code{label.curves=} \code{list(method="arrow",
-	cex=.8)}. 
+	cex=.8)}.
   These option names may be abbreviated in the usual way arguments
   are abbreviated.  Use for example \code{label.curves=list(keys=letters[1:5])}
   to draw single lower case letters on 5 curves where they are most
@@ -242,7 +242,7 @@ fh@fharrell.com
 	\code{link{plotp.Predict}}, \code{\link{rbind.Predict}},
   \code{\link{datadist}}, \code{\link{predictrms}}, \code{\link{anova.rms}},
   \code{\link{contrast.rms}}, \code{\link{summary.rms}},
-  \code{\link{rms}}, \code{\link{rmsMisc}}, 
+  \code{\link{rms}}, \code{\link{rmsMisc}},
   \code{\link[Hmisc]{labcurve}}, \code{\link[Hmisc]{scat1d}},
   \code{\link[Hmisc]{xYplot}}, \code{\link[Hmisc]{Overview}}
 }
@@ -280,7 +280,7 @@ plot(Predict(fit), data=llist(blood.pressure,age))
 p <- Predict(fit, name=c('age','cholesterol'))   # Make 2 plots
 plot(p)
 
-p <- Predict(fit, age=seq(20,80,length=100), sex, conf.int=FALSE)
+p <- Predict(fit, age=seq(20,80,length.out=100), sex, conf.int=FALSE)
                          # Plot relationship between age and log
                          # odds, separate curve for each sex,
 plot(p, subset=sex=='female' | age > 30)
@@ -294,7 +294,7 @@ plot(p, label.curves=FALSE, data=llist(age,sex))
                          # on each sex's curve, with sex-
                          # specific density of age
                          # If data were in data frame could have used that
-p <- Predict(fit, age=seq(20,80,length=100), sex='male', fun=plogis)
+p <- Predict(fit, age=seq(20,80,length.out=100), sex='male', fun=plogis)
                          # works if datadist not used
 plot(p, ylab=expression(hat(P)))
                          # plot predicted probability in place of log odds
@@ -333,7 +333,7 @@ plot(p, cond='sex', varypred=TRUE, adj.subtitle=FALSE)
 \dontrun{
 # For males at the median blood pressure and cholesterol, plot 3 types
 # of confidence intervals for the probability on one plot, for varying age
-ages <- seq(20, 80, length=100)
+ages <- seq(20, 80, length.out=100)
 p1 <- Predict(fit, age=ages, sex='male', fun=plogis)  # standard pointwise
 p2 <- Predict(fit, age=ages, sex='male', fun=plogis,
               conf.type='simultaneous')               # simultaneous
@@ -355,7 +355,7 @@ n <- 1000
 set.seed(731)
 age <- 50 + 12*rnorm(n)
 label(age) <- "Age"
-sex <- factor(sample(c('Male','Female'), n, 
+sex <- factor(sample(c('Male','Female'), n,
               rep=TRUE, prob=c(.6, .4)))
 cens <- 15*runif(n)
 h <- .02*exp(.04*(age-50)+.8*(sex=='Female'))
@@ -420,7 +420,7 @@ options(datadist=NULL)
 # the democratic party is plotted against the percent of voters
 # who graduated from college.  Data are county-level percents.
 
-incomes <- seq(22900, 32800, length=4)  
+incomes <- seq(22900, 32800, length.out=4)
 # equally spaced to outer quintiles
 p <- Predict(f, college, income=incomes, conf.int=FALSE)
 plot(p, xlim=c(0,35), ylim=c(30,55))
