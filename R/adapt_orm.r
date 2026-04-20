@@ -31,22 +31,19 @@ adapt_orm <- function(x, y, maxk=6, ...) {
   ## model.frame() on newdata without needing to resolve 'ki' or 'k' in
   ## any (possibly dead) environment.
   ## Cannot create a formula outside the orm() call or wrong environment (mkform) is saved.
-  fi <- if(ki == 0) orm(y ~ x, x=TRUE, y=TRUE, ...)
-        else        orm(eval(bquote(y ~ rcs(x, .(ki)))), x=TRUE, y=TRUE, ...)
+  form <- if(ki == 0) y ~ x else eval(bquote(y ~ rcs(x, .(ki))))
+  fi <- orm(form, x=TRUE, y=TRUE, ...)
   w    <- Olinks(fi)
   best <- which.min(w[, 'deviance'])
   link <- w[best, 'link']
-  if(link != 'logistic')
-    fi <- if(ki == 0) orm(y ~ x, family=link, ...)
-          else        orm(eval(bquote(y ~ rcs(x, .(ki)))), family=link, ...)
+  if(link != 'logistic') fi <- orm(form, family=link, ...)
   fits <- list()
   # Use the best link in finding best # knots
   i  <- 0
   ks <- if(maxk < 3) 0 else c(0, 3 : maxk)
   for(k in ks) {
     f <- if(k == ki) fi
-         else if(k == 0) orm(y ~ x, family=link, ...)
-         else            orm(eval(bquote(y ~ rcs(x, .(k)))), family=link, ...)
+         else            orm(if(k == 0) y ~ x else eval(bquote(y ~ rcs(x, .(k)))), family=link, ...)
     if(! f$fail) {
       i <- i + 1
       fits[[i]] <- f
