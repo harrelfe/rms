@@ -18,3 +18,5 @@ publish
 CLAUDE.md
 \.Rbuildignore
 \.claude
+^\.positai$
+^\.claude$

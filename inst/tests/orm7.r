@@ -46,7 +46,6 @@ g <- lrm(y ~ x)
 range(coef(f) - coef(g))
 range(vcov(f, intercepts='all') - vcov(g))
 
-require(rms)
 n <- 2000; p <- 5; k <- 10
 set.seed(1)
 x <- matrix(rnorm(n*p), n, p)
@@ -54,13 +53,15 @@ y <- sample(0:k, n, TRUE)
 # options(rmsdebug=TRUE)
 # Get fit object from rms 6.9-0 and makes sure current methods can
 # operate on it
-f <- readRDS('~/tmp/orm-old-fit.rds')
 g <- orm(y ~ x)
-class(f$info.matrix); class(g$info.matrix)
-f; g
-vf <- vcov(f, intercepts='mid'); dim(vf)
-vg <- vcov(g, intercepts='mid'); dim(vg)
-range(vf - vg)
+if(FALSE) {
+  f <- readRDS('~/tmp/orm-old-fit.rds')
+  class(f$info.matrix); class(g$info.matrix)
+  f; g
+  vf <- vcov(f, intercepts='mid'); dim(vf)
+  vg <- vcov(g, intercepts='mid'); dim(vg)
+  range(vf - vg)
+}
 
 h <- orm(y ~ x, scale=TRUE)
 range(coef(g) - coef(h))
