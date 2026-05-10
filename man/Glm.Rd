@@ -62,7 +62,7 @@ summary(f, outcome=c('1','2','3'), treatment=c('1','2','3'))
 
 }
 \seealso{
-\code{\link[stats:glm]{stats::glm()}},\code{\link[Hmisc:GiniMd]{Hmisc::GiniMd()}}, \code{\link[=prModFit]{prModFit()}}, \link[stats:glm.summaries]{stats::residuals.glm}
+\code{\link[stats:glm]{stats::glm()}},\code{\link[Hmisc:GiniMd]{Hmisc::GiniMd()}}, \code{\link[=prModFit]{prModFit()}}, \link[stats:residuals.glm]{stats::residuals.glm}
 }
 \keyword{models}
 \keyword{regression}

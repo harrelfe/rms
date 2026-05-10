@@ -59,7 +59,7 @@ rexVar(h, data=d)
 options(datadist=NULL)
 }
 \seealso{
-\code{\link[Hmisc:cut2]{Hmisc::cutGn()}}
+\code{\link[Hmisc:cutGn]{Hmisc::cutGn()}}
 }
 \author{
 Frank Harrell

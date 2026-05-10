@@ -1,4 +1,4 @@
-Changes in version 8.1-2 (2026-04-19)
+Changes in version 8.1-2 (2026-05-10)
   * Changed all length= to length.out= in seq() calls to avoid warnings
   * Fixed bug in Dxy calculation in dxy.cens in validate.cph.s due to faulty conversion to Surv object from a matrix; thanks: Laurie Samuels https://github.com/harrelfe/rms/issues/171
   * modelData: improved scoping based on Claude suggestions

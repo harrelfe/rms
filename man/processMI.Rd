@@ -7,7 +7,7 @@
 processMI(object, ...)
 }
 \arguments{
-\item{object}{a fit object created by \code{\link[Hmisc:transcan]{Hmisc::fit.mult.impute()}}}
+\item{object}{a fit object created by \code{\link[Hmisc:fit.mult.impute]{Hmisc::fit.mult.impute()}}}
 
 \item{...}{ignored}
 }

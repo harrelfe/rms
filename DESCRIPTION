@@ -1,6 +1,6 @@
 Package: rms
 Version: 8.1-2
-Date: 2026-04-19
+Date: 2026-05-10
 Title: Regression Modeling Strategies
 Authors@R: person(given  = c("Frank E"),
                   family = "Harrell Jr",
@@ -26,4 +26,4 @@ Description: Regression modeling, testing, estimation, validation,
 License: GPL (>= 2)
 URL: https://hbiostat.org/R/rms/, https://github.com/harrelfe/rms
 LazyLoad: yes
-RoxygenNote: 7.3.3
+Config/roxygen2/version: 8.0.0

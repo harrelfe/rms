@@ -38,7 +38,7 @@ Processes a \code{funresults} object stored in a fit object created by \code{fit
 For \code{which='anova'} assumes that the \code{fun} given to \code{fit.mult.impute} runs \code{anova(fit, test='LR')} to get likelihood ratio tests, and that \code{method='stack'} was specified also so that a final \code{anova} was run on the stacked combination of all completed datasets.  The method of \href{https://hbiostat.org/rmsc/missing.html#sec-missing-lrt}{Chan and Meng (2022)} is used to obtain overall likelihood ratio tests, with each line of the \code{anova} table getting a customized adjustment based on the amount of missing information pertaining to the variables tested in that line.  The resulting statistics are chi-square and not $F$ statistics as used by Chan and Meng.  This will matter when the estimated denominator degrees of freedom for a variable is small (e.g., less than 50).  These d.f. are reported so that user can take appropriate cautions such as increasing \code{n.impute} for \code{aregImpute}.
 }
 \seealso{
-\code{\link[Hmisc:transcan]{Hmisc::fit.mult.impute()}}
+\code{\link[Hmisc:fit.mult.impute]{Hmisc::fit.mult.impute()}}
 }
 \author{
 Frank Harrell

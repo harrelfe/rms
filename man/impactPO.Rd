@@ -81,7 +81,7 @@ ggplot(w$estimates, aes(x=method, y=Probability, fill=revo(y))) +
 \href{https://hbiostat.org/bib/r2.html}{Adjusted R-square note}
 }
 \seealso{
-\code{\link[nnet:multinom]{nnet::multinom()}}, \code{\link[VGAM:vglm]{VGAM::vglm()}}, \code{\link[=lrm]{lrm()}}, \code{\link[Hmisc:popower]{Hmisc::propsPO()}}, \code{\link[Hmisc:R2Measures]{Hmisc::R2Measures()}}, \code{\link[Hmisc:combine.levels]{Hmisc::combine.levels()}}
+\code{\link[nnet:multinom]{nnet::multinom()}}, \code{\link[VGAM:vglm]{VGAM::vglm()}}, \code{\link[=lrm]{lrm()}}, \code{\link[Hmisc:propsPO]{Hmisc::propsPO()}}, \code{\link[Hmisc:R2Measures]{Hmisc::R2Measures()}}, \code{\link[Hmisc:combine.levels]{Hmisc::combine.levels()}}
 }
 \author{
 Frank Harrell \href{mailto:fh@fharrell.com}{fh@fharrell.com}
