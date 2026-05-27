@@ -444,6 +444,13 @@ survdiffplot(f)
 #See Boers (2004)
 survplot(f, conf='diffbands')
 
+#To make version of plot used in hbiostat.org logo:
+# svglite::svglite('/tmp/sdiff.svg')
+# par(mar=c(3, 3, 1, 1), mgp=c(2, 0.6, 0))
+# survplot(f, conf='diffbands', levels.only=TRUE, n.risk=TRUE, ylim=c(.5, 1))
+# dev.off()
+
+
 options(datadist=NULL)
 \dontrun{
 #
