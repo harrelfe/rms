@@ -1,5 +1,5 @@
 survplot.npsurv <-
-  function(fit, xlim, 
+  function(fit, xlim,
            ylim, xlab, ylab, time.inc, state=NULL,
            conf=c("bands", "bars", "diffbands", "none"), mylim=NULL,
            add=FALSE, label.curves=TRUE, abbrev.label=FALSE, levels.only=FALSE,
@@ -10,7 +10,7 @@ survplot.npsurv <-
            srt.n.risk=0, sep.n.risk=.056, adj.n.risk=1,
            y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'), cex.ylab=cex.xlab,
            pr=FALSE, ...) {
-    
+
     conf     <- match.arg(conf)
     polyg    <- ordGridFun(grid=FALSE)$polygon
     conf.int <- fit$conf.int
@@ -21,7 +21,7 @@ survplot.npsurv <-
     cylim <- function(ylim)
       if(length(mylim)) c(min(ylim[1], mylim[1]), max(ylim[2], mylim[2]))
     else ylim
-    
+
     fit.orig <- fit
     units   <- Punits(fit$units, adds=FALSE, upfirst=TRUE, default='day')
     maxtime <- fit$maxtime
@@ -50,10 +50,10 @@ survplot.npsurv <-
       if(state %nin% states) stop(paste('state is not in',
                                         paste(states, collapse=', ')))
     }
-    
+
     trans <- loglog || mstate || ! missing(fun)
     if(missing(ylab))
-      ylab <- 
+      ylab <-
        if(loglog) "log(-log Survival Probability)"
        else if(mstate) paste('Cumulative Incidence of', upFirst(state))
        else if(trans) ""
@@ -61,13 +61,13 @@ survplot.npsurv <-
 
     if(loglog) fun <- function(y) logb(-logb(ifelse(y == 0 | y == 1, NA, y)))
      else if(! trans) fun <- function(y) y
-    
+
     if(missing(xlab))
       xlab <- if(logt) paste("log Follow-up Time in ", units, "s", sep="")
       else labelPlotmath('Follow-up Time', paste(fit$units, 's', sep=''))
       ## else labelPlotmath(fit$time.label, fit$units)
-  
-    if(missing(xlim)) 
+
+    if(missing(xlim))
       xlim <- if(logt) logb(c(maxtime / 100, maxtime)) else c(mintime, maxtime)
 
     convert <- if(mstate) {
@@ -89,7 +89,7 @@ survplot.npsurv <-
       conv } else function(f) f
 
   fit <- convert(fit)
-  
+
   origsurv <- fit$surv
   if(trans) {
     fit$surv <- fun(fit$surv)
@@ -139,12 +139,12 @@ survplot.npsurv <-
   }
   xd <- xlim[2] - xlim[1]
   yd <- ylim[2] - ylim[1]
-  
+
   if(n.risk && !add) {
     mar <- opar$mar
     if(mar[4] < 4) {mar[4] <- mar[4] + 2; par(mar=mar)}
   }
-  
+
   ## One curve for each value of y, excl style used for C.L.
   lty <- if(missing(lty)) seq(ns + 1)[-2] else rep(lty, length=ns)
   lwd <- rep(lwd, length=ns)
@@ -153,7 +153,7 @@ survplot.npsurv <-
   if(conf == 'diffbands' && ns < 2) conf <- 'bands'
   if(labelc || conf %in% c('bands', 'diffbands')) curves <- vector('list', ns)
   Tim <- Srv <- list()
-  
+
   par(xpd=NA)
 
   nevents <- totaltime <- numeric(ns)
@@ -184,7 +184,7 @@ survplot.npsurv <-
                             ':', paste(round(cumi, 3), collapse=','),
                             sep='')
     }
-      
+
     if(logt) time <- logb(time)
     s <- !is.na(time) & (time >= xlim[1])
     if(i==1 & !add) {
@@ -271,7 +271,7 @@ survplot.npsurv <-
                 col = col.fill[i], type = "s")
       }
       else if(conf == 'diffbands')
-        survdiffplot(fit.orig, conf=conf, fun=fun, convert=convert, xlim=xlim)
+        survdiffplot(fit.orig, conf=conf, fun=fun, convert=convert, xlim=xlim, col.fill=col.fill)
 
       else {
         j <- if(ns == 1) TRUE else vs == olev[i]
@@ -285,7 +285,7 @@ survplot.npsurv <-
                col=col[i])
       }
     }
-    
+
     if(n.risk) {
       j <- if(ns == 1) TRUE else vs == olev[i]
       tt <- v$time[j]
@@ -304,7 +304,7 @@ survplot.npsurv <-
                     yy, adj=0, sleva[i], cex=cex.n.risk)
     }
   }
-  
+
   if(conf %in% c('bands', 'diffbands'))
     for(i in 1:ns)
       lines(curves[[i]][[1]], curves[[i]][[2]],
@@ -330,7 +330,7 @@ survplot.npsurv <-
   }
   if(labelc) labcurve(curves, sleva, type='s', lty=lty, lwd=lwd,
                       opts=label.curves, col.=col)
-  
+
   invisible(slev)
 }
 
@@ -339,7 +339,7 @@ survdiffplot <-
   function(fit, order=1:2, fun=function(y) y, xlim, ylim, xlab,
            ylab="Difference in Survival Probability", time.inc,
            conf.int, conf=c("shaded", "bands", "diffbands", "none"),
-           add=FALSE, lty=1, lwd=par('lwd'), col=1,
+           add=FALSE, lty=1, lwd=par('lwd'), col=1, col.fill=gray(0.9),
            n.risk=FALSE,  grid=NULL,
            srt.n.risk=0, adj.n.risk=1,
            y.n.risk, cex.n.risk=.6,
@@ -352,7 +352,7 @@ survdiffplot <-
 
   opar <- par(c('xpd', 'mar'))
   on.exit(par(opar))
-  
+
   units <- Punits(fit$units, adds=FALSE, upfirst=TRUE, default='Day')
   maxtime <- fit$maxtime
   if(!length(maxtime)) maxtime <- max(fit$time)
@@ -370,11 +370,11 @@ survdiffplot <-
     }
 
   if(missing(xlab)) xlab <- if(units==' ') 'Time' else paste(units, "s", sep="")
-  
+
   if(missing(xlim)) xlim <- c(mintime, maxtime)
-  
+
   if(length(grid) && is.logical(grid)) grid <- if(grid) gray(.8) else NULL
-  
+
   polyg <- ordGridFun(grid=FALSE)$polygon
 
   times <- sort(unique(c(fit$time, seq(mintime, maxtime, by=time.inc))))
@@ -382,7 +382,7 @@ survdiffplot <-
     ## Note: summary.survfit computes standard errors on S(t) scale
 
   f <- convert(summary(fit, times=times))
-  
+
   slev <- levels(f$strata)
   ns <- length(slev)
   if(ns !=2 ) stop('must have exactly two strata')
@@ -411,7 +411,7 @@ survdiffplot <-
     hi <- surv + 0.5 * z * se
     k <- ! is.na(times + lo + hi) & times < xlim[2]
     polyg(c(times[k], rev(times[k])), c(lo[k], rev(hi[k])),
-           col=gray(.9), type='s')
+           col=col.fill, type='s')
     return(invisible(slev))
   }
   lo <- surv - z * se
@@ -419,7 +419,7 @@ survdiffplot <-
 
   if(missing(ylim)) ylim <- range(c(lo, hi), na.rm=TRUE)
 
-  if(!add) {
+  if(! add) {
     plot(times, surv, type='n', axes=FALSE,
          xlim=xlim, ylim=ylim, xlab='', ylab='')
     mgp.axis(2, labels=TRUE, axistitle=ylab, cex.lab=cex.ylab)
@@ -437,10 +437,10 @@ survdiffplot <-
   }
 
   k <- !is.na(times + lo + hi)
-  
+
   switch(conf,
          shaded=polyg(c(times[k], rev(times[k])), c(lo[k], rev(hi[k])),
-           col=gray(.85), type='s'),
+           col=col.fill, type='s'),
          bands={
            lines(times, lo, col=gray(.7))
            lines(times, hi, col=gray(.7))
@@ -459,13 +459,13 @@ survdiffplot <-
     nrisk      <- pmin(anr$nrisk, bnr$nrisk)
     xd         <- xlim[2] - xlim[1]
     yd         <- ylim[2] - ylim[1]
-    
+
     if(! add) {
       mar <- opar$mar
       if(mar[4] < 4) {mar[4] <- mar[4] + 2; par(mar=mar)}
     }
     par(xpd=NA)
-    
+
     tt <- nrisktimes
     tt[1] <- xlim[1]
     if(missing(y.n.risk)) y.n.risk <- ylim[1]

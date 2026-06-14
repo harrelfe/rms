@@ -1,7 +1,7 @@
 lrm <- function(formula, data=environment(formula),
                 subset, na.action=na.delete,
-                method="lrm.fit", model=FALSE, x=FALSE, y=FALSE, 
-                linear.predictors=TRUE, se.fit=FALSE, 
+                method="lrm.fit", model=FALSE, x=FALSE, y=FALSE,
+                linear.predictors=TRUE, se.fit=FALSE,
                 penalty=0, penalty.matrix,
                 var.penalty,
                 weights, normwt=FALSE, scale, ...)
@@ -20,7 +20,7 @@ lrm <- function(formula, data=environment(formula),
               na.action=na.action, callenv=callenv)
 
   tform <- terms(formula, data=data)
-	if(length(atl <- attr(tform, "term.labels")) && 
+	if(length(atl <- attr(tform, "term.labels")) &&
 						any(atl!="."))	{ ##X's present
 
     X        <- Design(data, formula=formula)
@@ -41,7 +41,7 @@ lrm <- function(formula, data=environment(formula),
     if(length(weights))
       warning('currently weights are ignored in model validation and bootstrapping lrm fits')
     if(model) m <- X
-    
+
     X <- model.matrix(Terms, X)
     alt <- attr(mmcolnames, 'alt')
     if(! all(mmcolnames %in% colnames(X)) && length(alt)) mmcolnames <- alt
@@ -55,8 +55,8 @@ lrm <- function(formula, data=environment(formula),
     n <- length(Y)
 
     penpres <- !(missing(penalty) && missing(penalty.matrix))
-    
-    if(!penpres) penalty.matrix <- matrix(0,ncol=p,nrow=p) else { 
+
+    if(!penpres) penalty.matrix <- matrix(0,ncol=p,nrow=p) else {
       if(missing(penalty.matrix)) penalty.matrix <- Penalty.matrix(atr, X) else
       if(nrow(penalty.matrix)!=p || ncol(penalty.matrix)!=p) stop(
              paste("penalty.matrix does not have", p, "rows and columns"))
@@ -72,6 +72,7 @@ lrm <- function(formula, data=environment(formula),
       }
   }
   else {
+    stop('lrm requires predictors.  Use lrm.fit for the no-predictor case.')
     X <- Design(data, formula=formula)
 
     offs <- model.offset(X)
@@ -83,7 +84,7 @@ lrm <- function(formula, data=environment(formula),
     penpres <- FALSE
     penalty.matrix <- NULL
     }  ##Model: y~. without data= -> no predictors
-  
+
   if(method == "model.matrix") return(X)
 
   if(! is.factor(Y)) Y <- as.vector(Y)  # in case Y is a matrix
@@ -92,12 +93,12 @@ lrm <- function(formula, data=environment(formula),
     f <- lrm.fit(X, Y, offset=offs,
                  penalty.matrix=penalty.matrix,
                  weights=weights, normwt=normwt, ...)
-  
+
   if(f$fail) {
     warning("Unable to fit model using ", dQuote(method))
     return(f)
     }
-  
+
   f$call <- NULL
   if(model) f$model <- m
   if(x) f$x <- X
@@ -110,7 +111,7 @@ lrm <- function(formula, data=environment(formula),
     ## Get improved covariance matrix
     v <- infoMxop(info, invert=TRUE)
     # if(var.penalty=='sandwich') f$var.from.info.matrix <- v
-    f.nopenalty <- 
+    f.nopenalty <-
         lrm.fit(X, Y, offset=offs, initial=f$coef, maxit=1, ...)
     ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
     info.matrix.unpenalized <- infoMxop(f.nopenalty$info.matrix)
@@ -121,11 +122,11 @@ lrm <- function(formula, data=environment(formula),
     df <- sum(dag[- (1 : nrp)])
     lr <- f.nopenalty$stats["Model L.R."]
     pval <- 1 - pchisq(lr, df)
-    f$stats[c('d.f.','Model L.R.','P')] <- c(df, lr, pval)  
+    f$stats[c('d.f.','Model L.R.','P')] <- c(df, lr, pval)
   }
 
   ass <- if(xpres) DesignAssign(atr, nrp, Terms) else list()
-  
+
   if(xpres) {
     if(linear.predictors) names(f$linear.predictors) <- names(Y)
     else
@@ -147,7 +148,7 @@ lrm <- function(formula, data=environment(formula),
                  sformula=sformula,
                  terms=Terms, assign=ass, na.action=nact, fail=FALSE,
                  interceptRef=1))
-  
+
   class(f) <- c("lrm", "rms", "glm")
   f
 }
@@ -158,10 +159,10 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
                       title='Logistic Regression Model', ...) {
 
   latex <- prType() == 'latex'
-  
+
   z <- list()
   k <- 0
-  
+
   lf <- length(x$freq)
   if(lf > 3 && lf <= 20) {
     k <- k + 1
@@ -183,9 +184,9 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
     z[[k]] <- list(type=paste('naprint',class(x$na.action),sep='.'),
                    list(x$na.action))
   }
-  
+
   ns <- x$non.slopes
-  
+
   pm <- x$penalty.matrix
   penaltyFactor <- NULL
   if(length(pm)) {
@@ -201,7 +202,7 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
   }
 
   cof   <- x$coef
-  
+
   if(length(x$var)) {     # old fit object < rms 7.0-0 or result of bootcov, robcov
     vv <- diag(x$var)
     if(! intercepts) vv <- vv[- (1 : ns)]
@@ -241,11 +242,11 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
                       gamma   = stats['Gamma'],
                       'tau-a' = stats['Tau-a'],
                       dec     = 3)
-  
+
   headings <- c('','Model Likelihood\nRatio Test',
                    'Discrimination\nIndexes',
                    'Rank Discrim.\nIndexes')
-  
+
   data <- list(misc, lr, disc, discr)
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
@@ -257,9 +258,7 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
                         aux=if(length(pm)) penalty.scale,
                         auxname='Penalty Scale'))
   }
-  
+
   prModFit(x, title=title, z, digits=digits,
            coefs=coefs, ...)
 }
-
-

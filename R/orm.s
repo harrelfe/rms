@@ -17,7 +17,7 @@ orm <- function(formula, data=environment(formula),
   tform <- terms(formula, data=data)
   if(! missing(data) || (
 						length(atl <- attr(tform,"term.labels")) &&
-						any(atl!=".")))	{ ##X's present
+						any(atl!=".")))	{ # X's present
 
     callenv <- parent.frame()   # don't delay these evaluations
     subset  <- if(! missing(subset )) eval(substitute(subset),  data, callenv)
@@ -76,11 +76,13 @@ orm <- function(formula, data=environment(formula),
           penalty.matrix <- a %*% penalty.matrix %*% a
         }
     }
-  }
+  }  # end X's present
   else
     {
-      X <- eval.parent(m)
+      stop('orm requires predictors.  Use orm.fit for the no-predictor case.')
+      X <- eval.parent(m)   # but m is not defined
       offs <- model.offset(X)
+
       if(!length(offs)) offs <- 0
       Y <- model.extract(X, 'response')
       Y <- if(is.matrix(Y)) Y[! is.na(Y),, drop=FALSE] else Y[! is.na(Y)]
@@ -124,7 +126,7 @@ orm <- function(formula, data=environment(formula),
     f$penalty <- penalty
     ## Get improved covariance matrix
     v <- infoMxop(info, invert=TRUE)
- 
+
     if(var.penalty == 'sandwich') f$var.from.info.matrix <- v
     f.nopenalty <-
         fitter(X, Y, family=family, offset=offs, initial=f$coef, maxit=1,
@@ -263,7 +265,7 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
             "rho", "Dxy", "R2", names(r2m), "g", "gr", "pdm")
     stats <- rep(NA, length(statsnam))
     names(stats) <- statsnam
-    } 
+    }
 
   misc <- reListclean(Obs           = stats['Obs'],
                       ESS           = round(stats['ESS'], 1),
@@ -308,7 +310,7 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
   data <- if(length(discr)) list(misc, lr, disc, discr) else list(misc, lr, disc)
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
-  
+
   if(coefs) {
     k <- k + 1
     if(!intercepts) {
@@ -352,7 +354,7 @@ Quantile.orm <- function(object, codes=FALSE, ...)
     cumprob <- eval(trans[1])
     deriv   <- eval(trans[5])
     ## Uses the first derivative that doesn't need the f argument
-  
+
     ns <- length(intercepts)
     method <- match.arg(method)
     lp <- if(length(lp)) lp - intercepts[interceptRef] else matxv(X, slopes)

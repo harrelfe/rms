@@ -89,7 +89,7 @@ survplotp(fit, \dots)
 survdiffplot(fit, order=1:2, fun=function(y) y,
            xlim, ylim, xlab, ylab="Difference in Survival Probability",
            time.inc, conf.int, conf=c("shaded", "bands","diffbands","none"),
-           add=FALSE, lty=1, lwd=par('lwd'), col=1,
+           add=FALSE, lty=1, lwd=par('lwd'), col=1, col.fill=gray(0.9),
            n.risk=FALSE, grid=NULL,
            srt.n.risk=0, adj.n.risk=1,
            y.n.risk, cex.n.risk=.6, cex.xlab=par('cex.lab'),
@@ -445,9 +445,10 @@ survdiffplot(f)
 survplot(f, conf='diffbands')
 
 #To make version of plot used in hbiostat.org logo:
-# svglite::svglite('/tmp/sdiff.svg')
-# par(mar=c(3, 3, 1, 1), mgp=c(2, 0.6, 0))
-# survplot(f, conf='diffbands', levels.only=TRUE, n.risk=TRUE, ylim=c(.5, 1))
+# png('/tmp/sdiff.svg', height=700, width=700)
+# par(mar=c(3, 3, 1, 1), mgp=c(2, 0.6, 0), lwd=2, cex=1.25)
+# survplot(f, conf='diffbands', levels.only=TRUE, n.risk=TRUE, ylim=c(.5, 1),
+#          col=4, col.fill=gray(0.6), adj.n.risk=0.75, lty=1)
 # dev.off()
 
 
