@@ -36,7 +36,7 @@ recode2integer <- function(y, precision = 7, ftable = TRUE) {
   # 1. y is numeric and contains decimals
   # 2. y is numeric and does not contain decimals
   # 3. y is factor/categorical
-  # 4. y is something else (character)
+  # 4. y is something else  (character)
   if (anyNA(y)) stop("y may not contain NAs")
   y_new <- NULL
   ynumeric <- is.numeric(y)
