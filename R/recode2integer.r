@@ -50,7 +50,7 @@ recode2integer <- function(y, precision = 7, ftable = TRUE) {
       # when determining unique values of "y", round to avoid unpredictable behavior
       # this is better than `round(y, precision)`
       mult <- 10^precision
-      if (any(abs(y) > (2^.Machine$double.digits) / mult)) {
+      if (any(abs(y) > .Machine$double.xmax / mult)) {
         warning("y values may be too large for recode2integer precision; consider reducing precision")
       }
       y_rnd <- round(y * mult)

@@ -98,4 +98,38 @@ for(i in 1: 2500) {
 
 cat(nignore, 'iterations ignored\n')
 
+# Modified from Eric Kawaguchi  ekawaguc@usc.edu
 
+y1 <- c(0.20114, 0.20111, 0.20000, 0.20112,
+        0.20113, 0.20115, 0.21000)
+
+for (u in y1) {
+  cat('u=', u, '\n')
+  y <- c(u, 0.28449, 0.41395, 0.44128, 1.41887)
+  max(abs(y - round(y * 1e7)/1e7))
+  Y <- Ocens(y)
+  Y[1] - u
+  v <- round(u * 1e7) / 1e7
+  u - v
+  Y <- Ocens2ord(Y)
+  a <- attributes(Y)
+  a$levels[1] - u
+  a$ranges$y[1] - u
+  a$ranges$u[1] - u
+  f <- orm.fit(y = y)
+  f$ranges$y[1] - u
+  val <- f$yunique
+  prn(plogis(coef(f)))
+  S <- Survival(f)
+  w <- formals(S)
+  identical(f$ranges, w$ranges)
+  z <- w$values
+  z[1] - u
+
+  r <- w$ranges
+  r$y[1] - u
+  r$u[1] - u
+  prn(S())
+  prn(S(times=c(0, y)))
+  prn(with(survfit(Surv(y) ~ 1), data.frame(time, surv)))
+  }
