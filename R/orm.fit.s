@@ -103,21 +103,23 @@ orm.fit <- function(x=NULL, y,
     kmid    <- which.min(abs(ylevels[-1] - mediany))
     anycens <- any(ctype > 0)
     ranges  <- a$ranges
-  } else {
-  ylabel    <- label(y)
-  uni       <- units(y)
-  ranges    <- if(is.numeric(y)) list(y=range(y), u=range(y), c=c(NA, NA))
-  w         <- recode2integer(y, precision=y.precision)
-  y         <- w$y - 1
-  y2        <- y
-  ylevels   <- w$ylevels
-  k         <- length(ylevels) - 1
-  kmid      <- max(w$whichmedian - 1L, 1L)
-  numy      <- w$freq
-  mediany   <- w$median
-  Ncens1    <- Ncens2 <- c(left=0L, right=0L, interval=0L)
-  anycens   <- FALSE
-  rt_cens_beyond <- NULL
+  } else {  # regular variable
+    ylabel    <- label(y)
+    uni       <- units(y)
+    mul       <- 10^y.precision
+    yrange    <- range(round(y * mul)) / mul   # be consistent with recode2integer
+    ranges    <- if(is.numeric(y)) list(y=yrange, u=yrange, c=c(NA, NA))
+    w         <- recode2integer(y, precision=y.precision)
+    y         <- w$y - 1
+    y2        <- y
+    ylevels   <- w$ylevels
+    k         <- length(ylevels) - 1
+    kmid      <- max(w$whichmedian - 1L, 1L)
+    numy      <- w$freq
+    mediany   <- w$median
+    Ncens1    <- Ncens2 <- c(left=0L, right=0L, interval=0L)
+    anycens   <- FALSE
+    rt_cens_beyond <- NULL
   }
 
   intcens <- 1L * any(ctype == 3)
@@ -332,7 +334,7 @@ orm.fit <- function(x=NULL, y,
                   Ncens1            = if(isOcens) Ncens1,
                   Ncens2            = if(isOcens) Ncens2,
                   # n.risk          = if(any(ctype > 0)) n.risk,
-                  ranges            = ranges,             # ranges attribute from Ocens
+                  ranges            = ranges,             # ranges attribute from Ocens or computed above
                   rt_cens_beyond    = rt_cens_beyond,
                   stats             = stats,
                   coefficients      = kof,
@@ -692,4 +694,3 @@ probabilityFamilies <-
 ## plot(x, d(x), type='l')
 ## ad <- c(NA,diff(dlogis(x))/(x[2]-x[1]))
 ## lines(x, ad, col='red')
-
