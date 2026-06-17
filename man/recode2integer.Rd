@@ -27,22 +27,22 @@ a list with the following elements:
 Create Ordinal Variables With a Given Precision
 }
 \details{
-For a factor variable \code{y}, uses existing factor levels and codes the output \code{y} as integer.  For a character \code{y}, converts to \code{factor} and does the same.  For a numeric \code{y} that is integer, leaves the levels intact and codes \code{y} as consecutive positive integers corresponding to distinct values in the data.  For numeric \code{y} that contains any non-integer values, rounds \code{y} to \code{precision} decimal places to the right before finding the distinct values.
+For a factor variable \code{y}, uses existing factor levels and codes the output \code{y} as integer.  For a character \code{y}, converts to \code{factor} and does the same.  For a numeric \code{y} that is integer, leaves the distinct levels intact and codes \code{y} as integers 1, 2, 3, ... corresponding to distinct values in the data.  For numeric \code{y} that contains any non-integer values, rounds \code{y} to \code{precision} decimal places to the right before finding the distinct values.
 
 This function is used to prepare ordinal variables for \code{\link[=orm.fit]{orm.fit()}} and \code{\link[=lrm.fit]{lrm.fit()}}.  It was written because just using \code{\link[=factor]{factor()}} creates slightly different distinct \code{y} levels on different hardware because \code{\link[=factor]{factor()}} uses \code{\link[=unique]{unique()}} which functions slightly differently on different systems when there are non-significant digits in floating point numbers.  See \href{https://hbiostat.org/r/rms/unique-float/}{this} for more details.
 }
 \examples{
-w <- function(y, precision=7) {
-  v <- recode2integer(y, precision);
+w <- function(y, precision = 7) {
+  v <- recode2integer(y, precision)
   print(v)
-  print(table(y, ynew=v$y))
+  print(table(y, ynew = v$y))
 }
 set.seed(1)
 w(sample(1:3, 20, TRUE))
 w(sample(letters[1:3], 20, TRUE))
 y <- runif(20)
 w(y)
-w(y, precision=2)
+w(y, precision = 2)
 }
 \author{
 Cole Beck

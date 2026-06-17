@@ -1,6 +1,6 @@
 #' Create Ordinal Variables With a Given Precision
 #'
-#' For a factor variable `y`, uses existing factor levels and codes the output `y` as integer.  For a character `y`, converts to `factor` and does the same.  For a numeric `y` that is integer, leaves the levels intact and codes `y` as consecutive positive integers corresponding to distinct values in the data.  For numeric `y` that contains any non-integer values, rounds `y` to `precision` decimal places to the right before finding the distinct values.
+#' For a factor variable `y`, uses existing factor levels and codes the output `y` as integer.  For a character `y`, converts to `factor` and does the same.  For a numeric `y` that is integer, leaves the distinct levels intact and codes `y` as integers 1, 2, 3, ... corresponding to distinct values in the data.  For numeric `y` that contains any non-integer values, rounds `y` to `precision` decimal places to the right before finding the distinct values.
 #'
 #' This function is used to prepare ordinal variables for [orm.fit()] and [lrm.fit()].  It was written because just using [factor()] creates slightly different distinct `y` levels on different hardware because [factor()] uses [unique()] which functions slightly differently on different systems when there are non-significant digits in floating point numbers.  See [this](https://hbiostat.org/r/rms/unique-float/) for more details.
 #'
@@ -20,80 +20,83 @@
 #' @md
 #'
 #' @examples
-#' w <- function(y, precision=7) {
-#'   v <- recode2integer(y, precision);
+#' w <- function(y, precision = 7) {
+#'   v <- recode2integer(y, precision)
 #'   print(v)
-#'   print(table(y, ynew=v$y))
+#'   print(table(y, ynew = v$y))
 #' }
 #' set.seed(1)
 #' w(sample(1:3, 20, TRUE))
 #' w(sample(letters[1:3], 20, TRUE))
 #' y <- runif(20)
 #' w(y)
-#' w(y, precision=2)
-
-recode2integer <- function(y, precision=7, ftable=TRUE) {
-
+#' w(y, precision = 2)
+recode2integer <- function(y, precision = 7, ftable = TRUE) {
   # four scenarios for "y"
   # 1. y is numeric and contains decimals
   # 2. y is numeric and does not contain decimals
   # 3. y is factor/categorical
   # 4. y is something else (character)
-  y_new    <- NULL
+  if (anyNA(y)) stop("y may not contain NAs")
+  y_new <- NULL
   ynumeric <- is.numeric(y)
-  if(ynumeric) {
+  if (ynumeric) {
     # median of "y"
     mediany <- quantile(y, probs = 0.5, type = 7)
     # need precision if any fractional values
     needPrecision <- any(y %% 1 != 0)
-    if(needPrecision) {
+    if (needPrecision) {
       ## scenario #1
       # when determining unique values of "y", round to avoid unpredictable behavior
       # this is better than `round(y, precision)`
-      y_rnd       <- round(y       * 10^precision)
-      mediany_rnd <- round(mediany * 10^precision)
+      mult <- 10^precision
+      if (any(abs(y) > .Machine$double.xmax / mult)) {
+        warning("y values may be too large for recode2integer precision; consider reducing precision")
+      }
+      y_rnd <- round(y * mult)
+      mediany_rnd <- round(mediany * mult)
       # distinct values of "y"
       yu <- sort(unique(y_rnd))
       # convert whole number back to decimal
-      ylevels <- yu * 10^-precision
+      ylevels <- yu / mult
       # map "y" values from 1:n for `n` unique value
       y_new <- match(y_rnd, yu)
       # find the midpoint
       whichmedian <- which.min(abs(yu - mediany_rnd))
     } else {
       ## scenario #2
-      yu      <- sort(unique(y))
+      yu <- sort(unique(y))
       ylevels <- yu
-      y_new   <- match(y, yu)
+      y_new <- match(y, yu)
       whichmedian <- which.min(abs(yu - mediany))
     }
   }
   # For large n, as.factor is slow
   # if(!is.factor(y)) y <- as.factor(y)
-  if(is.factor(y)) {
+  if (is.factor(y)) {
     ## scenario #3
     ylevels <- levels(y)
-    y       <- as.integer(y)
-  }
-  else {
-    if(length(y_new)) {
+    y <- as.integer(y)
+  } else {
+    if (length(y_new)) {
       # work already done if "y_new" is set
-      y       <- y_new
+      y <- y_new
     } else {
       ## scenario #4
       # if not done, map "y" values from 1:n for `n` unique value
       ylevels <- sort(unique(y))
-      y       <- match(y, ylevels)
+      y <- match(y, ylevels)
     }
   }
-  if(! ynumeric) {
-    yu      <- sort(unique(y))
+  if (!ynumeric) {
+    yu <- sort(unique(y))
     mediany <- quantile(y, probs = 0.5, type = 7)
     whichmedian <- which.min(abs(yu - mediany))
   }
 
-  list(y=y, ylevels=ylevels,
-       freq=if(ftable) structure(tabulate(y), names=ylevels),
-       median=unname(mediany), whichmedian=whichmedian)
+  list(
+    y = y, ylevels = ylevels,
+    freq = if (ftable) structure(tabulate(y), names = ylevels),
+    median = unname(mediany), whichmedian = whichmedian
+  )
 }
-
