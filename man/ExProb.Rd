@@ -14,11 +14,11 @@
 	linear predictor was evaluated multiple step functions are drawn.
 	\code{ExProb} is especially useful for \code{\link{nomogram}}.  \code{Survival}
   generates a similar function but for computing survival probabilities Prob(Y>y)
-  and adding an origin of zero.  Plotting of survival curves is done with a 
+  and adding an origin of zero.  Plotting of survival curves is done with a
   \code{survplot} method.  For survival estimation when interval
   censoring is present, times are taken as interval midpoints with intervals
   corresponding to intercepts in the model.
-	
+
 	Optionally a normal approximation (normality for the linear predictor) for a confidence
 	interval for exceedance probabilities will be computed, if
 	\code{conf.int > 0} is specified to the function generated from calling
@@ -38,17 +38,17 @@ ExProb(object, \dots)
                       pch.data=21, lwd=par('lwd'), lwd.data=lwd,
                       lty.data=2, key=TRUE)
 
-\method{Survival}{orm}(object, \dots)
+\method{Survival}{orm}(object, precision, \dots)
 }
 \arguments{
   \item{object}{a fit object from \code{orm}.  For \code{Survival} the fit may be from \code{orm.fit}.
   This is used to estimate survival curves when there are no predictors in the model.  In the case
   the link function (\code{family} argument to \code{orm.fit}) does not affect survival probabilities
-  but does affect confidence limits.  To get the same confidence intervals as \code{survival:survfit.formula} 
+  but does affect confidence limits.  To get the same confidence intervals as \code{survival:survfit.formula}
   use \code{ormfit(y=, family='loglog')} to correspond to \code{survfit(..., conf.type='log-log')}.}
   \item{codes}{if \code{TRUE}, \code{ExProb} use the integer codes
      \eqn{1,2,\ldots,k} for the \eqn{k}-level response instead of its
-     original unique values} 
+     original unique values}
   \item{\dots}{ignored for \code{ExProb}.  Passed to \code{plot} for
     \code{plot.ExProb}}
 	\item{data}{Specify \code{data} if you want to add stratified empirical
@@ -58,7 +58,8 @@ ExProb(object, \dots)
     variable (corresponding to what made the linear predictor vary) and
 		the second variable is the data vector for the \code{y} variable.
 		The rows of data should be sorted to be in order of the linear
-    predictor argument.
+    predictor argument.}
+  \item{precision}{Used if \code{times} is given to \code{Survival.orm} to ensure that times are rounded the same way that they were rounded by \code{Ocens2ord}
 	}
 	\item{x}{an object created by running the function created by \code{ExProb}}
   \item{xlim}{limits for x-axis; default is range of observed \code{y}}
