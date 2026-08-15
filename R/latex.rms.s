@@ -1,8 +1,63 @@
+## -----------------------------------------------------------------------
+## latexrms, with changes concentrated in four places, each marked below.
+## Two.Way, Three.Way, and the entire term-building switch (assume.code
+## cases 1-11) are byte-for-byte identical to the uploaded source --
+## nothing there needed to change, since none of it emits LaTeX syntax
+## directly; it builds raw term/coefficient content that the
+## before/after wrapping (at the end) and the array scaffolding (at the
+## start) apply uniformly to.
+##
+## No prType()-specific branches were added anywhere in these changes --
+## per the conclusion that plain LaTeX math, made texmath-safe, renders
+## correctly under both prType='latex' (real LaTeX/PDF) and
+## prType='typst' (via Pandoc's texmath conversion) from the SAME code
+## path. The existing html-specific pre-transformations-table branch
+## near the end (checking `html <- prType()=='html'`) is untouched --
+## that's a separate, already-working feature, out of scope here.
+##
+## CHANGE 1 (signature): before=if(inline) "" else "& &" -> "&". The
+## array is now 2 columns (see Change 2), so continuation rows need one
+## leading empty column, not two.
+##
+## CHANGE 2 (array opening + prefix row): \begin{array} -> explicit
+## \begin{array}{ll} -- confirmed by direct testing that texmath's array
+## reader requires a column-spec argument and errors ("expecting ... {")
+## on a bare \begin{array}. \lefteqn{prefix=}\\ -> prefix= & \\ --
+## \lefteqn{} is an eqnarray-package macro texmath's LaTeX reader
+## doesn't recognize (confirmed by testing); the 2-column
+## "prefix in column 1, empty column 2" row achieves the identical
+## hanging-indent visual layout using only standard array semantics, no
+## package-specific macro needed.
+##
+## CHANGE 3 (inline branch): the \\\\-joining of tex elements now has a
+## {} guard after every join, not just implicitly at the end -- same
+## fix as changes 4/5 below, applied here too since it's the same
+## silent-content-swallowing risk (a joined element starting with '['
+## right after a bare \\ gets misparsed as \\[...], an optional
+## LaTeX spacing argument, and silently disappears with no error).
+##
+## CHANGE 4 (closing section): tex == paste0(prefix, '= & & \\\\') check
+## updated to match the new 2-column prefix row ('= & \\\\', not
+## '= & & \\\\'). The substring(tex,1,1)=="\\" guard is kept as a
+## general safety net even though \end{array} no longer passes through
+## this ifelse() at all (see Change 5) -- harmless to keep, protects any
+## future/edge-case row that happens to start with a literal backslash.
+##
+## CHANGE 5 (closing section): the anyivar/anyplus trailing definitions
+## ([c]=1 if..., (x)_+=x if...) are now merged into the SAME array as
+## additional rows, instead of being appended afterward as separate $$
+## blocks -- confirmed empirically to produce much better, consistent
+## spacing. The last coefficient/term row's normal single "\\\\"
+## terminator gets extended to "\\\\{} \\\\{}" (an extra guarded blank
+## row) to visually separate the two sections within the one array.
+## \end{array} now closes the array AFTER these definition rows are
+## appended, not before.
+## -----------------------------------------------------------------------
 latexrms <-
   function(object,
            file="",
            append=FALSE, which=1 : p, varnames, columns=65, prefix=NULL, 
-           inline=FALSE, before=if(inline) "" else "& &", after="",
+           inline=FALSE, before=if(inline) "" else "&", after="",   ## CHANGE 1
            intercept, pretrans=TRUE, digits=.Options$digits, size='')
 {
   html <- prType() == 'html'
@@ -274,12 +329,12 @@ latexrms <-
   
   if(! inline)
     {
-      tex <- '\\begin{array}'   # was eqnarray*
+      tex <- '\\begin{array}{ll}'   ## CHANGE 2: explicit 2-column spec
       if(size != '') tex <- c(tex, paste0('\\', size))
       if(length(prefix))
         tex <- c(tex,
-#                 if(html) paste0(prefix, '= & & \\\\') else
-                 paste0("\\lefteqn{", prefix, "=}\\\\"))
+                 paste0(prefix, "= & \\\\"))
+                 ## CHANGE 2: was \lefteqn{prefix=}\\ -- see header note
     } else tex <- NULL
   
   cur <- ""
@@ -591,7 +646,7 @@ latexrms <-
   if(cur != "") tex <- c(tex, cur)
 
   if(inline) {
-    tex <- paste(tex, collapse='\\\\')
+    tex <- paste(tex, collapse='\\\\{}')   ## CHANGE 3: {} guard on every join
     tex <- c('\\begin{array}{l}', tex, '\\end{array}')
     if(before != '') tex <- c(before, '', tex)
     if(size != '')   tex <- c(paste0('{\\', size), tex)
@@ -602,23 +657,32 @@ latexrms <-
     return(invisible())
   }
   
-  tex <- c(tex, '\\end{array}')  # was eqnarray*
-
-  tex <- ifelse(tex == paste0(prefix, '= & & \\\\') |
+  tex <- ifelse(tex == paste0(prefix, '= & \\\\') |    ## CHANGE 4: '& \\\\' not '& & \\\\'
                 substring(tex,1,1) == "\\", tex,
                 paste(before, tex, "\\\\"))
-  
+
+  ## CHANGE 5: merge trailing definitions into the same array, with a
+  ## guarded blank-row separator, instead of appending as separate $$
+  ## blocks -- see header note.
   if(anyivar | anyplus) {
-    # s <- if(length(which) == p) "and " else "where "
-    s <- ''
+    tex[length(tex)] <- paste0(tex[length(tex)], "{} \\\\{}")
+
+    defs <- character(0)
     if(anyivar)
-      s <- paste0(s, "$$[c]=1~\\mathrm{if~subject~is~in~group}~c,~0~\\mathrm{otherwise}$$")
-    # if(anyivar && anyplus) s <- paste0(s, '; ')
+      defs <- c(defs,
+                paste(before,
+                      "[c]=1~\\mathrm{if~subject~is~in~group}~c,~0~\\mathrm{otherwise}",
+                      "\\\\"))
     if(anyplus)
-      s <- paste0(s, "$$(x)_{+}=x~\\mathrm{if}~x > 0,~0~\\mathrm{otherwise}$$")
-    tex <- c(tex, s)
+      defs <- c(defs,
+                paste(before,
+                      "(x)_{+}=x~\\mathrm{if}~x > 0,~0~\\mathrm{otherwise}",
+                      "\\\\"))
+    tex <- c(tex, defs)
   }
-  
+
+  tex <- c(tex, '\\end{array}')  # was eqnarray*
+
   if(anytr & pretrans) {
     i <- TLi != ""
     if(sum(i) == 1) tr <- paste0("$", varnames[i],
