@@ -5,7 +5,6 @@ useDynLib(rms, .registration=TRUE, .fixes="F_")
 import(Hmisc)
 importFrom(survival, Surv, is.Surv, concordancefit, coxph.fit, coxph.control, survfit, survfit.formula, survfitKM, survfitcoxph.fit, survreg.fit, survreg.control, survpenal.fit, survreg.distributions, agreg.fit, agexact.fit, attrassign, untangle.specials)
 importFrom(SparseM, solve, t, as.matrix)
-#import(SparseM)
 
 #import(ggplot2)
 importFrom(ggplot2, ggplot, guides,  geom_point, geom_text, geom_col,
@@ -33,6 +32,7 @@ importFrom(rpart, rpart, rpart.control, prune)
 importFrom(polspline, hare, phare)
 import(multcomp)
 # importFrom(multcomp, confint.glht, glht)  FAILS confint.glht not exported by namespace:multcomp
+import(tinytable)
 importFrom(htmlTable, htmlTable, txtRound)
 importFrom(htmltools, HTML)
 importFrom(knitr, kable)
