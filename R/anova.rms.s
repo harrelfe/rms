@@ -605,17 +605,27 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 ## handling is self-contained and can be extended independently. See
 ## end of file for the detailed reasoning behind each format's specific
 ## choices.
-rms_tiny_table_core <- function(d, lang, fontsize = NULL) {
-  rowlab <- rownames(d)
-  dd <- data.frame(Var = rowlab, unclass(d), check.names = FALSE)
-  colnames(dd) <- c('', colnames(d))
+## show_rownames=FALSE (new, default TRUE preserves existing behavior):
+## omits the row-label column entirely, for tables with no meaningful
+## row names -- see note [6] at end of file. linebreak="\n" (new,
+## unconditional): allows multi-line column headers (e.g.
+## "Original\nSample"), harmless for headers without embedded newlines.
+rms_tiny_table_core <- function(d, lang, fontsize = NULL,
+                                show_rownames = TRUE) {
+  dd <- if(show_rownames) {
+    rowlab <- rownames(d)
+    tmp <- data.frame(Var = rowlab, unclass(d), check.names = FALSE)
+    colnames(tmp) <- c('', colnames(d))
+    tmp
+  } else as.data.frame(unclass(d), check.names = FALSE)
   nc <- ncol(dd)
+  jdata <- if(show_rownames) 2:nc else 1:nc
 
   x <- tinytable::tt(dd, output = lang)
   x <- tinytable::format_tt(x, j = 1:nc, escape = FALSE)
-  x <- tinytable::format_tt(x, i = 0,    escape = FALSE)
-  x <- tinytable::style_tt(x, j = 1,     align = 'l')
-  x <- tinytable::style_tt(x, j = 2:nc,  align = 'r')
+  x <- tinytable::format_tt(x, i = 0,    escape = FALSE, linebreak = "\n")
+  if(show_rownames) x <- tinytable::style_tt(x, j = 1, align = 'l')
+  x <- tinytable::style_tt(x, j = jdata, align = 'r')
   x <- tinytable::style_tt(x, i = 0,     align = 'c')
   x <- tinytable::theme_striped(x)
   if(length(fontsize) && fontsize != 1)
@@ -649,8 +659,10 @@ rms_tiny_table_caption_typst <- function(caption) {
                     caption, ']]]'))
 }
 
-rms_tiny_table <- function(d, lang, caption = NULL, fontsize = NULL) {
-  x <- rms_tiny_table_core(d, lang, fontsize = fontsize)
+rms_tiny_table <- function(d, lang, caption = NULL, fontsize = NULL,
+                           show_rownames = TRUE) {
+  x <- rms_tiny_table_core(d, lang, fontsize = fontsize,
+                           show_rownames = show_rownames)
   result <- switch(lang,
                    latex = rms_tiny_table_finalize_latex(x),
                    html  = rms_tiny_table_finalize_html(x),
@@ -1061,4 +1073,16 @@ plot.anova.rms <-
 ##     chisq() actually returns rather than hard-coding an assumption
 ##     per format, so it should hold even if a given format's wrapping
 ##     convention isn't fully known or changes later.
+##
+## [6] rms_tiny_table_core/rms_tiny_table extended with two new,
+##     backward-compatible optional parameters (defaults preserve prior
+##     behavior exactly, so anova.rms's and summary.rms's existing calls
+##     are unaffected): show_rownames=FALSE omits the row-label column
+##     entirely, needed by validate.ols for its marker/frequency tables,
+##     which have no meaningful row names (the original code used
+##     rowname=NULL/rnames=FALSE for these). format_tt(linebreak="\n")
+##     is now applied unconditionally to headers, enabling multi-line
+##     column headers (e.g. "Original\nSample") -- harmless for headers
+##     without embedded newlines, and reusing the exact mechanism
+##     already confirmed working for prStats' multi-line headers.
 ## -----------------------------------------------------------------------

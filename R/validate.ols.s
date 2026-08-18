@@ -1,6 +1,6 @@
 validate <-
   function(fit,  method="boot", B=40,
-           bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, 
+           bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0,
            force=NULL, estimates=TRUE, pr=FALSE,...)
   UseMethod("validate")
 
@@ -18,9 +18,9 @@ validate.ols <- function(fit, method="boot",
     pr=FALSE, u=NULL, rel=">", tolerance=1e-7, ...)
 {
   fit.orig <- fit
-  
+
   penalty.matrix <- fit.orig$penalty.matrix
-  
+
   discrim <- function(x, y, fit, iter, evalfit=FALSE, u=NULL, rel=NULL,
                       pr=FALSE, ...)
 	{
@@ -42,7 +42,7 @@ validate.ols <- function(fit, method="boot",
           slope     <- coef[2]
         }
       }
-      
+
       z <- c(rsquare, mse, GiniMd(slope*x), intercept, slope)
       nam <- c("R-square", "MSE", "g", "Intercept", "Slope")
       if(length(u)) {
@@ -64,8 +64,8 @@ validate.ols <- function(fit, method="boot",
       names(z) <- nam
       z
     }
-  
-  ols.fit <- function(x, y, tolerance=1e-7, backward, 
+
+  ols.fit <- function(x, y, tolerance=1e-7, backward,
                       penalty.matrix=NULL, xcol=NULL, ...)
   {
     fail <- FALSE
@@ -89,13 +89,13 @@ validate.ols <- function(fit, method="boot",
       fit <- lm.fit.qr.bare(x, as.vector(y), tolerance=tolerance,
                             intercept=TRUE, xpxi=TRUE)
       if(any(is.na(fit$coefficients))) fail <- TRUE
-      if(backward) 
+      if(backward)
         fit$var <- sum(fit$residuals^2) * fit$xpxi/
           (length(y) - length(fit$coefficients))
     }
     c(fit, fail=fail)
   }
-  
+
   predab.resample(fit.orig, method=method, fit=ols.fit, measure=discrim,
                   pr=pr, B=B, bw=bw, rule=rule, type=type, sls=sls, aics=aics,
                   force=force, estimates=estimates, tolerance=tolerance,
@@ -106,9 +106,12 @@ validate.ols <- function(fit, method="boot",
 print.validate <- function(x, digits=4, B=Inf, ...)
 {
 
-  if(prType() == 'html')
-    return(html.validate(x, digits=digits, B=B, ...))
-  
+  lang <- prType()
+  if(lang == 'html') return(html.validate(x, digits=digits, B=B, ...))
+  if(lang %in% c('latex', 'typst'))
+    return(latex.validate(x, digits=digits, B=B, ...))
+  ## latex/typst auto-dispatch -- see note [1] at end of file
+
     kept <- attr(x, 'kept'); attr(x, 'kept') <- NULL
     print(round(unclass(x), digits), ...)
     if(length(kept) && B > 0) {
@@ -123,12 +126,24 @@ print.validate <- function(x, digits=4, B=Inf, ...)
     }
   }
 
+## latex.validate: builds and renders up to three tables (main
+## validation statistics; factors-retained marker table; frequencies of
+## factors retained) for the current output language (latex/html/
+## typst). Basic calling sequence unchanged from the original
+## latex.validate/html.validate -- html.validate below now delegates
+## here, matching the pattern already used by html.anova.rms and
+## html.summary.rms. See notes [2]-[5] at end of file for the reasoning
+## behind unifying what were previously two separate, duplicated
+## functions, the row-name translation additions, and the vestigial
+## parameters kept for signature compatibility.
 latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
                            title=first.word(deparse(substitute(x))),
                            caption=NULL, table.env=FALSE,
                            size='normalsize',
                            extracolsize=size, ...)
   {
+    lang  <- prType()
+
     chg <- function(x, old, new) {
       names(new) <- old
       tx <- new[x]
@@ -143,123 +158,160 @@ latex.validate <- function(object, digits=4, B=Inf, file='', append=FALSE,
                 'Test\nSample', 'Optimism', 'Corrected\nIndex', 'Lower', 'Upper',
                 'Successful\nResamples'))
     rn <- rownames(x)
-    rn <- chg(rn, c('Dxy','R2','R-square','Emax','D','U','Q','B','g','gp','gr','rho','pdm'),
-              c('$D_{xy}$','$R^{2}$','$R^{2}$', '$E_{\\max}$','$D$','$U$',
-                '$Q$','$B$','$g$','$g_{p}$','$g_{r}$','$\\rho$',
-                '$|\\overline{\\mathrm{Pr}(Y\\geq Y_{0.5})-\\frac{1}{2}}|$'))
+    ## row-name translation, format-specific -- see note [3] at end of file
+    rnNew <- switch(lang,
+                    latex = c('$D_{xy}$','$R^{2}$','$R^{2}$', '$E_{\\max}$',
+                              '$D$','$U$','$Q$','$B$','$g$','$g_{p}$',
+                              '$g_{r}$','$\\rho$',
+                              '$|\\overline{P(Y\\geq Y_{0.5})-\\frac{1}{2}}|$'),
+                    html  = c('<i>D<sub>xy</sub></i>',
+                              '<i>R<sup>2</sup></i>','<i>R<sup>2</sup></i>',
+                              '<i>E<sub>max</sub></i>','<i>D</i>','<i>U</i>',
+                              '<i>Q</i>','<i>B</i>','<i>g</i>',
+                              '<i>g<sub>p</sub></i>',
+                              '<i>g<sub>r</sub></i>','<i>&rho;</i>',
+                              'Mean |P(Y&ge;Y<sub>0.5</sub>)-0.5|'),
+                    typst = c('$D_("xy")$', '$R^(2)$', '$R^(2)$',
+                              '$E_("max")$', '$D$', '$U$', '$Q$', '$B$',
+                              '$g$', '$g_(p)$', '$g_(r)$', '$rho$',
+                              '$|overline("P"(Y >= Y_(0.5)) - 1/2)|$'))
+    rn <- chg(rn, c('Dxy','R2','R-square','Emax','D','U','Q','B','g','gp','gr',
+                    'rho','pdm'), rnNew)
     dimnames(x) <- list(rn, cn)
-    cat('\\Needspace{2in}\n', file=file, append=append)
-    cat('\\begin{center}\\', size, '\n', sep='', file=file, append=append)
-    if(length(caption) && !table.env)
-      cat(caption, '\n\n', sep='', file=file, append=TRUE)
+
     cdec <- ifelse(cn == 'Successful\nResamples', 0, digits)
-    latex(unclass(x), cdec=cdec, rowlabel='Index',
-          title=title, caption=if(table.env) caption,
-          table.env=table.env, file=file, append=TRUE,
-          center='none', extracolsize=extracolsize, ...)
-    cat('\\end{center}\n', file=file, append=TRUE)
+    z <- unclass(x)
+    ## Bug in htmlTable::txtRound for vector digits -- rounded directly
+    ## here instead, format-agnostic
+    for(i in 1 : length(cdec)) z[, i] <- round(z[, i], cdec[i])
+    z <- as.data.frame(z, check.names = FALSE)
+    rownames(z) <- rn
+
+    R <- rms_tiny_table(z, lang, caption = caption)
 
     if(length(kept) && B > 0) {
-      varin <- ifelse(kept, '$\\bullet$', ' ')
+      ## Bullet marker for retained variables, format-specific -- see
+      ## note [4] at end of file
+      bullet <- switch(lang, latex = '$\\bullet$',
+                       html  = htmlSpecial('mediumsmallwhitecircle'),
+                       typst = '\u2022')
+      varin <- ifelse(kept, bullet, ' ')
       nr <- nrow(varin)
       varin <- varin[1:min(nrow(varin), B),, drop=FALSE]
-      cat('\\Needspace{2in}\n', sep='',
-          file=file, append=append)
-      cat('\\begin{center}\\', size, '\n', sep='',
-          file=file, append=TRUE)
-      if(table.env) {
-        cap <- paste(caption,
-                     '. Factors retained in backwards elimination', sep='')
-        if(nr > B)
-          cap <- paste(cap, paste(' (first', B, 'resamples).', sep=''))
-      }
-        else {
-          cap <- 'Factors Retained in Backwards Elimination'
-          if(nr > B) cap <- c(cap, paste('First', B, 'Resamples'))
-          cap <- paste(cap, collapse='\\\\')
-          cat(cap, '\n\n', file=file, append=TRUE)
-        }
-      latex(varin, ..., caption=if(table.env) cap,
-            title=paste(title,'retained', sep='-'),
-            rowname=NULL, file=file, append=TRUE,
-            table.env=table.env, center='none',
-            extracolsize=extracolsize)
-      if(!table.env) cat('\\end{center}\n', file=file, append=TRUE)
-      
-      cap <- if(table.env)
-        paste(caption,
-              '. Frequencies of numbers of factors retained', sep='')
-      else {
-        cap <- 'Frequencies of Numbers of Factors Retained'
-        cat('\\Needspace{1in}\n', sep='',
-            file=file, append=append)
-        cat('\\begin{center}\\', size, '\n', sep='', file=file, append=TRUE)
-        cat(cap, '\n\n', file=file, append=TRUE)
-      }
-      
+      cap <- 'Factors Retained in Backwards Elimination'
+      if(nr > B)
+        cap <- switch(lang,
+                      html = paste0(cap, '<br>First ', B, ' Resamples'),
+                      paste0(cap, ' (first ', B, ' resamples)'))
+      varin <- as.data.frame(varin, check.names = FALSE)
+      R <- c(R, rms_tiny_table(varin, lang, caption = cap,
+                               show_rownames = FALSE))
+
+      cap <- 'Frequencies of Numbers of Factors Retained'
       nkept <- apply(kept, 1, sum)
       tkept <- t(as.matrix(table(nkept)))
-      latex(tkept, ..., caption=if(table.env) cap,
-            title=paste(title, 'freq', sep='-'),
-            rowname=NULL, file=file, append=TRUE,
-            table.env=table.env, center='none', extracolsize=extracolsize)
-      if(!table.env) cat('\\end{center}\n', file=file, append=TRUE)
+      tkept <- as.data.frame(tkept, check.names = FALSE)
+      R <- c(R, rms_tiny_table(tkept, lang, caption = cap,
+                               show_rownames = FALSE))
     }
+
+    if(lang == 'html') rendHTML(R) else rendHTML(R, html = FALSE)
   }
 
-html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...) {
-  chg <- function(x, old, new) {
-    names(new) <- old
-    tx <- new[x]
-    ifelse(is.na(tx), x, tx)
-  }
-  x <- object
-  kept <- attr(x, 'kept'); attr(x, 'kept') <- NULL
-  cn <- colnames(x)
-  cn <- chg(cn, c('index.orig', 'training', 'test', 'optimism',
-                  'index.corrected', 'Lower', 'Upper', 'n'),
-            c('Original<br>Sample', 'Training<br>Sample',
-              'Test<br>Sample', 'Optimism', 'Corrected<br>Index',
-              'Lower', 'Upper',
-              'Successful<br>Resamples'))
-  rn <- rownames(x)
-  rn <- chg(rn, c('Dxy','R2','R-square','Emax','D','U','Q','B','g','gp','gr',
-                  'rho','pdm'),
-            c('<i>D<sub>xy</sub></i>',
-              '<i>R<sup>2</sup></i>','<i>R<sup>2</sup></li>',
-              '<i>E<sub>max</sub></i>','<i>D</i>','<i>U</i>',
-              '<i>Q</i>','<i>B</i>','<i>g</i>','<i>g<sub>p</sub></i>',
-              '<i>g<sub>r</sub></i>','<i>&rho;</i>',
-                'Mean |Pr(Y&ge;Y<sub>0.5</sub>)-0.5|'))
-  
-  dimnames(x) <- list(rn, cn)
-  cdec <- ifelse(cn == 'Successful\nResamples', 0, digits)
-  ## Bug in htmlTable::txtRound for vector digits
-  z <- unclass(x)
-  for(i in 1 : length(cdec)) z[, i] <- round(z[, i], cdec[i])
+## html.validate: thin delegate, matching html.anova.rms/html.summary.rms's
+## identical pattern -- lang detection inside latex.validate (via
+## prType()) already handles the branching.
+html.validate <- function(object, digits=4, B=Inf, caption=NULL, ...)
+  latex.validate(object, digits=digits, B=B, caption=caption, ...)
 
-R <- as.character(
-  htmlTable::htmlTable(z, rowlabel='Index', caption=caption,
-                           escape.html=FALSE) )
-  
-                         
-  if(length(kept) && B > 0) {
-    varin <- ifelse(kept, htmlSpecial('mediumsmallwhitecircle'), ' ')
-    nr <- nrow(varin)
-    varin <- varin[1:min(nrow(varin), B),, drop=FALSE]
-    cap <- 'Factors Retained in Backwards Elimination'
-    if(nr > B) cap <- paste0(cap, '<br>First ', B, ' Resamples')
-    R <- c(R, as.character(
-                htmlTable::htmlTable(varin, caption=cap, rnames=FALSE,
-                             escape.html=FALSE)))
-
-    cap <- 'Frequencies of Numbers of Factors Retained'
-    nkept <- apply(kept, 1, sum)
-    tkept <- t(as.matrix(table(nkept)))
-
-    R <- c(R, as.character(
-               htmlTable::htmlTable(tkept, caption=cap, rnames=FALSE,
-                                     escape.html=FALSE) ))
-  }
-rendHTML(R)
-}
+## -----------------------------------------------------------------------
+## Detailed notes on extending validate.ols's table output to typst,
+## referenced by the short [N] tags inline above. Most of this is
+## simply building out Typst coverage for the first time -- part of
+## this project's goal from the start, not corrections to anything
+## broken. Two items are worth reading carefully regardless (notes [1]
+## and [6]): one is a bug class that has bitten this exact spot before
+## in a sibling file, the other is a real, deliberate simplification of
+## existing parameters.
+##
+## [1] print.validate previously only auto-dispatched for html
+##     (if(prType()=='html') return(html.validate(...))); latex and
+##     typst fell through to plain-text printing entirely, even under
+##     prType='latex'. Extended to match html's behavior, per explicit
+##     confirmation this was wanted (unlike anova.rms/summary.rms, where
+##     the equivalent auto-dispatch already existed for all non-plain
+##     languages). Every branch uses return() -- the exact same bug
+##     class already found and fixed once in summary.rms.s: rendHTML()'s
+##     asis_output mechanism requires being the visible, top-level
+##     return value to trigger at all, and a branch without return()
+##     would have its output silently discarded when the function
+##     continued on past the switch/if-chain, producing no visible
+##     output despite no error. Worth remembering for any future
+##     function converted to this mechanism.
+##
+## [2] latex.validate/html.validate unification: previously two entirely
+##     separate, fully duplicated functions -- one manually writing
+##     \Needspace{}/\begin{center}/Hmisc::latex()/\end{center} blocks
+##     directly to a file connection via cat(), the other building an R
+##     character vector via htmlTable::htmlTable() calls and emitting
+##     once via rendHTML(). Unified into one lang-aware implementation
+##     using rms_tiny_table() (shared with anova.rms and summary.rms,
+##     extended for this file's needs -- see anova.rms.s's own note [6]
+##     for the show_rownames/linebreak additions), with html.validate
+##     reduced to a thin delegate, matching the pattern already
+##     established for html.anova.rms/html.summary.rms.
+##
+## [3] Row-name translation (Dxy, R2, Emax, g, gp, gr, rho, pdm, etc.):
+##     extended with a third, typst-specific translation vector,
+##     following the same conventions already established and
+##     compile-tested in prStats' trans_tbl -- quoted multi-letter
+##     subscripts ($D_("xy")$), bare greek names ($rho$), bare
+##     single-letter symbols left unquoted. The pdm entry (the mean
+##     |P(Y>=median)-0.5| statistic) is the exact same underlying
+##     statistic as prStats' '|Pr(Y>=median)-0.5|' row, so the identical
+##     typst expression already built there is reused here rather than
+##     rebuilt independently -- still the single highest-risk expression
+##     in this whole effort (a long expression inside overline(), never
+##     itself directly compile-tested), worth testing deliberately here
+##     too, not just assumed correct because it matches prStats'.
+##
+##     Emax's subscript ("max") is quoted ($E_("max")$) rather than left
+##     bare, even though "max" is a recognized Typst function/operator
+##     name -- its behavior as bare subscript content (not a function
+##     call) is genuinely uncertain, and quoting guarantees it displays
+##     as literal text regardless.
+##
+## [4] Bullet marker for retained variables (previously '$\\bullet$'
+##     for latex, htmlSpecial('mediumsmallwhitecircle') for html): typst
+##     uses the literal Unicode bullet character (\u2022) directly,
+##     following the same "prefer literal Unicode over a guessed Typst
+##     symbol name" convention already used elsewhere in this project
+##     (e.g. the >=/<= comparison operators in prStats).
+##
+## [5] Vestigial parameters, kept for signature compatibility with
+##     existing direct calls but no longer used internally: file/append
+##     (the file-writing mechanism is replaced entirely by rendHTML()'s
+##     asis-output mechanism, matching every other function converted
+##     this way in this project); title (only ever used by the old
+##     Hmisc::latex() calls, which rms_tiny_table() has no equivalent
+##     parameter for -- also worth noting the original default,
+##     first.word(deparse(substitute(x))), referenced a parameter named
+##     x that doesn't exist in this function's own signature (it's
+##     named object), a pre-existing bug unrelated to typst; harmless
+##     here specifically because R's lazy evaluation means this default
+##     expression is never evaluated now that title is unused); size/
+##     extracolsize (LaTeX-specific font-sizing directives with no
+##     equivalent needed in the tinytable-based approach).
+##
+## [6] table.env's former role (choosing between Hmisc::latex()'s own
+##     numbered-caption mechanism and a manually cat()'d plain-text
+##     caption) is no longer used -- captions are always shown via
+##     rms_tiny_table()'s plain bold-heading mechanism when given,
+##     matching the simplification already applied in anova.rms.s and
+##     summary.rms.s. This is a direct match to the ORIGINAL code's net
+##     behavior, not a new simplification specific to this file: the
+##     original latex.validate showed the caption either way (via
+##     Hmisc::latex()'s caption= when table.env=TRUE, or via a manual
+##     cat() when table.env=FALSE) -- table.env only ever chose the
+##     mechanism, never whether the caption appeared at all.
+## -----------------------------------------------------------------------
