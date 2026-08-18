@@ -149,11 +149,17 @@ print.Rq <- function(x, digits=4, coefs=TRUE, title, ...)
     mad <- s['mad']
 
     ci <- x$clusterInfo
+    ## dec is per-argument, not per-value -- a scalar here previously
+    ## applied 3 decimal places to every argument uniformly, including
+    ## Obs/p/Residual d.f. (which should be integers). See end-of-file
+    ## note for the full mechanism. 'Cluster on's value doesn't actually
+    ## matter -- prStats() special-cases that name and bypasses digit
+    ## formatting for it entirely -- NA used as a safe placeholder.
     misc <- reListclean(Obs=n, p=p, 'Residual d.f.'=errordf,
                      'Cluster on'=ci$name,
                      Clusters    =ci$n,
                      'mean |Y-Yhat|'=mad,
-                     dec = 3)
+                     dec = c(0, 0, 0, NA, 0, 3))
     disc <- reListclean(g=g)
     headings <- c('', 'Discrimination\nIndex')
     data     <- list(misc, disc)
@@ -272,4 +278,23 @@ predict.Rq <- function(object, ..., kint=1, se.fit=FALSE)
 ##     defines its own `before` parameter default at all, so it
 ##     inherits latexrms()'s already-corrected "&" default automatically
 ##     rather than having a stale local copy of the old, wrong one.
+##
+## [3] misc <- reListclean(..., dec=3) call: a genuine, pre-existing bug,
+##     format-agnostic (affects latex/html/typst identically) and
+##     unrelated to any of the edits above -- reListclean() replicates a
+##     scalar dec to one value per top-level named argument
+##     (rep(dec, length=length(d))), not per individual value, so the
+##     single dec=3 previously applied 3 decimal places uniformly to all
+##     six arguments (Obs, p, Residual d.f., Cluster on, Clusters, mean
+##     |Y-Yhat|) -- including the three that should show as plain
+##     integers. Both reListclean() and prStats() (which the resulting
+##     list is ultimately rendered through) work exactly as designed;
+##     reListclean()'s own c(r, dec) construction matches prStats' own
+##     documented convention (trailing unnamed elements are per-statistic
+##     digit counts) precisely. Fixed by passing a per-argument vector,
+##     c(0, 0, 0, NA, 0, 3), matching argument order. The NA for
+##     'Cluster on' is a placeholder, not a meaningful choice -- prStats()
+##     special-cases that exact name (nuj == 'Cluster on') and bypasses
+##     the digit-count/dec logic for it entirely, using specs$code()
+##     directly instead.
 ## -----------------------------------------------------------------------

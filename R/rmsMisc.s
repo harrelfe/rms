@@ -1383,10 +1383,10 @@ for(i in 1:p) {
                                          beta, vbar),
                           typst = 'max $|(partial log L)/(partial beta)|$'),
       'mean |Y-Yhat|' = c(latex = 'mean $|Y-\\hat{Y}|$',
-                          ## cca moved inside <i>, adjacent to the Y it
-                          ## modifies -- see end-of-file notes
-                          html  = paste0('mean ', vbar, '<i>Y - Y', cca,
-                                         '</i>', vbar),
+                          ## Precomposed character (&Ycirc;, U+0176) used
+                          ## instead of cca -- see end-of-file notes
+                          html  = paste0('mean ', vbar, '<i>Y - &Ycirc;</i>',
+                                         vbar),
                           typst = 'mean $|Y-hat(Y)|$'),
       'Distinct Y'   = c(latex = 'Distinct $Y$',
                        html  = 'Distinct <i>Y</i>',
@@ -1794,17 +1794,25 @@ removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
 ##   value was tuned only for a 3-column example and cramped a 4-column
 ##   one.
 ## - 'mean |Y-Yhat|' row, html entry: a genuine bug, not a typst gap --
-##   the combining circumflex accent (cca) was placed after the closing
-##   </i> tag rather than immediately adjacent to the second Y it's
-##   meant to modify. Unicode combining characters only combine with a
-##   preceding base character when directly adjacent, with no
-##   intervening markup -- across an HTML tag boundary, a browser
-##   renders the accent as its own standalone glyph instead, which is
-##   what a lone combining circumflex accent looks like: a caret to the
-##   right ("Y^") rather than a hat over the Y ("Ŷ"). Confirmed directly
-##   from real rendered output (latex/typst were already correct, only
-##   html showed the caret). Fixed by moving cca inside the <i> tag,
-##   directly adjacent to the Y.
+##   the combining circumflex accent (cca, htmlSpecial(
+##   'combiningcircumflexaccent')) was placed after the closing </i> tag
+##   rather than adjacent to the second Y it's meant to modify, which
+##   was the first diagnosis tried: moving cca inside <i>, directly next
+##   to the Y. That did NOT fix it -- confirmed directly from the real
+##   generated HTML, which still showed a separate, visible caret next
+##   to the Y even with cca correctly adjacent. This means the earlier
+##   diagnosis (a tag-boundary adjacency problem) was wrong; the more
+##   likely explanation is that htmlSpecial('combiningcircumflexaccent')
+##   itself isn't producing a genuine Unicode *combining* character that
+##   the browser will visually merge with a preceding base character,
+##   regardless of adjacency. Rather than continue guessing at why,
+##   fixed by sidestepping the whole combining-character mechanism:
+##   "&Ycirc;" (U+0176, the precomposed Latin Capital Y with Circumflex)
+##   is a single codepoint, not two characters that need to visually
+##   merge, so it has no adjacency or combining-character rendering
+##   dependency at all. cca itself is left defined but is now unused
+##   within prStats -- not removed, since doing so wasn't necessary for
+##   this fix and goes beyond what was asked.
 ##
 ## typstSN (new) / formatNP
 ## ---------------------------------
