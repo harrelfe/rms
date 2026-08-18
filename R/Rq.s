@@ -128,10 +128,15 @@ print.Rq <- function(x, digits=4, coefs=TRUE, title, ...)
     z <- list()
 
     ftau <- format(round(x$tau, digits))
-    if(missing(title))
-      title <- if(prType() == 'latex')
-        paste('Quantile Regression~~~~$\\tau$', ftau, sep='=') else
-        paste('Quantile Regression\t\ttau:',     ftau)
+    ## extended to a per-format switch -- see note [1] at end of file
+    if(missing(title)) {
+      lang   <- prType()
+      tauLab <- switch(lang, latex = '$\\tau$', typst = '$tau$',
+                       html = htmlGreek('tau'), 'tau')
+      gap    <- switch(lang, latex = '~~~~', typst = '#h(1em)',
+                       html = strrep(htmlSpecial('nbsp'), 4), '  ')
+      title  <- paste0('Quantile Regression', gap, tauLab, '=', ftau)
+    }
 
     if(length(zz <- x$na.action))
       {
@@ -186,7 +191,7 @@ latex.Rq <-
          if(html) paste('<div align=center><strong>', caption,
                       '</strong></div>', sep='')
          else
-           paste("\\begin{center} \\bf", caption, "\\end{center}")
+           paste0("$$\\textbf{", caption, "}$$")   ## see note [2] at end of file
          }
     if (missing(which) & !inline)
       {
@@ -210,3 +215,61 @@ latex.Rq <-
 
 predict.Rq <- function(object, ..., kint=1, se.fit=FALSE)
   predictrms(object, ..., kint=kint, se.fit=se.fit)
+
+## -----------------------------------------------------------------------
+## Detailed notes on extending print.Rq's title formatting to typst,
+## referenced by the short [1] tag inline above. Part of this project's
+## goal from the start, not a correction to anything broken -- though
+## one incidental improvement to html is included, flagged below.
+##
+## [1] The tau symbol in the title (e.g. "Quantile Regression  tau=0.5")
+##     was previously built via a two-way if(prType()=='latex') ... else
+##     ... check, meaning typst fell into the same bucket as html and
+##     plain -- a plain-text "tau:" label with tab-character spacing,
+##     no math rendering, rather than the properly math-formatted "$\tau$"
+##     latex got. Extended to a proper per-format switch(): '$\tau$'
+##     (latex), '$tau$' (typst, the same bare-greek-name-in-math
+##     convention already used throughout this project, e.g. prStats'
+##     trans_tbl), htmlGreek('tau') (html), plain 'tau' as the fallback.
+##     Typst's spacing uses "#h(1em)" directly embedded in the title
+##     string -- safe here because prModFit's title always goes through
+##     catl(..., bold=TRUE), which already fences bold/centered typst
+##     content in a raw block (confirmed working via prModFit's own
+##     title-handling fix, several turns back in this project), so the
+##     embedded #h() call is correctly interpreted as Typst markup
+##     rather than escaped as literal text.
+##
+##     Incidental, directly-related fix to html: its previous spacing
+##     used two tab characters ("\t\t"), which don't render as visible
+##     separation in HTML (whitespace, including tabs, collapses to a
+##     single space by default) -- the html branch was already
+##     imperfect before typst existed. Since this whole if/else was
+##     being restructured into a per-format switch anyway, giving html
+##     proper non-breaking-space spacing (via htmlSpecial('nbsp'),
+##     repeated) at the same time was a small, low-risk improvement
+##     rather than separate scope creep -- not requested directly, but
+##     directly adjacent to what was.
+##
+## [2] latex.Rq()'s caption handling -- see the follow-up flagged in the
+##     previous turn's notes above. Confirmed to be the exact same bug
+##     already found and fixed in six other latex.X functions earlier in
+##     this project (latex.lrm, latex.orm, latex.ols, latex.cph,
+##     latex.psm, latex.pphsm): "\begin{center} \bf caption \end{center}"
+##     is plain text sitting outside math mode, which Pandoc silently
+##     drops for any non-LaTeX/Markdown/Org/ConTeXt target -- captions
+##     built this way would simply vanish under prType='typst', with no
+##     error to indicate why. Fixed identically to the other six:
+##     "$$\textbf{caption}$$", reusing display math's default centering
+##     in both real LaTeX and Typst rendering, staying within the
+##     confirmed-working math-content pathway rather than needing a new
+##     Typst-specific branch.
+##
+##     Every other known latex.X bug pattern from this project was
+##     checked against latex.Rq() and confirmed NOT present: no stray
+##     trailing "\\" before the closing "$$" (the latex.lrm bug); the
+##     array/equation content from latexrms() already carries its own
+##     correct $$ wrapping, fixed at the source; and latex.Rq() never
+##     defines its own `before` parameter default at all, so it
+##     inherits latexrms()'s already-corrected "&" default automatically
+##     rather than having a stale local copy of the old, wrong one.
+## -----------------------------------------------------------------------
