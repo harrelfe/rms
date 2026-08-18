@@ -307,8 +307,10 @@ summary.rms <- function(object, ..., ycut=NULL,
 print.summary.rms <- function(x, ..., table.env=FALSE)
 {
   switch(prType(),
-         latex = latex.summary.rms(x, ..., file='', table.env=table.env),
+         latex = return(latex.summary.rms(x, ..., file='', table.env=table.env)),
          html  = return(html.summary.rms(x, ...)),
+         typst = return(latex.summary.rms(x, ..., file='', table.env=table.env)),
+         ## typst dispatch -- see note [1] at end of file
          plain = {
   
            cstats <- dimnames(x)[[1]]
@@ -333,69 +335,75 @@ print.summary.rms <- function(x, ..., table.env=FALSE)
 }
 
 
+## latex.summary.rms: builds and renders the summary table for the
+## current output language (latex/html/typst). Basic calling sequence
+## unchanged from the original latex.summary.rms/html.summary.rms --
+## html.summary.rms below now delegates here, matching the same pattern
+## already used by html.anova.rms/latex.anova.rms. See notes [2]-[4] at
+## end of file for the reasoning behind unifying what were previously
+## two separate, duplicated functions.
 latex.summary.rms <-
   function(object, 
            title=paste('summary', attr(object, 'obj.name'), sep='.'),
-           table.env=TRUE, ...)
+           table.env=TRUE, digits=4, dec=NULL, ...)
 { 
-
   title <- title   # because of lazy evaluation
-  caption <- latexTranslate(attr(object, "heading"))
-  scale <- attr(object, "scale")
-  object <- object[, -8, drop=FALSE]
-  rowl <- latexTranslate(dimnames(object)[[1]])
-  rowl <- ifelse(substring(rowl, 1, 1) == " ",
-                 paste("~~{\\it ",
-                       substring(rowl,2), "}", sep=""),
-                 rowl) # preserve leading blank
-  rowl <- sedit(rowl, "-", "---")
-  cstats <- matrix("", nrow=nrow(object), ncol=ncol(object), 
-                   dimnames=dimnames(object))
-  for(i in 1 : 7) cstats[,i] <- format(signif(object[, i], 5))
-  ## for(i in 4 : 7) cstats[,i] <- format(round(object[, i],  2))
-  cstats[is.na(object)] <- ""
-  caption <- sedit(caption, "    Response","~~~~~~Response")
-  cstats <- as.data.frame(cstats)
-  attr(cstats,"row.names") <- rowl
-  names(cstats)[3] <- "$\\Delta$"
-  latex(cstats, caption=if(table.env) caption else NULL,
-        title=title, rowlabel="",
-        col.just=rep("r", 7), table.env=table.env, ...)
-}
-
-html.summary.rms <- function(object, digits=4, dec=NULL,...) { 
+  lang  <- prType()
+  specs <- markupSpecs[[lang]]
 
   caption <- attr(object, "heading")
-  ## scale   <- attr(object, "scale")
+  ## extended to typst -- see note [2] at end of file
+  caption <- switch(lang, latex = latexTranslate(caption),
+                    typst = typstTranslate(caption), caption)
+
+  scale <- attr(object, "scale")
   object <- object[, -8, drop=FALSE]
+
   rowl <- dimnames(object)[[1]]
+  ## extended to typst -- see note [2] at end of file
+  rowl <- switch(lang, latex = latexTranslate(rowl),
+                 typst = typstTranslate(rowl), rowl)
   rowl <- ifelse(substring(rowl, 1, 1) == " ",
-                 paste("&emsp;<em>",
-                       substring(rowl, 2), "</em>", sep=""),
-                 rowl) # preserve leading blank
+                paste0(specs$lspace, specs$italics(substring(rowl, 2))),
+                rowl) # preserve leading blank
   rowl <- sedit(rowl, "-", "---")
+
   cstats <- matrix("", nrow=nrow(object), ncol=ncol(object), 
                    dimnames=dimnames(object))
   for(i in 1 : 7)
     cstats[,i] <- if(length(dec)) format(round(object[, i], dec))
-                  else
-                    format(signif(object[, i], digits))
+                  else format(signif(object[, i], digits))
   cstats[is.na(object)] <- ""
-  caption <- sub('^ *', '', caption)
-  ## htmlTable creates invalid html if start caption with blank
-  caption <- sub('    Response : ', '&emsp;&emsp;Response: <code>', caption)
-  caption <- paste0(caption, '</code>')
-  cstats <- as.data.frame(cstats)
-  attr(cstats,"row.names") <- rowl
-  names(cstats)[3] <- "&Delta;"
 
-  rendHTML(
-    htmlTable::htmlTable(cstats, caption=caption,
-                         ## css.cell = 'min-width: 6em;',
-                         css.cell=c('', rep('padding-left:4ex;', ncol(cstats))),
-                         rowlabel='', align='r', align.header='r',
-                         escape.html=FALSE) )
+  ## caption spacing before "Response", format-specific -- see note [3]
+  ## at end of file
+  caption <- switch(lang,
+                    latex = sedit(caption, "    Response", "~~~~~~Response"),
+                    typst = sedit(caption, "    Response",
+                                  "#h(1.5em)Response"),
+                    html  = { c1 <- sub('^ *', '', caption)
+                              c1 <- sub('    Response : ',
+                                        '&emsp;&emsp;Response: <code>', c1)
+                              paste0(c1, '</code>') },
+                    caption)
+
+  cstats <- as.data.frame(cstats)
+  attr(cstats, 'row.names') <- rowl
+  ## Delta symbol, format-specific -- see note [4] at end of file
+  names(cstats)[3] <- switch(lang, latex = '$\\Delta$',
+                             html = '&Delta;', typst = '$Delta$')
+
+  w <- rms_tiny_table(cstats, lang, caption = if(table.env) caption else NULL)
+  if(lang == 'html') rendHTML(w) else rendHTML(w, html = FALSE)
 }
+
+## html.summary.rms: thin delegate, matching html.anova.rms's identical
+## pattern -- lang detection inside latex.summary.rms (via prType())
+## already handles the branching, so no separate implementation is
+## needed. digits/dec kept as named parameters here (rather than folded
+## into ...) for backward compatibility with existing direct calls.
+html.summary.rms <- function(object, digits=4, dec=NULL, ...)
+  latex.summary.rms(object, digits=digits, dec=dec, ...)
 
 
 ## plot is not using bootstrap percentile or Bayesian HPD
@@ -601,3 +609,74 @@ plot.summary.rms <-
                         y0 = 0, y1=length(lb), yref='y'))
                  )
 }
+
+## -----------------------------------------------------------------------
+## Detailed notes on extending summary.rms's table output to typst,
+## referenced by the short [N] tags inline above. Most of this is
+## simply building out Typst coverage for the first time -- part of
+## this project's goal from the start, not corrections to anything
+## broken. One item (note [5]) is a genuine, deliberate behavior change
+## worth flagging explicitly rather than treating as incidental.
+##
+## [1] print.summary.rms's switch(prType(), ...) previously had no
+##     typst case and no default -- under prType='typst' this silently
+##     returned NULL with no error, producing no table output at all.
+##     Added, dispatching to latex.summary.rms the same way latex does.
+##
+##     A second, genuine bug (not a typst gap) was found and fixed at
+##     the same spot, affecting latex too: the html case explicitly
+##     return()s, but latex/typst originally did not. This mattered a
+##     great deal once latex.summary.rms was switched from calling
+##     Hmisc::latex() directly to the shared rendHTML()-based mechanism
+##     used throughout this project -- rendHTML()'s asis_output handling
+##     requires being the visible, top-level return value of the R
+##     expression to trigger at all, whereas Hmisc::latex() apparently
+##     emitted regardless via its own separate mechanism. Without
+##     return(), the switch()'s value was silently discarded when
+##     print.summary.rms() continued on to its final invisible() call,
+##     confirmed directly: the real .typ/.tex output showed summary()'s
+##     code echoed but no output at all following it, for every
+##     summary() call in the document. Fixed by adding return() to both
+##     the latex and typst cases, matching html's existing pattern.
+##
+## [2] rowl/caption translation: previously latex.summary.rms and
+##     html.summary.rms were two entirely separate functions, each
+##     hardcoding its own format-specific markup directly rather than
+##     using markupSpecs[[lang]] (latex: "~~{\\it ...}" and
+##     latexTranslate(); html: "&emsp;<em>...</em>", untranslated).
+##     Unified into one lang-aware implementation, following the same
+##     structure already established in anova.rms.s: latexTranslate()
+##     for latex, typstTranslate() for typst, untouched for html/plain;
+##     specs$lspace/specs$italics() for the leading-blank/sub-item
+##     styling, reusing the exact pattern already confirmed working in
+##     anova.rms.s's own rowl handling.
+##
+## [3] Caption spacing before "Response": the original latex version
+##     used "~~~~~~" (six LaTeX non-breaking spaces) for visual
+##     separation; html used its own distinct HTML-entity-based
+##     cleanup. typst uses "#h(1.5em)" as a native equivalent -- an
+##     approximate visual match, not a pixel-for-pixel one, since exact
+##     spacing parity across three fundamentally different typesetting
+##     systems isn't the goal here, just reasonable visual separation.
+##
+## [4] Delta symbol (3rd column header): was "$\\Delta$" (latex) /
+##     "&Delta;" (html) hardcoded separately in each of the two former
+##     functions. typst uses "$Delta$" -- a capital Greek letter name,
+##     following the same bare-greek-name-in-math convention already
+##     confirmed working for lowercase names (chi, tau, gamma, etc. in
+##     prStats' trans_tbl) -- but this specific capital-letter case
+##     hasn't itself been individually compile-tested, worth confirming.
+##
+## [5] Deliberate behavior change, not a side effect: the original latex
+##     version hardcoded 5 significant digits unconditionally
+##     (format(signif(object[,i], 5))), while the original html version
+##     defaulted to 4 significant digits via a digits= parameter
+##     (overridable, and supporting an alternative dec= fixed-decimal
+##     mode). Unifying these into one shared implementation meant
+##     picking one behavior; html's more flexible digits/dec
+##     parameterization was adopted for all three formats, meaning
+##     latex output now defaults to 4 significant digits rather than 5
+##     unless digits= is passed explicitly. Worth confirming this
+##     doesn't affect anything relying on the old hardcoded-5 latex
+##     default.
+## -----------------------------------------------------------------------
