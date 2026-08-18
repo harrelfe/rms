@@ -1,15 +1,15 @@
 #' rms Version of glm
-#' 
+#'
 #' This function saves `rms` attributes with the fit object so that
 #' `anova.rms`, `Predict`, etc. can be used just as with `ols`
 #' and other fits.  No `validate` or `calibrate` methods exist for
 #' `Glm` though.
-#' 
+#'
 #' For the `print` method, format of output is controlled by the user
 #' previously running `options(prType="lang")` where `lang` is
 #' `"plain"` (the default), `"latex"`, or `"html"`.
-#' 
-#' 
+#'
+#'
 #' @aliases Glm
 #' @param formula,family,data,weights,subset,na.action,start,offset,control,model,method,x,y,contrasts
 #' see [stats::glm()]; for `print` `x` is the result of `Glm`
@@ -22,7 +22,7 @@
 #' @keywords models regression
 #' @md
 #' @examples
-#' 
+#'
 #' ## Dobson (1990) Page 93: Randomized Controlled Trial :
 #' counts <- c(18,17,15,20,10,20,25,13,12)
 #' outcome <- gl(3,1,9)
@@ -36,9 +36,9 @@
 #' f
 #' anova(f)
 #' summary(f, outcome=c('1','2','3'), treatment=c('1','2','3'))
-#' 
+#'
 
-Glm <- 
+Glm <-
   function(formula, family = gaussian, data = environment(formula),
            weights, subset, na.action = na.delete, start = NULL, offset = NULL,
            control = glm.control(...), model = TRUE, method = "glm.fit",
@@ -72,10 +72,10 @@ Glm <-
 
   sformula   <- at$sformula
   mmcolnames <- desatr$mmcolnames
-    
-  switch(method, model.frame = return(mf), glm.fit = 1, 
+
+  switch(method, model.frame = return(mf), glm.fit = 1,
          stop(paste("invalid `method':", method)))
-  
+
   xvars <- as.character(attr(mt, "variables"))[-1]
   if ((yvar <- attr(mt, "response")) > 0)
     xvars <- xvars[-yvar]
@@ -90,7 +90,7 @@ Glm <-
     mmcolnames <- alt
     X <- X[, c(intcpt, mmcolnames), drop=FALSE]
   colnames(X) <- c(if(length(intcpt)) 'Intercept', desatr$colnames)
-  
+
 #    colnames(X) <- if(attr(mt, 'intercept') > 0)
 #    c('Intercept', desatr$colnames)
 #    else desatr$colnames
@@ -172,12 +172,12 @@ print.Glm <- function(x, digits=4, coefs=TRUE,
                       g               = stats['g'], dec=c(NA,NA,NA,NA,3))
   lr   <- reListclean('LR chi2'       = stats['Model L.R.'],
                       'd.f.'          = stats['d.f.'],
-                      'Pr(> chi2)'    = stats['P'], dec=c(2, NA, -4))
+                      'P(> chi2)'    = stats['P'], dec=c(2, NA, -4))
   headings <- c('', 'Model Likelihood\nRatio Test')
   data <- list(misc, lr)
   k <- k + 1
   z[[k]] <- list(type='stats', list(headings=headings, data=data))
-  
+
   se <- sqrt(diag(vcov(x)))
   k <- k + 1
   z[[k]] <- list(type='coefmatrix',
@@ -200,7 +200,7 @@ vcov.Glm <- function(object, regcoef.only=TRUE, intercepts='all', ...) {
 #{
 #  if(length(object$var))
 #    return(object$var)  ## for Glm
-#  
+#
 #  s <- summary.glm(object)
 #  s$cov.unscaled * s$dispersion
 #}
@@ -228,7 +228,7 @@ residuals.Glm <- function(object, type, ...) {
   residuals.glm(object, type=type, ...)
 }
 
-predict.Glm <- 
+predict.Glm <-
   function(object, newdata,
            type=c("lp","x","data.frame","terms","cterms","ccterms","adjto",
              "adjto.data.frame", "model.frame"),
@@ -249,5 +249,3 @@ latex.Glm <- function(..., file='', append=FALSE, inline=FALSE) {
   cat(z, file=file, append=append, sep='\n')
   invisible()
 }
-
-  

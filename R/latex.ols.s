@@ -1,8 +1,13 @@
+## -----------------------------------------------------------------------
+## latex.ols, with one change, marked below: the caption fix (see
+## latex_lrm.s header comment for the full rationale). No array in this
+## file, so Change B/C from latex_lrm.s don't apply here.
+## -----------------------------------------------------------------------
 latex.ols <-
   function(object, title,
            file='',
            append=FALSE, which, varnames, columns=65, inline=FALSE, 
-           before=if(inline)"" else "& &", after="",
+           before=if(inline)"" else "&", after="",
            pretrans=TRUE, caption=NULL, digits=.Options$digits, size='',
            ...)
 {
@@ -14,8 +19,7 @@ latex.ols <-
          if(md) paste('<div align=center><strong>', caption,
                       '</strong></div>', sep='')
          else
-           paste('\\begin{center} \\bf',
-                 caption,'\\end{center}')
+           paste0("$$\\textbf{", caption, "}$$")   ## CHANGE A
          }
   
   if(missing(which) & !inline)

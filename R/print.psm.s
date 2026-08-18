@@ -3,7 +3,7 @@ print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
 {
   k <- 0
   z <- list()
-  
+
   dist <- x$dist
   name <- survreg.distributions[[dist]]$name
   if(missing(title))
@@ -21,7 +21,7 @@ print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
 
   lr <- reListclean('LR chi2'     = stats['Model L.R.'],
                     'd.f.'        = stats['d.f.'],
-                    'Pr(> chi2)'  = stats['P'],
+                    'P(> chi2)'  = stats['P'],
                     dec           = c(2,NA,-4))
   newr2 <- grep('R2\\(', names(stats))
   nnr   <- length(newr2)
@@ -63,7 +63,7 @@ print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
                      title='Correlation of Coefficients')
     }
   }
-  
+
   prModFit(x, title=title, z, digits=digits, coefs=coefs, ...)
 }
 
@@ -95,7 +95,7 @@ print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
 #      excl <- wt == 0
 #      if(any(excl))
 #        {
-#          warning(paste(sum(excl), 
+#          warning(paste(sum(excl),
 #                        "rows with zero weights not counted"))
 #          resid <- resid[!excl]
 #          if(!length(x$df.residual))
@@ -145,24 +145,24 @@ print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
 
 print.summary.survreg2 <-
   function (x, digits = max(options()$digits - 4, 3),
-            correlation=FALSE, ...) 
+            correlation=FALSE, ...)
   {
     correl <- x$correl
     n <- x$n
-    if (is.null(digits)) 
+    if (is.null(digits))
       digits <- options()$digits
     print(x$table, digits = digits)
-    if (nrow(x$var) == length(x$coefficients)) 
-      cat("\nScale fixed at", format(x$scale, digits = digits), 
+    if (nrow(x$var) == length(x$coefficients))
+      cat("\nScale fixed at", format(x$scale, digits = digits),
           "\n")
     else
-      if (length(x$scale) == 1) 
+      if (length(x$scale) == 1)
         cat("\nScale=", format(x$scale, digits = digits), "\n")
       else {
         cat("\nScale:\n")
         print(x$scale, digits = digits, ...)
       }
-    
+
     if (correlation && length(correl)) {
       p <- dim(correl)[2]
       if (p > 1) {

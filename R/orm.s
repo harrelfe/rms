@@ -284,9 +284,9 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
 
   lr   <- reListclean('LR chi2'    = stats['Model L.R.'],
                    'd.f.'       = round(stats['d.f.'],3),
-                   'Pr(> chi2)' = stats['P'],
+                   'P(> chi2)' = stats['P'],
                    'Score chi2' = stats['Score'],
-                   'Pr(> chi2)' = stats['Score P'],
+                   'P(> chi2)' = stats['Score P'],
                    Penalty      = penaltyFactor,
                    dec          = c(2,NA,-4,2,-4,2))
   newr2 <- grepl('R2\\(', names(stats))
@@ -294,7 +294,7 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
                       namesFrom = if(any(newr2)) stats[newr2][setdiff(r2, 0)],
                       g         = if(pg) stats['g'],
                       gr        = if(pg) stats['gr'],
-                      '|Pr(Y>=median)-0.5|' = stats['pdm'],
+                      '|P(Y>=median)-0.5|' = stats['pdm'],
                       dec       = 3)
   if(any(newr2)) names(disc)[names(disc) == 'R2m'] <- names(stats[newr2])
 

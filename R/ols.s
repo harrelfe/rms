@@ -1,5 +1,5 @@
 ols <- function(formula, data=environment(formula),
-                weights, subset, na.action=na.delete, 
+                weights, subset, na.action=na.delete,
                 method = "qr", model = FALSE, x = FALSE, y = FALSE,
                 se.fit=FALSE, linear.predictors=TRUE,
                 penalty=0, penalty.matrix, tol=.Machine$double.eps, sigma=NULL,
@@ -20,7 +20,7 @@ ols <- function(formula, data=environment(formula),
       modelData(data, formula,
                 subset  = subset, weights=weights,
                 na.action=na.action, callenv=callenv)
-                        
+
     X      <- Design(X, formula=formula)
     offset <- attr(X, 'offset')
     atrx  <- attributes(X)
@@ -30,21 +30,21 @@ ols <- function(formula, data=environment(formula),
     Terms <- atrx$terms
     assig <- DesignAssign(atr, 1, Terms)
     mmcolnames <- atr$mmcolnames
-    
+
     penpres <- FALSE
     if(! missing(penalty)        && any(unlist(penalty) != 0)) penpres <- TRUE
     if(! missing(penalty.matrix) && any(penalty.matrix  != 0)) penpres <- TRUE
-    
+
     if(penpres && missing(var.penalty))
       warning('default for var.penalty has changed to "simple"')
-    
+
     if(method == "model.frame") return(X)
     scale <- as.character(formula[2])
     attr(Terms, "formula") <- formula
     weights <- model.extract(X, 'weights')
     if(length(weights) && penpres)
       stop('may not specify penalty with weights')
-    
+
     Y <- model.extract(X, 'response')
     ## For some reason integer class being attached to Y if labelled
     class(Y) <- setdiff(class(Y), 'integer')
@@ -56,14 +56,14 @@ ols <- function(formula, data=environment(formula),
     ## prn(mmcolnames); prn(colnames(X))
     X <- X[, c('(Intercept)', mmcolnames), drop=FALSE]
     colnames(X) <- c('Intercept', atr$colnames)
-    #if(length(atr$colnames)) 
+    #if(length(atr$colnames))
     #  dimnames(X)[[2]] <- c("Intercept", atr$colnames)
     #else dimnames(X)[[2]] <- c("Intercept", dimnames(X)[[2]][-1])
     if(method == "model.matrix") return(X)
   }
-  
+
   ##Model with no covariables:
-  
+
   else {
     if(length(weights))
       stop('weights not implemented when no covariables are present')
@@ -83,21 +83,21 @@ ols <- function(formula, data=environment(formula),
                 non.slopes=1, fail=FALSE, residuals=Y - yest,
                 df.residual=n - 1, intercept=TRUE, sformula=sformula)
     if(linear.predictors) {
-      fit$linear.predictors <- rep(yest, n); 
+      fit$linear.predictors <- rep(yest, n);
       names(fit$linear.predictors) <- names(Y)
     }
     if(model) fit$model <- m
-    if(x) fit$x <- NULL #matrix(1, ncol=1, nrow=n, 
+    if(x) fit$x <- NULL #matrix(1, ncol=1, nrow=n,
     ## dimnames=list(NULL,"Intercept"))
     if(y) fit$y <- Y
     class(fit) <- c("ols","rms","lm")
     return(fit)
   }
-  
+
   if(! penpres) {
     fit <- if(length(weights))
       lm.wfit(X, Y, weights, method=method, offset=offset, tol=tol, ...)
-    else 
+    else
       lm.fit (X, Y,          method=method, offset=offset, tol=tol, ...)
     cov.unscaled <- chol2inv(fit$qr$qr)
     ## For some reason when Y was labelled, fit functions are making
@@ -128,7 +128,7 @@ ols <- function(formula, data=environment(formula),
   else {
     p <- length(atr$colnames)
     if(missing(penalty.matrix)) penalty.matrix <- Penalty.matrix(atr, X)
-    if(nrow(penalty.matrix) != p || ncol(penalty.matrix) != p) 
+    if(nrow(penalty.matrix) != p || ncol(penalty.matrix) != p)
       stop('penalty matrix does not have', p, 'rows and columns')
     psetup     <- Penalty.setup(atr, penalty)
     penalty    <- psetup$penalty
@@ -145,7 +145,7 @@ ols <- function(formula, data=environment(formula),
     fit$residuals     <- unclass(fit$residuals)
     fit$penalty       <- penalty
   }
-  
+
   if(model) fit$model <- m
   if(linear.predictors) {
     fit$linear.predictors <- Y - fit$residuals
@@ -198,14 +198,14 @@ lm.pfit <- function(X, Y, offset=NULL, penalty.matrix, tol=.Machine$double.eps,
   df <- sum(dag) - 1
   stats <- c(n=n, 'Model L.R.'=lr, 'd.f.'=df, R2=1 - sse / sst,
              g=GiniMd(yhat), Sigma=sqrt(s2))
-  
+
   list(coefficients=drop(coef), var=var, residuals=res, df.residual=n - df - 1,
-       penalty.matrix=penalty.matrix, 
+       penalty.matrix=penalty.matrix,
        stats=stats, effective.df.diagonal=dag)
 }
 
 
-predict.ols <- 
+predict.ols <-
   function(object, newdata,
            type=c("lp", "x", "data.frame", "terms", "cterms", "ccterms",
                   "adjto", "adjto.data.frame", "model.frame"),
@@ -227,13 +227,13 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
   latex <- prType() == 'latex'
   k <- 0
   z <- list()
-  
+
 
   if(length(zz <- x$na.action)) {
     k <- k + 1
     z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
   }
-  
+
   stats <- x$stats
   if(! length(stats)) stop('fit does not have stats')
 
@@ -262,7 +262,7 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
                      dec = c(NA,digits,NA,NA,NA))
     lr   <- reListclean('LR chi2'     = lrchisq,
                      'd.f.'        = ndf,
-                     'Pr(> chi2)' = 1 - pchisq(lrchisq, ndf),
+                     'P(> chi2)' = 1 - pchisq(lrchisq, ndf),
                      dec = c(2,NA,4))
     disc <- reListclean(R2=r2, 'R2 adj'=rsqa, g=stats['g'],
                         dec=3)
@@ -295,20 +295,20 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
                      list(resid, digits=digits),
                      tex=latex, title='Residuals')
     }
-  
+
   if(nsingular <- df[3] - df[1]) {
     k <- k + 1
     z[[k]] <- list(type='cat',
                    paste(nsingular, 'coefficients not defined because of singularities'))
   }
-  
+
   k <- k + 1
   se <- sqrt(diag(x$var))
   z[[k]] <- list(type='coefmatrix',
                  list(coef    = x$coefficients,
                       se      = se,
                       errordf = rdf))
-  
+
   if(!pen) {
     if(long && p > 0) {
       correl <- diag(1/se) %*% x$var %*% diag(1/se)
@@ -318,7 +318,7 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
       correl[ll] <- format(round(correl[ll], digits), ...)
       correl[!ll] <- ""
       k <- k + 1
-      z[[k]] <- list(type='print', 
+      z[[k]] <- list(type='print',
                      list(correl[-1,  - (p + 1), drop = FALSE],
                           quote=FALSE, digits = digits))
     }

@@ -22,12 +22,18 @@
 ## CHANGE 2 (array opening + prefix row): \begin{array} -> explicit
 ## \begin{array}{ll} -- confirmed by direct testing that texmath's array
 ## reader requires a column-spec argument and errors ("expecting ... {")
-## on a bare \begin{array}. \lefteqn{prefix=}\\ -> prefix= & \\ --
-## \lefteqn{} is an eqnarray-package macro texmath's LaTeX reader
-## doesn't recognize (confirmed by testing); the 2-column
+## on a bare \begin{array}. Left-aligned per explicit preference (a
+## right-aligned version was tried, to line up the trailing = in
+## "X\hat{\beta}=", "[c]=", and "(x)_+=", but reverted). \lefteqn{prefix=}\\
+## -> prefix= & \\ -- \lefteqn{} is an eqnarray-package macro texmath's
+## LaTeX reader doesn't recognize (confirmed by testing); the 2-column
 ## "prefix in column 1, empty column 2" row achieves the identical
 ## hanging-indent visual layout using only standard array semantics, no
-## package-specific macro needed.
+## package-specific macro needed. The [c]=/(x)_+= definition rows (see
+## CHANGE 5) use this same "label in column 1" structure -- an earlier
+## version of CHANGE 5 incorrectly put them in column 2 instead, via the
+## continuation-row 'before' prefix, which was the actual bug behind
+## them appearing misaligned with the rest of the array.
 ##
 ## CHANGE 3 (inline branch): the \\\\-joining of tex elements now has a
 ## {} guard after every join, not just implicitly at the end -- same
@@ -329,7 +335,8 @@ latexrms <-
   
   if(! inline)
     {
-      tex <- '\\begin{array}{ll}'   ## CHANGE 2: explicit 2-column spec
+      tex <- '\\begin{array}{ll}'   ## CHANGE 2: explicit 2-column spec,
+                                    ## left-aligned
       if(size != '') tex <- c(tex, paste0('\\', size))
       if(length(prefix))
         tex <- c(tex,
@@ -667,21 +674,43 @@ latexrms <-
   if(anyivar | anyplus) {
     tex[length(tex)] <- paste0(tex[length(tex)], "{} \\\\{}")
 
+    ## Label goes in column 1 (matching the X\hat{\beta}= prefix row's
+    ## own structure), NOT appended after 'before' into column 2 -- that
+    ## was the actual bug: "before" is the empty-column-1 continuation
+    ## prefix meant for ordinary coefficient rows, not appropriate here
+    ## since these rows have their own label, the same as the prefix row.
     defs <- character(0)
     if(anyivar)
       defs <- c(defs,
-                paste(before,
-                      "[c]=1~\\mathrm{if~subject~is~in~group}~c,~0~\\mathrm{otherwise}",
-                      "\\\\"))
+                "[c]= & 1~\\mathrm{if~subject~is~in~group}~c,~0~\\mathrm{otherwise} \\\\")
     if(anyplus)
       defs <- c(defs,
-                paste(before,
-                      "(x)_{+}=x~\\mathrm{if}~x > 0,~0~\\mathrm{otherwise}",
-                      "\\\\"))
+                "(x)_{+}= & x~\\mathrm{if}~x > 0,~0~\\mathrm{otherwise} \\\\")
     tex <- c(tex, defs)
   }
 
   tex <- c(tex, '\\end{array}')  # was eqnarray*
+
+  ## NEW: wrap the array in $$ ... $$ so it's recognized as genuine math
+  ## -- by real LaTeX (which needs math mode for \hat{}/_{}/^{} to mean
+  ## anything at all) and by Pandoc/texmath under Typst (which only
+  ## translates content inside math delimiters). This was missing
+  ## entirely before -- latexrms never added it, and none of the
+  ## calling latex.X functions did either, so the array was always
+  ## reaching the compiler as bare text outside math mode. Applied here
+  ## by position (first/last element), after the before/after ifelse()
+  ## step above, specifically to avoid interfering with that step's
+  ## existing substring(tex,1,1)=="\\" protection -- prepending $$
+  ## earlier would make the array-opening line start with '$' instead
+  ## of '\\', failing that exclusion check and getting an unwanted
+  ## before/after wrapping applied to it too. Only applied for the
+  ## non-inline case -- inline mode is presumably meant to be embedded
+  ## within a math context the caller already has open, though that
+  ## assumption hasn't been specifically confirmed.
+  if(! inline) {
+    tex[1]            <- paste0('$$', tex[1])
+    tex[length(tex)]  <- paste0(tex[length(tex)], '$$')
+  }
 
   if(anytr & pretrans) {
     i <- TLi != ""
@@ -699,14 +728,90 @@ latexrms <-
                                                 escape.html=FALSE))
             }
             else
-              c("\\vspace{0.5ex}\\begin{center}{\\bf Pre--Transformations}\\\\",
-                "\\vspace{1.5ex}\\begin{tabular}{|l|l|} \\hline",
-                "\\multicolumn{1}{|c|}{Variable} & \\multicolumn{1}{c|}{Transformation} \\\\ \\hline",
-                paste0("$",varnames[i],"$ & $",TLi[i],"$ \\\\"),
-                "\\hline", "\\end{tabular}\\end{center}")
+              pretrans_tiny_table(varnames[i], TLi[i],
+                                  if(prType() == 'typst') 'typst' else 'latex')
     }
     tex <- c(tex, tr)
   }
   if(file == '') return(tex)
   cat(tex, sep='\n', file=file, append=append)
+}
+
+
+## -----------------------------------------------------------------------
+## NEW: latex_to_typst_math
+## Targeted LaTeX-to-Typst converter for content ALREADY built (earlier
+## in this function) using latexrms's own LaTeX-syntax from/to table --
+## needed because that content is shared with the equation array (which
+## goes through texmath and needs no translation) but is now ALSO fed to
+## tinytable (which does NOT run cell content through texmath, confirmed
+## directly by the "S_{0}(t)" braces-showing-literally bug on the
+## survival table). Deliberately narrow: covers only the constructs
+## latexrms's own from/to table is known to produce (\mathrm{}, \sqrt{},
+## \log(, \min(, \max(, brace-based sub/superscripts), not a general
+## LaTeX parser. \mathrm{} becomes upright(), not a quoted string, so
+## nested math (e.g. a digit subscript already inside the \mathrm{}
+## content) keeps working rather than being flattened to literal text --
+## same reasoning as the mathvar design in markupSpecs$typst.
+##
+## This is the least-tested part of today's work -- regex-based reverse
+## translation of syntax built elsewhere, not something compile-tested
+## yet the way most of this effort has been. Worth a dedicated test
+## before trusting it in place.
+## -----------------------------------------------------------------------
+latex_to_typst_math <- function(x) {
+  x <- gsub('\\\\mathrm\\{([^}]*)\\}', 'upright(\\1)', x)
+  x <- gsub('\\\\sqrt\\{([^}]*)\\}',   'sqrt(\\1)',    x)
+  x <- gsub('\\\\log\\(', 'log(', x, fixed = TRUE)
+  x <- gsub('\\\\min\\(', 'min(', x, fixed = TRUE)
+  x <- gsub('\\\\max\\(', 'max(', x, fixed = TRUE)
+  x <- gsub('_\\{([^}]*)\\}', '_(\\1)', x)
+  x <- gsub('\\^\\{([^}]*)\\}', '^(\\1)', x)
+  x
+}
+
+
+## -----------------------------------------------------------------------
+## NEW: pretrans_tiny_table
+## Pre-transformations table via tinytable, mirroring surv_tiny_table's
+## structure. Both columns left-justified uniformly (no header-alignment
+## override needed here, unlike the survival table). Title line uses the
+## already-confirmed \textbf{} math-mode technique (same as the caption
+## fix elsewhere) rather than depending on tinytable's own
+## (unconfirmed) caption argument.
+## -----------------------------------------------------------------------
+pretrans_tiny_table <- function(vars, trans, output) {
+  ## Local, non-exported helper -- see surv_tiny_table's identical
+  ## definition for the full rationale.
+  typstFence <- function(x) paste0("````{=typst}\n", x, "\n````\n")
+
+  if(output == 'typst') {
+    vars  <- latex_to_typst_math(vars)
+    trans <- latex_to_typst_math(trans)
+  }
+  d <- data.frame(Variable       = paste0('$', vars,  '$'),
+                  Transformation = paste0('$', trans, '$'))
+
+  x <- tt(d, output = output)
+  x <- style_tt(x, j = 1 : 2, align = 'l')
+
+  if(output == 'typst')
+    x <- theme_typst(x, figure = TRUE, align_figure = "c")
+  else if(output == 'latex')
+    ## Confirmed by direct compile test: theme_latex(placement=...)
+    ## already inserts \centering automatically -- no separate
+    ## centering mechanism needed for LaTeX.
+    x <- theme_latex(x, placement = 'H')
+
+  ## save_tt(x, output): documented public function, returns the
+  ## rendered string directly. Confirmed reliable, unlike as.character()
+  ## (real internal bug) and build_tt() (works but unexported).
+  result <- save_tt(x, output)
+
+  ## Same fence requirement as surv_tiny_table -- see its comment for
+  ## the full explanation. typst needs the fence; latex stays bare.
+  if(output == 'typst') result <- typstFence(result)
+
+  title <- "$$\\textbf{Pre--Transformations}$$"
+  c(title, result)
 }

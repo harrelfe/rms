@@ -1,28 +1,37 @@
+## -----------------------------------------------------------------------
+## latex.psm, with one change, marked below: the caption fix (see
+## latex_lrm.s header comment for the full rationale).
+##
+## Deliberately NOT addressed here (deferred, per discussion): the
+## survreg.auxinfo[[dist]]$latex(f$scale) call feeding the header
+## formula -- a separate, unexamined dependency whose source hasn't
+## been reviewed.
+## -----------------------------------------------------------------------
 latex.psm <-
   function(object,  title,
            file='',
-           append=FALSE, which=NULL, varnames, 
-           columns=65, inline=FALSE, 
-           before=if(inline)"" else "& &", after="",
+           append=FALSE, which=NULL, varnames,
+           columns=65, inline=FALSE,
+           before=if(inline)"" else "&", after="",
            pretrans=TRUE, caption=NULL, digits=.Options$digits, size='',
            ...)
 {
   md <- prType() %in% c('html', 'md', 'markdown')
-  
+
   f <- object
   whichNot <- length(which)==0
-  
+
   w <- if(length(caption)) {
          if(md) paste('<div align=center><strong>', caption,
                       '</strong></div>', sep='')
          else
-           paste('\\begin{center} \\bf',caption,'\\end{center}')
+           paste0("$$\\textbf{", caption, "}$$")   ## CHANGE A
          }
 
   if(whichNot & !inline)
     {
       dist <- f$dist
-      w <- c(w, paste("$$\\Pr(T\\geq t) = ",
+      w <- c(w, paste("$$P(T\\geq t) = ",
                       survreg.auxinfo[[dist]]$latex(f$scale),
                       "~\\mathrm{where}$$",sep=""))
     }
@@ -34,9 +43,9 @@ latex.psm <-
   if(file != '') cat(w, sep=if(length(w)) "\n" else "",
                      file=file, append=append)
   ltx <- latexrms(f, append=TRUE, which=which,
-                  varnames=varnames, columns=columns, 
+                  varnames=varnames, columns=columns,
                   before=before, after=after,
-                  prefix=if(whichNot)"X\\hat{\\beta}" else NULL, 
+                  prefix=if(whichNot)"X\\hat{\\beta}" else NULL,
                   inline=inline,pretrans=pretrans, digits=digits,
                   size=size)
   if(inline) return(ltx)

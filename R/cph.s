@@ -4,7 +4,7 @@ cph <- function(formula     = formula(data),
                 data        = environment(formula),
                 weights,
                 subset,
-                na.action   = na.delete, 
+                na.action   = na.delete,
                 method      =c("efron", "breslow", "exact",
                                "model.frame", "model.matrix"),
                 singular.ok = FALSE,
@@ -68,7 +68,7 @@ cph <- function(formula     = formula(data),
     if(method == "model.frame") return(X)
 
     Terms <- terms(sformula, specials=c('strat', 'strata'), data=data)
-  
+
 
     asm   <- atr$assume.code
     name  <- atr$name
@@ -82,15 +82,15 @@ cph <- function(formula     = formula(data),
       if(missing(robust)) robust <- TRUE
       attr(X, 'cluster') <- NULL
     }
-    
+
     Terms.ns     <- Terms
     if(length(stra)) {
       temp <- untangle.specials(Terms.ns, "strat", 1)
       Terms.ns <- Terms.ns[- temp$terms]	#uses [.terms function
-      
+
       Strata <- list()
       strataname <- attr(Terms, 'term.labels')[stra - 1]
-      
+
       j <- 0
       for(i in (1 : length(asm))[asm == 8]) {
         nstrata <- nstrata + 1
@@ -108,7 +108,7 @@ cph <- function(formula     = formula(data),
     weights <- model.extract(X, 'weights')
     offset  <- attr(X, 'offset')
     ##  Cox ph fitter routines expect null if no offset
-    
+
     ##No mf if only strata factors
     if(! xpres) {
       X <- matrix(nrow=0, ncol=0)
@@ -130,7 +130,7 @@ cph <- function(formula     = formula(data),
       assign <- attr(X, "assign")
       assign[[1]] <- NULL  # remove intercept position, renumber
     }
-    
+
     nullmod <- FALSE
   }
   else {	## model with no right-hand side
@@ -143,7 +143,7 @@ cph <- function(formula     = formula(data),
     Terms    <- terms(formula, allowDotAsName=TRUE)
     if(! inherits(Y, "Surv"))
       stop("response variable should be a Surv object")
-    
+
     Y <- Y[! is.na(Y)]
     assign  <- NULL
     xpres   <- FALSE
@@ -160,14 +160,14 @@ cph <- function(formula     = formula(data),
 
   time.units <- units(Y)
   if(! length(time.units) || time.units == '') time.units <- "Day"
-  
+
   if(missing(time.inc)) {
     time.inc <- switch(time.units,
                        Day   = 30,
                        Month = 1,
                        Year  = 1,
                        maxtime / 10)
-    
+
     if(time.inc >= maxtime | maxtime / time.inc > 25)
       time.inc <- max(pretty(c(0, maxtime))) / 10
   }
@@ -187,7 +187,7 @@ cph <- function(formula     = formula(data),
         }
       else
         stop(paste ("Unknown method", method))
-    
+
     if (missing(init)) init <- NULL
 
     f <- fitter(X, Y,
@@ -216,22 +216,22 @@ cph <- function(formula     = formula(data),
   f$terms      <- Terms
   f$sformula   <- sformula
   f$mmcolnames <- mmcolnames
-  
+
   if(robust) {
     f$naive.var <- f$var
     ## Terry gets a little tricky here, calling resid before adding
     ## na.action method to avoid re-inserting NAs.  Also makes sure
     ## X and Y are there
     if(! length(cluster)) cluster <- FALSE
-    
+
     fit2 <- c(f, list(x=X, y=Y, weights=weights, method=method))
     if(length(stra)) fit2$strata <- Strata
-    
+
     r <- getS3method('residuals', 'coxph')(fit2, type='dfbeta',
                                            collapse=cluster, weighted=TRUE)
     f$var <- t(r) %*% r
   }
-  
+
   nvar <- length(f$coefficients)
 
   ev <- factor(Y[, ny], levels=0 : 1, labels=c("No Event", "Event"))
@@ -249,20 +249,20 @@ cph <- function(formula     = formula(data),
     P   <- 1 - pchisq(logtest,nvar)
     gindex <- GiniMd(f$linear.predictors)
     dxy <- dxy.cens(f$linear.predictors, Y, type='hazard')['Dxy']
-    stats <- c(n, nevent, logtest, nvar, P, f$score, 
+    stats <- c(n, nevent, logtest, nvar, P, f$score,
                1-pchisq(f$score,nvar), R2, r2m, dxy, gindex, exp(gindex))
-    names(stats) <- c("Obs", "Events", "Model L.R.", "d.f.", "P", 
+    names(stats) <- c("Obs", "Events", "Model L.R.", "d.f.", "P",
                       "Score", "Score P", "R2", names(r2m), "Dxy", "g", "gr")
   }
   else {
     stats <- c(n, nevent)
     names(stats) <- c("Obs", "Events")
   }
-  
+
   f$method <- NULL
   if(xpres)
     dimnames(f$var) <- list(atr$colnames, atr$colnames)
-  
+
   f <- c(f, list(call=call, Design=atr,
                  assign=DesignAssign(atr, 0, atrx$terms),
                  na.action=nact,
@@ -280,11 +280,11 @@ cph <- function(formula     = formula(data),
       ##  XX <- sweep(X, 2, f$means)	# center   (slower;so is scale)
       se.fit <- drop(((XX %*% f$var) * XX) %*% rep(1,ncol(XX)))^.5
       names(se.fit) <- rnam
-      f$se.fit <- se.fit  	
+      f$se.fit <- se.fit
     }
   }
   if(model) f$model <- data
-  
+
   if(is.character(surv) || surv) {
     if(length(Strata)) {
       iStrata <- as.character(Strata)
@@ -315,11 +315,11 @@ cph <- function(formula     = formula(data),
       yy   <- Y[if(nstr == 1) TRUE else iStrata == slev[k], ny - 1]
       maxt <- max(yy)
       ##n.risk from surv.fit does not have usual meaning if not Kaplan-Meier
-      
+
       tt <- c(0,  g$time[j])
       su <- c(1,  g$surv[j])
       se <- c(NA, g$std.err[j])
-      
+
       if(maxt > tt[length(tt)]) {
         tt <- c(tt, maxt)
         su <- c(su, su[length(su)])
@@ -338,11 +338,11 @@ cph <- function(formula     = formula(data),
           Su <- su[t.choice]
           Se <- se[t.choice]
         }
-        
+
         n.risk <- sum(yy >= tp)
         s.sum[kk, k, 1 : 3] <- c(Su, n.risk, Se)
       }
-      
+
       if(! is.character(surv)) {
         if(nstr == 1) {
           tim  <- tt
@@ -356,18 +356,18 @@ cph <- function(formula     = formula(data),
         }
       }
     }
-    
+
     if(is.character(surv)) f$surv.summary <- s.sum
     else {
       if(nstr > 1) {
         names(srv) <- names(tim) <- names(s.e.) <- levels(Strata) ###
       }
-      
+
       f <- c(f, list(time=tim, surv=srv,
-                     std.err=s.e., surv.summary=s.sum))		
+                     std.err=s.e., surv.summary=s.sum))
     }
   }
-  
+
   f$strata <- Strata    ### was $Strata
   if(x) f$x <- X
   if(y) f$y <- Y
@@ -398,9 +398,9 @@ coxphFit <- function(..., method, strata=NULL, rownames=NULL, offset=NULL,
                 offset=offset, init=init, method=method,
                 control=coxph.control(toler.chol=toler.chol, toler.inf=1,
                                       eps=eps, iter.max=iter.max))
-  
+
   if(is.character(res)) return(list(fail=TRUE))
-  
+
   if(iter.max > 1 && res$iter >= iter.max) return(list(fail=TRUE))
 
   res$fail <- FALSE
@@ -469,10 +469,10 @@ Mean.cph <- function(object, method=c("exact","approximate"),
                      type=c("step","polygon"), n=75, tmax=NULL, ...) {
   method <- match.arg(method)
   type   <- match.arg(type)
-  
+
   if(! length(object$time) || ! length(object$surv))
     stop("did not specify surv=TRUE with cph")
-  
+
   if(method == "exact") {
     f <- function(lp=0, stratum=1, type=c("step","polygon"),
                   tmax=NULL, time, surv) {
@@ -494,7 +494,7 @@ Mean.cph <- function(object, method=c("exact","approximate"),
       }
       for(j in 1 : length(lp)) {
         s <- surv ^ exp(lp[j])
-        Q[j] <- if(type == "step") sum(c(diff(time[k]), 0) * s[k]) else 
+        Q[j] <- if(type == "step") sum(c(diff(time[k]), 0) * s[k]) else
           trap.rule(time[k], s[k])
       }
       Q
@@ -508,12 +508,12 @@ Mean.cph <- function(object, method=c("exact","approximate"),
   else {
     lp     <- object$linear.predictors
     lp.seq <- if(length(lp)) lp.seq <- seq(min(lp), max(lp), length.out=n) else 0
-    
+
     time   <- object$time
     surv   <- object$surv
     nstrat <- if(is.list(time)) length(time) else 1
     areas  <- list()
-    
+
     for(is in 1 : nstrat) {
       tim <- if(nstrat == 1) time else time[[is]]
       srv <- if(nstrat == 1) surv else surv[[is]]
@@ -533,7 +533,7 @@ Mean.cph <- function(object, method=c("exact","approximate"),
       ymean <- lp.seq
       for(j in 1 : length(lp.seq)) {
         s <- srv ^ exp(lp.seq[j])
-        ymean[j] <- if(type == "step") sum(c(diff(tim[k]),0) * s[k]) else 
+        ymean[j] <- if(type == "step") sum(c(diff(tim[k]),0) * s[k]) else
         trap.rule(tim[k], s[k])
       }
       areas[[is]] <- ymean
@@ -541,7 +541,7 @@ Mean.cph <- function(object, method=c("exact","approximate"),
     if(nstrat > 1) names(areas) <- names(time)
 
     ff <- function(lp=0, stratum=1, lp.seq, areas) {
-      
+
       if(length(stratum) > 1) stop("does not handle vector stratum")
       area <- areas[[stratum]]
       if(length(lp.seq) == 1 && all(lp == lp.seq))
@@ -574,20 +574,23 @@ predict.cph <- function(object, newdata=NULL,
 print.cph <- function(x, digits=4, r2=c(0,2,4), table=TRUE, conf.int=FALSE,
                       coefs=TRUE, pg=FALSE,
                       title='Cox Proportional Hazards Model', ...)
-{ 
+{
   k <- 0
   z <- list()
-  
+
   if(length(zz <- x$na.action)) {
     k <- k + 1
     z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
   }
-  
+
   if(table && length(x$n) && is.matrix(x$n)) {
+    ftab <- x$n
+    ndm <- names(dimnames(ftab))
+    if(length(ndm)) names(dimnames(ftab)) <- ifelse(ndm == 'Status', '', ndm)
     k <- k + 1
-    z[[k]] <- list(type='print', list(x$n))
+    z[[k]] <- list(type='print', list(ftab))
   }
-  
+
   if(length(x$coef)) {
     stats <- x$stats
     ci <- x$clusterInfo
@@ -598,9 +601,9 @@ print.cph <- function(x, digits=4, r2=c(0,2,4), table=TRUE, conf.int=FALSE,
                      Center   = round(x$center, digits))
     lr   <- reListclean('LR chi2'     = stats['Model L.R.'],
                      'd.f.'        = stats['d.f.'],
-                     'Pr(> chi2)'  = stats['P'],
+                     'P(> chi2)'  = stats['P'],
                      'Score chi2'  = stats['Score'],
-                     'Pr(> chi2)'  = stats['Score P'],
+                     'P(> chi2)'  = stats['Score P'],
                      dec=c(2,NA,4,2,4))
     newr2 <- grepl('R2\\(', names(stats))
     disc <- reListclean(R2        = if(0 %in% r2) stats['R2'],
@@ -610,12 +613,12 @@ print.cph <- function(x, digits=4, r2=c(0,2,4), table=TRUE, conf.int=FALSE,
                         g  = if(pg) stats['g'],
                         gr = if(pg) stats['gr'],
                         dec=3)
-                                                              
+
     k <- k + 1
     headings <- c('', 'Model Tests', 'Discrimination\nIndexes')
     data     <- list(misc, lr, disc)
     z[[k]] <- list(type='stats', list(headings=headings, data=data))
-    
+
     beta <- x$coef
     se <- sqrt(diag(x$var))
     k <- k + 1
@@ -623,7 +626,7 @@ print.cph <- function(x, digits=4, r2=c(0,2,4), table=TRUE, conf.int=FALSE,
                    list(coef = x$coef,
                         se   = sqrt(diag(x$var))))
     if(conf.int) {
-          
+
       zcrit <- qnorm((1 + conf.int)/2)
       tmp <- cbind(exp(beta), exp( - beta), exp(beta - zcrit * se),
                    exp(beta + zcrit * se))
@@ -637,7 +640,7 @@ print.cph <- function(x, digits=4, r2=c(0,2,4), table=TRUE, conf.int=FALSE,
       z[[k]] <- list(type='print', list(tmp, digits=digits))
     }
   }
-  
+
   prModFit(x, title=title,
            z, digits=digits, coefs=coefs, ...)
 }

@@ -21,7 +21,7 @@ contrast.rms <-
     stop('conf.type=profile only works with type=individual')
   if(bayes & (type == 'joint' || conf.type == 'simultaneous'))
     stop('type=joint or conf.type=simultaneous not allowed for Bayesian models')
-  
+
   zcrit <- if(length(idf <- fit$df.residual)) qt((1 + conf.int) / 2, idf) else
               qnorm((1 + conf.int) / 2)
 
@@ -31,7 +31,7 @@ contrast.rms <-
     dens <- density(x)
     dens$x[which.max(dens$y)[1]]
     }
-  
+
   if(! bayes) {
     betas <- coef(fit)
     iparm <- 1 : length(betas)
@@ -48,7 +48,7 @@ contrast.rms <-
     fite$coefficients <- betas    # for simult confint
     if(usebootcoef) bcoef <- bcoef[, iparm, drop=FALSE]
   } else nrp <- num.intercepts(fit, 'var')
-    
+
   if(length(bcoef) && conf.type != 'simultaneous')
     conf.type <- switch(boot.type,
                         percentile = 'bootstrap nonparametric percentile',
@@ -61,7 +61,7 @@ contrast.rms <-
   cppo      <- fit$cppo
   if(partialpo && ! length(cppo))
     stop('only implemented for constrained partial PO models')
-  
+
   pred <- function(d) {
     ## predict.blrm duplicates rows of design matrix for partial PO models
     ## if ycut has length > 1 and only one observation is being predicted
@@ -69,7 +69,7 @@ contrast.rms <-
          else
            predict(fit, d, type='x')
     }
-  
+
   da <- do.call('gendata', list(fit, factors=a, expand=expand))
   xa <- pred(da)
   if(! missing(b)) {
@@ -96,7 +96,7 @@ contrast.rms <-
   }
 
   allsame <- function(x) diff(range(x)) == 0
-  
+
   vary <- NULL
   mall <- c(ma, mb)
   ncols <- c(ncol(da), ncol(db))
@@ -104,14 +104,14 @@ contrast.rms <-
     mall <- c(mall, ma2, mb2)
     ncols <- c(ncols, ncol(da2), ncol(db2))
   }
-  
+
   if(allsame(mall) && ! allsame(ncols)) stop('program logic error')
   if(any(sort(names(da)) != sort(names(db))))
     stop('program logic error')
   if(! missing(a2) && (any(sort(names(da)) != sort(names(da2))) ||
                        any(sort(names(da)) != sort(names(db2)))))
     stop('program logic error')
-    
+
   if(type != 'average' && ! length(cnames)) {
     ## If all lists have same length, label contrasts by any variable
     ## that has the same length and values in all lists
@@ -167,16 +167,16 @@ contrast.rms <-
     colnames(pa) <- colnames(pb) <- cnames
 
     res <- list(esta=pa, estb=pb,
-                Xa=xa, Xb=xb, 
+                Xa=xa, Xb=xb,
                 nvary=length(vary))
     return(structure(res, class='contrast.rms'))
     }   # end if bayes & length(fun) ...
-  
+
   X <- xa - xb
   if(! missing(a2)) X <- X - (xa2 - xb2)
   m <- nrow(X)
   if(nrp > 0) X <- cbind(matrix(0., nrow=m, ncol=nrp), X)
-  
+
   if(is.character(weights)) {
     if(weights != 'equal') stop('weights must be "equal" or a numeric vector')
     weights <- rep(1,  m)
@@ -268,18 +268,18 @@ contrast.rms <-
               cdraws = cdraws)
   if(conf.type == 'profile') res$LR <- LR
   if(type != 'average')      res <- c(vary, res)
-  
+
   r <- qr(v, tol=tol)
   nonred <- r$pivot[1 : r$rank]   # non-redundant contrasts
   redundant <- (1 : length(est)) %nin% nonred
   res$redundant <- redundant
-  
+
   if(type=='joint') {
     est <- est[! redundant]
     v <- v[! redundant, ! redundant, drop=FALSE]
     res$jointstat <- as.vector(est %*% solve(v, est, tol=tol))
   }
-  
+
   structure(res, class='contrast.rms')
 }
 
@@ -305,10 +305,10 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
     print(t(apply(esta - estb, 2, f)))
     return(invisible())
     }
-  
+
   edf <- x$df.residual
   sn <- if(length(edf)) 't' else if(x$conf.type == 'profile') '\u03A7\u00B2' else 'Z'
-  pn <- if(length(edf)) 'Pr(>|t|)' else if(x$conf.type == 'profile') 'Pr(>\u03A7\u00B2)' else 'Pr(>|z|)'
+  pn <- if(length(edf)) 'P(>|t|)' else if(x$conf.type == 'profile') 'P(>\u03A7\u00B2)' else 'P(>|z|)'
   if(length(x$LR)) {
     x$Z  <- x$LR
     x$LR <- NULL
@@ -316,17 +316,17 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
   w <- x[1 : (x$nvary + 7)]
   isn <- sapply(w, is.null)
   w <- w[! isn]
-  
+
   if(length(w$Z))      w$Z      <- round(w$Z, 2)
   if(length(w$Pvalue)) w$Pvalue <- round(w$Pvalue, 4)
   if(length(w$PP))     w$PP     <- round(w$PP, 4)
-  if(length(w$PP))     pn       <- 'Pr(Contrast>0)'
-  
+  if(length(w$PP))     pn       <- 'P(Contrast>0)'
+
   no <- names(w)
   no[no=='SE'] <- 'S.E.'
   no[no=='Z']  <- sn
   no[no %in% c('Pvalue', 'PP')] <- pn
-  
+
   cnames <- x$cnames
   if(! length(cnames))
     cnames <- if(x$nvary) rep('', length(x[[1]])) else
@@ -354,7 +354,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
     print(w, ...)
     if(any(x$redundant)) cat('\nRedundant contrasts are denoted by *\n')
   }
-  
+
   jstat <- x$jointstat
   if(length(jstat)) {
     cat('\nJoint test for all contrasts=0:\n\n')
@@ -379,7 +379,7 @@ print.contrast.rms <- function(x, X=FALSE, fun=function(u) u,
     cat('\nIntervals are', x$conf.int, 'highest posterior density intervals\n')
     cat('Contrast is the posterior', x$posterior.summary, '\n')
     }
-    
+
   if(X) {
     cat('\nDesign Matrix for Contrasts\n\n')
     if(is.matrix(x$X)) dimnames(x$X) <- list(cnames, dimnames(x$X)[[2]])
@@ -449,7 +449,7 @@ rms_profile_ci <-
            ylab='Change in Deviance From Full Model')
       abline(v=c(est - se, est, est + se), col='blue')
       title(paste('Contrast', i))
-      title(sub='Vertical lines are at point estimate of contrast \u00b1 S.E.', adj=1, cex.sub=0.65)  
+      title(sub='Vertical lines are at point estimate of contrast \u00b1 S.E.', adj=1, cex.sub=0.65)
     }
     hi <- try(uniroot(g, c(est + se/100, est + se_factor * se))$root)
     if(inherits(hi, 'try-error')) hi <-  Inf
@@ -460,4 +460,3 @@ rms_profile_ci <-
   }
 list(lower=lower, upper=upper, LR=LR, P=1. - pchisq(LR, 1))
 }
-

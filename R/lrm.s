@@ -225,7 +225,7 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
   }
   lr   <- reListclean('LR chi2'    = stats['Model L.R.'],
                       'd.f.'       = round(stats['d.f.'], 3),
-                      'Pr(> chi2)' = stats['P'],
+                      'P(> chi2)' = stats['P'],
                       Penalty      = penaltyFactor,
                       dec          = c(2, NA, -4, 2))
   newr2 <- grepl('R2\\(', names(stats))
