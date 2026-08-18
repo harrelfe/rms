@@ -6,13 +6,13 @@
 #'
 #' @param formula a model formula.  To work properly with `multinom` or `vglm` the terms should have completely specified knot locations if a spline function is being used.
 #' @param relax defaults to `"both"` if `nonpo` is given, resulting in fitting two relaxed models.  Set `relax` to `"multinomial"` or `"ppo"` to fit only one relaxed model.  The multinomial model does not assume PO for any predictor.
-#' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  Specifying `nonpo` results in a relaxed fit that is a partial PO model fitted with `VGAM::vglm`.  
+#' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  Specifying `nonpo` results in a relaxed fit that is a partial PO model fitted with `VGAM::vglm`.
 #' @param newdata a data frame or data table with one row per covariate setting for which predictions are to be made
 #' @param data data frame containing variables to fit; default is the frame in which `formula` is found
 #' @param minfreq minimum sample size to allow for the least frequent category of the dependent variable.  If the observed minimum frequency is less than this, the [Hmisc::combine.levels()] function will be called to combine enough consecutive levels so that this minimum frequency is achieved.
 #' @param B number of bootstrap resamples to do to get confidence intervals for differences in predicted probabilities for relaxed methods vs. PO model fits.  Default is not to run the bootstrap.  When running the bootstrap make sure that all model variables are explicitly in `data=` so that selection of random subsets of data will call along the correct rows for all predictors.
 #' @param ... other parameters to pass to `lrm` and `multinom`
-#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, `mad`, `newdata`, `nboot`, and `boot`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "Multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  Pr(>chi^2)` the P-value for this test, `MCS R2` the Maddala-Cox-Snell R2 using the actual sample size, `MCS R2 adj` (`MCS R2` adjusted for estimating `p` regression coefficients by subtracting `p` from `LR`), `McFadden R2`, `McFadden R2 adj` (an AIC-like adjustment proposed by McFadden without full justification), `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model.  `nboot` is the number of successful bootstrap repetitions, and `boot` is a 4-way array with dimensions represented by the `nboot` resamples, the number of rows in `newdata`, the number of outcome levels, and elements for `PPO` and `multinomial`.  For the modifications of the Maddala-Cox-Snell indexes see `Hmisc::R2Measures`.
+#' @return an `impactPO` object which is a list with elements `estimates`, `stats`, `mad`, `newdata`, `nboot`, and `boot`.  `estimates` is a data frame containing the variables and values in `newdata` in a tall and thin format with additional variable `method` ("PO", "Multinomial", "PPO"), `y` (current level of the dependent variable), and `Probability` (predicted cell probability for covariate values and value of `y` in the current row).  `stats` is a data frame containing `Deviance` the model deviance, `d.f.` the total number of parameters counting intercepts, `AIC`, `p` the number of regression coefficients, `LR chi^2` the likelihood ratio chi-square statistic for testing the predictors, `LR - p` a chance-corrected LR chi-square, `LR chi^2 test for PO` the likelihood ratio chi-square test statistic for testing the PO assumption (by comparing -2 log likelihood for a relaxed model to that of a fully PO model), `  d.f.` the degrees of freedom for this test, `  P(>chi^2)` the P-value for this test, `MCS R2` the Maddala-Cox-Snell R2 using the actual sample size, `MCS R2 adj` (`MCS R2` adjusted for estimating `p` regression coefficients by subtracting `p` from `LR`), `McFadden R2`, `McFadden R2 adj` (an AIC-like adjustment proposed by McFadden without full justification), `Mean |difference} from PO` the overall mean absolute difference between predicted probabilities over all categories of Y and over all covariate settings.  `mad` contains `newdata` and separately by rows in `newdata` the mean absolute difference (over Y categories) between estimated probabilities by the indicated relaxed model and those from the PO model.  `nboot` is the number of successful bootstrap repetitions, and `boot` is a 4-way array with dimensions represented by the `nboot` resamples, the number of rows in `newdata`, the number of outcome levels, and elements for `PPO` and `multinomial`.  For the modifications of the Maddala-Cox-Snell indexes see `Hmisc::R2Measures`.
 #'
 #' @author Frank Harrell <fh@fharrell.com>
 #' @export
@@ -52,7 +52,7 @@
 #'   xlab('') + guides(fill=guide_legend(title=''))
 #'
 #' # Now vary 2 predictors
-#' 
+#'
 #' d <- expand.grid(sex=c('female', 'male'), age=c(40, 60))
 #' w <- impactPO(y ~ age + sex, nonpo = ~ sex, newdata=d)
 #' w
@@ -126,7 +126,7 @@ impactPO <- function(formula,
                `LR - p`   = LR - p,
                `LR chi^2 test for PO` = if(mpo) NA else devPO - dev,
                `  d.f.`    = if(mpo) NA else p - dfPO,
-               `  Pr(>chi^2)` = if(mpo) NA else 1. - pchisq(devPO - dev, p - dfPO),
+               `  P(>chi^2)` = if(mpo) NA else 1. - pchisq(devPO - dev, p - dfPO),
                `MCS R2`     = r2,
                `MCS R2 adj` = r2adj,
                `McFadden R2`      = 1. - dev / dev0,
@@ -137,7 +137,7 @@ impactPO <- function(formula,
   stats <- st('PO', f, probsPO)
 
   mad <- NULL
-  
+
   if(do.ppo) {
     ppo  <- formula(paste('FALSE ~', as.character(nonpo)[-1]))
     g <- VGAM::vglm(formula, VGAM::cumulative(parallel=ppo, reverse=TRUE),
@@ -217,7 +217,7 @@ impactPO <- function(formula,
     }
     if(nboot < B) boot <- boot[1 : nboot, , , , drop=FALSE]
     }
-                                    
+
   structure(list(estimates=z, stats=stats, mad=mad, newdata=newdata,
                  nboot=nboot, boot=if(B > 0) boot),
             class='impactPO')
@@ -246,7 +246,7 @@ print.impactPO <- function(x, estimates=nrow(x$estimates) < 16, ...) {
     y[is.na(x)] <- ''
     y
     }
-  pvn <- '  Pr(>chi^2)'
+  pvn <- '  P(>chi^2)'
   for(j in integercol) fstats[[j]]   <- z(fstats[[j]])
   for(j in r2col)      fstats[[j]]   <- z(fstats[[j]], 3)
                        fstats[[pvn]] <- z(fstats[[pvn]], pval=TRUE)
