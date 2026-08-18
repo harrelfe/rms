@@ -1383,8 +1383,10 @@ for(i in 1:p) {
                                          beta, vbar),
                           typst = 'max $|(partial log L)/(partial beta)|$'),
       'mean |Y-Yhat|' = c(latex = 'mean $|Y-\\hat{Y}|$',
-                          html  = paste0('mean ', vbar, '<i>Y - Y</i>',
-                                         cca, vbar),
+                          ## cca moved inside <i>, adjacent to the Y it
+                          ## modifies -- see end-of-file notes
+                          html  = paste0('mean ', vbar, '<i>Y - Y', cca,
+                                         '</i>', vbar),
                           typst = 'mean $|Y-hat(Y)|$'),
       'Distinct Y'   = c(latex = 'Distinct $Y$',
                        html  = 'Distinct <i>Y</i>',
@@ -1791,6 +1793,18 @@ removeFormulaTerms <- function(form, which=NULL, delete.response=FALSE) {
 ##   column count rather than a single fixed value, since the fixed
 ##   value was tuned only for a 3-column example and cramped a 4-column
 ##   one.
+## - 'mean |Y-Yhat|' row, html entry: a genuine bug, not a typst gap --
+##   the combining circumflex accent (cca) was placed after the closing
+##   </i> tag rather than immediately adjacent to the second Y it's
+##   meant to modify. Unicode combining characters only combine with a
+##   preceding base character when directly adjacent, with no
+##   intervening markup -- across an HTML tag boundary, a browser
+##   renders the accent as its own standalone glyph instead, which is
+##   what a lone combining circumflex accent looks like: a caret to the
+##   right ("Y^") rather than a hat over the Y ("Ŷ"). Confirmed directly
+##   from real rendered output (latex/typst were already correct, only
+##   html showed the caret). Fixed by moving cca inside the <i> tag,
+##   directly adjacent to the Y.
 ##
 ## typstSN (new) / formatNP
 ## ---------------------------------
