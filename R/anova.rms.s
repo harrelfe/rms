@@ -593,6 +593,78 @@ print.anova.rms <- function(x, which=c('none','subscripts',
   invisible()
 }
 
+## rms_tiny_table: renders d (a data.frame whose rownames are the
+## desired row labels) as a table for the current output language, with
+## an optional bold centered caption above it. Used by anova.rms,
+## summary.rms, and validate.ols. Row labels become an explicit
+## left-justified first column; data columns right-justified; header
+## centered; rows striped.
+##
+## Structured as one format-agnostic core builder plus a separate,
+## named finalize/caption function per language, so each format's
+## handling is self-contained and can be extended independently. See
+## end of file for the detailed reasoning behind each format's specific
+## choices.
+rms_tiny_table_core <- function(d, lang, fontsize = NULL) {
+  rowlab <- rownames(d)
+  dd <- data.frame(Var = rowlab, unclass(d), check.names = FALSE)
+  colnames(dd) <- c('', colnames(d))
+  nc <- ncol(dd)
+
+  x <- tinytable::tt(dd, output = lang)
+  x <- tinytable::format_tt(x, j = 1:nc, escape = FALSE)
+  x <- tinytable::format_tt(x, i = 0,    escape = FALSE)
+  x <- tinytable::style_tt(x, j = 1,     align = 'l')
+  x <- tinytable::style_tt(x, j = 2:nc,  align = 'r')
+  x <- tinytable::style_tt(x, i = 0,     align = 'c')
+  x <- tinytable::theme_striped(x)
+  if(length(fontsize) && fontsize != 1)
+    x <- tinytable::style_tt(x, fontsize = fontsize)
+  x
+}
+
+rms_tiny_table_finalize_latex <- function(x) {
+  x <- tinytable::theme_latex(x, environment_table = FALSE)
+  result <- tinytable::save_tt(x, 'latex')
+  paste0('\\begin{center}\n', result, '\n\\end{center}')
+}
+
+rms_tiny_table_finalize_html <- function(x) tinytable::save_tt(x, 'html')
+
+rms_tiny_table_finalize_typst <- function(x) {
+  result <- tinytable::save_tt(x, 'typst')
+  typstFence <- function(s) paste0("````{=typst}\n", s, "\n````\n")
+  typstFence(paste0('#block(width: 100%)[#align(center)[\n', result, '\n]]'))
+}
+
+rms_tiny_table_caption_latex <- function(caption)
+  paste0('\\begin{center}\\textbf{', caption, '}\\end{center}\n')
+
+rms_tiny_table_caption_html <- function(caption)
+  paste0('<p style="text-align:center"><strong>', caption, '</strong></p>\n')
+
+rms_tiny_table_caption_typst <- function(caption) {
+  typstFence <- function(s) paste0("````{=typst}\n", s, "\n````\n")
+  typstFence(paste0('#block(width: 100%)[#align(center)[#strong[',
+                    caption, ']]]'))
+}
+
+rms_tiny_table <- function(d, lang, caption = NULL, fontsize = NULL) {
+  x <- rms_tiny_table_core(d, lang, fontsize = fontsize)
+  result <- switch(lang,
+                   latex = rms_tiny_table_finalize_latex(x),
+                   html  = rms_tiny_table_finalize_html(x),
+                   typst = rms_tiny_table_finalize_typst(x))
+  if(length(caption)) {
+    capMarkup <- switch(lang,
+                        latex = rms_tiny_table_caption_latex(caption),
+                        html  = rms_tiny_table_caption_html(caption),
+                        typst = rms_tiny_table_caption_typst(caption))
+    result <- c(capMarkup, result)
+  }
+  result
+}
+
 latex.anova.rms <-
   function(object,
            title=paste('anova', attr(object, 'obj.name'), sep='.'),
@@ -611,7 +683,9 @@ latex.anova.rms <-
     rowl <- rownames(object)
     if(any(sn=='MS')) rowl[rowl=='TOTAL'] <- 'REGRESSION'
 
-    if(! html) rowl <- latexTranslate(rowl)
+    ## extended to typst -- see note [1] at end of file
+    rowl <- switch(lang, latex = latexTranslate(rowl),
+                   typst = typstTranslate(rowl), rowl)
 
     specs <- markupSpecs[[lang]]
     bold  <- specs$bold
@@ -619,7 +693,9 @@ latex.anova.rms <-
 
     ## Translate interaction symbol (*) to times symbol
     ## rowl <- gsub('\\*', specs$times, rowl)   # changed * to $times$
-    rowl <- gsub('*', specs$times, rowl, fixed=TRUE)
+    ## extended to typst -- see note [2] at end of file
+    pat <- if(lang == 'typst') '\\*' else '*'
+    rowl <- gsub(pat, specs$times, rowl, fixed=TRUE)
 
     ## Put TOTAL rows in boldface
     rowl <- ifelse(substring(rowl, 1, 5) %in% c("REGRE", "ERROR", "TOTAL"),
@@ -639,12 +715,21 @@ latex.anova.rms <-
                 REV=dec.REV, Lower=dec.REV, Upper=dec.REV)
 
     dig <- digits[sn]
-    sn[sn=='Chi-Square'] <- specs$chisq(add='')
-    names(dstats) <- ifelse(sn %nin% c('d.f.','MS','Partial SS'),
-                            math(sn), sn)
+    ## column names double-processed for the chi-square entry -- see
+    ## note [4] at end of file. specs$chisq()'s own $-wrapping is
+    ## format-inconsistent (see note [5]), checked directly below rather
+    ## than assumed.
+    nms <- ifelse(sn %nin% c('d.f.','MS','Partial SS','Chi-Square'),
+                  math(sn), sn)
+    chi2lab <- specs$chisq(add='')
+    nms[sn == 'Chi-Square'] <-
+      if(substring(chi2lab, 1, 1) == '$') chi2lab else math(chi2lab)
+    names(dstats) <- nms
 
     resp <- as.character(attr(object, 'formula')[2])
-    if(! html) resp <- latexTranslate(resp)
+    ## extended to typst -- see note [1] at end of file
+    resp <- switch(lang, latex = latexTranslate(resp),
+                    typst = typstTranslate(resp), resp)
 
     test <- attr(object, 'test')
     if(! length(test))  test <- 'Chisq'   # for legacy fit objects
@@ -680,24 +765,10 @@ latex.anova.rms <-
       sn <- c(sn, 'Tested')
     }
 
-    if(html) {
-      al <- rep('r', length(sn))
-      fshead <- rep(paste0('font-size:', fontsize, 'em;'), ncol(dstats))
-      fscell <- rep('padding-left:2ex;',                   ncol(dstats))
-      w <- htmlTable::htmlTable(dstats, caption=caption,
-                                css.table=fshead,
-                                css.cell =fscell,
-                                align=al, align.header=al,
-                                rowlabel='', escape.html=FALSE)
-      rendHTML(w)
-    }
-    else {
-        latex(dstats, title=title,
-              caption    = if(table.env) caption else NULL,
-              insert.top = if(length(caption) && ! table.env)
-                             paste0('\\Needspace{2in}\n', caption),
-              rowlabel="", col.just=rep('r',length(sn)), table.env=table.env, ...)
-      }
+    ## table-making via tinytable, modular across latex/html/typst --
+    ## see rms_tiny_table() above; see note [3] at end of file
+    w <- rms_tiny_table(dstats, lang, caption = caption, fontsize = fontsize)
+    if(lang == 'html') rendHTML(w) else rendHTML(w, html = FALSE)
   }
 
 
@@ -911,3 +982,83 @@ plot.anova.rms <-
     }
     if(isbase) invisible(w) else p
   }
+
+## -----------------------------------------------------------------------
+## Detailed notes on extending latex.anova.rms() to typst, referenced by
+## the short [N] tags inline above. Most of this is simply building out
+## Typst coverage for the first time -- part of this project's goal from
+## the start, not corrections to anything broken.
+##
+## [1] rowl/resp translation: previously `if(! html) rowl <-
+##     latexTranslate(rowl)` applied LaTeX-specific escaping to any
+##     non-html language, since typst wasn't part of the original
+##     design. Now lang-aware: latexTranslate() for latex,
+##     typstTranslate() for typst, untouched for html/plain. Without
+##     this, LaTeX escape sequences (e.g. "\%", "\_") would appear
+##     literally in Typst output rather than being escaped correctly for
+##     Typst's own syntax. Same extension applied to resp (the response
+##     variable name used in the caption).
+##
+## [2] Interaction symbol (*) substitution: extending this to typst
+##     needs the search pattern to match what typstTranslate() has
+##     already produced by that point, not a bare '*'. typstTranslate()
+##     escapes bare * to \* unconditionally (needed in general, since *
+##     is Typst's bold/emphasis shorthand) -- so with a bare '*' pattern,
+##     fixed=TRUE would match the * inside \*, leaving the escaping
+##     backslash orphaned and producing a broken token like "\$times$".
+##     Same construct already handled this way in prModFit's coefficient
+##     table row-name handling, kept consistent here. latex/html's
+##     translators never touch *, so they still use the bare pattern.
+##
+## [3] Table-making, rms_tiny_table(): replaces the previous
+##     htmlTable::htmlTable()/Hmisc::latex() split, which had no typst
+##     handling at all. Structured as one format-agnostic core builder
+##     (rms_tiny_table_core) plus a separate, named finalize and caption
+##     function per language (rms_tiny_table_finalize_latex/html/typst,
+##     rms_tiny_table_caption_latex/html/typst), so each format's
+##     handling is self-contained and can be extended independently
+##     without touching the others -- this is also intended to be
+##     reused by summary.rms and validate.ols, which produce
+##     structurally similar tables.
+##
+##     table.env's former role (choosing between a numbered/captioned
+##     LaTeX float vs. a plain caption) is no longer used --
+##     environment_table=FALSE is applied unconditionally, matching the
+##     approach used throughout this project to avoid LaTeX's
+##     auto-numbered "Table N:" captioning; the caption is always
+##     emitted as a plain bold, centered heading instead via
+##     rms_tiny_table_caption_latex/html/typst.
+##
+##     specs$lspace (used in the leading-blank-preservation logic,
+##     unchanged from the original) is confirmed defined in
+##     markupSpecs$typst as "#h(0.5em)".
+##
+## [4] Chi-square column name: `sn[sn=='Chi-Square'] <- specs$chisq(add='')`
+##     followed by `ifelse(sn %nin% c(...), math(sn), sn)` applied math()
+##     a second time to the same entry -- by the time the second line's
+##     %nin% check ran, sn no longer held "Chi-Square" for that column
+##     (it had already been overwritten with the chisq()-formatted
+##     value), so the check couldn't exclude it and math() ran again.
+##     Under typst this double-wrapped already-$-wrapped content,
+##     surfacing as literal unrendered text. See note [5]: the original
+##     double-application turned out to be load-bearing for latex,
+##     where it was the only thing providing $ wrapping at all -- fixed
+##     properly there, not just removed.
+##
+## [5] specs$chisq()'s $-wrapping turns out to be format-inconsistent:
+##     typst's version already returns fully-wrapped math ("$chi^2$"),
+##     while latex's returns bare, unwrapped "\chi^{2}", relying on
+##     something downstream to add the $ delimiters -- which, before
+##     note [4]'s fix, was exactly the "double" math() application being
+##     removed there. Removing it without accounting for this asymmetry
+##     fixed typst but broke latex outright: bare \chi (a math-mode-only
+##     command) outside $ $ produces "Missing $ inserted" at LaTeX
+##     compile time, confirmed directly from a real compile error.
+##     Fixed by checking the actual returned value rather than assuming
+##     either format's behavior: if specs$chisq()'s output already
+##     starts with "$", use it as-is; otherwise wrap it with math().
+##     This is format-agnostic -- it adapts to whatever each language's
+##     chisq() actually returns rather than hard-coding an assumption
+##     per format, so it should hold even if a given format's wrapping
+##     convention isn't fully known or changes later.
+## -----------------------------------------------------------------------
