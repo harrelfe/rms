@@ -151,7 +151,7 @@ processMI.fit.mult.impute <-
 
 ##' Print Information About Impact of Imputation
 ##'
-##' For the results of `processMI.fit.mult.impute` prints or writes html (the latter if `options(prType='html')` is in effect) summarizing various correction factors related to missing data multiple imputation.
+##' For the results of `processMI.fit.mult.impute` prints or renders a formatted table (html, LaTeX, or Typst, according to `options(prType=)`) summarizing various correction factors related to missing data multiple imputation.
 ##' @title prmiInfo
 ##' @param x an object created by `processMI(..., 'anova')`
 ##' @return nothing 
@@ -169,40 +169,114 @@ prmiInfo <- function(x) {
   if(! length(m)) stop('object does not have mi.info attributes')
   
   for(j in 2:4) m[, j] <- format(round(m[, j], c(NA,3,1,3)[j]))
-  if(prType() == 'html') {
-    specs <- markupSpecs$html
-    rowl <- m$Test
-    if('MS' %in% names(m)) rowl[rowl=='TOTAL'] <- 'REGRESSION'
-    bold  <- specs$bold
-    math  <- specs$math
-    
-    ## Translate interaction symbol (*) to times symbol
-    rowl <- gsub('*', specs$times, rowl, fixed=TRUE)
-  
-    ## Put TOTAL rows in boldface
-    rowl <- ifelse(substring(rowl, 1, 5) %in% c("REGRE", "ERROR", "TOTAL"),
-                   bold(rowl), rowl)
-    rowl <- ifelse(substring(rowl, 1, 1) == " ",
-                 paste0(specs$lspace, specs$italics(substring(rowl,2)), sep=""),
-                 rowl) # preserve leading blank
-    m$Test <- rowl
-    
-    names(m) <- c('Test', 'Missing<br>Information<br>Fraction',
-                  'Denominator<br>d.f.',
-                  paste(specs$chisq(add=''), 'Discount'))
-    fshead <- rep('font-size:1em;',    4)
-    fscell <- rep('padding-left:2ex;', 4)
-    al     <- c('l', 'r', 'r', 'r')
-    w <- htmlTable::htmlTable(m, caption='Imputation penalties',
-                              css.table=fshead,
-                              css.cell =fscell,
-                              align=al,
-                              align.header=al,
-                              escape.html=FALSE, rnames=FALSE)
-    rendHTML(w)
-    } else {cat('\n'); print(m); cat('\n')}
 
+  lang <- prType()
+  if(lang == 'plain') { cat('\n'); print(m); cat('\n'); return(invisible()) }
+  ## unified latex/html/typst rendering -- see end-of-file note
+
+  specs <- markupSpecs[[lang]]
+  rowl  <- m$Test
+  if('MS' %in% names(m)) rowl[rowl=='TOTAL'] <- 'REGRESSION'
+  bold  <- specs$bold
+
+  ## row-label translation, extended to latex/typst
+  rowl <- switch(lang, latex = latexTranslate(rowl),
+                 typst = typstTranslate(rowl), rowl)
+
+  ## Translate interaction symbol (*) to times symbol. Searches for the
+  ## already-escaped pattern under typst, matching anova.rms's identical
+  ## fix (typstTranslate() above has already escaped bare * to \*).
+  pat  <- if(lang == 'typst') '\\*' else '*'
+  rowl <- gsub(pat, specs$times, rowl, fixed=TRUE)
+
+  ## Put TOTAL rows in boldface
+  rowl <- ifelse(substring(rowl, 1, 5) %in% c("REGRE", "ERROR", "TOTAL"),
+                 bold(rowl), rowl)
+  rowl <- ifelse(substring(rowl, 1, 1) == " ",
+               paste0(specs$lspace, specs$italics(substring(rowl,2)), sep=""),
+               rowl) # preserve leading blank
+  m$Test <- rowl
+
+  ## chisq() wrapping is format-inconsistent (typst pre-wrapped, latex
+  ## bare) -- same fix as anova.rms's chi-square column name; html's
+  ## chisq() is already display-ready and untouched, matching original
+  chi2lab <- specs$chisq(add='')
+  if(lang != 'html' && substring(chi2lab, 1, 1) != '$')
+    chi2lab <- specs$math(chi2lab)
+
+  names(m) <- c('Test', 'Missing\nInformation\nFraction',
+                'Denominator\nd.f.', paste(chi2lab, 'Discount'))
+
+  rownames(m) <- m$Test
+  m$Test <- NULL
+
+  w <- rms_tiny_table(m, lang, caption = 'Imputation penalties')
+  if(lang == 'html') rendHTML(w) else rendHTML(w, html = FALSE)
   }
 
 
 utils::globalVariables(c('predicted', 'corrected', 'imputation'))
+
+## -----------------------------------------------------------------------
+## Detailed notes on extending prmiInfo's table output to latex/typst,
+## and unifying it with rms_tiny_table, referenced by the short comment
+## inline above. Most of this is simply building out latex/typst
+## coverage for the first time -- part of this project's broader goal,
+## not corrections to anything broken in the previously html-only
+## version.
+##
+## - prmiInfo was previously html-only (if(prType()=='html') {...} else
+##   {plain-text print}) -- no latex or typst branch at all, meaning
+##   fit.mult.impute imputation-penalty tables never rendered as a
+##   formatted table under those two prTypes, falling straight through
+##   to plain-text printing regardless. Restructured to the same
+##   simplified dispatch pattern already used by print.anova.rms/
+##   print.summary.rms/print.validate after their own refactor
+##   (if(lang == 'plain') {...} else {...unified rendering...}), rather
+##   than a three-way html/latex/typst switch.
+##
+## - Row-label handling (interaction-symbol substitution, bold TOTAL
+##   rows, italicized/indented sub-rows) is structurally identical to
+##   anova.rms's own latex.anova.rms() -- this function appears to have
+##   been directly modeled on it. Extended using the exact same fixes
+##   already established and compile-tested there, rather than
+##   reinventing them: latexTranslate()/typstTranslate() applied to
+##   rowl before the interaction-symbol substitution (previously absent
+##   entirely, since only html was ever supported and html's specs
+##   didn't need it); the substitution itself searches for the
+##   already-escaped "\\*" pattern under typst rather than a bare "*"
+##   (typstTranslate() has already escaped bare * by that point, since *
+##   is Typst's bold/emphasis shorthand -- searching for the bare
+##   pattern would match the * inside \*, leaving an orphaned backslash,
+##   the same bug class found and fixed in anova.rms and reused
+##   verbatim here).
+##
+## - chi-square column label: specs$chisq()'s $-wrapping is
+##   format-inconsistent (typst pre-wrapped, latex bare, html
+##   already display-ready and not math-mode at all) -- same issue
+##   and same fix already established in anova.rms's note [5]: check
+##   whether the returned value already starts with "$" rather than
+##   assume either format's convention, wrapping with specs$math()
+##   only when it doesn't. html is left completely untouched, matching
+##   its original behavior exactly (specs$chisq() used directly, no
+##   wrapping, since it was already correct as html markup).
+##
+## - Rendering: htmlTable::htmlTable() (html-only, hand-built
+##   css.table/css.cell font-size and padding strings) replaced with
+##   rms_tiny_table(m, lang, caption='Imputation penalties') for all
+##   three formats -- no new rms_tiny_table parameters were needed here;
+##   this table's shape (row labels + right-aligned numeric columns +
+##   caption) is exactly what rms_tiny_table already supported by
+##   default; the row-label/data-column alignment split ('l' for Test,
+##   'r' for the three statistic columns) matches rms_tiny_table's
+##   existing defaults exactly, so no align_data override was needed
+##   either.
+##
+## - Multi-line column headers ("Missing\nInformation\nFraction", etc.)
+##   use "\n" uniformly across all three formats, including html --
+##   matching summary.rms's already-established, working pattern for
+##   this, rather than the original code's own html-specific "<br>"
+##   convention. rms_tiny_table_core's unconditional
+##   format_tt(i=0, linebreak="\n") handles "\n" correctly for html too,
+##   making a separate <br>-based header string unnecessary.
+## -----------------------------------------------------------------------
