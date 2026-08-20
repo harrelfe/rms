@@ -225,14 +225,12 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
                       title="Linear Regression Model", ...)
 {
   latex <- prType() == 'latex'
-  k <- 0
   z <- list()
 
 
-  if(length(zz <- x$na.action)) {
-    k <- k + 1
-    z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
-  }
+  if(length(zz <- x$na.action))
+    z <- c(z, list(prModItem(paste('naprint', class(zz)[1], sep='.'),
+                             list(zz))))
 
   stats <- x$stats
   if(! length(stats)) stop('fit does not have stats')
@@ -270,8 +268,7 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
                   'Model Likelihood\nRatio Test',
                   'Discrimination\nIndexes')
     data <- list(misc, lr, disc)
-    k <- k + 1
-    z[[k]] <- list(type='stats', list(headings=headings, data=data))
+    z <- c(z, list(prModItem('stats', list(headings=headings, data=data))))
   }
   if(rdf > 5) {
     if(length(dim(resid)) == 2) {
@@ -283,31 +280,25 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
       rq <- quantile(resid)
       names(rq) <- c("Min", "1Q", "Median", "3Q", "Max")
     }
-    k <- k + 1
-    z[[k]] <- list(type=if(latex)'latexVector' else 'print',
-                   list(rq, digits=digits),
-                   tex=latex, title='Residuals')
+    z <- c(z, list(prModItem(if(latex)'latexVector' else 'print',
+                             list(rq, digits=digits),
+                             tex=latex, title='Residuals')))
   }
   else
-    if(rdf > 0) {
-      k <- k + 1
-      z[[k]] <- list(type=if(latex)'latexVector' else 'print',
-                     list(resid, digits=digits),
-                     tex=latex, title='Residuals')
-    }
+    if(rdf > 0)
+      z <- c(z, list(prModItem(if(latex)'latexVector' else 'print',
+                               list(resid, digits=digits),
+                               tex=latex, title='Residuals')))
 
-  if(nsingular <- df[3] - df[1]) {
-    k <- k + 1
-    z[[k]] <- list(type='cat',
-                   paste(nsingular, 'coefficients not defined because of singularities'))
-  }
+  if(nsingular <- df[3] - df[1])
+    z <- c(z, list(prModItem('cat',
+                             paste(nsingular, 'coefficients not defined because of singularities'))))
 
-  k <- k + 1
   se <- sqrt(diag(x$var))
-  z[[k]] <- list(type='coefmatrix',
-                 list(coef    = x$coefficients,
-                      se      = se,
-                      errordf = rdf))
+  z <- c(z, list(prModItem('coefmatrix',
+                           list(coef    = x$coefficients,
+                                se      = se,
+                                errordf = rdf))))
 
   if(!pen) {
     if(long && p > 0) {
@@ -317,13 +308,29 @@ print.ols <- function(x, digits=4, long=FALSE, coefs=TRUE,
       ll <- lower.tri(correl)
       correl[ll] <- format(round(correl[ll], digits), ...)
       correl[!ll] <- ""
-      k <- k + 1
-      z[[k]] <- list(type='print',
-                     list(correl[-1,  - (p + 1), drop = FALSE],
-                          quote=FALSE, digits = digits))
+      z <- c(z, list(prModItem('print',
+                               list(correl[-1,  - (p + 1), drop = FALSE],
+                                    quote=FALSE, digits = digits))))
     }
   }
 
   prModFit(x, title=title, z, digits=digits,
            coefs=coefs, ...)
 }
+
+## -----------------------------------------------------------------------
+## print.ols was rewritten to use prModItem() (rmsMisc.s) instead of
+## hand-built z[[k]] <- list(type=..., ...) items with a manually
+## tracked k <- k + 1 counter -- part of a broader, explicitly requested
+## refactor across every print.* method that calls prModFit(). No bugs
+## were found in print.ols itself during this pass.
+##
+## Two items retained deliberately as-is, matching the original exactly:
+## the conditional type (if(latex)'latexVector' else 'print') needs no
+## special handling from prModItem() -- the caller computes type before
+## calling it, same as before. The 'cat' item's payload is passed as a
+## bare, un-listed character string (paste(nsingular, ...)), matching
+## the original -- do.call()'s own as.list() coercion means this works
+## identically to an explicit list() wrapper (see rmsMisc.s's corrected
+## prModItem notes for the full reasoning).
+## -----------------------------------------------------------------------

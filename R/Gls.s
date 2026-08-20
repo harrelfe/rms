@@ -275,7 +275,6 @@ print.Gls <- function(x, digits=4, coefs=TRUE,
 
   summary.gls <- getS3method('summary', 'gls')
 
-  k <- 0
   z <- list()
   
   dd <- x$dims
@@ -303,20 +302,16 @@ print.Gls <- function(x, digits=4, coefs=TRUE,
                     'd.f.' = errordf,
                     dec=c(2L,NA,digits,NA))
   names(llike)[1L] <- ltype
-  k <- k + 1L
-  z[[k]] <- list(type='stats',
-                 list(
-                      headings = c('', ''),
-                      data     = list(misc, llike)))
+  z <- c(z, list(prModItem('stats',
+                           list(headings = c('', ''),
+                                data     = list(misc, llike)))))
 
   if(any(names(x)=='var') && length(x$var))
     {
       se <- sqrt(diag(x$var))
       beta <- coef(x)
-      k <- k + 1L
-      z[[k]] <- list(type='coefmatrix',
-                     list(coef = beta, se= se),
-                     title='Using bootstrap variance estimates')
+      z <- c(z, list(prModItem('coefmatrix', list(coef = beta, se= se),
+                               title='Using bootstrap variance estimates')))
     }
   else
     {
@@ -324,47 +319,34 @@ print.Gls <- function(x, digits=4, coefs=TRUE,
       ## Make it use logLik.gls instead
       class(x) <- 'gls'
       s <- summary.gls(x)$tTable
-      k <- k + 1L
-      z[[k]] <- list(type='coefmatrix',
-                     list(coef = s[,'Value'], se = s[,'Std.Error'],
-                          errordf = errordf))
+      z <- c(z, list(prModItem('coefmatrix',
+                               list(coef = s[,'Value'], se = s[,'Std.Error'],
+                                    errordf = errordf))))
     }
   
 
   if (length(x$modelStruct) > 0)
-    {
-      k <- k + 1L
-      z[[k]] <- list(type='print', list(summary(x$modelStruct)))
-    }
+    z <- c(z, list(prModItem('print', list(summary(x$modelStruct)))))
 
   if(x$B > 0)
     {
-      k <- k + 1L
-      z[[k]] <- list(type='cat', list('Bootstrap repetitions:',x$B))
+      z <- c(z, list(prModItem('cat', list('Bootstrap repetitions:', x$B))))
 
       tn <- table(x$Nboot)
       if(length(tn) > 1L)
-        {
-          k < k + 1L
-          z[[k]] <- list(type='print', list(tn), 
-                         title = 'Table of Sample Sizes used in Bootstraps')
-        }
+        z <- c(z, list(prModItem('print', list(tn),
+                                 title = 'Table of Sample Sizes used in Bootstraps')))
       else
-        {
-          k <- k + 1L
-          z[[k]] <- list(type='cat',
-                         list('Bootstraps were all balanced with respect to clusters'))
-        }
+        z <- c(z, list(prModItem('cat',
+                                 list('Bootstraps were all balanced with respect to clusters'))))
       
       dr <- diag(x$varBeta)/diag(x$var)
-      k <- k + 1L
-      z[[k]] <- list(type='print', list(round(dr, 2L)),
-                     title = 'Ratio of Original Variances to Bootstrap Variances')
-      k <- k + 1L
+      z <- c(z, list(prModItem('print', list(round(dr, 2L)),
+                               title = 'Ratio of Original Variances to Bootstrap Variances')))
       r <- round(t(apply(x$boot.Corr, 2L, quantile, probs=c(.025,.975))), 3L)
       colnames(r) <- c('Lower','Upper')
-      z[[k]] <- list(type='print', list(r),
-                     title = 'Bootstrap Nonparametric 0.95 Confidence Limits for Correlation Parameters')
+      z <- c(z, list(prModItem('print', list(r),
+                               title = 'Bootstrap Nonparametric 0.95 Confidence Limits for Correlation Parameters')))
     }
   
   prModFit(x, title=title, z, digits=digits, coefs=coefs, ...)
@@ -402,3 +384,25 @@ latex.Gls <- function(..., file='', inline=FALSE, append=FALSE) {
   cat(z, file=file, append=append, sep='\n')
   invisible()
 }
+
+## -----------------------------------------------------------------------
+## print.Gls was rewritten to use prModItem() (rmsMisc.s) instead of
+## hand-built z[[k]] <- list(type=..., ...) items with a manually
+## tracked k <- k + 1 counter -- part of a broader, explicitly requested
+## refactor across every print.* method that calls prModFit().
+##
+## One genuine, pre-existing bug was found and fixed along the way, not
+## a side effect of typst work: `k < k + 1L` (a comparison, not an
+## assignment -- should have been `k <- k + 1L`), in the branch handling
+## table(x$Nboot) when it has more than one distinct value. Because k
+## was never actually incremented there, the following
+## z[[k]] <- list(type='print', ...) line silently overwrote the
+## immediately preceding item (the 'Bootstrap repetitions:' cat() item)
+## at the same index -- meaning that output never reached prModFit, and
+## never appeared, regardless of output format. This was not a typst-
+## specific issue; it would have silently dropped that line under
+## latex/html/plain too. The c(z, list(prModItem(...))) approach used
+## throughout this refactor eliminates the k counter entirely, which
+## resolves this bug as a direct consequence of the refactor rather
+## than requiring a separate, targeted fix.
+## -----------------------------------------------------------------------

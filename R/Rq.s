@@ -124,7 +124,6 @@ RqFit <- function(fit, wallow=TRUE, passdots=FALSE)
 
 print.Rq <- function(x, digits=4, coefs=TRUE, title, ...)
   {
-    k <- 0
     z <- list()
 
     ftau <- format(round(x$tau, digits))
@@ -139,10 +138,8 @@ print.Rq <- function(x, digits=4, coefs=TRUE, title, ...)
     }
 
     if(length(zz <- x$na.action))
-      {
-        k <- k + 1
-        z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
-      }
+      z <- c(z, list(prModItem(paste('naprint', class(zz)[1], sep='.'),
+                               list(zz))))
     
     s <- x$stats
     n <- s['n']; p <- s['p']; errordf <- n - p; g <- s['g']
@@ -163,21 +160,16 @@ print.Rq <- function(x, digits=4, coefs=TRUE, title, ...)
     disc <- reListclean(g=g)
     headings <- c('', 'Discrimination\nIndex')
     data     <- list(misc, disc)
-    k <- k + 1
-    z[[k]] <- list(type='stats', list(headings=headings, data=data))
+    z <- c(z, list(prModItem('stats', list(headings=headings, data=data))))
 
     s <- x$summary
-    k <- k + 1
-    z[[k]] <- list(type='coefmatrix', 
-                   list(coef = s[,'Value'],
-                        se   = s[,'Std. Error'],
-                        errordf = errordf))
+    z <- c(z, list(prModItem('coefmatrix', 
+                             list(coef = s[,'Value'],
+                                  se   = s[,'Std. Error'],
+                                  errordf = errordf))))
     
     if (length(mes <- attr(x, "na.message")))
-      {
-        k <- k + 1
-        z[[k]] <- list(type='cat', list(mes, '\n'))
-      }
+      z <- c(z, list(prModItem('cat', list(mes, '\n'))))
 
     prModFit(x, title=title, z, digits=digits, coefs=coefs, ...)
   }
@@ -297,4 +289,13 @@ predict.Rq <- function(object, ..., kint=1, se.fit=FALSE)
 ##     special-cases that exact name (nuj == 'Cluster on') and bypasses
 ##     the digit-count/dec logic for it entirely, using specs$code()
 ##     directly instead.
+##
+## [4] print.Rq was rewritten to use prModItem() (rmsMisc.s) instead of
+##     hand-built z[[k]] <- list(type=..., ...) items with a manually
+##     tracked k <- k + 1 counter -- part of a broader, explicitly
+##     requested refactor across every print.* method that calls
+##     prModFit(). No bugs were found in print.Rq itself during this
+##     pass. The 'cat' item's payload (list(mes, '\n')) is passed
+##     through unchanged -- do.call()-style, matching the same shape
+##     already used in print.Gls's 'cat' items.
 ## -----------------------------------------------------------------------

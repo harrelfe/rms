@@ -308,13 +308,11 @@ bjplot <- function(fit, which=1:dim(X)[[2]])
 print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE,
                      title="Buckley-James Censored Data Regression", ...)
 {
-  k <- 0
   z <- list()
 
-  if(length(zz <- x$na.action)) {
-    k <- k + 1
-    z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
-  }
+  if(length(zz <- x$na.action))
+    z <- c(z, list(prModItem(paste('naprint', class(zz)[1], sep='.'),
+                             list(zz))))
   
   stats <- x$stats
   ci    <- x$clusterInfo
@@ -327,16 +325,13 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE,
                      'd.f.'=stats['error d.f.'],
                      dec=c(NA, digits, NA))
   disc <- reListclean(g = stats['g'], gr = stats['gr'], dec=3)
-  k <- k + 1
-  z[[k]] <- list(type='stats',
-                 list(headings=c('', '', 'Discrimination\nIndexes'),
-                      data=list(misc, dfstat, disc)))
+  z <- c(z, list(prModItem('stats',
+                           list(headings=c('', '', 'Discrimination\nIndexes'),
+                                data=list(misc, dfstat, disc)))))
   
   cof <- x$coefficients
   se <- sqrt(diag(x$var))
-  k <- k + 1
-  z[[k]] <- list(type='coefmatrix',
-                 list(coef = cof, se = se))
+  z <- c(z, list(prModItem('coefmatrix', list(coef = cof, se = se))))
 
   p <- length(cof)
   if(long &&  p > 1) {
@@ -346,10 +341,9 @@ print.bj <- function(x, digits=4, long=FALSE, coefs=TRUE,
 	  ll <- lower.tri(correl)
 	  correl[ll] <- format(round(correl[ll], digits=max(digits-2,2)))
 	  correl[!ll] <- ""
-    k <- k + 1
-    z[[k]] <- list(type='print',
-                   list(correl[-1, - p, drop = FALSE], quote = FALSE),
-                   title='Correlation Matrix for Parameter Estimates')
+    z <- c(z, list(prModItem('print',
+                             list(correl[-1, - p, drop = FALSE], quote = FALSE),
+                             title='Correlation Matrix for Parameter Estimates')))
 	}
   
   prModFit(x, title=title, z, digits=digits, coefs=coefs, ...)
@@ -445,3 +439,13 @@ latex.bj <- function(..., inline=FALSE, file='', append=FALSE) {
   invisible()
 }
 
+## -----------------------------------------------------------------------
+## print.bj was rewritten to use prModItem() (rmsMisc.s) instead of
+## hand-built z[[k]] <- list(type=..., ...) items with a manually
+## tracked k <- k + 1 counter -- part of a broader, explicitly requested
+## refactor across every print.* method that calls prModFit(), not a
+## correction to anything broken in this specific file. No bugs were
+## found in print.bj itself during this pass; unlike some of its sibling
+## files (see e.g. Gls.s's own notes), this one's k-counter usage was
+## already correct throughout.
+## -----------------------------------------------------------------------

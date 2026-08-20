@@ -575,20 +575,17 @@ print.cph <- function(x, digits=4, r2=c(0,2,4), table=TRUE, conf.int=FALSE,
                       coefs=TRUE, pg=FALSE,
                       title='Cox Proportional Hazards Model', ...)
 {
-  k <- 0
   z <- list()
 
-  if(length(zz <- x$na.action)) {
-    k <- k + 1
-    z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
-  }
+  if(length(zz <- x$na.action))
+    z <- c(z, list(prModItem(paste('naprint', class(zz)[1], sep='.'),
+                             list(zz))))
 
   if(table && length(x$n) && is.matrix(x$n)) {
     ftab <- x$n
     ndm <- names(dimnames(ftab))
     if(length(ndm)) names(dimnames(ftab)) <- ifelse(ndm == 'Status', '', ndm)
-    k <- k + 1
-    z[[k]] <- list(type='print', list(ftab))
+    z <- c(z, list(prModItem('print', list(ftab))))
   }
 
   if(length(x$coef)) {
@@ -614,17 +611,15 @@ print.cph <- function(x, digits=4, r2=c(0,2,4), table=TRUE, conf.int=FALSE,
                         gr = if(pg) stats['gr'],
                         dec=3)
 
-    k <- k + 1
     headings <- c('', 'Model Tests', 'Discrimination\nIndexes')
     data     <- list(misc, lr, disc)
-    z[[k]] <- list(type='stats', list(headings=headings, data=data))
+    z <- c(z, list(prModItem('stats', list(headings=headings, data=data))))
 
     beta <- x$coef
     se <- sqrt(diag(x$var))
-    k <- k + 1
-    z[[k]] <- list(type='coefmatrix',
-                   list(coef = x$coef,
-                        se   = sqrt(diag(x$var))))
+    z <- c(z, list(prModItem('coefmatrix',
+                             list(coef = x$coef,
+                                  se   = sqrt(diag(x$var))))))
     if(conf.int) {
 
       zcrit <- qnorm((1 + conf.int)/2)
@@ -636,11 +631,19 @@ print.cph <- function(x, digits=4, r2=c(0,2,4), table=TRUE, conf.int=FALSE,
                                     round(100 * conf.int, 2), sep = ""),
                               paste("upper .",
                                     round(100 * conf.int, 2), sep = "")))
-      k <- k + 1
-      z[[k]] <- list(type='print', list(tmp, digits=digits))
+      z <- c(z, list(prModItem('print', list(tmp, digits=digits))))
     }
   }
 
   prModFit(x, title=title,
            z, digits=digits, coefs=coefs, ...)
 }
+
+## -----------------------------------------------------------------------
+## print.cph was rewritten to use prModItem() (rmsMisc.s) instead of
+## hand-built z[[k]] <- list(type=..., ...) items with a manually
+## tracked k <- k + 1 counter -- part of a broader, explicitly requested
+## refactor across every print.* method that calls prModFit(), not a
+## correction to anything broken in this specific file. No bugs were
+## found in print.cph itself during this pass.
+## -----------------------------------------------------------------------

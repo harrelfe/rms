@@ -1,7 +1,6 @@
 print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
                       coefs=TRUE, pg=FALSE, title, ...)
 {
-  k <- 0
   z <- list()
 
   dist <- x$dist
@@ -39,16 +38,14 @@ print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
                 'Discrimination\nIndexes')
 
   data <- list(counts, lr, disc)
-  k <- k + 1
-  z[[k]] <- list(type='stats', list(headings=headings, data=data))
+  z <- c(z, list(prModItem('stats', list(headings=headings, data=data))))
 
   summary.survreg <- getS3method('summary', 'survreg')
   if(!x$fail) x$fail <- NULL    # summary.survreg uses NULL for OK
   s <- summary.survreg(x, correlation=correlation)
-  k <- k + 1
-  z[[k]] <- list(type='coefmatrix',
-                 list(coef = s$table[,'Value'],
-                      se   = s$table[,'Std. Error']))
+  z <- c(z, list(prModItem('coefmatrix',
+                           list(coef = s$table[,'Value'],
+                                se   = s$table[,'Std. Error']))))
 
   if (correlation && length(correl <- s$correlation)) {
     p <- ncol(correl)
@@ -57,10 +54,9 @@ print.psm <- function(x, correlation = FALSE, digits=4, r2=c(0, 2, 4),
       ll <- lower.tri(correl)
       correl[ll] <- format(round(correl[ll], digits = digits))
       correl[!ll] <- ""
-      k <- k + 1
-      z[[k]] <- list(type='print',
-                     list(correl[-1, -p, drop = FALSE], quote = FALSE),
-                     title='Correlation of Coefficients')
+      z <- c(z, list(prModItem('print',
+                               list(correl[-1, -p, drop = FALSE], quote = FALSE),
+                               title='Correlation of Coefficients')))
     }
   }
 
@@ -176,3 +172,16 @@ print.summary.survreg2 <-
     cat("\n")
     invisible(NULL)
   }
+
+## -----------------------------------------------------------------------
+## print.psm was rewritten to use prModItem() (rmsMisc.s) instead of
+## hand-built z[[k]] <- list(type=..., ...) items with a manually
+## tracked k <- k + 1 counter -- part of a broader, explicitly requested
+## refactor across every print.* method that calls prModFit(). No bugs
+## were found in print.psm itself during this pass.
+##
+## print.summary.survreg2, later in this file, is unrelated and was not
+## touched -- it doesn't call prModFit() at all (a separate, older-style
+## print method for a different class), so it falls outside the scope
+## of this refactor despite the print.* name pattern.
+## -----------------------------------------------------------------------

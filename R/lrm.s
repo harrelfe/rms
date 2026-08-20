@@ -161,29 +161,20 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
   latex <- prType() == 'latex'
 
   z <- list()
-  k <- 0
 
   lf <- length(x$freq)
-  if(lf > 3 && lf <= 20) {
-    k <- k + 1
-    z[[k]] <- list(type='print', list(x$freq),
-                   title='Frequencies of Responses')
-  }
-  if(length(x$sumwty)) {
-    k <- k + 1
-    z[[k]] <- list(type='print', list(x$sumwty),
-                   title='Sum of Weights by Response Category')
-  }
-  if(!is.null(x$nmiss)) {  ## for backward compatibility
-    k <- k + 1
-    z[[k]] <- list(type='print', list(x$nmiss),
-                   title='Frequencies of Missing Values Due to Each Variable')
-  }
-  else if(length(x$na.action)) {
-    k <- k + 1
-    z[[k]] <- list(type=paste('naprint',class(x$na.action),sep='.'),
-                   list(x$na.action))
-  }
+  if(lf > 3 && lf <= 20)
+    z <- c(z, list(prModItem('print', list(x$freq),
+                             title='Frequencies of Responses')))
+  if(length(x$sumwty))
+    z <- c(z, list(prModItem('print', list(x$sumwty),
+                             title='Sum of Weights by Response Category')))
+  if(!is.null(x$nmiss))   ## for backward compatibility
+    z <- c(z, list(prModItem('print', list(x$nmiss),
+                             title='Frequencies of Missing Values Due to Each Variable')))
+  else if(length(x$na.action))
+    z <- c(z, list(prModItem(paste('naprint',class(x$na.action),sep='.'),
+                             list(x$na.action))))
 
   ns <- x$non.slopes
 
@@ -195,9 +186,8 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
       sqrt(diag(pm))
     penalty.scale <- c(rep(0, ns), psc)
     cof <- matrix(x$coef[- (1 : ns)], ncol=1)
-    k <- k + 1
-    z[[k]] <- list(type='print', list(as.data.frame(x$penalty, row.names='')),
-                   title='Penalty factors')
+    z <- c(z, list(prModItem('print', list(as.data.frame(x$penalty, row.names='')),
+                             title='Penalty factors')))
     penaltyFactor <- as.vector(t(cof) %*% pm %*% cof)
   }
 
@@ -248,17 +238,31 @@ print.lrm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE,
                    'Rank Discrim.\nIndexes')
 
   data <- list(misc, lr, disc, discr)
-  k <- k + 1
-  z[[k]] <- list(type='stats', list(headings=headings, data=data))
+  z <- c(z, list(prModItem('stats', list(headings=headings, data=data))))
 
-  if(coefs) {
-    k <- k + 1
-    z[[k]] <- list(type='coefmatrix',
-                   list(coef=cof, se=sqrt(vv),
-                        aux=if(length(pm)) penalty.scale,
-                        auxname='Penalty Scale'))
-  }
+  if(coefs)
+    z <- c(z, list(prModItem('coefmatrix',
+                             list(coef=cof, se=sqrt(vv),
+                                  aux=if(length(pm)) penalty.scale,
+                                  auxname='Penalty Scale'))))
 
   prModFit(x, title=title, z, digits=digits,
            coefs=coefs, ...)
 }
+
+## -----------------------------------------------------------------------
+## print.lrm was rewritten to use prModItem() (rmsMisc.s) instead of
+## hand-built z[[k]] <- list(type=..., ...) items with a manually
+## tracked k <- k + 1 counter -- part of a broader, explicitly requested
+## refactor across every print.* method that calls prModFit(). No bugs
+## were found in print.lrm itself during this pass.
+##
+## Deliberately NOT changed here: `names(x$freq) <- paste(if(latex)'~~'
+## else ' ', ...)` -- a two-way latex/else spacing check for short
+## x$freq row labels, missing a dedicated typst case (typst falls into
+## the plain-space "else" branch rather than getting its own treatment,
+## e.g. "#h(...)"). This is cosmetic, not broken output, so it wasn't
+## treated as one of the "errors" this pass was scoped to fix -- flagged
+## here for a possible separate, explicit decision. The identical
+## pattern also appears in print.orm (see that file's own notes).
+## -----------------------------------------------------------------------

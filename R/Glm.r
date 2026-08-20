@@ -152,14 +152,11 @@ Glm <-
 print.Glm <- function(x, digits=4, coefs=TRUE,
                       title='General Linear Model', ...)
 {
-  k <- 0
   z <- list()
 
   if(length(zz <- x$na.action))
-    {
-      k <- k + 1
-      z[[k]] <- list(type=paste('naprint', class(zz)[1], sep='.'), list(zz))
-    }
+    z <- c(z, list(prModItem(paste('naprint', class(zz)[1], sep='.'),
+                             list(zz))))
 
   cof <- coef(x)
   stats <- x$stats
@@ -175,13 +172,10 @@ print.Glm <- function(x, digits=4, coefs=TRUE,
                       'P(> chi2)'    = stats['P'], dec=c(2, NA, -4))
   headings <- c('', 'Model Likelihood\nRatio Test')
   data <- list(misc, lr)
-  k <- k + 1
-  z[[k]] <- list(type='stats', list(headings=headings, data=data))
+  z <- c(z, list(prModItem('stats', list(headings=headings, data=data))))
 
   se <- sqrt(diag(vcov(x)))
-  k <- k + 1
-  z[[k]] <- list(type='coefmatrix',
-                 list(coef=cof, se=se))
+  z <- c(z, list(prModItem('coefmatrix', list(coef=cof, se=se))))
   prModFit(x, title=title, z, digits=digits, coefs=coefs, ...)
 }
 
@@ -249,3 +243,12 @@ latex.Glm <- function(..., file='', append=FALSE, inline=FALSE) {
   cat(z, file=file, append=append, sep='\n')
   invisible()
 }
+
+## -----------------------------------------------------------------------
+## print.Glm was rewritten to use prModItem() (rmsMisc.s) instead of
+## hand-built z[[k]] <- list(type=..., ...) items with a manually
+## tracked k <- k + 1 counter -- part of a broader, explicitly requested
+## refactor across every print.* method that calls prModFit(), not a
+## correction to anything broken in this specific file. No bugs were
+## found in print.Glm itself during this pass.
+## -----------------------------------------------------------------------
