@@ -107,10 +107,9 @@ print.validate <- function(x, digits=4, B=Inf, ...)
 {
 
   lang <- prType()
-  if(lang == 'html') return(html.validate(x, digits=digits, B=B, ...))
-  if(lang %in% c('latex', 'typst'))
-    return(latex.validate(x, digits=digits, B=B, ...))
-  ## latex/typst auto-dispatch -- see note [1] at end of file
+  ## unified dispatch for latex/html/typst -- see note [1] at end of
+  ## file for why this collapsed from a two-way check
+  if(lang != 'plain') return(latex.validate(x, digits=digits, B=B, ...))
 
     kept <- attr(x, 'kept'); attr(x, 'kept') <- NULL
     print(round(unclass(x), digits), ...)

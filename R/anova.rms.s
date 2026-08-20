@@ -605,36 +605,64 @@ print.anova.rms <- function(x, which=c('none','subscripts',
 ## handling is self-contained and can be extended independently. See
 ## end of file for the detailed reasoning behind each format's specific
 ## choices.
-## show_rownames=FALSE (new, default TRUE preserves existing behavior):
-## omits the row-label column entirely, for tables with no meaningful
-## row names -- see note [6] at end of file. linebreak="\n" (new,
-## unconditional): allows multi-line column headers (e.g.
-## "Original\nSample"), harmless for headers without embedded newlines.
+## show_rownames=FALSE: omits the row-label column entirely, for tables
+## with no meaningful row names (validate.ols's marker/frequency
+## tables). linebreak="\n" (unconditional): multi-line column headers,
+## harmless for headers without embedded newlines. align_data/
+## bold_header/header_rule/vertical_borders/width: new, all defaulting
+## to prior behavior exactly (right-aligned data, plain non-bold header,
+## no rule, no borders, no explicit width) -- added to absorb
+## prStats/stats_tiny_table's styling needs, previously a separate,
+## partially-duplicated implementation. See note [6] at end of file.
 rms_tiny_table_core <- function(d, lang, fontsize = NULL,
-                                show_rownames = TRUE) {
+                                show_rownames = TRUE, align_data = 'r',
+                                bold_header = FALSE, header_rule = FALSE,
+                                vertical_borders = FALSE, width = NULL) {
   dd <- if(show_rownames) {
     rowlab <- rownames(d)
     tmp <- data.frame(Var = rowlab, unclass(d), check.names = FALSE)
     colnames(tmp) <- c('', colnames(d))
     tmp
-  } else as.data.frame(unclass(d), check.names = FALSE)
+  } else if(is.data.frame(d)) d
+    else as.data.frame(unclass(d), check.names = FALSE)
+  ## is.data.frame(d) check added -- see end-of-file note on the
+  ## stats_tiny_table regression this fixed: the unclass()/as.data.frame()
+  ## round-trip was new (the original stats_tiny_table called tt()
+  ## directly on its data.frame, no conversion step), and produced
+  ## corrupted output specifically for stats_tiny_table's multi-line,
+  ## marked-up column headers -- confirmed from a real compile error.
+  ## Every current caller already passes a proper data.frame here, so
+  ## skipping the round-trip when one is already given sidesteps the
+  ## issue without depending on fully diagnosing the exact interaction.
   nc <- ncol(dd)
+  nr <- nrow(dd)
   jdata <- if(show_rownames) 2:nc else 1:nc
 
-  x <- tinytable::tt(dd, output = lang)
+  x <- if(length(width)) tinytable::tt(dd, output = lang, width = width)
+       else tinytable::tt(dd, output = lang)
   x <- tinytable::format_tt(x, j = 1:nc, escape = FALSE)
   x <- tinytable::format_tt(x, i = 0,    escape = FALSE, linebreak = "\n")
   if(show_rownames) x <- tinytable::style_tt(x, j = 1, align = 'l')
-  x <- tinytable::style_tt(x, j = jdata, align = 'r')
-  x <- tinytable::style_tt(x, i = 0,     align = 'c')
+  x <- tinytable::style_tt(x, j = jdata, align = align_data)
+  x <- tinytable::style_tt(x, i = 0,     align = 'c', bold = bold_header)
+  if(header_rule) x <- tinytable::style_tt(x, i = 0, j = 1:nc, line = "b")
+  if(vertical_borders) {
+    x <- tinytable::style_tt(x, i = 0:nr, j = 1:nc, line = "l")
+    x <- tinytable::style_tt(x, i = 0:nr, j = nc,   line = "r")
+  }
   x <- tinytable::theme_striped(x)
   if(length(fontsize) && fontsize != 1)
     x <- tinytable::style_tt(x, fontsize = fontsize)
   x
 }
 
-rms_tiny_table_finalize_latex <- function(x) {
-  x <- tinytable::theme_latex(x, environment_table = FALSE)
+## inner=: optional raw tabularray inner options (e.g. colsep/rowsep
+## tuning), new, defaulting to NULL (prior behavior: no inner= passed).
+rms_tiny_table_finalize_latex <- function(x, inner = NULL) {
+  x <- if(length(inner))
+         tinytable::theme_latex(x, environment_table = FALSE, inner = inner)
+       else
+         tinytable::theme_latex(x, environment_table = FALSE)
   result <- tinytable::save_tt(x, 'latex')
   paste0('\\begin{center}\n', result, '\n\\end{center}')
 }
@@ -660,11 +688,19 @@ rms_tiny_table_caption_typst <- function(caption) {
 }
 
 rms_tiny_table <- function(d, lang, caption = NULL, fontsize = NULL,
-                           show_rownames = TRUE) {
+                           show_rownames = TRUE, align_data = 'r',
+                           bold_header = FALSE, header_rule = FALSE,
+                           vertical_borders = FALSE, width = NULL,
+                           latex_inner = NULL) {
   x <- rms_tiny_table_core(d, lang, fontsize = fontsize,
-                           show_rownames = show_rownames)
+                           show_rownames = show_rownames,
+                           align_data = align_data,
+                           bold_header = bold_header,
+                           header_rule = header_rule,
+                           vertical_borders = vertical_borders,
+                           width = width)
   result <- switch(lang,
-                   latex = rms_tiny_table_finalize_latex(x),
+                   latex = rms_tiny_table_finalize_latex(x, inner = latex_inner),
                    html  = rms_tiny_table_finalize_html(x),
                    typst = rms_tiny_table_finalize_typst(x))
   if(length(caption)) {
@@ -1074,7 +1110,7 @@ plot.anova.rms <-
 ##     per format, so it should hold even if a given format's wrapping
 ##     convention isn't fully known or changes later.
 ##
-## [6] rms_tiny_table_core/rms_tiny_table extended with two new,
+## [6] rms_tiny_table_core/rms_tiny_table extended with several new,
 ##     backward-compatible optional parameters (defaults preserve prior
 ##     behavior exactly, so anova.rms's and summary.rms's existing calls
 ##     are unaffected): show_rownames=FALSE omits the row-label column
@@ -1085,4 +1121,62 @@ plot.anova.rms <-
 ##     column headers (e.g. "Original\nSample") -- harmless for headers
 ##     without embedded newlines, and reusing the exact mechanism
 ##     already confirmed working for prStats' multi-line headers.
+##
+## [7] Refactoring pass across prModFit/prStats (rmsMisc.s), prompted by
+##     a review specifically looking for redundancy across the model-fit
+##     print/latex methods and prModFit, once all of anova.rms/
+##     summary.rms/validate.ols/prModFit/prStats existed side by side:
+##
+##     coef_tiny_table (rmsMisc.s, prModFit's coefficient table) was
+##     deleted entirely -- comparing it directly against
+##     rms_tiny_table_core, it was a strict subset (same data.frame/
+##     escape/alignment/centering/striping construction, built before
+##     rms_tiny_table existed and never reconciled with it afterward).
+##     Its one genuinely new contribution, the discovery that cph/Gls/
+##     psm's real output wraps prModFit's content in an outer #block[ of
+##     unknown origin with no definite width (breaking simple
+##     #align(center) alone), was already independently incorporated
+##     into rms_tiny_table_finalize_typst's #block(width:100%) wrap, so
+##     nothing was lost by removing it. prModFit's one call site now
+##     calls rms_tiny_table(U, lang) directly.
+##
+##     stats_tiny_table (rmsMisc.s, prStats' final table) was NOT a
+##     simple subset -- it has real, hard-won features rms_tiny_table
+##     didn't: no row-label column at all (every column holds
+##     dual-justified "label #h(1fr) value" content via hfill, not a
+##     separate label + right-aligned value column), a bold header with
+##     a bottom rule, vertical column borders, column-count-scaled
+##     width, and format-specific spacing tuning (LaTeX colsep/rowsep,
+##     Typst fontsize reduction) -- each added after a real bug surfaced
+##     during testing. Extended rms_tiny_table's parameters (align_data,
+##     bold_header, header_rule, vertical_borders, width, latex_inner --
+##     see note [6] immediately above) to cover all of these, all
+##     defaulting to prior behavior exactly. stats_tiny_table itself is
+##     now a thin wrapper: applies its own no-hyphenation header wrapping
+##     (genuinely specific to this table, kept local) and computes its
+##     format-specific width/fontsize/inner values, then makes one call
+##     to rms_tiny_table() with those as overrides.
+##
+## [8] Real regression, caught immediately via a real LaTeX compile
+##     error ("Missing $ inserted") on the very next test after note
+##     [7]'s refactor: rms_tiny_table_core's show_rownames=FALSE branch
+##     added an unclass(d)/as.data.frame(..., check.names=FALSE)
+##     round-trip that the original stats_tiny_table() never had --
+##     it called tt() directly on its already-built data.frame, no
+##     conversion step at all. validate.ols's varin/tkept tables also
+##     go through this same show_rownames=FALSE branch and were already
+##     confirmed working, so the round-trip itself isn't universally
+##     broken; the difference is that stats_tiny_table's column headers
+##     are multi-line and carry embedded Typst/LaTeX markup (built via
+##     colnames(d) <- labels), unlike validate.ols's simple column
+##     names, and something about that combination interacting with the
+##     round-trip corrupted the output -- confirmed directly from the
+##     generated .tex file, which showed an entire column's data
+##     collapsed into one cell as literal, deparsed R vector syntax
+##     (c("Obs~\\hfill 960", ...)) rather than being used as actual
+##     per-row values. Rather than fully diagnose the exact
+##     unclass()/as.data.frame() interaction, fixed by skipping the
+##     round-trip entirely when d is already a data.frame -- true for
+##     every current caller, so this sidesteps the issue without
+##     depending on understanding it completely.
 ## -----------------------------------------------------------------------

@@ -306,31 +306,29 @@ summary.rms <- function(object, ..., ycut=NULL,
 
 print.summary.rms <- function(x, ..., table.env=FALSE)
 {
-  switch(prType(),
-         latex = return(latex.summary.rms(x, ..., file='', table.env=table.env)),
-         html  = return(html.summary.rms(x, ...)),
-         typst = return(latex.summary.rms(x, ..., file='', table.env=table.env)),
-         ## typst dispatch -- see note [1] at end of file
-         plain = {
-  
-           cstats <- dimnames(x)[[1]]
-           for(i in 1 : 7) cstats <- cbind(cstats, format(signif(x[, i], 5)))
-           dimnames(cstats) <- list(rep("", nrow(cstats)), 
-                                    c("Factor", dimnames(x)[[2]][1 : 7]))
-           cat(attr(x,"heading"), "\n\n")
-           print(cstats, quote=FALSE)
-           if((A <- attr(x, "adjust")) != "") cat("\nAdjusted to:", A, "\n")
-           blab <- switch(attr(x, 'conf.type'),
-              'bootstrap nonparametric percentile' = 
-              'Bootstrap nonparametric percentile confidence intervals',
-              'bootstrap BCa' = 'Bootstrap BCa confidence intervals',
-              'basic bootstrap' = 'Basic bootstrap confidence intervals',
-              HPD = 'Bayesian highest posterior density intervals',
-              '')
-           if(blab != '') cat('\n', blab, '\n', sep='')
-           cat('\n')
-         }
-         )
+  lang <- prType()
+
+  ## unified dispatch for latex/html/typst -- see note [1] at end of
+  ## file for why this collapsed from a three-way switch
+  if(lang != 'plain')
+    return(latex.summary.rms(x, ..., file='', table.env=table.env))
+
+  cstats <- dimnames(x)[[1]]
+  for(i in 1 : 7) cstats <- cbind(cstats, format(signif(x[, i], 5)))
+  dimnames(cstats) <- list(rep("", nrow(cstats)), 
+                           c("Factor", dimnames(x)[[2]][1 : 7]))
+  cat(attr(x,"heading"), "\n\n")
+  print(cstats, quote=FALSE)
+  if((A <- attr(x, "adjust")) != "") cat("\nAdjusted to:", A, "\n")
+  blab <- switch(attr(x, 'conf.type'),
+     'bootstrap nonparametric percentile' = 
+     'Bootstrap nonparametric percentile confidence intervals',
+     'bootstrap BCa' = 'Bootstrap BCa confidence intervals',
+     'basic bootstrap' = 'Basic bootstrap confidence intervals',
+     HPD = 'Bayesian highest posterior density intervals',
+     '')
+  if(blab != '') cat('\n', blab, '\n', sep='')
+  cat('\n')
   invisible()
 }
 

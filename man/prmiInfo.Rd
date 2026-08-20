@@ -16,7 +16,7 @@ nothing
 Print Information About Impact of Imputation
 }
 \details{
-For the results of \code{processMI.fit.mult.impute} prints or writes html (the latter if \code{options(prType='html')} is in effect) summarizing various correction factors related to missing data multiple imputation.
+For the results of \code{processMI.fit.mult.impute} prints or renders a formatted table (html, LaTeX, or Typst, according to \code{options(prType=)}) summarizing various correction factors related to missing data multiple imputation.
 }
 \examples{
 \dontrun{
