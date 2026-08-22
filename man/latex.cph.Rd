@@ -7,13 +7,14 @@
 \alias{latex.psm}
 \title{LaTeX Representation of a Fitted Cox Model}
 
-\description{Creates a file containing a LaTeX representation of the fitted model.}
+\description{Renders a LaTeX, html, or Typst representation of the
+fitted model, according to \code{options(prType=)}.}
 
 \usage{
 \method{latex}{cph}(object, title,
       file='', 
       append=FALSE, surv=TRUE, maxt=FALSE, which=NULL, varnames, columns=65, 
-      inline=FALSE, before=if(inline)"" else "& &", after="", dec=3,
+      inline=FALSE, before=if(inline)"" else "&", after="", dec=3,
       pretrans=TRUE, caption, digits=.Options$digits, size="",
       \dots) # for cph fit
 
@@ -73,7 +74,7 @@ last entry in \code{object$surv.summary}, underlying survival estimates at
 the name of the created file, with class \code{c("latex","file")}.  This
 object works with latex viewing and printing commands in Hmisc.  If
 \code{file=''} and \code{options(prType=x} is in effect, where \code{x}
-is \code{"html", "markdown"} or \code{"md"}, the result is run through
+is \code{"html", "typst", "markdown"} or \code{"md"}, the result is run through
 \code{knitr::asis_output} so that it will be rendered correctly no
 matter which options are in effect in the chunk header.
 }
@@ -97,6 +98,8 @@ w              #displays image, if viewer installed and file given above
 latex(f)   # send LaTeX code to the console for knitr
 options(prType='html')
 latex(f)       # for use with knitr and R Markdown/Quarto using MathJax
+options(prType='typst')
+latex(f)       # for use with knitr and Quarto Typst output
 }
 }
 \keyword{regression}

@@ -42,7 +42,7 @@ and other fits.  No \code{validate} or \code{calibrate} methods exist for
 \details{
 For the \code{print} method, format of output is controlled by the user
 previously running \code{options(prType="lang")} where \code{lang} is
-\code{"plain"} (the default), \code{"latex"}, or \code{"html"}.
+\code{"plain"} (the default), \code{"latex"}, \code{"html"}, or \code{"typst"}.
 }
 \examples{
 

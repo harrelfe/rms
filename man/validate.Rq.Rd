@@ -19,9 +19,6 @@ dichotomizing \code{y}. This can be used to obtain an ordinary receiver
 operating characteristic curve area using the formula \eqn{0.5(D_{xy} +
 1)}.  See \code{\link{predab.resample}} for information about confidence limits
 and for the list of resampling methods.
-
-The LaTeX \code{needspace} package must be in effect to use the
-\code{latex} method. 
 }
 \usage{
 # fit <- fitting.function(formula=response ~ terms, x=TRUE, y=TRUE)

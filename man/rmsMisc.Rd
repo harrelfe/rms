@@ -40,11 +40,13 @@
 \alias{print.lrtest}
 \alias{survest.rms}
 \alias{prModFit}
+\alias{prModItem}
 \alias{prStats}
 \alias{reListclean}
 \alias{formatNP}
 \alias{latex.naprint.delete}
 \alias{html.naprint.delete}
+\alias{typst.naprint.delete}
 \alias{removeFormulaTerms}
 \title{Miscellaneous Design Attributes and Utility Functions}
 \description{
@@ -129,15 +131,24 @@ with levels of categorical predictors changed.  These two functions are
 vary may be specified without values (after an equals sign).
 
 \code{prModFit} is the workhorse for the \code{print} methods for
-highest-level \code{rms} model fitting functions, handling both regular,
-html, and LaTeX printing, the latter two resulting in html or LaTeX code
-written to the console, automatically ready for \code{knitr}.  The work
-of printing 
+highest-level \code{rms} model fitting functions, handling regular,
+html, LaTeX, and Typst printing (see \code{options(prType=)}), the
+latter three resulting in html, LaTeX, or Typst code written to the
+console, automatically ready for \code{knitr}.  The work of printing
 summary statistics is done by \code{prStats}, which uses the Hmisc
 \code{print.char.matrix} function to print overall model statistics if
-\code{options(prType=)} was not set to \code{"latex"} or \code{"html"}.
-Otherwise it generates customized LaTeX or html
-code.  The LaTeX longtable and epic packages must be in effect to use LaTeX.
+\code{options(prType=)} was not set to \code{"latex"}, \code{"html"},
+or \code{"typst"}.  Otherwise it renders the table via the
+\code{tinytable} package, which for LaTeX output requires the LaTeX
+package \code{tabularray}.
+
+\code{prModItem} is a constructor for a single element of the \code{w}
+list that \code{print.*} methods build up and pass to \code{prModFit}
+(e.g. \code{print.lrm}, \code{print.cph}, \code{print.ols}).  \code{w}
+itself is not exported and is not intended to be constructed directly
+by users of \code{rms}; it is documented here for developers extending
+\code{rms}-style model fitting functions with their own \code{print}
+methods.
 
 \code{reListclean} allows one to rename a subset of a named list,
 ignoring the previous names and not concatenating them as \R does.  It
@@ -156,10 +167,15 @@ If \code{pvalue=TRUE}, it will replace
 formatted values with "< 0.0001" (if \code{digits=4}).
 
 \code{latex.naprint.delete} will, if appropriate, use LaTeX to draw a
-dot chart of frequency of variable \code{NA}s related to model fits.
+dot chart of frequency of variable \code{NA}s related to model fits,
+via \code{latexDotchart}, which draws using LaTeX's \code{picture}
+environment and requires the LaTeX \code{epic} package to be in effect.
 \code{html.naprint.delete} does the same thing in the RStudio R markdown
 context, using \code{Hmisc:dotchartp} (which uses \code{plotly}) for
-drawing any needed dot chart.
+drawing any needed dot chart.  \code{typst.naprint.delete}, used when
+\code{options(prType='typst')}, does the same thing for Typst output,
+drawing the dot chart as native Typst vector markup rather than an
+embedded image.  It is not exported.
 
 \code{removeFormulaTerms} removes one or more terms from a model
 formula, using strictly character manipulation.  This handles problems
@@ -218,19 +234,23 @@ Newlevels(fit, \dots)
 \method{Newlabels}{rms}(fit, labels, \dots)
 \method{Newlevels}{rms}(fit, levels, \dots)
 
+prModItem(type, payload, title=NULL, tex=NULL, preskip=NULL)
+
 prModFit(x, title, w, digits=4, coefs=TRUE, footer=NULL,
          lines.page=40, long=TRUE, needspace, subtitle=NULL, \dots)
 
-prStats(labels, w, lang=c("plain", "latex", "html"))
+prStats(labels, w, lang=c("plain", "latex", "html", "typst"))
 
 reListclean(\dots, dec=NULL, na.rm=TRUE)
 
 formatNP(x, digits=NULL, pvalue=FALSE,
-         lang=c("plain", "latex", "html"))
+         lang=c("plain", "latex", "html", "typst"))
 
 \method{latex}{naprint.delete}(object, file="", append=TRUE, \dots)
 
 \method{html}{naprint.delete}(object, \dots)
+
+typst.naprint.delete(object, \dots)
 
 removeFormulaTerms(form, which=NULL, delete.response=FALSE)
 
@@ -293,7 +313,12 @@ predictor).  For \code{AIC.rms}, \code{type} specifies the basis on
 which to return AIC.  The default is minus twice the maximized log
 likelihood plus \code{k} times the degrees of freedom counting
 intercept(s).  Specify \code{type='chisq'} to get a penalized model
-likelihood ratio chi-square instead.  
+likelihood ratio chi-square instead.  For \code{prModItem}, a character
+string naming either one of \code{prModFit}'s special-cased item kinds
+(\code{"stats"}, \code{"coefmatrix"}, or the \code{naprint.*} family),
+or, generically, the name of any function to call via
+\code{do.call(type, payload)} (e.g. \code{"print"}, \code{"cat"},
+\code{"latexVector"}).
 }
 \item{term.order}{
 1 for all parameters, 2 for all parameters associated with either nonlinear
@@ -331,7 +356,9 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   Set to \code{""} to suppress the title.}
 \item{w}{For \code{prModFit}, a special list of lists, which each list
   element specifying information about a block of information to include
-  in the \code{print.} output for a fit.  For \code{prStats}, \code{w}
+  in the \code{print.} output for a fit.  Each element is typically
+  constructed with \code{prModItem} rather than built up by hand.  For
+  \code{prStats}, \code{w}
   is a list of statistics to print, elements of which can be vectors
   that are stacked vertically.  Unnamed elements specify number of
   digits to the right of the decimal place to which to round (\code{NA}
@@ -340,6 +367,16 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
   that the value is a P-value to be formatted with \code{formatNP}.
   Digits are recycled as needed. 
 }
+\item{payload}{For \code{prModItem}, the content for this item.  Its
+  shape depends on \code{type}: a \code{do.call}-style argument list for
+  the generic-dispatch types, or a type-specific named list for
+  \code{"stats"} (\code{list(headings=, data=)}) or \code{"coefmatrix"}
+  (\code{list(coef=, se=, \dots)}).}
+\item{tex}{For \code{prModItem}, an optional logical passed through as
+  the item's \code{tex} field.}
+\item{preskip}{For \code{prModItem}, an optional value passed through
+  as the item's \code{preskip} field, controlling vertical space before
+  the item.}
 \item{digits}{number of digits to the right of the decimal point, for
   formatting numeric values in printed output}
 \item{coefs}{specify \code{coefs=FALSE} to suppress printing the table
@@ -352,7 +389,7 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
 \item{append}{specify \code{append=FALSE} when using \code{file} and you
 	want to start over instead of adding to an existing file.}
 \item{lang}{specifies the typesetting language: plain text, LaTeX, or html}
-\item{lines.page}{see \code{\link[Hmisc]{latex}}}
+\item{lines.page}{kept for signature compatibility; not currently used}
 \item{long}{set to \code{FALSE} to suppress printing of formula and
   certain other model output}
 \item{needspace}{optional character string to insert inside a LaTeX

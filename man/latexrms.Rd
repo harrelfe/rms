@@ -11,15 +11,15 @@ model-specific typesetting there is \code{latex.lrm}, \code{latex.cph},
 arguments that are specific to \code{cph} models.
 \code{latexrms} is the core function which is
 called internally by \code{latexrms} (which is called by
-\code{latex.cph}, \code{latex.ols}, etc.).  \code{html} and R
-Markdown-compatible markup (using MathJax) are written if
-\code{options(prType='html')}.
+\code{latex.cph}, \code{latex.ols}, etc.).  html (using MathJax) and
+Typst (using its own native math typesetting) markup are written
+according to \code{options(prType=)}.
 }
 \usage{
 latexrms(object,
  file='',
  append=FALSE, which=1:p, varnames, columns=65, prefix=NULL, inline=FALSE,
- before=if(inline)"" else "& &", after="", intercept, pretrans=TRUE,
+ before=if(inline)"" else "&", after="", intercept, pretrans=TRUE,
  digits=.Options$digits, size="")
 }
 \arguments{
@@ -28,7 +28,8 @@ a fit object created by a fitting function in the \code{rms} series
 }
 \item{file}{
   name of \code{.tex} file to create, default is to write to console.
-	\code{file} is ignored when \code{options(prType='html'}. 
+	\code{file} is ignored when \code{options(prType)} is \code{'html'}
+	or \code{'typst'}.
 }
 \item{append}{whether or not to append to an existing file}
 \item{which}{
@@ -94,8 +95,10 @@ a fit object created by a fitting function in the \code{rms} series
 \value{\code{latexrms} returns a character vector if \code{file=''},
 	otherwise writes the output to \code{file}.  For particular model
 	fits, the \code{latex} method returns the result of running
-	\code{knitr::asis_output} on the LaTeX or HTML code if \code{file=''},
-	\code{options(prType)} was set but not to \code{'plain'}, and if
+	\code{knitr::asis_output} on the LaTeX, html, or Typst code if
+	\code{file=''}, \code{options(prType)} was set but not to
+	\code{'plain'} (i.e. \code{'latex'}, \code{'html'}, or
+	\code{'typst'}), and if
 	\code{knitr} is currently running.  This causes correct output to be
 	rendered whether or not \code{results='asis'} appeared in the R
 	Markdown or Quarto chunk header.}
@@ -116,6 +119,8 @@ w     # displays, using e.g. xdvi
 latex(f)    # send LaTeX code to console, as for knitr
 options(prType='html')
 latex(f)    # emit html and latex for knitr html and html notebooks
+options(prType='typst')
+latex(f)    # emit Typst markup for knitr Typst/Quarto output
 }
 }
 \keyword{models}

@@ -11,8 +11,8 @@ standard deviation (\code{Sigma}) instead of the usual root mean squared
 error.
 Format of output is controlled by the user previously running
 \code{options(prType="lang")} where \code{lang} is \code{"plain"} (the default),
-\code{"latex"}, or \code{"html"}.  When using html with Quarto or RMarkdown,
-\code{results='asis'} need not be written in the chunk header.
+\code{"latex"}, \code{"html"}, or \code{"typst"}.  For LaTeX, html, or Typst
+output, \code{results='asis'} need not be written in the chunk header.
 }
 \usage{
 \method{print}{ols}(x, digits=4, long=FALSE, coefs=TRUE, 

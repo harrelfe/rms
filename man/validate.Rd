@@ -9,10 +9,15 @@
   \code{rms} series does resampling validation of a 
   regression model, with or without backward step-down variable
 	deletion.
-	The \code{print} method will call the \code{latex} or \code{html} method
-if \code{options(prType=)} is set to \code{"latex"} or \code{"html"}.
-For \code{"latex"} printing through \code{print()}, the LaTeX table
-environment is turned off.  When using html with Quarto or RMarkdown,
+	The \code{print} method will call the \code{latex} method
+if \code{options(prType=)} is set to \code{"latex"}, \code{"html"}, or
+\code{"typst"} -- \code{latex.validate} itself detects which of these
+is in effect and renders accordingly, so \code{html.validate} is not
+called separately for html output (it remains available for direct
+use, e.g. \code{html(v)}).  Tables are always rendered without a
+numbered LaTeX float or caption mechanism; a plain caption is shown
+above each table when one is given, regardless of \code{table.env}.
+When using LaTeX, html, or Typst output with Quarto or RMarkdown,
   \code{results='asis'} need not be written in the chunk header.
 
 See \code{\link{predab.resample}} for information about confidence limits.
@@ -79,9 +84,8 @@ validate(fit, method="boot", B=40,
   \item{\dots}{
     parameters for each specific validate function, and parameters to
     pass to \code{predab.resample} (note especially the \code{group},
-    \code{cluster}, amd \code{subset} parameters).  For \code{latex},
-	optional arguments to \code{\link[Hmisc:latex]{latex.default}}.  Ignored for
-	\code{html.validate}.
+    \code{cluster}, amd \code{subset} parameters).  Ignored for
+	\code{latex.validate} and \code{html.validate}.
     
     For \code{psm}, you can pass the \code{maxiter} parameter here (passed to 
     \code{survreg.control}, default is 15 iterations) as well as a \code{tol} parameter 
@@ -96,14 +100,13 @@ validate(fit, method="boot", B=40,
 \item{file}{file to write LaTeX output.  Default is standard output.}
 \item{append}{set to \code{TRUE} to append LaTeX output to an existing
   file}
-\item{title, caption, table.env, extracolsize}{see
-  \code{\link[Hmisc]{latex.default}}.  If \code{table.env} is
-  \code{FALSE} and \code{caption} is given, the character string
-  contained in \code{caption} will be placed before the table,
-  centered.}
-\item{size}{size of LaTeX output.  Default is \code{'normalsize'}.  Must
-  be a defined LaTeX size when prepended by double slash.
-  }
+\item{title, table.env, extracolsize}{kept for signature compatibility
+  with earlier versions but no longer used -- rendering no longer goes
+  through \code{Hmisc::latex.default}.}
+\item{caption}{if given, shown as a plain, bold, centered heading above
+  each table.}
+\item{size}{kept for signature compatibility with earlier versions but
+  no longer used.}
 }
 \details{
   It provides bias-corrected indexes that are specific to each type

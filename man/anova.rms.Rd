@@ -35,10 +35,11 @@ of variables in the model, as measured by Wald or LR \eqn{\chi^2}{chi-square},
 \eqn{\chi^2}{chi-square} minus d.f., AIC, \eqn{P}-values, partial
 \eqn{R^2}, \eqn{R^2} for the whole model after deleting the effects in
 question, or proportion of overall model \eqn{R^2} that is due to each
-predictor.  \code{latex.anova.rms} is the \code{latex} method.  It
+predictor.  \code{latex.anova.rms} is the \code{latex} method (also used
+for \code{"html"} and \code{"typst"} \code{prType} output).  It
 substitutes Greek/math symbols in column headings, uses boldface for
-\code{TOTAL} lines, and constructs a caption.  Then it passes the result
-to \code{latex.default} for conversion to LaTeX.
+\code{TOTAL} lines, and constructs a caption, then renders the table via
+the \code{tinytable} package for the current output language.
 
 When the anova table was converted to account for missing data
 imputation by \code{processMI}, a separate function \code{prmiInfo} can
@@ -53,10 +54,12 @@ normality of betas are computed just as with frequentist models, and for
 each draw (or for the summary) the ratio of the partial Wald chi-square
 to the total Wald statistic for the model is computed as REV.
 
-The \code{print} method calls \code{latex} or \code{html} methods
-depending on \code{options(prType=)}.  For
-\code{latex} a \code{table} environment is not used and an ordinary
-\code{tabular} is produced.  When using html with Quarto or RMarkdown,
+The \code{print} method calls the \code{latex} method
+depending on \code{options(prType=)} -- for \code{"latex"},
+\code{"html"}, and \code{"typst"} alike, since \code{latex.anova.rms}
+itself detects which of these is in effect and renders accordingly.
+Tables are always rendered without a numbered LaTeX float.  When using
+LaTeX, html, or Typst output with Quarto or RMarkdown,
   \code{results='asis'} need not be written in the chunk header.
 
 \code{html.anova.rms} just calls \code{latex.anova.rms}.
@@ -103,8 +106,7 @@ importance of age, cholesterol, and any factor interacting with them.
 Add \code{test='LR'} to get a likelihood ratio chi-square test instead.
 
 Can be optional graphical parameters to send to
-\code{dotchart2}, or other parameters to send to \code{latex.default}.
-Ignored for \code{print}.
+\code{dotchart2}.  Ignored for \code{print}.
 
 For \code{html.anova.rms} the arguments are passed to \code{latex.anova.rms}.
 }
@@ -252,8 +254,8 @@ If the statistics being plotted with \code{plot.anova.rms} are few in
 number and one of them is negative or zero, \code{plot.anova.rms}
 will quit because of an error in \code{dotchart2}.
 
-The \code{latex} method requires LaTeX packages \code{relsize} and
-\code{needspace}.
+The \code{latex} method requires the LaTeX package \code{tabularray}
+(via the \code{tinytable} package).
 }
 \author{
 Frank Harrell\cr
@@ -261,8 +263,10 @@ Department of Biostatistics, Vanderbilt University\cr
 fh@fharrell.com
 }
 \section{Side Effects}{
-\code{print} prints, \code{latex} creates a
-file with a name of the form \code{"title.tex"} (see the \code{title} argument above).
+\code{print} prints; \code{latex} renders the table for the current
+output language and, when running under \code{knitr}, returns the
+result of \code{knitr::asis_output} so it renders correctly regardless
+of the chunk header's \code{results} setting.
 }
 \seealso{
 \code{\link{prmiInfo}},

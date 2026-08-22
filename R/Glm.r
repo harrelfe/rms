@@ -7,7 +7,7 @@
 #'
 #' For the `print` method, format of output is controlled by the user
 #' previously running `options(prType="lang")` where `lang` is
-#' `"plain"` (the default), `"latex"`, or `"html"`.
+#' `"plain"` (the default), `"latex"`, `"html"`, or `"typst"`.
 #'
 #'
 #' @aliases Glm
@@ -139,7 +139,7 @@ Glm <-
 
 ##' Print a `Glm` Object
 ##'
-##' Prints a `Glm` object, optionally in LaTeX or html
+##' Prints a `Glm` object, optionally in LaTeX, html, or Typst
 ##' @title print.glm
 ##' @param x `Glm` object
 ##' @param digits number of significant digits to print

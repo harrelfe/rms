@@ -29,8 +29,8 @@
 
 	For the \code{print} method, format of output is controlled by the
 	user previously running \code{options(prType="lang")} where
-	\code{lang} is \code{"plain"} (the default), \code{"latex"}, or
-	\code{"html"}. 
+	\code{lang} is \code{"plain"} (the default), \code{"latex"},
+	\code{"html"}, or \code{"typst"}. 
 
 
   The \code{residuals.psm} function exists mainly to compute normalized

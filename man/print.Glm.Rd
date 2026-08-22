@@ -23,7 +23,7 @@ only the first `n` regression coefficients in the model.}
 Print a `Glm` Object
 }
 \details{
-Prints a `Glm` object, optionally in LaTeX or html
+Prints a `Glm` object, optionally in LaTeX, html, or Typst
 }
 \author{
 Frank Harrell

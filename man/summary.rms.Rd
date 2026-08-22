@@ -28,10 +28,15 @@ ignores bootstrap and Bayesian highest posterior density intervals but approxima
 intervals based on standard errors.  The \code{html} method is for use
 with R Markdown using html.
 
-The \code{print} method will call the \code{latex} or \code{html} method
-if \code{options(prType=)} is set to \code{"latex"} or \code{"html"}.
-For \code{"latex"} printing through \code{print()}, the LaTeX table
-environment is turned off.  When using html with Quarto or RMarkdown,
+The \code{print} method will call the \code{latex} method
+if \code{options(prType=)} is set to \code{"latex"}, \code{"html"}, or
+\code{"typst"} -- \code{latex.summary.rms} itself detects which of
+these is in effect and renders accordingly, so \code{html.summary.rms}
+is not called separately for html output (it remains available for
+direct use, e.g. \code{html(s)}).  The table is always rendered without
+a numbered LaTeX float or caption mechanism; a plain caption is shown
+above the table when one is given, regardless of \code{table.env}.
+When using LaTeX, html, or Typst output with Quarto or RMarkdown,
   \code{results='asis'} need not be written in the chunk header.
 
 If \code{usebootcoef=TRUE} and the fit was run through \code{bootcov},
@@ -62,7 +67,8 @@ posterior.summary=c('mean', 'median', 'mode'), verbose=FALSE)
 
 \method{print}{summary.rms}(x, \dots, table.env=FALSE)
 
-\method{latex}{summary.rms}(object, title, table.env=TRUE, \dots)
+\method{latex}{summary.rms}(object, title, table.env=TRUE, digits=4,
+                            dec=NULL, \dots)
 
 \method{html}{summary.rms}(object, digits=4, dec=NULL, \dots)
 
@@ -151,7 +157,8 @@ factor levels for categorical variables in the model.}
 \code{title} to pass to \code{latex}.  Default is name of fit object passed to
 \code{summary} prefixed with \code{"summary"}.}
 \item{table.env}{see \code{\link[Hmisc]{latex}}}
-\item{digits,dec}{for \code{html.summary.rms}; \code{digits} is the
+\item{digits,dec}{for \code{latex.summary.rms} and \code{html.summary.rms};
+	\code{digits} is the
 	number of significant digits for printing for effects, standard
 	errors, and confidence limits.  It is ignored if \code{dec} is
 	given. The statistics are rounded to \code{dec} digits to the right of
@@ -215,8 +222,11 @@ are stored first, and effects for any categorical factors are stored at
 the end of the returned matrix.  \code{scale.pred} and \code{adjust}.  \code{adjust}
 is a character string containing levels of adjustment variables, if
 there are any interactions.  Otherwise it is "".
-\code{latex.summary.rms} returns an object of class \code{c("latex","file")}.
-It requires the \code{latex} function in Hmisc.
+\code{latex.summary.rms} renders the table for the current output
+language (see \code{options(prType=)}) via the \code{tinytable} package
+and, when running under \code{knitr}, returns the result of
+\code{knitr::asis_output} so it renders correctly regardless of the
+chunk header's \code{results} setting.
 }
 \author{
 Frank Harrell\cr
@@ -270,6 +280,8 @@ options(prType='latex')
 summary(fit)                     # prints with LaTeX, table.env=FALSE
 options(prType='html')
 summary(fit)                     # prints with html
+options(prType='typst')
+summary(fit)                     # prints with Typst
 }
 summary(fit, sex='male', age=60) # Specify ref. cell and adjustment val
 summary(fit, age=c(50,70))       # Estimate effect of increasing age from

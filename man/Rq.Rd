@@ -15,10 +15,12 @@ function definition.
 
 For the \code{print} method, format of output is controlled by the
 user previously running \code{options(prType="lang")} where
-\code{lang} is \code{"plain"} (the default), \code{"latex"}, or
-\code{"html"}.  For the \code{latex} method, \code{html} will actually
-be used of \code{options(prType='html')}.  When using html with Quarto
-or RMarkdown, \code{results='asis'} need not be written in the chunk header.
+\code{lang} is \code{"plain"} (the default), \code{"latex"},
+\code{"html"}, or \code{"typst"}.  For the \code{latex} method,
+\code{html} will actually be used if \code{options(prType='html')}, and
+Typst output will be produced (via \code{\link{latexrms}}) if
+\code{options(prType='typst')}.  For LaTeX, html, or Typst output,
+\code{results='asis'} need not be written in the chunk header.
 }
 \usage{
 Rq(formula, tau = 0.5, data=environment(formula),

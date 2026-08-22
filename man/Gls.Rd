@@ -14,8 +14,8 @@
 
 	For the \code{print} method, format of output is controlled by the
 	user previously running \code{options(prType="lang")} where
-	\code{lang} is \code{"plain"} (the default), \code{"latex"}, or
-	\code{"html"}. When using html with Quarto or RMarkdown,
+	\code{lang} is \code{"plain"} (the default), \code{"latex"},
+	\code{"html"}, or \code{"typst"}. For LaTeX, html, or Typst output,
   \code{results='asis'} need not be written in the chunk header.
 }
 \usage{

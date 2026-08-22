@@ -1,13 +1,13 @@
 Package: rms
 Version: 8.2-0
-Date: 2026-08-20
+Date: 2026-08-22
 Title: Regression Modeling Strategies
 Authors@R: person(given  = c("Frank E"),
                   family = "Harrell Jr",
                   role   = c("aut", "cre"),
                   email  = "fh@fharrell.com")
 Depends: R (>= 4.4.0), Hmisc (>= 5.2-5)
-Imports: methods, survival, quantreg, ggplot2, Matrix, SparseM, rpart, nlme (>= 3.1-123), polspline, multcomp, htmlTable (>= 1.11.0), htmltools, MASS, cluster, digest, colorspace, knitr, grDevices, scales
+Imports: methods, survival, quantreg, ggplot2, Matrix, SparseM, rpart, nlme (>= 3.1-123), polspline, multcomp, htmlTable (>= 1.11.0), htmltools, MASS, cluster, digest, colorspace, knitr, grDevices, scales, tinytable
 Suggests: boot, tcltk, plotly (>= 4.5.6), mice, icenReg, rmsb, nnet, VGAM, lattice, kableExtra
 Description: Regression modeling, testing, estimation, validation,
 	graphics, prediction, and typesetting by storing enhanced model design
