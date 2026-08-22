@@ -207,10 +207,14 @@ prmiInfo <- function(x) {
   names(m) <- c('Test', 'Missing\nInformation\nFraction',
                 'Denominator\nd.f.', paste(chi2lab, 'Discount'))
 
-  rownames(m) <- m$Test
-  m$Test <- NULL
-
-  w <- rms_tiny_table(m, lang, caption = 'Imputation penalties')
+  ## Test is kept as an ordinary data column, not converted to
+  ## data.frame rownames -- see end-of-file note on the duplicate-
+  ## rownames crash this avoids (multiple predictors can legitimately
+  ## share the same sub-test label, e.g. "Nonlinear", which data.frame
+  ## rownames cannot allow but an ordinary column can).
+  w <- rms_tiny_table(m, lang, caption = 'Imputation penalties',
+                      show_rownames = FALSE,
+                      align_data = c('l', 'r', 'r', 'r'))
   if(lang == 'html') rendHTML(w) else rendHTML(w, html = FALSE)
   }
 
@@ -263,14 +267,26 @@ utils::globalVariables(c('predicted', 'corrected', 'imputation'))
 ##
 ## - Rendering: htmlTable::htmlTable() (html-only, hand-built
 ##   css.table/css.cell font-size and padding strings) replaced with
-##   rms_tiny_table(m, lang, caption='Imputation penalties') for all
-##   three formats -- no new rms_tiny_table parameters were needed here;
-##   this table's shape (row labels + right-aligned numeric columns +
-##   caption) is exactly what rms_tiny_table already supported by
-##   default; the row-label/data-column alignment split ('l' for Test,
-##   'r' for the three statistic columns) matches rms_tiny_table's
-##   existing defaults exactly, so no align_data override was needed
-##   either.
+##   rms_tiny_table(). Originally this used rms_tiny_table's defaults
+##   directly (row labels via rownames(m), no explicit show_rownames/
+##   align_data overrides), on the assumption that this table's shape
+##   (row labels + right-aligned numeric columns + caption) fit those
+##   defaults exactly. That assumption turned out wrong in a way only
+##   surfaced by real data: the row-label column (Test) can legitimately
+##   contain duplicate values -- multiple different predictors can each
+##   have their own "Nonlinear"/"All Interactions" sub-test row, sharing
+##   the same display text for the test type. Converting Test into
+##   data.frame rownames (rownames(m) <- m$Test) crashed on this with
+##   "duplicate 'row.names' are not allowed", confirmed directly from a
+##   real error report. Fixed by keeping Test as an ordinary data column
+##   (show_rownames = FALSE) instead of converting it to rownames at
+##   all, since data.frame columns, unlike data.frame rownames, permit
+##   duplicates freely. To keep the original visual layout (Test
+##   left-aligned, the three numeric columns right-aligned) without
+##   rownames, align_data is now passed as the vector
+##   c('l', 'r', 'r', 'r') -- rms_tiny_table_core (anova_rms.s) was
+##   extended to accept align_data as a per-column vector for exactly
+##   this need; see its own note [9].
 ##
 ## - Multi-line column headers ("Missing\nInformation\nFraction", etc.)
 ##   use "\n" uniformly across all three formats, including html --

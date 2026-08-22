@@ -643,7 +643,19 @@ rms_tiny_table_core <- function(d, lang, fontsize = NULL,
   x <- tinytable::format_tt(x, j = 1:nc, escape = FALSE)
   x <- tinytable::format_tt(x, i = 0,    escape = FALSE, linebreak = "\n")
   if(show_rownames) x <- tinytable::style_tt(x, j = 1, align = 'l')
-  x <- tinytable::style_tt(x, j = jdata, align = align_data)
+  ## align_data as a vector: applied one column at a time rather than
+  ## passing the vector directly to a single style_tt(j=jdata, align=)
+  ## call, since element-wise recycling of align across j hasn't been
+  ## confirmed for tinytable's style_tt() -- looping is the safe,
+  ## already-proven pattern used everywhere else in this file (e.g. the
+  ## j=1/jdata split just above). A scalar align_data (the prior,
+  ## default behavior) is unaffected -- single style_tt() call, same as
+  ## before.
+  if(length(align_data) > 1)
+    for(jj in seq_along(jdata))
+      x <- tinytable::style_tt(x, j = jdata[jj], align = align_data[jj])
+  else
+    x <- tinytable::style_tt(x, j = jdata, align = align_data)
   x <- tinytable::style_tt(x, i = 0,     align = 'c', bold = bold_header)
   if(header_rule) x <- tinytable::style_tt(x, i = 0, j = 1:nc, line = "b")
   if(vertical_borders) {
@@ -1179,4 +1191,28 @@ plot.anova.rms <-
 ##     round-trip entirely when d is already a data.frame -- true for
 ##     every current caller, so this sidesteps the issue without
 ##     depending on understanding it completely.
+##
+## [9] align_data extended to accept a per-column vector, not just a
+##     single value applied uniformly (the prior, still-default
+##     behavior). Prompted by a real crash in processMI.r's prmiInfo():
+##     it had been converting a "Test" label column into data.frame
+##     rownames (rownames(m) <- m$Test) to get that column
+##     left-aligned via show_rownames=TRUE, but data.frame rownames must
+##     be unique, and prmiInfo's Test labels legitimately are not --
+##     multiple different predictors can each have their own
+##     "Nonlinear"/"All Interactions" sub-test row, sharing the same
+##     display text for the test type while representing genuinely
+##     different predictors. This was a real, confirmed regression: the
+##     original prmiInfo (before being unified with this shared helper)
+##     called htmlTable::htmlTable(m, ..., rnames=FALSE) specifically to
+##     avoid this exact constraint, keeping Test as an ordinary data
+##     column rather than rownames. Fixed at the source in prmiInfo
+##     (kept as an ordinary column, show_rownames=FALSE now), and this
+##     align_data extension lets it still get the same per-column
+##     layout as the original (Test left-aligned, the three numeric
+##     columns right-aligned) without needing rownames at all. A vector
+##     align_data loops style_tt() once per column rather than trusting
+##     element-wise recycling of align across a vector j (unconfirmed
+##     for tinytable's style_tt()) -- the same safe, already-proven
+##     per-column style_tt() pattern used elsewhere in this function.
 ## -----------------------------------------------------------------------
