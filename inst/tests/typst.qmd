@@ -1,0 +1,134 @@
+---
+title: "Tests of LaTeX, Typst, and HTML Output With `rms`"
+format:
+  html: default
+  typst:
+    keep-typ: true
+    output-file: rms-typst
+  pdf:
+    keep-tex: true
+    output-file: rms-latex
+    include-in-header:
+      - text: |
+          \usepackage{epic}
+          \usepackage{relsize}
+knitr:
+  opts_chunk:
+    dev: "svglite"
+---
+
+<!--
+format:
+  typst:
+    keep-typ: true
+
+format:
+  pdf:
+    include-in-header:
+      - text: |
+          \usepackage{epic}
+-->
+
+```{r}
+library(rms)
+require(tinytable)
+# options(prType = c('latex', 'typst', 'html')[2])
+fmt <- knitr::pandoc_to()
+cat('Format:', fmt, '\n')
+cat(fmt, '\n', file='/tmp/z', append=TRUE)
+options(prType = fmt)
+loadpkg(rms)
+```
+
+```{r}
+set.seed(1)
+n <- 1000
+age <- rnorm(n, 50, 7)
+sex <- sample(c('male', 'female'), n, TRUE)
+y <- sample(0:1, n, TRUE)
+z <- sample(runif(20), n, TRUE)
+x1 <- runif(n)
+x2 <- runif(n)
+x3 <- runif(n)
+i <- sample(1:n, 30, FALSE)
+j <- sample(1:n, 40, FALSE)
+age[j] <- x1[i] <- x2[i] <- x3[i] <- NA
+# sex can't have NAs if used in strat()
+dd <- datadist(age, sex, y, z, x1, x2, x3)
+options(datadist='dd')
+
+S <- Surv(1:n)
+f <- lrm(y ~ rcs(age, 4)*sex)
+# w <- latex(f)
+u <- '
+$$P(\\mathrm{y}=1) = \\frac{1}{1+\\exp(-X\\beta)}, \\mathrm{~~where}$$
+$$\\begin{array}{ll}
+X\\hat{\\beta}= & \\\\
+& 0.6608358 \\\\
+& + 0.001374476  \\mathrm{age}-0.0003919127(\\mathrm{age}-39.69889)_{+}^{3}  \\\\
+&  +0.001676937  (\\mathrm{age}-47.70627)_{+}^{3}-0.001674642 (\\mathrm{age}-52.71902)_{+}^{3}  \\\\
+&   +0.0003896176 (\\mathrm{age}-61.19738)_{+}^{3}  \\\\
+&  -1.341946[\\mathrm{male}] \\\\
+&  +[\\mathrm{male}][0.01103733   \\mathrm{age}+0.0002697899 (\\mathrm{age}-39.69889)_{+}^{3}  \\\\
+&  -0.001249603 (\\mathrm{age}-47.70627)_{+}^{3}+0.001304317  (\\mathrm{age}-52.71902)_{+}^{3}  \\\\
+&   -0.0003245031(\\mathrm{age}-61.19738)_{+}^{3}  ] \\\\{} \\\\{}
+[c]= & 1~\\mathrm{if~subject~is~in~group}~c,~0~\\mathrm{otherwise} \\\\
+(x)_{+}= & x~\\mathrm{if}~x > 0,~0~\\mathrm{otherwise}\\end{array}$$
+'
+# cat(u, file='/tmp/a')
+# knitr::asis_output(u)
+```
+
+```{r}
+f
+latex(f)
+summary(f)
+g <- cph(S ~ age + strat(sex), surv=TRUE)
+g
+latex(g)
+anova(g)
+summary(g)
+```
+
+```{r}
+a <- ols(y ~ rcs(age, 3), x=TRUE, y=TRUE)
+a
+latex(a)
+anova(a)
+summary(a)
+validate(a, B=20)
+a <- Gls(y ~ rcs(age, 3))
+a
+latex(a)
+a <- orm(z ~ rcs(age, 3))
+a
+latex(a, intercepts=TRUE)
+summary(a)
+a <- psm(S ~ rcs(age, 3))
+a
+latex(a)
+summary(a)
+a <- Rq(z ~ rcs(age, 3) + sex, x=TRUE, y=TRUE)
+a
+latex(a)
+summary(a)
+validate(a, B=20)
+```
+
+```{r}
+f <- lrm(y ~ x1 + rcs(sqrt(x2),3) + log(sqrt(x3)) + age + sex, x=TRUE, y=TRUE)
+f
+latex(f)
+anova(f)
+summary(f)
+validate(f, B=20)
+validate(f, B=20, bw=TRUE, sls=0.75, rule='p')
+```
+
+```{r}
+d <- data.frame(y, x1, x2, x3, age, sex)
+a <- aregImpute(~ y + x1 + x2 + x3 + age + sex)
+f <- fit.mult.impute(y ~ x1 + x2 + x3 + age + sex, lrm, a, data=d, lrt=TRUE)
+v <- processMI(f, 'anova')
+prmiInfo(v)
+```
