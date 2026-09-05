@@ -1,7 +1,7 @@
 # Design  FEH 1Aug90, re-written 21Oct91
 #
 # Augments S formula language to include:
-# 
+#
 #	name	- name[i] = name of ith original variable in x
 #	label	- label[i] = label of ith original variable (=name if none)
 #	assume	- assume(original x)
@@ -20,11 +20,11 @@
 #		  vector of values.  NULL otherwise.
 #	interactions - 3 x k matrix of factor numbers
 #
-# Cannot have interactions between two stratification factors. 
+# Cannot have interactions between two stratification factors.
 #
 #
 
-  
+
 Design <- function(mf, formula=NULL, specials=NULL,
                    allow.offset=TRUE, intercept=1) {
 
@@ -120,7 +120,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
     Term.labels <- Term.labels[! istime]
   }
   else {time <- timename <- NULL}
-  
+
 
   ioffset <- integer(0)
   if(length(offs)) {
@@ -151,7 +151,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
   ## Handles case where a function has two arguments that are names,
   ## e.g. rcs(x,knots) -> want x only
   ## Note: these exclude interaction terms and %ia% terms
-  
+
   factors <- attr(Terms, "factors")
   if(length(factors) && response.pres) factors <- factors[-1, , drop=FALSE]
 
@@ -162,8 +162,8 @@ Design <- function(mf, formula=NULL, specials=NULL,
   ##         Used for later keeping only those columns that don't pertain
   ##         to strat main effects or to strat interactions involving
   ##         non-reference categories
-  
-  fname <- flabel <- name <- mmname <- strt <- asm <- len <- 
+
+  fname <- flabel <- name <- mmname <- strt <- asm <- len <-
     fname.incl.dup <- ia <- funits <- NULL
   parm <- nonlinear <- tex <- limits <- values <- list()
 
@@ -183,7 +183,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
     Limits   <- datadist$limits
     Limnames <- dimnames(Limits)[[2]]
   }
-  
+
   nc <- 0
 
   options(Design.attr=NULL, TEMPORARY=FALSE)
@@ -270,7 +270,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
             }
           }
         }
-        
+
         if(length(nonl <- z$nonlinear)) nonlinear[[zname]] <- nonl
 
         if(length(tx <- z$tex))         tex[[zname]]       <- tx
@@ -288,14 +288,14 @@ Design <- function(mf, formula=NULL, specials=NULL,
       nrows <- if(is.matrix(xi)) nrow(xi) else length(xi)
     }
   }
-  
+
   ##Save list of which factors where %ia% interactions
   ## (before adding automatic ias)
 
   which.ia <- (1 : length(asm))[asm == 9]
 
   ##Add automatically created interaction terms
-  
+
   if(anyfactors) {
     nrf <- if(! length(factors)) 0 else nrow(factors)
 
@@ -353,7 +353,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
         mmnalt1 <- mmnnalt[[1]]
         mmnalt2 <- mmnnalt[[2]]
         mmnalt3 <- mmnnalt[[3]]
-        
+
         ## model.matrix makes auto-products move first variable fastest, etc.
         for(j3 in 1 : length(n3)) {
           for(j2 in 1 : length(n2)) {
@@ -373,7 +373,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
             }
           }
         }
-        
+
         ## If was 2-way interaction and one of the factors was restricted %ia%,
         ## adjust indicators
         k <- match(jf, which.ia, 0)
@@ -386,16 +386,16 @@ Design <- function(mf, formula=NULL, specials=NULL,
           jf <- parms[, 1]
           nonlin <- apply(parms, 2, any)[-1]
         }
-        
+
         if(length(jf) == 2) {jf <- c(jf, 0); parms[3, ] <- 0}
         ia <- cbind(ia, jf)
         if(length(parms)) parm[[ialab]] <- parms
         if(length(nonlin)) nonlinear[[ialab]] <- nonlin
-        
+
       }
     }
   }
-  
+
   if(anyfactors) {
     if(length(XDATADIST))
       limits <- structure(limits,
@@ -405,7 +405,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
                             "Low", "High"),
                           class="data.frame")
     ##data.frame converts variables always NA to factor!
-    
+
     if(length(funits) != sum(asm != 9)) warning('program logic warning 1')
     else names(funits) <- fname[asm != 9]
 
@@ -422,7 +422,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
                 assume.code=as.integer(asm), parms=parm, limits=limits,
                 values=values, nonlinear=nonlinear, tex=tex,
                 interactions=if(length(ia)) structure(ia, dimnames=NULL))
-    
+
     nact <- attr(mf, 'na.action')
     if(length(nact) && length(nmiss <- nact$nmiss)) {
       jia <- grep('%ia%', names(nmiss),  fixed=TRUE)
@@ -437,9 +437,9 @@ Design <- function(mf, formula=NULL, specials=NULL,
       attr(mf, 'na.action')$nmiss <- nmiss
     }
   }
-  
+
   else atr <- list(name=NULL, assume=NULL, assume.code=NULL, parms=NULL)
-  
+
   attr(mf, 'Design')     <- atr
   attr(mf, 'terms')      <- Terms
   attr(mf, 'sformula') <- sformula
@@ -451,7 +451,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
     attr(mf, 'time') <- time
     attr(mf, 'timename') <- var.inner(as.formula(paste0('~', timename)))
   }
-  
+
   if(length(offs))    attr(mf, 'offset')  <- offs
   mf
 }
@@ -466,7 +466,7 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
     cl <- class(z)
     ('matrix' %in% cl) && ('rms' %nin% cl) && ('Ocens' %nin% cl)
     }
-  
+
   ## Get a list of all variables in either formula
   ## This is for innermost variables, e.g. Surv(a,b) will produce a,b
   v1 <- all.vars(formula)
@@ -522,7 +522,7 @@ modelData <- function(data=environment(formula), formula, formula2=NULL,
 
   noexpand <- rhsdot & ! dotexpand
   deparse2 <- function(x)   # from stats
-    paste(deparse(x, width.cutoff = 500L, backtick = !is.symbol(x) && 
+    paste(deparse(x, width.cutoff = 500L, backtick = !is.symbol(x) &&
                   is.language(x)), collapse = " ")
 
   ## Build an enclosing environment for eval() that replicates the lookup
@@ -642,4 +642,3 @@ as.data.frame.rms <- function(x, row.names = NULL, optional = FALSE, ...) {
   if(! optional) names(value) <- deparse(substitute(x))[[1]]
   structure(value, row.names=row.names, class='data.frame')
 }
-
