@@ -27,7 +27,12 @@ orm <- function(formula, data=environment(formula),
                 subset = subset,
                 na.action=na.action, callenv=callenv)
 
-    X          <- Design(X, formula=formula)
+    # Design handles cluster()
+    X          <- Design(X, formula=formula, specials="cluster")
+
+    cluster     <- attr(X, 'cluster')
+    clustername <- attr(X, 'clustername')
+
     atrx       <- attributes(X)
     sformula   <- atrx$sformula
     nact       <- atrx$na.action
@@ -96,7 +101,7 @@ orm <- function(formula, data=environment(formula),
 
   if(existsFunction(method)) {
       fitter <- getFunction(method)
-      f <- fitter(X, Y, family=family, offset=offs,
+      f <- fitter(X, Y, family=family, offset=offs, cluster=cluster,
                   penalty.matrix=penalty.matrix,
                   scale=scale, maxit=maxit, weights=weights, normwt=normwt, ...)
     }
@@ -159,7 +164,10 @@ orm <- function(formula, data=environment(formula),
         f$se.fit <- se
       }
   }
-  f <- c(f, list(call=call, Design=if(xpres)atr,
+  clusterInfo <- if(length(cluster))
+                   list(cluster = if(x) cluster, n=f$ncluster, name=clustername)
+  f$ncluster <- NULL
+  f <- c(f, list(call=call, Design=if(xpres)atr, clusterInfo=clusterInfo,
                  scale.pred=if(f$family=='logistic') c("log odds", "Odds Ratio") else
                    if(f$family=='loglog') c("log hazard", "Hazard Ratio"),
                  terms=Terms, assign=ass, na.action=nact) )
@@ -227,10 +235,21 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
   stats <- x$stats
 
   maxd <- stats['Max Deriv']
-  ci <- x$clusterInfo
-  frq <- if(length(x$freq) < 4) {
-    x$freq
+  ci   <- x$clusterInfo
+  sigmathere <- length(x$info.matrix$xname) && any(x$info.matrix$xname == 'log(sigma)')
+  sigmasum <- if(length(ci) && sigmathere) {
+     # clusterInfo also defined by robcov with after-fit clustering
+     sigma <- x$sigma
+     se    <- sqrt(infoMxop(x$info.matrix, i='log(sigma)'))
+     if(is.na(se)) formatNP(signif(sigma, 4), lang=prType())
+     else {
+       mmoe  <- exp(qnorm(0.975) * se)
+       sig <- c(sigma, sigma / mmoe, sigma * mmoe)
+       r <- if(sigma > 0.001) round(sig, 4) else formatNP(signif(sig, 4), lang=prType())
+       paste0(r[1], " [", r[2], ", ", r[3], "]")
+      }
     }
+  frq  <- if(length(x$freq) < 4) x$freq
 
   Ncens <- x$Ncens1
   if(! length(Ncens)) {ce <- ced <- NULL}
@@ -266,6 +285,7 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
                       'Distinct Y'    = stats['Distinct Y'],
                       'Cluster on'  = ci$name,
                       Clusters      = ci$n,
+                      'sigma gamma' = sigmasum,
                       'Median Y'    = stats['Median Y'],
                       'max |deriv|' = maxd)
   if(length(x$freq) < 4) {
