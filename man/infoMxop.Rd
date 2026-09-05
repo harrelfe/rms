@@ -17,30 +17,34 @@ infoMxop(
 \arguments{
 \item{info}{an information matrix object}
 
-\item{i}{integer vector specifying elements returned from the inverse.  You an also specify \code{i='x'} to return non-intercepts or \code{i='i'} to return intercepts.}
+\item{i}{integer vector specifying elements returned from the inverse.  You can also specify \code{i='x'} to return non-intercepts, \code{i='i'} to return intercepts, or \code{i="log(sigma)"} to return the estimated variance of log(sigma).}
 
 \item{invert}{set to \code{TRUE} to invert \code{info} (implied when \code{i} or \code{B} is given)}
 
-\item{B}{multiplier matrix}
+\item{B}{multiplier matrix.  If random effects were included, \code{B} should ignore them.}
 
-\item{np}{set to \code{TRUE} to just fetch the total number of parameters (intercepts + betas)}
+\item{np}{set to \code{TRUE} to just fetch the total number of parameters (intercepts + betas, possible log(sigma) not counting)}
 
 \item{tol}{tolerance for matrix inversion singularity}
 
-\item{abort}{set to \code{FALSE} to run the \code{solve} calculation through \code{try()} without aborting; the user will detect that the operation did not success by examinine \code{inherits(result, 'try-error')} for being \code{TRUE}.}
+\item{abort}{set to \code{FALSE} to run the \code{solve} calculation through \code{try()} without aborting; the user will detect that the operation did not success by examinine \code{inherits(result, 'try-error')} for being \code{TRUE}.  This is ignored when \code{i='log(sigma)'}: if the underlying \code{solve()} fails there (e.g. because the model converged with sigma at or near its lower boundary of zero, where log(sigma) is not identifiable), a warning is issued and \code{NA} is returned regardless of \code{abort}, since a plain \code{NA} is more informative than a \code{try-error} object for this specific, well-understood failure mode.  For every \emph{other} request, a singularity caused specifically by \code{log(sigma)} being at this same boundary is instead handled by an automatic, targeted ridge retry (see \strong{Description}) with a warning on success; \code{abort} only comes into play if that retry itself fails, in which case the original error is handled exactly as documented above.}
 }
 \value{
 a single integer or a matrix
 }
 \description{
-Processes four types of information matrices: ones produced by the \code{SparseM} package for the \code{orm} or \code{lrm} functions in \code{rms} version 6.9-0 and earlier, by the \code{Matrix} package for version 7.0-0 of \code{rms} using a tri-band diagonal matrix for the intercepts, using \code{Matrix} for general sparse information matrices for intercepts (when any interval-censored observations exist), or plain matrices.  For \code{Matrix}, the input information matrix is a list with three elements: \code{a} containing in two columns the diagonal and superdiagonal for intercepts (when there is no interval censoring) or a list with three elements \code{row}, \code{col}, \code{a} (when there is interval censoring), \code{b}, a square matrix for the covariates, and \code{ab} for intercepts x covariates.  If nothing else is specified, the assembled information matrix is returned for \code{Matrix}, or the original \code{info} otherwise.  If \code{p=TRUE}, the number of parameters in the model (number of rows and columns in the whole information matrix) is returned.  If \code{i} is given, the \code{i} elements of the inverse of \code{info} are returned, using efficient calculation to avoid inverting the whole matrix.  Otherwise if \code{invert=TRUE} or \code{B} is given without \code{i}, the efficiently (if \code{Matrix} or \code{SparseM}) inverted matrix is returned, or the matrix multiplication of the inverse and \code{B}.  If both \code{i} and \code{B} are given, what is returned is the \code{i} portion of the inverse of the information matrix, matrix multiplied by \code{B}.  This is done inside \code{solve()}.
+Processes four types of information matrices: ones produced by the \code{SparseM} package for the \code{orm} or \code{lrm} functions in \code{rms} version 6.9-0 and earlier, by the \code{Matrix} package for version 7.0-0 of \code{rms} using a tri-band diagonal matrix for the intercepts, using \code{Matrix} for general sparse information matrices for intercepts (when any interval-censored observations exist or random effects are included), or plain matrices.  For \code{Matrix}, the input information matrix is a list with three elements: \code{a} containing in two columns the diagonal and superdiagonal for intercepts (when there is no interval censoring) or a list with three elements \code{row}, \code{col}, \code{a} (when there is interval censoring), \code{b}, a square matrix for the covariates, and \code{ab} for intercepts x covariates.  If nothing else is specified, the assembled information matrix is returned for \code{Matrix}, or the original \code{info} otherwise.  If \code{p=TRUE}, the number of parameters in the model (number of rows and columns in the whole information matrix minus any log(sigma) elements) is returned.  If \code{i} is given, the \code{i} elements of the inverse of \code{info} are returned, using efficient calculation to avoid inverting the whole matrix.  Otherwise if \code{invert=TRUE} or \code{B} is given without \code{i}, the efficiently (if \code{Matrix} or \code{SparseM}) inverted matrix less any log(sigma) elements is returned, or the matrix multiplication of the inverse and \code{B}.  If both \code{i} and \code{B} are given, what is returned is the \code{i} portion of the inverse of the information matrix, matrix multiplied by \code{B}.  This is done inside \code{solve()}.
 }
 \details{
 When only variance-covariance matrix elements corresponding to the non-intercepts are desired, specify
-\code{i='x'} or \code{i=(k + 1) : nv} where \code{nv} is the number of intercepts and slopes combined.  \code{infoMxop} computes the needed covariance matrix very quickly in this case.
+\code{i='x'} or \code{i=(k + 1) : nv} where \code{nv} is the number of intercepts and slopes combined.  \code{infoMxop} computes the needed covariance matrix very quickly in this case.  To retrieve only the variance of log(sigma) for a model with random effects, specify \code{i='log(sigma)'}.
 When inverting \code{info}, if \code{info} has a \code{'scale'} attribute with elements \code{mean} and \code{sd}, the scaling is reversed after inverting \code{info}.
 
 When the number of intercepts is needed to be known and the \code{info} object is not a 3-element list, \code{info} must have an \code{intercepts} attribute to define the number.  This is used for example when \code{transx=TRUE} is specified to \code{lrm} or \code{lrm.fit}.
+
+When the model contains random effects and there are elements corresponding to log(sigma) in the \code{ab} and \code{b} components of \code{info}, the \code{xname} component of the \code{info} list must contain a last element named \code{log(sigma)} corresponding to the column number of log(sigma).  This should be the last column in \code{ab} and \code{b}.
+
+A random-intercept fit's information matrix can become genuinely near-singular in exactly one direction -- \code{log(sigma)} -- whenever the fitted \code{sigma} is at or very near its lower boundary of zero; this is a real, expected non-regular feature of variance-component estimation (log(sigma) is not identifiable there), not a numerical defect. Since every general solve (\code{missing(i)}, \code{i='i'}, or any \code{i} mixing intercepts and slopes) factors the \emph{whole} information matrix regardless of which elements of its inverse are ultimately kept, this near-singularity can surface even when the caller never asked for \code{log(sigma)} at all. When it does, \code{infoMxop} automatically retries with a small, escalating ridge applied \emph{only} to \code{log(sigma)}'s own diagonal entry -- not the whole matrix -- since \code{log(sigma)} is empirically essentially uncorrelated with everything else at such a fit, so this leaves every other requested quantity negligibly perturbed. A warning is issued when this happens. \code{i='x'} is never affected by this, since it already avoids factoring the full matrix (see below); \code{i='log(sigma)'} is also never affected, since \code{log(sigma)}'s own variance genuinely isn't well defined there and is instead returned as \code{NA} with its own explanatory warning.
 }
 \examples{
 \dontrun{
@@ -48,6 +52,9 @@ f <- orm(y ~ x)
 infoMxop(f$info.matrix)   # assembles 3 pieces
 infoMxop(v, i=c(2,4))     # returns a submatrix of v inverse
 infoMxop(f$info.matrix, i='x')  # sub-covariance matrix for just the betas
+f <- orm(y ~ x + cluster(id))
+infoMxop(f$info.matrix, i='log(sigma)')
+# a single number = variance of log(sigma), sigma=sqrt of random effects variance
 }
 }
 \author{
