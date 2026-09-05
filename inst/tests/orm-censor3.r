@@ -1,5 +1,6 @@
 # Example agreement of orm's estimated survival curves and icenReg's
 # with a series of random datasets with left, right, and interval censoring
+# Also compares with inclusion of unneeded random effects with 2 obs/subject
 
 require(rms)
 require(icenReg)
@@ -10,6 +11,8 @@ cat('\n----------------------------------------------------\nRepetition', irep, 
 set.seed(20 + irep)
 N <- 250  # was 80
 y  <- sample(10 : 50, N, TRUE)
+# Add unnecessary clusters
+clus <- c(1 : (N/2), 1 : (N/2))
 maxy <- max(y)
 y2 <- y
 # Left censoring
@@ -25,7 +28,7 @@ if(irep == 7) {
   print(Y7)
 }
 
-d <- data.frame(y, y2, grp=factor(rep(1, N)))
+d <- data.frame(y, y2, grp=factor(rep(1, N)), clus=clus)
 f <- ic_np(cbind(y, y2) ~ grp, data=d)
 cu <- f$scurves[[1]]
 su <- cu$S_curves$baseline
@@ -50,6 +53,11 @@ ti <- if(midpts || ! length(f$yupper)) f$yunique else (f$yunique + f$yupper) / 2
 ti <- c(ti[1], ti)
 su  <- c(1, plogis(coef(f)), NA)
 lines(ti, su, type='s', col='blue', lwd=2)
+f <- orm.fit(y=Ocens(y, y2), trace=1, cluster=clus)
+ti <- if(midpts || ! length(f$yupper)) f$yunique else (f$yunique + f$yupper) / 2
+ti <- c(ti[1], ti)
+su  <- c(1, plogis(coef(f)), NA)
+lines(ti, su, type='s', col='red', lwd=2)
 }
 
 # See what happens when interval consolidation is not done
