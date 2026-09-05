@@ -19,7 +19,8 @@ rfort <- function(theta, k, y, y2, x=numeric(0), intcens=FALSE, what=3L) {
   penmat <- matrix(0e0, p, p)
   link   <- 1L
   nu     <- 0L
-  w <- .Fortran('ormll', n, k, p, x, y, y2, offset, wt, penmat,
+  # Ignore old Fortran calling sequence
+  if(FALSE) w <- .Fortran('ormll', n, k, p, x, y, y2, offset, wt, penmat,
                 link=link, theta[1:k], theta[-(1:k)],
                 logL=numeric(1), grad=numeric(k + p), lpe=numeric(n),
                 a=matrix(0e0, (1 - intcens) * k, 2), b=matrix(0e0, p, p), ab=matrix(0e0, k, p),
@@ -27,6 +28,37 @@ rfort <- function(theta, k, y, y2, x=numeric(0), intcens=FALSE, what=3L) {
                 nai=nai, ne=integer(1),
                 urow=integer(nu), ucol=integer(nu), um=numeric(nu), nu=nu, nuu=integer(1),
                 what=what, debug=0L, 1L, salloc=integer(1), PACKAGE='rms')
+  ## Updated for the current ormll signature. The key structural change:
+  ## ormll no longer computes its own (ia, ia2, sgn, ib, nb) index
+  ## structure internally from y/y2 -- that's now a separate, one-time
+  ## precomputation via ormidx, whose output replaces the old y/y2
+  ## arguments. This is what let ormll drop y/y2 as arguments entirely
+  ## and made the same index structure reusable across repeated ormll
+  ## calls (e.g. within an optimization loop) without recomputing it
+  ## every time.
+
+  ## ---- Precompute the index structure (replaces passing y, y2 directly) ----
+  idx <- .Fortran('ormidx', n, k, y, y2, ia=integer(n), ia2=integer(n),
+                  sgn=numeric(n), ib=integer(n), nb=integer(1),
+                  salloc=integer(1), PACKAGE='rms')
+
+  ## Guards against R's 1:0 gotcha (1:0 == c(1,0), not empty) when a
+  ## dataset has no observations needing a second alpha (nb=0).
+  nb <- idx$nb
+  ib <- if(nb > 0) idx$ib[1 : nb] else integer(0)
+
+  nai <- 1L   # no interval censoring in this call -- sparse triplet outputs unused, size-1 placeholders
+  nu  <- 0L   # no random-effects missing-information accumulation here -- same treatment
+
+  w <- .Fortran('ormll', n, k, p, x, idx$ia, idx$ia2, idx$sgn, ib, nb,
+                offset, wt, penmat,
+                link=link, theta[1:k], theta[-(1:k)],
+                logL=numeric(1), grad=numeric(k + p), lpe=numeric(n),
+                a=matrix(0e0, k, 2), b=matrix(0e0, p, p), ab=matrix(0e0, k, p),
+                intcens=intcens, row=integer(nai), col=integer(nai), ai=numeric(nai),
+                nai=nai, ne=integer(1),
+                urow=integer(nu), ucol=integer(nu), um=numeric(nu), nu=nu, nuu=integer(1),
+                what=what, debug=0L, penhess=1L, salloc=integer(1), PACKAGE='rms')
   if(intcens && what == 3L) {
     ne    <- w$ne
     w$a   <- list(row = w$row[1 : ne], col = w$col[1 : ne], a = w$ai[1 : ne])
