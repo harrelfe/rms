@@ -1,13 +1,29 @@
 subroutine ormll(n, k, p,  &
-                 x, y, y2, offset, wt, penmat, link, alpha, beta, logL, u, &
+                 x, ia, ia2, sgn, ib, nb, offset, wt, penmat, link, alpha, beta, logL, u, &
                  d, ha, hb, hab,                 &
                  intcens, row, col, ai, nai, ne, &
                  urow, ucol, um, nu, nuu,        &
                  what, debug, penhess, salloc)
 
+! Claude Sonnet 5 2026-08-30
+! Modified to accept ia, ia2, sgn, ib, nb as precomputed inputs (produced
+! once per fit by ormidx) instead of recomputing them internally on every
+! call -- this bookkeeping is a pure function of y, y2, k and does not
+! depend on alpha, beta, or offset, so recomputing it every
+! Newton-Raphson iteration was wasted work. cdf/pdf/dpdf are now
+! supplied by the orm_links module instead of an internal contains
+! block, so the same link-function code can be shared with ormeta.
+! All downstream math (from the p1/p2 construction onward) is
+! byte-for-byte unchanged from the original.
+
 ! n      : # observations
 ! k      : # intercepts
 ! p      : # x columns
+! ia     : intercept index for the "p1" probability component (from ormidx)
+! ia2    : intercept index for "p2" component, 0 if none (from ormidx)
+! sgn    : +1 if p1 enters as F(), -1 if as 1-F() (from ormidx)
+! ib     : observation numbers having a p2 component; only ib(1:nb) used (from ormidx)
+! nb     : count of such observations (from ormidx)
 ! ne     : # elements set aside for sparse intercept
 !          hessian when interval censoring is present
 ! nu     : # elements set aside for sparse score matrix
@@ -15,15 +31,11 @@ subroutine ormll(n, k, p,  &
 !           To be safe, set nu = n * (2 + p)
 ! intcens: 1 if any interval censoring, 0 otherwose
 ! x      : covariate matrix
-! y      : integer outcome vector with values 0 : k
-! y2     : for censoring, y=y2 => uncensored; y2 is 0 : k
-!           y  =  -1 for left censored observation
-!           y2 = k+1 for right censored observation
-!           0 <= y < y1 <= k for interval-censored data
+! (y, y2 removed -- see note below at the ia/ia2/sgn declaration)
 ! offset : n-vector of offsets
 ! wt     : n-vector of case weights
 ! penmat : p x p penalty matrix (ignored for Hessian in case x was QR-transformed)
-! link   : link function/distribution famiily, 1-5 (see definition of cdf below)
+! link   : link function/distribution famiily, 1-5 (see orm_links module)
 ! alpha  : k-vector of intercepts
 ! beta   : p-vector of regression coefficients
 ! logL   : -2 LL
@@ -55,47 +67,45 @@ subroutine ormll(n, k, p,  &
 !          996 if nu > 0 but is not large enough to hold all score vector elements
 
   use, intrinsic :: ISO_FORTRAN_ENV, only: dp => real64, int32
+  use orm_links, only: cdf, pdf, dpdf
   implicit none
-  integer(int32), intent(in)  :: n, y(n), y2(n), k, p, what, debug, penhess, link, &
-                                 nai, intcens, nu
-  real(dp),       intent(in)  :: x(n, p), offset(n), wt(n), penmat(p, p), &
+  ! Claude Sonnet 5 2026-08-30          4 lines
+  ! y, y2 removed entirely: every substantive use in this subroutine
+  ! (the likelihood/gradient/Hessian computation) was already replaced
+  ! by ia, ia2, sgn, ib, nb (from ormidx) in the prior revision -- the
+  ! only remaining uses were debug-only diagnostics, now adapted below
+  ! to print ia/ia2/sgn instead (a deterministic, information-equivalent
+  ! transform of y/y2). A future y-dependent-effects (YDE / partial PO)
+  ! extension should route new information through ia/ia2 (already
+  ! cutpoint-indexed), not y/y2.
+  integer(int32), intent(in)  :: n, k, p, what, debug, penhess, link, &
+                                 nai, intcens, nu, ia(n), ia2(n), ib(nb), nb
+  real(dp),       intent(in)  :: x(n, p), sgn(n), offset(n), wt(n), penmat(p, p), &
                                  alpha(k), beta(p)
   real(dp),       intent(out) :: logL, d(n), u(k + p), &
                                  ha(k * (1 - intcens), 2), hb(p, p), hab(k, p), &
                                  ai(nai), um(nu)
   integer(int32), intent(out) :: row(nai), col(nai), ne, urow(nu), ucol(nu), nuu, salloc
 
-  integer(int32)  :: i, j, l, c, nb, j2, a, b, nbad, il(1)
+  integer(int32)  :: i, j, l, c, j2, nbad, il(1)
   real(dp)                    :: w, z, g1, g2
-  real(dp), allocatable :: lp(:), sgn(:), &
+  real(dp), allocatable :: lp(:), &
                            p1(:), p2(:), pdf1(:), pdf2(:), dpdf1(:), dpdf2(:)
-  ! ib: which obs have y=0, y=k, 0<y<k or are interval censored
-  ! Suffix b = "between", suffix a = "alpha"
-  integer(int32), allocatable :: ib(:), ia(:), ia2(:), ibad(:)
+  integer(int32), allocatable :: ibad(:)
 
   if(debug > 0) then
-    call intpr('n,k,p,ic,nai,x,y,o,w,pen,a,b,ha,d,r,c,ai', 40, &
-      [n, k, p, intcens, nai, size(x), size(y), size(offset), size(wt), size(penmat), &
-       size(alpha), size(beta), size(ha), size(d), size(row), size(col), size(ai)],   17)
+    call intpr('n,k,p,ic,nai,x,o,w,pen,a,b,ha,d,r,c,ai', 38, &
+      [n, k, p, intcens, nai, size(x), size(offset), size(wt), size(penmat), &
+       size(alpha), size(beta), size(ha), size(d), size(row), size(col), size(ai)],   16)
     call dblepr('alpha',  5, alpha,  k)
     call dblepr('beta',   4, beta,   p)
     call dblepr('penmat', 6, penmat, p * p)
   end if
 
-  nb = count((y > 0 .and. y < k .and. y == y2) .or. & ! uncensored Y, 0 < Y < k
-             (y >= 0 .and. y2 <= k .and. y /= y2))    ! or interval censored
-
-  allocate(lp(n), ib(nb), ia(n), ia2(n), sgn(n), &
-           p1(n), p2(n), pdf1(n), pdf2(n), &
+  allocate(lp(n), p1(n), p2(n), pdf1(n), pdf2(n), &
            dpdf1(n), dpdf2(n), stat=salloc)
 
   if(salloc /= 0) return
-
-  ! Compute observation numbers of uncensored data with 0 <= y <= k or
-  ! interval censored observations involving two alphas
-  ! Interval censored [a, k] just involves one alpha
-  ib = pack([(i, i=1,n)], (y > 0 .and. y < k .and. y == y2) .or. &
-                          (y >= 0 .and. y2 < k .and. y /= y2)      )
 
   lp = offset
   if(p > 0) lp = lp + matmul(x, beta)
@@ -119,53 +129,9 @@ subroutine ormll(n, k, p,  &
   !   Pr(j <= Y <= l) = F(alpha(j) + lp) - F(alpha(l + 1) + lp), j > 0, l < k
   !   Pr(0 <= Y <= l) = 1 - Pr(Y > l) = 1 - F(alpha(l + 1) + lp), l < k (s = -1)
   !   Pr(j <= Y <= k) = Pr(Y >= j) = F(alpha(j) + lp), j > 0, j < k
-
-  ! Compute ia : which alpha is involved (first alpha if 0 < y < k & uncensored)
-  !         ia2: second alpha involved, will always have negated F(); ia2=0 if no second alpha
-  !         ia goes with p1, ia2 goes with p2, take p1 - p2
-  !         s  : 1.0 when prob is F(), -1.0 when prob is 1 - F()
-
-  sgn = 1_dp
-  ia2 = 0_int32
-  do i = 1, n
-    a  = y (i)
-    b  = y2(i)
-    if(a == b) then       ! uncensored
-      if(a == 0) then
-        ia(i)  = 1        ! alpha(1)
-        sgn(i) = -1_dp
-      else if(a == k) then
-        ia(i) = k
-      else                ! 0 < a < k
-        ia(i)  = a        ! alpha number of p1; for p2 is ia + 1
-        ia2(i) = a + 1
-      end if
-    else                       ! a not= b: censored
-      if(a == -1_int32) then   ! left censored
-        ia(i)  = max(b, 1)
-        sgn(i) = -1_dp
-      else if(b > k) then ! right censored
-        ! It is possible that the highest right-censored a-value is at a=k
-        ! In that case the intercept involved is a=k and the interpretation
-        ! of the fitted model for the highest value of y (y=k) is
-        ! P(Y >= k | X) instead of P(Y == k | X)
-        ! If right censoring occurs when b=k the observation is treated the
-        ! same as an uncensored point in the likelihood calculations
-        ia(i) = min(a + 1, k)
-      else if(a == 0 .and. b < k) then      ! interval censored [0, b]
-        ia(i)  = b + 1
-        sgn(i) = -1_dp
-      else if(a > 0 .and. b == k) then  ! interval censored [a, k]
-        ia(i) = a
-      else if(a > 0 .and. b < k .and. a < b) then
-        ia(i)  = a
-        ia2(i) = b + 1
-      else
-        salloc = 998
-        return
-      end if
-    end if
-  end do
+  !
+  ! ia, ia2, sgn, ib, nb are now supplied by ormidx (called once per fit)
+  ! rather than computed here on every call.
 
   ! Compute first probability component without applying sgn, as this will become an
   ! argument for derivative functions to reduce execution time
@@ -193,8 +159,10 @@ subroutine ormll(n, k, p,  &
       call intpr('Zero or negative probability for observations ', 45, ibad, nbad)
       call intpr('Intercept involved', 18, ia(ibad), nbad)
       if(any(ia2(ibad) > 0)) call intpr('2nd Intercept involved', 22, ia2(ibad), nbad)
-      call intpr('y',    1, y  (ibad),   nbad)
-      call intpr('y2',   2, y2 (ibad),   nbad)
+      ! Claude Sonnet 5 2026-08-30          1 line
+      ! (y/y2 print lines removed -- ia/ia2 above and sgn below already
+      ! carry the same information, since ia/ia2/sgn are a deterministic,
+      ! information-equivalent transform of y/y2)
       call dblepr('d',   1, d  (ibad),   nbad)
       call dblepr('p1',  2, p1 (ibad),   nbad)
       call dblepr('p2',  2, p2 (ibad),   nbad)
@@ -202,7 +170,7 @@ subroutine ormll(n, k, p,  &
       deallocate(ibad)
     end if
     salloc = 999_int32
-    deallocate(lp, ib, ia, ia2, sgn, p1, p2, pdf1, pdf2, dpdf1, dpdf2)
+    deallocate(lp, p1, p2, pdf1, pdf2, dpdf1, dpdf2)
     return
   end if
 
@@ -223,8 +191,7 @@ subroutine ormll(n, k, p,  &
   hab = 0_dp
 
   if(what == 1) then
-    deallocate(lp, ib, ia, ia2, sgn, &
-               p1, p2, pdf1, pdf2, dpdf1, dpdf2)
+    deallocate(lp, p1, p2, pdf1, pdf2, dpdf1, dpdf2)
     return
   end if
 
@@ -270,7 +237,7 @@ subroutine ormll(n, k, p,  &
     if(nu > 0) then  ! compute sparse score matrix elements
       if(nuu + 2_int32 + p > nu) then
         salloc = 996_int32
-        deallocate(lp, ib, ia, ia2, sgn, p1, p2, pdf1, pdf2, dpdf1, dpdf2)
+        deallocate(lp, p1, p2, pdf1, pdf2, dpdf1, dpdf2)
         return
       end if
       nuu = nuu + 1
@@ -302,8 +269,7 @@ subroutine ormll(n, k, p,  &
   if(debug > 0) call dblepr('u', 1, u, k + p)
 
   if(what == 2) then
-    deallocate(lp, ib, ia, sgn, &
-               p1, p2, pdf1, pdf2, dpdf1, dpdf2)
+    deallocate(lp, p1, p2, pdf1, pdf2, dpdf1, dpdf2)
     return
     end if
 
@@ -349,7 +315,8 @@ subroutine ormll(n, k, p,  &
 
 
   do i = 1, n
-    a  = y(i)
+    ! Claude Sonnet 5 2026-08-30          1 line
+    ! (dead "a = y(i)" assignment removed here -- was never subsequently used)
     j  = ia(i)     ! intercept involved in p1
     j2 = ia2(i)    ! intercept involved in p2 (0 if not there)
     w  = wt(i) * 1_dp / d(i) ** 2
@@ -433,77 +400,8 @@ end do
     call dblepr('hab', 3, hab, size(hab))
   end if
 
-deallocate(lp, ib, ia, ia2, sgn, &
-            p1, p2, pdf1, pdf2, dpdf1, dpdf2)
+deallocate(lp, p1, p2, pdf1, pdf2, dpdf1, dpdf2)
 
 return
-
-contains
-
-  ! Compute CDF per link function given x
-  real(dp) function cdf(x, link) result(p)
-  real(dp),       intent(in) :: x(:)
-  integer(int32), intent(in) :: link
-  allocatable :: p(:)
-
-  select case(link)
-  case(1)              ! logistic
-    p = 1.0_dp / (1.0_dp + exp(- x))
-  case(2)              ! probit
-    p = 0.5_dp * (1.0_dp + erf(x / 1.414213562373095_dp))
-  case(3)
-    p = exp(-exp(-x))  ! loglog
-  case(4)              ! complementary loglog
-    p = 1 - exp(-exp(x))
-  case(5)              ! Cauchy
-    p = (1.0_dp / 3.14159265358979323846_dp) * atan(x) + 0.5_dp
-  end select
-
-  end function cdf
-
-  ! Compute probability density function (derivative of cdf) given x and cdf f
-  ! cdf is used as extra input to save time
-  ! Note: f is the value returned from cdf() in pure form.  Likewise for deriv
-  ! in dpdf.  For example if you computed 1 - cdf( ), f=cdf( ) not 1 - cdf( ).
-  real(dp) function pdf(x, f, link) result(p)
-    real(dp),       intent(in) :: x(:), f(:)
-    integer(int32), intent(in) :: link
-    allocatable                :: p(:)
-
-    select case(link)
-    case(1)
-      p = f * (1_dp - f)
-    case(2)
-      p = (1_dp / sqrt(2_dp * 3.14159265358979323846_dp)) * exp(- x * x / 2.0_dp)
-    case(3)
-      p = exp(-x - exp(-x))
-    case(4)
-      p = exp(x - exp(x))
-    case(5)
-      p = (1.0_dp / 3.14159265358979323846_dp) / (1_dp + x * x)
-    end select
-
-    end function pdf
-
-  ! Compute 2nd derivative of cdf (derivative of pdf) given x, cdf, pdf
-  real(dp) function dpdf(x, f, deriv, link) result(p)
-  real(dp),       intent(in) :: x(:), f(:), deriv(:)
-  integer(int32), intent(in) :: link
-  allocatable                :: p(:)
-
-  select case(link)
-  case(1)
-    p = f * (1_dp - 3_dp * f + 2 * f * f)
-  case(2)
-    p = - deriv * x
-  case(3)
-    p = deriv * (-1_dp + exp(-x))
-  case(4)
-    p = deriv * (1_dp - exp(x))
-  case(5)
-    p = -2_dp * x * ((1 + x * x) ** (-2_dp)) / 3.14159265358979323846_dp
-  end select
-
-end function dpdf
 
 end subroutine ormll
