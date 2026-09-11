@@ -7,16 +7,16 @@
 cluster(x)
 }
 \arguments{
-\item{x}{a vector representing a categorical vector}
+\item{x}{a vector representing a categorical variable}
 }
 \value{
-x unchanged
+\code{x} unchanged
 }
 \description{
 Cluster Function for Random Effects
 }
 \details{
-Used by \code{blrm} to signal a categorical variable to generate random effects.
+Used by \code{orm} and \code{blrm} to signal a categorical variable to generate random effects.
 }
 \author{
 Frank Harrell

@@ -26,12 +26,14 @@ orm <- function(formula, data=environment(formula),
       modelData(data, formula, weights=weights,
                 subset = subset,
                 na.action=na.action, callenv=callenv)
-
-    # Design handles cluster()
-    X          <- Design(X, formula=formula, specials="cluster")
-
+    # Design handles cluster(), mix_re()
+    X           <- Design(X, formula=formula, specials=c("cluster", "mix_re"))
     cluster     <- attr(X, 'cluster')
     clustername <- attr(X, 'clustername')
+    mix_re      <- attr(X, 'mix_re')
+    mix_rename  <- attr(X, 'mix_rename')
+    if(length(mix_re) && (length(mix_re) != length(cluster)))
+      stop('mix_re and cluster must have the same length')
 
     atrx       <- attributes(X)
     sformula   <- atrx$sformula
@@ -101,7 +103,7 @@ orm <- function(formula, data=environment(formula),
 
   if(existsFunction(method)) {
       fitter <- getFunction(method)
-      f <- fitter(X, Y, family=family, offset=offs, cluster=cluster,
+      f <- fitter(X, Y, family=family, offset=offs, cluster=cluster, mre=mix_re,
                   penalty.matrix=penalty.matrix,
                   scale=scale, maxit=maxit, weights=weights, normwt=normwt, ...)
     }
@@ -134,7 +136,9 @@ orm <- function(formula, data=environment(formula),
 
     if(var.penalty == 'sandwich') f$var.from.info.matrix <- v
     f.nopenalty <-
-        fitter(X, Y, family=family, offset=offs, initial=f$coef, maxit=1,
+        fitter(X, Y, family=family, offset=offs, 
+               cluster=cluster, mre=mix_re,
+               initial=f$coef, maxit=1,
                weights=weights, normwt=normwt)
     ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
     info.matrix.unpenalized <- infoMxop(f.nopenalty$info.matrix)
@@ -165,7 +169,8 @@ orm <- function(formula, data=environment(formula),
       }
   }
   clusterInfo <- if(length(cluster))
-                   list(cluster = if(x) cluster, n=f$ncluster, name=clustername)
+                   list(cluster = if(x) cluster, n=f$ncluster,
+                        name=clustername, mix_re = if(x) mix_re, mix_rename=mix_rename)
   f$ncluster <- NULL
   f <- c(f, list(call=call, Design=if(xpres)atr, clusterInfo=clusterInfo,
                  scale.pred=if(f$family=='logistic') c("log odds", "Odds Ratio") else
@@ -236,19 +241,38 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
 
   maxd <- stats['Max Deriv']
   ci   <- x$clusterInfo
-  sigmathere <- length(x$info.matrix$xname) && any(x$info.matrix$xname == 'log(sigma)')
-  sigmasum <- if(length(ci) && sigmathere) {
-     # clusterInfo also defined by robcov with after-fit clustering
-     sigma <- x$sigma
-     se    <- sqrt(infoMxop(x$info.matrix, i='log(sigma)'))
-     if(is.na(se)) formatNP(signif(sigma, 4), lang=prType())
-     else {
-       mmoe  <- exp(qnorm(0.975) * se)
-       sig <- c(sigma, sigma / mmoe, sigma * mmoe)
-       r <- if(sigma > 0.001) round(sig, 4) else formatNP(signif(sig, 4), lang=prType())
-       paste0(r[1], " [", r[2], ", ", r[3], "]")
-      }
+  xnm  <- x$info.matrix$xname
+  # clusterInfo also defined by robcov with after-fit clustering
+  sigmathere <- length(ci) && length(xnm) && any(xnm == 'log(sigma)')
+  sigma2there <- sigmathere && any(xnm == 'sigma2')
+
+  sigmafmt <- function(sigma, se, log=TRUE) {
+    if(is.na(se)) return(formatNP(signif(sigma, 4), lang=prType()))
+    z <- qnorm(0.975)
+    if(log) {
+      mmoe  <- exp(z * se)
+      sig <- c(sigma, sigma / mmoe, sigma * mmoe)
+    } else {
+      moe <- z * se
+      sig <- c(sigma, sigma - moe, sigma + moe)
     }
+    r <- if(sigma > 0.001) round(sig, 4) else formatNP(signif(sig, 4), lang=prType())
+    paste0(r[1], " [", r[2], ", ", r[3], "]")
+    }
+
+  re_cov <- if(sigmathere) infoMxop(x$info.matrix, i='sigma_parameters')
+  sigmasum <- if(sigmathere) {
+    sigma  <- if(sigma2there) x$sigma1 else x$sigma
+    se     <- if(sigma2there) sqrt(re_cov[1,1]) else sqrt(re_cov)
+    sigmafmt(sigma, se)   # retrieves x$sigma1 if sigma not there
+    }
+  sigma1sum <- if(sigma2there) sigmasum
+  if(sigma2there) sigmasum <- NULL
+  sigma2sum <- if(sigma2there) {
+    se     <- sqrt(re_cov[2,2])
+    sigmafmt(x$sigma2, se, log=FALSE)
+    }
+
   frq  <- if(length(x$freq) < 4) x$freq
 
   Ncens <- x$Ncens1
@@ -286,6 +310,8 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
                       'Cluster on'  = ci$name,
                       Clusters      = ci$n,
                       'sigma gamma' = sigmasum,
+                      sigma1        = sigma1sum,
+                      sigma2        = sigma2sum,
                       'Median Y'    = stats['Median Y'],
                       'max |deriv|' = maxd)
   if(length(x$freq) < 4) {

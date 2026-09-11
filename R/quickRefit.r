@@ -27,6 +27,8 @@ quickRefit <-
            strata         = object[['strata'        ]],
            penalty.matrix = object[['penalty.matrix']],
            weights        = object[[if(k == 'Glm')'oweights' else 'weights']],
+           cluster        = if(k == 'orm') object$clusterInfo$cluster,
+           mre            = if(k == 'orm') object$clusterInfo$mix_re,
            compstats      = FALSE,
            gradtol        = 0.001,
            ytarget        = NULL,
@@ -66,10 +68,12 @@ g <-
                    penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method, ...),
          orm = function()
            orm.fit(as.matrix(X)[subset,,drop=FALSE], if(is.matrix(y)) y[subset,,drop=FALSE] else y[subset],
+                        cluster=cluster[subset], mre=mre[subset],
                         family=family, compstats=compstats, gradtol=gradtol, offset=offset[subset], initial=initial,
                         penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method), #, ...),
          ormt= function() {
            f <- orm.fit(as.matrix(X)[subset,,drop=FALSE], if(is.matrix(y)) y[subset,,drop=FALSE] else y[subset],
+                        cluster=cluster[subset], mre=mre[subset],
                         family=family, compstats=compstats, gradtol=gradtol, offset=offset[subset], initial=initial,
                         penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method) # $, ...)
            ns  <- f$non.slopes

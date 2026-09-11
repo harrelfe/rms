@@ -34,6 +34,7 @@ orm.fit(
   nAGQ = 7L,
   nAGQ.grid = c(7L, 11L, 15L, 21L, 31L, 45L, 63L),
   nAGQ.tol = 1e-05,
+  mre = NULL,
   ...
 )
 }
@@ -173,6 +174,23 @@ given}
 current \code{nAGQ} to the next candidate in \code{nAGQ.grid}, below which
 \code{nAGQ} escalation stops; used only when \code{cluster} is given}
 
+\item{mre}{optional fixed, numeric vector the same length as \code{y},
+used only when \code{cluster} is also given: a user-computed
+"multiplier for random effects" governing how the random
+intercept's own contribution is weighted at each observation, via
+two estimated scale parameters \code{sigma1} and \code{sigma2} in place of
+the ordinary single \code{sigma} (see \strong{Details}). Left as \code{NULL}
+(the default) to fit the ordinary, single-\code{sigma} random-
+intercept model. For a Markov-1 model on repeated ordinal
+responses, a natural choice is \code{mre} equal to \code{0} at each
+subject's first follow-up and \code{1} at every later one (see
+\strong{Examples}), but any fixed function of the data, continuous or
+discrete, is valid. \code{mre} must vary within at least some
+clusters; a completely constant \code{mre} (whether \code{0}, \code{1}, or any
+other single value across the whole dataset) is rejected with an
+informative error, since it would leave \code{sigma1} and \code{sigma2}
+unidentifiable.}
+
 \item{...}{ignored}
 }
 \value{
@@ -204,13 +222,21 @@ back as \code{NA}.
 when \code{cluster} is given, \code{maxit.outer>1})
 \item \code{coefficients}: estimated parameters (intercepts then slopes)
 \item \code{family}, \code{famfunctions}: see \code{\link[=orm]{orm()}}
-\item \code{deviance}: \code{-2} log likelihoods. When an offset variable is
-present, three deviances are computed: for intercept(s) only, for
-intercepts+offset, and for intercepts+offset+predictors. When
-there is no offset variable, the vector contains deviances for
-the intercept(s)-only model and the model with intercept(s) and
-predictors; when \code{cluster} is given, the random-intercept model's
-own deviance is appended as the final element.
+\item \code{deviance}: named vector of \code{-2} log likelihoods, in the order
+computed. Element names, in order (present or absent according to
+which of censoring/an offset/covariates/clustering actually
+apply -- see \strong{Details} for why, when \code{cluster} is given and
+\code{p>0}, two additional, clustered elements are always computed):
+\code{"intercepts"} (always present); \code{"intercepts+offset"} (only if
+an offset variable is given); \code{"intercepts+x"} (only if \code{p>0}
+covariates are present); \code{"intercepts+random effects"} (only if
+\code{cluster} is given -- when \code{p>0} this is an extra, covariate-free
+clustered fit computed solely to give the next element a correct
+baseline; when \code{p==0} it is instead the final element, there
+being no \code{x} to add); \code{"intercepts+x+random effects"} (the final
+element whenever both \code{cluster} is given and \code{p>0}). The vector
+is correspondingly shorter whenever \code{cluster} is not given,
+ending at \code{"intercepts+x"} (or just \code{"intercepts"} if \code{p==0}).
 \item \code{lpe}: vector of per-observation likelihood probability elements.
 An observation's contribution to the log likelihood is the log of
 \code{lpe}. Not currently computed when \code{cluster} is given (returned
@@ -225,15 +251,25 @@ downstream fit statistics retain their ordinary interpretation.
 \item \code{penalty.matrix}: see above
 \item \code{info.matrix}: see \code{\link[=orm]{orm()}} and \code{\link[=infoMxop]{infoMxop()}}. When \code{cluster} is
 given, this is the corrected (Louis's-identity-adjusted) sparse
-information matrix described in \strong{Details}, with an additional
-\code{log(sigma)} row/column in its \code{b}/\code{ab} pieces.
+information matrix described in \strong{Details}, with additional
+row(s)/column(s) in its \code{b}/\code{ab} pieces: a single \code{log(sigma)}
+element when \code{mre} is not given, or \code{log(sigma)} and \code{sigma2}
+together when it is. Use \code{infoMxop(fit$info.matrix, i='sigma_parameters')} to retrieve the variance of \code{log(sigma)}
+alone, or the \verb{2x2} covariance matrix of \code{log(sigma)} and
+\code{sigma2} when both are present.
 \item \code{ncluster}: number of distinct clusters. Present only when
 \code{cluster} is given.
 \item \code{nAGQ}: the number of adaptive Gauss-Hermite quadrature nodes
 used for the final, converged fit (after any automatic
 escalation). Present only when \code{cluster} is given.
 \item \code{sigma}: the estimated random-intercept standard deviation.
-Present only when \code{cluster} is given.
+Present only when \code{cluster} is given \emph{and} \code{mre} is not; when
+\code{mre} is given, \code{sigma1} and \code{sigma2} are reported instead (see
+below) and \code{sigma} is absent.
+\item \code{sigma1}, \code{sigma2}: the two estimated random-effect scale
+parameters described in \strong{Details} (\code{sigma1} constrained
+positive, \code{sigma2} unconstrained). Present only when both
+\code{cluster} and \code{mre} are given.
 \item \code{gamma}: vector of estimated (posterior mode) random intercepts,
 one per cluster, in the order of the distinct levels of
 \code{cluster}. Present only when \code{cluster} is given.
@@ -256,7 +292,9 @@ times the number of columns of \code{x}.
 
 \code{orm.fit} also fits a single-level random-intercept extension of
 this model when \code{cluster} is specified, for clustered or repeated-
-measures data. See \strong{Details} for a full description of the
+measures data, optionally with a user-specified, continuously- or
+discretely-varying weight on the random effect (see \code{mre} below and
+\strong{Details}). See \strong{Details} for a full description of the
 random-intercept model, how it is fit, and how sparseness is
 preserved even with thousands of intercepts.
 }
@@ -280,6 +318,90 @@ started) at each successively larger value in \code{nAGQ.grid} until the
 log-likelihood stabilizes within \code{nAGQ.tol}, since no single fixed
 value of \code{nAGQ} was found to be adequate across the full range of
 \code{sigma} a user might encounter.
+}
+
+\subsection{Weighted random effects via \code{mre}}{
+
+When a fixed, user-specified per-observation vector \code{mre} is also
+given, the random intercept's own contribution to the linear
+predictor is no longer a constant \code{gamma_j} -- it is scaled by a
+quantity that can vary, continuously if desired, across an
+individual cluster's own observations:
+\deqn{\eta_{ij} = \ldots + [\sigma_1(1-\mbox{mre}_{ij}) +
+  \sigma_2\,\mbox{mre}_{ij}]\, v_i}
+where \code{v_i ~ N(0,1)} is a standardized, per-cluster random effect
+and \code{sigma1}, \code{sigma2} are two estimated scale parameters --
+\code{sigma1} constrained positive via a \code{log} link (to pin down \code{v_i}'s
+otherwise arbitrary sign, since flipping the sign of both \code{sigma2}
+and every \code{v_i} simultaneously leaves the likelihood unchanged
+unless something anchors it), \code{sigma2} left unconstrained, so it
+may legitimately come out negative. \code{mre} is entirely user-computed
+and fixed -- it is data, exactly like a column of \code{x}, never
+estimated -- while \code{sigma1} and \code{sigma2} are estimated jointly with
+\code{alpha} and \code{beta} in the same Newton step. \code{mre=NULL} (the
+default) recovers the ordinary, single-\code{sigma} model exactly, with
+no loss of speed or accuracy.
+
+This additive form -- \code{sigma1} and \code{sigma2} each multiplying a
+separately-known quantity, \verb{(1-mre)v_i} and \verb{mre \\, v_i}
+respectively -- was chosen over an earlier, multiplicative design
+(a single \code{sigma} combined with a separately estimated multiplier)
+specifically because it keeps \code{sigma1} and \code{sigma2} close to
+orthogonal. Extensive testing found the multiplicative form's extra
+parameter became structurally unidentifiable whenever the base
+\code{sigma} approached its lower boundary of zero, causing the fit to
+converge to an arbitrary, meaningless value for it; \code{sigma1} and
+\code{sigma2} remain well-behaved instead (their estimated correlation
+stayed well under \code{0.2} in magnitude across every scenario tested,
+including deliberately small samples and scale parameters of
+opposite sign), since each is an absolute scale directly identified
+by its own share of the data rather than a ratio relative to the
+other.
+
+\code{mre} must vary \emph{within} at least some clusters for \code{sigma1} and
+\code{sigma2} to be separately identifiable; \code{orm.fit} checks this
+directly and stops with an informative error if \code{mre} has no
+variation anywhere in the data (e.g. is constant at \code{0}, at \code{1}, or
+at any other single value for every observation). A cluster
+contributing only a single observation is harmless and needs no
+special handling -- it simply contributes nothing toward separating
+\code{sigma1} from \code{sigma2}, the same way a covariate with no variation
+in one subgroup does not hurt an ordinary regression, as long as
+\emph{some} clusters elsewhere in the data do have within-cluster \code{mre}
+variation.
+
+A natural and recommended choice for a Markov-1 model on repeated
+ordinal responses (a proportional-odds model whose linear predictor
+includes a term for the previous response) is a piecewise-constant
+\code{mre}: \code{0} at each subject's first follow-up time and \code{1} at every
+subsequent one (see \strong{Examples}). The motivation is that a plain,
+constantly-weighted random effect double-counts its own influence
+once a lag term is present -- the previous response already carries
+the random effect's influence forward, so adding it again at full
+strength at every subsequent visit can induce an unrealistically
+large or ever-growing correlation across time. Letting \code{sigma2}
+differ from \code{sigma1} -- including, if the data call for it, being
+of the opposite sign -- lets the random effect's influence after
+the first visit either add to or subtract from the correlation the
+lag term alone would induce, as the data determine. \code{mre} is not
+restricted to this \code{0}/\code{1} step function, however; any fixed,
+user-computed function of the data (continuously varying with
+follow-up time, for example) is equally valid.
+}
+
+\subsection{Likelihood ratio tests under clustering}{
+
+When \code{cluster} is given together with \code{p>0} covariates, \code{orm.fit}
+fits an \emph{additional}, otherwise-unnecessary clustered model:
+intercepts plus the same random-effects structure (including \code{mre},
+if given), but without \code{x}. This provides a clustered null deviance
+that is directly comparable to the clustered full model's deviance,
+so that the reported model likelihood ratio chi-square is a genuine
+test of the covariates given the random-effects structure already
+in the model -- not a test confounded with whether the random
+effect itself improves the fit. See the \code{deviance} element of
+\strong{Returns} for the full, named composition of the returned
+deviance vector.
 }
 
 \subsection{Inner and outer loops}{
@@ -308,10 +430,24 @@ the random-intercept extension inherits the same scalability to
 very large numbers of intercepts that \code{orm.fit} has without
 random effects -- it simply pays this cost \code{nAGQ} times per
 outer iteration instead of once.
-\item \strong{A one-dimensional profile search for \code{sigma}}, done via
-\code{optimize()} using only the lean, \code{O(n)} per-observation routine
-from step 1 (no gradient or Hessian needed) -- cheap relative to
-step 2.
+\item \strong{Fitting the random-effect scale parameter(s)}. When \code{mre} is
+not given, this is a one-dimensional profile search for \code{sigma}
+via \code{optimize()}, using only the lean, \code{O(n)} per-observation
+routine from step 1 (no gradient or Hessian needed) -- cheap
+relative to step 2. This separate-search design was tried for
+the \code{sigma1}/\code{sigma2} case too, but found to converge to a
+persistent wrong value whenever the true \code{sigma2} had the
+opposite sign from its (necessarily sign-unknown-in-advance)
+starting value, regardless of sample size -- confirmed to be a
+genuine optimization-path problem, not a sign of poor
+identifiability, since a direct grid-scan of the likelihood
+always found a well-behaved optimum near the true values. When
+\code{mre} \emph{is} given, \code{sigma1} and \code{sigma2} are therefore instead
+estimated jointly with \code{alpha} and \code{beta} in the very same
+Newton step as step 2, \code{sigma2} started at exactly \code{0} (not an
+arbitrary nonzero value) so the step itself discovers the
+correct sign directly from the data rather than being biased
+toward whichever sign it happened to start on.
 }
 
 Because this scheme converges only linearly near the optimum
@@ -378,12 +514,17 @@ entries out of 11,175 possible for a \code{k=149}, 75-cluster
 example). This lets \code{orm.fit} fit random-intercept models with
 thousands of intercepts in about a second, versus tens of seconds
 to minutes for \code{ordinal::clmm2} on the same data.
-\item \code{log(sigma)}'s standard error is obtained by extending only the
-non-intercept (\code{b}/\code{ab}) pieces of \code{info.matrix} by one row and
-column -- the intercept-intercept block is never touched by this
-extension, so \code{\link[=infoMxop]{infoMxop()}} and other code that consumes
-\code{info.matrix} require no special handling for the random-effects
-case beyond what interval censoring already required.
+\item \code{log(sigma)}'s standard error (or the covariance of \code{log(sigma)}
+and \code{sigma2}, when \code{mre} is given) is obtained by extending only
+the non-intercept (\code{b}/\code{ab}) pieces of \code{info.matrix} by one or two
+rows and columns -- the intercept-intercept block is never
+touched by this extension, so \code{\link[=infoMxop]{infoMxop()}} and other code that
+consumes \code{info.matrix} require no special handling for the
+random-effects case beyond what interval censoring already
+required. \code{\link[=infoMxop]{infoMxop()}} locates these elements by searching
+\code{info.matrix$xname} for \code{"log(sigma)"} and \code{"sigma2"} wherever
+they occur, rather than assuming a fixed position, so their
+presence and order elsewhere in \code{xname} does not matter.
 }
 }
 
@@ -406,14 +547,15 @@ information matrix when random effects are present -- ignoring
 the missing-information correction was found in validation
 studies to understate intercept standard errors by as much as
 40\%.
-\item Requesting \code{i='log(sigma)'} from \code{\link[=infoMxop]{infoMxop()}} can encounter a
-genuinely singular information matrix when a fit has converged
-with \code{sigma} at or very near its lower boundary of zero -- at
-that boundary \code{log(sigma)}'s information content correctly
+\item Requesting \code{i='sigma_parameters'} from \code{\link[=infoMxop]{infoMxop()}} can encounter
+a genuinely singular information matrix when a fit has converged
+with \code{sigma} (or \code{sigma1}) at or very near its lower boundary of
+zero -- at that boundary its information content correctly
 collapses to zero (a known, non-regular feature of variance-
 component estimation, not a numerical defect), and \code{infoMxop}
-returns \code{NA} with an explanatory warning rather than raising a
-raw singularity error in that case.
+returns \code{NA} (a scalar, or an all-\code{NA} \verb{2x2} matrix when \code{sigma2}
+is also present) with an explanatory warning rather than raising
+a raw singularity error in that case.
 \item The effective-sample-size adjustment for censored observations
 (contributing to the \code{"ESS"} element of \code{stats}) is not yet
 available when \code{cluster} is specified; \code{stats["ESS"]} reflects
@@ -433,6 +575,21 @@ is issued.
 # Fit a random-intercept version for repeated measurements on
 # subject id
 # fit <- orm.fit(cbind(age, blood.pressure, sex), death, cluster=id)
+
+# A Markov-1 model on repeated ordinal responses, where the linear
+# predictor already includes a term for the previous response (e.g.
+# via an added column of x, such as a spline in the lagged y). The
+# recommended mre for this situation takes on only the values 0 and
+# 1: 0 at each subject's FIRST follow-up time, 1 at every later one.
+# This lets the fit determine, via the separately-estimated sigma2,
+# how much the random effect should add to or subtract from the
+# correlation the lag term alone induces, rather than assuming (as
+# a plain, constantly-weighted random effect implicitly would) that
+# its influence should be injected again at full, undiminished
+# strength at every subsequent visit:
+# mre <- ave(time, id, FUN = function(t) as.numeric(t > min(t)))
+# fit <- orm.fit(cbind(prev.y, age, blood.pressure, sex), y,
+#                 cluster=id, mre=mre)
 }
 }
 \seealso{

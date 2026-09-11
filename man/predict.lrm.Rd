@@ -23,6 +23,16 @@ with nonzero \code{conf.int}, an attribute named \code{limits} is attached
 For \code{orm} fits on censored data, the function created by \code{Mean.orm}
 has an argument \code{tmax} which specifies the restriction time for mean
 restricted survival time.
+
+For \code{orm} fits containing random intercepts, \code{predict} and
+\code{Predict} compute predictions with the random effect(s) set to
+their mean of zero.  This gives a fixed-effects prediction for a
+\dQuote{typical} cluster, not a population-averaged (marginal)
+probability obtained by integrating over the random effect
+distribution, and not a cluster-specific prediction for a particular
+cluster in the data.  Because the link function is nonlinear, these
+three quantities differ whenever the estimated random intercept
+variance is appreciable.
 }
 \usage{
 \method{predict}{lrm}(object, \dots, type=c("lp", "fitted",

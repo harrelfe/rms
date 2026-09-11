@@ -17,7 +17,9 @@
 #'
 #' `orm.fit` also fits a single-level random-intercept extension of
 #' this model when `cluster` is specified, for clustered or repeated-
-#' measures data. See **Details** for a full description of the
+#' measures data, optionally with a user-specified, continuously- or
+#' discretely-varying weight on the random effect (see `mre` below and
+#' **Details**). See **Details** for a full description of the
 #' random-intercept model, how it is fit, and how sparseness is
 #' preserved even with thousands of intercepts.
 #'
@@ -40,6 +42,86 @@
 #' log-likelihood stabilizes within `nAGQ.tol`, since no single fixed
 #' value of `nAGQ` was found to be adequate across the full range of
 #' `sigma` a user might encounter.
+#'
+#' ## Weighted random effects via `mre`
+#' When a fixed, user-specified per-observation vector `mre` is also
+#' given, the random intercept's own contribution to the linear
+#' predictor is no longer a constant `gamma_j` -- it is scaled by a
+#' quantity that can vary, continuously if desired, across an
+#' individual cluster's own observations:
+#' \deqn{\eta_{ij} = \ldots + [\sigma_1(1-\mbox{mre}_{ij}) +
+#'   \sigma_2\,\mbox{mre}_{ij}]\, v_i}
+#' where `v_i ~ N(0,1)` is a standardized, per-cluster random effect
+#' and `sigma1`, `sigma2` are two estimated scale parameters --
+#' `sigma1` constrained positive via a `log` link (to pin down `v_i`'s
+#' otherwise arbitrary sign, since flipping the sign of both `sigma2`
+#' and every `v_i` simultaneously leaves the likelihood unchanged
+#' unless something anchors it), `sigma2` left unconstrained, so it
+#' may legitimately come out negative. `mre` is entirely user-computed
+#' and fixed -- it is data, exactly like a column of `x`, never
+#' estimated -- while `sigma1` and `sigma2` are estimated jointly with
+#' `alpha` and `beta` in the same Newton step. `mre=NULL` (the
+#' default) recovers the ordinary, single-`sigma` model exactly, with
+#' no loss of speed or accuracy.
+#'
+#' This additive form -- `sigma1` and `sigma2` each multiplying a
+#' separately-known quantity, `(1-mre)v_i` and `mre \, v_i`
+#' respectively -- was chosen over an earlier, multiplicative design
+#' (a single `sigma` combined with a separately estimated multiplier)
+#' specifically because it keeps `sigma1` and `sigma2` close to
+#' orthogonal. Extensive testing found the multiplicative form's extra
+#' parameter became structurally unidentifiable whenever the base
+#' `sigma` approached its lower boundary of zero, causing the fit to
+#' converge to an arbitrary, meaningless value for it; `sigma1` and
+#' `sigma2` remain well-behaved instead (their estimated correlation
+#' stayed well under `0.2` in magnitude across every scenario tested,
+#' including deliberately small samples and scale parameters of
+#' opposite sign), since each is an absolute scale directly identified
+#' by its own share of the data rather than a ratio relative to the
+#' other.
+#'
+#' `mre` must vary *within* at least some clusters for `sigma1` and
+#' `sigma2` to be separately identifiable; `orm.fit` checks this
+#' directly and stops with an informative error if `mre` has no
+#' variation anywhere in the data (e.g. is constant at `0`, at `1`, or
+#' at any other single value for every observation). A cluster
+#' contributing only a single observation is harmless and needs no
+#' special handling -- it simply contributes nothing toward separating
+#' `sigma1` from `sigma2`, the same way a covariate with no variation
+#' in one subgroup does not hurt an ordinary regression, as long as
+#' *some* clusters elsewhere in the data do have within-cluster `mre`
+#' variation.
+#'
+#' A natural and recommended choice for a Markov-1 model on repeated
+#' ordinal responses (a proportional-odds model whose linear predictor
+#' includes a term for the previous response) is a piecewise-constant
+#' `mre`: `0` at each subject's first follow-up time and `1` at every
+#' subsequent one (see **Examples**). The motivation is that a plain,
+#' constantly-weighted random effect double-counts its own influence
+#' once a lag term is present -- the previous response already carries
+#' the random effect's influence forward, so adding it again at full
+#' strength at every subsequent visit can induce an unrealistically
+#' large or ever-growing correlation across time. Letting `sigma2`
+#' differ from `sigma1` -- including, if the data call for it, being
+#' of the opposite sign -- lets the random effect's influence after
+#' the first visit either add to or subtract from the correlation the
+#' lag term alone would induce, as the data determine. `mre` is not
+#' restricted to this `0`/`1` step function, however; any fixed,
+#' user-computed function of the data (continuously varying with
+#' follow-up time, for example) is equally valid.
+#'
+#' ## Likelihood ratio tests under clustering
+#' When `cluster` is given together with `p>0` covariates, `orm.fit`
+#' fits an *additional*, otherwise-unnecessary clustered model:
+#' intercepts plus the same random-effects structure (including `mre`,
+#' if given), but without `x`. This provides a clustered null deviance
+#' that is directly comparable to the clustered full model's deviance,
+#' so that the reported model likelihood ratio chi-square is a genuine
+#' test of the covariates given the random-effects structure already
+#' in the model -- not a test confounded with whether the random
+#' effect itself improves the fit. See the `deviance` element of
+#' **Returns** for the full, named composition of the returned
+#' deviance vector.
 #'
 #' ## Inner and outer loops
 #' Fitting uses an outer, block-alternating loop, each iteration of
@@ -66,10 +148,24 @@
 #'    very large numbers of intercepts that `orm.fit` has without
 #'    random effects -- it simply pays this cost `nAGQ` times per
 #'    outer iteration instead of once.
-#' 3. **A one-dimensional profile search for `sigma`**, done via
-#'    `optimize()` using only the lean, `O(n)` per-observation routine
-#'    from step 1 (no gradient or Hessian needed) -- cheap relative to
-#'    step 2.
+#' 3. **Fitting the random-effect scale parameter(s)**. When `mre` is
+#'    not given, this is a one-dimensional profile search for `sigma`
+#'    via `optimize()`, using only the lean, `O(n)` per-observation
+#'    routine from step 1 (no gradient or Hessian needed) -- cheap
+#'    relative to step 2. This separate-search design was tried for
+#'    the `sigma1`/`sigma2` case too, but found to converge to a
+#'    persistent wrong value whenever the true `sigma2` had the
+#'    opposite sign from its (necessarily sign-unknown-in-advance)
+#'    starting value, regardless of sample size -- confirmed to be a
+#'    genuine optimization-path problem, not a sign of poor
+#'    identifiability, since a direct grid-scan of the likelihood
+#'    always found a well-behaved optimum near the true values. When
+#'    `mre` *is* given, `sigma1` and `sigma2` are therefore instead
+#'    estimated jointly with `alpha` and `beta` in the very same
+#'    Newton step as step 2, `sigma2` started at exactly `0` (not an
+#'    arbitrary nonzero value) so the step itself discovers the
+#'    correct sign directly from the data rather than being biased
+#'    toward whichever sign it happened to start on.
 #'
 #' Because this scheme converges only linearly near the optimum
 #' (unlike `orm.fit`'s own Newton-Raphson, which converges
@@ -133,12 +229,17 @@
 #'   example). This lets `orm.fit` fit random-intercept models with
 #'   thousands of intercepts in about a second, versus tens of seconds
 #'   to minutes for `ordinal::clmm2` on the same data.
-#' - `log(sigma)`'s standard error is obtained by extending only the
-#'   non-intercept (`b`/`ab`) pieces of `info.matrix` by one row and
-#'   column -- the intercept-intercept block is never touched by this
-#'   extension, so [infoMxop()] and other code that consumes
-#'   `info.matrix` require no special handling for the random-effects
-#'   case beyond what interval censoring already required.
+#' - `log(sigma)`'s standard error (or the covariance of `log(sigma)`
+#'   and `sigma2`, when `mre` is given) is obtained by extending only
+#'   the non-intercept (`b`/`ab`) pieces of `info.matrix` by one or two
+#'   rows and columns -- the intercept-intercept block is never
+#'   touched by this extension, so [infoMxop()] and other code that
+#'   consumes `info.matrix` require no special handling for the
+#'   random-effects case beyond what interval censoring already
+#'   required. [infoMxop()] locates these elements by searching
+#'   `info.matrix$xname` for `"log(sigma)"` and `"sigma2"` wherever
+#'   they occur, rather than assuming a fixed position, so their
+#'   presence and order elsewhere in `xname` does not matter.
 #'
 #' ## Other computational details
 #' - `opt_method='LM'` uses an *asymmetric* Levenberg-Marquardt damping
@@ -158,14 +259,15 @@
 #'   the missing-information correction was found in validation
 #'   studies to understate intercept standard errors by as much as
 #'   40%.
-#' - Requesting `i='log(sigma)'` from [infoMxop()] can encounter a
-#'   genuinely singular information matrix when a fit has converged
-#'   with `sigma` at or very near its lower boundary of zero -- at
-#'   that boundary `log(sigma)`'s information content correctly
+#' - Requesting `i='sigma_parameters'` from [infoMxop()] can encounter
+#'   a genuinely singular information matrix when a fit has converged
+#'   with `sigma` (or `sigma1`) at or very near its lower boundary of
+#'   zero -- at that boundary its information content correctly
 #'   collapses to zero (a known, non-regular feature of variance-
 #'   component estimation, not a numerical defect), and `infoMxop`
-#'   returns `NA` with an explanatory warning rather than raising a
-#'   raw singularity error in that case.
+#'   returns `NA` (a scalar, or an all-`NA` `2x2` matrix when `sigma2`
+#'   is also present) with an explanatory warning rather than raising
+#'   a raw singularity error in that case.
 #' - The effective-sample-size adjustment for censored observations
 #'   (contributing to the `"ESS"` element of `stats`) is not yet
 #'   available when `cluster` is specified; `stats["ESS"]` reflects
@@ -180,6 +282,22 @@
 #'   given, `orm.fit` fits an additional normally-distributed random
 #'   intercept for each distinct cluster; see **Details**. Left as
 #'   `NULL` (the default) to fit the ordinary fixed-effects model.
+#' @param mre optional fixed, numeric vector the same length as `y`,
+#'   used only when `cluster` is also given: a user-computed
+#'   "multiplier for random effects" governing how the random
+#'   intercept's own contribution is weighted at each observation, via
+#'   two estimated scale parameters `sigma1` and `sigma2` in place of
+#'   the ordinary single `sigma` (see **Details**). Left as `NULL`
+#'   (the default) to fit the ordinary, single-`sigma` random-
+#'   intercept model. For a Markov-1 model on repeated ordinal
+#'   responses, a natural choice is `mre` equal to `0` at each
+#'   subject's first follow-up and `1` at every later one (see
+#'   **Examples**), but any fixed function of the data, continuous or
+#'   discrete, is valid. `mre` must vary within at least some
+#'   clusters; a completely constant `mre` (whether `0`, `1`, or any
+#'   other single value across the whole dataset) is rejected with an
+#'   informative error, since it would leave `sigma1` and `sigma2`
+#'   unidentifiable.
 #' @param family a character value specifying the distribution family,
 #'   corresponding to logistic (the default), Gaussian, Cauchy, Gumbel
 #'   maximum (`exp(-exp(-x))`; extreme value type I), and Gumbel
@@ -309,13 +427,21 @@
 #'   when `cluster` is given, `maxit.outer>1`)
 #' - `coefficients`: estimated parameters (intercepts then slopes)
 #' - `family`, `famfunctions`: see [orm()]
-#' - `deviance`: `-2` log likelihoods. When an offset variable is
-#'   present, three deviances are computed: for intercept(s) only, for
-#'   intercepts+offset, and for intercepts+offset+predictors. When
-#'   there is no offset variable, the vector contains deviances for
-#'   the intercept(s)-only model and the model with intercept(s) and
-#'   predictors; when `cluster` is given, the random-intercept model's
-#'   own deviance is appended as the final element.
+#' - `deviance`: named vector of `-2` log likelihoods, in the order
+#'   computed. Element names, in order (present or absent according to
+#'   which of censoring/an offset/covariates/clustering actually
+#'   apply -- see **Details** for why, when `cluster` is given and
+#'   `p>0`, two additional, clustered elements are always computed):
+#'   `"intercepts"` (always present); `"intercepts+offset"` (only if
+#'   an offset variable is given); `"intercepts+x"` (only if `p>0`
+#'   covariates are present); `"intercepts+random effects"` (only if
+#'   `cluster` is given -- when `p>0` this is an extra, covariate-free
+#'   clustered fit computed solely to give the next element a correct
+#'   baseline; when `p==0` it is instead the final element, there
+#'   being no `x` to add); `"intercepts+x+random effects"` (the final
+#'   element whenever both `cluster` is given and `p>0`). The vector
+#'   is correspondingly shorter whenever `cluster` is not given,
+#'   ending at `"intercepts+x"` (or just `"intercepts"` if `p==0`).
 #' - `lpe`: vector of per-observation likelihood probability elements.
 #'   An observation's contribution to the log likelihood is the log of
 #'   `lpe`. Not currently computed when `cluster` is given (returned
@@ -330,15 +456,26 @@
 #' - `penalty.matrix`: see above
 #' - `info.matrix`: see [orm()] and [infoMxop()]. When `cluster` is
 #'   given, this is the corrected (Louis's-identity-adjusted) sparse
-#'   information matrix described in **Details**, with an additional
-#'   `log(sigma)` row/column in its `b`/`ab` pieces.
+#'   information matrix described in **Details**, with additional
+#'   row(s)/column(s) in its `b`/`ab` pieces: a single `log(sigma)`
+#'   element when `mre` is not given, or `log(sigma)` and `sigma2`
+#'   together when it is. Use `infoMxop(fit$info.matrix,
+#'   i='sigma_parameters')` to retrieve the variance of `log(sigma)`
+#'   alone, or the `2x2` covariance matrix of `log(sigma)` and
+#'   `sigma2` when both are present.
 #' - `ncluster`: number of distinct clusters. Present only when
 #'   `cluster` is given.
 #' - `nAGQ`: the number of adaptive Gauss-Hermite quadrature nodes
 #'   used for the final, converged fit (after any automatic
 #'   escalation). Present only when `cluster` is given.
 #' - `sigma`: the estimated random-intercept standard deviation.
-#'   Present only when `cluster` is given.
+#'   Present only when `cluster` is given *and* `mre` is not; when
+#'   `mre` is given, `sigma1` and `sigma2` are reported instead (see
+#'   below) and `sigma` is absent.
+#' - `sigma1`, `sigma2`: the two estimated random-effect scale
+#'   parameters described in **Details** (`sigma1` constrained
+#'   positive, `sigma2` unconstrained). Present only when both
+#'   `cluster` and `mre` are given.
 #' - `gamma`: vector of estimated (posterior mode) random intercepts,
 #'   one per cluster, in the order of the distinct levels of
 #'   `cluster`. Present only when `cluster` is given.
@@ -363,6 +500,21 @@
 #' # Fit a random-intercept version for repeated measurements on
 #' # subject id
 #' # fit <- orm.fit(cbind(age, blood.pressure, sex), death, cluster=id)
+#'
+#' # A Markov-1 model on repeated ordinal responses, where the linear
+#' # predictor already includes a term for the previous response (e.g.
+#' # via an added column of x, such as a spline in the lagged y). The
+#' # recommended mre for this situation takes on only the values 0 and
+#' # 1: 0 at each subject's FIRST follow-up time, 1 at every later one.
+#' # This lets the fit determine, via the separately-estimated sigma2,
+#' # how much the random effect should add to or subtract from the
+#' # correlation the lag term alone induces, rather than assuming (as
+#' # a plain, constantly-weighted random effect implicitly would) that
+#' # its influence should be injected again at full, undiminished
+#' # strength at every subsequent visit:
+#' # mre <- ave(time, id, FUN = function(t) as.numeric(t > min(t)))
+#' # fit <- orm.fit(cbind(prev.y, age, blood.pressure, sex), y,
+#' #                 cluster=id, mre=mre)
 #' }
 #' @md
 #' @export
@@ -379,7 +531,7 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                     compstats=TRUE, onlydata=FALSE,
                     sigma.init=1.0, maxit.outer=100L, maxit.mode=30L,
                     nAGQ=7L, nAGQ.grid=c(7L, 11L, 15L, 21L, 31L, 45L, 63L),
-                    nAGQ.tol=1e-5, ...)
+                    nAGQ.tol=1e-5, mre=NULL, ...)
 {
   cal        <- match.call()
   family     <- match.arg(family)
@@ -401,6 +553,12 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
       xname <- dimnames(x)[[2]]
       if(! length(xname)) xname <- paste("x[", 1 : p, "]", sep="")
   }
+  ## Claude Sonnet 5 2026-09-08
+  ## Diagnostic only: confirm p/x are already correct (or already
+  ## broken) at the very top of orm.fit, before any of its own
+  ## downstream logic runs.
+  Hmisc::Fdebug('orm.re.debug')(p)
+  Hmisc::Fdebug('orm.re.debug')(dim(x))
 
   len.penmat <- length(penalty.matrix)
   penpres    <- len.penmat && any(penalty.matrix != 0.)
@@ -573,7 +731,14 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
    initial <- c(initial, rep(0., p))
  }
 
-  if(! anycens) loglik <- -2 * sum(sumwty * log(sumwty / sum(sumwty)))
+  ## Claude Sonnet 5 2026-09-07
+  ## Every element pushed into loglik (-> the returned `deviance`
+  ## vector) is named at the point it is computed, regardless of which
+  ## combination of censoring/offset/covariates/clustering branches
+  ## actually run -- see orm.fit's own @returns documentation for the
+  ## full, ordered list of possible names.
+  if(! anycens) { loglik <- -2 * sum(sumwty * log(sumwty / sum(sumwty)))
+                  names(loglik) <- 'intercepts' }
 
   if(anycens || (p==0 & ! ofpres)) {
     z <- ormfit(NULL, y, y2, k, intcens, initial=initial[1 : k],
@@ -589,6 +754,7 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
       print(utils::head(ww, 10)); print(utils::tail(ww, 10))
     }
     loglik <- z$loglik
+    names(loglik) <- 'intercepts'
     initial <- c(kof, rep(0., p))
     info   <- z$info
   }
@@ -604,6 +770,7 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
     if(z$fail) return(structure(list(fail=TRUE), class="orm"))
     kof    <- z$coef
     loglik <- c(loglik, z$loglik)
+    names(loglik)[length(loglik)] <- 'intercepts+offset'
     initial <- c(z$coef, rep(0., p))
     if(p == 0) info <- z$info
   }
@@ -617,6 +784,7 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                 trace=trace, link=link, iname=iname, xname=xname)
     if(z$fail) return(structure(list(fail=TRUE), class="orm"))
     loglik <- c(loglik, z$loglik)
+    names(loglik)[length(loglik)] <- 'intercepts+x'
     kof  <- z$coef
     info <- z$info
     # Compute linear predictor before unscaling beta, as x is scaled
@@ -633,6 +801,15 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
       info$scale    <- list(mean=xbar, sd=xsd)
     }
   } else lp <- rep(kof[kmid], n)
+
+  ## Claude Sonnet 5 2026-09-08
+  ## Diagnostic only: pinpoint whether p/x/kof are already broken
+  ## HERE, at the boundary between orm.fit's own fixed-effects logic
+  ## above and the cluster dispatch below, or whether they were still
+  ## correct up to this point and something in the dispatch block
+  ## itself is at fault.
+  deb <- Hmisc::Fdebug('orm.re.debug')
+  deb(p); deb(dim(x)); deb(length(kof)); deb(kof)
 
   ## Claude Sonnet 5 2026-08-30          entire block
   ## Random-intercept dispatch. If cluster is present, override the
@@ -662,6 +839,77 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
     ## earlier "convergence too loose" fix) -- cap it here so a user
     ## who never touched abstol still gets that fix, while a user who
     ## explicitly passed a tighter abstol has it respected for both.
+    ## Claude Sonnet 5 2026-09-07          entire block
+    ## For a correct beta-specific LR test under clustering, also fit
+    ## an INTERCEPT-ONLY (p=0) clustered model -- the SAME random-
+    ## effects structure (mre, if present), just without x -- to get a
+    ## clustered null deviance actually comparable to the clustered
+    ## full model's. Appending BOTH the clustered null and full
+    ## deviances (rather than just the full one, the previous
+    ## behavior) keeps the stats block's existing "the last two
+    ## elements of loglik are [null, full]" logic correct without
+    ## needing to touch it: previously, with only the full clustered
+    ## deviance appended, loglik[length-1] silently grabbed the
+    ## NON-clustered full-model deviance instead of any null deviance
+    ## at all, so the reported "Model L.R." was actually testing "does
+    ## the random effect improve fit over the fixed-effects-only
+    ## model" rather than "is beta significant" -- confirmed directly:
+    ## it bore no relationship to beta's own Wald chi-square.
+    if(p > 0) {
+      ## Claude Sonnet 5 2026-09-08          entire block
+      ## Refit a proper, converged non-clustered INTERCEPT-ONLY model
+      ## first, rather than warm-starting the covariate-free clustered
+      ## null model directly from kof[1:k] -- the full model's own
+      ## intercepts, jointly optimized WITH p covariates. Removing
+      ## those covariates while keeping the same intercepts is often a
+      ## poor starting point: with no beta contribution left to
+      ## explain any of the spread across categories, some adjacent
+      ## intercepts can end up implying a near-zero (or, under
+      ## floating-point rounding, exactly zero) category probability
+      ## that was perfectly fine under the full model's own linear
+      ## predictor. Confirmed directly to matter in practice under
+      ## probit specifically: its faster-saturating CDF turns this
+      ## mismatch into repeated, though individually recoverable
+      ## (step-halved) salloc=999 hits in the clustered null-model fit.
+      ##
+      ## Claude Sonnet 5 2026-09-08          9 lines
+      ## kof[1:k] is NOT used as this refit's OWN starting point either
+      ## -- confirmed directly (from a real failure) that it can
+      ## already be invalid there too, with zero NR iterations even
+      ## attempted, meaning ordinary step-halving cannot help: it only
+      ## rescues an overshooting STEP, not a starting point that is
+      ## itself already outside the valid region. finverse(pp) -- the
+      ## same link-appropriate, purely marginal-frequency-based
+      ## intercept-only starting guess orm.fit itself computes at the
+      ## very top for its OWN first fit, independent of any covariate
+      ## fit -- is recomputed fresh here (rather than relying on
+      ## whatever `initial` happened to be if the user supplied their
+      ## own) as a properly-scaled starting point instead.
+      pp0 <- if(anycens) npsurv$surv[-1]
+             else { ncum0 <- rev(cumsum(rev(sumwty)))[2 : (k + 1)]; ncum0 / sumwt }
+      init_null <- finverse(pp0)
+      if(ofpres) init_null <- init_null - mean(offset)
+      z_null_fixed <- ormfit(NULL, y, y2, k, intcens, initial=init_null,
+                             offset=offset, wt=weights, penmat=matrix(0., 0, 0),
+                             opt_method=opt_method, maxit=maxit,
+                             tolsolve=tol, objtol=eps, gradtol=gradtol,
+                             paramtol=abstol, trace=trace, link=link,
+                             iname=iname, xname=character(0))
+      if(z_null_fixed$fail) return(structure(list(fail=TRUE), class="orm"))
+      zr0 <- ormrfit(x=matrix(0., n, 0), y=y, y2=y2, k=k, intcens=intcens,
+                    cluster=cluster.int, nc=nc,
+                    initial=z_null_fixed$coef, sigma.init=sigma.init,
+                    offset=offset, wt=weights, penmat=matrix(0., 0, 0),
+                    maxit=maxit, maxit.outer=maxit.outer, maxit.mode=maxit.mode,
+                    objtol=eps, gradtol=gradtol, paramtol=min(abstol, 1e-4),
+                    tolsolve=tol, minstepsize=minstepsize, trace=trace,
+                    link=link, iname=iname, xname=character(0),
+                    nAGQ=nAGQ, nAGQ.grid=nAGQ.grid, nAGQ.tol=nAGQ.tol, mre=mre)
+      if(zr0$fail) return(structure(list(fail=TRUE), class="orm"))
+      loglik <- c(loglik, zr0$loglik)
+      names(loglik)[length(loglik)] <- 'intercepts+random effects'
+    }
+
     zr <- ormrfit(x=x, y=y, y2=y2, k=k, intcens=intcens,
                  cluster=cluster.int, nc=nc,
                  initial=kof, sigma.init=sigma.init,
@@ -670,18 +918,20 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                  objtol=eps, gradtol=gradtol, paramtol=min(abstol, 1e-4),
                  tolsolve=tol, minstepsize=minstepsize, trace=trace,
                  link=link, iname=iname, xname=xname,
-                 nAGQ=nAGQ, nAGQ.grid=nAGQ.grid, nAGQ.tol=nAGQ.tol)
+                 nAGQ=nAGQ, nAGQ.grid=nAGQ.grid, nAGQ.tol=nAGQ.tol, mre=mre)
     if(zr$fail) return(structure(list(fail=TRUE), class="orm"))
     z      <- zr
     kof    <- zr$coef
     info   <- zr$info
     loglik <- c(loglik, zr$loglik)
+    names(loglik)[length(loglik)] <- if(p > 0) 'intercepts+x+random effects' else 'intercepts+random effects'
     ## Stats block below treats random effects as absent: lp is the
     ## fixed-effects-only linear predictor, computed via the exact
     ## same formula used above for the non-clustered case, not
     ## anything gamma-adjusted.
     lp     <- if(p > 0) matxv(x, kof, kint=kmid) else rep(kof[kmid], n)
-  }
+  } else if(length(mre))
+    stop('mre requires cluster to also be specified')
 
   # Add second derivative of penalty function if needed, on the original scale
   if(! inclpen && penpres)
@@ -808,11 +1058,19 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
   ## Added only when cluster is present -- no placeholders otherwise,
   ## matching every other cluster-only field (info.matrix's own shape
   ## already varies this way for the interval-censoring case).
+  ## Claude Sonnet 5 2026-09-06          2 lines
+  ## zr$sigma is NULL when mre was used (sigma1/sigma2 replace it
+  ## entirely -- see ormrfit's own return value) -- attach whichever
+  ## of the two is actually present, never a placeholder for the other.
   if(length(cluster)) {
     retlist$ncluster <- nc
     retlist$nAGQ     <- zr$nAGQ
-    retlist$sigma    <- zr$sigma
     retlist$gamma    <- zr$gamma
+    if(length(mre)) {
+      retlist$sigma1 <- zr$sigma1
+      retlist$sigma2 <- zr$sigma2
+    } else
+      retlist$sigma  <- zr$sigma
   }
 
   class(retlist) <- 'orm'

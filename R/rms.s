@@ -94,23 +94,38 @@ Design <- function(mf, formula=NULL, specials=NULL,
                  substring(Term.labels, 1, 8) == 'cluster('  else FALSE
   istime <- if(length(Term.labels))
               substring(Term.labels, 1, 6) == 'aTime('  else FALSE
+  ismixre <- if(length(Term.labels))
+                 substring(Term.labels, 1, 7) == 'mix_re('  else FALSE
 
-  ## Handle cluster() and aTime()
-  ## Save right hand side of formula less cluster() and time() terms
+  ## Handle cluster(), aTime(), mix_re
+  ## Save right hand side of formula less cluster(), time(), mix_re() terms
   sformula <- formula(Terms)
   if(any(iscluster)) sformula <- removeFormulaTerms(sformula, 'cluster')
   if(any(istime))    sformula <- removeFormulaTerms(sformula, 'aTime')
+  if(any(ismixre))   sformula <- removeFormulaTerms(sformula, 'mix_re')
 
   if(any(iscluster)) {
     clustername <- Term.labels[iscluster]
     cluster     <- mf[[clustername]]
+    # mre         <- attr(cluster, 'mre')
+    # if(length(mre)) attr(cluster, 'mre') <- NULL
     mf[[clustername]] <- NULL
     Terms       <- Terms[! iscluster]
     Term.labels <- Term.labels[! iscluster]
     if(any(istime)) istime <- if(length(Term.labels))
      substring(Term.labels, 1, 6) == 'aTime('  else FALSE
+    ismixre <- ismixre[! iscluster]
   }
   else {cluster <- clustername <- NULL}
+  
+  if(any(ismixre)) {
+    mixrename <- Term.labels[ismixre]
+    mixre     <- mf[[mixrename]]
+    mf[[mixrename]] <- NULL
+    Terms       <- Terms[! ismixre]
+    Term.labels <- Term.labels[! ismixre]
+  }
+  else {mixre <- mixrename <- NULL}
 
   if(any(istime)) {
     timename <- Term.labels[istime]
@@ -431,6 +446,7 @@ Design <- function(mf, formula=NULL, specials=NULL,
                     ! grepl('offset\\(',  names(nmiss)) &
                     names(nmiss) != '(offset)' &
                     ! grepl('cluster\\(', names(nmiss)) &
+                    ! grepl('mix_re\\(',  names(nmiss)) &
                     ! grepl('aTime\\(',   names(nmiss)))
       if(response.pres) jz <- jz[jz > 1]
       names(nmiss)[jz] <- fname[asm != 9]
@@ -446,6 +462,10 @@ Design <- function(mf, formula=NULL, specials=NULL,
   if(length(cluster)) {
     attr(mf, 'cluster') <- cluster
     attr(mf, 'clustername') <- var.inner(as.formula(paste0('~', clustername)))
+  }
+  if(length(mixre)) {
+    attr(mf, 'mix_re')     <- mixre
+    attr(mf, 'mix_rename') <- var.inner(as.formula(paste0('~', mixrename)))
   }
   if(length(time)) {
     attr(mf, 'time') <- time

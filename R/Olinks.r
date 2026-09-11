@@ -16,7 +16,8 @@
 #' f <- orm(y ~ x1 + x2, family='loglog', x=TRUE, y=TRUE)
 #' Olinks(f)
 #' }
-Olinks <- function(object, links=c('logistic', 'probit', 'loglog', 'cloglog'), dec=3, gradtol=0.001) {
+Olinks <- function(object, links=c('logistic', 'probit', 'loglog', 'cloglog'),
+                   dec=3, gradtol=0.001) {
   if(! inherits(object, 'orm')) stop('object must an orm object')
   if(! all(c('x', 'y') %in% names(object))) stop('must run orm with x=TRUE, y=TRUE')
   fam    <- object$family
@@ -26,7 +27,17 @@ Olinks <- function(object, links=c('logistic', 'probit', 'loglog', 'cloglog'), d
   R      <- NULL
   for(fm in links) {
     f    <- if(fm ==fam) object else fitter(family=fm)
+    if(length(f$fail) == 1 && f$fail) {
+      warning('fit failed for family=', fm)
+      next
+    }
     dev  <- deviance(f)
+    nm   <- names(dev)
+    ldev <- length(dev)
+    if(! length(nm)) dev <- dev[c(1, ldev)]
+    else if(any(names(dev) == 'intercepts+random effects'))
+      dev <- dev[c('intercepts+random effects', 'intercepts+x+random effects')]
+    else dev <- dev[c('intercepts', 'intercepts+x')]
     st   <- f$stats
     r2   <- st[grep('^R2', names(st))]
     last <- length(r2)
