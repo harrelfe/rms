@@ -16,6 +16,9 @@ tests/\.Rhistory
 
 publish
 CLAUDE.md
+orm-random-effects-methodology.md
+orm-random-effects-implementation.md
+longitudinal_ordinal_correlation_structures.md
 \.Rbuildignore
 \.claude
 ^\.positai$
