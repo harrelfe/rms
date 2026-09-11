@@ -1,3 +1,6 @@
+require(rms)
+require(nlme)
+
 set.seed(7)
 
 ## true params (unconstrained/eta scale)
@@ -17,7 +20,7 @@ simOne <- function(tt) {
   mid  <- outer(tt, tt, "+") / 2
   rate <- exp(a_true + b_true*mid)
   R <- k_true + (1-k_true)*exp(-rate*lag); diag(R) <- 1
-  R <- .nearestCorPD(R)
+  R <- rms:::.nearestCorPD(R)
   L <- chol(R)
   eps <- as.vector(t(L) %*% rnorm(n))
   data.frame(time = tt, resid = eps)
