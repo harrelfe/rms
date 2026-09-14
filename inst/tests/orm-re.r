@@ -166,6 +166,13 @@ f <- orm(y ~ x + x2 + cluster(cluster) + mix_re(mre), trace=1, x=TRUE, y=TRUE)
 anova(f)
 anova(f, test='LR')
 f
+dd <- datadist(x, x2); options(datadist='dd')
+summary(f, x=c(-2, 2), x2=c(.2, .7))
+contrast(f, list(x=2, x2=0), list(x=-2, x2=0))
+contrast(f, list(x=2, x2=0), list(x=-2, x2=0), conf.type='profile')
+contrast(f, list(x=0, x2=.7), list(x=0, x2=.2))
+contrast(f, list(x=0, x2=.7), list(x=0, x2=.2), conf.type='profile')
+
 
 # Compare deviances of this well-fitting model to an oversimplified random
 # effects model and to a model ignoring random effects
