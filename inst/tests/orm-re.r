@@ -163,6 +163,7 @@ print(round(unique(data.frame(time = times, mre = mre_fun(times),
 set.seed(3)
 x2 <- runif(length(x))
 f <- orm(y ~ x + x2 + cluster(cluster) + mix_re(mre), trace=1, x=TRUE, y=TRUE)
+latex(f)
 anova(f)
 anova(f, test='LR')
 f

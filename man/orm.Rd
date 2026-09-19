@@ -25,6 +25,10 @@
 	by \code{X}, and assessing parallelism.  Note that parametric
 	regression models make the much stronger assumption of linearity of
 	such inverse functions.
+	
+	\code{orm} allows two types of random effects to be included in the model to faciliate
+	the analysis of paired and longitudinal data.  Details are in the \code{\link{orm.fit}} function
+	(\code{cluster}) and \code{mre}) arguments).
 
 	For the \code{print} method, format of output is controlled by the
 	user previously running \code{options(prType="lang")} where
@@ -70,7 +74,13 @@ fitting of a model such as \eqn{logit(Y=1) = X\beta + W}, where \eqn{W} is the
 offset variable having no estimated coefficient.
 The response variable can be any data type; \code{orm} converts it
 in alphabetic or numeric order to a factor variable and
-recodes it 1,2,\dots internally.
+recodes it 1,2,\dots internally.  To include random effects (intercepts) in the model,
+\code{cluster(id)} should be included in \code{formula}, where \code{id} is a unique
+cluster/subject identifier.  This adds a \eqn{\sigma} parameter to the model (SD of random effects).
+To use the second type of random effects, which involves two \eqn{\sigma} parameters, include
+a \code{cluster(id)} term and
+a \code{mix_re(t)} term in the model where \code{t} is an appropriate function of time.  Note that these
+terms may not interact with other variables.
 }
 \item{data}{
 data frame to use. Default is the current frame.

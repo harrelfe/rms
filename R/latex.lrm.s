@@ -108,7 +108,6 @@ latex.orm <-
 
   md <- prType() %in% c('html', 'md', 'markdown')
 
-  
   if(missing(which) & !inline)
     {
       Y <- paste0("\\mathrm{", f$yname, "}")
@@ -117,6 +116,19 @@ latex.orm <-
 
       z <- '\\alpha_{y} + X\\beta'
       zm <- '- \\alpha_{y} - X\\beta'
+
+      clustername <- f$clusterInfo$name
+      mixrename   <- f$clusterInfo$mix_rename
+      if(length(clustername)) {
+        extraterm <- if(length(mixrename)) c(paste0(c(' + ', ' - '),
+                                             paste0(latexSN(f$sigma1), 'u_{j}(1 - w(t))'),
+                                             c(' + ', ' - '),
+                                             paste0(latexSN(f$sigma2), 'u_{j}w(t)'))) else
+                                                    paste0(c(' + ', ' - '), 'u_{j}')
+        z  <- paste0(z,  extraterm[1])
+        zm <- paste0(zm, extraterm[2])
+      }
+
       dist <-
         switch(f$family,
                logistic = paste('\\frac{1}{1+\\exp(', zm, ')}', sep=''),
@@ -125,11 +137,14 @@ latex.orm <-
                  ') + \\frac{1}{2}', sep=''),
                loglog   = paste('\\exp(-\\exp(', zm, '))', sep=''),
                cloglog  = paste('1 - \\exp(-\\exp(', z, ')', sep=''))
-                     
+               
       w <- '$$'
-      
+       
+      cluscond    <- if(length(clustername)) paste0(', \\mathrm{', clustername, '}=j')
+      mixrecond   <- if(length(mixrename)) ', t'
+                     
       w <- paste(w, "P(", Y, 
-                   "\\geq y | X) = ", dist, sep='')
+                   "\\geq y | X", cluscond, mixrecond, ") = ", dist, sep='')
 
       w <- paste(w, "\\mathrm{~~where}$$", sep="")
 
@@ -164,6 +179,12 @@ latex.orm <-
            size=size)
   if(inline) return(z)
   w <- c(w, z)
+  if(length(clustername)) {
+    extra <- if(length(mixrename)) paste0('u &\\sim& \\mathcal{N}(0, 1)\\\\') else
+                                   paste0('u &\\sim& \\mathcal{N}(0, ', latexSN(f$sigma), '^{2})\\\\')
+    extra <- c('$$\\begin{array}{ll}', extra, '\\end{array}$$')
+    w <- c(w, extra)
+  }
   if(file == '' && prType() != 'plain') return(rendHTML(w, html=FALSE))
   cat(w, file=file, append=append, sep='\n')
   invisible()
