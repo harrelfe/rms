@@ -8,7 +8,8 @@ Olinks(
   object,
   links = c("logistic", "probit", "loglog", "cloglog"),
   dec = 3,
-  gradtol = 0.001
+  gradtol = 0.001,
+  trace = 0
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ Olinks(
 \item{dec}{number of digits to the right of the decimal place to round statistics to}
 
 \item{gradtol}{tolerance for convergence on the absolute gradient; see \code{lrm.fit} and \code{orm.fit}.}
+
+\item{trace}{passed to \code{orm.fit}, and a positive value also causes progress notes to be written}
 }
 \value{
 data frame.  The \code{R2} column is from the last adjusted \eqn{R^2} computed by \code{orm},
