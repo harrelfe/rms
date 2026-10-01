@@ -95,11 +95,12 @@ clusterModeFind <- function(alpha, beta, sigma, gamma_c_init, base_lp,
     lp <- base_lp + gamma_obs
     deb(alpha); deb(gc); deb(lp)
     if(any(! is.finite(lp))) return(list(salloc=999L))
+    ## what is a bit mask (1 = logd, 2 = g/s1/s2, 4 = h); mode finding needs only g and h.
     w <- .Fortran(F_ormeta, n, k, link, alpha, lp1=lp, lp2=lp, wt,
                  ia, ia2, sgn, ib, nb,
                  logd=numeric(n), g=numeric(n), h=numeric(n),
                  s1=numeric(n), s2=numeric(n),
-                 debug=0L, salloc=integer(1))
+                 what=6L, debug=0L, salloc=integer(1))
     deb(w$salloc)
     w
   }
@@ -238,11 +239,12 @@ agqStep <- function(alpha, beta, sigma, gamma_c, kappa_c, nAGQ,
     ## step_c enough to put some AGQ node's gamma_node_c at an extreme
     ## value).
     if(any(! is.finite(lp))) return(list(fail=TRUE, code=999L))
+    ## what=1: this call needs only logd.
     w        <- .Fortran(F_ormeta, n, k, link, alpha, lp1=lp, lp2=lp, wt,
                          ia, ia2, sgn, ib, nb,
                          logd=numeric(n), g=numeric(n), h=numeric(n),
                          s1=numeric(n), s2=numeric(n),
-                         debug=0L, salloc=integer(1))
+                         what=1L, debug=0L, salloc=integer(1))
     if(w$salloc != 0) return(list(fail=TRUE, code=w$salloc))
     ## Claude Sonnet 5 2026-08-30          1 line
     ## The Gaussian random-effect prior log-density is part of the
@@ -506,11 +508,12 @@ sparseMissingInfo <- function(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
       stop('non-finite linear predictor encountered while computing the ',
           'sparse missing-information correction (sigma or a random ',
           'effect may not have converged to a finite value)')
+    ## what=3: logd, g, s1, s2 (no h) are what the missing-information correction uses.
     w <- .Fortran(F_ormeta, n, k, link, alpha, lp1=lp, lp2=lp, wt,
                  ia, ia2, sgn, ib, nb,
                  logd=numeric(n), g=numeric(n), h=numeric(n),
                  s1=numeric(n), s2=numeric(n),
-                 debug=0L, salloc=integer(1))
+                 what=3L, debug=0L, salloc=integer(1))
     if(w$salloc != 0)
       stop('ormeta failed while computing the sparse missing-information correction')
     logd_nodes[, m] <- w$logd
@@ -719,7 +722,7 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
                     tolsolve=.Machine$double.eps, minstepsize=1e-2, trace=FALSE,
                     link, iname, xname,
                     nAGQ=7L, nAGQ.grid=c(7L, 11L, 15L, 21L, 31L, 45L, 63L),
-                    nAGQ.tol=1e-5, mre=NULL) {
+                    nAGQ.tol=1e-5, mre=NULL, maxetastep=15) {
 
   # Claude Sonnet 5 2026-08-30          entire function
   n <- length(y)
@@ -1047,11 +1050,12 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
           ## step size as rejected and halves further, rather than
           ## crashing on an uncatchable .Fortran() error.
           if(any(! is.finite(lp_t))) return(Inf)
+          ## what=1: this call needs only logd.
           wtt <- .Fortran(F_ormeta, n, k, link, alpha_t, lp1=lp_t, lp2=lp_t, wt,
                           idx$ia, idx$ia2, idx$sgn, ib, nb,
                           logd=numeric(n), g=numeric(n), h=numeric(n),
                           s1=numeric(n), s2=numeric(n),
-                          debug=0L, salloc=integer(1))
+                          what=1L, debug=0L, salloc=integer(1))
           if(wtt$salloc != 0) return(Inf)
           tot <- tot + sum(ag$rho[cluster, mm] * wtt$logd)
           if(use_mre)
@@ -1060,13 +1064,28 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
         -2 * tot
       }
 
+      ## Claude Sonnet 5 2026-09-29          5 lines
+      ## Same maxetastep guard as ormfit()'s NR branch (see its own
+      ## fuller rationale comment in orm.fit.r) applied to this step-
+      ## halving loop's trial step: delta[1:k] is already an eta shift,
+      ## and x %*% delta[(k+1):(k+p)] converts the beta part to its own
+      ## eta-shift regardless of how x's columns are scaled.
+      delta_int     <- delta[1 : k]
+      xdelta        <- if(p > 0) as.vector(x %*% delta[(k + 1) : (k + p)]) else 0.
+      max_delta_int <- max(abs(delta_int))
+      max_xdelta    <- max(abs(xdelta))
+
       objf      <- surrogate(theta_star)
       step_size <- 1.0
       repeat {
         theta_star_new <- theta_star - step_size * delta
-        objfnew   <- surrogate(theta_star_new)
+        # Claude Sonnet 5 2026-09-29          2 lines
+        eta_shift <- step_size * (max_delta_int + max_xdelta)
+        too_big   <- eta_shift > maxetastep
+        objfnew   <- if(too_big) Inf else surrogate(theta_star_new)
         if(trace > 1)
-          cat('    [step_size=', step_size, ' objf=', objf, ' objfnew=', objfnew, ']\n')
+          cat('    [step_size=', step_size, ' objf=', objf, ' objfnew=', objfnew,
+              if(too_big) ' (maxetastep exceeded)' else '', ']\n')
         if(! is.finite(objfnew) || objfnew > objf + objtol / 10) {
           step_size <- step_size / 2
           if(step_size < minstepsize) {

@@ -16,12 +16,16 @@
    sparse missing-information correction to the final information
    matrix -- see orm.rfit.r's sparseInfoMatrix). */
 
+/* Claude Sonnet 5 2026-09-21
+   ormeta extended from 19 to 20 arguments: added `what` (bit mask of the
+   outputs to compute; see ormeta.f90) just before debug. */
+
 /* .Fortran calls */
 extern void F77_NAME(lrmll)(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 extern void F77_NAME(matinv)(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 extern void F77_NAME(robcovf)(void *, void *, void *, void *, void *, void *, void *, void *);
 extern void F77_NAME(ormidx)(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
-extern void F77_NAME(ormeta)(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
+extern void F77_NAME(ormeta)(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 extern void F77_NAME(ormll)(void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *, void *);
 
 static const R_FortranMethodDef FortranEntries[] = {
@@ -29,7 +33,7 @@ static const R_FortranMethodDef FortranEntries[] = {
     {"matinv",  (DL_FUNC) &F77_NAME(matinv),  11},
     {"robcovf", (DL_FUNC) &F77_NAME(robcovf),  8},
     {"ormidx",  (DL_FUNC) &F77_NAME(ormidx),  10},
-    {"ormeta",  (DL_FUNC) &F77_NAME(ormeta),  19},
+    {"ormeta",  (DL_FUNC) &F77_NAME(ormeta),  20},
     {"ormll",   (DL_FUNC) &F77_NAME(ormll),   36},
     {NULL, NULL, 0}
 };

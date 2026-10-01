@@ -17,6 +17,7 @@ orm.fit(
   gradtol = 0.001,
   abstol = 1e+10,
   minstepsize = 0.01,
+  maxetastep = 15,
   tol = .Machine$double.eps,
   trace = FALSE,
   penalty.matrix = NULL,
@@ -104,6 +105,25 @@ found to make this criterion a permanent no-op for that loop's
 only-linear convergence.}
 
 \item{minstepsize}{used to specify when to abandon step-halving}
+
+\item{maxetastep}{maximum change, in linear-predictor (eta) units,
+that a single Newton-Raphson (\code{opt_method='NR'}, the default) or
+Levenberg-Marquardt (\code{opt_method='LM'}) update may impose before it
+is accepted; a larger implied change forces additional step-halving
+(\code{'NR'}) or an outright-rejected, more heavily damped correction
+(\code{'LM'}), the same as the existing intercept-ordering safeguard.
+Also governs the analogous joint Newton step of the clustered/
+random-intercept fit (used when \code{cluster} is given), which shares
+the identical risk. Guards against \code{Matrix::solve()}'s native
+sparse LU factorization crashing on the severely, badly-scaled
+Hessian an undamped early step can produce with a very large
+number of intercepts (e.g. a nearly continuous \code{y}); see
+\code{ormfit}'s internal documentation for the mechanism. The default,
+\code{15}, is comfortably above the largest step a well-posed fit
+legitimately needs and should rarely bind; lower it only if you
+continue to see native crashes, and raise it only if you have
+reason to believe legitimate large early steps are being
+needlessly halved for your data.}
 
 \item{tol}{singularity criterion. Default is typically \code{2e-16}}
 

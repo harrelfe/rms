@@ -344,6 +344,24 @@
 #'   found to make this criterion a permanent no-op for that loop's
 #'   only-linear convergence.
 #' @param minstepsize used to specify when to abandon step-halving
+#' @param maxetastep maximum change, in linear-predictor (eta) units,
+#'   that a single Newton-Raphson (`opt_method='NR'`, the default) or
+#'   Levenberg-Marquardt (`opt_method='LM'`) update may impose before it
+#'   is accepted; a larger implied change forces additional step-halving
+#'   (`'NR'`) or an outright-rejected, more heavily damped correction
+#'   (`'LM'`), the same as the existing intercept-ordering safeguard.
+#'   Also governs the analogous joint Newton step of the clustered/
+#'   random-intercept fit (used when `cluster` is given), which shares
+#'   the identical risk. Guards against `Matrix::solve()`'s native
+#'   sparse LU factorization crashing on the severely, badly-scaled
+#'   Hessian an undamped early step can produce with a very large
+#'   number of intercepts (e.g. a nearly continuous `y`); see
+#'   `ormfit`'s internal documentation for the mechanism. The default,
+#'   `15`, is comfortably above the largest step a well-posed fit
+#'   legitimately needs and should rarely bind; lower it only if you
+#'   continue to see native crashes, and raise it only if you have
+#'   reason to believe legitimate large early steps are being
+#'   needlessly halved for your data.
 #' @param tol singularity criterion. Default is typically `2e-16`
 #' @param trace set to `TRUE` to print `-2` log likelihood,
 #'   step-halving fraction, change in `-2` log likelihood, maximum
@@ -525,7 +543,7 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                     offset, initial,
                     opt_method=c('NR', 'LM'),
                     maxit=30L, eps=5e-4, gradtol=1e-3, abstol=1e10,
-                    minstepsize=1e-2, tol=.Machine$double.eps, trace=FALSE,
+                    minstepsize=1e-2, maxetastep=15, tol=.Machine$double.eps, trace=FALSE,
                     penalty.matrix=NULL, weights=NULL, normwt=FALSE,
                     scale=FALSE, mscore=FALSE, inclpen=TRUE, y.precision = 7,
                     compstats=TRUE, onlydata=FALSE,
@@ -745,7 +763,8 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                 offset=offset, wt=weights,
                 penmat=penmat, opt_method=opt_method, maxit=maxit,
                 tolsolve=tol, objtol=eps, gradtol=gradtol, paramtol=abstol,
-                trace=trace, link=link, iname=iname, xname=xname)
+                trace=trace, link=link, iname=iname, xname=xname,
+                maxetastep=maxetastep)
     if(z$fail) return(structure(list(fail=TRUE), class="orm"))
     kof    <- z$coef
     if(debug2) {
@@ -766,7 +785,8 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                 offset=offset, wt=weights,
                 penmat=penmat, opt_method=opt_method, maxit=maxit,
                 tolsolve=tol, objtol=eps, gradtol=gradtol, paramtol=abstol,
-                trace=trace, link=link, iname=iname, xname=xname)
+                trace=trace, link=link, iname=iname, xname=xname,
+                maxetastep=maxetastep)
     if(z$fail) return(structure(list(fail=TRUE), class="orm"))
     kof    <- z$coef
     loglik <- c(loglik, z$loglik)
@@ -781,7 +801,8 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                 penmat=penmat, opt_method=opt_method,
                 maxit=maxit, tolsolve=tol, objtol=eps,
                 gradtol=gradtol, paramtol=abstol, mscore=mscore,
-                trace=trace, link=link, iname=iname, xname=xname)
+                trace=trace, link=link, iname=iname, xname=xname,
+                maxetastep=maxetastep)
     if(z$fail) return(structure(list(fail=TRUE), class="orm"))
     loglik <- c(loglik, z$loglik)
     names(loglik)[length(loglik)] <- 'intercepts+x'
@@ -894,7 +915,8 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                              opt_method=opt_method, maxit=maxit,
                              tolsolve=tol, objtol=eps, gradtol=gradtol,
                              paramtol=abstol, trace=trace, link=link,
-                             iname=iname, xname=character(0))
+                             iname=iname, xname=character(0),
+                             maxetastep=maxetastep)
       if(z_null_fixed$fail) return(structure(list(fail=TRUE), class="orm"))
       zr0 <- ormrfit(x=matrix(0., n, 0), y=y, y2=y2, k=k, intcens=intcens,
                     cluster=cluster.int, nc=nc,
@@ -904,7 +926,8 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                     objtol=eps, gradtol=gradtol, paramtol=min(abstol, 1e-4),
                     tolsolve=tol, minstepsize=minstepsize, trace=trace,
                     link=link, iname=iname, xname=character(0),
-                    nAGQ=nAGQ, nAGQ.grid=nAGQ.grid, nAGQ.tol=nAGQ.tol, mre=mre)
+                    nAGQ=nAGQ, nAGQ.grid=nAGQ.grid, nAGQ.tol=nAGQ.tol, mre=mre,
+                    maxetastep=maxetastep)
       if(zr0$fail) return(structure(list(fail=TRUE), class="orm"))
       loglik <- c(loglik, zr0$loglik)
       names(loglik)[length(loglik)] <- 'intercepts+random effects'
@@ -918,7 +941,8 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                  objtol=eps, gradtol=gradtol, paramtol=min(abstol, 1e-4),
                  tolsolve=tol, minstepsize=minstepsize, trace=trace,
                  link=link, iname=iname, xname=xname,
-                 nAGQ=nAGQ, nAGQ.grid=nAGQ.grid, nAGQ.tol=nAGQ.tol, mre=mre)
+                 nAGQ=nAGQ, nAGQ.grid=nAGQ.grid, nAGQ.tol=nAGQ.tol, mre=mre,
+                 maxetastep=maxetastep)
     if(zr$fail) return(structure(list(fail=TRUE), class="orm"))
     z      <- zr
     kof    <- zr$coef
@@ -1081,12 +1105,49 @@ ormfit <-
   function(x, y, y2, k, intcens, link, initial,
            offset=rep(0., n), wt=rep(1., n), penmat=matrix(0., p, p), opt_method='NR',
            maxit=30L, objtol=5e-4, gradtol=1e-3, paramtol=1e10, tolsolve=.Machine$double.eps,
-           minstepsize=1e-2, mscore=FALSE, trace=FALSE, iname, xname) {
+           minstepsize=1e-2, mscore=FALSE, trace=FALSE, iname, xname,
+           maxetastep=15) {
 
 # y  =  -1 for left censored observation
 # y2 = k+1 for right censored observation
 # Uncensored observations have y = y2 = 0, 1, ..., k
 # intcens = 1 if there are any interval censored observations
+
+## Claude Sonnet 5 2026-09-29          entire comment block
+## maxetastep caps, in linear-predictor (eta) units, the largest shift a
+## single Newton-Raphson (or Levenberg-Marquardt) correction may impose
+## on theta before it is accepted -- applied in the NR branch's existing
+## step-halving loop, and in the LM branch before a correction is
+## accepted. A raw parameter-space step mixes unlike quantities: each
+## intercept's units are already eta units, but a beta's units depend on
+## the scale of its own x column, so a single cutoff on |delta| itself
+## would not be portable across differently-scaled covariates. Casting
+## the check in eta units sidesteps that: delta[1:k] already IS an eta
+## shift, and x %*% delta[-(1:k)] converts the beta part to its own
+## eta-shift, regardless of how x is scaled.
+##
+## Motivated by a real crash: fitting a model with ~290,000 largely-
+## singleton intercepts (very fine-grained/near-continuous Y), an
+## undamped first NR step moved some intercepts by ~44 eta units. That
+## left the assembled sparse Hessian's entries spanning roughly 10
+## orders of magnitude, and Matrix::solve()'s native sparse LU
+## (SuiteSparse/UMFPACK, via dgCMatrix_trf) segfaulted/bus-errored on
+## the following iteration -- confirmed reproducible, and confirmed NOT
+## caused by NaN/Inf anywhere in the gradient, Hessian pieces, or
+## assembled sparse matrix (all finite going in); an ordinary singular
+## or merely ill-conditioned Hessian is already handled cleanly by the
+## try()/tolsolve machinery below. This is a native crash triggered by
+## the specific matrix structure an undamped jump can produce (observed
+## on aarch64/Apple Silicon) -- capping the step keeps the trajectory
+## out of that structure entirely, without needing to characterize or
+## fix the underlying SuiteSparse behavior. The default, 15, is
+## comfortably above the ~12-13 eta units a legitimate step can need
+## purely from extreme base rates (e.g. logit(1/300000) for a rare
+## category), but well below the ~40+ region confirmed dangerous.
+## Testing on the triggering dataset confirmed the capped path converges
+## to the same basin (quadratic convergence resumes once the step
+## naturally falls under the cap) -- this changes only how NR/LM get
+## there, not where they stop.
 
 if(getOption('orm.fit.debug', FALSE)) try <- function(x) x
 
@@ -1241,15 +1302,31 @@ if(maxit == 1) {
         all(theta[- (1 : k)] == 0.))
         score.test <- - gradient %*% delta
 
+      # Claude Sonnet 5 2026-09-29          4 lines
+      # See maxetastep's definition comment above for the full rationale.
+      delta_int     <- delta[1 : k]
+      xdelta        <- if(p > 0) as.vector(x %*% delta[- (1 : k)]) else 0.
+      max_delta_int <- max(abs(delta_int))
+      max_xdelta    <- max(abs(xdelta))
+
       step_size <- 1.0           # Initialize step size for step-halving
 
       # Step-halving loop
       while (TRUE) {
         new_theta <- theta - step_size * delta # Update parameter vector
         wd <- which(diff(new_theta[1 : k]) >= 0e0)
-        if(length(wd)) {
-          if(trace > 0) cat('new_theta out of order for intercepts',
-              paste(wd + 1, collapse=' '), 'forced step-halving\n')
+        # Claude Sonnet 5 2026-09-29          2 lines
+        eta_shift <- step_size * (max_delta_int + max_xdelta)
+        too_big   <- eta_shift > maxetastep
+        if(length(wd) || too_big) {
+          if(trace > 0) {
+            if(length(wd)) cat('new_theta out of order for intercepts',
+                paste(wd + 1, collapse=' '), 'forced step-halving\n')
+            # Claude Sonnet 5 2026-09-29          2 lines
+            if(too_big) cat('implied max shift in linear predictor (',
+                format(eta_shift, digits=4), ') exceeds maxetastep =',
+                maxetastep, '; forced step-halving\n', sep='')
+          }
           objfnew <- Inf
         }
         else objfnew   <- rfort(new_theta, what=1L)$logL
@@ -1324,8 +1401,25 @@ if(maxit == 1) {
       next
       }
 
-    theta_new <- theta - delta
-    objf      <- rfort(theta_new, what=1L)$logL
+    # Claude Sonnet 5 2026-09-29          entire block
+    # Same maxetastep guard as the NR branch (see its definition comment
+    # above). LM has no step-halving to fall back on, so an oversized
+    # correction is rejected outright here -- exactly like a try-error a
+    # few lines up -- rather than shrunk: lambda increases and the
+    # current, already-safe theta/H are kept for the next attempt. This
+    # is what keeps theta from ever reaching the region whose Hessian
+    # crashed Matrix::solve's native LU on the following call.
+    eta_shift <- max(abs(delta[1 : k])) +
+                 if(p > 0) max(abs(as.vector(x %*% delta[- (1 : k)]))) else 0.
+    if(eta_shift > maxetastep) {
+      if(trace > 0) cat('implied max shift in linear predictor (',
+          format(eta_shift, digits=4), ') exceeds maxetastep =', maxetastep,
+          '; LM step rejected, lambda increased\n', sep='')
+      objf <- Inf
+    } else {
+      theta_new <- theta - delta
+      objf      <- rfort(theta_new, what=1L)$logL
+    }
     if(trace > 0)
       cat('LM iteration:', iter, '  -2LL:', format(objf, nsmall=4),
           '  Max |gradient|:', m(gradient),
