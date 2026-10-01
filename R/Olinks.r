@@ -4,6 +4,7 @@
 #' @param links a vector of links to consider other than the one used to get `object`
 #' @param dec number of digits to the right of the decimal place to round statistics to
 #' @param gradtol tolerance for convergence on the absolute gradient; see `lrm.fit` and `orm.fit`.
+#' @param trace passed to `orm.fit`, and a positive value also causes progress notes to be written
 #'
 #' @returns data frame.  The `R2` column is from the last adjusted \eqn{R^2} computed by `orm`,
 #' which adjustes for the effective sample size and the number of betas.
@@ -17,21 +18,27 @@
 #' Olinks(f)
 #' }
 Olinks <- function(object, links=c('logistic', 'probit', 'loglog', 'cloglog'),
-                   dec=3, gradtol=0.001) {
+                   dec=3, gradtol=0.001, trace=0) {
   if(! inherits(object, 'orm')) stop('object must an orm object')
   if(! all(c('x', 'y') %in% names(object))) stop('must run orm with x=TRUE, y=TRUE')
   fam    <- object$family
   links  <- unique(c(fam, links))
   p      <- length(coef(object))
-  fitter <- quickRefit(object, storevals=TRUE, compstats=TRUE, gradtol=gradtol, what='fitter')
+  fitter <- quickRefit(object, storevals=TRUE, compstats=TRUE, gradtol=gradtol,
+                       trace=trace, what='fitter')
   R      <- NULL
   for(fm in links) {
+    if(trace) cat('\nLink:', fm, '\n')
     f    <- if(fm ==fam) object else fitter(family=fm)
     if(length(f$fail) == 1 && f$fail) {
       warning('fit failed for family=', fm)
       next
     }
     dev  <- deviance(f)
+    if(trace) {
+      cat('Deviance:\n\n')
+      print(dev)
+    }
     nm   <- names(dev)
     ldev <- length(dev)
     if(! length(nm)) dev <- dev[c(1, ldev)]
