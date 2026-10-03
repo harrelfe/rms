@@ -975,6 +975,43 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
       ## zero (lambda*0=0 regardless of lambda) -- a real, reachable
       ## failure mode confirmed directly during the earlier (wl,rho)
       ## work, retained here as a general safeguard.
+      ## Claude Sonnet 5 2026-10-01          revision note
+      ## REVERTED: this used to pre-damp hess with an absolute ridge
+      ## floor whenever its diagonal's dynamic range looked dangerous
+      ## (see orm.fit.r's hessPreDampLambda() definition comment for the
+      ## full story) -- direct trace evidence from a logit fit that
+      ## converged fine before this fix existed showed the dynamic range
+      ## this was keying off routinely reaches ~1e10 on EVERY iteration
+      ## for large-k, near-continuous-Y data, not just after a bad step,
+      ## so it is not a reliable crash predictor; the resulting pre-
+      ## damping (lambda in the 10,000+ range, every iteration) distorted
+      ## the Newton direction badly enough to break an otherwise-fine
+      ## fit. hessPreDampLambda() is still called here, but only to print
+      ## a diagnostic line -- the value is no longer applied to hess.
+      ## Claude Sonnet 5 2026-10-01          revision note
+      ## Diagnostic only (no behavior change), added for consistency with
+      ## the same addition in orm.fit.r's safeSolve() -- see that
+      ## function's comment: both the dynamic-range and exact-zero-count
+      ## hypotheses this was testing are now ruled out (the probit/
+      ## cloglog native-solve crash tracks with large Hessian dimension,
+      ## not any value-level property). No clustered-fit crash has
+      ## actually been observed, so this is here only for consistency;
+      ## it does not alter hess or the solve. Gated entirely behind
+      ## trace>0 (production default trace=FALSE) so it costs nothing,
+      ## including the O(nnz) pass over hess@x, on an ordinary fit.
+      if(trace > 0) {
+        lambda0    <- hessPreDampLambda(hess)   # diagnostic only -- NOT applied
+        d_rf       <- abs(Matrix::diag(hess))
+        nzero_diag <- sum(d_rf == 0)
+        nzero_x    <- tryCatch(sum(hess@x == 0), error=function(e) NA_integer_)
+        if(lambda0 > 0)
+          cat('  [hess dynamic range exceeds', maxhessratio,
+              '(would-be lambda0=', format(lambda0, digits=4), ', not applied)]\n')
+        cat('  [hess exact-zero entries: diag=', nzero_diag, ' of ', length(d_rf),
+            ', nonzero-structure x=', nzero_x,
+            ' (diagnostic only, unconfirmed hypothesis)]\n', sep='')
+      }
+
       lambda <- 0
       repeat {
         hess_try <- if(lambda == 0) hess else
@@ -1088,9 +1125,26 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
               if(too_big) ' (maxetastep exceeded)' else '', ']\n')
         if(! is.finite(objfnew) || objfnew > objf + objtol / 10) {
           step_size <- step_size / 2
-          if(step_size < minstepsize) {
+          # Claude Sonnet 5 2026-10-01          entire block
+          # Same minstepsize/maxetastep decoupling as ormfit()'s NR
+          # branch (see its fuller rationale comment in orm.fit.r):
+          # don't let a step that simply hasn't been halved enough YET
+          # to satisfy maxetastep exhaust minstepsize's budget before
+          # the objective is ever actually evaluated there. Only treat
+          # this as a genuine convergence failure once the step no
+          # longer needs forcing on account of maxetastep; a separate,
+          # much smaller hard floor still catches a pathologically huge
+          # raw step.
+          eta_shift_next <- step_size * (max_delta_int + max_xdelta)
+          if(step_size < minstepsize && eta_shift_next <= maxetastep) {
             message('step size reduced below minstepsize in ormrfit ',
                     'without improving the objective')
+            return(list(fail=TRUE))
+          }
+          if(step_size < 1e-8) {
+            message('step size reduced to ', step_size,
+                    ' in ormrfit while still trying to satisfy maxetastep = ',
+                    maxetastep, ' (implied shift was far larger than normal)')
             return(list(fail=TRUE))
           }
         } else break

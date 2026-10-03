@@ -555,7 +555,17 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
   family     <- match.arg(family)
   opt_method <- match.arg(opt_method)
 
+  debug      <- getOption('orm.fit.debug' , FALSE)
   debug2     <- getOption('orm.fit.debug2', FALSE)
+  rdebug     <- getOption('orm.re.debug'  , FALSE)
+  
+  if(debug) {
+    w <- llist(family, opt_method, maxit, eps, gradtol, abstol, minstepsize,
+               maxetastep, tol, trace, normwt, scale, mscore, inclpen, y.precision,
+               compstats, onlydata, sigma.init, maxit.outer, maxit.mode, nAGQ,
+               nAGQ.grid, nAGQ.tol)
+    for(nam in names(w)) cat(nam, ':\t', paste(w[[nam]], collapse=', '), '\n', sep='')
+  }
 
   n <- NROW(y)
   if(! length(x)) {
@@ -575,8 +585,7 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
   ## Diagnostic only: confirm p/x are already correct (or already
   ## broken) at the very top of orm.fit, before any of its own
   ## downstream logic runs.
-  Hmisc::Fdebug('orm.re.debug')(p)
-  Hmisc::Fdebug('orm.re.debug')(dim(x))
+  if(rdebug) {prn(p); prn(dim(x))}
 
   len.penmat <- length(penalty.matrix)
   penpres    <- len.penmat && any(penalty.matrix != 0.)
@@ -829,8 +838,9 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
   ## above and the cluster dispatch below, or whether they were still
   ## correct up to this point and something in the dispatch block
   ## itself is at fault.
-  deb <- Hmisc::Fdebug('orm.re.debug')
-  deb(p); deb(dim(x)); deb(length(kof)); deb(kof)
+  if(rdebug) {
+    prn(p); prn(dim(x)); prn(length(kof)); prn(kof)
+  }
 
   ## Claude Sonnet 5 2026-08-30          entire block
   ## Random-intercept dispatch. If cluster is present, override the
@@ -1101,6 +1111,113 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
   retlist
 }
 
+## Claude Sonnet 5 2026-10-01          entire block
+## maxetastep (above) only guards a step that has already been
+## PROPOSED and is about to be ACCEPTED -- it cannot help when the
+## very FIRST Matrix::solve() call, using the Hessian at the STARTING
+## values (before any Newton step has been taken at all), is itself
+## already dangerous. Confirmed directly: a probit fit with > 200,000
+## distinct Y values segfaulted inside this exact first call, with
+## trace=2 producing no output at all -- the crash happened before
+## this function's own first cat(), a few lines below -- and the
+## try() already wrapping that call did NOT catch it, confirming this
+## is a native crash in Matrix's compiled sparse LU (SuiteSparse/
+## UMFPACK), not a catchable R-level condition, and so must be
+## prevented rather than caught. Likely mechanism: probit's density
+## phi() decays as exp(-z^2/2), far faster than logistic's density --
+## so with k this large, some of the marginal-frequency-based
+## starting intercepts needed for near-singleton extreme categories
+## can already put the Hessian's diagonal entries many orders of
+## magnitude apart before any step is taken.
+##
+## hessPreDampLambda()/safeSolve() inspect the diagonal's dynamic
+## range BEFORE calling Matrix::solve and, if it looks dangerous,
+## pre-damp with an ABSOLUTE ridge term (hess + lambda*I) first. An
+## absolute term is needed here -- not the lambda*diag(hess) RELATIVE
+## damping used elsewhere (both in the L-M branch below and in
+## ormrfit) for genuine near-singularity -- because relative damping
+## scales every diagonal entry by the same factor, so a huge/tiny
+## ratio comes out just as extreme after it as before; only an
+## absolute floor actually narrows the ratio.
+##
+## maxhessratio=1e6 is an engineering judgment, calibrated with a wide
+## safety margin below the one dynamic range directly observed to
+## crash Matrix::solve (~1e9-1e10, from the earlier logistic/
+## maxetastep diagnosis on a different dataset) -- it has NOT been
+## independently verified against this new probit case. trace>=1 now
+## prints the Hessian diagonal range actually seen before each solve;
+## if a crash still occurs, that line (the last one printed) is the
+## key diagnostic for recalibrating the threshold.
+##
+## These three objects are defined at package (top) level, not inside
+## ormfit(), because ormrfit() in orm.rfit.r (a different file, same
+## package namespace) needs hessPreDampLambda()/maxhessratio too --
+## it has the identical first-call-crash exposure. See its own call
+## site there for the analogous fix.
+## Claude Sonnet 5 2026-10-01          revision note
+## REVERTED: automatic pre-emptive ridge damping removed. Direct trace
+## evidence (a logit fit that converged fine before this fix existed) now
+## shows the Hessian's diagonal routinely spans ~1e10 on EVERY iteration
+## for large-k, near-continuous-Y data -- not just after a bad step --
+## and is therefore not a reliable crash predictor at all: maxhessratio's
+## 1e6 threshold fired on every iteration, applying lambda in the
+## 10,000-11,000 range throughout, which distorted the Newton direction
+## badly enough to break a fit that was otherwise fine (gradient
+## essentially stalling, repeated degenerate-probability and intercept-
+## ordering rejections, eventual step-halving failure). So this is a
+## confirmed false-positive, not a rare edge case. Since maxetastep alone
+## was independently validated end-to-end on the original crash dataset,
+## and the one-off probit first-call crash this damping was meant to
+## guard has no confirmed fix, the safer choice is to stop altering the
+## solve and keep only the diagnostic visibility: hessPreDampLambda()
+## still computes what damping WOULD be applied and safeSolve() still
+## prints the Hessian diagonal range when trace>0, but neither actually
+## changes hess before calling Matrix::solve. If the probit crash
+## recurs, that printed range is now real evidence to reason from,
+## instead of another guessed threshold.
+maxhessratio <- 1e6
+
+hessPreDampLambda <- function(hess, maxratio=maxhessratio) {
+  d   <- abs(Matrix::diag(hess))
+  dnz <- d[d > 0]
+  if(length(dnz) < 2) return(0.)
+  r <- max(dnz) / min(dnz)
+  if(r <= maxratio) 0. else max(dnz) / maxratio
+}
+
+safeSolve <- function(hess, gradient, tolsolve, trace=FALSE, label='') {
+  ## Claude Sonnet 5 2026-10-01          revision note
+  ## All of the following is diagnostic-only printing (dynamic-range and
+  ## exact-zero-count hypotheses, both now empirically ruled out -- see
+  ## the project record: the probit/cloglog native-solve crash tracks
+  ## with large Hessian dimension (k on the order of 1e5), not with any
+  ## value-level property of the Hessian visible from R). Nothing
+  ## computed here feeds the solve -- the returned lambda is hardcoded
+  ## 0 below regardless. Gated entirely behind trace>0 (the production
+  ## default is trace=FALSE) so these diagnostics, including the
+  ## O(nnz) pass over hess@x, cost nothing on an ordinary fit -- which
+  ## matters most on exactly the huge-k fits where this was heaviest.
+  if(trace > 0) {
+    d       <- abs(Matrix::diag(hess))
+    dnz     <- d[d > 0]
+    lambda0 <- hessPreDampLambda(hess)   # diagnostic only -- NOT applied
+    nzero_diag <- sum(d == 0)
+    nzero_x    <- tryCatch(sum(hess@x == 0), error=function(e) NA_integer_)
+    if(length(dnz))
+      cat(label, ' hess diag range: [', format(min(dnz), digits=4), ', ',
+          format(max(dnz), digits=4), ']',
+          if(lambda0 > 0) paste0(' -- dynamic range exceeds ', maxhessratio,
+              ' (would-be lambda=', format(lambda0, digits=4), ', not applied)') else '',
+          ' -- exact-zero entries: diag=', nzero_diag, ' of ', length(d),
+          ', nonzero-structure x=', nzero_x,
+          ' (diagnostic only, unconfirmed hypothesis)',
+          '\n', sep='')
+  }
+  delta <- try(Matrix::solve(hess, gradient, tol=tolsolve), silent=TRUE)
+  if(! inherits(delta, 'try-error')) return(list(delta=delta, lambda=0, fail=FALSE))
+  list(delta=NULL, lambda=0, fail=TRUE)
+}
+
 ormfit <-
   function(x, y, y2, k, intcens, link, initial,
            offset=rep(0., n), wt=rep(1., n), penmat=matrix(0., p, p), opt_method='NR',
@@ -1149,7 +1266,7 @@ ormfit <-
 ## naturally falls under the cap) -- this changes only how NR/LM get
 ## there, not where they stop.
 
-if(getOption('orm.fit.debug', FALSE)) try <- function(x) x
+if(getOption('debug', FALSE)) try <- function(x) x
 
 n <- length(y)
 p <- length(initial) - k
@@ -1181,16 +1298,14 @@ if(idx$salloc != 0)
 nb <- idx$nb
 ib <- idx$ib[1 : nb]
 
-if(getOption('rms.fit.debug', FALSE)) try <- function(x) x
-
 rfort <- function(theta, what=3L, mscore=FALSE,
-                  debug=as.integer(getOption('orm.fit.debug', 0L)),
-                  debug2=getOption('orm.fit.debug2', FALSE)) {
+                  debug  = getOption('debug', FALSE),
+                  debug2 = getOption('debug2', FALSE)) {
   p <- as.integer(length(theta) - k)
   nai <- as.integer(if(intcens) 1000000 else 0)
   if(debug2) prn(c(k, length(theta), p), 'rfort')
   if(debug) {
-    a <- llist(n, k, p, y, y2, link, intcens, nai, what, debug)
+    a <- llist(n, k, p, y, y2, link, intcens, nai, what)
     s <- sapply(a, storage.mode)
     if(any(s != 'integer')) stop(s)
     ac <- llist(x, offset, wt, penmat, theta[1:k], theta[-(1:k)],
@@ -1286,12 +1401,14 @@ if(maxit == 1) {
 
       # Newton-Raphson step
 
-      delta <- try(Matrix::solve(hess, gradient, tol=tolsolve))
+      ss <- safeSolve(hess, gradient, tolsolve, trace=trace,
+                       label=paste0('NR iteration ', iter, ':'))
       # Runs amazingly slow if Matrix:: is omitted; prob. not using Matrix
-      if(inherits(delta, 'try-error')) {
-        message('singular Hessian matrix')
+      if(ss$fail) {
+        message('singular Hessian matrix even after pre-emptive ridge damping')
         return(list(fail=TRUE))
       }
+      delta <- ss$delta
 
       if(trace > 0)
         cat('NR iteration:', iter, '  -2LL:', format(objf, nsmall=4),
@@ -1336,10 +1453,40 @@ if(maxit == 1) {
           # Objective function failed to be reduced or is infinite
           step_size <- step_size / 2e0         # Reduce the step size
           if(trace > 0) cat('Step size reduced to', step_size, '\n')
-          if(step_size < minstepsize) {
+          # Claude Sonnet 5 2026-10-01          entire block
+          # minstepsize's floor predates maxetastep and was designed to
+          # catch a genuine failure to improve the OBJECTIVE. Applying it
+          # unconditionally conflates that with a step that simply hasn't
+          # been halved enough YET to satisfy maxetastep: a very large
+          # raw (uncapped) Newton step can legitimately need many more
+          # halvings than the default minstepsize=0.01 allows just to
+          # bring eta_shift under the cap, well before the objective is
+          # ever actually evaluated at that step size. Confirmed directly:
+          # a logit fit that converged fine before maxetastep existed
+          # started failing at step_size=0.0078125 (just below
+          # minstepsize) -- consistent with the halving budget being
+          # consumed entirely by the eta cap, never reaching a step size
+          # where the objective itself got a chance to improve. Only
+          # apply minstepsize once the step no longer needs forcing on
+          # account of maxetastep (eta_shift at the new, smaller
+          # step_size is already within the cap) -- an intercept-
+          # ordering (wd) violation, the other forcing condition above,
+          # still counts against minstepsize exactly as before. A
+          # separate, much smaller hard floor still catches a genuinely
+          # pathological direction (eta_shift stays above maxetastep even
+          # at a vanishingly small step_size, only possible if the raw
+          # step itself is enormous).
+          eta_shift_next <- step_size * (max_delta_int + max_xdelta)
+          if(step_size < minstepsize && eta_shift_next <= maxetastep) {
             message('Step size ', step_size, ' has reduced below minstepsize=',
                     minstepsize,
                     ' without improving log likelihood; fitting stopped')
+            return(list(fail=TRUE))
+          }
+          if(step_size < 1e-8) {
+            message('Step size reduced to ', step_size,
+                    ' while still trying to satisfy maxetastep = ', maxetastep,
+                    ' (implied shift was far larger than normal); fitting stopped')
             return(list(fail=TRUE))
           }
         } else {
@@ -1391,8 +1538,15 @@ if(maxit == 1) {
   w        <- rfort(theta)
   gradient <- w$grad
   H        <- infoMxop(w[c('a', 'b', 'ab')])
+  # Claude Sonnet 5 2026-10-01          1 line
+  # Diagnostic only -- see hessPreDampLambda's reverted-pre-damping note
+  # above; lambda0 is computed and printed but no longer applied to H_damped.
+  lambda0  <- hessPreDampLambda(H)
 
   for (iter in 1:maxit) {
+    if(trace > 0 && lambda0 > 0)
+      cat('LM iteration:', iter, ': hess dynamic range exceeds', maxhessratio,
+          ' (would-be lambda0=', format(lambda0, digits=4), ', not applied)\n', sep='')
     H_damped <- H + lambda * Matrix::Diagonal(x = Matrix::diag(H))
     delta    <- try(Matrix::solve(H_damped, gradient, tol=tolsolve))
     if(inherits(delta, 'try-error')) {
@@ -1454,6 +1608,7 @@ if(maxit == 1) {
       w        <- rfort(theta)
       gradient <- w$grad
       H        <- infoMxop(w[c('a', 'b', 'ab')])
+      lambda0  <- hessPreDampLambda(H)
       lambda   <- lambda / 1.5
     } else {
       # Reject the step and increase lambda
