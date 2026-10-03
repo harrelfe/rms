@@ -184,6 +184,11 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
                       intercepts=x$non.slopes < 10,
                       title, ...) {
 
+  if(length(x$fail) && x$fail) {
+    cat('\nFit failed\n\n')
+    return(invisible())
+  }
+  
   if(missing(title)) {
     title <- switch(x$family,
                     logistic = 'Logistic (Proportional Odds)',
