@@ -406,7 +406,7 @@ legend.nomabbrev(object, which, x, y, ncol=3, \dots)
 
   Wikipedia: Nomogram, \url{https://en.wikipedia.org/wiki/Nomogram}.
   
-  R package \code{R6Nomogram}, \url{https://cran.r-project.org/web/packages/R6Nomogram/index.html}
+  R package \code{R6Nomogram}, \url{https://CRAN.R-project.org/package=pkgname}
   }
 \seealso{
   \code{\link{rms}}, \code{\link{plot.Predict}},
