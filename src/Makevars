@@ -1,0 +1,10 @@
+# 'all' must come first: make uses the first rule in Makevars as the default
+# target, so without it the dependency rules below would replace R's default
+# and the shared object would never be linked.
+all: $(SHLIB)
+
+# Fortran 90 module dependencies, needed for parallel make (make -j).
+# orm_links.f90 defines module orm_links, so orm_links.o (which also creates
+# orm_links.mod) must be built before any file that "use"s the module.
+ormeta.o: orm_links.o
+ormll.o: orm_links.o
