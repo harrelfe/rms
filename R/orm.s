@@ -51,7 +51,7 @@ orm <- function(formula, data=environment(formula),
     if(!length(offs)) offs <- 0
     weights <- wt <- model.extract(X, 'weights')
     if(length(weights))
-      warning('currently weights are ignored in model validation and bootstrapping orm fits')
+      warn_once('currently weights are ignored in model validation and bootstrapping orm fits')
 
     if(model) m <- X
     X <- model.matrix(sformula, X)
@@ -66,7 +66,7 @@ orm <- function(formula, data=environment(formula),
 
     penpres <- !(missing(penalty) && missing(penalty.matrix))
     if(penpres && missing(var.penalty))
-      warning('default for var.penalty has changed to "simple"')
+      warn_once('default for var.penalty has changed to "simple"')
 
     if(!penpres) penalty.matrix <- matrix(0,ncol=p,nrow=p) else {
       if(missing(penalty.matrix)) penalty.matrix <- Penalty.matrix(atr, X) else
@@ -216,7 +216,7 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
   ## coefficient intercepts kept: (fit.mult.impute)
   cik <- attr(x$coef, 'intercepts')  # esp. for fit.mult.impute
   if(length(cik) && intercepts) {
-    warning('intercepts=TRUE not implemented for fit.mult.impute objects')
+    warn_once('intercepts=TRUE not implemented for fit.mult.impute objects')
     intercepts <- FALSE
   }
 

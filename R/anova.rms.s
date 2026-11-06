@@ -465,7 +465,7 @@ statnam <- if(bayes) c('REV', 'Lower', 'Upper', 'd.f.')
   attr(stats,"chisqBayes") <- chisqBayes
 
   if(issue.warn)
-    warning("tests of nonlinear interaction with respect to single component \nvariables ignore 3-way interactions")
+    warn_once("tests of nonlinear interaction with respect to single component \nvariables ignore 3-way interactions")
 
   stats
 }

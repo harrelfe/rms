@@ -1008,7 +1008,7 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
     ## its already-computed, pre-adjustment value) when lpe isn't
     ## actually available, rather than corrupting ess and crashing.
     if(anycens && length(cluster))
-      warning('ESS adjustment for censored observations is not yet ',
+      warn_once('ESS adjustment for censored observations is not yet ',
               'available for clustered (random-intercept) fits -- ess ',
               'reflects only the uncensored-observation count.')
     if(anycens && ! length(cluster)) {

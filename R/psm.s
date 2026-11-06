@@ -8,7 +8,7 @@ psm <- function(formula,
   call <- match.call()
 
   if(dist == 'extreme')
-    warning('Unlike earlier versions of survreg, dist="extreme" does not fit\na Weibull distribution as it uses an identity link.  To fit the Weibull\ndistribution use the default for dist or specify dist="weibull".')
+    warn_once('Unlike earlier versions of survreg, dist="extreme" does not fit\na Weibull distribution as it uses an identity link.  To fit the Weibull\ndistribution use the default for dist or specify dist="weibull".')
 
   ## Start FEH
   callenv <- parent.frame()   # don't delay these evaluations
@@ -149,7 +149,7 @@ psm <- function(formula,
   
   if (length(dlist$scale)) {
     if (!missing(scale))
-      warning(paste(dlist$name, 
+      warn_once(paste(dlist$name, 
                     "has a fixed scale, user specified value ignored"))
     scale <- dlist$scale
   }
@@ -248,7 +248,7 @@ psm <- function(formula,
   Dxy    <- if(type %in% c('right', 'left'))
            dxy.cens(fit$linear.predictors, Y)['Dxy']
   else {
-    warning('Dxy not computed since right or left censoring not in effect')
+    warn_once('Dxy not computed since right or left censoring not in effect')
     NA
   }
   stats <- c(nnn, logtest, df, P, R2, r2m, Dxy, gindex, exp(gindex))

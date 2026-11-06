@@ -1,6 +1,6 @@
 pphsm <- function(fit)
 {
-  warning("at present, pphsm does not return the correct covariance matrix")
+  warn_once("at present, pphsm does not return the correct covariance matrix")
 
   clas <- class(fit)[1]
   if(clas %nin% c('psm', 'survreg'))
