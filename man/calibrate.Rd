@@ -61,7 +61,7 @@ calibrate(fit, \dots)
                         bw=FALSE, rule="aic",
                         type="residual", sls=.05, aics=0, force=NULL,
                         estimates=TRUE, pr=FALSE, what="observed-predicted",
-                        val.surv.args=list(method='loess', eps=30),
+                        val.surv.args=list(method='loess'),
                         \dots)
 \method{calibrate}{psm}(fit, cmethod=c('hare', 'KM', 'loess'),
   method="boot", u, m=150, pred, cuts, B=40,
@@ -96,7 +96,7 @@ a fit from \code{ols}, \code{lrm}, \code{cph} or \code{psm}
 \item{cmethod}{method for validating survival predictions using
   right-censored data.  Applies to \code{cph} and \code{psm} fits.
   \code{cmethod='loess'} is recommended: it calls \code{val.surv} with
-  \code{method='loess'}, which uses \code{\link{loess.surv}}, a smoother
+  \code{method='loess'}, which uses \code{\link[Hmisc]{loess.surv}}, a smoother
   for right-censored data based on inverse probability of censoring
   weighting (van Klaveren et al., 2026), to estimate the probability of
   surviving to time \code{u} as a function of the predicted probability.
@@ -246,7 +246,7 @@ Locally estimated scatterplot smoothing for censored survival data.
 }
 \seealso{
   \code{\link{validate}}, \code{\link{predab.resample}},
-  \code{\link{loess.surv}},
+  \code{\link[Hmisc]{loess.surv}},
   \code{\link{groupkm}}, \code{\link[Hmisc]{errbar}},
   \code{\link[Hmisc]{scat1d}}, \code{\link{cph}}, \code{\link{psm}},
   \code{\link{lowess}},\code{\link[Hmisc]{fit.mult.impute}},
