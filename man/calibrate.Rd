@@ -24,7 +24,9 @@ time point, and "observed" refers to the corresponding Kaplan-Meier
 survival estimate, stratifying on intervals of predicted survival, or,
 the predicted survival
 probability as a function of transformed predicted survival probability
-using the flexible hazard regression approach or for \code{orm} and probably
+using the flexible hazard regression approach, or, recommended for
+\code{cph} and \code{psm}, a locally weighted smoother for censored data
+(\code{cmethod='loess'}), or for \code{orm} and probably
 better, smoothed overlapping moving Kaplan-Meier estimates
 (see the \code{val.surv.args} argument and \code{val.surv}
 function for details).  Nonparametric
@@ -49,7 +51,7 @@ calibrate(fit, \dots)
   type=c("residual","individual"),
   sls=.05, aics=0, force=NULL, estimates=TRUE, pr=FALSE, kint,
   smoother="lowess", digits=NULL, \dots) 
-\method{calibrate}{cph}(fit, cmethod=c('hare', 'KM'),
+\method{calibrate}{cph}(fit, cmethod=c('hare', 'KM', 'loess'),
   method="boot", u, m=150, pred, cuts, B=40, 
   bw=FALSE, rule="aic", type="residual", sls=0.05, aics=0, force=NULL,
   estimates=TRUE,
@@ -59,9 +61,9 @@ calibrate(fit, \dots)
                         bw=FALSE, rule="aic",
                         type="residual", sls=.05, aics=0, force=NULL,
                         estimates=TRUE, pr=FALSE, what="observed-predicted",
-                        val.surv.args=list(method='smoothkm', eps=30),
+                        val.surv.args=list(method='loess', eps=30),
                         \dots)
-\method{calibrate}{psm}(fit, cmethod=c('hare', 'KM'),
+\method{calibrate}{psm}(fit, cmethod=c('hare', 'KM', 'loess'),
   method="boot", u, m=150, pred, cuts, B=40,
   bw=FALSE,rule="aic",
   type="residual", sls=.05, aics=0, force=NULL, estimates=TRUE,
@@ -92,11 +94,19 @@ a fit from \code{ols}, \code{lrm}, \code{cph} or \code{psm}
   all re-samples.
   }
 \item{cmethod}{method for validating survival predictions using
-  right-censored data.  The default is \code{cmethod='hare'} to use the
+  right-censored data.  Applies to \code{cph} and \code{psm} fits.
+  \code{cmethod='loess'} is recommended: it calls \code{val.surv} with
+  \code{method='loess'}, which uses \code{\link{loess.surv}}, a smoother
+  for right-censored data based on inverse probability of censoring
+  weighting (van Klaveren et al., 2026), to estimate the probability of
+  surviving to time \code{u} as a function of the predicted probability.
+  The default is \code{cmethod='hare'} to use the
   \code{hare} function in the \code{polspline} package.  Specify
   \code{cmethod='KM'} to use less precision stratified Kaplan-Meier
   estimates.  If the \code{polspline} package is not available, the
-  procedure reverts to \code{cmethod='KM'}.
+  procedure reverts to \code{cmethod='KM'}.  A warning,
+  \code{"cmethod='loess' is recommended"}, is issued when
+  \code{cmethod} is not \code{'loess'}.
   }
 \item{u}{
 the time point for which to validate predictions for survival
@@ -149,7 +159,7 @@ intercept to use, e.g., \code{kint=2} means to calibrate \eqn{Prob(Y\geq
 \item{val.surv.args}{a list containing arguments to send to \code{val.surv} when
 running \code{calibrate.orm}.  By default smoothed overlapping windows of Kaplan-Meier
 estimates are used for \code{orm}.  The \code{val.surv.args} argument is especially
-useful for specifying bandwidths and the \code{movStats} \code{eps} argument.}
+useful for specifying the estimation method to use, and bandwidths and the \code{movStats} \code{eps} argument.}
 \item{smoother}{
 a function in two variables which produces \eqn{x}- and
 \eqn{y}-coordinates by smoothing the input \code{y}.  The default is to
@@ -229,8 +239,14 @@ Department of Biostatistics\cr
 Vanderbilt University\cr
 fh@fharrell.com
 }
+\references{
+van Klaveren D, Austin PC, Serruys PW, van Calster B, Harrell FE (2026).
+Locally estimated scatterplot smoothing for censored survival data.
+\emph{Statistics in Medicine}. \doi{10.1002/sim.70783}
+}
 \seealso{
   \code{\link{validate}}, \code{\link{predab.resample}},
+  \code{\link{loess.surv}},
   \code{\link{groupkm}}, \code{\link[Hmisc]{errbar}},
   \code{\link[Hmisc]{scat1d}}, \code{\link{cph}}, \code{\link{psm}},
   \code{\link{lowess}},\code{\link[Hmisc]{fit.mult.impute}},
@@ -247,12 +263,14 @@ x2 <- factor(sample(c('a', 'b', 'c'), n, TRUE))
 f <- cph(Surv(d.time) ~ pol(x1,2) * x2, x=TRUE, y=TRUE, surv=TRUE, time.inc=1.5)
 #or f <- psm(S ~ \dots)
 pa <- requireNamespace('polspline')
+cal <- calibrate(f, u=1.5, cmethod='loess', B=20)  # recommended
+plot(cal)
 if(pa) {
  cal <- calibrate(f, u=1.5, B=20)  # cmethod='hare'
- plot(cal)
+ plot(cal, add=TRUE)
 }
 cal <- calibrate(f, u=1.5, cmethod='KM', m=50, B=20)  # usually B=200 or 300
-plot(cal, add=pa)
+plot(cal, add=TRUE)
 
 set.seed(1)
 y <- sample(0:2, n, TRUE)

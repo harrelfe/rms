@@ -250,7 +250,7 @@ val.surv <- function(fit, newdata, S, est.surv,
                      ...)
 {
   method  <- match.arg(method)
-  if(method != 'loess') warning("method='loess' is recommended")
+  if(method != 'loess') warn_once("method='loess' is recommended")
   isorm   <- ! missing(fit) && inherits(fit, 'orm')
   if(! missing(u)) {
     if(method == 'loess') fun <- function(p) p

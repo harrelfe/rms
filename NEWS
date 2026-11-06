@@ -1,6 +1,8 @@
 Changes in version 8.2-2 (2026-11-05)
   * val.surv: add new method loess, issue warning if this method is not selected as it performs better than the other methods
   * Make dependent on Hmisc >= 5.3-1 so can use loess.surv
+  * calibrate.orm: made default method loess for censored data instead of smoothkm
+  * calibrate.cph, calibrate.psm: added cmethod='loess' and issued warning when it's not used as it's now the preferred method
 
 Changes in version 8.2-1 (2026-11-01)
   * Minor update adding a proper src/Makevars file to solve parallel make error at CRAN

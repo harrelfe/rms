@@ -11,7 +11,7 @@
 #distributions of predicted survival vary greatly withing quantile groups
 #defined from original sample's predicted survival
 
-calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
+calibrate.cph <- function(fit, cmethod=c('hare', 'KM', 'loess'),
                           method="boot", u, m=150, pred, cuts, B=40,
                           bw=FALSE, rule="aic",
                           type="residual", sls=.05, aics=0, force=NULL,
@@ -20,6 +20,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
 {
   call    <- match.call()
   cmethod <- match.arg(cmethod)
+  if(cmethod != 'loess') warn_once("cmethod='loess' is recommended")
 
   oldopt <- options('digits')
   options(digits=3)
@@ -38,7 +39,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
     surv.by.strata <- surv.by.strata[stra]
   survival <- as.vector(surv.by.strata ^ exp(xb))
 
-  if(cmethod=='hare' && missing(pred)) {
+  if(cmethod != 'KM' && missing(pred)) {
     lim <- datadist(survival)$limits[c('Low:prediction','High:prediction'),]
     pred <- seq(lim[1], lim[2], length.out=100)
   }
@@ -47,11 +48,11 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
     cuts <- unique(quantile(c(0, 1, survival), seq(0, 1, length.out=g + 1),
                             na.rm=TRUE))
   }
-  if(cmethod=='hare') cuts <- NULL
+  if(cmethod != 'KM') cuts <- NULL
   else pred <- NULL
   
   distance <- function(x, y, strata, fit, iter, u, fit.orig, what="observed",
-                       pred, orig.cuts, maxdim, ...) {
+                       pred, orig.cuts, maxdim, cmethod, ...) {
     ## Assumes y is matrix with 1st col=time, 2nd=event indicator
     if(sum(y[, 2]) < 5) return(NA)
     surv.by.strata <- fit$surv.summary[2, , 1]
@@ -69,6 +70,7 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
     } else {
       pred.obs <- val.surv(fit, S=Surv(y[, 1], y[, 2]), u=u,
                            est.surv=cox,
+                           method=cmethod,
                            pred=pred, maxdim=maxdim)
       dist <- if(what=='observed') pred.obs$actualseq
               else                 pred.obs$actualseq - pred
@@ -104,7 +106,8 @@ calibrate.cph <- function(fit, cmethod=c('hare', 'KM'),
                     pr=pr, B=B, bw=bw, rule=rule, type=type,  
                     u=u, m=m, what=what, sls=sls, aics=aics,
                     force=force, estimates=estimates,
-                    pred=pred, orig.cuts=cuts, tol=tol, maxdim=maxdim, ...)
+                    pred=pred, orig.cuts=cuts, tol=tol, maxdim=maxdim,
+                    cmethod=cmethod, ...)
   
   kept     <- attr(reliability, 'kept')
   keepinfo <- attr(reliability, 'keepinfo')

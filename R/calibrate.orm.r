@@ -3,7 +3,7 @@ calibrate.orm <- function(fit,
                           bw=FALSE, rule="aic",
                           type="residual", sls=.05, aics=0, force=NULL,
                           estimates=TRUE, pr=FALSE, what="observed-predicted",
-                          val.surv.args=list(method='smoothkm', eps=30),
+                          val.surv.args=list(method='loess', eps=30),
                           ...)
 {
   call    <- match.call()

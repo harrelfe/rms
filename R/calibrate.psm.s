@@ -1,4 +1,4 @@
-calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
+calibrate.psm <- function(fit, cmethod=c('hare', 'KM', 'loess'),
                           method="boot", u, m=150, pred, cuts, B=40,
                           bw=FALSE, rule="aic",
                           type="residual", sls=.05, aics=0,
@@ -9,6 +9,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
 {
   call <- match.call()
   cmethod <- match.arg(cmethod)
+  if(cmethod != 'loess') warn_once("cmethod='loess' is recommended")
   ## if(cmethod=='hare')
   ##  {
   ##    require('polspline') ||
@@ -29,7 +30,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
 
    survival <- survest.psm(fit, times=u, conf.int=FALSE)$surv
 
-  if(cmethod=='hare' && missing(pred))
+  if(cmethod != 'KM' && missing(pred))
     {
       lim <- datadist(survival)$limits[c('Low:prediction','High:prediction'),]
       pred <- seq(lim[1], lim[2], length.out=100)
@@ -39,7 +40,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
       g <- max(1, floor(ny[1]/m))
       cuts <- quantile(c(0, 1, survival), seq(0, 1, length.out=g+1), na.rm=TRUE)
     }
-  if(cmethod=='hare') cuts <- NULL
+  if(cmethod != 'KM') cuts <- NULL
   else
     pred <- NULL
 
@@ -47,7 +48,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
   parms <- fit$parms
   
   distance <- function(x, y, fit, iter, u, fit.orig, what="observed",
-                       pred, orig.cuts, maxdim, ...)
+                       pred, orig.cuts, maxdim, cmethod, ...)
     {
       ##Assumes y is matrix with 1st col=time, 2nd=event indicator
       if(sum(y[,2]) < 5) return(NA)
@@ -67,6 +68,7 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
         {
           pred.obs <- val.surv(fit, S=y, u=u,
                                est.surv=psurv,
+                               method=cmethod,
                                pred=pred, maxdim=maxdim)
           dist <- if(what=='observed') pred.obs$actualseq
           else                         pred.obs$actualseq - pred
@@ -98,7 +100,8 @@ calibrate.psm <- function(fit, cmethod=c('hare', 'KM'),
                         sls=sls, aics=aics, force=force, estimates=estimates,
                         strata=FALSE,
                         tol=tol, pred=pred, orig.cuts=cuts, maxiter=maxiter,
-                        rel.tolerance=rel.tolerance, maxdim=maxdim, ...)
+                        rel.tolerance=rel.tolerance, maxdim=maxdim,
+                        cmethod=cmethod, ...)
       kept     <- attr(reliability, 'kept') # TODO: accumulate over reps
       keepinfo <- attr(reliability, 'keepinfo')
       n        <- reliability[,"n"]
