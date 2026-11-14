@@ -1296,7 +1296,7 @@ if(idx$salloc != 0)
   stop('Censoring values encountered that are not handled (ormidx code ',
        idx$salloc, ')')
 nb <- idx$nb
-ib <- idx$ib[1 : nb]
+ib <- idx$ib[seq_len(nb)]   # 1 : nb would wrongly return ib[1] when nb == 0
 
 rfort <- function(theta, what=3L, mscore=FALSE,
                   debug  = getOption('debug', FALSE),
