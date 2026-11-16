@@ -55,16 +55,29 @@ contrast.rms <-
                         bca        = 'bootstrap BCa',
                         basic      = 'basic bootstrap')
 
-  partialpo <- inherits(fit, 'blrm') && fit$pppo > 0
+  # Claude Sonnet 5 2026-11-22          6 lines
+  # partialpo originally meant "blrm with pppo>0", the only case
+  # needing ycut passed through to predict(type='x'). rmsb::borm()'s
+  # ydep mechanism (yde/ytrans, a q x m tau matrix) needs the
+  # identical ycut-passing treatment for the same reason -- its
+  # Y-dependent effect also cannot be evaluated without a Y value --
+  # confirmed directly: contrast() on a yde-fitted borm() silently
+  # evaluated at the reference intercept regardless of ycut, while
+  # mislabeling the output as if ycut had been honored, before this
+  # fix. The cppo-requirement check below stays blrm-specific: borm()
+  # has no cppo at all (it validates yde/ytrans/tau itself).
+  partialpo <- (inherits(fit, 'blrm') && fit$pppo > 0) ||
+               (inherits(fit, 'borm') && length(fit$qyde) && fit$qyde > 0)
   if(partialpo & ! length(ycut))
     stop('must specify ycut for partial prop. odds model')
   cppo      <- fit$cppo
-  if(partialpo && ! length(cppo))
+  if(partialpo && inherits(fit, 'blrm') && ! length(cppo))
     stop('only implemented for constrained partial PO models')
 
   pred <- function(d) {
-    ## predict.blrm duplicates rows of design matrix for partial PO models
-    ## if ycut has length > 1 and only one observation is being predicted
+    ## predict.blrm/predict.borm duplicate rows of design matrix for
+    ## partial PO/ydep models if ycut has length > 1 and only one
+    ## observation is being predicted
     if(partialpo) predict(fit, d, type='x', ycut=ycut)
          else
            predict(fit, d, type='x')
