@@ -1,0 +1,48 @@
+I want to implement yde and ytrans in the maximum likelihood function orm in the
+rms package, parallel to what is now working in rmsb::borm.  yde and ytrans should have the same meaning in orm as they do in rmsb::borm.  The goal is to extend cumulative probability models as implemented in orm to allow for non-parallelism.  In the logit link case we are implementing the constrained partial proportional odds model.  ytrans specifies the constraints and yde is a formula specifying which predictors are to have y-varying effect.  yde generates a data (design) matrix Z that is n by q.  tau is a q by m matrix as in borm, with q predictor parameters that are allowed to have y-dependent effects and m restrictions on how each column in Z has its effect varying with y.  ytrans is a user function that can return a vector (m=1) or a matrix (m >= 1).
+
+STEP 1 - READ AND REPORT (no code changes). Read, in this order:
+  ~/web/R/rmsb/borm_development.md          (what we learned building borm/ydep)
+  ~/web/R/rms/orm_accuracy.md               (accuracy/stability work on orm)
+  ~/web/R/rms/orm-random-effects-implementation.md
+  ~/web/R/rms/orm-random-effects-methodology.md
+  then rms: orm.fit.r, orm.rfit.r, orm.s, infoMxop.r, ormll.f90, ormeta.f90,
+  ormidx.f90, and where ydep/ytrans are currently defined.
+Report a short summary of what you found and any contradictions between documents.
+
+STEP 2 - DESIGN DOCUMENT (still no code). Write it to a file and stop for my approval.
+It must cover:
+  a. The log-likelihood, gradient and Hessian with tau, in mathematical notation. Show each
+     Hessian block (intercept-intercept, intercept-beta, intercept-tau, beta-tau,
+     tau-tau), which are dense, banded or sparse, and what storage and solving
+     strategy (e.g. Schur complement) keeps large k (>1e5 distinct Y) feasible.
+     Confirm patterns on small examples numerically.
+  b. How infoMxop's list-of-components representation extends to tau, and how
+     vcov, predict, contrast, Predict, summary, anova, nomogram, bootcov, robcov
+     get covariance matrices and predictions when parameters include a matrix tau.
+     Decide and document the ordering/naming of tau in coef() and vcov().
+  c. Random effects: how the intercept block changes from tri-band to general sparse,
+     and the added patterns when random effects and ydep are both present.
+  d. Recommendation, with evidence, on generalizing orm.fit/orm.rfit versus writing
+     new functions for the ydep case. My constraint: models without ydep must give
+     the same results as now (state the tolerance) with no slowdown or extra memory
+     at large k.
+  e. Where ydep/ytrans should live so rmsb and rms share one definition. (ignore this; these are user-given)
+  f. A staged plan: (1) ydep without random effects, with fit, vcov and predictions;
+     (2) random effects; (3) ytrans. Each stage has tests and a stop for my review.
+  g. A verification plan: gradient and Hessian against finite differences of the
+     likelihood on small problems; no-ydep fits identical to current orm; one-column
+     ydep versus cppo/ppo; agreement with borm's posterior mode under weak priors;
+     large-k stress tests.
+
+CONSTRAINTS
+  - Base R, no tidyverse; minimal diffs; flag CRAN and reverse-dependency risks
+    (rmsb depends on rms).
+  - Do not change existing Fortran behavior. Adding new routines (or new bits for
+    ormeta's `what`) is allowed: standard-conforming, registered in init.c.
+  - Evidence before fixes. If you cannot confirm a hypothesis from a real run, add
+    diagnostics gated behind trace and ask me to run them.
+  - Use the existing change-report and code-comment conventions in CLAUDE.md.
+  - Lessons from earlier orm work apply: large-k Matrix sparse solves can segfault
+    and cannot be caught, so avoid dense or fragile paths at large k.
+  - Ask me when a design choice is mine to make.
