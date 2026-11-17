@@ -15,12 +15,26 @@
 ##' @author Frank Harrell
 Xcontrast <- function(fit, a, b=NULL, a2=NULL, b2=NULL, ycut=NULL,
                       weights='equal', expand=TRUE, Zmatrix=TRUE) {
-  partialpo <- inherits(fit, 'blrm') && fit$pppo > 0
+  # Claude Sonnet 5 2026-11-17          entire block
+  # Generalized to also recognize a yde-fitted borm() object, which
+  # has no pppo/cppo fields at all (borm()'s own non-PO mechanism is
+  # qyde/ytrans/tau) -- previously only blrm()'s own pppo was checked,
+  # so a yde-fitted borm() object was never detected as partialpo
+  # here. blrm's own cppo-presence requirement (only the constrained,
+  # cppo-based partial-PO case is supported by this function) stays
+  # blrm-specific, since borm() has no unconstrained-PO alternative to
+  # rule out -- qyde > 0 always means the ytrans-constrained case.
+  isblrm    <- inherits(fit, 'blrm')
+  isborm    <- inherits(fit, 'borm')
+  partialpo <- (isblrm && fit$pppo > 0) ||
+               (isborm && length(fit$qyde) && fit$qyde > 0)
   if(partialpo && Zmatrix && ! length(ycut))
     stop('must specify ycut for partial prop. odds model')
-  cppo      <- fit$cppo
-  if(partialpo && ! length(cppo))
-    stop('only implemented for constrained partial PO models')
+  if(isblrm) {
+    cppo <- fit$cppo
+    if(partialpo && ! length(cppo))
+      stop('only implemented for constrained partial PO models')
+  }
   
   pred <- function(d) {
     ## predict.blrm duplicates rows of design matrix for partial PO models

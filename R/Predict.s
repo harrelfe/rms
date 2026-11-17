@@ -27,6 +27,7 @@ Predict <-
 
   cl <- class(fit)
   isblrm <- 'blrm' %in% cl
+  isborm <- 'borm' %in% cl
   isorm  <- 'orm'  %in% cl
   islrm  <- 'lrm'  %in% cl
 
@@ -39,14 +40,26 @@ Predict <-
     if(! length(kint)) kint <- 1
   }
 
+  # Claude Sonnet 5 2026-11-17          entire block
+  # Generalized to also recognize a yde-fitted borm() object, which
+  # has no pppo/cppo fields at all (borm()'s own non-PO mechanism is
+  # qyde/ytrans/tau) -- previously this unconditionally forced pppo to
+  # 0 for any non-blrm object, so a yde-fitted borm() silently lost
+  # its Y-dependent effect here. blrm's own cppo-presence requirement
+  # (only the constrained, cppo-based partial-PO case is supported by
+  # this function) stays blrm-specific, since borm() has no
+  # unconstrained-PO alternative to rule out -- qyde > 0 always means
+  # the ytrans-constrained case for borm().
   pppo <- fit$pppo
   if(! isblrm) pppo <- 0
-  partialpo <- pppo > 0L
+  qyde <- fit$qyde
+  if(! isborm || ! length(qyde)) qyde <- 0
+  partialpo <- pppo > 0L || qyde > 0L
   if(isblrm) cppo <- fit$cppo
-  if(partialpo && ! length(cppo))
+  if(partialpo && isblrm && ! length(cppo))
     stop('only implemented for constrained partial PO models')
-  ylevels   <- if(isblrm) fit$ylevels else fit$yunique
-  if(islrm || isorm || isblrm) {
+  ylevels   <- if(isblrm || isborm) fit$ylevels else fit$yunique
+  if(islrm || isorm || isblrm || isborm) {
     if(kintgiven && ! length(ycut)) ycut <- ylevels[kint + 1]
     if(length(ycut) && ! kintgiven)
       kint <- if(all.is.numeric(ylevels)) which(ylevels == ycut) - 1
@@ -55,17 +68,17 @@ Predict <-
 
   Pred <- function(type='lp') {
     if(type == 'x') {
-      if(isblrm) predict(fit, settings, type='x', kint=kint, ycut=ycut,
+      if(isblrm || isborm) predict(fit, settings, type='x', kint=kint, ycut=ycut,
                          zcppo=FALSE)
       else
         predictrms(fit, settings, type='x')
     }
     else {
-      if(isblrm) predict(fit, settings, type='lp',
+      if(isblrm || isborm) predict(fit, settings, type='lp',
                        fun=fun, funint=funint,
                        kint=kint, ycut=ycut,
                        posterior.summary=posterior.summary, cint=conf.int)
-      else predictrms(fit, settings, kint=kint, 
+      else predictrms(fit, settings, kint=kint,
                       ref.zero=ref.zero,
                       type='lp', conf.int=conf.int, conf.type=conf.type)
     }
@@ -284,7 +297,11 @@ Predict <-
     upper <- as.vector(xx$upper)
   }
   
-  if(! isblrm && length(fun) && is.function(fun)) {
+  # Claude Sonnet 5 2026-11-17          2 lines
+  # borm() also applies fun= itself (via predict.borm(), delegating to
+  # predict.blrm() for the non-yde case) -- exclude it here too, same
+  # reason blrm() already was, to avoid applying fun twice.
+  if(! isblrm && ! isborm && length(fun) && is.function(fun)) {
     ## If fun is for example the result of Mean.lrm or Quantile.orm
     ## and confidence limits are requested, must use entire design matrix
     ## to get variances.  Note that conf.int must also have been requested

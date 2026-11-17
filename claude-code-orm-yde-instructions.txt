@@ -1,6 +1,8 @@
 I want to implement yde and ytrans in the maximum likelihood function orm in the
 rms package, parallel to what is now working in rmsb::borm.  yde and ytrans should have the same meaning in orm as they do in rmsb::borm.  The goal is to extend cumulative probability models as implemented in orm to allow for non-parallelism.  In the logit link case we are implementing the constrained partial proportional odds model.  ytrans specifies the constraints and yde is a formula specifying which predictors are to have y-varying effect.  yde generates a data (design) matrix Z that is n by q.  tau is a q by m matrix as in borm, with q predictor parameters that are allowed to have y-dependent effects and m restrictions on how each column in Z has its effect varying with y.  ytrans is a user function that can return a vector (m=1) or a matrix (m >= 1).
 
+Note that any reference to ppo and cppo in existing rms package functions need to be used only in the context of supporting rmsb::blrm.  For rmsb::borm new code and documentation needss to be added to reflect the new yde and ytrans user-specified objects that borm (and the soon updated orm) use.  yde serves exactly the role of ppo but ytrans generalizes cppo to have a matrix output for the function instead of just a vector.  There should be no modifications of lrm.  yde and ytrans are not "extra formula-like things" but instead are just new arguments for orm.
+
 STEP 1 - READ AND REPORT (no code changes). Read, in this order:
   ~/web/R/rmsb/borm_development.md          (what we learned building borm/ydep)
   ~/web/R/rms/orm_accuracy.md               (accuracy/stability work on orm)
