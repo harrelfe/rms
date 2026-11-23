@@ -19,7 +19,7 @@
 #' linear predictors.
 #'
 #' @details
-#' \code{method="loess"} (recommended) uses \code{\link{loess.surv}}, a
+#' \code{method="loess"} (recommended) uses \code{\link[Hmisc]{loess.surv}}, a
 #' locally weighted smoother for right-censored data (van Klaveren et al.,
 #' 2026).  Event indicators are inflated by inverse probability of
 #' censoring weights obtained from a Cox model for the censoring
@@ -244,9 +244,9 @@
 #' @concept model validation
 #' @concept predictive accuracy
 #' @export
-val.surv <- function(fit, newdata, S, est.surv, 
+val.surv <- function(fit, newdata, S, est.surv,
                      method=c('hare', 'smoothkm', 'loess'),
-                     censor, u, fun, lim, evaluate=100, pred, maxdim=5, 
+                     censor, u, fun, lim, evaluate=100, pred, maxdim=5,
                      ...)
 {
   method  <- match.arg(method)
@@ -275,7 +275,7 @@ val.surv <- function(fit, newdata, S, est.surv,
   if(! inherits(S, c('Surv', 'Ocens'))) stop('S must be a Surv or Ocens object')
   if(inherits(S, 'Ocens')) S <- Ocens2Surv(S)
   if(ncol(S) != 2) stop('S must be a right-censored Surv object')
-  
+
   if(missing(est.surv))
     est.surv <- if(! missing(u)) {
       if(missing(newdata))
@@ -310,7 +310,7 @@ val.surv <- function(fit, newdata, S, est.surv,
       pseq <- seq(lim[1], lim[2], length.out=evaluate)
     }
     else pseq <- pred
-    
+
     if(method == 'hare') {
       actual    <- 1 - polspline::phare(u, func(est.surv), f)
       actualseq <- 1 - polspline::phare(u, func(pseq),     f)
@@ -335,7 +335,7 @@ val.surv <- function(fit, newdata, S, est.surv,
     else                          w$loessfit <- f
     return(w)
   }
-  
+
   n <- nrow(S)
   nac <- if(! missing(fit)) fit$na.action
   if(! missing(censor) && length(censor) > 1 && ! missing(fit)) {
@@ -347,7 +347,7 @@ val.surv <- function(fit, newdata, S, est.surv,
     if(length(censor) != n)
       stop("length of censor does not match # rows used in fit")
   }
-  
+
   est.surv.censor <- lp <- NULL
   if(! missing(censor)) {
     if(missing(fit))
@@ -362,7 +362,7 @@ val.surv <- function(fit, newdata, S, est.surv,
     else
       predict(fit, newdata, type='lp')
   }
-  
+
   if(length(est.surv) != n)
     stop('length of est.surv must equal number of rows in S')
   structure(list(S=S, est.surv=est.surv,
@@ -413,7 +413,7 @@ plot.val.survh <- function(x, lim, xlab, ylab,
     if(riskdist) do.call('scat1d', c(list(x=x$p), scat1d.opts))
     invisible()
   }
-    
+
 
 
 #' @rdname val.surv
@@ -429,10 +429,10 @@ plot.val.surv <- function(x, group, g.group=4,
   censor.est.surv <- x$censor.est.surv
   what            <- match.arg(what)
   type            <- match.arg(type)
-  
+
   n   <- length(est.surv)
   nac <- x$na.action
-  
+
   if(! missing(group)) {
       if(length(group) > n && length(nac)) {
         ## Missing observations were deleted during fit
@@ -441,11 +441,11 @@ plot.val.surv <- function(x, group, g.group=4,
       }
       if(length(group) != n)
         stop("length of group does not match # rows used in fit")
-      if(! is.factor(group)) group <- 
-        if(is.logical(group) || is.character(group)) 
+      if(! is.factor(group)) group <-
+        if(is.logical(group) || is.character(group))
           as.factor(group) else cut2(group, g=g.group)
     }
-  
+
   if(length(censor.est.surv)) {
     if(missing(group)) group <- rep(1, length(censor.est.surv))
     i <- S[, 2]==1
@@ -479,12 +479,12 @@ plot.val.surv <- function(x, group, g.group=4,
     abline(h=if(what=='difference')0 else 1, lty=2)
     return(res)
   }
-  
+
   if(missing(xlab)) xlab <- 'Predicted Pr[T <= observed T]'
   if(missing(ylab)) ylab <- 'Fraction <= x'
   if(missing(xlim)) xlim <- 0:1
   if(missing(ylim)) ylim <- 0:1
-  
+
   if(missing(group)) {
     nma <- ! is.na(est.surv + S[,2])
     est.surv <- est.surv[nma]
@@ -500,12 +500,12 @@ plot.val.surv <- function(x, group, g.group=4,
                   color = "black", linewidth=1, alpha=0.25)
     return(g)
   }
-  
+
   nma <- ! (is.na(est.surv + S[,1] + S[,2]) | is.na(group))
   S        <- S[nma,, drop=FALSE]
   est.surv <- est.surv[nma]
   group    <- group[nma]
-  
+
   ng <- length(lg <- levels(group))
   w <- NULL
   for(i in 1 : (ng + 1)) {
@@ -515,7 +515,7 @@ plot.val.surv <- function(x, group, g.group=4,
                    se.fit = FALSE, conf.type = "none")
     w <- rbind(w, data.frame(group=c(lg, 'Overall')[i],
                              x=c(0, f$time), y=1 - c(1, f$surv)))
-  }  
+  }
   g <- ggplot(w, aes(x, y, color=group)) + geom_step() +
         xlim(xlim) + ylim(ylim) + xlab(xlab) + ylab(ylab) +
         guides(color=guide_legend(title='')) +

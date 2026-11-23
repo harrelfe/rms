@@ -26,8 +26,11 @@ Xcontrast <- function(fit, a, b=NULL, a2=NULL, b2=NULL, ycut=NULL,
   # rule out -- qyde > 0 always means the ytrans-constrained case.
   isblrm    <- inherits(fit, 'blrm')
   isborm    <- inherits(fit, 'borm')
+  isorm     <- inherits(fit, 'orm')
+  # Claude Sonnet 5 2026-11-17
+  # Also recognize a yde-fitted orm() object (qyde > 0), not just borm().
   partialpo <- (isblrm && fit$pppo > 0) ||
-               (isborm && length(fit$qyde) && fit$qyde > 0)
+               ((isborm || isorm) && length(fit$qyde) && fit$qyde > 0)
   if(partialpo && Zmatrix && ! length(ycut))
     stop('must specify ycut for partial prop. odds model')
   if(isblrm) {

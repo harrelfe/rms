@@ -69,7 +69,16 @@ gauss_hermite_quad <- function(n) {
 clusterModeFind <- function(alpha, beta, sigma, gamma_c_init, base_lp,
                             wt, ia, ia2, sgn, ib, nb, cluster, nc,
                             link, k, n, wtre=rep(1e0, n), maxit=30L, tol=1e-8,
-                            minstepsize=1e-4) {
+                            minstepsize=1e-4,
+                            qm=0L, Z1=matrix(0e0, n, 0), Z2=matrix(0e0, n, 0),
+                            tau=numeric(0)) {
+  ## Claude Sonnet 5 2026-11-17          3 lines
+  ## qm/Z1/Z2/tau (Stage 2: yde + random effects, see
+  ## orm-yde-design.md section c): the random intercept u shifts lp1/
+  ## lp2 identically (a common shift, exactly like beta), so mode-
+  ## finding w.r.t. u needs no change beyond passing the correct yde
+  ## terms through to ormatoms (via ormeta's own qm/Z1/Z2/tau) for
+  ## accuracy -- see ormeta.f90's own extended header.
   ## Claude Sonnet 5 2026-09-08
   ## deb() is a real print-with-label function (see Hmisc::Fdebug) only
   ## when options(orm.re.debug=TRUE) is set; otherwise it's a do-nothing
@@ -98,6 +107,7 @@ clusterModeFind <- function(alpha, beta, sigma, gamma_c_init, base_lp,
     ## what is a bit mask (1 = logd, 2 = g/s1/s2, 4 = h); mode finding needs only g and h.
     w <- .Fortran(F_ormeta, n, k, link, alpha, lp1=lp, lp2=lp, wt,
                  ia, ia2, sgn, ib, nb,
+                 qm=qm, Z1=Z1, Z2=Z2, tau=tau,
                  logd=numeric(n), g=numeric(n), h=numeric(n),
                  s1=numeric(n), s2=numeric(n),
                  what=6L, debug=0L, salloc=integer(1))
@@ -212,7 +222,14 @@ clusterModeFind <- function(alpha, beta, sigma, gamma_c_init, base_lp,
 agqStep <- function(alpha, beta, sigma, gamma_c, kappa_c, nAGQ,
                     base_lp, x, wt, ia, ia2, sgn, ib, nb,
                     cluster, nc, link, k, p, n, penmat, penhess=1L,
-                    intcens=0L, score=TRUE, mre=NULL, sigma1=NULL, sigma2=NULL) {
+                    intcens=0L, score=TRUE, mre=NULL, sigma1=NULL, sigma2=NULL,
+                    qm=0L, Z1=matrix(0e0, n, 0), Z2=matrix(0e0, n, 0),
+                    tau=numeric(0)) {
+  ## Claude Sonnet 5 2026-11-17          3 lines
+  ## qm/Z1/Z2/tau (Stage 2): threaded into both the per-node log-
+  ## density loop (ormeta, for accuracy -- see clusterModeFind's
+  ## identical note) and the score/Hessian accumulation (ormll, which
+  ## already has its own qm/Z1/Z2/tau extension from Stage 1).
   gh     <- gauss_hermite_quad(nAGQ)
   step_c <- sqrt(2 / kappa_c)
 
@@ -225,6 +242,36 @@ agqStep <- function(alpha, beta, sigma, gamma_c, kappa_c, nAGQ,
   ## SD) -- sigma1/sigma2, not this function's own `sigma` argument,
   ## carry the actual estimated scale information in that case.
   wtre <- if(use_mre) sigma1 * (1 - mre) + sigma2 * mre else rep(1e0, n)
+
+  # Claude Sonnet 5 2026-11-17          entire block
+  # Missing-information (Louis 1982) setup: agqStep's own Newton-step
+  # Hessian (accum_hb below) is only the conditional-expectation term,
+  # E[d2(complete ll)/dtheta2 | y] -- the TRUE marginal Hessian also
+  # needs Var[d(complete ll)/dtheta | y] ADDED (Louis' identity, same
+  # correction sparseMissingInfo() already computes, there for the
+  # FINAL reported info matrix only). Confirmed by direct finite-
+  # difference measurement (comparing against the true profile
+  # Hessian obtained by re-running clusterModeFind at perturbed
+  # points) that this gap is negligible for yde alone or mix_re alone,
+  # but becomes large enough (~60%, in a real case) to break Newton's
+  # step once yde's signal is informative enough to compete with
+  # sigma2 in explaining cluster-level variation -- hence gated behind
+  # qm > 0 (zero cost/behavior change otherwise) and restricted to the
+  # (p_star+qm) x (p_star+qm) block only (beta/sigma1/sigma2/tau),
+  # skipping the far more expensive per-cluster "active alpha" terms
+  # sparseMissingInfo() tracks for ha/hab -- justified by the same
+  # finite-difference check showing alpha's own gradient trajectory
+  # stays well-behaved in the failing case, so the instability is
+  # isolated to this smaller block.
+  need_mi  <- score && qm > 0
+  what_lt  <- if(need_mi) 3L else 1L   # +2: also get g, s1, s2 (cheap, same ormeta call)
+  if(need_mi) {
+    s1_nodes <- matrix(0e0, n, nAGQ); s2_nodes <- matrix(0e0, n, nAGQ)
+    g_nodes  <- matrix(0e0, n, nAGQ)
+    if(use_mre) {
+      d_logsigma1_nodes <- matrix(0e0, n, nAGQ); d_sigma2_nodes <- matrix(0e0, n, nAGQ)
+    }
+  }
 
   lt <- matrix(0e0, nc, nAGQ)
   for(m in 1 : nAGQ) {
@@ -239,12 +286,14 @@ agqStep <- function(alpha, beta, sigma, gamma_c, kappa_c, nAGQ,
     ## step_c enough to put some AGQ node's gamma_node_c at an extreme
     ## value).
     if(any(! is.finite(lp))) return(list(fail=TRUE, code=999L))
-    ## what=1: this call needs only logd.
+    ## what=1: logd only (what=3 additionally requests g/s1/s2, when
+    ## need_mi gates it on -- see above).
     w        <- .Fortran(F_ormeta, n, k, link, alpha, lp1=lp, lp2=lp, wt,
                          ia, ia2, sgn, ib, nb,
+                         qm=qm, Z1=Z1, Z2=Z2, tau=tau,
                          logd=numeric(n), g=numeric(n), h=numeric(n),
                          s1=numeric(n), s2=numeric(n),
-                         what=1L, debug=0L, salloc=integer(1))
+                         what=what_lt, debug=0L, salloc=integer(1))
     if(w$salloc != 0) return(list(fail=TRUE, code=w$salloc))
     ## Claude Sonnet 5 2026-08-30          1 line
     ## The Gaussian random-effect prior log-density is part of the
@@ -255,6 +304,13 @@ agqStep <- function(alpha, beta, sigma, gamma_c, kappa_c, nAGQ,
     lt[, m] <- log(gh$weights[m]) + gh$nodes[m]^2 +
                as.vector(rowsum(w$logd, cluster, reorder=TRUE)) +
                dnorm(gamma_node_c, mean=0, sd=sigma, log=TRUE)
+    if(need_mi) {
+      s1_nodes[, m] <- w$s1; s2_nodes[, m] <- w$s2; g_nodes[, m] <- w$g
+      if(use_mre) {
+        d_logsigma1_nodes[, m] <- (1 - mre) * gamma_node_c[cluster] * sigma1
+        d_sigma2_nodes[, m]    <- mre * gamma_node_c[cluster]
+      }
+    }
   }
 
   mrow      <- apply(lt, 1, max)
@@ -277,11 +333,49 @@ agqStep <- function(alpha, beta, sigma, gamma_c, kappa_c, nAGQ,
   p_star  <- p + if(use_mre) 2L else 0L
   zeromat_star <- matrix(0e0, p_star, p_star)
 
-  accum_grad <- numeric(k + p_star)
+  # Claude Sonnet 5 2026-11-17          3 lines
+  # qm (Stage 2): yde's tau is a SEPARATE block from p_star (its two
+  # design vectors, Z1/Z2, differ, unlike beta/sigma1/sigma2's shared
+  # shift) -- accumulated via ormll's own dedicated qm/Z1/Z2/tau
+  # arguments (from Stage 1) and combined into hb/hab below, after the
+  # node loop, exactly as orm.fit.r's rfort() already does.
+  accum_grad <- numeric(k + p_star + qm)
   accum_ha   <- if(intcens == 0L) matrix(0e0, k, 2) else NULL
   accum_row  <- NULL; accum_col <- NULL; accum_ai <- NULL; accum_ne <- 0L
   accum_hb   <- matrix(0e0, p_star, p_star)
   accum_hab  <- matrix(0e0, k, p_star)
+  accum_hc   <- matrix(0e0, qm, qm)
+  accum_hac  <- matrix(0e0, k, qm)
+  accum_hbc  <- matrix(0e0, p_star, qm)
+
+  # Claude Sonnet 5 2026-11-17          entire block
+  # Missing-information correction (see this function's header comment
+  # above): a small (p_star+qm) x (p_star+qm) dense matrix, built per
+  # cluster from s1_nodes/s2_nodes/g_nodes already captured in the
+  # rho_w loop above -- mirrors sparseMissingInfo()'s own Sj/Vj
+  # construction for its non-alpha columns exactly, but omits the
+  # per-cluster "active alpha" columns entirely (dimj = p_star+qm, not
+  # na+p_star+qm), since only this block is being corrected here.
+  missing_hb <- matrix(0e0, p_star + qm, p_star + qm)
+  if(need_mi) {
+    obs_by_cluster <- split(seq_len(n), cluster)
+    ptot <- p_star + qm
+    for(j in 1 : nc) {
+      obs <- obs_by_cluster[[j]]
+      Sj  <- matrix(0e0, nAGQ, ptot)
+      if(p > 0) for(l in 1 : p) Sj[, l] <- colSums(g_nodes[obs, , drop=FALSE] * x[obs, l])
+      if(use_mre) {
+        Sj[, p + 1] <- colSums(g_nodes[obs, , drop=FALSE] * d_logsigma1_nodes[obs, , drop=FALSE])
+        Sj[, p + 2] <- colSums(g_nodes[obs, , drop=FALSE] * d_sigma2_nodes[obs, , drop=FALSE])
+      }
+      for(l in 1 : qm)
+        Sj[, p_star + l] <- colSums(s1_nodes[obs, , drop=FALSE] * Z1[obs, l]) +
+                             colSums(s2_nodes[obs, , drop=FALSE] * Z2[obs, l])
+      wj    <- rho_w[j, ]
+      Dj    <- sweep(Sj, 2, as.vector(wj %*% Sj))
+      missing_hb <- missing_hb + crossprod(Dj, wj * Dj)
+    }
+  }
   ## Claude Sonnet 5 2026-09-06          3 lines
   ## tau=log(sigma)'s own gradient/curvature: only meaningful (and
   ## only accumulated) when mre is INACTIVE -- when mre is active,
@@ -335,11 +429,20 @@ agqStep <- function(alpha, beta, sigma, gamma_c, kappa_c, nAGQ,
       beta_star <- c(beta, 0, 0)
     } else { x_star <- x; beta_star <- beta }
 
-    wc <- .Fortran(F_ormll, n, k, p_star, x_star, ia, ia2, sgn, ib, nb,
+    # Claude Sonnet 5 2026-11-17
+    # qm/Z1/Z2/tau (Stage 2): yde's own dedicated block in ormll's
+    # already-extended (Stage 1) signature -- Z1/Z2 are the SAME every
+    # node (fixed per-observation design, not node-dependent), only
+    # node_off/node_wt change across nodes, exactly like x_star/
+    # beta_star's treatment above.
+    wc <- .Fortran(F_ormll, n, k, p_star, qm, x_star, ia, ia2, sgn, ib, nb,
                    node_off, node_wt, zeromat_star,
-                   link=link, alpha, beta_star, logL=numeric(1),
-                   grad=numeric(k + p_star), lpe=numeric(n),
+                   link=link, alpha, beta_star,
+                   Z1, Z2, tau,
+                   logL=numeric(1),
+                   grad=numeric(k + p_star + qm), lpe=numeric(n),
                    a=a_arg, b=matrix(0e0, p_star, p_star), ab=matrix(0e0, k, p_star),
+                   hc=matrix(0e0, qm, qm), hac=matrix(0e0, k, qm), hbc=matrix(0e0, p_star, qm),
                    intcens=intcens, row=integer(nai), col=integer(nai), ai=numeric(nai),
                    nai=nai, ne=integer(1),
                    ## nu=0L intentionally: this disables ormll's sparse
@@ -356,6 +459,11 @@ agqStep <- function(alpha, beta, sigma, gamma_c, kappa_c, nAGQ,
     accum_grad <- accum_grad + wc$grad
     accum_hb   <- accum_hb   + wc$b
     accum_hab  <- accum_hab  + wc$ab
+    if(qm > 0) {
+      accum_hc  <- accum_hc  + wc$hc
+      accum_hac <- accum_hac + wc$hac
+      accum_hbc <- accum_hbc + wc$hbc
+    }
 
     if(intcens == 0L) {
       accum_ha <- accum_ha + wc$a
@@ -421,6 +529,28 @@ agqStep <- function(alpha, beta, sigma, gamma_c, kappa_c, nAGQ,
     if(penhess > 0) accum_hb[1 : p, 1 : p] <- accum_hb[1 : p, 1 : p] - penmat
   }
 
+  # Claude Sonnet 5 2026-11-17          3 lines
+  # Fold yde's tau-tau/(beta,sigma-pseudo)-tau blocks into hb/hab's
+  # existing shape (hb square, hab k x ncol(hb)) right here, exactly as
+  # orm.fit.r's rfort() does for the non-clustered case -- so
+  # sparseInfoMatrix() below needs no awareness of qm beyond widening
+  # its own p_star by qm (see its own comment).
+  if(qm > 0) {
+    accum_hb  <- rbind(cbind(accum_hb, accum_hbc), cbind(t(accum_hbc), accum_hc))
+    accum_hab <- cbind(accum_hab, accum_hac)
+    # Claude Sonnet 5 2026-11-17
+    # Missing-information correction (Louis 1982), added to the
+    # conditional-expectation Hessian just assembled above -- see this
+    # function's header comment for the derivation and the finite-
+    # difference evidence motivating it. Sign: the TRUE marginal
+    # Hessian equals the naive one PLUS this term (confirmed directly:
+    # naive hb[sigma2,sigma2] = -486.85, missing_hb[sigma2,sigma2] =
+    # +178.19, corrected = -308.66, matching a from-scratch finite-
+    # difference of the true profiled log-likelihood, -308.66, to 4
+    # significant figures).
+    accum_hb <- accum_hb + missing_hb
+  }
+
   list(fail=FALSE, loglik=total_ll, rho=rho_w, gh=gh, step_c=step_c,
        gamma_c=gamma_c, kappa_c=kappa_c,
        grad=accum_grad, ha=accum_ha, hb=accum_hb, hab=accum_hab,
@@ -437,15 +567,24 @@ agqStep <- function(alpha, beta, sigma, gamma_c, kappa_c, nAGQ,
 ## search over sigma, exactly as in the original, pre-fold design.
 sigmaObjective <- function(log_sigma, alpha, beta, gamma_c_init, base_lp,
                            wt, ia, ia2, sgn, ib, nb, cluster, nc,
-                           link, k, n, nAGQ, maxit.mode) {
+                           link, k, n, nAGQ, maxit.mode,
+                           qm=0L, Z1=matrix(0e0, n, 0), Z2=matrix(0e0, n, 0),
+                           tau=numeric(0)) {
+  # Claude Sonnet 5 2026-11-17
+  # qm/Z1/Z2/tau (Stage 2): this 1-D profile search over sigma still
+  # needs yde's effect included in the log-likelihood it evaluates --
+  # alpha/beta/ytau are all held fixed at their just-updated trial
+  # values while only sigma varies, same as alpha/beta already were.
   sigma <- exp(log_sigma)
   mf <- clusterModeFind(alpha, beta, sigma, gamma_c_init, base_lp,
                         wt, ia, ia2, sgn, ib, nb, cluster, nc,
-                        link, k, n, maxit=maxit.mode)
+                        link, k, n, maxit=maxit.mode,
+                        qm=qm, Z1=Z1, Z2=Z2, tau=tau)
   if(mf$fail) return(-Inf)
   ag <- agqStep(alpha, beta, sigma, mf$gamma_c, mf$kappa_c, nAGQ,
                base_lp, x=0, wt, ia, ia2, sgn, ib, nb, cluster, nc,
-               link, k, p=0L, n, penmat=matrix(0, 0, 0), score=FALSE)
+               link, k, p=0L, n, penmat=matrix(0, 0, 0), score=FALSE,
+               qm=qm, Z1=Z1, Z2=Z2, tau=tau)
   if(ag$fail) return(-Inf)
   ag$loglik
 }
@@ -475,7 +614,20 @@ sigmaObjective <- function(log_sigma, alpha, beta, gamma_c_init, base_lp,
 sparseMissingInfo <- function(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
                               x, wt, ia, ia2, sgn, ib, nb,
                               cluster, nc, link, k, p, n, nAGQ,
-                              mre=NULL, sigma1=NULL, sigma2=NULL) {
+                              mre=NULL, sigma1=NULL, sigma2=NULL,
+                              qm=0L, Z1=matrix(0e0, n, 0), Z2=matrix(0e0, n, 0),
+                              tau=numeric(0)) {
+  ## Claude Sonnet 5 2026-11-17          8 lines
+  ## qm/Z1/Z2/tau (Stage 2): yde's tau gets its own qm columns in each
+  ## cluster's per-node score vector Sj, using the SAME s1_nodes/
+  ## s2_nodes this function already computes for the active-alpha
+  ## columns (s1*Z1 + s2*Z2, not g*Z -- ytau's chain rule needs Z1/Z2
+  ## separately, since they differ, unlike beta/sigma's shared-shift
+  ## columns which correctly use the combined g). Column ordering
+  ## matches agqStep's own combining order: tauYDE comes right after
+  ## p_star (i.e. after sigma1/sigma2 when mre is active, since those
+  ## are part of p_star there; before the separate log(sigma) column
+  ## added externally by sparseInfoMatrix when mre is inactive).
   gh     <- gauss_hermite_quad(nAGQ)
   step_c <- sqrt(2 / kappa_c)
   use_mre <- length(mre) > 0
@@ -485,7 +637,7 @@ sparseMissingInfo <- function(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
   ## (tau=log(sigma), the ONLY case that still needs the tau-tau
   ## complete_tau_info correction below).
   p_wt <- if(use_mre) 2L else 1L
-  ptot <- p + p_wt   # p fixed-effect columns plus p_wt random-effect-scale columns
+  ptot <- p + qm + p_wt   # p fixed-effect + qm yde-tau + p_wt random-effect-scale columns
   wtre <- if(use_mre) sigma1 * (1 - mre) + sigma2 * mre else rep(1e0, n)
 
   obs_by_cluster <- split(seq_len(n), cluster)
@@ -511,6 +663,7 @@ sparseMissingInfo <- function(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
     ## what=3: logd, g, s1, s2 (no h) are what the missing-information correction uses.
     w <- .Fortran(F_ormeta, n, k, link, alpha, lp1=lp, lp2=lp, wt,
                  ia, ia2, sgn, ib, nb,
+                 qm=qm, Z1=Z1, Z2=Z2, tau=tau,
                  logd=numeric(n), g=numeric(n), h=numeric(n),
                  s1=numeric(n), s2=numeric(n),
                  what=3L, debug=0L, salloc=integer(1))
@@ -563,16 +716,25 @@ sparseMissingInfo <- function(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
     na     <- length(active)
     dimj   <- na + ptot
 
+    # Claude Sonnet 5 2026-11-17          1 line
+    # Position of yde's qm tau columns within Sj -- see this
+    # function's own header comment for why it differs by use_mre.
+    tauYdeOffset <- na + p + if(use_mre) p_wt else 0L
+
     Sj <- matrix(0e0, nAGQ, dimj)
     for(m in 1 : nAGQ) {
+      s1o <- s1_nodes[obs, m]; s2o <- s2_nodes[obs, m]
       if(na > 0) {
-        s1o <- s1_nodes[obs, m]; s2o <- s2_nodes[obs, m]
         for(l in 1 : na)
           Sj[m, l] <- sum(s1o[iao == active[l]]) + sum(s2o[ia2o == active[l]])
       }
       if(p > 0) {
         go <- g_nodes[obs, m]
         for(l in 1 : p) Sj[m, na + l] <- sum(go * x[obs, l])
+      }
+      if(qm > 0) {
+        for(l in 1 : qm)
+          Sj[m, tauYdeOffset + l] <- sum(s1o * Z1[obs, l]) + sum(s2o * Z2[obs, l])
       }
       if(use_mre) {
         ## Claude Sonnet 5 2026-09-06          6 lines
@@ -594,15 +756,29 @@ sparseMissingInfo <- function(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
     Dj    <- sweep(Sj, 2, Sbarj)
     Vj    <- crossprod(Dj, wj * Dj)   # AGQ-weighted covariance, dimj x dimj
 
-    idxglobal <- c(active,
-                  if(p > 0) (k + 1) : (k + p) else integer(0),
-                  (k + p + 1) : (k + p + p_wt))
+    # Claude Sonnet 5 2026-11-17          4 lines
+    # Global positions must list columns in the SAME order Sj was
+    # filled in above: tauYDE comes after sigma1/sigma2 when mre is
+    # active (matching agqStep's own p_star, which already includes
+    # them), but before the separate log(sigma) column when mre is
+    # inactive (that column is added externally, after everything
+    # agqStep/this function compute, by sparseInfoMatrix).
+    idxglobal <- if(use_mre)
+      c(active,
+        if(p > 0) (k + 1) : (k + p) else integer(0),
+        (k + p + 1) : (k + p + p_wt),
+        if(qm > 0) (k + p + p_wt + 1) : (k + p + p_wt + qm) else integer(0))
+    else
+      c(active,
+        if(p > 0) (k + 1) : (k + p) else integer(0),
+        if(qm > 0) (k + p + 1) : (k + p + qm) else integer(0),
+        (k + p + qm + 1) : (k + p + qm + p_wt))
     tI <- c(tI, rep(idxglobal, times = dimj))
     tJ <- c(tJ, rep(idxglobal, each  = dimj))
     tX <- c(tX, as.vector(Vj))
   }
 
-  ptotall <- k + p + p_wt
+  ptotall <- k + p + qm + p_wt
   missing_info <- if(length(tI) > 0)
     Matrix::sparseMatrix(i=tI, j=tJ, x=tX, dims=c(ptotall, ptotall)) else
     Matrix::Matrix(0, ptotall, ptotall, sparse=TRUE)
@@ -614,7 +790,15 @@ sparseInfoMatrix <- function(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
                              x, wt, ia, ia2, sgn, ib, nb, cluster, nc,
                              link, k, p, n, ha, hb, hab, row, col, ai, ne,
                              intcens, nAGQ, iname, xname,
-                             mre=NULL, sigma1=NULL, sigma2=NULL) {
+                             mre=NULL, sigma1=NULL, sigma2=NULL,
+                             qm=0L, Z1=matrix(0e0, n, 0), Z2=matrix(0e0, n, 0),
+                             tau=numeric(0)) {
+  ## Claude Sonnet 5 2026-11-17          3 lines
+  ## qm/Z1/Z2/tau (Stage 2): hb/hab as passed in already include yde's
+  ## qm columns (agqStep combines them in before returning) -- p_star
+  ## below is widened by qm to match, and xname is reordered so its
+  ## own yde tau names (already present from orm.fit.r, appended right
+  ## after the ordinary beta names) land in the same position.
   ## Claude Sonnet 5 2026-08-30
   ## Branches on intcens for how the complete-data alpha-alpha block
   ## is built: the tri-band ha (k x 2) when intcens=0, or directly
@@ -651,7 +835,7 @@ sparseInfoMatrix <- function(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
   ## along with everything else for the info-matrix sign convention;
   ## complete_tau_info is 0, and unused, when mre is active).
   use_mre <- length(mre) > 0
-  p_star  <- p + if(use_mre) 2L else 0L    # matches ag.final$hb/hab's actual dimension
+  p_star  <- p + qm + if(use_mre) 2L else 0L    # matches ag.final$hb/hab's actual dimension
   ptau    <- if(use_mre) p_star else p_star + 1L
   hb_ext    <- matrix(0e0, ptau, ptau)
   if(p_star > 0) hb_ext[1 : p_star, 1 : p_star] <- hb
@@ -661,7 +845,8 @@ sparseInfoMatrix <- function(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
   mi <- sparseMissingInfo(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
                           x, wt, ia, ia2, sgn, ib, nb,
                           cluster, nc, link, k, p, n, nAGQ,
-                          mre=mre, sigma1=sigma1, sigma2=sigma2)
+                          mre=mre, sigma1=sigma1, sigma2=sigma2,
+                          qm=qm, Z1=Z1, Z2=Z2, tau=tau)
   if(! use_mre) hb_ext[ptau, ptau] <- -mi$complete_tau_info   # raw Hessian scale, negated below with the rest
 
   complete_data_info <-
@@ -682,9 +867,22 @@ sparseInfoMatrix <- function(alpha, beta, sigma, gamma_c, kappa_c, base_lp,
   b_mat  <- as.matrix(V[(k + 1) : (k + ptau), (k + 1) : (k + ptau), drop=FALSE])
   ab_mat <- as.matrix(V[1 : k, (k + 1) : (k + ptau), drop=FALSE])
 
+  # Claude Sonnet 5 2026-11-17          entire block
+  # xname (from orm.fit.r) already has yde's qm tau names appended
+  # right after the p ordinary beta names -- reordered here to match
+  # hb/hab's actual column order (see this function's own header
+  # comment): tauYDE after sigma1/sigma2 when mre is active, before
+  # the separate log(sigma) column when it is not. Reduces to the
+  # original c(xname, 'log(sigma)', if(use_mre) 'sigma2') exactly when
+  # qm = 0.
+  xname_beta <- xname[seq_len(p)]
+  xname_tau  <- if(qm > 0) xname[p + seq_len(qm)] else character(0)
+  xname_full <- if(use_mre) c(xname_beta, 'log(sigma)', 'sigma2', xname_tau)
+                else c(xname_beta, xname_tau, 'log(sigma)')
+
   list(a = a_list, b = b_mat, ab = ab_mat,
       iname = iname,
-      xname = c(xname, 'log(sigma)', if(use_mre) 'sigma2'))
+      xname = xname_full)
 }
 
 ## Claude Sonnet 5 2026-09-06
@@ -721,12 +919,23 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
                     objtol=5e-4, gradtol=1e-3, paramtol=1e10,
                     tolsolve=.Machine$double.eps, minstepsize=1e-2, trace=FALSE,
                     link, iname, xname,
+                    Z=NULL, ytransmat=NULL,
                     nAGQ=7L, nAGQ.grid=c(7L, 11L, 15L, 21L, 31L, 45L, 63L),
                     nAGQ.tol=1e-5, mre=NULL, maxetastep=15) {
 
   # Claude Sonnet 5 2026-08-30          entire function
+  # Claude Sonnet 5 2026-11-17          entire block
+  # Stage 2: yde/ytrans + random effects (cluster()/mix_re). qyde/myde/
+  # qm, Zexp1/Zexp2 mirror orm.fit.r's own ormfit() construction
+  # exactly (same ia/ia2-based per-observation expansion). initial is
+  # expected at length k+p (NOT k+p+qm) on entry, matching ormfit()'s
+  # own documented convention -- see its identical comment -- so p
+  # must be computed net of qm, same fix as ormfit()'s own.
   n <- length(y)
-  p <- length(initial) - k
+  qyde <- if(length(Z)) ncol(Z) else 0L
+  myde <- if(length(ytransmat)) ncol(ytransmat) else 0L
+  qm   <- qyde * myde
+  p <- length(initial) - k - qm
   deb <- Hmisc::Fdebug('orm.re.debug')
   deb(k); deb(length(initial)); deb(p); deb(dim(x)); deb(initial)
 
@@ -777,11 +986,42 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
   ## dataset ever has nb=0 (no observations needing a second alpha).
   ib <- if(nb > 0) idx$ib[1 : nb] else integer(0)
 
+  # Claude Sonnet 5 2026-11-17          entire block
+  # Zexp1/Zexp2 (n x qm): the per-observation yde design vectors at
+  # the "p1"/"p2" intercepts, identical construction to orm.fit.r's
+  # own ormfit() (see its comment there for the column-major
+  # convention and the ia2==0 zeroing, which matters identically
+  # here). Fixed for the whole fit (do not depend on theta/gamma_c),
+  # computed once rather than per onestep()/AGQ-node call.
+  # Claude Sonnet 5 2026-11-23: "+ 1L" shift -- see orm.fit.r's own
+  # identical comment on this same line; ytransmat now has k+1 rows.
+  if(qm > 0) {
+    storage.mode(Z) <- 'double'
+    ia2safe <- pmax(idx$ia2, 1L)
+    Zexp1   <- matrix(0., n, qm)
+    Zexp2   <- matrix(0., n, qm)
+    for(mm in 1 : myde) {
+      cols          <- ((mm - 1) * qyde + 1) : (mm * qyde)
+      Zexp1[, cols] <- Z * ytransmat[idx$ia  + 1L, mm]
+      Zexp2[, cols] <- Z * ytransmat[ia2safe + 1L, mm]
+    }
+    Zexp2[idx$ia2 == 0L, ] <- 0.
+    storage.mode(Zexp1) <- storage.mode(Zexp2) <- 'double'
+  } else {
+    Zexp1 <- matrix(0., n, 0)
+    Zexp2 <- matrix(0., n, 0)
+  }
+
   m <- function(v) max(abs(v))
 
   theta   <- initial
   alpha   <- theta[1 : k]
   beta    <- if(p > 0) theta[(k + 1) : (k + p)] else numeric(0)
+  # Claude Sonnet 5 2026-11-17
+  # ytau: initial's own layout (from orm.fit.r) is [alpha,beta,ytau],
+  # matching the no-cluster case -- extracted here since theta_full's
+  # OWN layout differs (see immediately below).
+  ytau    <- if(qm > 0) theta[(k + p + 1) : (k + p + qm)] else numeric(0)
   sigma   <- sigma.init
   ## Claude Sonnet 5 2026-09-06          6 lines
   ## sigma1 starts at sigma.init (needs some positive value to start
@@ -831,7 +1071,21 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
     ## sigma1/sigma2 together replace it rather than sitting alongside
     ## it. log_sigma1 keeps sigma1 positive; sigma2 is stored directly
     ## (unconstrained, no transform).
-    theta_full <- if(use_mre) c(theta, log(sigma1), sigma2) else c(theta, log(sigma))
+    ## Claude Sonnet 5 2026-11-17          7 lines
+    ## ytau (Stage 2) sits after sigma1/sigma2 when mre is active
+    ## (matching agqStep's own combining order, p_star, which already
+    ## includes sigma1/sigma2 there) but BEFORE log(sigma) when mre is
+    ## inactive (log(sigma) is appended externally by sparseInfoMatrix
+    ## after everything agqStep computes -- see onestep()'s own
+    ## extraction of ytau_t/sigma a few lines down, which this must
+    ## match exactly). Getting this backwards for the !use_mre case was
+    ## a real bug: ytau_t then silently read log(sigma)'s slot instead
+    ## (0 at the very first call, since log(sigma.init)=log(1)=0),
+    ## breaking the yde-warm-started alpha's finely-tuned narrow-cell
+    ## ordering and causing clusterModeFind to fail outright at the
+    ## first cold-started call for cluster()+yde.
+    theta_full <- if(use_mre) c(theta[1 : (k + p)], log(sigma1), sigma2, ytau)
+                  else c(theta[1 : (k + p)], ytau, log(sigma))
 
     ## Claude Sonnet 5 2026-09-04          entire onestep() function
     ## One full outer "fixed-point" iteration -- per-cluster
@@ -896,13 +1150,23 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
         sigma1 <- NULL; sigma2 <- NULL
         sigma  <- exp(theta_full[k + p + p_wt])
       }
+      # Claude Sonnet 5 2026-11-17
+      # ytau's position within theta_full: after sigma1/sigma2 when
+      # mre is active (p_wt=2, already part of p_star), but BEFORE the
+      # separate log(sigma) column when it is not (p_wt=1 there is
+      # log(sigma) itself, which sits AFTER ytau, not before it) --
+      # same asymmetry as sparseMissingInfo's idxglobal construction.
+      ytau_t  <- if(qm == 0) numeric(0)
+                 else if(use_mre) theta_full[(k + p + p_wt + 1) : (k + p + p_wt + qm)]
+                 else theta_full[(k + p + 1) : (k + p + qm)]
       xbeta   <- if(p > 0) as.vector(x %*% beta) else rep(0e0, n)
       base_lp <- offset + xbeta
       wtre    <- if(use_mre) sigma1 * (1 - mre) + sigma2 * mre else rep(1e0, n)
 
       mf <- clusterModeFind(alpha, beta, sigma, gamma_c, base_lp,
                             wt, idx$ia, idx$ia2, idx$sgn, ib, nb,
-                            cluster, nc, link, k, n, wtre=wtre, maxit=maxit.mode)
+                            cluster, nc, link, k, n, wtre=wtre, maxit=maxit.mode,
+                            qm=qm, Z1=Zexp1, Z2=Zexp2, tau=ytau_t)
       if(mf$fail) {
         if(trace) message('clusterModeFind failed (ormeta salloc=', mf$code,
                           ') at nAGQ=', cur.nAGQ, ' outer.iter=', oi,
@@ -925,7 +1189,8 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
       ag <- agqStep(alpha, beta, sigma, gamma_c, mf$kappa_c, cur.nAGQ,
                    base_lp, x, wt, idx$ia, idx$ia2, idx$sgn, ib, nb,
                    cluster, nc, link, k, p, n, penmat, penhess=1L,
-                   intcens=intcens, score=TRUE, mre=mre, sigma1=sigma1, sigma2=sigma2)
+                   intcens=intcens, score=TRUE, mre=mre, sigma1=sigma1, sigma2=sigma2,
+                   qm=qm, Z1=Zexp1, Z2=Zexp2, tau=ytau_t)
       if(ag$fail) {
         if(trace) message('agqStep failed (code=', ag$code,
                           ') at nAGQ=', cur.nAGQ, ' outer.iter=', oi,
@@ -1012,6 +1277,98 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
             ' (diagnostic only, unconfirmed hypothesis)]\n', sep='')
       }
 
+      ## Step-halving surrogate: an EM/MM-style "M-step" objective --
+      ## the node posterior weights (ag$rho) and the mode/curvature
+      ## (gamma_c, ag$kappa_c / ag$step_c / ag$gh) are held FIXED at their
+      ## values from the current outer iteration while trialing a new
+      ## theta, giving sum_m rho_m * clusterLogLik(theta, node_m),
+      ## which shares a gradient with the true AGQ log-likelihood at
+      ## the current theta and is cheap (ormeta-only) to evaluate
+      ## repeatedly. This is NOT the true log-sum-exp AGQ likelihood
+      ## away from the current theta -- that gets recomputed properly
+      ## at the *start* of every outer iteration via agqStep, so any
+      ## gap between the surrogate and the true objective cannot
+      ## accumulate silently across outer iterations.
+      ## Claude Sonnet 5 2026-09-07
+      ## Trials (alpha,beta) alone when mre is inactive (sigma is NOT
+      ## part of this step, see revision note above -- no prior-density
+      ## term needed here, matching the original pre-fold design), or
+      ## (alpha,beta,log_sigma1,sigma2) jointly when mre is active,
+      ## INCLUDING the prior-density term (sigma1/sigma2 genuinely are
+      ## part of this step in that case, exactly as validated for the
+      ## negative-weight scenario).
+      # Claude Sonnet 5 2026-11-17
+      # ytau (Stage 2) is part of this joint Newton step exactly like
+      # beta (an ordinary regression effect, not a variance parameter)
+      # -- included for both use_mre and !use_mre, unlike log(sigma)/
+      # sigma1/sigma2's own mutually-exclusive treatment above. delta
+      # (solved from ag$hb/ag$hab/ag$grad, which already combine in
+      # yde's qm block -- see agqStep) has this exact same width.
+      theta_star <- theta_full[1 : (k + p + qm + if(use_mre) 2L else 0L)]
+      surrogate <- function(theta_t) {
+        alpha_t <- theta_t[1 : k]
+        # Claude Sonnet 5 2026-11-19
+        # This alpha-monotonicity pre-check is necessary and sufficient
+        # only when qm==0 -- with a yde term active, alpha alone need
+        # not be monotonic for the model to be valid (the effective
+        # ordering depends on each observation's own x*tau*ytrans(y)
+        # shift too); skipping it for qm>0 and relying on the real
+        # criterion, wtt$salloc below (ormeta's own F(x1)>F(x2) check
+        # for every observed x), exactly mirrors the fix already made
+        # to orm.fit.r's own NR step-halving loop for the same reason
+        # -- see orm-yde-implementation.md.
+        if(qm == 0 && k > 1 && any(diff(alpha_t) >= 0)) return(Inf)
+        beta_t    <- if(p > 0) theta_t[(k + 1) : (k + p)] else numeric(0)
+        xbeta_t   <- if(p > 0) as.vector(x %*% beta_t) else rep(0e0, n)
+        lp_base_t <- offset + xbeta_t
+        # Claude Sonnet 5 2026-11-17
+        # ytau_t: theta_t's own layout matches theta_star's (see its
+        # construction above) -- [alpha,beta,(sigma1,sigma2 if
+        # use_mre),ytau]. Passed to ormeta below as qm/Z1/Z2/tau so it
+        # computes e1/e2 directly from Z1/Z2/tau (never from lp2-lp1),
+        # exactly as ormll.f90's own yde accuracy requirement.
+        ytau_t <- if(qm > 0)
+          theta_t[(k + p + if(use_mre) 2L else 0L + 1) : (k + p + if(use_mre) 2L else 0L + qm)]
+          else numeric(0)
+        if(use_mre) {
+          sigma1_t <- exp(theta_t[k + p + 1])
+          sigma2_t <- theta_t[k + p + 2]
+          wtre_t   <- sigma1_t * (1 - mre) + sigma2_t * mre
+        } else wtre_t <- rep(1e0, n)
+        tot <- 0
+        for(mm in 1 : cur.nAGQ) {
+          gamma_node_c <- gamma_c + ag$step_c * ag$gh$nodes[mm]
+          gamma_node   <- wtre_t * gamma_node_c[cluster]
+          lp_t     <- lp_base_t + gamma_node
+          ## Claude Sonnet 5 2026-09-08          2 lines
+          ## Same non-finite-argument guard as clusterModeFind/agqStep,
+          ## returning Inf here to match this function's own existing
+          ## graceful-rejection convention (salloc!=0 -> Inf), so the
+          ## surrogate step-halving loop above simply treats this trial
+          ## step size as rejected and halves further, rather than
+          ## crashing on an uncatchable .Fortran() error.
+          if(any(! is.finite(lp_t))) return(Inf)
+          ## what=1: this call needs only logd.
+          wtt <- .Fortran(F_ormeta, n, k, link, alpha_t, lp1=lp_t, lp2=lp_t, wt,
+                          idx$ia, idx$ia2, idx$sgn, ib, nb,
+                          qm=qm, Z1=Zexp1, Z2=Zexp2, tau=ytau_t,
+                          logd=numeric(n), g=numeric(n), h=numeric(n),
+                          s1=numeric(n), s2=numeric(n),
+                          what=1L, debug=0L, salloc=integer(1))
+          if(wtt$salloc != 0) return(Inf)
+          tot <- tot + sum(ag$rho[cluster, mm] * wtt$logd)
+          if(use_mre)
+            tot <- tot + sum(ag$rho[, mm] * dnorm(gamma_node_c, mean=0, sd=1, log=TRUE))
+        }
+        -2 * tot
+      }
+
+      ## Claude Sonnet 5 2026-09-29          5 lines
+      ## Same maxetastep guard as ormfit()'s NR branch (see its own
+      ## fuller rationale comment in orm.fit.r) applied to this step-
+      ## halving loop's trial step: delta[1:k] is already an eta shift,
+      ## and x %*% delta[(k+1):(k+p)] converts the beta part to its own
+      ## eta-shift regardless of how x's columns are scaled.
       lambda <- 0
       repeat {
         hess_try <- if(lambda == 0) hess else
@@ -1042,71 +1399,6 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
       if(trace > 1 && lambda > 0)
         cat('  [ridge damping used, lambda=', lambda, ']\n')
 
-      ## Step-halving surrogate: an EM/MM-style "M-step" objective --
-      ## the node posterior weights (ag$rho) and the mode/curvature
-      ## (gamma_c, ag$kappa_c / ag$step_c / ag$gh) are held FIXED at their
-      ## values from the current outer iteration while trialing a new
-      ## theta, giving sum_m rho_m * clusterLogLik(theta, node_m),
-      ## which shares a gradient with the true AGQ log-likelihood at
-      ## the current theta and is cheap (ormeta-only) to evaluate
-      ## repeatedly. This is NOT the true log-sum-exp AGQ likelihood
-      ## away from the current theta -- that gets recomputed properly
-      ## at the *start* of every outer iteration via agqStep, so any
-      ## gap between the surrogate and the true objective cannot
-      ## accumulate silently across outer iterations.
-      ## Claude Sonnet 5 2026-09-07
-      ## Trials (alpha,beta) alone when mre is inactive (sigma is NOT
-      ## part of this step, see revision note above -- no prior-density
-      ## term needed here, matching the original pre-fold design), or
-      ## (alpha,beta,log_sigma1,sigma2) jointly when mre is active,
-      ## INCLUDING the prior-density term (sigma1/sigma2 genuinely are
-      ## part of this step in that case, exactly as validated for the
-      ## negative-weight scenario).
-      theta_star <- if(use_mre) theta_full else theta_full[1 : (k + p)]
-      surrogate <- function(theta_t) {
-        alpha_t <- theta_t[1 : k]
-        if(k > 1 && any(diff(alpha_t) >= 0)) return(Inf)
-        beta_t    <- if(p > 0) theta_t[(k + 1) : (k + p)] else numeric(0)
-        xbeta_t   <- if(p > 0) as.vector(x %*% beta_t) else rep(0e0, n)
-        lp_base_t <- offset + xbeta_t
-        if(use_mre) {
-          sigma1_t <- exp(theta_t[k + p + 1])
-          sigma2_t <- theta_t[k + p + 2]
-          wtre_t   <- sigma1_t * (1 - mre) + sigma2_t * mre
-        } else wtre_t <- rep(1e0, n)
-        tot <- 0
-        for(mm in 1 : cur.nAGQ) {
-          gamma_node_c <- gamma_c + ag$step_c * ag$gh$nodes[mm]
-          gamma_node   <- wtre_t * gamma_node_c[cluster]
-          lp_t     <- lp_base_t + gamma_node
-          ## Claude Sonnet 5 2026-09-08          2 lines
-          ## Same non-finite-argument guard as clusterModeFind/agqStep,
-          ## returning Inf here to match this function's own existing
-          ## graceful-rejection convention (salloc!=0 -> Inf), so the
-          ## surrogate step-halving loop above simply treats this trial
-          ## step size as rejected and halves further, rather than
-          ## crashing on an uncatchable .Fortran() error.
-          if(any(! is.finite(lp_t))) return(Inf)
-          ## what=1: this call needs only logd.
-          wtt <- .Fortran(F_ormeta, n, k, link, alpha_t, lp1=lp_t, lp2=lp_t, wt,
-                          idx$ia, idx$ia2, idx$sgn, ib, nb,
-                          logd=numeric(n), g=numeric(n), h=numeric(n),
-                          s1=numeric(n), s2=numeric(n),
-                          what=1L, debug=0L, salloc=integer(1))
-          if(wtt$salloc != 0) return(Inf)
-          tot <- tot + sum(ag$rho[cluster, mm] * wtt$logd)
-          if(use_mre)
-            tot <- tot + sum(ag$rho[, mm] * dnorm(gamma_node_c, mean=0, sd=1, log=TRUE))
-        }
-        -2 * tot
-      }
-
-      ## Claude Sonnet 5 2026-09-29          5 lines
-      ## Same maxetastep guard as ormfit()'s NR branch (see its own
-      ## fuller rationale comment in orm.fit.r) applied to this step-
-      ## halving loop's trial step: delta[1:k] is already an eta shift,
-      ## and x %*% delta[(k+1):(k+p)] converts the beta part to its own
-      ## eta-shift regardless of how x's columns are scaled.
       delta_int     <- delta[1 : k]
       xdelta        <- if(p > 0) as.vector(x %*% delta[(k + 1) : (k + p)]) else 0.
       max_delta_int <- max(abs(delta_int))
@@ -1166,12 +1458,17 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
         sigma2_new <- theta_star_new[k + p + 2]
         theta_full_new <- theta_star_new
       } else {
+        # Claude Sonnet 5 2026-11-17
+        # ytau_new: theta_star_new's layout here is [alpha,beta,ytau]
+        # (mre inactive) -- see theta_star's own construction above.
+        ytau_new <- if(qm > 0) theta_star_new[(k + p + 1) : (k + p + qm)] else numeric(0)
         br   <- log(sigma) + c(-2.5, 2.5)
         sopt <- optimize(sigmaObjective, interval=br, maximum=TRUE,
                          alpha=alpha_new, beta=beta_new, gamma_c_init=gamma_c, base_lp=base_lp_new,
                          wt=wt, ia=idx$ia, ia2=idx$ia2, sgn=idx$sgn, ib=ib, nb=nb,
                          cluster=cluster, nc=nc, link=link, k=k, n=n,
-                         nAGQ=cur.nAGQ, maxit.mode=maxit.mode, tol=1e-4)
+                         nAGQ=cur.nAGQ, maxit.mode=maxit.mode, tol=1e-4,
+                         qm=qm, Z1=Zexp1, Z2=Zexp2, tau=ytau_new)
         sigma_new_local <- exp(sopt$maximum)
         theta_full_new <- c(theta_star_new, log(sigma_new_local))
       }
@@ -1278,7 +1575,16 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
           step_len <- max(-nr / nv, -stepmax)
           theta_sq <- theta_full - 2 * step_len * r + step_len^2 * v
           alpha_sq <- theta_sq[1 : k]
-          valid <- all(is.finite(theta_sq)) && (k == 1 || all(diff(alpha_sq) < 0))
+          # Claude Sonnet 5 2026-11-19
+          # Same qm>0 exemption as surrogate()'s own alpha-monotonicity
+          # check above: raw alpha need not be monotonic when yde is
+          # active. onestep(theta_sq,...) below validates theta_sq
+          # itself via clusterModeFind/agqStep/surrogate, all of which
+          # already rely on the real (salloc-based) criterion rather
+          # than this alpha-only proxy, so it's safe to let SQUAREM at
+          # least try a trial point this check would have rejected.
+          valid <- all(is.finite(theta_sq)) &&
+                   (qm > 0 || k == 1 || all(diff(alpha_sq) < 0))
           if(valid) {
             s3 <- onestep(theta_sq, s2$gamma_c, outer.iter + 1L, 'squarem-trial')
             outer.iter <- outer.iter + 1L
@@ -1357,7 +1663,14 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
     } else {
       sigma  <- exp(theta_full[k + p + p_wt])
     }
-    theta   <- theta_full[1 : (k + p)]
+    # Claude Sonnet 5 2026-11-17
+    # ytau: theta_full's own layout -- after sigma1/sigma2 when mre is
+    # active, but BEFORE log(sigma) when it is not (same asymmetry as
+    # onestep()'s identical extraction above).
+    ytau    <- if(qm == 0) numeric(0)
+               else if(use_mre) theta_full[(k + p + p_wt + 1) : (k + p + p_wt + qm)]
+               else theta_full[(k + p + 1) : (k + p + qm)]
+    theta   <- c(theta_full[1 : (k + p)], ytau)
     xbeta   <- if(p > 0) as.vector(x %*% beta) else rep(0e0, n)
     base_lp <- offset + xbeta
 
@@ -1367,7 +1680,8 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
     wtre.cur <- if(use_mre) sigma1 * (1 - mre) + sigma2 * mre else rep(1e0, n)
     mf.cur <- clusterModeFind(alpha, beta, sigma, gamma_c, base_lp,
                               wt, idx$ia, idx$ia2, idx$sgn, ib, nb,
-                              cluster, nc, link, k, n, wtre=wtre.cur, maxit=maxit.mode)
+                              cluster, nc, link, k, n, wtre=wtre.cur, maxit=maxit.mode,
+                              qm=qm, Z1=Zexp1, Z2=Zexp2, tau=ytau)
     ## Claude Sonnet 5 2026-09-08          entire block
     ## This escalation check is a cheap, OPTIONAL verification step run
     ## AFTER the outer loop has already converged at cur.nAGQ -- if
@@ -1393,7 +1707,8 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
     agq.cur <- agqStep(alpha, beta, sigma, mf.cur$gamma_c, mf.cur$kappa_c, cur.nAGQ,
                        base_lp, x, wt, idx$ia, idx$ia2, idx$sgn, ib, nb,
                        cluster, nc, link, k, p, n, penmat, score=FALSE,
-                       mre=mre, sigma1=sigma1, sigma2=sigma2)
+                       mre=mre, sigma1=sigma1, sigma2=sigma2,
+                       qm=qm, Z1=Zexp1, Z2=Zexp2, tau=ytau)
     if(agq.cur$fail) {
       if(trace) message('nAGQ escalation check skipped (agqStep failed at cur.nAGQ=',
                         cur.nAGQ, ') -- keeping the already-converged result')
@@ -1410,7 +1725,8 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
     agq.next <- agqStep(alpha, beta, sigma, mf.cur$gamma_c, mf.cur$kappa_c, next.nAGQ,
                         base_lp, x, wt, idx$ia, idx$ia2, idx$sgn, ib, nb,
                         cluster, nc, link, k, p, n, penmat, score=FALSE,
-                        mre=mre, sigma1=sigma1, sigma2=sigma2)
+                        mre=mre, sigma1=sigma1, sigma2=sigma2,
+                        qm=qm, Z1=Zexp1, Z2=Zexp2, tau=ytau)
     if(agq.next$fail) {
       if(trace) message('nAGQ escalation check inconclusive (agqStep failed at next.nAGQ=',
                         next.nAGQ, ') -- keeping the already-converged result at cur.nAGQ=',
@@ -1444,11 +1760,13 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
   wtre.final <- if(use_mre) sigma1 * (1 - mre) + sigma2 * mre else rep(1e0, n)
   mf.final <- clusterModeFind(alpha, beta, sigma, gamma_c, base_lp,
                               wt, idx$ia, idx$ia2, idx$sgn, ib, nb,
-                              cluster, nc, link, k, n, wtre=wtre.final, maxit=maxit.mode)
+                              cluster, nc, link, k, n, wtre=wtre.final, maxit=maxit.mode,
+                              qm=qm, Z1=Zexp1, Z2=Zexp2, tau=ytau)
   ag.final <- agqStep(alpha, beta, sigma, mf.final$gamma_c, mf.final$kappa_c, cur.nAGQ,
                       base_lp, x, wt, idx$ia, idx$ia2, idx$sgn, ib, nb,
                       cluster, nc, link, k, p, n, penmat,
-                      intcens=intcens, score=TRUE, mre=mre, sigma1=sigma1, sigma2=sigma2)
+                      intcens=intcens, score=TRUE, mre=mre, sigma1=sigma1, sigma2=sigma2,
+                      qm=qm, Z1=Zexp1, Z2=Zexp2, tau=ytau)
 
   info <- sparseInfoMatrix(alpha, beta, sigma, mf.final$gamma_c, mf.final$kappa_c,
                            base_lp, x, wt, idx$ia, idx$ia2, idx$sgn, ib, nb,
@@ -1456,7 +1774,8 @@ ormrfit <- function(x, y, y2, k, intcens=0L, cluster, nc, initial, sigma.init=1.
                            ag.final$ha, ag.final$hb, ag.final$hab,
                            ag.final$row, ag.final$col, ag.final$ai, ag.final$ne,
                            intcens, cur.nAGQ, iname, xname,
-                           mre=mre, sigma1=sigma1, sigma2=sigma2)
+                           mre=mre, sigma1=sigma1, sigma2=sigma2,
+                           qm=qm, Z1=Zexp1, Z2=Zexp2, tau=ytau)
 
   ## Claude Sonnet 5 2026-08-30
   ## Field names/shape aligned with ormfit's own return object as

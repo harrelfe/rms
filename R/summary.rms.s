@@ -46,12 +46,21 @@ summary.rms <- function(object, ..., ycut=NULL,
     stop('conf.type simultaneous does not apply to Bayesian model fits')
 
   isblrm <- inherits(object, 'blrm')
+  isborm <- inherits(object, 'borm')
+  isorm  <- inherits(object, 'orm')
   partialpo <- isblrm && object$pppo > 0
   if(partialpo & (length(ycut) != 1))
     stop('must specify a single value of ycut for partial prop. odds model')
-  
+  # Claude Sonnet 5 2026-11-17          2 lines
+  # Also pass ycut through for a yde-fitted orm()/borm() object (qyde >
+  # 0), not just blrm()'s own pppo -- previously a user-specified ycut=
+  # was silently ignored here for such an object (always using the
+  # default reference intercept instead); unlike blrm's own pppo,
+  # borm()/orm()'s yde mechanism has a sensible default, so no
+  # requirement to specify ycut is added.
+  isyde <- (isborm || isorm) && length(object$qyde) && object$qyde > 0
   pred <- function(d)
-    if(isblrm) predict(object, d, type='x', ycut=ycut)
+    if(isblrm || isyde) predict(object, d, type='x', ycut=ycut)
     else
       predict(object, d, type='x')
   

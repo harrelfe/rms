@@ -29,6 +29,8 @@ quickRefit <-
            weights        = object[[if(k == 'Glm')'oweights' else 'weights']],
            cluster        = if(k == 'orm') object$clusterInfo$cluster,
            mre            = if(k == 'orm') object$clusterInfo$mix_re,
+           Z              = if(k == 'orm') object[['z']],
+           ytrans         = if(k == 'orm') object[['ytrans']],
            compstats      = FALSE,
            gradtol        = 0.001,
            trace          = 0,
@@ -49,6 +51,19 @@ quickRefit <-
   # is.null instead of ! length because X may be a no-covariate matrix during profile likelihood
   if(is.null(X) || is.null(y))    # is.null instead of ! length because X may be a no-covariate matrix during profile likelihood
     stop('you must specify x=TRUE, y=TRUE when fitting, or provide them to quickRefit')
+  # Claude Sonnet 5 2026-11-23
+  # Z's presence is gated on x=TRUE whenever qyde>0 (orm.s: "if(x &&
+  # length(qyde) && qyde > 0) f$z <- Z"), so the x-presence check above
+  # normally already guarantees Z is available here too -- EXCEPT for
+  # a fit object saved before this z-storage feature existed (or any
+  # other path where x ended up present without z). Without this
+  # check, such an object would silently refit as if qyde were 0 (Z=
+  # NULL makes orm.fit() treat it as a non-yde model) instead of
+  # erroring -- exactly the silent-regeneration risk this guards
+  # against, for bootcov() and anova(test='LR'), both of which reach
+  # orm.fit() through this function's own fitter closure.
+  if(k %in% c('orm', 'ormt') && length(object$qyde) && object$qyde > 0 && is.null(Z))
+    stop('x=TRUE was not specified to orm')
 
   if(length(offset) && any(offset != 0e0) && (k %in% c('ols', 'olsp', 'Rq')))
     stop('offset not implemented for ols or Rq')
@@ -70,13 +85,20 @@ g <-
          orm = function()
            orm.fit(as.matrix(X)[subset,,drop=FALSE], if(is.matrix(y)) y[subset,,drop=FALSE] else y[subset],
                         cluster=cluster[subset], mre=mre[subset],
-                        family=family, compstats=compstats, gradtol=gradtol, trace=trace, 
+                        # Claude Sonnet 5 2026-11-17
+                        # Z resampled/subsetted in step with X/y (same
+                        # subset); ytrans is a fixed function, not
+                        # resampled -- see bootcov.s for how Z gets
+                        # overridden per bootstrap replicate.
+                        Z=if(length(Z)) as.matrix(Z)[subset,,drop=FALSE] else NULL, ytrans=ytrans,
+                        family=family, compstats=compstats, gradtol=gradtol, trace=trace,
                         offset=offset[subset], initial=initial,
                         penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method), #, ...),
          ormt= function() {
            f <- orm.fit(as.matrix(X)[subset,,drop=FALSE], if(is.matrix(y)) y[subset,,drop=FALSE] else y[subset],
                         cluster=cluster[subset], mre=mre[subset],
-                        family=family, compstats=compstats, gradtol=gradtol, 
+                        Z=if(length(Z)) as.matrix(Z)[subset,,drop=FALSE] else NULL, ytrans=ytrans,
+                        family=family, compstats=compstats, gradtol=gradtol,
                         trace=trace, offset=offset[subset], initial=initial,
                         penalty.matrix=penalty.matrix, weights=weights[subset], opt_method=opt_method) # $, ...)
            ns  <- f$non.slopes
@@ -141,8 +163,15 @@ if(k %in% c('lrm', 'orm', 'ormt')) {
                             }
 }
 if(k %in% c('orm', 'ormt')) {
-                           fm <- list(initial=initial)
+                           # Claude Sonnet 5 2026-11-17          2 lines
+                           # Z (storevals-gated, like X/y above -- NULL
+                           # under storevals=FALSE forces the caller,
+                           # e.g. bootcov(), to always supply its own
+                           # resampled Z explicitly) and ytrans (fixed,
+                           # not subset-affected, like family below).
+                           fm <- list(initial=initial, Z=if(storevals) Z else NULL)
                            formals(g) <- c(formals(g), fm)
+                           formals(g)$ytrans <- ytrans
 }
 if(k == 'ormt' && is.na(ytarget)) {
   yu   <- object$yunique[-1]

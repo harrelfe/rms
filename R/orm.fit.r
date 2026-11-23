@@ -297,7 +297,12 @@
 #'   clusters; a completely constant `mre` (whether `0`, `1`, or any
 #'   other single value across the whole dataset) is rejected with an
 #'   informative error, since it would leave `sigma1` and `sigma2`
-#'   unidentifiable.
+#'   unidentifiable. Combined with `yde`/`ytrans`, this is a
+#'   numerically difficult combination -- `sigma1`/`sigma2` and the
+#'   `yde` effect can compete to explain the same cluster-level
+#'   variation, and the fit may fail to converge or converge to a
+#'   degenerate solution with `sigma1`/`sigma2` collapsed to ~0; a
+#'   one-time `warn_once()` warning is issued when both are given.
 #' @param family a character value specifying the distribution family,
 #'   corresponding to logistic (the default), Gaussian, Cauchy, Gumbel
 #'   maximum (`exp(-exp(-x))`; extreme value type I), and Gumbel
@@ -308,6 +313,27 @@
 #'   a built-in family, the string must be one of the following,
 #'   corresponding to the previous list: `logistic`, `probit`,
 #'   `loglog`, `cloglog`, `cauchit`.
+#' @param Z optional design matrix (`n` rows) for Y-dependent
+#'   (non-proportional-odds) effects -- the analog, for `orm`, of
+#'   `rms::Xcontrast()`'s partial-PO mechanism and of `rmsb::blrm()`'s
+#'   own `ppo`/`cppo` and `rmsb::borm()`'s `yde`/`ytrans`. Normally
+#'   built by `orm()` itself from its own `yde` formula argument, not
+#'   supplied directly. Must be given together with `ytrans`. May be
+#'   combined with `cluster`; combined with `cluster` AND `mre`
+#'   together, the fit may fail to converge or may converge to a
+#'   degenerate (sigma1/sigma2 near 0) solution -- a `warn_once()`
+#'   warning is issued in that case (see `mre`'s own documentation).
+#' @param ytrans optional function of a vector of Y values, returning
+#'   a matrix with one row per Y value and one or more columns (the
+#'   `m` Y-dependent "shapes" `Z`'s `q` columns are each allowed to
+#'   take); together `Z` (`q` columns) and `ytrans` (`m` columns)
+#'   parameterize a `q x m` matrix of new `tau` coefficients. May also
+#'   be the character string `"all"`, which `orm.fit` substitutes with
+#'   a constructed function producing a `k - 2` column 0/1 indicator
+#'   matrix (one column per distinct Y value beyond the first two),
+#'   giving each `yde` predictor a saturated (fully flexible) Y-
+#'   dependent effect shape. `ytrans="all"` requires no censoring and
+#'   `k <= 50` distinct Y values.
 #' @param offset optional numeric vector containing an offset on the
 #'   logit scale
 #' @param initial vector of initial parameter estimates, beginning
@@ -540,6 +566,7 @@
 #' @concept logistic regression model
 orm.fit <- function(x=NULL, y, cluster=NULL,
                     family=c("logistic","probit","loglog","cloglog","cauchit"),
+                    Z=NULL, ytrans=NULL,
                     offset, initial,
                     opt_method=c('NR', 'LM'),
                     maxit=30L, eps=5e-4, gradtol=1e-3, abstol=1e10,
@@ -558,7 +585,7 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
   debug      <- getOption('orm.fit.debug' , FALSE)
   debug2     <- getOption('orm.fit.debug2', FALSE)
   rdebug     <- getOption('orm.re.debug'  , FALSE)
-  
+
   if(debug) {
     w <- llist(family, opt_method, maxit, eps, gradtol, abstol, minstepsize,
                maxetastep, tol, trace, normwt, scale, mscore, inclpen, y.precision,
@@ -580,6 +607,60 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
       if(dx[1] != n) stop("x and y must have same number of rows")
       xname <- dimnames(x)[[2]]
       if(! length(xname)) xname <- paste("x[", 1 : p, "]", sep="")
+  }
+
+  # Claude Sonnet 5 2026-11-17          entire block
+  # yde/ytrans (Y-dependent effects), Stage 1: fit + vcov + predictions,
+  # no random effects yet (see orm-yde-design.md). qyde (= ncol(Z)) is
+  # computed here and used throughout orm.fit/ormfit; myde/qm (depends
+  # on ytransmat, which needs ylevels, not yet known here) are computed
+  # once ylevels is established, below. Z/ytrans given together or not
+  # at all -- mirroring rmsb::borm()'s own yde/ytrans validation.
+  qyde <- 0L
+  if(length(Z) || length(ytrans)) {
+    if(! length(Z) || ! length(ytrans))
+      stop("yde and ytrans must be given together")
+    if(! is.matrix(Z)) Z <- as.matrix(Z)
+    if(nrow(Z) != n) stop("Z (from yde) and y must have same number of rows")
+    # Claude Sonnet 5 2026-11-17          1 line
+    # ytrans='all' (a character string, not yet a function) is a
+    # special request, substituted for the real thing once k/ylevels/
+    # anycens are known -- see the ytrans=='all' block below.
+    if(! is.function(ytrans) && ! identical(ytrans, 'all'))
+      stop("ytrans must be a function or 'all'")
+    # Claude Sonnet 5 2026-11-17          2 lines
+    # A yde-only model (no predictors at all in the main formula) is
+    # not supported -- Frank's explicit instruction, not attempted.
+    if(p == 0)
+      stop("yde requires at least one predictor in the main model ",
+           "formula; a yde-only model is not supported")
+    qyde  <- ncol(Z)
+    zname <- dimnames(Z)[[2]]
+    if(! length(zname)) zname <- paste("Z[", 1 : qyde, "]", sep="")
+    # Claude Sonnet 5 2026-11-18          entire block
+    # yde combined with mix_re (both sigma1/sigma2 AND a yde tau trying
+    # to explain cluster-level variation at once) is a known hard case,
+    # not merely slow to converge: direct investigation (comparing
+    # agqStep's Newton-step Hessian against the true marginal curvature,
+    # obtained by re-finding the cluster mode at perturbed points) found
+    # the profile log-likelihood for sigma2 is genuinely locally CONVEX
+    # near its fixed starting value (sigma2=0) once yde's tau is
+    # informative enough -- not a fixable Hessian-accuracy gap (a Louis
+    # 1982 missing-information correction was confirmed mathematically
+    # exact there, and still wasn't sufficient) but a real competing-
+    # local-optimum problem (a degenerate sigma1=sigma2=0 solution,
+    # with tau alone absorbing the cluster-level signal, is a genuine
+    # alternative local maximum). No reliable fix found; flagged here
+    # rather than attempted. See orm-yde-design.md section c for the
+    # fuller investigation.
+    if(length(mre) && length(cluster))
+      warn_once(paste('yde/ytrans combined with cluster()/mix_re (random effects)',
+                       'is a numerically difficult combination: the fit may fail',
+                       'to converge, or may converge to a degenerate solution with',
+                       'sigma1/sigma2 collapsed to ~0 -- examine sigma1/sigma2',
+                       'after fitting rather than assuming convergence implies',
+                       'a valid fit'),
+                 id='orm.yde.mre')
   }
   ## Claude Sonnet 5 2026-09-08
   ## Diagnostic only: confirm p/x are already correct (or already
@@ -696,6 +777,123 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
   # value represents P(Y > highest uncensored value); label it accordingly
   if(k > 1 && length(tailinfo) && tailinfo$type == 'right')
     iname[tailinfo$index - 1L] <- paste0('y>', ylevels[tailinfo$index - 1L])
+
+  # Claude Sonnet 5 2026-11-23
+  # ytransmat ((k+1) x m): ytrans() applied to the FULL ylevels
+  # (including the first/baseline level, which has no intercept of its
+  # own), not just ylevels[-1] -- changed from the original k-row
+  # design to match rmsb::borm()'s own convention exactly (per Frank's
+  # explicit request, "for completeness"). Row 1 (the baseline level)
+  # is carried along but never multiplies anything -- every consumer
+  # that indexes ytransmat by alpha/intercept position now adds 1 to
+  # get from a 1..k alpha index to the corresponding 2..(k+1) ytransmat
+  # row (see idx$ia/idx$ia2 usage below, and ormPredictYde()/
+  # ormYdeFittedMean() in predict.lrm.s).
+  # Claude Sonnet 5 2026-11-17          entire block
+  # myde/qm/tauname are
+  # established here (not where qyde was computed above) because they
+  # need ylevels, only just established. tauname follows the same
+  # outer(Z-colname, ytrans-colname) column-major convention as
+  # rmsb::borm()'s bormYdeNames(), so coef()/vcov() naming matches
+  # between orm() and borm() for the same yde/ytrans (see
+  # orm-yde-design.md section b.3). xname/name are extended with
+  # tauname here so every later use (ormfit()'s own xname argument,
+  # info$xname, the final coefficient vector's names) already includes
+  # it consistently.
+  myde <- qm <- 0L
+  tauname <- character(0)
+  if(qyde > 0) {
+    # Claude Sonnet 5 2026-11-22
+    # k=1 (a binary Y, just one cutpoint) makes a Y-dependent effect
+    # meaningless -- there is no "shape across cutpoints" to estimate
+    # with only one cutpoint, and any such attempt would be exactly
+    # redundant with the main formula's own (ordinary, non-yde) effect
+    # for that predictor, the same non-identifiability already
+    # confirmed for a 0-anchor ytrans='all' when its predictor is also
+    # in the main formula. Per Frank's explicit request.
+    if(k <= 1)
+      stop("yde/ytrans requires more than 1 modeled intercept (k = ", k,
+           "); a Y-dependent effect is not meaningful for a binary Y")
+    # Claude Sonnet 5 2026-11-22          entire block
+    # Fixed bug: this used to build a k x (k-2) indicator matrix (a
+    # 2-cutpoint anchor), reported by Frank as wrong -- the correct,
+    # intended design is k-1 free tau parameters per yde predictor
+    # (1-cutpoint anchor), not k-2. Confirmed empirically before
+    # fixing (not just reasoned through): a k-1-free custom ytrans,
+    # fit with the SAME yde predictor also present in the main
+    # formula (the normal, default usage pattern for yde, exercising
+    # exactly the identifiability concern a >=1-cutpoint anchor exists
+    # to avoid), converged cleanly (fail=FALSE, no singular Hessian) --
+    # unlike a FULLY unconstrained, 0-anchor version of this same
+    # setup, confirmed separately (while auditing rms::impactPO()'s
+    # own migration off VGAM) to be genuinely non-identifiable
+    # ("singular Hessian matrix even after pre-emptive ridge damping").
+    # So exactly 1 anchor, not 2, is both necessary AND sufficient here.
+    # ytrans='all': a special request (character string, not a
+    # function) substituted here, once k/anycens are known, for a
+    # constructed function producing a (k+1) x (k-1) 0/1 indicator
+    # matrix -- column j (j=1..k-1) is 1 for the Y level whose position
+    # in the FULL ylevels is j+2 (i.e. the cutpoint j+1 positions after
+    # the first/anchored one), 0 elsewhere. This gives tau one free
+    # parameter per cutpoint for cutpoints 2..k (the first cutpoint,
+    # row 2 of ylevels, always gets a zero row, i.e. no y-dependent
+    # deviation there; row 1, the baseline level with no intercept at
+    # all, is also always zero), a saturated (fully flexible, no
+    # smoothness assumption) Y-dependent effect shape for each
+    # predictor named in yde, up to that 1-df anchor. Claude Sonnet 5
+    # 2026-11-23: row count changed from k to k+1 (ylevels, not
+    # ylevels[-1]) to match rmsb::borm()'s own convention -- the
+    # column-count formula here (kk-2, using the FULL ylevels' length)
+    # is numerically identical to the pre-2026-11-23 k-row version's
+    # (kk-1, using ylevels[-1]'s length): both give k-1 free columns,
+    # this one just carries an extra, always-zero row for the baseline
+    # level. ylevels is captured as the constructed function's own
+    # second argument's default (per Frank's spec) so the function is
+    # also usable later, e.g. at predict time, without needing the fit
+    # object's own environment.
+    if(identical(ytrans, 'all')) {
+      if(anycens)
+        stop("ytrans='all' does not support censored Y")
+      if(k > 50)
+        stop("ytrans='all' requires k <= 50 distinct Y values (k = ", k, ")")
+      ylevfull <- ylevels
+      ytrans <- function(y, ylevels = ylevfull) {
+        kk  <- length(ylevels)
+        nn  <- length(y)
+        Z   <- matrix(0L, nn, kk - 2L)
+        # Claude Sonnet 5 2026-11-23
+        # Column j corresponds to ylevels[j + 2] -- name it that value
+        # directly, rather than a generic "ytransN", per Frank's
+        # request.
+        colnames(Z) <- as.character(ylevels[3L : kk])
+        e   <- match(y, ylevels)
+        use <- which(e > 2L)
+        if(length(use)) Z[cbind(use, e[use] - 2L)] <- 1L
+        Z
+      }
+    }
+    ytransmat <- ytrans(ylevels)
+    if(! is.matrix(ytransmat)) ytransmat <- matrix(ytransmat, ncol=1)
+    if(nrow(ytransmat) != k + 1L)
+      stop("ytrans(ylevels) must return a matrix with k+1 = ", k + 1L, " rows")
+    myde <- ncol(ytransmat)
+    qm   <- qyde * myde
+    # Claude Sonnet 5 2026-11-21          6 lines
+    # ytransmat's own column names (the "y" side of tau's name) are
+    # trusted only when every column has a real, non-empty name -- a
+    # bare-symbol ytrans like function(y) cbind(y, y^2) gets cbind()'s
+    # own auto-inferred, partial names (c("y","")), not a deliberate
+    # label set. No names (or any blank) -> generic yt1,yt2,... (just
+    # "yt", no number, when there is only one column); a full set of
+    # names that isn't unique is an error, not a silent fallback.
+    ytransname <- dimnames(ytransmat)[[2]]
+    if(! length(ytransname) || any(ytransname == ''))
+      ytransname <- if(myde == 1L) 'yt' else paste0('yt', 1 : myde)
+    else if(anyDuplicated(ytransname))
+      stop("ytrans's column names must be unique")
+    tauname <- as.vector(outer(zname, ytransname, paste, sep=" * "))
+    xname <- c(xname, tauname)
+  }
   name  <- c(iname, xname)
 
   if(onlydata) return(
@@ -811,23 +1009,30 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                 maxit=maxit, tolsolve=tol, objtol=eps,
                 gradtol=gradtol, paramtol=abstol, mscore=mscore,
                 trace=trace, link=link, iname=iname, xname=xname,
+                Z=Z, ytransmat=if(qyde > 0) ytransmat else NULL,
                 maxetastep=maxetastep)
     if(z$fail) return(structure(list(fail=TRUE), class="orm"))
     loglik <- c(loglik, z$loglik)
     names(loglik)[length(loglik)] <- 'intercepts+x'
     kof  <- z$coef
     info <- z$info
-    # Compute linear predictor before unscaling beta, as x is scaled
-    lp <- matxv(x, kof, kint=kmid)
+    # Claude Sonnet 5 2026-11-17          2 lines
+    # Compute linear predictor before unscaling beta, as x is scaled.
+    # Uses only the intercepts+beta part (kof[1:(k+p)]) -- a yde effect
+    # is Y-dependent, so there is no single scalar "the" linear
+    # predictor to add in here; this matches how blrm()/borm() treat
+    # their own ppo/cppo/yde refinement as separate from the ordinary
+    # (PO-part) linear predictor used for stats like R2.
+    lp <- if(p > 0) matxv(x, kof[1 : (k + p)], kint=kmid) else rep(kof[kmid], n)
 
     if(scale) {
-      betas         <- kof[- (1 : k)]
+      betas         <- kof[(k + 1) : (k + p)]
       kof[1 : k]    <- kof[1 : k] - sum(betas * xbar / xsd)
-      kof[-(1 : k)] <- betas / xsd
+      kof[(k + 1) : (k + p)] <- betas / xsd
       xbar          <- as.vector(xbar)
-      names(xbar)   <- xname
+      names(xbar)   <- xname[seq_len(p)]
       xsd           <- as.vector(xsd)
-      names(xsd)    <- xname
+      names(xsd)    <- xname[seq_len(p)]
       info$scale    <- list(mean=xbar, sd=xsd)
     }
   } else lp <- rep(kof[kmid], n)
@@ -943,6 +1148,11 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
       names(loglik)[length(loglik)] <- 'intercepts+random effects'
     }
 
+    # Claude Sonnet 5 2026-11-17
+    # Z/ytransmat (Stage 2): the main clustered fit must carry yde
+    # through -- unlike zr0 just above, which deliberately omits it
+    # (a true covariate-and-yde-free null for the "intercepts+random
+    # effects" loglik baseline).
     zr <- ormrfit(x=x, y=y, y2=y2, k=k, intcens=intcens,
                  cluster=cluster.int, nc=nc,
                  initial=kof, sigma.init=sigma.init,
@@ -951,6 +1161,7 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                  objtol=eps, gradtol=gradtol, paramtol=min(abstol, 1e-4),
                  tolsolve=tol, minstepsize=minstepsize, trace=trace,
                  link=link, iname=iname, xname=xname,
+                 Z=if(qyde > 0) Z else NULL, ytransmat=if(qyde > 0) ytransmat else NULL,
                  nAGQ=nAGQ, nAGQ.grid=nAGQ.grid, nAGQ.tol=nAGQ.tol, mre=mre,
                  maxetastep=maxetastep)
     if(zr$fail) return(structure(list(fail=TRUE), class="orm"))
@@ -968,19 +1179,28 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
     stop('mre requires cluster to also be specified')
 
   # Add second derivative of penalty function if needed, on the original scale
+  # Claude Sonnet 5 2026-11-17          2 lines
+  # info$b is (p+qm) x (p+qm) once yde is present (tau rides along as
+  # extra "beta" columns, see rfort()) -- penalty.matrix is p x p
+  # (penalization is a beta-only concept in Stage 1), so it must only
+  # touch the beta-beta sub-block, not the whole matrix.
   if(! inclpen && penpres)
-    info$b <- info$b - penalty.matrix
+    info$b[seq_len(p), seq_len(p)] <- info$b[seq_len(p), seq_len(p)] - penalty.matrix
 
   names(kof) <- name
 
   stats <- NULL
   if(compstats) {
+    # Claude Sonnet 5 2026-11-17          1 line
+    # model.df (below) now counts tau's qm parameters too, since a
+    # yde-fitted model (always p > 0; a yde-only model is unsupported,
+    # see the p==0 guard above) tests x and yde jointly in this LR test.
     if(p == 0) {llnull <- loglik[length(loglik)]; model.lr <- 0e0}
     else {
       llnull   <- loglik[length(loglik) - 1L]
       model.lr <- llnull - loglik[length(loglik)]
     }
-    model.df <- p
+    model.df <- p + qm
     if(initial.there || maxit == 1)
       model.p <- score <- score.p <- NA
     else {
@@ -1007,10 +1227,13 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
     ## stat missing as intended. Skip the adjustment (leaving ess at
     ## its already-computed, pre-adjustment value) when lpe isn't
     ## actually available, rather than corrupting ess and crashing.
-    if(anycens && length(cluster))
-      warn_once('ESS adjustment for censored observations is not yet ',
-              'available for clustered (random-intercept) fits -- ess ',
-              'reflects only the uncensored-observation count.')
+    if (anycens && length(cluster)) {
+      warn_once(paste(
+        "ESS adjustment for censored observations is not yet ",
+        "available for clustered (random-intercept) fits -- ess ",
+        "reflects only the uncensored-observation count."
+      ))
+    }
     if(anycens && ! length(cluster)) {
       nuncens <- ess   # based on original counts, not Ocens modifications
       ll      <- -2e0 * log(z$lpe)
@@ -1086,6 +1309,20 @@ orm.fit <- function(x=NULL, y, cluster=NULL,
                   xsd               = if(p > 0 && scale) xsd,
                   info.matrix       = info,
                   mscore            = z$mscore,
+                  # Claude Sonnet 5 2026-11-17          5 lines
+                  # yde/ytrans (Stage 1): qyde (always present, 0 if no
+                  # yde) lets downstream code (predict/Xcontrast/Predict
+                  # -- see orm-yde-design.md b.4 and ormPredictYde())
+                  # detect a yde-fitted orm object the same way it
+                  # detects one from borm() (qyde field, same name).
+                  # ytransmat (k x myde, NULL if no yde) is stored
+                  # rather than recomputed from ytrans at predict time,
+                  # since ytrans='all''s constructed function would
+                  # silently give an all-zero row for any Y value
+                  # outside the original k training cutpoints.
+                  qyde              = qyde,
+                  ytrans            = ytrans,
+                  ytransmat         = if(qyde > 0) ytransmat else NULL,
                   fail              = FALSE)
 
   ## Claude Sonnet 5 2026-08-30          4 lines
@@ -1223,6 +1460,7 @@ ormfit <-
            offset=rep(0., n), wt=rep(1., n), penmat=matrix(0., p, p), opt_method='NR',
            maxit=30L, objtol=5e-4, gradtol=1e-3, paramtol=1e10, tolsolve=.Machine$double.eps,
            minstepsize=1e-2, mscore=FALSE, trace=FALSE, iname, xname,
+           Z=NULL, ytransmat=NULL,
            maxetastep=15) {
 
 # y  =  -1 for left censored observation
@@ -1286,6 +1524,16 @@ storage.mode(wt)      <- 'double'
 storage.mode(penmat)  <- 'double'
 storage.mode(link)    <- 'integer'
 
+# Claude Sonnet 5 2026-11-17          5 lines
+# yde/ytrans (Stage 1): qm = q*m is the flattened tau width (0 if no
+# yde). p above is computed from length(initial) - k before qm is
+# known/added, so it is unaffected by tau -- initial is expected to
+# have length k+p on entry (orm.fit's own padding below extends it by
+# qm zeros, exactly as it already does for p).
+qyde <- if(length(Z)) ncol(Z) else 0L
+myde <- if(length(ytransmat)) ncol(ytransmat) else 0L
+qm   <- qyde * myde
+
 # Claude Sonnet 5 2026-08-30          9 lines
 # Precompute intercept-index bookkeeping once per fit (not once per
 # Newton-Raphson iteration) -- pure function of y, y2, k. See ormidx.f90.
@@ -1298,34 +1546,86 @@ if(idx$salloc != 0)
 nb <- idx$nb
 ib <- idx$ib[seq_len(nb)]   # 1 : nb would wrongly return ib[1] when nb == 0
 
+# Claude Sonnet 5 2026-11-17          entire block
+# yde/ytrans (Stage 1): Zexp1(i,.)/Zexp2(i,.) are the per-observation
+# yde design vectors at the "p1"/"p2" intercepts (idx$ia/idx$ia2),
+# flattened in the same column-major order (q varies fastest within
+# each ytrans column m) as as.vector(outer(Z[i,], ytransmat[row,])) --
+# matching rmsb::borm()'s own expandZ()/bormYdeNames() convention
+# exactly (see orm-yde-design.md section b.3). Built vectorized over
+# ytrans columns rather than per observation, for large-n/large-k
+# speed. ia2 == 0 (no second intercept) rows get an all-zero Zexp2 --
+# harmless even without this (ormatoms's s2/h12/h22 are already exactly
+# 0 for those observations, so Zexp2's value cannot affect the result),
+# but kept explicit rather than relying on that.
+# Claude Sonnet 5 2026-11-23
+# idx$ia/idx$ia2 are 1-based indices into the k-length alpha vector
+# (confirmed from ormidx.f90's own "ia: returned intercept index"
+# documentation and alpha's own cof[1:k] indexing elsewhere in this
+# file). ytransmat now has k+1 rows (row 1 = the baseline Y level,
+# which has no intercept), so row (alpha index + 1) is the one that
+# corresponds to a given alpha index -- the "+ 1L" below is that
+# shift, verified numerically (not just reasoned) to reproduce the
+# pre-2026-11-23 k-row version's likelihood/coefficients exactly.
+if(qm > 0) {
+  storage.mode(Z) <- 'double'
+  ia2safe <- pmax(idx$ia2, 1L)
+  Zexp1   <- matrix(0., n, qm)
+  Zexp2   <- matrix(0., n, qm)
+  for(mm in 1 : myde) {
+    cols         <- ((mm - 1) * qyde + 1) : (mm * qyde)
+    Zexp1[, cols] <- Z * ytransmat[idx$ia  + 1L, mm]
+    Zexp2[, cols] <- Z * ytransmat[ia2safe + 1L, mm]
+  }
+  Zexp2[idx$ia2 == 0L, ] <- 0.
+  storage.mode(Zexp1) <- storage.mode(Zexp2) <- 'double'
+} else {
+  Zexp1 <- matrix(0., n, 0)
+  Zexp2 <- matrix(0., n, 0)
+}
+
 rfort <- function(theta, what=3L, mscore=FALSE,
                   debug  = getOption('debug', FALSE),
                   debug2 = getOption('debug2', FALSE)) {
-  p <- as.integer(length(theta) - k)
+  # Claude Sonnet 5 2026-11-17          1 line
+  # qm (yde tau width) comes from the enclosing ormfit() scope -- was
+  # "length(theta) - k" alone, which would wrongly fold qm into p now
+  # that theta may carry tau too.
+  p <- as.integer(length(theta) - k - qm)
   nai <- as.integer(if(intcens) 1000000 else 0)
-  if(debug2) prn(c(k, length(theta), p), 'rfort')
+  if(debug2) prn(c(k, length(theta), p, qm), 'rfort')
+  beta <- if(p  > 0) theta[(k + 1) : (k + p)] else numeric(0)
+  tau  <- if(qm > 0) theta[(k + p + 1) : (k + p + qm)] else numeric(0)
   if(debug) {
-    a <- llist(n, k, p, y, y2, link, intcens, nai, what)
+    a <- llist(n, k, p, qm, y, y2, link, intcens, nai, what)
     s <- sapply(a, storage.mode)
     if(any(s != 'integer')) stop(s)
-    ac <- llist(x, offset, wt, penmat, theta[1:k], theta[-(1:k)],
+    ac <- llist(x, offset, wt, penmat, theta[1:k], beta, tau,
                 logL=numeric(1))
     sc <- sapply(ac, storage.mode)
     if(any(sc != 'double')) stop(s)
     g <- function(x) if(is.matrix(x)) paste(dim(x), collapse='x') else length(x)
     print(sapply(c(a, ac), g), quote=FALSE)
   }
-  nu <- if(mscore) n * (2L + p) else 0L
+  nu <- if(mscore) n * (2L + p + qm) else 0L
   # Claude Sonnet 5 2026-08-30          2 lines
   # ia, ia2, sgn, ib, nb now passed through (computed once, above) rather
   # than being recomputed inside ormll on every call. y, y2 are no longer
   # passed at all -- ormll's only uses of them were debug-diagnostic
   # (now served by ia/ia2/sgn instead) and a dead assignment.
-  w <- .Fortran(F_ormll, n, k, p, x, idx$ia, idx$ia2, idx$sgn, ib, nb,
+  # Claude Sonnet 5 2026-11-17          4 lines
+  # Extended for yde/ytrans: qm, Zexp1, Zexp2, tau added after beta; hc,
+  # hac, hbc (new tau-tau/alpha-tau/beta-tau Hessian blocks) added after
+  # ab. When qm == 0 this is the exact same call as before (Zexp1/Zexp2
+  # are 0-column, tau is length 0, hc/hac/hbc are 0-sized) -- see
+  # ormll.f90 and orm-yde-design.md.
+  w <- .Fortran(F_ormll, n, k, p, qm, x, idx$ia, idx$ia2, idx$sgn, ib, nb,
                 offset, wt, penmat,
-                link=link, theta[1:k], theta[-(1:k)],
-                logL=numeric(1), grad=numeric(k + p), lpe=numeric(n),
+                link=link, theta[1:k], beta,
+                Zexp1, Zexp2, tau,
+                logL=numeric(1), grad=numeric(k + p + qm), lpe=numeric(n),
                 a=matrix(0e0, (1 - intcens) * k, 2), b=matrix(0e0, p, p), ab=matrix(0e0, k, p),
+                hc=matrix(0e0, qm, qm), hac=matrix(0e0, k, qm), hbc=matrix(0e0, p, qm),
                 intcens, row=integer(nai), col=integer(nai), ai=numeric(nai), nai=nai, ne=integer(1),
                 urow=integer(nu), ucol=integer(nu), um=numeric(nu), nu=nu, nuu=integer(1),
                 what=what, debug=as.integer(debug), 1L, salloc=integer(1))
@@ -1349,9 +1649,20 @@ rfort <- function(theta, what=3L, mscore=FALSE,
     w$a   <- list(row = w$row[1 : ne], col = w$col[1 : ne], a = w$ai[1 : ne])
     w$row <- w$col <- w$ai <- w$nai <- w$ne <- NULL
     }
+  # Claude Sonnet 5 2026-11-17          5 lines
+  # Fold the new tau-tau/alpha-tau/beta-tau blocks into b/ab's existing
+  # shape (b square, ab k x ncol(b)) right here, so every downstream use
+  # of w$b/w$ab (infoMxop(), the final info list) needs no change at
+  # all -- tau's qm columns simply ride along as extra "beta" columns,
+  # per orm-yde-design.md section a.4.
+  if(qm > 0) {
+    w$b  <- rbind(cbind(w$b, w$hbc), cbind(t(w$hbc), w$hc))
+    w$ab <- cbind(w$ab, w$hac)
+  }
+  w$hc <- w$hac <- w$hbc <- NULL
   if(mscore) {
     nuu      <- w$nuu
-    w$mscore <- Matrix::sparseMatrix(w$urow[1 : nuu], w$ucol[1 : nuu], x = w$um[1 : nuu], dims=c(n, k + p))
+    w$mscore <- Matrix::sparseMatrix(w$urow[1 : nuu], w$ucol[1 : nuu], x = w$um[1 : nuu], dims=c(n, k + p + qm))
   }
   w
   }
@@ -1361,7 +1672,11 @@ rfort <- function(theta, what=3L, mscore=FALSE,
     p <- 0L
   }
 
-  nv <- k + p
+  # Claude Sonnet 5 2026-11-17          1 line
+  # Was "k + p" -- initial (length k+p on entry, see note above qm's
+  # own definition) is padded with qm zeros here exactly as it already
+  # was with p zeros, so tau's starting value defaults to 0 for free.
+  nv <- k + p + qm
   if(length(initial) < nv)
     initial <- c(initial, rep(0., nv - length(initial)))
   if(trace > 2) prn(initial)
@@ -1415,23 +1730,55 @@ if(maxit == 1) {
             '  Max |gradient|:', m(gradient),
             '  Max |change in parameters|:', m(delta), '\n', sep='')
 
+      # Claude Sonnet 5 2026-11-17          1 line
+      # Was "theta[-(1:k)]" -- now that theta may also carry tau,
+      # explicitly restrict this beta-only score test to beta's slice.
       if(opt_method == 'NR' && is.na(score.test) && p > 0 &&
-        all(theta[- (1 : k)] == 0.))
+        all(theta[(k + 1) : (k + p)] == 0.))
         score.test <- - gradient %*% delta
 
       # Claude Sonnet 5 2026-09-29          4 lines
       # See maxetastep's definition comment above for the full rationale.
+      # Claude Sonnet 5 2026-11-17          3 lines
+      # delta[-(1:k)] (all of beta+tau) would mismatch x's p columns now
+      # that tau may be present -- sliced explicitly, and a parallel
+      # zdelta (yde's own eta-shift contribution, via Zexp1/Zexp2) added
+      # so a large tau step gets the same maxetastep protection beta's
+      # step already has.
       delta_int     <- delta[1 : k]
-      xdelta        <- if(p > 0) as.vector(x %*% delta[- (1 : k)]) else 0.
+      xdelta        <- if(p  > 0) as.vector(x %*% delta[(k + 1) : (k + p)]) else 0.
+      zdelta         <- if(qm > 0) {
+        dtau <- delta[(k + p + 1) : (k + p + qm)]
+        c(as.vector(Zexp1 %*% dtau), as.vector(Zexp2 %*% dtau))
+      } else 0.
       max_delta_int <- max(abs(delta_int))
-      max_xdelta    <- max(abs(xdelta))
+      max_xdelta    <- max(abs(xdelta), abs(zdelta))
 
       step_size <- 1.0           # Initialize step size for step-halving
 
       # Step-halving loop
       while (TRUE) {
         new_theta <- theta - step_size * delta # Update parameter vector
-        wd <- which(diff(new_theta[1 : k]) >= 0e0)
+        # Claude Sonnet 5 2026-11-19          8 lines
+        # This alpha-monotonicity pre-check predates yde and is both
+        # necessary and sufficient when qm==0 (alpha alone shifts every
+        # observation's cumulative probabilities identically, so alpha
+        # monotonic <=> valid for every observation). With a yde term
+        # active (qm>0), alpha alone is neither: the real criterion is
+        # F(x1)>F(x2) for every OBSERVED x (x1/x2 include the x*tau*
+        # ytrans(y) shift, which varies the effective ordering by
+        # observation) -- exactly rfort()'s own existing d>0 check
+        # below, already correct and already always reached when this
+        # pre-check is skipped. Confirmed directly: of 10 simulated
+        # yde fits (continuous x and y, k~999), 4 failed outright under
+        # the old alpha-only pre-check (step-halving forced all the way
+        # to minstepsize on alpha positions whose RAW values looked
+        # "out of order" even though the actual, tau-adjusted cell
+        # probabilities were valid); all 10 converge with this pre-
+        # check skipped for qm>0, with beta/tau agreeing closely with
+        # an independent rmsb::blrm(method='optimizing') MLE on the
+        # same data for every seed, including the 4 that used to fail.
+        wd <- if(qm > 0) integer(0) else which(diff(new_theta[1 : k]) >= 0e0)
         # Claude Sonnet 5 2026-09-29          2 lines
         eta_shift <- step_size * (max_delta_int + max_xdelta)
         too_big   <- eta_shift > maxetastep
@@ -1563,8 +1910,16 @@ if(maxit == 1) {
     # current, already-safe theta/H are kept for the next attempt. This
     # is what keeps theta from ever reaching the region whose Hessian
     # crashed Matrix::solve's native LU on the following call.
+    # Claude Sonnet 5 2026-11-17          3 lines
+    # Same fix as the NR branch above: delta[-(1:k)] would mismatch x's
+    # p columns once tau may be present -- sliced explicitly, plus the
+    # parallel yde eta-shift term via Zexp1/Zexp2.
     eta_shift <- max(abs(delta[1 : k])) +
-                 if(p > 0) max(abs(as.vector(x %*% delta[- (1 : k)]))) else 0.
+                 (if(p  > 0) max(abs(as.vector(x %*% delta[(k + 1) : (k + p)]))) else 0.) +
+                 (if(qm > 0) {
+                    dtau <- delta[(k + p + 1) : (k + p + qm)]
+                    max(abs(c(as.vector(Zexp1 %*% dtau), as.vector(Zexp2 %*% dtau))))
+                  } else 0.)
     if(eta_shift > maxetastep) {
       if(trace > 0) cat('implied max shift in linear predictor (',
           format(eta_shift, digits=4), ') exceeds maxetastep =', maxetastep,

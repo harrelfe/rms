@@ -394,6 +394,12 @@ residuals.orm <-
 {
   type <- match.arg(type)
   if(type == 'score' && ! length(object$mscore)) {
+    # Claude Sonnet 5 2026-11-17          2 lines
+    # Same reason censored Y requires mscore=TRUE just below: the
+    # X-only (p-wide) fallback computed further down has no way to
+    # form the Y-dependent (tau, k+p+qm wide) score contributions.
+    if(length(object$qyde) && object$qyde > 0)
+      stop('For a yde-fitted orm() object, score residuals require mscore=TRUE during the fit')
     if(! length(y <- object[['y']]))
       stop('When the fit did not specify mscore=TRUE it must specify x=TRUE, y=TRUE to get score residuals')
     else if(NCOL(y) == 2)

@@ -239,7 +239,8 @@ prModItem(type, payload, title=NULL, tex=NULL, preskip=NULL)
 prModFit(x, title, w, digits=4, coefs=TRUE, footer=NULL,
          lines.page=40, long=TRUE, needspace, subtitle=NULL, \dots)
 
-prStats(labels, w, lang=c("plain", "latex", "html", "typst"))
+prStats(labels, w, lang=c("plain", "latex", "html", "typst"),
+        widthadj=NULL)
 
 reListclean(\dots, dec=NULL, na.rm=TRUE)
 
@@ -389,6 +390,11 @@ predictors.  This will override \code{parms} as well as \code{datadist} informat
 \item{append}{specify \code{append=FALSE} when using \code{file} and you
 	want to start over instead of adding to an existing file.}
 \item{lang}{specifies the typesetting language: plain text, LaTeX, or html}
+\item{widthadj}{for \code{prStats}, an optional numeric vector, one
+  element per column of \code{w}, of character counts to add to (or,
+  if negative, subtract from) that column's computed plain-text
+  width.  Has no effect for non-plain \code{lang}.  Default is no
+  adjustment.}
 \item{lines.page}{kept for signature compatibility; not currently used}
 \item{long}{set to \code{FALSE} to suppress printing of formula and
   certain other model output}

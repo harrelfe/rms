@@ -1,4 +1,4 @@
-orm <- function(formula, data=environment(formula),
+orm <- function(formula, yde=NULL, ytrans=NULL, data=environment(formula),
         subset, na.action=na.delete,
 				method="orm.fit",
 				family=c("logistic", "probit", "loglog", "cloglog", "cauchit"),
@@ -22,10 +22,56 @@ orm <- function(formula, data=environment(formula),
     callenv <- parent.frame()   # don't delay these evaluations
     subset  <- if(! missing(subset )) eval(substitute(subset),  data, callenv)
     weights <- if(! missing(weights)) eval(substitute(weights), data, callenv)
+    # Claude Sonnet 5 2026-11-17          entire block
+    # yde/ytrans (Y-dependent effects), Stage 1 (see orm-yde-design.md).
+    # yde and ytrans are new arguments, not formula specials (per
+    # instructions) -- yde's own formula is passed as modelData()'s
+    # formula2, the exact mechanism already built for blrm()'s ppo
+    # (see rms.s's modelData: it keeps both formulas' row subsetting/NA
+    # handling consistent and attaches the yde-only data as a 'data2'
+    # attribute, since calling Design() twice on the same data object
+    # fails -- confirmed directly, "program logic error tl"). Z is
+    # built from data2 the same way rmsb::borm()'s own identical block
+    # builds it (R/borm.r), immediately below, before the main
+    # Design()/model.matrix() calls below consume/overwrite X's own
+    # attributes.
     X <-
-      modelData(data, formula, weights=weights,
+      modelData(data, formula, yde, weights=weights,
                 subset = subset,
                 na.action=na.action, callenv=callenv)
+    data2 <- attr(X, 'data2')
+    attr(X, 'data2') <- NULL
+    Z <- qyde <- NULL
+    if(length(yde)) {
+      if(! length(ytrans)) stop('ytrans must be given together with yde')
+      # Claude Sonnet 5 2026-11-17          1 line
+      # ytrans='all' is a special request substituted for a real
+      # function later, once k/ylevels/anycens are known inside
+      # orm.fit() -- see its own ytrans=='all' block.
+      if(! is.function(ytrans) && ! identical(ytrans, 'all'))
+        stop('ytrans must be a function or "all"')
+      Z     <- Design(data2, formula=yde)
+      zatrx <- attributes(Z)
+      zsformula <- zatrx$sformula
+      zTerms <- zatrx$terms
+      attr(zTerms, "formula") <- yde
+      zatr   <- zatrx$Design
+      zmmcolnames <- zatr$mmcolnames
+      Z      <- model.matrix(zTerms, Z)
+      zalt   <- attr(zmmcolnames, 'alt')
+      if(! all(zmmcolnames %in% colnames(Z)) && length(zalt)) zmmcolnames <- zalt
+      Z      <- Z[, zmmcolnames, drop=FALSE]
+      colnames(Z) <- zatr$colnames
+      qyde   <- ncol(Z)
+      # Claude Sonnet 5 2026-11-17          2 lines
+      # zassign, matching the main model's own "assign <- DesignAssign(atr,
+      # nrp, Terms)" below -- needed by predictrms()'s existing
+      # second=TRUE mechanism (built for blrm()'s own ppo; see
+      # predictrms.s), which reads fit$zDesign/fit$zassign/fit$zsformula
+      # by exactly those names to build the Z-only design matrix for
+      # new data, the same way rmsb::borm() computes its own zass.
+      zassign <- rms::DesignAssign(zatr, 0, zTerms)
+    }
     # Design handles cluster(), mix_re()
     X           <- Design(X, formula=formula, specials=c("cluster", "mix_re"))
     cluster     <- attr(X, 'cluster')
@@ -104,6 +150,7 @@ orm <- function(formula, data=environment(formula),
   if(existsFunction(method)) {
       fitter <- getFunction(method)
       f <- fitter(X, Y, family=family, offset=offs, cluster=cluster, mre=mix_re,
+                  Z=Z, ytrans=ytrans,
                   penalty.matrix=penalty.matrix,
                   scale=scale, maxit=maxit, weights=weights, normwt=normwt, ...)
     }
@@ -123,8 +170,22 @@ orm <- function(formula, data=environment(formula),
   else labelPlotmath(ylab, paste0(uni, 's'))
 
   f$sformula <- sformula
+  # Claude Sonnet 5 2026-11-17          3 lines
+  # Stored only when yde was used, so a plain orm() fit's object is
+  # unchanged -- predictrms()'s existing second=TRUE mechanism reads
+  # these by exactly these names.
+  if(length(qyde) && qyde > 0) {
+    f$zDesign   <- zatr
+    f$zassign   <- zassign
+    f$zsformula <- zsformula
+  }
   if(model) f$model <- m
   if(x)   f$x <- X
+  # Claude Sonnet 5 2026-11-17          3 lines
+  # Z is also only stored under x=TRUE, mirroring f$x -- needed so
+  # bootcov() can resample it in step with X/Y (see quickRefit.r and
+  # bootcov.s).
+  if(x && length(qyde) && qyde > 0) f$z <- Z
   if(y)   f$y <- Y
   if(! lpe) f$lpe <- NULL
   nrp  <- f$non.slopes
@@ -136,8 +197,9 @@ orm <- function(formula, data=environment(formula),
 
     if(var.penalty == 'sandwich') f$var.from.info.matrix <- v
     f.nopenalty <-
-        fitter(X, Y, family=family, offset=offs, 
+        fitter(X, Y, family=family, offset=offs,
                cluster=cluster, mre=mix_re,
+               Z=Z, ytrans=ytrans,
                initial=f$coef, maxit=1,
                weights=weights, normwt=normwt)
     ##  info.matrix.unpenalized <- solvet(f.nopenalty$var, tol=tol)
@@ -153,6 +215,27 @@ orm <- function(formula, data=environment(formula),
     f$stats[c('d.f.','Model L.R.','P')] <- c(df, lr, pval)
   }
   ass <- if(xpres) DesignAssign(atr, nrp, Terms) else list()
+  # Claude Sonnet 5 2026-11-17          entire block
+  # Extend ass so a yde variable's tau columns are tested JOINTLY with
+  # its ordinary (main-formula) effect in anova()'s Wald tests, when
+  # that variable's name also appears in the main formula (the common
+  # case: a predictor with both an ordinary and a Y-dependent effect).
+  # zassign maps each yde-formula variable to its own 1..qyde column
+  # positions within Z; tau's actual column order is column-major over
+  # ytransmat's columns (see tauname's own construction in orm.fit.r --
+  # as.vector(outer(zname, ytransname, ...))), so variable v's q_v
+  # Z-columns appear q_v times, once per ytrans column, each shifted by
+  # (m - 1) * qyde.
+  if(xpres && length(qyde) && qyde > 0) {
+    myde <- ncol(f$ytransmat)
+    for(vn in names(zassign)) {
+      if(vn %nin% c('(Intercept)', 'Intercept') && vn %in% names(ass)) {
+        zpos   <- zassign[[vn]]
+        taupos <- as.vector(outer(zpos, (0 : (myde - 1)) * qyde, '+'))
+        ass[[vn]] <- c(ass[[vn]], nrp + ncol(X) + taupos)
+      }
+    }
+  }
 
   if(xpres) {
     if(linear.predictors) names(f$linear.predictors) <- names(Y)
@@ -262,7 +345,19 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
       sig <- c(sigma, sigma - moe, sigma + moe)
     }
     r <- if(sigma > 0.001) round(sig, 4) else formatNP(signif(sig, 4), lang=prType())
-    paste0(r[1], " [", r[2], ", ", r[3], "]")
+    # Claude Sonnet 5 2026-11-22
+    # Matches rmsb::bormFmtCI()'s own convention (point estimate at
+    # normal size; "[lower, upper]", numbers included, in a smaller
+    # font for non-plain output) -- found while auditing this
+    # "point [lower, upper]" shape for consistency across orm/borm/
+    # blrm; this was the one place in rms itself with that shape and
+    # no such treatment at all. rmsb's own bormFmtCI() isn't callable
+    # from here (rms does not depend on rmsb), so this ports the same
+    # small piece of logic rather than sharing code across packages.
+    lang <- prType()
+    tailstr <- paste0(" [", r[2], ", ", r[3], "]")
+    if(lang != 'plain') tailstr <- markupSpecs[[lang]][['smaller2']](tailstr)
+    paste0(r[1], tailstr)
     }
 
   re_cov <- if(sigmathere) infoMxop(x$info.matrix, i='sigma_parameters')
@@ -369,11 +464,20 @@ print.orm <- function(x, digits=4, r2=c(0,2,4), coefs=TRUE, pg=FALSE,
            coefs=coefs, ...)
 }
 
-Mean.orm <- function(object, codes=FALSE, ...)
+Mean.orm <- function(object, codes=FALSE, ...) {
+  # Claude Sonnet 5 2026-11-20          2 lines
+  # A yde-fitted object needs a different closure (ormYdeMean(), in
+  # predict.lrm.s) -- Mean.lrm()'s own has no notion of Z/tau at all.
+  if(length(object$qyde) && object$qyde > 0) return(ormYdeMean(object, codes=codes))
   Mean.lrm(object, codes=codes, ...)
+}
 
 Quantile.orm <- function(object, codes=FALSE, ...)
 {
+  # Claude Sonnet 5 2026-11-20          2 lines
+  # A yde-fitted object needs ormYdeQuantile() (predict.lrm.s) -- this
+  # function's own shift-trick lb has no notion of Z/tau at all.
+  if(length(object$qyde) && object$qyde > 0) return(ormYdeQuantile(object, codes=codes))
   ns <- object$non.slopes
   if(ns < 2)
     stop('using this function only makes sense for >2 ordered response categories')
@@ -472,6 +576,10 @@ ExProb <- function(object, ...) UseMethod("ExProb")
 
 ExProb.orm <- function(object, codes=FALSE, ...)
 {
+  # Claude Sonnet 5 2026-11-20          2 lines
+  # A yde-fitted object needs ormYdeExProb() (predict.lrm.s) -- this
+  # function's own shift-trick xb has no notion of Z/tau at all.
+  if(length(object$qyde) && object$qyde > 0) return(ormYdeExProb(object, codes=codes))
   ns <- object$non.slopes
   if(codes) vals <- 1:length(object$freq)
   else {

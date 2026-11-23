@@ -33,6 +33,34 @@ distribution, and not a cluster-specific prediction for a particular
 cluster in the data.  Because the link function is nonlinear, these
 three quantities differ whenever the estimated random intercept
 variance is appreciable.
+
+For an \code{orm} fit that used the \code{yde}/\code{ytrans} Y-dependent
+(non-proportional-odds) effect mechanism (see \code{\link{orm}}),
+\code{type="lp"}, \code{"x"}, \code{"fitted"}, \code{"fitted.ind"}, and
+\code{"mean"} are the only types currently supported, and each correctly
+includes the Y-dependent contribution at every level of \eqn{Y} (not just
+at \code{kint}/\code{ycut}, which only \code{type="lp"}/\code{"x"} make
+use of). Any other \code{type} (e.g. \code{"terms"}) stops with an
+informative error for such a fit, rather than silently returning a result
+that omits the Y-dependent effect. Unlike an ordinary (non-\code{yde})
+fit, \code{type="mean"} for such a fit does support \code{se.fit=TRUE},
+returning \code{list(mean=, se.fit=)}; the fastest, lower-memory
+computation is used automatically when \code{se.fit=FALSE} (the
+default), with separate code used when \code{se.fit=TRUE} (needed
+because every intercept, not just one, contributes to the mean, so its
+standard error cannot use the smaller "touched intercepts only"
+shortcut that \code{type="lp"}/\code{"fitted.ind"} use).
+
+For such a fit, the function returned by \code{Mean.orm} also differs
+from the ordinary case described next: because the Y-dependent effect
+varies by level of \eqn{Y}, it cannot be represented by a single linear
+predictor value, so the returned function requires \code{newdata} (the
+original covariate data frame) rather than \code{lp} or \code{X}, and
+computes its result by calling \code{predict(object, newdata,
+type="mean")} internally. Calling it with only \code{lp}/\code{X} (as
+\code{Predict(fun=)} and \code{nomogram} do for ordinary fits) stops
+with an informative error, since a Y-dependent effect cannot be
+evaluated from a linear predictor value alone.
 }
 \usage{
 \method{predict}{lrm}(object, \dots, type=c("lp", "fitted",
@@ -71,6 +99,8 @@ so these must be translatable to numeric, unless \code{codes=TRUE}.
 See the Hannah and Quigley reference below for the method of estimating
 (and presenting) the mean score.  If you specify
 \code{type="fitted","fitted.ind","mean"} you may not specify \code{kint}.
+See \dQuote{Description} above for which types are supported for an
+\code{orm} fit using \code{yde}/\code{ytrans}.
 }
 \item{se.fit}{
 applies only to \code{type="lp"}, to get standard errors.
@@ -136,6 +166,24 @@ plot(Predict(f, x1, fun=m), ylab='Predicted Mean')
 # Note: Run f through bootcov with coef.reps=TRUE to get proper confidence
 # limits for predicted means from the prop. odds model
 options(datadist=NULL)
+
+# Example of type='fitted.ind'/'mean' for an orm fit using yde/ytrans
+# (a Y-dependent, non-proportional-odds effect for x2)
+set.seed(2)
+n   <- 300
+x1o <- rnorm(n); x2o <- rnorm(n)
+yo  <- round(x1o + 0.3 * x2o + rnorm(n), 1)
+# Center ytrans using the mean of the raw sample values of yo, not the
+# mean of whatever subset ytrans happens to be called on internally
+# (e.g. the distinct Y levels) -- see orm's own ytrans documentation.
+ybar <- mean(yo)
+g    <- orm(yo ~ x1o + x2o, yde = ~ x2o, ytrans = function(y) y - ybar)
+dg  <- data.frame(x1o=c(0,0), x2o=c(-1,1))
+predict(g, dg, type='fitted.ind')  # Prob(Y=j), including the Y-dependent effect
+predict(g, dg, type='mean')        # mean(Y), computed without an N x k matrix
+predict(g, dg, type='mean', se.fit=TRUE) # also get the delta-method SE
+mg <- Mean(g)                      # unlike the ordinary case, requires newdata=
+mg(newdata=dg, conf.int=0.95)      # mean(Y) with 0.95 confidence limits
 }
 \keyword{models}
 \keyword{regression}

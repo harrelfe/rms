@@ -1,6 +1,7 @@
-subroutine ormll(n, k, p,  &
-                 x, ia, ia2, sgn, ib, nb, offset, wt, penmat, link, alpha, beta, logL, u, &
-                 d, ha, hb, hab,                 &
+subroutine ormll(n, k, p, qm,  &
+                 x, ia, ia2, sgn, ib, nb, offset, wt, penmat, link, alpha, beta, &
+                 Z1, Z2, tau, logL, u, &
+                 d, ha, hb, hab, hc, hac, hbc,    &
                  intcens, row, col, ai, nai, ne, &
                  urow, ucol, um, nu, nuu,        &
                  what, debug, penhess, salloc)
@@ -22,10 +23,29 @@ subroutine ormll(n, k, p,  &
 ! This routine only accumulates.  ib and nb are no longer used (ormatoms
 ! selects two-intercept observations from ia2 > 0) but stay in the
 ! argument list so the .Fortran() call and init.c are unchanged.
+!
+! Claude Sonnet 5 2026-11-17          entire subroutine
+! Extended for yde/ytrans (Y-dependent effects): qm (= q*m, the
+! flattened width of the q x m tau parameter matrix) new parameters tau,
+! with per-observation design vectors Z1(i,.), Z2(i,.) (already expanded
+! via outer(Z[i,], ytransmat[ia(i)/ia2(i),]) on the R side -- see
+! orm-yde-design.md section a) giving e1 = Z1 %*% tau, e2 = Z2 %*% tau,
+! the y-dependent additive terms at the two intercepts touched by this
+! observation's likelihood contribution. Passed to ormatoms as e1, e2
+! SEPARATELY (never pre-added into lp) per the measured requirement in
+! orm_accuracy.md section 3.1 -- pre-summing first costs about 5 orders
+! of magnitude of relative accuracy in the cell probability d.
+! All new code is gated behind qm > 0 (mirroring the existing p > 0
+! gating for x/beta): when qm == 0 (no yde), the exact same ormatoms
+! call and accumulation as before run, unchanged, so existing fits are
+! bit-identical. See orm-yde-design.md for the full derivation of the
+! hac/hbc/hc blocks below (alpha-tau, beta-tau, tau-tau), confirmed
+! there against finite differences on a small example.
 
 ! n      : # observations
 ! k      : # intercepts
 ! p      : # x columns
+! qm     : # tau parameters (q * m for the yde design; 0 if no yde)
 ! ia     : intercept index for the "p1" probability component (from ormidx)
 ! ia2    : intercept index for "p2" component, 0 if none (from ormidx)
 ! sgn    : +1 if p1 enters as F(), -1 if as 1-F() (from ormidx)
@@ -35,7 +55,7 @@ subroutine ormll(n, k, p,  &
 !          hessian when interval censoring is present
 ! nu     : # elements set aside for sparse score matrix
 !           Set to zero to not compute the score matrix
-!           To be safe, set nu = n * (2 + p)
+!           To be safe, set nu = n * (2 + p + qm)
 ! intcens: 1 if any interval censoring, 0 otherwose
 ! x      : covariate matrix
 ! (y, y2 removed -- see note below at the ia/ia2/sgn declaration)
@@ -45,14 +65,20 @@ subroutine ormll(n, k, p,  &
 ! link   : link function/distribution famiily, 1-5 (see orm_links module)
 ! alpha  : k-vector of intercepts
 ! beta   : p-vector of regression coefficients
+! Z1, Z2 : n x qm design matrices for the yde effect at the "p1"/"p2"
+!          intercepts (0-column if qm = 0)
+! tau    : qm-vector of yde regression coefficients
 ! logL   : -2 LL
-! u      : returned k + p-vector of 1st derivatives
+! u      : returned k + p + qm-vector of 1st derivatives
 ! d      : returned per-observation probability element used in log likelihood calculation
 ! ha     : returned k x 2 matrix for alpha portion of Hessian for sparse
 !          representation with the Matrix R package; first column is the
 !          diagonal, second is the superdiagonal (last element ignored)
 ! hb     : returned p x p matrix for beta portion of Hessian
 ! hab    : returned k x p matrix for alpha x beta portion of Hessian
+! hc     : returned qm x qm matrix for tau portion of Hessian
+! hac    : returned k x qm matrix for alpha x tau portion of Hessian
+! hbc    : returned p x qm matrix for beta x tau portion of Hessian
 ! nai    : number of elements set aside for row, col, ai when intcens=1
 ! row    : returned vector of row numbers for intercept hessian with interval censoring
 ! col    : returned column numbers
@@ -82,21 +108,20 @@ subroutine ormll(n, k, p,  &
   ! by ia, ia2, sgn, ib, nb (from ormidx) in the prior revision -- the
   ! only remaining uses were debug-only diagnostics, now adapted below
   ! to print ia/ia2/sgn instead (a deterministic, information-equivalent
-  ! transform of y/y2). A future y-dependent-effects (YDE / partial PO)
-  ! extension should route new information through ia/ia2 (already
-  ! cutpoint-indexed), not y/y2.
-  integer(int32), intent(in)  :: n, k, p, what, debug, penhess, link, &
+  ! transform of y/y2).
+  integer(int32), intent(in)  :: n, k, p, qm, what, debug, penhess, link, &
                                  nai, intcens, nu, nb, ia(n), ia2(n), ib(nb)
   real(dp),       intent(in)  :: x(n, p), sgn(n), offset(n), wt(n), penmat(p, p), &
-                                 alpha(k), beta(p)
-  real(dp),       intent(out) :: logL, d(n), u(k + p), &
+                                 alpha(k), beta(p), Z1(n, qm), Z2(n, qm), tau(qm)
+  real(dp),       intent(out) :: logL, d(n), u(k + p + qm), &
                                  ha(k * (1 - intcens), 2), hb(p, p), hab(k, p), &
+                                 hc(qm, qm), hac(k, qm), hbc(p, qm), &
                                  ai(nai), um(nu)
   integer(int32), intent(out) :: row(nai), col(nai), ne, urow(nu), ucol(nu), nuu, salloc
 
-  integer(int32)  :: i, j, l, c, j2, nbad, il(1)
+  integer(int32)  :: i, j, l, c, j2, m, mc, nbad, il(1)
   real(dp), allocatable :: lp(:), s1(:), s2(:), hee(:), h11(:), h22(:), h12(:), &
-                           h1e(:), h2e(:)
+                           h1e(:), h2e(:), e1(:), e2(:)
   integer(int32), allocatable :: ibad(:)
 
   if(debug > 0) then
@@ -109,7 +134,7 @@ subroutine ormll(n, k, p,  &
   end if
 
   allocate(lp(n), s1(n), s2(n), hee(n), h11(n), h22(n), h12(n), h1e(n), h2e(n), &
-           stat=salloc)
+           e1(n), e2(n), stat=salloc)
 
   if(salloc /= 0) return
 
@@ -157,10 +182,22 @@ subroutine ormll(n, k, p,  &
   !                  logL  = -2 * sum(ell_i) + beta' penmat beta
 
   ! d, and (per what) the score and Hessian coefficients, for all observations.
-  ! lp is the common linear predictor.  The y-dependent parts e1 and e2 are omitted
-  ! (0) until y-dependent effects exist.
-  call ormatoms(link, n, k, alpha, ia, ia2, sgn, lp, wt, what, &
-                d, s1, s2, hee, h11, h22, h12, h1e, h2e, salloc)
+  ! lp is the common linear predictor.  e1, e2 are the y-dependent parts of
+  ! the linear predictor at the "p1"/"p2" intercepts (0 when qm = 0); per
+  ! orm_accuracy.md section 3.1, they must reach ormatoms as separate
+  ! arguments, never pre-added into lp, or about 5 orders of magnitude of
+  ! relative accuracy in d is lost. When qm = 0 the call below is byte-
+  ! for-byte the same call as before this extension (e1, e2 omitted
+  ! entirely, not just zero), so existing (non-yde) fits are unaffected.
+  if(qm > 0) then
+    e1 = matmul(Z1, tau)
+    e2 = matmul(Z2, tau)
+    call ormatoms(link, n, k, alpha, ia, ia2, sgn, lp, wt, what, &
+                  d, s1, s2, hee, h11, h22, h12, h1e, h2e, salloc, e1=e1, e2=e2)
+  else
+    call ormatoms(link, n, k, alpha, ia, ia2, sgn, lp, wt, what, &
+                  d, s1, s2, hee, h11, h22, h12, h1e, h2e, salloc)
+  end if
 
   if(debug > 0) then
     call intpr('ia',           2, ia,          size(ia))
@@ -234,9 +271,18 @@ subroutine ormll(n, k, p,  &
         u(k + l) = u(k + l) + (s1(i) + s2(i)) * x(i, l)
       end do
     end if
+    ! Claude Sonnet 5 2026-11-17          4 lines
+    ! tau gradient: unlike beta (whose x is shared between the "p1" and
+    ! "p2" intercepts), Z1(i,.) and Z2(i,.) generally differ, so s1 and
+    ! s2 each get their own design vector rather than combining first.
+    if(qm > 0) then
+      do m = 1, qm
+        u(k + p + m) = u(k + p + m) + s1(i) * Z1(i, m) + s2(i) * Z2(i, m)
+      end do
+    end if
 
     if(nu > 0) then  ! compute sparse score matrix elements
-      if(nuu + 2_int32 + p > nu) then
+      if(nuu + 2_int32 + p + qm > nu) then
         salloc = 996_int32
         return
       end if
@@ -258,6 +304,14 @@ subroutine ormll(n, k, p,  &
           um(nuu)   = (s1(i) + s2(i)) * x(i, l)
         end do
       end if
+      if(qm > 0) then
+        do m = 1, qm
+          nuu = nuu + 1
+          urow(nuu) = i
+          ucol(nuu) = k + p + m
+          um(nuu)   = s1(i) * Z1(i, m) + s2(i) * Z2(i, m)
+        end do
+      end if
     end if
 
   end do
@@ -266,16 +320,24 @@ subroutine ormll(n, k, p,  &
   ! Ignored at present for mscore
   if(p > 0) u((k + 1) : (k + p)) = u((k + 1) : (k + p)) - matmul(penmat, beta)
 
-  if(debug > 0) call dblepr('u', 1, u, k + p)
+  if(debug > 0) call dblepr('u', 1, u, k + p + qm)
 
   if(what == 2) return
 
   ha  = 0_dp
   hb  = 0_dp
   hab = 0_dp
+  if(qm > 0) then
+    hc  = 0_dp
+    hac = 0_dp
+    hbc = 0_dp
+  end if
 
   ! Hessian
   ! Create 3 matrices: ha (k x 2), hb (p x p), hab (k x p)
+  ! (plus, when qm > 0: hc (qm x qm), hac (k x qm), hbc (p x qm) --
+  ! the tau-tau, alpha-tau, beta-tau blocks; see orm-yde-design.md
+  ! section a for the derivation)
   ! ha represents a sparse matrix to be served up to the Matrix package in R
   ! It is tri-band diagonal, and since it is symmetric we only need to compute
   ! two bands (diagonal ha[, 1] and superdiagonal ha[, 2] with ha[k, 2] irrelevant.)
@@ -381,15 +443,48 @@ subroutine ormll(n, k, p,  &
       end if
     end if
 
-    if(p == 0) cycle
-
-    do l = 1, p
-      hab(j, l) = hab(j, l) + x(i, l) * h1e(i)
-      if(j2 > 0) hab(j2, l) = hab(j2, l) + x(i, l) * h2e(i)
-      do c = l, p
-        hb(l, c) = hb(l, c) + x(i, l) * x(i, c) * hee(i)
+    ! Claude Sonnet 5 2026-11-17          1 line
+    ! Was "if(p == 0) cycle" -- replaced with an explicit if(p > 0) block
+    ! (rather than cycling past the rest of the loop body) because a
+    ! yde-only model (q > 0, p == 0) still needs the qm block below to
+    ! run for every observation.
+    if(p > 0) then
+      do l = 1, p
+        hab(j, l) = hab(j, l) + x(i, l) * h1e(i)
+        if(j2 > 0) hab(j2, l) = hab(j2, l) + x(i, l) * h2e(i)
+        do c = l, p
+          hb(l, c) = hb(l, c) + x(i, l) * x(i, c) * hee(i)
+        end do
       end do
-    end do
+    end if
+
+    ! Claude Sonnet 5 2026-11-17          entire block
+    ! tau Hessian blocks. Unlike beta (h1e = h11+h12, h2e = h12+h22,
+    ! hee = h11+2h12+h22 collapse the two-intercept curvature into one
+    ! number because x is shared between the "p1"/"p2" intercepts), Z1
+    ! and Z2 generally differ for yde, so h11/h12/h22 must be used
+    ! directly rather than through the h1e/h2e/hee shortcuts -- except
+    ! for hbc (beta-tau), where beta's side of the cross term IS shared
+    ! (x is the same for both intercepts), so h1e/h2e remain the right
+    ! coefficients there, each paired with the tau side's own Z1/Z2.
+    ! Derivation and a numerical finite-difference check are in
+    ! orm-yde-design.md section a.
+    if(qm > 0) then
+      do m = 1, qm
+        hac(j, m) = hac(j, m) + h11(i) * Z1(i, m) + h12(i) * Z2(i, m)
+        if(j2 > 0) hac(j2, m) = hac(j2, m) + h12(i) * Z1(i, m) + h22(i) * Z2(i, m)
+        if(p > 0) then
+          do l = 1, p
+            hbc(l, m) = hbc(l, m) + h1e(i) * x(i, l) * Z1(i, m) + h2e(i) * x(i, l) * Z2(i, m)
+          end do
+        end if
+        do mc = m, qm
+          hc(m, mc) = hc(m, mc) + h11(i) * Z1(i, m) * Z1(i, mc) &
+                                 + h12(i) * (Z1(i, m) * Z2(i, mc) + Z2(i, m) * Z1(i, mc)) &
+                                 + h22(i) * Z2(i, m) * Z2(i, mc)
+        end do
+      end do
+    end if
   end do
 
   ! Finish symmetric matrix
@@ -399,6 +494,13 @@ subroutine ormll(n, k, p,  &
       hb(c, l) = hb(l, c)
     end do
   end do
+  end if
+  if(qm > 0) then
+    do m = 1, qm - 1
+    do mc = m + 1, qm
+      hc(mc, m) = hc(m, mc)
+    end do
+    end do
   end if
 
   if(debug > 1) call intpr1('hess A', 6, 0)
@@ -410,6 +512,11 @@ subroutine ormll(n, k, p,  &
     call dblepr('ha',  2, ha,  size(ha))
     call dblepr('hb',  2, hb,  size(hb))
     call dblepr('hab', 3, hab, size(hab))
+    if(qm > 0) then
+      call dblepr('hc',  2, hc,  size(hc))
+      call dblepr('hac', 3, hac, size(hac))
+      call dblepr('hbc', 3, hbc, size(hbc))
+    end if
   end if
 
 return

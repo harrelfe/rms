@@ -9,6 +9,8 @@ orm.fit(
   y,
   cluster = NULL,
   family = c("logistic", "probit", "loglog", "cloglog", "cauchit"),
+  Z = NULL,
+  ytrans = NULL,
   offset,
   initial,
   opt_method = c("NR", "LM"),
@@ -61,6 +63,29 @@ quoted string, e.g. \code{family=loglog} or \code{family="loglog"}. To use
 a built-in family, the string must be one of the following,
 corresponding to the previous list: \code{logistic}, \code{probit},
 \code{loglog}, \code{cloglog}, \code{cauchit}.}
+
+\item{Z}{optional design matrix (\code{n} rows) for Y-dependent
+(non-proportional-odds) effects -- the analog, for \code{orm}, of
+\code{rms::Xcontrast()}'s partial-PO mechanism and of \code{rmsb::blrm()}'s
+own \code{ppo}/\code{cppo} and \code{rmsb::borm()}'s \code{yde}/\code{ytrans}. Normally
+built by \code{orm()} itself from its own \code{yde} formula argument, not
+supplied directly. Must be given together with \code{ytrans}. May be
+combined with \code{cluster}; combined with \code{cluster} AND \code{mre}
+together, the fit may fail to converge or may converge to a
+degenerate (sigma1/sigma2 near 0) solution -- a \code{warn_once()}
+warning is issued in that case (see \code{mre}'s own documentation).}
+
+\item{ytrans}{optional function of a vector of Y values, returning
+a matrix with one row per Y value and one or more columns (the
+\code{m} Y-dependent "shapes" \code{Z}'s \code{q} columns are each allowed to
+take); together \code{Z} (\code{q} columns) and \code{ytrans} (\code{m} columns)
+parameterize a \verb{q x m} matrix of new \code{tau} coefficients. May also
+be the character string \code{"all"}, which \code{orm.fit} substitutes with
+a constructed function producing a \code{k - 2} column 0/1 indicator
+matrix (one column per distinct Y value beyond the first two),
+giving each \code{yde} predictor a saturated (fully flexible) Y-
+dependent effect shape. \code{ytrans="all"} requires no censoring and
+\code{k <= 50} distinct Y values.}
 
 \item{offset}{optional numeric vector containing an offset on the
 logit scale}
@@ -209,7 +234,12 @@ discrete, is valid. \code{mre} must vary within at least some
 clusters; a completely constant \code{mre} (whether \code{0}, \code{1}, or any
 other single value across the whole dataset) is rejected with an
 informative error, since it would leave \code{sigma1} and \code{sigma2}
-unidentifiable.}
+unidentifiable. Combined with \code{yde}/\code{ytrans}, this is a
+numerically difficult combination -- \code{sigma1}/\code{sigma2} and the
+\code{yde} effect can compete to explain the same cluster-level
+variation, and the fit may fail to converge or converge to a
+degenerate solution with \code{sigma1}/\code{sigma2} collapsed to ~0; a
+one-time \code{warn_once()} warning is issued when both are given.}
 
 \item{...}{ignored}
 }

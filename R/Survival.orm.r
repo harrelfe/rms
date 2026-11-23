@@ -1,4 +1,8 @@
 Survival.orm <- function(object, precision = 7, ...) {
+  # Claude Sonnet 5 2026-11-20          2 lines
+  # A yde-fitted object needs ormYdeSurvival() (predict.lrm.s) -- this
+  # function's own shift-trick lpsi has no notion of Z/tau at all.
+  if(length(object$qyde) && object$qyde > 0) return(ormYdeSurvival(object, precision=precision))
   ns <- object$non.slopes
   vals <- as.numeric(object$yunique)
   up <- object$yupper

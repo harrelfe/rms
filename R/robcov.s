@@ -1,7 +1,21 @@
 robcov <- function(fit, cluster, method=c('huber','efron'))
 {
   method <- match.arg(method)
-  
+
+  # Claude Sonnet 5 2026-11-17          5 lines
+  # residuals.orm()'s type='score' already correctly uses object$mscore
+  # directly (already k+p+qm wide for a yde fit, not just k+p -- see
+  # ormll.f90/orm.fit.r) when it is present; it falls back to a
+  # different, X-only (p-wide) computation when mscore wasn't
+  # requested at fit time, which crashes for a yde fit ("subscript out
+  # of bounds") rather than explaining why. Require mscore=TRUE here
+  # instead of letting that confusing crash happen -- orm(..., mscore
+  # =TRUE) already works today (mscore is forwarded through orm.fit()
+  # unchanged, nothing yde-specific needed there).
+  if(length(fit$qyde) && fit$qyde > 0 && ! length(fit$mscore))
+    stop('robcov() for a yde-fitted orm() object requires the fit to ',
+         'have been run with mscore=TRUE')
+
   var   <- vcov(fit, intercepts='all')
   vname <- dimnames(var)[[1]]
   

@@ -171,7 +171,7 @@ probabilities that one expects to create a linear relationship with the
 linear predictors.
 }
 \details{
-\code{method="loess"} (recommended) uses \code{\link{loess.surv}}, a
+\code{method="loess"} (recommended) uses \code{\link[Hmisc]{loess.surv}}, a
 locally weighted smoother for right-censored data (van Klaveren et al.,
 2026).  Event indicators are inflated by inverse probability of
 censoring weights obtained from a Cox model for the censoring

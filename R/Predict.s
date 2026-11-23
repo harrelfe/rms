@@ -53,7 +53,9 @@ Predict <-
   pppo <- fit$pppo
   if(! isblrm) pppo <- 0
   qyde <- fit$qyde
-  if(! isborm || ! length(qyde)) qyde <- 0
+  # Claude Sonnet 5 2026-11-17          1 line
+  # Also recognize a yde-fitted orm() object (qyde > 0), not just borm().
+  if((! isborm && ! isorm) || ! length(qyde)) qyde <- 0
   partialpo <- pppo > 0L || qyde > 0L
   if(isblrm) cppo <- fit$cppo
   if(partialpo && isblrm && ! length(cppo))
@@ -66,18 +68,61 @@ Predict <-
               else max((1 : length(ylevels))[ylevels <= ycut]) - 1
   }
 
+  # Claude Sonnet 5 2026-11-17          1 line
+  # A yde-fitted orm() object routes through predict() (-> predict.orm()
+  # -> ormPredictYde()), same as blrm()/borm(), not predictrms()
+  # directly -- predictrms() alone knows nothing about tau/Z.
+  isormyde  <- isorm  && qyde > 0L
+  # Claude Sonnet 5 2026-11-22
+  # Same reason isormyde needs its own branch below: bormPredictYde()'s
+  # own type='lp' stops on fun= (a per-draw-then-summarize concept it
+  # doesn't implement), so a yde-fitted borm() object needs the same
+  # no-fun-passthrough treatment isormyde already gets, not the
+  # isblrm/isborm branch's fun=fun forwarding.
+  isbormyde <- isborm && qyde > 0L
   Pred <- function(type='lp') {
     if(type == 'x') {
-      if(isblrm || isborm) predict(fit, settings, type='x', kint=kint, ycut=ycut,
+      if(isblrm || isborm || isormyde) predict(fit, settings, type='x', kint=kint, ycut=ycut,
                          zcppo=FALSE)
       else
         predictrms(fit, settings, type='x')
     }
     else {
-      if(isblrm || isborm) predict(fit, settings, type='lp',
-                       fun=fun, funint=funint,
+      # Claude Sonnet 5 2026-11-20          6 lines
+      # isormyde/isbormyde split out of the blrm/borm branch: fun=/
+      # funint=/posterior.summary= are a Bayesian-draws concept (apply
+      # fun per draw, then summarize) that predict.orm()/ormPredictYde()
+      # (an MLE fit, no draws) does not implement at all, and that
+      # bormPredictYde() doesn't implement for fun= specifically (though
+      # it does support posterior.summary=/cint= already) -- fun is
+      # instead applied later, below, exactly as for an ordinary
+      # (non-yde) orm/lrm fit.
+      # Claude Sonnet 5 2026-11-22          entire block
+      # fun=Mean(fit) (the real function), not fun=fun (the literal
+      # string 'mean'), when isMean: predict.blrm()'s own 'lp' code has
+      # no is.function() check before trying to call fun() in its
+      # per-draw loop (confirmed directly, on a PLAIN non-yde blrm()
+      # fit, unrelated to any yde/borm work: "could not find function
+      # 'fun'"). Mean.blrm()'s closure signature
+      # (lp, lptau=, intercepts=, codes=) is exactly what that loop
+      # calls it with, so this isn't a workaround -- it's the real
+      # function the string 'mean' is shorthand for, confirmed by
+      # reading how that branch finishes: it HPD-summarizes the
+      # already-fun-transformed per-draw values, so lower/upper come
+      # back on the mean (not log-odds) scale automatically. Passing
+      # NULL instead (an earlier, incomplete fix attempt) avoided the
+      # crash but left lower/upper on the untransformed log-odds scale
+      # while xb got transformed later via m(xb) -- confirmed directly
+      # to produce a nonsensical result (the point estimate landing
+      # outside its own "confidence interval").
+      if(isblrm || (isborm && ! isbormyde)) predict(fit, settings, type='lp',
+                       fun=if(isMean) Mean(fit) else fun, funint=funint,
                        kint=kint, ycut=ycut,
                        posterior.summary=posterior.summary, cint=conf.int)
+      else if(isormyde) predict(fit, settings, type='lp', kint=kint, ycut=ycut,
+                                 cint=conf.int)
+      else if(isbormyde) predict(fit, settings, type='lp', kint=kint, ycut=ycut,
+                                  posterior.summary=posterior.summary, cint=conf.int)
       else predictrms(fit, settings, kint=kint,
                       ref.zero=ref.zero,
                       type='lp', conf.int=conf.int, conf.type=conf.type)
@@ -253,11 +298,33 @@ Predict <-
     bootdone <- FALSE
   }
   isMean <- length(fun) && ! is.function(fun) && fun == 'mean'
-  if(isMean && ! bootdone & conf.int > 0 & ! bayes)
+  # Claude Sonnet 5 2026-11-20          9 lines
+  # For a yde-fitted orm() object, fun='mean' is handled below via a
+  # direct predict(type='mean', se.fit=) call, which gets a real
+  # delta-method CI with no need for bootstrap reps or posterior draws
+  # -- unlike the ordinary-fit mechanism these two guards exist for
+  # (Mean.lrm()'s own conf.int code needs X, which isn't available at
+  # the plain xb <- m(xb) call site below, hence bootcov/bayes being
+  # required there). isormyde is exempted from both; fun=Mean(object)
+  # (a function, not the string) is instead stopped on explicitly just
+  # below, since the string form is the one implemented for yde.
+  if(isMean && ! bootdone & conf.int > 0 & ! bayes & ! isormyde)
     stop('specifying fun="mean" with conf.int > 0 does not make sense when not running bootcov (with coef.reps=TRUE)')
-  if(isMean && isorm && conf.int > 0)
+  if(isMean && isorm && conf.int > 0 && ! isormyde)
     stop("fun='mean' not implemented for orm models when confidence intervals are requested")
-  
+  if(isMean && isormyde && bootdone && conf.int > 0)
+    stop("fun='mean' is not yet implemented together with bootcov(coef.reps=TRUE) for an orm object using yde/ytrans")
+  # Claude Sonnet 5 2026-11-22
+  # borm() has no bootcov(coef.reps=TRUE) concept and bayes is always
+  # TRUE for it, so the first two guards above never fire for a borm
+  # fit regardless of isbormyde -- no analogous guard needed there;
+  # predict(type='mean', cint=) already gets a real HPD interval with
+  # no bootstrap/draws requirement, same as isormyde's delta-method SE.
+  if((isormyde || isbormyde) && length(fun) && is.function(fun))
+    stop("for an orm()/borm() object using yde/ytrans, specify fun='mean' instead of ",
+         "fun=Mean(object) (or omit fun= and call predict(object, newdata, ",
+         "type='mean') directly)")
+
   if(! length(time)) {
     xx <- Pred()
     if(length(attr(xx, "strata")) && any(is.na(attr(xx, "strata"))))
@@ -267,8 +334,51 @@ Predict <-
       stop("model has no covariables and survival not plotted")
     xb <- if(is.list(xx)) xx$linear.predictors else xx
     if(isMean) {
-      m <- Mean(fit)
-      xb <- m(xb)
+      if(isormyde) {
+        # Claude Sonnet 5 2026-11-20          entire block
+        # Predict() already has settings (the actual covariate grid)
+        # in scope, so it calls predict(type='mean') directly rather
+        # than going through Mean()/ormYdeMean() -- no need to pass
+        # settings out to a closure and have the closure call predict()
+        # again. xx$lower/xx$upper are overwritten here (mean scale)
+        # so the generic "lower <- as.vector(xx$lower)" step further
+        # below picks these up unchanged; they otherwise still held
+        # ormPredictYde()'s own type='lp' (log-odds-scale) CI from
+        # Pred(), which would be the wrong scale for fun='mean'.
+        r <- predict(fit, settings, type='mean', se.fit = conf.int > 0)
+        if(conf.int > 0) {
+          xb <- r$mean
+          zcrit <- qnorm((1 + conf.int) / 2)
+          xx$lower <- xb - zcrit * r$se.fit
+          xx$upper <- xb + zcrit * r$se.fit
+        } else xb <- r
+      } else if(isbormyde) {
+        # Claude Sonnet 5 2026-11-22
+        # Same reasoning as isormyde just above, but bormPredictYde()'s
+        # own type='mean' already returns an HPD interval directly
+        # (list(mean=, lower=, upper=), via posterior draws) when
+        # cint>0, rather than a delta-method se.fit Predict() would
+        # then need to turn into bounds itself -- so lower/upper are
+        # used as returned, no qnorm step needed here.
+        r <- predict(fit, settings, type='mean',
+                     posterior.summary=posterior.summary, cint=conf.int)
+        if(conf.int > 0) {
+          xb <- r$mean
+          xx$lower <- r$lower
+          xx$upper <- r$upper
+        } else xb <- r
+      } else if(isblrm || isborm) {
+        # Claude Sonnet 5 2026-11-22
+        # Nothing left to do: xb (and, via xx$lower/xx$upper, the CI)
+        # were already transformed by fun=Mean(fit) inside Pred()'s own
+        # call above (isormyde/isbormyde, which do need the separate
+        # handling above, were already routed there). Calling m(xb)
+        # again here would double-apply Mean() to an already-mean
+        # value.
+      } else {
+        m <- Mean(fit)
+        xb <- m(xb)
+      }
       }
     if(bootdone && conf.int > 0) {
       X <- Pred(type='x')

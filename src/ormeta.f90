@@ -1,5 +1,22 @@
 subroutine ormeta(n, k, link, alpha, lp1, lp2, wt, ia, ia2, sgn, ib, nb, &
+                   qm, Z1, Z2, tau, &
                    logd, g, h, s1, s2, what, debug, salloc)
+! Claude Sonnet 5 2026-11-17          entire subroutine
+! Extended for yde/ytrans + random effects (Stage 2; see
+! orm-yde-design.md section c): qm, Z1, Z2, tau let the caller supply
+! the Y-dependent additive terms e1 = Z1 %*% tau, e2 = Z2 %*% tau,
+! computed HERE (not from lp2-lp1, which would destroy their accuracy
+! -- see orm_accuracy.md section 3.1/3.2, the same reasoning ormll.f90
+! already follows) and passed to ormatoms as separate small terms. g/h
+! (the combined, "common-shift" quantities) remain exactly right for
+! per-cluster mode-finding w.r.t. the random intercept u: u enters x1
+! and x2 identically (d(x1)/du = d(x2)/du = 1) regardless of whether
+! e1 = e2, so no h11/h12/h22 split is needed HERE the way ormll.f90
+! needs one for yde's OWN (Z1 != Z2) gradient/Hessian -- only getting
+! e1/e2 themselves right, for accuracy, is new. Gated behind qm > 0 so
+! existing (no-yde) callers are unaffected: when qm = 0 the exact same
+! ormatoms call as before runs, unchanged.
+!
 ! Claude Sonnet 5 2026-08-30
 ! Extended to also return s1, s2: the per-observation score
 ! contributions to alpha(ia(i)) and alpha(ia2(i)) SEPARATELY, rather
@@ -54,6 +71,10 @@ subroutine ormeta(n, k, link, alpha, lp1, lp2, wt, ia, ia2, sgn, ib, nb, &
 ! sgn    : +1 if p1 enters as F(), -1 if as 1-F() (from ormidx)
 ! ib     : observation numbers having a p2 component; only ib(1:nb) used (from ormidx)
 ! nb     : count of such observations (from ormidx)
+! qm     : # yde tau parameters (q * m); 0 if no yde
+! Z1, Z2 : n x qm design matrices for the yde effect at the "p1"/"p2"
+!          intercepts (0-column if qm = 0)
+! tau    : qm-vector of yde regression coefficients
 ! logd   : returned n-vector, wt(i) * log(d(i)) -- grouped-sum by
 !          cluster gives each cluster's log-likelihood at this trial u
 ! g      : returned n-vector, d(logL)/d(eta_i) -- grouped-sum by cluster
@@ -88,13 +109,14 @@ subroutine ormeta(n, k, link, alpha, lp1, lp2, wt, ia, ia2, sgn, ib, nb, &
   use, intrinsic :: ISO_FORTRAN_ENV, only: dp => real64, int32
   use orm_links, only: ormatoms
   implicit none
-  integer(int32), intent(in)  :: n, k, link, nb, what, debug, ia(n), ia2(n), ib(nb)
-  real(dp),       intent(in)  :: alpha(k), lp1(n), lp2(n), wt(n), sgn(n)
+  integer(int32), intent(in)  :: n, k, link, nb, qm, what, debug, ia(n), ia2(n), ib(nb)
+  real(dp),       intent(in)  :: alpha(k), lp1(n), lp2(n), wt(n), sgn(n), &
+                                 Z1(n, qm), Z2(n, qm), tau(qm)
   real(dp),       intent(inout) :: logd(n), g(n), h(n), s1(n), s2(n)
   integer(int32), intent(out) :: salloc
 
   integer(int32) :: i, nbad, lvl
-  real(dp), allocatable       :: d(:), e2(:)
+  real(dp), allocatable       :: d(:), e2(:), e1yde(:), e2yde(:)
   integer(int32), allocatable :: ibad(:)
 
   ! Claude Sonnet 5 2026-09-19
@@ -126,7 +148,21 @@ subroutine ormeta(n, k, link, alpha, lp1, lp2, wt, ia, ia2, sgn, ib, nb, &
   !          logistic: -wt * pdf1  or  -wt * (pdf1 + pdf2)
   ! ia2 > 0 always has sgn = +1 (ormidx sets sgn = -1 only in one-intercept cases), so
   ! the two-intercept formulas omit sgn.
-  if(all(lp1 == lp2)) then                  ! always, until YDE exists
+  ! Claude Sonnet 5 2026-11-17          entire if/else
+  ! qm > 0 (yde active): e1/e2 come from Z1/Z2/tau, formed here and
+  ! passed to ormatoms as separate small terms -- never via lp2-lp1,
+  ! which would destroy their accuracy (orm_accuracy.md 3.1/3.2). lp1
+  ! is used as the common "lp" argument; callers (clusterModeFind,
+  ! agqStep) always pass lp1 = lp2 in this case; the yde terms are what
+  ! actually differ between the "p1"/"p2" intercepts.
+  if(qm > 0) then
+    allocate(e1yde(n), e2yde(n), stat=salloc)
+    if(salloc /= 0) return
+    e1yde = matmul(Z1, tau)
+    e2yde = matmul(Z2, tau)
+    call ormatoms(link, n, k, alpha, ia, ia2, sgn, lp1, wt, lvl, &
+                  d, s1, s2, hee=h, salloc=salloc, e1=e1yde, e2=e2yde)
+  else if(all(lp1 == lp2)) then
     call ormatoms(link, n, k, alpha, ia, ia2, sgn, lp1, wt, lvl, &
                   d, s1, s2, hee=h, salloc=salloc)
   else

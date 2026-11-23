@@ -18,6 +18,14 @@ nomogram <-
 
   if(length(fit$pppo) && fit$pppo > 0)
     stop('nomogram will not work for partial proportional odds models')
+  # Claude Sonnet 5 2026-11-17          2 lines
+  # Same reason as the pppo check above: a yde-fitted orm()/borm()
+  # object (qyde > 0) has no single nomogram-representable effect per
+  # predictor -- its contribution varies with the Y value being
+  # predicted. Without this, nomogram() previously failed later with
+  # an unrelated, confusing error ("replacement has length zero").
+  if(length(fit$qyde) && fit$qyde > 0)
+    stop('nomogram will not work for Y-dependent-effect (yde) models')
 
   Format <- function(x)
     { # like format but does individually

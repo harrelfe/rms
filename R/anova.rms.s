@@ -16,7 +16,35 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=.Machine$double.eps,
   if(test == 'LR') {
     if('x' %nin% names(object))
       stop('must specify x=TRUE, y=TRUE when fitting model to use LR test')
-    X <- object[['x']]
+    # Claude Sonnet 5 2026-11-17          3 lines
+    # idx (via ass, extended above so a yde variable's tau columns are
+    # tested jointly -- see orm.s) can contain global coefficient
+    # positions (p+1 onward, in the no-intercept indexing used here)
+    # that correspond to tau, not to columns of X -- see qyde/p/myde
+    # below for how those are now mapped back to Z columns to drop,
+    # instead of (the original bug here) being silently ignored by
+    # X[, -idx, drop=FALSE]'s own out-of-range negative indexing.
+    X    <- object[['x']]
+    p    <- ncol(X)
+    # Claude Sonnet 5 2026-11-21
+    # quickRefit()'s generated fitter only has Z=/ytrans= as formals
+    # for an orm/ormt fit (confirmed from quickRefit.r's own "if(k %in%
+    # c('orm','ormt'))" gating) -- passing them for any other class
+    # (lrm, cph, psm, ols, Glm, ...) errors with "unused arguments"
+    # (confirmed directly: broke every non-orm LR-test example in
+    # R CMD check before this guard was added).
+    isorm <- inherits(object, 'orm')
+    qyde <- object$qyde
+    if(! length(qyde)) qyde <- 0L
+    # Claude Sonnet 5 2026-11-21          4 lines
+    # Z (the yde design matrix) is stored under x=TRUE whenever qyde>0
+    # (see orm.s: "if(x && length(qyde) && qyde > 0) f$z <- Z"), so the
+    # x=TRUE check above already guarantees object$z exists here when
+    # needed; myde is ytransmat's own column count (independent of
+    # which Z columns, if any, get dropped below).
+    Zfull <- if(qyde > 0) object[['z']] else NULL
+    myde  <- if(qyde > 0) ncol(object$ytransmat) else 0L
+    qm    <- qyde * myde
     fitter <- do.call('quickRefit', c(list(object, what='fitter'), fitargs))
     # Compute deviance for full model
     devf <- getDeviance(object)
@@ -24,9 +52,27 @@ anova.rms <- function(object, ..., main.effect=FALSE, tol=.Machine$double.eps,
   }
 
  ava <- if(test == 'LR') function(idx) {
-   if(length(idx) == ncol(X)) c(object$stats['Model L.R.'], length(idx))
+   if(length(idx) == p + qm) c(object$stats['Model L.R.'], length(idx))
    else {
-    devs <- getDeviance(fitter(X[, - idx, drop=FALSE]), fitfunName)
+    idxX <- idx[idx <= p]
+    Zarg <- Zfull; ytrarg <- object[['ytrans']]
+    if(qyde > 0) {
+      idxTau <- idx[idx > p] - p
+      if(length(idxTau)) {
+        # Claude Sonnet 5 2026-11-21
+        # Flattened tau position -> Z column, matching tau's own
+        # column-major-over-ytransmat flattening (confirmed from
+        # orm.s's own taupos <- outer(zpos, (0:(myde-1))*qyde, '+')):
+        # position j's Z column is ((j-1) %% qyde) + 1.
+        zcols <- sort(unique(((idxTau - 1) %% qyde) + 1))
+        if(length(zcols) == qyde) { Zarg <- NULL; ytrarg <- NULL } # dropping all yde columns
+        else Zarg <- Zfull[, -zcols, drop=FALSE]
+      }
+    }
+    devs <- getDeviance(
+              if(isorm) fitter(X[, - idxX, drop=FALSE], Z=Zarg, ytrans=ytrarg)
+              else      fitter(X[, - idxX, drop=FALSE]),
+              fitfunName)
     devs <- devs[length(devs)]
     c(devs - devf, length(idx))
    }

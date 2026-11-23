@@ -48,3 +48,10 @@ CONSTRAINTS
   - Lessons from earlier orm work apply: large-k Matrix sparse solves can segfault
     and cannot be caught, so avoid dense or fragile paths at large k.
   - Ask me when a design choice is mine to make.
+
+  Tasks to do Later
+    - Modify impactPO.r to use orm with ydep instead of VGAM
+
+Implement a special value of ytrans for rms::orm.  When ytrans is a character string "all" make an internal function be substituted for ytrans inside orm.fit.   Throw an error if ytrans=='all' and there is any censoring or k > 50. Once ylevels is defined for the no-censoring case, define the replacement ytrans to produce an integer matrix with the number of rows being the sample size and the number of columns being k-2.  Set all elements to zero, then for each row determine which ylevels element corresponds to the value of the argument y to the constructed ytrans.  If the element number exceeds 2, set column j to 1 where j is 2 less than the ylevels element index matching the current y.  Store ylevels in the environment of the new function or as the default vector value of a ylevels argument the user will not use (the argument after y).  For the documentation say; Specify ytrans='all' for discrete Y with 50 or fewer distinct values, to create a k - 2 parameter transformation that will fit a saturated model with respond to y-dependent effects for predictors in yde.
+
+No need to implement the case where there are no predictors in the main part of the model but yde is specified.

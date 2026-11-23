@@ -163,8 +163,8 @@ contrast.rms <-
     }
   }
 
-  if(bayes && length(fun) && inherits(fit, 'blrm')) {
-    if(! missing(a2)) stop('fun= is only implemented for blrm fits')
+  if(bayes && length(fun) && (inherits(fit, 'blrm') || inherits(fit, 'borm'))) {
+    if(! missing(a2)) stop('fun= is only implemented for blrm or borm fits')
     if(missing(b))    stop('b must be specified when fun= is given')
     if(!missing(ycut)) stop('ycut not used with fun=')
 

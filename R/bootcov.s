@@ -10,6 +10,11 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
     stop("you did not specify x=TRUE and y=TRUE in the fit")
   X <- fit$x
   Y <- fit$y
+  # Claude Sonnet 5 2026-11-17          2 lines
+  # Z (yde's own design matrix), resampled in step with X/Y below
+  # using the same row index j -- see quickRefit.r for how it gets
+  # threaded through to orm.fit().
+  Z <- fit$z
 
   if(length(stat) > 1) stop('stat may only contain one statistic name')
 
@@ -156,8 +161,19 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       else j <- sample(1L : n, n, replace=TRUE)
 
       ## Note: If Strata is NULL, NULL[j] is still NULL
-      f <- tryCatch(fitter(X[j,,drop=FALSE], Y[j,,drop=FALSE],
-                           strata=Strata[j], ytarget=ytarget, ...),
+      # Claude Sonnet 5 2026-11-17          entire block
+      # Z resampled with the same row index j as X/Y, when present --
+      # passed via do.call() rather than a literal Z= argument, since
+      # a non-orm fitter's own closure forwards its ... straight into
+      # a fitting function (e.g. lrm.fit()) that has no Z parameter at
+      # all: passing Z=NULL unconditionally reached that call and
+      # failed there with "unused argument (Z = NULL)" -- a regression
+      # confirmed directly by comparing against the pre-change code,
+      # not merely a style choice.
+      fitargs <- list(X[j,,drop=FALSE], Y[j,,drop=FALSE],
+                       strata=Strata[j], ytarget=ytarget)
+      if(nfit == 'orm' && length(Z)) fitargs$Z <- Z[j,,drop=FALSE]
+      f <- tryCatch(do.call(fitter, c(fitargs, list(...))),
                     error=function(...) list(fail=TRUE))
       if(length(f$fail) && f$fail) next
 
@@ -230,8 +246,13 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
         obs <- unlist(Obsno[j])
       }
 
-      f <- tryCatch(fitter(X[obs,,drop=FALSE], Y[obs,,drop=FALSE],
-                           strata=Strata[obs], ytarget=ytarget, ...),
+      # Claude Sonnet 5 2026-11-17
+      # Z resampled with the same row index obs as X/Y, when present --
+      # see the identical do.call()-based fix (and why) above.
+      fitargs <- list(X[obs,,drop=FALSE], Y[obs,,drop=FALSE],
+                       strata=Strata[obs], ytarget=ytarget)
+      if(nfit == 'orm' && length(Z)) fitargs$Z <- Z[obs,,drop=FALSE]
+      f <- tryCatch(do.call(fitter, c(fitargs, list(...))),
                     error=function(...) list(fail=TRUE))
       if(length(f$fail) && f$fail) next
 

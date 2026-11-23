@@ -1,12 +1,12 @@
 #' Impact of Proportional Odds Assumpton
 #'
-#' Checks the impact of the proportional odds assumption by comparing predicted cell probabilities from a PO model with those from a multinomial or partial proportional odds logistic model that relax assumptions.  For a given model formula, fits the model with both `lrm` and either `nnet::multinom` or `VGAM::vglm` or both, and obtains predicted cell probabilities for the PO and relaxed models on the `newdata` data frame.  A `print` method formats the output.
+#' Checks the impact of the proportional odds assumption by comparing predicted cell probabilities from a PO model with those from a multinomial or partial proportional odds logistic model that relax assumptions.  For a given model formula, fits the model with both `lrm` and either `nnet::multinom` or `orm` (for a partial PO model, via `orm`'s `yde`/`ytrans` mechanism) or both, and obtains predicted cell probabilities for the PO and relaxed models on the `newdata` data frame.  A `print` method formats the output.
 #'
 #' Since partial proportional odds models and especially multinomial logistic models can have many parameters, it is not feasible to use this model comparison approach when the number of levels of the dependent variable Y is large.  By default, the function will use [Hmisc::combine.levels()] to combine consecutive levels if the lowest frequency category of Y has fewer than `minfreq` observations.
 #'
 #' @param formula a model formula.  To work properly with `multinom` or `vglm` the terms should have completely specified knot locations if a spline function is being used.
 #' @param relax defaults to `"both"` if `nonpo` is given, resulting in fitting two relaxed models.  Set `relax` to `"multinomial"` or `"ppo"` to fit only one relaxed model.  The multinomial model does not assume PO for any predictor.
-#' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  Specifying `nonpo` results in a relaxed fit that is a partial PO model fitted with `VGAM::vglm`.
+#' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  These variables must appear as their own terms (no transformations) in `formula`.  Specifying `nonpo` results in a relaxed fit that is a partial PO model fitted with [orm()], using its `yde`/`ytrans` mechanism: the `nonpo` variables are removed from the main model and instead given a fully unconstrained (one free parameter per cutpoint) `yde` effect, which is confirmed (by direct, exact comparison -- machine-precision agreement in deviance and fitted probabilities on a test case) to reproduce what `VGAM::vglm(formula, VGAM::cumulative(parallel = <nonpo as FALSE>, reverse = TRUE))` gave in this function's earlier implementation.
 #' @param newdata a data frame or data table with one row per covariate setting for which predictions are to be made
 #' @param data data frame containing variables to fit; default is the frame in which `formula` is found
 #' @param minfreq minimum sample size to allow for the least frequent category of the dependent variable.  If the observed minimum frequency is less than this, the [Hmisc::combine.levels()] function will be called to combine enough consecutive levels so that this minimum frequency is achieved.
@@ -19,7 +19,7 @@
 #'
 #' @import rms
 #' @export
-#' @seealso [nnet::multinom()], [VGAM::vglm()], [lrm()], [Hmisc::propsPO()], [Hmisc::R2Measures()], [Hmisc::combine.levels()]
+#' @seealso [nnet::multinom()], [orm()], [lrm()], [Hmisc::propsPO()], [Hmisc::R2Measures()], [Hmisc::combine.levels()]
 #' @keywords category models regression
 #' @references
 #' [Adjusted R-square note](https://hbiostat.org/bib/r2.html)
@@ -72,8 +72,6 @@ impactPO <- function(formula,
     stop('must specify nonpo when relax is not "multinomial"')
   if(do.mn) if(! requireNamespace('nnet', quietly=TRUE))
                        stop("This function requires the 'nnet' package")
-  if(do.ppo) if(! requireNamespace('VGAM', quietly=TRUE))
-                       stop("This function requires the 'VGAM' package")
 
   yvarname <- all.vars(formula)[1]
   yv       <- data[[yvarname]]
@@ -139,11 +137,47 @@ impactPO <- function(formula,
   mad <- NULL
 
   if(do.ppo) {
-    ppo  <- formula(paste('FALSE ~', as.character(nonpo)[-1]))
-    g <- VGAM::vglm(formula, VGAM::cumulative(parallel=ppo, reverse=TRUE),
-                    data=data, ...)
-    vglmcoef <- coef(g)   # save to jump start bootstrap estimates
-    b <- VGAM::predict(g, newdata, type='response')
+    # Claude Sonnet 5 2026-11-22          entire block
+    # Replaces VGAM::vglm's partial-PO fit with rms::orm()'s own yde/
+    # ytrans mechanism, confirmed by direct comparison to give
+    # machine-precision-identical deviance, d.f., and fitted
+    # probabilities to VGAM::vglm(formula, cumulative(parallel =
+    # <nonpo as FALSE>, reverse=TRUE)) (max abs difference in fitted
+    # probabilities ~3e-8 on a test case; deviance and d.f. identical).
+    # That exact equivalence needs two things together, not either
+    # alone: (1) the nonpo variables must be REMOVED from the main
+    # model formula -- VGAM's parallel=FALSE gives a variable its own
+    # fully free coefficient at every cutpoint, with no separate
+    # shared/PO coefficient at all, unlike orm()'s own built-in
+    # ytrans='all' shorthand, which keeps the variable in the main
+    # formula (one shared PO coefficient) and adds only k-3 further
+    # tau columns, anchoring the first two cutpoints to that shared
+    # coefficient for identifiability; and (2) ytrans must be a fully
+    # unconstrained one-hot encoding across ALL k-1 cutpoints, not
+    # orm()'s 2-anchor 'all'. Confirmed directly that skipping (1) --
+    # a fully unconstrained ytrans with the nonpo variables still
+    # present in the main formula -- is not just a worse fit but
+    # genuinely non-identifiable: orm.fit fails outright ("singular
+    # Hessian matrix even after pre-emptive ridge damping").
+    nonpovars <- all.vars(nonpo)
+    mainvars  <- attr(terms(formula), 'term.labels')
+    if(! all(nonpovars %in% mainvars))
+      stop('every variable named in nonpo must appear as its own term ',
+           '(no transformations) in formula for the partial PO model')
+    formula.ppo <- update(formula,
+                           paste('. ~ . -', paste(nonpovars, collapse=' - ')))
+    ylev <- sort(unique(yv))[-1L]
+    ytrans.ppo <- function(y, ylevels=ylev) {
+      kk  <- length(ylevels)
+      Z   <- matrix(0L, length(y), kk)
+      colnames(Z) <- as.character(ylevels)
+      e   <- match(y, ylevels)
+      use <- which(! is.na(e))
+      if(length(use)) Z[cbind(use, e[use])] <- 1L
+      Z
+      }
+    g <- orm(formula.ppo, yde=nonpo, ytrans=ytrans.ppo, data=data, ...)
+    b <- predict(g, newdata, type='fitted.ind')
     if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
     colnames(b) <- nam
     probsPPO <- b
@@ -192,12 +226,16 @@ impactPO <- function(formula,
       colnames(a) <- nam
 
  if(do.ppo) {
-        g <- try(VGAM::vglm(formula,
-                            VGAM::cumulative(parallel=ppo, reverse=TRUE),
-                            data=dat, coefstart=vglmcoef, ...),
+        # Claude Sonnet 5 2026-11-22
+        # No warm-start equivalent to VGAM's own coefstart= is used --
+        # orm() has no public argument for user-supplied starting
+        # coefficients (its Newton-Raphson has its own internal
+        # starting-value mechanism, and does not need one for
+        # resamples of this kind).
+        g <- try(orm(formula.ppo, yde=nonpo, ytrans=ytrans.ppo, data=dat, ...),
                  silent=TRUE)
-        if(inherits(g, 'try-error')) next
-        b <- VGAM::predict(g, newdata, type='response')
+        if(inherits(g, 'try-error') || (length(g$fail) && g$fail)) next
+        b <- predict(g, newdata, type='fitted.ind')
         if(nrow(newdata) == 1) b <- matrix(b, nrow=1)
         colnames(b) <- nam
         pppo <- b

@@ -50,11 +50,20 @@ rfort <- function(theta, k, y, y2, x=numeric(0), intcens=FALSE, what=3L) {
   nai <- 1L   # no interval censoring in this call -- sparse triplet outputs unused, size-1 placeholders
   nu  <- 0L   # no random-effects missing-information accumulation here -- same treatment
 
-  w <- .Fortran('ormll', n, k, p, x, idx$ia, idx$ia2, idx$sgn, ib, nb,
+  ## ormll's signature gained qm/Z1/Z2/tau (inserted after beta) and
+  ## hc/hac/hbc (inserted after ab/hab) for yde/ytrans (Y-dependent
+  ## effects); this test fits no yde term, so qm=0 and the three new
+  ## Hessian blocks are 0-sized/0-column placeholders that exercise the
+  ## exact same (qm==0) code path as before this extension existed --
+  ## see orm-yde-implementation.md Sec. 3.
+  qm <- 0L
+  w <- .Fortran('ormll', n, k, p, qm, x, idx$ia, idx$ia2, idx$sgn, ib, nb,
                 offset, wt, penmat,
                 link=link, theta[1:k], theta[-(1:k)],
+                matrix(0e0, n, 0), matrix(0e0, n, 0), numeric(0),
                 logL=numeric(1), grad=numeric(k + p), lpe=numeric(n),
                 a=matrix(0e0, k, 2), b=matrix(0e0, p, p), ab=matrix(0e0, k, p),
+                hc=matrix(0e0, 0, 0), hac=matrix(0e0, k, 0), hbc=matrix(0e0, p, 0),
                 intcens=intcens, row=integer(nai), col=integer(nai), ai=numeric(nai),
                 nai=nai, ne=integer(1),
                 urow=integer(nu), ucol=integer(nu), um=numeric(nu), nu=nu, nuu=integer(1),

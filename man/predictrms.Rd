@@ -151,13 +151,18 @@ individual predicted values by specifying \code{conf.type="individual"}.
         specifies whether you want the linear predictor to be computed
         from the posterior mean of parameters (default) or the posterior
         mode or median median}
-\item{second}{set to \code{TRUE} to use the model's second formula.  At
-        present this pertains only to a partial proportional odds model
-        fitted using the \code{blrm} function.  When \code{second=TRUE}
+\item{second}{set to \code{TRUE} to use the model's second formula.  This
+        pertains to a partial proportional odds model fitted using the
+        \code{blrm} function, and, in the same way, to the \code{yde}/
+        \code{ytrans} Y-dependent-effect mechanism of \code{\link{orm}}
+        (and of \code{rmsb::borm}).  When \code{second=TRUE}
         and \code{type='x'} the Z design matrix is returned (that goes
-        with the tau parameters in the partial PO model).  When
+        with the tau parameters in the partial PO/Y-dependent-effect
+        model).  When
         \code{type='lp'} is specified Z*tau is computed.  In neither case
-        is the result is multiplied by the by the \code{cppo} function.}
+        is the result multiplied by the \code{cppo} function (for
+        \code{blrm}) or by the \code{ytrans} function (for \code{orm}/
+        \code{borm}).}
 \item{kint}{a single integer specifying the number of the intercept to use in
 multiple-intercept models.  The default is 1 for \code{lrm} and the reference median intercept for \code{orm} and \code{blrm}.  For a partial PO model, \code{kint} should correspond to the response variable value that will be used when dealing with \code{second=TRUE}.}
 \item{na.action}{

@@ -165,12 +165,15 @@ the transformed parameters such as means.}
 }
   \item{ycut}{for an ordinal model specifies the Y cutoff to use in
 		evaluating departures from proportional odds, when the constrained
-		partial proportional odds model is used.  When omitted, \code{ycut}
+		partial proportional odds model is used (\code{cppo} in
+		\code{blrm}, or the analogous \code{yde}/\code{ytrans} mechanism in
+		\code{orm}/\code{rmsb::borm}).  When omitted, \code{ycut}
 		is implied by \code{kint}.  The only time it is absolutely mandatory
-		to specify \code{ycut} is when computed an effect (e.g., odds ratio)
+		to specify \code{ycut} is when computing an effect (e.g., odds ratio)
 		at a level of the response variable that did not occur in the data.
 		This would only occur when the \code{cppo} function given to
-		\code{blrm} is a continuous function.}
+		\code{blrm}, or the \code{ytrans} function given to \code{orm}/
+		\code{borm}, is a continuous function.}
   \item{time}{
 	Specify a single time \code{u} to cause function \code{survest} to
 	be invoked to plot the probability of surviving until time \code{u}

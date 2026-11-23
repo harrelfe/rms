@@ -30,6 +30,14 @@
 	the analysis of paired and longitudinal data.  Details are in the \code{\link{orm.fit}} function
 	(\code{cluster}) and \code{mre}) arguments).
 
+	Y-dependent effects of selected predictors can also be included in the
+	model by the user providing the \code{yde} and \code{ytrans} arguments.
+	For a logit link this implements the constrained partial proportional
+	odds model of Peterson and Harrell (1990), and as a special case when
+	\code{ytrans='all'}, the unconstrained partial proportional odds model.
+	For a log-log link this represents time-dependent covariate effects in
+	a Cox proportional hazards model when Y=time.
+
 	For the \code{print} method, format of output is controlled by the
 	user previously running \code{options(prType="lang")} where
 	\code{lang} is \code{"plain"} (the default), \code{"latex"},
@@ -53,7 +61,7 @@
   When creating ordinal levels for non-integer numeric Y, this function does not use the \code{unique} function because it was found to be non-reproducible across hardware platforms.  Instead, intercepts are mapped to integers obtained from rounding original Y levels after multiplying by 1e7 (by default).  When using the \code{ExProb} or \code{Survival} functions to compute exceedance probabilities or survival curves, when the user wishes to obtain probabilities at select non-integer y values, the only way to guarantee the correct mapping to intercepts is to request estimates at the "official" levels of Y stored in the \code{yunique} object found in the fit object.  Users may opt instead to replace original data with e.g. 1e-7 * round(Y * 1e7) before model fitting.
 }
 \usage{
-orm(formula, data=environment(formula),
+orm(formula, yde=NULL, ytrans=NULL, data=environment(formula),
     subset, na.action=na.delete, method="orm.fit",
     family=c("logistic", "probit", "loglog", "cloglog", "cauchit"),
     model=FALSE, x=FALSE, y=FALSE, lpe=FALSE,
@@ -81,6 +89,31 @@ To use the second type of random effects, which involves two \eqn{\sigma} parame
 a \code{cluster(id)} term and
 a \code{mix_re(t)} term in the model where \code{t} is an appropriate function of time.  Note that these
 terms may not interact with other variables.
+}
+\item{yde}{
+an optional one-sided formula specifying which predictors are to have
+a Y-dependent (non-proportional-odds) effect, generalizing \code{ppo}
+in \code{rmsb::blrm}. Predictors named in \code{yde} may (and usually
+will) also appear in \code{formula}. Must be given together with
+\code{ytrans}. Not yet implemented in combination with \code{cluster()}/
+\code{mix_re()} random effects. See \code{\link{orm.fit}}'s own
+\code{Z}/\code{ytrans} arguments for the underlying mechanism.
+}
+\item{ytrans}{
+a function of a vector of Y values returning a matrix with one row
+per Y value and one or more columns, generalizing \code{cppo} in
+\code{rmsb::blrm} to allow more than one Y-dependent shape at once;
+see \code{\link{orm.fit}}. May also be the character string
+\code{"all"}: for discrete Y with 50 or fewer distinct values and no
+censoring, this creates a \code{k - 2} parameter transformation that
+fits a saturated model, giving each predictor named in \code{yde} a
+freely-varying (not smoothness-constrained) Y-dependent effect shape.
+When \code{ytrans} is a user-specified function, it is recommended to
+mean-center any column it produces, using that column's own sample
+mean, when the uncentered column's values have a mean far from zero.
+See the Examples section below, where the means are computed and
+stored for later use. When \code{ytrans} produces column names, these
+are used as part of the names given to the \code{tau} parameters.
 }
 \item{data}{
 data frame to use. Default is the current frame.
@@ -421,6 +454,36 @@ ggplot(d, aes(x=y, y=p, color=sex)) + geom_line() +
 
 options(datadist=NULL)
 \dontrun{
+# For Y=0, 1, 2 for no pain, pain, or death fit a partial proportional
+# odds model that allows for a special effect of x1 on death (the
+# linear part only)
+f <- orm(y ~ rcs(x1, 4) + x2, ~ x1, ytrans=function(y) 1 * (y == 2))
+
+# For discrete Y with > 3 levels fit an unconstrained partial PO model
+f <- orm(y ~ rcs(x1, 4) + x2, ~ x1, ytrans='all')
+
+# Fit the equivalent of an unequal variance 2-sample t-test for
+# continuous Y.  This corresponds to a linear rescaling of probit
+# ordinal model intercepts
+yt <- function(y, bar) y - bar
+formals(yt)$bar <- mean(y)
+f <- orm(y ~ treatment, ~ treatment, ytrans=yt, family='probit')
+
+# For continuous Y, let the linear effect of x1 be U-shaped over Y levels
+yt <- function(y, bar) cbind(lin=y - bar, quad=(y - bar) ^ 2)
+formals(yt)$bar <- mean(y)
+yt
+# Note that in the function definition, bar is now a fixed number,
+# not the expression mean(y)
+f <- orm(y ~ rcs(x1, 4) + x2, ~ x1, ytrans=yt)
+
+# In some cases a vector of means will be needed:
+yt <- function(y, bar) cbind(a=fun1(y) - bar[1], b=fun2(y) - bar[2])
+formals(yt)$bar <- c(mean(fun1(y)), mean(fun2(y)))
+
+# When using a spline function it may be advisable to use an
+# orthogonal basis that is nicely scaled, perhaps natural splines.
+
 ## Simulate power and type I error for orm logistic and probit regression
 ## for likelihood ratio, Wald, and score chi-square tests, and compare
 ## with t-test

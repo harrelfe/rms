@@ -858,7 +858,14 @@ prModFit <- function(x, title, w, digits=4, coefs=TRUE, footer=NULL,
     if(! length(preskip)) preskip <- 0
     if(! tex && length(titl)) R <- c(R, '', catl(titl, pre=preskip, skip=1))
     if(type == 'stats') {
-      R <- c(R, prStats(obj[[1]], obj[[2]], lang=lang))
+      # Claude Sonnet 5 2026-11-22
+      # obj[[3]], if present, is an optional per-column plain-text
+      # width adjustment (see prStats()'s own widthadj= argument).
+      # Existing callers pass a 2-element payload (headings, data);
+      # obj[[3]] on a length-2 list errors ("subscript out of bounds"),
+      # not NULL, so length(obj) must be checked first.
+      wa <- if(length(obj) >= 3) obj[[3]]
+      R <- c(R, prStats(obj[[1]], obj[[2]], lang=lang, widthadj=wa))
     } else if(type == 'coefmatrix') {
       if(coefs) {
         pad <- function(x)
@@ -1193,17 +1200,54 @@ stats_tiny_table <- function(z, labels, lang) {
     }, character(1))
     paste(wrapped, collapse = '\n')
   }
+  nc <- ncol(z)
+
+  # Claude Sonnet 5 2026-11-22          entire block
+  # Per-column relative width weights, detected from the ORIGINAL
+  # (pre-noHyphen) heading text -- only fires for borm's/blrm's own
+  # 4-column stats table layout (column 1 blank-headed, a standalone
+  # "Discrimination Indexes" column, and a "Mixed Calibration/..."
+  # one all present together); any other caller of this function
+  # (e.g. orm's/lrm's own 3-column layout, whose third column is ALSO
+  # headed "Discrimination Indexes" but has no "Mixed Calibration"
+  # column to match against) is unaffected -- wts stays uniform (all
+  # 1) and width keeps its prior uniform per-column split. Per Frank's
+  # request: column 1 (the "misc" column -- Obs/Distinct Y/.../Draws/
+  # Chains/Time) wider, and "Discrimination Indexes" matched to the
+  # width "Mixed Calibration/..." gets (narrower than the prior equal
+  # 1/nc share, since "Mixed Calibration/Discrimination Indexes" is
+  # itself not that wide a label for how much content its column
+  # holds).
+  clabs  <- trimws(gsub('\n', ' ', labels, fixed = TRUE))
+  imixed <- which(grepl('^Mixed Calibration', clabs))
+  idisc  <- which(clabs == 'Discrimination Indexes')
+  borm_layout <- length(imixed) > 0 && length(idisc) > 0
+
   labels <- vapply(labels, noHyphen, character(1))
 
   d <- as.data.frame(z, stringsAsFactors = FALSE)
   colnames(d) <- labels
-  nc <- ncol(z)
 
-  ## width scales with column count -- fixed values were tuned for a
-  ## 3-column example and cramped a 4-column one
-  width <- if(lang == 'latex') min(0.95, 0.21 * nc)
-           else if(lang == 'typst') min(0.95, 0.233 * nc)
-           else NULL
+  # Claude Sonnet 5 2026-11-22          entire block
+  # width: overall table width now varies with column count, per
+  # Frank's follow-up request -- 2 columns: 50%; 3 columns: 75%; 4 or
+  # more: 100%. Within that total, borm_layout keeps its own 0.8/1/1/1
+  # per-column ratio (column 1 narrower, "Discrimination Indexes"
+  # matching "Mixed Calibration/..."); every other caller (e.g. orm's/
+  # lrm's own 3-column layout) gets equal columns. The width vector is
+  # built to sum to EXACTLY widthTotal (not relying on tinytable::
+  # tt()'s own "sum exceeds 1 -> normalize to full width" behavior,
+  # which only self-triggers for the nc>=4 case here, not nc=2/3),
+  # applied identically for any output format, html included (whose
+  # own table previously had no width control at all -- pure content-
+  # driven auto-sizing, confirmed not filling the available width).
+  widthTotal <- if(nc <= 2) 0.50 else if(nc == 3) 0.75 else 1.00
+  wts <- rep(1, nc)
+  if(borm_layout) {
+    wts[1]     <- 0.8
+    wts[idisc] <- wts[imixed]
+  }
+  width <- widthTotal * wts / sum(wts)
   fontsize    <- if(lang == 'typst') 0.9 else NULL
   latex_inner <- if(lang == 'latex') "colsep=8.8pt,rowsep=1pt" else NULL
 
@@ -1213,10 +1257,22 @@ stats_tiny_table <- function(z, labels, lang) {
                 fontsize = fontsize, latex_inner = latex_inner)
 }
 
-prStats <- function(labels, w, lang=c('plain', 'latex', 'html', 'typst')) {
+prStats <- function(labels, w, lang=c('plain', 'latex', 'html', 'typst'),
+                    widthadj=NULL) {
   lang  <- match.arg(lang)
   lorh  <- lang != 'plain'
   specs <- markupSpecs[[lang]]
+  # Claude Sonnet 5 2026-11-22
+  # widthadj: optional per-column character-count adjustment to the
+  # computed plain-text column width, e.g. c(3, 0, -5, 0) to widen
+  # column 1 by 3 and narrow column 3 by 5. Plain-text only -- html's
+  # own table is auto-width (no per-column lever at all), and latex/
+  # typst currently give every column an equal share of the table's
+  # own total width (see stats_tiny_table()'s colspec), so there is no
+  # existing per-column mechanism there either; a caller wanting
+  # weighted columns for those would need a larger change to
+  # stats_tiny_table() than this, not attempted here. Default NULL
+  # (no adjustment) keeps every other caller of prStats() unaffected.
 
   partial <- htmlSpecial('part')
   vbar    <- htmlTranslate('|')
@@ -1274,10 +1330,32 @@ for(i in 1:p) {
     }
     names(fu) <- names(u)
     w[[i]]    <- fu
+    # Claude Sonnet 5 2026-11-22
+    # Fixed bug: this loop was using nuj, left over from the PRIOR
+    # loop's final iteration (the name of the LAST element of u), for
+    # EVERY j here, instead of each element's own name. This
+    # underestimates width[i] whenever an earlier element's name is
+    # longer than the last element's -- confirmed directly to be the
+    # cause of labels and values running together with no separating
+    # space (e.g. "Distinct Y5") in borm's print method's plain-text
+    # table, where the last misc entry ("Time") is shorter than
+    # "Distinct Y"; orm's own typical misc column happened to escape
+    # this by luck (its last entry, "max |deriv|", is one of its
+    # longest labels).
+    # Claude Sonnet 5 2026-11-22
+    # Minimum gap raised from 1 to 2: with 1, a column whose labels are
+    # uniformly short (e.g. rho/C/Dxy, B) and whose values are
+    # uniformly long (HPD interval strings such as "0.602 [0.602,
+    # 0.602]") could still end up with only a single separating space
+    # on its widest row -- not the same bug as the nuj fix above (this
+    # one was never negative/zero), but visually reads as the value
+    # "butting up against" the label.
     for(j in seq_len(length(u)))
       width[i] <- max(width[i],
-                      1 + nchar(nuj) + nchar(fu[j]))
+                      2 + nchar(names(u)[j]) + nchar(fu[j]))
   }
+  if(! lorh && length(widthadj))
+    width <- pmax(2, width + widthadj)
   if(lorh) {
     maxl <- max(sapply(w, length))
     z <- matrix('', nrow=maxl, ncol=p)
@@ -1355,12 +1433,17 @@ for(i in 1:p) {
                        html  = '<i>Y</i><sub>0.5</sub>',
                        typst = '$Y_(0.5)$'),
       '|P(Y>=median)-0.5|'  =
-        c(latex = '$|\\overline{P(Y\\geq Y_{0.5})-\\frac{1}{2}}|$',
-          html  = paste0('<span style="text-decoration: overline">', vbar,
-                         'P(<i>Y</i> ', geq, ' median)-',
-                       htmlSpecial('half'), vbar,
-                         '</span>'),
-          typst = '$|overline("P"(Y >= Y_(0.5)) - 1/2)|$')
+        # Claude Sonnet 5 2026-11-22
+        # The html branch here literally spelled "median" instead of
+        # using a Y[0.5] subscript, unlike the latex and typst
+        # branches (both already correct) -- fixed to match. Also
+        # removed the overbar (overline/text-decoration) from all
+        # three non-plain branches per Frank's request; the |...|
+        # absolute-value bars are kept.
+        c(latex = '$|P(Y\\geq Y_{0.5})-\\frac{1}{2}|$',
+          html  = paste0(vbar, 'P(<i>Y</i> ', geq, ' <i>Y</i><sub>0.5</sub>)-',
+                       htmlSpecial('half'), vbar),
+          typst = '$|"P"(Y >= Y_(0.5)) - 1/2|$')
 
     )
 
@@ -1414,11 +1497,21 @@ for(i in 1:p) {
     labs <- c(labs, paste(lab, collapse='\n'))
     u   <- w[[i]]
     a <- ''
-    for(i in seq_len(length(u)))
-      a <- paste0(a, names(u)[i],
-                 spaces(wid - nchar(u[i]) - nchar(names(u[i]))),
-                 u[i],
-                 if(i < length(u)) '\n')
+    # Claude Sonnet 5 2026-11-22
+    # Loop variable renamed from i to j (it was shadowing the outer
+    # loop's own i, which worked only because nothing after this inner
+    # loop, within the same outer iteration, still needed the outer i
+    # -- fragile, not an actual bug, but confusing to read and risky
+    # under future edits). Also added a max(2, ...) floor directly at
+    # render time: width[] above is derived to already guarantee this,
+    # but enforcing it here too means a label/value pair can never
+    # visually run together even if some future change to width[]'s
+    # own computation regresses that guarantee.
+    for(j in seq_len(length(u)))
+      a <- paste0(a, names(u)[j],
+                 spaces(max(2, wid - nchar(u[j]) - nchar(names(u[j])))),
+                 u[j],
+                 if(j < length(u)) '\n')
     z <- c(z, a)
   }
   res <- rbind(labs, z)
