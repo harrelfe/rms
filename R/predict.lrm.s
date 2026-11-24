@@ -53,7 +53,7 @@ predict.lrm <- function(object, ...,
 }
 
 predict.orm <- function(object, ...,
-		type=c("lp","fitted","fitted.ind","mean","x","data.frame",
+		type=c("lp","fitted","fitted.ind","mean","quantile","x","data.frame",
 		"terms", "cterms", "ccterms", "adjto", "adjto.data.frame",
           "model.frame"),
 		se.fit=FALSE, codes=FALSE)
@@ -104,24 +104,37 @@ predict.orm <- function(object, ...,
 ##' @noRd
 ormPredictYde <- function(object, ..., type, kint=NULL, ycut=NULL, se.fit=FALSE,
                            Zmatrix=TRUE, zcppo=TRUE, fun=NULL, funint=TRUE,
-                           codes=FALSE, posterior.summary=NULL, cint=NULL) {
+                           codes=FALSE, posterior.summary=NULL, cint=NULL,
+                           q=NULL, method=c('interpolated', 'discrete')) {
+  method <- match.arg(method)
   # Claude Sonnet 5 2026-11-20          4 lines
   # 'fitted'/'fitted.ind'/'mean' are handled by a separate helper,
   # ormYdeFittedMean() (below) -- a different enough computation (all k
   # cutpoints at once, or streamed over them) that threading it through
   # this function's existing single-ycut lp/x logic would be more
   # confusing than two focused functions sharing the same setup.
-  implemented <- c('lp', 'x', 'fitted', 'fitted.ind', 'mean')
+  # Claude Sonnet 5 2026-11-25
+  # type='quantile' added to that same set (ormYdeFittedMean() now also
+  # handles it) -- see its own doc comment for why the quantile needs
+  # its own per-cutpoint delta-method pass, not a reuse of type='mean''s.
+  implemented <- c('lp', 'x', 'fitted', 'fitted.ind', 'mean', 'quantile')
   if(type %nin% implemented)
     stop("type='", type, "' is not yet implemented for an orm() fit using yde/ytrans; ",
          "only ", paste(sQuote(implemented), collapse=', '),
          " are currently supported for such fits")
+  if(type == 'quantile' && ! length(q))
+    stop("q= must be given for type='quantile'")
   if(se.fit && type == 'x')
     warning('se.fit does not apply to type="x"')
   # Claude Sonnet 5 2026-11-20
   # type='mean' now has a real delta-method se.fit (see
   # ormYdeFittedMean()) -- only 'fitted'/'fitted.ind' still ignore it,
   # matching predict.lrm()'s own (non-yde) convention for those two.
+  # type='quantile' (2026-11-25) uses cint directly (see its own branch
+  # below -- a quantile's CI comes from inverting confidence BANDS on
+  # the probability scale, which is not symmetric around the point
+  # estimate the way "point +/- zcrit*se" is, so se.fit alone has no
+  # meaningful quantile-scale counterpart here).
   if(se.fit && type %in% c('fitted', 'fitted.ind'))
     warning('se.fit not supported with type="fitted" or "fitted.ind"')
   if(length(fun))
@@ -146,9 +159,10 @@ ormPredictYde <- function(object, ..., type, kint=NULL, ycut=NULL, se.fit=FALSE,
   Z <- predictrms(object, ..., type='x', second=TRUE)
   n <- NROW(X)
 
-  if(type %in% c('fitted', 'fitted.ind', 'mean'))
+  if(type %in% c('fitted', 'fitted.ind', 'mean', 'quantile'))
     return(ormYdeFittedMean(object, X=X, Z=Z, type=type, codes=codes,
-                             se.fit = se.fit && type == 'mean'))
+                             se.fit = se.fit && type == 'mean',
+                             q=q, method=method, cint=cint))
 
   ylevels   <- object$yunique
   ytransmat <- object$ytransmat
@@ -325,7 +339,8 @@ ormPredictYde <- function(object, ..., type, kint=NULL, ycut=NULL, se.fit=FALSE,
 ##'   error of the mean (see Details)
 ##' @author Frank Harrell
 ##' @noRd
-ormYdeFittedMean <- function(object, X, Z, type, codes=FALSE, se.fit=FALSE) {
+ormYdeFittedMean <- function(object, X, Z, type, codes=FALSE, se.fit=FALSE,
+                              q=NULL, method='interpolated', cint=NULL) {
   ylevels   <- object$yunique
   ytransmat <- object$ytransmat
   qyde      <- object$qyde
@@ -366,6 +381,89 @@ ormYdeFittedMean <- function(object, X, Z, type, codes=FALSE, se.fit=FALSE) {
     ynam <- paste(ynam, "=", ylevels, sep="")
     dimnames(Peq) <- list(rnam, ynam)
     return(drop(Peq))
+  }
+
+  if(type == 'quantile') {
+    # Claude Sonnet 5 2026-11-25          entire block
+    # Ports rms::Quantile.orm()'s own (ordinary, non-yde) conf.int
+    # mechanism -- confidence BANDS on the cumulative-probability scale
+    # at each cutpoint, inverted the same way the point estimate is
+    # inverted -- rather than inventing a different technique, so this
+    # stays consistent with the one the package already ships. The one
+    # genuine difference: that mechanism's own dlb.dtheta (the gradient
+    # of the cutpoint-j linear predictor w.r.t. the parameters) is
+    # cbind(1, X), the SAME matrix reused for every cutpoint, because an
+    # ordinary PO model's linear predictor is alpha[j] + X %*% beta --
+    # unaffected by j except through which alpha is "hot". For a yde
+    # fit it is alpha[j] + X %*% beta + Z %*% Tau %*% ytransmat[j+1, ],
+    # and that last term genuinely depends on j, so dlb.dtheta cannot be
+    # reused across cutpoints -- Zexp_j (this cutpoint's own
+    # Z-times-ytransmat-row expansion, the same outer-product flattening
+    # ormPredictYde()'s own type='lp' se.fit code uses for a single
+    # ycut, vectorized here over all n rows of newdata at once) is
+    # appended fresh inside the loop over cutpoints.
+    ZTau    <- W %*% t(ytransmat[-1, , drop = FALSE])
+    lp_full <- sweep(ZTau, 2, alpha, '+') + Xbeta       # n x k
+    P       <- cumprob(lp_full)
+    ns      <- k
+    if(codes) values <- 1 : length(ylevels)
+    else {
+      values <- as.numeric(ylevels)
+      if(any(is.na(values)))
+        stop('values of response levels must be numeric for type="quantile" and codes=FALSE')
+    }
+    inverse <- if(length(object$famfunctions)) eval(object$famfunctions[2]) else qlogis
+
+    m.yvals <- matrix(NA, nrow = n, ncol = ns + 2)
+    cp <- cbind(P, 0)
+    for(j in 1 : n) {
+      ws <- c(0, (cp[j, -ns-1] - cp[j, 1]) / (cp[j, ns] - cp[j, 1]), 1)
+      m.yvals[j, ] <- (1 - ws) * c(values[1], values) + ws * c(values, values[ns + 1])
+    }
+    if(method == 'interpolated')
+      z <- sapply(1 : n, function(i) approx(c(1, cp[i, ]), m.yvals[i, ],
+                                             xout = cumprob(inverse(1 - q)), rule = 2)$y)
+    if(method == 'discrete') {
+      m.cdf <- cbind(1 - P, 1)
+      id <- apply(m.cdf, 1, FUN = function(x) {min(which(x >= q))[1]})
+      z <- values[id]
+    }
+    names(z) <- rnam
+    # Claude Sonnet 5 2026-11-25
+    # cint=0 (not just cint missing/NULL) must also mean "no CI" --
+    # length(0) is 1, not 0, so a length()-only check let a caller's
+    # explicit cint=0 fall through into the CI block below and return
+    # a 3-element list instead of the plain vector that cint=0 implies
+    # (confirmed directly: Predict(..., fun='quantile', conf.int=0)
+    # crashed downstream on exactly this shape mismatch).
+    if(! length(cint) || ! cint) return(z)
+
+    idx   <- (k + 1) : (k + p + qm)         # beta+tau positions, fixed
+    lb.se <- matrix(NA, nrow = n, ncol = ns)
+    for(j in 1 : ns) {
+      Zexp_j <- sweep(Z[, rep(1 : qyde, myde), drop = FALSE], 2,
+                       rep(ytransmat[j + 1L, ], each = qyde), '*')
+      dlb.dtheta <- as.matrix(cbind(1, X, Zexp_j))      # n x (1+p+qm)
+      v.j <- infoMxop(object$info.matrix, i = c(j, idx), B = t(dlb.dtheta))
+      lb.se[, j] <- sqrt(Matrix::diag(dlb.dtheta %*% v.j))
+    }
+    w     <- qnorm((1 + cint) / 2)
+    ci.ub <- 1 - cumprob(lp_full - w * lb.se)
+    ci.lb <- 1 - cumprob(lp_full + w * lb.se)
+    if(method == 'interpolated') {
+      z.ub <- sapply(1 : n, function(i) approx(c(1, 1 - ci.lb[i, ], 0), m.yvals[i, ],
+                                                xout = cumprob(inverse(1 - q)), rule = 2)$y)
+      z.lb <- sapply(1 : n, function(i) approx(c(1, 1 - ci.ub[i, ], 0), m.yvals[i, ],
+                                                xout = cumprob(inverse(1 - q)), rule = 2)$y)
+    }
+    if(method == 'discrete') {
+      id <- apply(cbind(ci.lb, 1), 1, FUN = function(x) {min(which(x >= q))[1]})
+      z.ub <- values[id]
+      id <- apply(cbind(ci.ub, 1), 1, FUN = function(x) {min(which(x >= q))[1]})
+      z.lb <- values[id]
+    }
+    names(z.lb) <- names(z.ub) <- rnam
+    return(list(quantile = z, lower = z.lb, upper = z.ub))
   }
 
   ## type == 'mean'
@@ -548,19 +646,11 @@ ormYdeExProb <- function(object, codes=FALSE) {
 ##' `Quantile()` Closure for a Y-Dependent-Effect `orm()` Fit
 ##'
 ##' Internal helper for [Quantile.orm()] when `qyde > 0`, paralleling
-##' [ormYdeMean()]/[ormYdeExProb()]. [Quantile.orm()]'s own closure
-##' builds `cp <- cbind(cumprob(lb), 0)` (or, for `method='discrete'`,
-##' `m.cdf <- cbind(1 - cumprob(lb), 1)`) from `lb`, the shift-trick
-##' matrix of per-cutpoint linear predictors -- invalid for `yde` for the
-##' same reason as [ormYdeExProb()]. Requires `newdata` and substitutes
-##' `P <- predict(object, newdata, type='fitted')` for `cumprob(lb)`
-##' (verified column-for-column identical in meaning: `P`'s `j`-th column
-##' is `P(Y >= values[j+1])`, exactly what `cumprob(lb)[,j]` was). Every
-##' other line -- the `ws`/`m.yvals` interpolation-grid construction, the
-##' `approx()` inversion, the `'discrete'` method's `which(x >= q)`
-##' lookup -- is copied verbatim from [Quantile.orm()], unchanged, since
-##' none of it is `yde`-specific; only the source of the cumulative-
-##' probability matrix differs.
+##' [ormYdeMean()]: a thin wrapper around `predict(object, newdata,
+##' type='quantile', ...)`, where the real computation lives (point
+##' estimate and, as of 2026-11-25, a real delta-method `conf.int`, both
+##' in [ormYdeFittedMean()]) -- the same division of labor `ormYdeMean()`
+##' already uses for `type='mean'`.
 ##' @param object a `yde`-fitted `orm()` object
 ##' @param codes see [Quantile.orm()]'s own `codes` argument
 ##' @author Frank Harrell
@@ -574,38 +664,13 @@ ormYdeQuantile <- function(object, codes=FALSE) {
            'predictor or design matrix (lp=/X=) cannot represent a ',
            'Y-dependent effect, which varies by level of Y. Call this ',
            'function as f(newdata=...), or use predict(object, newdata, ',
-           'type="fitted") directly.')
-    if(conf.int)
-      stop('conf.int is not yet implemented for Quantile() on an orm() fit using yde/ytrans')
+           'type="quantile", q=..., cint=...) directly.')
     method <- match.arg(method)
-    values <- if(codes) 1 : length(object$yunique) else as.numeric(object$yunique)
-    if(any(is.na(values)))
-      stop('values of response levels must be numeric for codes=FALSE')
-    ns <- length(values) - 1L
-    trans   <- object$famfunctions
-    inverse <- eval(trans[2])
-    cumprob <- eval(trans[1])
-    P <- predict(object, newdata, type='fitted')
-    if(! is.matrix(P)) P <- matrix(P, nrow = 1)
-    n <- nrow(P)
-
-    if(method == 'interpolated') {
-      m.yvals <- matrix(NA, nrow = n, ncol = ns + 2)
-      cp <- cbind(P, 0)
-      for(j in 1 : n) {
-        ws <- c(0, (cp[j, -ns-1] - cp[j, 1]) / (cp[j, ns] - cp[j, 1]), 1)
-        m.yvals[j,] <- (1 - ws) * c(values[1], values) + ws * c(values, values[ns + 1])
-      }
-      z <- sapply(1 : n,
-                 function(i) approx(c(1, cp[i,]), m.yvals[i,],
-                                    xout = cumprob(inverse(1 - q)), rule = 2)$y)
-    }
-    if(method == 'discrete') {
-      m.cdf <- cbind(1 - P, 1)
-      id <- apply(m.cdf, 1, FUN=function(x) {min(which(x >= q))[1]})
-      z <- values[id]
-    }
-    names(z) <- rownames(P)
+    r <- predict(object, newdata, type='quantile', q=q, codes=codes,
+                 method=method, cint=conf.int)
+    if(! conf.int) return(r)
+    z <- r$quantile
+    attr(z, 'limits') <- list(lower = r$lower, upper = r$upper)
     z
   }
 }

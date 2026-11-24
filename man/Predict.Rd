@@ -60,7 +60,7 @@ Predict(object, ..., fun=NULL, funint=TRUE,
         posterior.summary=c('mean', 'median', 'mode'),
         adj.zero = FALSE, ref.zero = FALSE,
         kint=NULL, ycut=NULL, time = NULL, loglog = FALSE, digits=4, name,
-        factors=NULL, offset=NULL)
+        factors=NULL, offset=NULL, quantile=0.5)
 
 \method{print}{Predict}(x, \dots)
 
@@ -106,7 +106,13 @@ Predict(object, ..., fun=NULL, funint=TRUE,
 	properly account for all sources of uncertainty in estimating the
 	mean response.  \code{fun} can be a general function and can compute
 	confidence limits (stored as a list in the \code{limits} attribute) of
-the transformed parameters such as means.}
+the transformed parameters such as means.  For an \code{orm()} fit using
+	\code{yde}/\code{ytrans}, a bare function cannot be used for \code{fun}
+	(there is no single linear predictor value such a fit's Y-dependent
+	effect could be applied to); specify the string \code{fun='mean'} or
+	\code{fun='quantile'} instead (the latter using the \code{quantile}
+	argument below, default 0.5, the median), which route to a real
+	delta-method confidence interval computed directly from the fit.}
  \item{funint}{set to \code{FALSE} if \code{fun} is not a function such
 	as the result of \code{Mean}, \code{Quantile}, or \code{ExProb} that
 	contains an \code{intercepts} argument}
@@ -205,6 +211,9 @@ the transformed parameters such as means.}
 		mandatory if the model included an offset term.  The variable name
 		must match the innermost variable name in the offset term.  The
 		single offset is added to all predicted values.}
+	\item{quantile}{the quantile to compute when \code{fun='quantile'} is
+		given for a \code{yde}-fitted \code{orm()} object (see \code{fun}
+		above); defaults to 0.5, the median. Ignored otherwise.}
 	\item{x}{an object created by \code{Predict}}
   \item{rename}{
 	If you are concatenating predictor sets using \code{rbind} and one

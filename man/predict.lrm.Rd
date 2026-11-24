@@ -36,10 +36,11 @@ variance is appreciable.
 
 For an \code{orm} fit that used the \code{yde}/\code{ytrans} Y-dependent
 (non-proportional-odds) effect mechanism (see \code{\link{orm}}),
-\code{type="lp"}, \code{"x"}, \code{"fitted"}, \code{"fitted.ind"}, and
-\code{"mean"} are the only types currently supported, and each correctly
-includes the Y-dependent contribution at every level of \eqn{Y} (not just
-at \code{kint}/\code{ycut}, which only \code{type="lp"}/\code{"x"} make
+\code{type="lp"}, \code{"x"}, \code{"fitted"}, \code{"fitted.ind"},
+\code{"mean"}, and (as of 2026-11-25) \code{"quantile"} are the only
+types currently supported, and each correctly includes the Y-dependent
+contribution at every level of \eqn{Y} (not just at
+\code{kint}/\code{ycut}, which only \code{type="lp"}/\code{"x"} make
 use of). Any other \code{type} (e.g. \code{"terms"}) stops with an
 informative error for such a fit, rather than silently returning a result
 that omits the Y-dependent effect. Unlike an ordinary (non-\code{yde})
@@ -50,17 +51,30 @@ default), with separate code used when \code{se.fit=TRUE} (needed
 because every intercept, not just one, contributes to the mean, so its
 standard error cannot use the smaller "touched intercepts only"
 shortcut that \code{type="lp"}/\code{"fitted.ind"} use).
+\code{type="quantile"} requires a new argument \code{q} (the quantile,
+e.g. \code{q=.5} for the median) and uses \code{cint} (not
+\code{se.fit}) to request a delta-method confidence interval, returning
+\code{list(quantile=, lower=, upper=)}; its confidence limits come from
+inverting confidence bands on the cumulative-probability scale at every
+cutpoint (the same technique \code{Quantile.orm} already uses for an
+ordinary, non-\code{yde} fit), not a symmetric \code{point +/-
+zcrit*se}, since a quantile's own sampling distribution need not be
+symmetric.
 
-For such a fit, the function returned by \code{Mean.orm} also differs
-from the ordinary case described next: because the Y-dependent effect
-varies by level of \eqn{Y}, it cannot be represented by a single linear
-predictor value, so the returned function requires \code{newdata} (the
-original covariate data frame) rather than \code{lp} or \code{X}, and
-computes its result by calling \code{predict(object, newdata,
-type="mean")} internally. Calling it with only \code{lp}/\code{X} (as
+For such a fit, the functions returned by \code{Mean.orm} and
+\code{Quantile.orm} also differ from the ordinary case described next:
+because the Y-dependent effect varies by level of \eqn{Y}, it cannot be
+represented by a single linear predictor value, so the returned
+function requires \code{newdata} (the original covariate data frame)
+rather than \code{lp} or \code{X}, and computes its result by calling
+\code{predict(object, newdata, type="mean")} (or \code{type="quantile"})
+internally. Calling it with only \code{lp}/\code{X} (as
 \code{Predict(fun=)} and \code{nomogram} do for ordinary fits) stops
 with an informative error, since a Y-dependent effect cannot be
-evaluated from a linear predictor value alone.
+evaluated from a linear predictor value alone; for \code{Predict}, use
+\code{fun="mean"} or \code{fun="quantile"} (with the separate
+\code{quantile=} argument to \code{Predict} to pick which quantile)
+instead, which route to these \code{type=} calls directly.
 }
 \usage{
 \method{predict}{lrm}(object, \dots, type=c("lp", "fitted",
@@ -68,8 +82,8 @@ evaluated from a linear predictor value alone.
             "terms", "cterms", "ccterms", "adjto","adjto.data.frame", 
             "model.frame"), se.fit=FALSE, codes=FALSE)
 \method{predict}{orm}(object, \dots, type=c("lp", "fitted",
-            "fitted.ind", "mean", "x", "data.frame",
-            "terms", "cterms", "ccterms", "adjto","adjto.data.frame", 
+            "fitted.ind", "mean", "quantile", "x", "data.frame",
+            "terms", "cterms", "ccterms", "adjto","adjto.data.frame",
             "model.frame"), se.fit=FALSE, codes=FALSE)
 
 \method{Mean}{lrm}(object, codes=FALSE, \dots)

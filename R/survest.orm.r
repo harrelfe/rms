@@ -28,6 +28,36 @@ survest.orm <- function(fit, newdata=NULL, linear.predictors=NULL, x=NULL, times
 
   S <- Survival(fit)
 
+  # Claude Sonnet 5 2026-11-24          entire block
+  # A yde-fitted orm() object's Survival() returns a closure with a
+  # DIFFERENT signature (times, newdata, conf.int, ...) than the
+  # ordinary one (times, lp, X, ...) -- see ormYdeSurvival() in
+  # predict.lrm.s; a Y-dependent effect cannot be represented by a
+  # single linear predictor value, so that closure needs the actual
+  # covariate data frame. The code below (written only for the
+  # ordinary closure) ends with S(times, linear.predictors, X=x, ...);
+  # linear.predictors is never actually set from x (it stays at its
+  # NULL default throughout this function), so for a yde fit that NULL
+  # was being passed POSITIONALLY into the yde closure's own newdata
+  # argument -- confirmed directly (reported by Frank from
+  # survplot(g, trt); reproduced the exact error, then isolated it to
+  # this positional mismatch) -- giving a confusing "newdata must be
+  # given" error even when newdata WAS supplied to survest() itself
+  # (it just never reached the closure). Route directly to the yde
+  # closure's own newdata= argument instead, bypassing all of the
+  # ordinary closure's lp/X-oriented logic below, none of which
+  # applies to a yde fit.
+  if(length(fit$qyde) && fit$qyde > 0) {
+    if(what == 'parallel')
+      stop('what="parallel" is not yet implemented for an orm() fit using yde/ytrans')
+    if(! length(newdata))
+      stop('survest() for an orm() fit using yde/ytrans must be called with ',
+           'newdata (the original covariate data frame) -- a bare linear ',
+           'predictor or design matrix (linear.predictors=/x=) cannot ',
+           'represent a Y-dependent effect, which varies by level of Y.')
+    return(S(newdata=newdata, times=times, conf.int=conf.int, forcedf=TRUE, zero=TRUE))
+  }
+
   if(missing(fun)) fun <- if(loglog) function(x) logb(ifelse(x == 0 | x == 1, NA, x))
   else function(x) x
 

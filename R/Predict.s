@@ -9,7 +9,7 @@ Predict <-
            adj.zero=FALSE, ref.zero=FALSE,
            kint=NULL, ycut=NULL, time=NULL,
            loglog=FALSE, digits=4, name, factors=NULL,
-           offset=NULL)
+           offset=NULL, quantile=0.5)
 {
   fit       <- object
   type      <- match.arg(type)
@@ -325,6 +325,36 @@ Predict <-
          "fun=Mean(object) (or omit fun= and call predict(object, newdata, ",
          "type='mean') directly)")
 
+  # Claude Sonnet 5 2026-11-25          entire block
+  # fun='quantile', paralleling fun='mean' immediately above, but
+  # scoped to isormyde only for now -- the real computation
+  # (ormYdeFittedMean()'s new type='quantile' branch) is a delta
+  # method built on infoMxop()/the information matrix, which has no
+  # borm() counterpart (a Bayesian fit has posterior draws instead);
+  # borm()'s own version would need a different, per-draw-then-HPD
+  # mechanism (not yet built -- see Quantile.borm()'s own TODO).
+  # Ordinary (non-yde) fits are not given this string shorthand either:
+  # Quantile(fit) already has a working conf.int there via the existing
+  # (non-yde) band-inversion mechanism, reachable today by passing an
+  # actual function built from it as fun= (confirmed working directly,
+  # unlike yde, where that path is structurally unavailable -- see
+  # ormYdeQuantile()'s own doc comment).
+  isQuantile <- length(fun) && ! is.function(fun) && fun == 'quantile'
+  # Claude Sonnet 5 2026-11-26
+  # isbormyde now has a real implementation too (bormPredictYde()'s own
+  # type='quantile', a per-posterior-draw analog of ormYdeFittedMean()'s
+  # delta method -- see borm.r), so the earlier stop() for isbormyde is
+  # gone; only truly unsupported fit types (ordinary orm/lrm, blrm/borm
+  # without yde) still stop here, matching isMean's own scope just above.
+  if(isQuantile && ! isormyde && ! isbormyde)
+    stop("fun='quantile' is currently only implemented for a yde-fitted ",
+         "orm() or borm() object; for other fit types build fun from ",
+         "Quantile(object) directly, e.g. ",
+         "function(lp, ...) Quantile(object)(quantile, lp, ...)")
+  if(isQuantile && bootdone && conf.int > 0)
+    stop("fun='quantile' is not yet implemented together with ",
+         "bootcov(coef.reps=TRUE) for an orm object using yde/ytrans")
+
   if(! length(time)) {
     xx <- Pred()
     if(length(attr(xx, "strata")) && any(is.na(attr(xx, "strata"))))
@@ -380,6 +410,36 @@ Predict <-
         xb <- m(xb)
       }
       }
+    # Claude Sonnet 5 2026-11-25/26          entire block
+    # fun='quantile', structured exactly like the isMean block just
+    # above (Predict() already has settings in scope, so it calls
+    # predict(type='quantile') directly rather than going through
+    # Quantile()/ormYdeQuantile()/bormYdeQuantile()). q=quantile
+    # (Predict()'s own new formal, since a bare fun='quantile' string
+    # cannot also carry which quantile is wanted the way fun=Mean(fit)
+    # needs no such extra argument). xx$lower/xx$upper are overwritten
+    # here (quantile scale) for the same reason isMean's own branch
+    # overwrites them -- they otherwise still hold Pred()'s own
+    # type='lp' (log-odds-scale) CI, the wrong scale for a quantile.
+    # isormyde's delta-method SE and isbormyde's HPD interval are both
+    # already on the quantile scale when predict() returns them (unlike
+    # isMean's isormyde branch, which needs an extra zcrit*se.fit step
+    # for the CI -- type='quantile' returns lower/upper directly from
+    # both ormYdeFittedMean() and bormPredictYde(), so no such step is
+    # needed here for either fit type).
+    if(isQuantile) {
+      if(isormyde) {
+        r <- predict(fit, settings, type='quantile', q=quantile, cint=conf.int)
+      } else if(isbormyde) {
+        r <- predict(fit, settings, type='quantile', q=quantile,
+                     posterior.summary=posterior.summary, cint=conf.int)
+      }
+      if(conf.int > 0) {
+        xb <- r$quantile
+        xx$lower <- r$lower
+        xx$upper <- r$upper
+      } else xb <- r
+    }
     if(bootdone && conf.int > 0) {
       X <- Pred(type='x')
       pred <- t(matxv(X, boot.Coef,
