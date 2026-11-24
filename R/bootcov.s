@@ -130,8 +130,52 @@ bootcov <- function(fit, cluster, B=200, fitter, coef.reps=TRUE,
       # intercepts for non-sampled Y values
       alphas <- structure(rep(NA, ns), names=intnames)  # intercept template
       ints_actual <- cof[1 : ints_fitted]
+      # Claude Sonnet 5 2026-11-25          entire block
+      # A right-censored orm() fit's intercept just below the open-ended
+      # right tail is labeled "y>X" (bare, no "="), not the ordinary
+      # "y>=X", where X is THIS SAMPLE's own largest uncensored Y value
+      # (orm.fit.r's tailinfo$type=='right' relabeling, built from
+      # Ocens.r's own trailing-censored-observations tail level). A
+      # bootstrap replicate's own largest uncensored value is usually
+      # smaller than the original fit's (resampling with replacement
+      # tends to miss the single largest/rarest value), so its "y>X" name
+      # essentially never has an exact match in the original template.
+      # First attempt here (reconcile "y>X" to the template's own "y>=X"
+      # for the SAME X) was wrong: confirmed directly with a small
+      # hand-built Ocens() example (uncensored y=1:5 plus one observation
+      # censored exactly at 5) that "y>=X" (charged to an observation
+      # uncensored exactly at X) and "y>X" (charged to one censored at or
+      # beyond X) are two DIFFERENT, legitimate, adjacent parameters
+      # whenever such a tie occurs -- collapsing them into one name
+      # causes a duplicate-name collision instead of fixing anything,
+      # which is exactly what broke after that first attempt. The
+      # correct identity (confirmed from Ocens.r's own comment on
+      # interior right-censored observations: "P(Y >= next level) ...
+      # equals P(Y > censoring point) exactly because no probability mass
+      # can fall between support points") is that a replicate's "y>X"
+      # equals the template's "y>=Y", where Y is the SMALLEST original
+      # support point strictly greater than X -- not the template's
+      # "y>=X" entry for that same X, which (when present) is a different
+      # quantity: it includes the probability mass exactly at X, which
+      # "y>X" excludes. Confirmed by direct reproduction this applies
+      # identically to an ordinary (non-yde) right-censored orm() fit
+      # too, so this is a general censored-orm bootstrap gap, not
+      # yde-specific.
+      nm   <- names(ints_actual)
+      bare <- grepl('^y>[^=]', nm) & ! (nm %in% intnames)
+      if(any(bare)) {
+        eq      <- grepl('^y>=', intnames)
+        eqnames <- intnames[eq]
+        tval    <- suppressWarnings(as.numeric(sub('^y>=', '', eqnames)))
+        xval    <- suppressWarnings(as.numeric(sub('^y>', '', nm[bare])))
+        for(ii in seq_along(xval)) {
+          cand <- tval > xval[ii] & ! is.na(tval) & ! is.na(xval[ii])
+          if(any(cand)) nm[bare][ii] <- eqnames[cand][which.min(tval[cand])]
+        }
+        names(ints_actual) <- nm
+      }
       alphas[names(ints_actual)] <- ints_actual
-      if(sum(is.na(alphas)) != nry) stop('program logic error in alphas') 
+      if(sum(is.na(alphas)) != nry) stop('program logic error in alphas')
       alphas <- fillin(yu[- 1], alphas)
       return(c(alphas, cof[- (1 : ints_fitted)]))
       }
