@@ -83,7 +83,7 @@ contrast(fit, \dots)
          boot.type=c("percentile","bca","basic"),
          posterior.summary=c('mean', 'median', 'mode'),
          weights="equal", conf.int=0.95, tol=1e-7, expand=TRUE,
-         se_factor=4, plot_profile=FALSE, \dots)
+         se_factor=4, plot_profile=FALSE, quantile=0.5, \dots)
 \method{print}{contrast.rms}(x, X=FALSE,
        fun=function(u)u, jointonly=FALSE, prob=0.95, \dots)
 }
@@ -133,7 +133,23 @@ compare \code{list(treat="drug", age=c(20,30))} with
 	\code{a} and \code{b}.  Applies to Bayesian model fits.  Also,
 a function to transform the contrast, SE, and lower and upper
 confidence limits before printing.  For example, specify \code{fun=exp} to
-anti-log them for logistic models.}
+anti-log them for logistic models.  For a non-Bayesian ordinal
+(\code{orm}) or \code{lrm} fit, \code{fun} may instead be the string
+\code{"mean"} or \code{"quantile"} to get a delta-method contrast on the
+mean or a quantile of \eqn{Y} rather than the linear predictor scale
+(see \code{\link{Mean.lrm}}/\code{\link{Quantile.orm}}) -- unlike a
+linear predictor contrast, this is a genuinely nonlinear function of
+the fit's entire intercept vector, not just the one intercept that
+would otherwise cancel. Only \code{type="individual"} or
+\code{"average"} and \code{conf.type="individual"} are supported with
+this; \code{a2}/\code{b2} (double-difference contrasts) and
+\code{weights} are supported; \code{ycut} is not used (the mean/quantile
+is evaluated across every cutpoint, not one). \code{fun="mean"} also
+works for an \code{orm} fit using \code{yde}/\code{ytrans} (a
+Y-dependent predictor effect); \code{fun="quantile"} does not yet
+support such a fit. Bootstrap coefficients (\code{usebootcoef=TRUE}
+fits) are not yet supported with \code{fun="mean"}/\code{"quantile"}
+and give an informative error.}
 \item{type}{
 set \code{type="average"} to average the individual contrasts (e.g., to
 obtain a Type II or III contrast).  Set \code{type="joint"} to jointly
@@ -179,6 +195,7 @@ interval probability for Bayesian analyses)
   getting contrasts over irregular predictor settings.}
 \item{se_factor}{multiplier for a contrast's standard error used for root finding of the profile likelihood confidence limits when \code{conf.type='profile'}. The search is over the maximum likelihood estimate plus or minus \code{se_factor} times the standard error.  This approach will fail when the Hauck-Donner effect is in play, because the standard error blows up when regression coefficients are estimating infinity.}
 \item{plot_profile}{when \code{conf.type='profile'} specify \code{plot_profile} to plot the change in deviance from the full model as a function of the contrast estimate, separately by each row of the contrast matrix.  The contrast estimate varies from the maximum likelihood estimate plus or minus \code{se_factor} times the standard error, with a regular grid of 50 points.}
+\item{quantile}{only used when \code{fun="quantile"} for a non-Bayesian \code{orm} fit, to specify which quantile of \eqn{Y} (e.g. \code{0.5} for the median, the default) to contrast between settings.}
 \item{\dots}{passed to \code{print} for main output.  A useful thing to
 	pass is \code{digits=4}.  Used also to pass convergence criteria arguments to fitting functions when \code{conf.type} is \code{"profile"}.}
 \item{x}{result of \code{contrast}}
