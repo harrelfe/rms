@@ -91,7 +91,21 @@ orm <- function(formula, yde=NULL, ytrans=NULL, data=environment(formula),
     mmcolnames <- atr$mmcolnames
 
     Y     <- model.extract(X, 'response')
-    yname <- if(inherits(Y, 'Ocens')) attr(Y, 'name') else all.vars(formula)[1]
+    # Claude Sonnet 5 2026-11-27
+    # Ocens()'s own 'name' attribute is only populated when its a/b
+    # arguments are bare variable names (it works via
+    # deparse(substitute(a))); for the realistic case of genuinely
+    # censored data built from an expression, e.g. Ocens(pmin(time,
+    # censtime), ifelse(event, time, Inf)), it comes out "" -- unlike
+    # the no-censoring case (Ocens() drops its own class and returns a
+    # plain vector when a==b everywhere, so the else branch below
+    # already applied there), there was no fallback to the formula's
+    # own response name, so fit$yname -- and hence contrast.rms()'s
+    # own row labels, which paste it in -- silently lost the variable
+    # name (confirmed directly: reported by Frank as a row name of the
+    # form "=2.5" instead of "y>=2.5").
+    yname <- if(inherits(Y, 'Ocens')) attr(Y, 'name') else ''
+    if(! length(yname) || yname == '') yname <- all.vars(formula)[1]
 
     offs  <- atrx$offset
     if(!length(offs)) offs <- 0

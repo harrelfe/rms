@@ -454,12 +454,12 @@ ggplot(d, aes(x=y, y=p, color=sex)) + geom_line() +
 
 options(datadist=NULL)
 \dontrun{
-# For Y=0, 1, 2 for no pain, pain, or death fit a partial proportional
-# odds model that allows for a special effect of x1 on death (the
-# linear part only)
+# For Y=0, 1, 2 for no pain, pain, or death fit a model with
+# Y-dependent predictor effects that allows for a special effect of
+# x1 on death (the linear part only)
 f <- orm(y ~ rcs(x1, 4) + x2, ~ x1, ytrans=function(y) 1 * (y == 2))
 
-# For discrete Y with > 3 levels fit an unconstrained partial PO model
+# For discrete Y with > 3 levels fit an unconstrained Y-dependent-effect model
 f <- orm(y ~ rcs(x1, 4) + x2, ~ x1, ytrans='all')
 
 # Fit the equivalent of an unequal variance 2-sample t-test for

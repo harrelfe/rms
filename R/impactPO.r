@@ -1,12 +1,12 @@
 #' Impact of Proportional Odds Assumpton
 #'
-#' Checks the impact of the proportional odds assumption by comparing predicted cell probabilities from a PO model with those from a multinomial or partial proportional odds logistic model that relax assumptions.  For a given model formula, fits the model with both `lrm` and either `nnet::multinom` or `orm` (for a partial PO model, via `orm`'s `yde`/`ytrans` mechanism) or both, and obtains predicted cell probabilities for the PO and relaxed models on the `newdata` data frame.  A `print` method formats the output.
+#' Checks the impact of the proportional odds assumption by comparing predicted cell probabilities from a PO model with those from a multinomial or Y-dependent-effect model that relax assumptions.  For a given model formula, fits the model with both `lrm` and either `nnet::multinom` or `orm` (for a model with Y-dependent predictor effects, via `orm`'s `yde`/`ytrans` mechanism) or both, and obtains predicted cell probabilities for the PO and relaxed models on the `newdata` data frame.  A `print` method formats the output.
 #'
-#' Since partial proportional odds models and especially multinomial logistic models can have many parameters, it is not feasible to use this model comparison approach when the number of levels of the dependent variable Y is large.  By default, the function will use [Hmisc::combine.levels()] to combine consecutive levels if the lowest frequency category of Y has fewer than `minfreq` observations.
+#' Since models with Y-dependent predictor effects and especially multinomial logistic models can have many parameters, it is not feasible to use this model comparison approach when the number of levels of the dependent variable Y is large.  By default, the function will use [Hmisc::combine.levels()] to combine consecutive levels if the lowest frequency category of Y has fewer than `minfreq` observations.
 #'
 #' @param formula a model formula.  To work properly with `multinom` or `vglm` the terms should have completely specified knot locations if a spline function is being used.
 #' @param relax defaults to `"both"` if `nonpo` is given, resulting in fitting two relaxed models.  Set `relax` to `"multinomial"` or `"ppo"` to fit only one relaxed model.  The multinomial model does not assume PO for any predictor.
-#' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  These variables must appear as their own terms (no transformations) in `formula`.  Specifying `nonpo` results in a relaxed fit that is a partial PO model fitted with [orm()], using its `yde`/`ytrans` mechanism: the `nonpo` variables are removed from the main model and instead given a fully unconstrained (one free parameter per cutpoint) `yde` effect, which is confirmed (by direct, exact comparison -- machine-precision agreement in deviance and fitted probabilities on a test case) to reproduce what `VGAM::vglm(formula, VGAM::cumulative(parallel = <nonpo as FALSE>, reverse = TRUE))` gave in this function's earlier implementation.
+#' @param nonpo a formula with no left hand side variable, specifying the variable or variables for which PO is not assumed.  These variables must appear as their own terms (no transformations) in `formula`.  Specifying `nonpo` results in a relaxed fit that is a model with Y-dependent predictor effects fitted with [orm()], using its `yde`/`ytrans` mechanism: the `nonpo` variables are removed from the main model and instead given a fully unconstrained (one free parameter per cutpoint) `yde` effect, which is confirmed (by direct, exact comparison -- machine-precision agreement in deviance and fitted probabilities on a test case) to reproduce what `VGAM::vglm(formula, VGAM::cumulative(parallel = <nonpo as FALSE>, reverse = TRUE))` gave in this function's earlier implementation.
 #' @param newdata a data frame or data table with one row per covariate setting for which predictions are to be made
 #' @param data data frame containing variables to fit; default is the frame in which `formula` is found
 #' @param minfreq minimum sample size to allow for the least frequent category of the dependent variable.  If the observed minimum frequency is less than this, the [Hmisc::combine.levels()] function will be called to combine enough consecutive levels so that this minimum frequency is achieved.
@@ -38,7 +38,7 @@
 #' # Note that PO model is a better model than multinomial (lower AIC)
 #' # since multinomial model's improvement in fit is low in comparison
 #' # with number of additional parameters estimated.  Same for PO model
-#' # in comparison with partial PO model.
+#' # in comparison with the Y-dependent-effect model.
 #'
 #' # Reverse levels of y so stacked bars have higher y located higher
 #' revo <- function(z) {
@@ -163,7 +163,7 @@ impactPO <- function(formula,
     mainvars  <- attr(terms(formula), 'term.labels')
     if(! all(nonpovars %in% mainvars))
       stop('every variable named in nonpo must appear as its own term ',
-           '(no transformations) in formula for the partial PO model')
+           '(no transformations) in formula for the Y-dependent-effect model')
     formula.ppo <- update(formula,
                            paste('. ~ . -', paste(nonpovars, collapse=' - ')))
     ylev <- sort(unique(yv))[-1L]
