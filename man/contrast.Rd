@@ -112,14 +112,13 @@ design matrix generated from \code{a} is analyzed alone.
 \item{a2}{an optional third list of settings of predictors}
 \item{b2}{an optional fourth list of settings of predictors.  Mandatory
 	if \code{a2} is given.}
-\item{ycut}{used of the fit is a constrained partial proportional odds
-       model fit, to specify the single value or vector of values
+\item{ycut}{used if the fit is a model with constrained Y-dependent
+       predictor effects, to specify the single value or vector of values
        (corresponding to the multiple contrasts) of the response
-       variable to use in forming contrasts.  When there is
-       non-proportional odds, odds ratios will vary over levels of the
+       variable to use in forming contrasts.  When there are y-dependent effects (e.g., non-proportional odds), effects will vary over levels of the
        response variable.  When there are multiple contrasts and only
        one value is given for \code{ycut}, that value will be propagated to
-       all contrasts.  To show the effect of non-proportional odds, let
+       all contrasts.  To show y-varying effects, let
        \code{ycut} vary.}
 \item{cnames}{
 vector of character strings naming the contrasts when
@@ -409,6 +408,29 @@ xYplot(Cbind(Contrast, Lower, Upper) ~ age, groups=sex, data=w,
        ylab='Drug - Placebo', method='alt bars')
 options(datadist=NULL)
 
+# Show time-varying treatment effects
+\dontrun{
+n <- 300
+trt <- c(rep('A', n), rep('B', n))
+dd <- datadist(trt); options(datadist='dd')
+set.seed(1)
+dt  <- pmax(0.01, round(exp(c(rnorm(n, 0, 1), rnorm(n, -0.5, 2))), 1))
+ct  <- runif(n * 2, 3, 4)
+units(dt) <- 'year'
+S   <- Surv(pmin(dt, ct), dt < ct)
+Y <- Ocens(pmin(dt, ct), ifelse(dt < ct, dt, Inf))
+yt <- function(y, bar) log(y) - bar
+lbar <- mean(log(dt[dt < ct]))
+formals(yt)$bar <- lbar
+g <- orm(Y ~ trt, ~ trt, ytrans=yt, family='probit', x=TRUE, y=TRUE)
+times <- g$yunique[-1]
+k <- contrast(g, list(trt='A'), list(trt='B'), ycut=times)
+k <- k[.q(Contrast, Lower, Upper)]
+require(tinyplot)
+plt(Contrast ~ times, ymin=Lower, ymax=Upper,
+    type='ribbon', xlab='Year', ylab='A - B', data=k)
+tinyplot_add(type=type_hline(h=0), col='grey90')
+}
 
 # Examples of type='joint' contrast tests
 

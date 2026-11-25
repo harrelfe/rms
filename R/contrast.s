@@ -66,17 +66,31 @@ contrast.rms <-
   # mislabeling the output as if ycut had been honored, before this
   # fix. The cppo-requirement check below stays blrm-specific: borm()
   # has no cppo at all (it validates yde/ytrans/tau itself).
+  # Claude Sonnet 5 2026-11-27
+  # Same gap, found independently for rms::orm()'s OWN yde/ytrans
+  # mechanism (missed when the borm() case above was fixed): an
+  # orm()-with-qyde>0 fit was never added to this condition, so
+  # contrast(orm_yde_fit, ..., ycut=) silently dropped ycut too (the
+  # pred() closure just below fell to its "else predict(fit,d,
+  # type='x')" branch, with no ycut at all), while cnames' own "Y=" `
+  # labeling below still showed the requested ycut as if it had been
+  # honored. Confirmed directly: contrast() gave the IDENTICAL
+  # Contrast value at two very different ycut values on a dataset
+  # where predict(fit, nd, type='lp', ycut=) itself showed the true
+  # treatment effect swinging from -3.0 to +1.77 between those same
+  # two Y values.
   partialpo <- (inherits(fit, 'blrm') && fit$pppo > 0) ||
-               (inherits(fit, 'borm') && length(fit$qyde) && fit$qyde > 0)
+               (inherits(fit, 'borm') && length(fit$qyde) && fit$qyde > 0) ||
+               (inherits(fit, 'orm')  && length(fit$qyde) && fit$qyde > 0)
   if(partialpo & ! length(ycut))
-    stop('must specify ycut for partial prop. odds model')
+    stop('must specify ycut for a model with Y-dependent predictor effects')
   cppo      <- fit$cppo
   if(partialpo && inherits(fit, 'blrm') && ! length(cppo))
     stop('only implemented for constrained partial PO models')
 
   pred <- function(d) {
     ## predict.blrm/predict.borm duplicate rows of design matrix for
-    ## partial PO/ydep models if ycut has length > 1 and only one
+    ## Y-dependent-effect models if ycut has length > 1 and only one
     ## observation is being predicted
     if(partialpo) predict(fit, d, type='x', ycut=ycut)
          else
@@ -140,6 +154,29 @@ contrast.rms <-
       if(eq) k <- c(k, j)
     }
     if(length(k)) vary <- da[k]
+    # Claude Sonnet 5 2026-11-27          entire block
+    # Fall back to labeling by whichever variable is actually varying
+    # (the same logic the "else if" branch below used to only reach
+    # when the search just above was never even attempted) whenever
+    # that search found nothing -- previously this was a sibling
+    # "else if", so it never ran at all once the outer "if" condition
+    # was taken, even when k ended up empty. Confirmed directly: the
+    # common case of a straightforward two-group contrast (a=list(trt=
+    # c('A','B')), b=list(trt='A')) has da$trt and db$trt of DIFFERENT
+    # length/values by construction (that's the whole point of a
+    # contrast), so the search above always finds nothing for it, and
+    # every row of the result was unlabeled (just the bare ycut suffix
+    # repeated identically on every row, with no indication at all of
+    # which trt value that row belonged to) before this fix.
+    if(! length(vary) && max(mall) > 1) {
+      ## Label contrasts by values of longest variable in list if
+      ## it has the same length as the expanded design matrix
+      d <- if(ma > 1) a else b
+      if(! missing(a2) && (max(ma2, mb2) > max(ma, mb)))
+        d <- if(ma2 > 1) a2 else b2
+      l <- sapply(d, length)
+      vary <- if(sum(l == max(mall)) == 1) d[l == max(mall)]
+    }
   } else if(max(mall) > 1) {
     ## Label contrasts by values of longest variable in list if
     ## it has the same length as the expanded design matrix
@@ -267,8 +304,22 @@ contrast.rms <-
   }
   PP <- NULL; posterior.summary=''
   }
-  if(type != 'average' && length(ycut))
-    cnames <- paste0(cnames, ' ', fit$yname, '=', ycut)
+  # Claude Sonnet 5 2026-11-27          entire block
+  # "=" -> ">=": ycut always means "Y >= ycut" (the intercept being
+  # referenced), never "Y = ycut" exactly, for a yde/ppo fit; "=" was
+  # simply the wrong symbol (reported by Frank). Also, suppress this
+  # suffix entirely when some OTHER variable is the one actually
+  # varying across rows (vary is set) and ycut itself is constant --
+  # showing the same "y>=2.5" on every row added nothing a reader
+  # couldn't already see from vary's own column, and Frank's own
+  # framing was exactly this: ">=" (the suffix at all) should not be
+  # used when the main varying variable is not ycut. Still shown when
+  # ycut itself has more than one distinct value, even if vary is also
+  # set (ycut is then genuinely one of the varying things, not merely
+  # a constant modifier).
+  if(type != 'average' && length(ycut) &&
+     (! length(vary) || length(unique(ycut)) > 1))
+    cnames <- paste0(cnames, ' ', fit$yname, '>=', ycut)
   res <- list(Contrast=est, SE=se,
               Lower=lower, Upper=upper,
               Z=Z, Pvalue=P, PP=PP,

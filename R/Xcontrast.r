@@ -10,7 +10,7 @@
 ##' @param ycut see [rms::contrast.rms()]
 ##' @param weights see [rms::contrast.rms()]
 ##' @param expand see [rms::contrast.rms()]
-##' @param Zmatrix set to `FALSE` for a partial PO model in which you do not want to include the Z matrix in the returned contrast matrix
+##' @param Zmatrix set to `FALSE` for a model with Y-dependent predictor effects in which you do not want to include the Z matrix in the returned contrast matrix
 ##' @return numeric matrix
 ##' @author Frank Harrell
 Xcontrast <- function(fit, a, b=NULL, a2=NULL, b2=NULL, ycut=NULL,
@@ -32,15 +32,15 @@ Xcontrast <- function(fit, a, b=NULL, a2=NULL, b2=NULL, ycut=NULL,
   partialpo <- (isblrm && fit$pppo > 0) ||
                ((isborm || isorm) && length(fit$qyde) && fit$qyde > 0)
   if(partialpo && Zmatrix && ! length(ycut))
-    stop('must specify ycut for partial prop. odds model')
+    stop('must specify ycut for a model with Y-dependent predictor effects')
   if(isblrm) {
     cppo <- fit$cppo
     if(partialpo && ! length(cppo))
       stop('only implemented for constrained partial PO models')
   }
-  
+
   pred <- function(d) {
-    ## predict.blrm duplicates rows of design matrix for partial PO models
+    ## predict.blrm duplicates rows of design matrix for Y-dependent-effect models
     ## if ycut has length > 1 and only one observation is being predicted
     if(partialpo) predict(fit, d, type='x', ycut=ycut, Zmatrix=Zmatrix)
          else

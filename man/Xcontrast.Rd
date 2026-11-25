@@ -33,7 +33,7 @@ Xcontrast(
 
 \item{expand}{see [rms::contrast.rms()]}
 
-\item{Zmatrix}{set to `FALSE` for a partial PO model in which you do not want to include the Z matrix in the returned contrast matrix}
+\item{Zmatrix}{set to `FALSE` for a model with Y-dependent predictor effects in which you do not want to include the Z matrix in the returned contrast matrix}
 }
 \value{
 numeric matrix
