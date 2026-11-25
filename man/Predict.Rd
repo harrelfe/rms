@@ -170,8 +170,8 @@ the transformed parameters such as means.  For an \code{orm()} fit using
 	corresponding to Y >= ycut will be used for \code{kint}.
 }
   \item{ycut}{for an ordinal model specifies the Y cutoff to use in
-		evaluating departures from proportional odds, when the constrained
-		partial proportional odds model is used (\code{cppo} in
+		evaluating departures from proportional odds, when a model with
+		constrained Y-dependent predictor effects is used (\code{cppo} in
 		\code{blrm}, or the analogous \code{yde}/\code{ytrans} mechanism in
 		\code{orm}/\code{rmsb::borm}).  When omitted, \code{ycut}
 		is implied by \code{kint}.  The only time it is absolutely mandatory

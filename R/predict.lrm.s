@@ -159,6 +159,32 @@ ormPredictYde <- function(object, ..., type, kint=NULL, ycut=NULL, se.fit=FALSE,
   Z <- predictrms(object, ..., type='x', second=TRUE)
   n <- NROW(X)
 
+  # Claude Sonnet 5 2026-11-27          entire block
+  # When only one row of newdata is predicted but ycut has length > 1,
+  # duplicate X/Z to ycut's own length so a single covariate setting
+  # can be evaluated at each requested Y cutoff in one call -- the same
+  # row-duplication rms::predict.blrm() already does for its own
+  # type='x' path (see its ly>1 && nz==1 branch, R/blrm.r in rmsb).
+  # Needed by contrast.rms(): it builds exactly one design-matrix row
+  # per factor setting, then passes a possibly-longer ycut through
+  # unchanged (reported by Frank: contrast(orm_yde_fit, a, b, ycut=
+  # 1:3) failed with "ycut must be of length 1 or the number of
+  # requested predictions" before this fix, for exactly this reason --
+  # the ycut-passing fix to contrast.s on 2026-11-27 made orm's own
+  # yde fits reach this code path for the first time, exposing a gap
+  # that was always there but never previously exercised). Only
+  # applies to type='x' -- type='lp' already disallows a vector ycut
+  # outright (one lp per call; see the stop() just below), and
+  # 'fitted'/'fitted.ind'/'mean'/'quantile' evaluate every cutpoint at
+  # once and never consult ycut at all, so this is unreachable for them
+  # anyway (they return before this point -- see the type %in% check
+  # just below).
+  if(type == 'x' && n == 1L && length(ycut) > 1L) {
+    n <- length(ycut)
+    X <- X[rep(1L, n), , drop=FALSE]
+    Z <- Z[rep(1L, n), , drop=FALSE]
+  }
+
   if(type %in% c('fitted', 'fitted.ind', 'mean', 'quantile'))
     return(ormYdeFittedMean(object, X=X, Z=Z, type=type, codes=codes,
                              se.fit = se.fit && type == 'mean',
