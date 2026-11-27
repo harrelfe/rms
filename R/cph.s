@@ -401,7 +401,7 @@ coxphFit <- function(..., method, strata=NULL, rownames=NULL, offset=NULL,
 
   if(is.character(res)) return(list(fail=TRUE))
 
-  if(iter.max > 1 && res$iter >= iter.max) return(list(fail=TRUE))
+  if(iter.max > 1 && length(res$iter) && res$iter >= iter.max) return(list(fail=TRUE))
 
   res$fail <- FALSE
   res
